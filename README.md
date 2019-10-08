@@ -8,6 +8,9 @@ If you use coupled-sim for academic work please cite the following paper.
 > Bazilinskyy, P., Kooijman, L., Dodou, D., & De Winter, J. C. F. (2020). Coupled simulator for research on the interaction between pedestrians and (automated) vehicles.
 
 ## Description of the simulator
+A video is better than a million words, so below is a recording of a demo of the simulator with 3 agents:
+[![demo video](http://img.youtube.com/vi/W2VWLYnTYrM/0.jpg)](https://www.youtube.com/watch?v=W2VWLYnTYrM "Demo of coupled simulator for research on interaction between pedestrians and vehicles")
+
 ### Environment
 ![](ReadmeFiles/night_mode_view.png)
 
@@ -16,7 +19,14 @@ The coupled simulator supports both day and night-time settings. Figure above sh
 - 10 intersections with traffic lights
 - 34 zebra crossings
 
-Traffic lights can be turned on and off before the experiment or programmatically in real-time. Small, medium, and large cars are supported for driving and are represented by the models similar to Smart Fortwo, Pontiac GTO, and Nissan Datsun, respectively. Cars that are not controlled by the human participants can be instructed to follow a trajectory before the experiment or can be programmed to respond to other road users. The advertisements are programmable and can be used as visual distractions (e.g., for research on visual attention distribution).
+Traffic lights can be turned on and off before the experiment or programmatically in real-time.
+
+Drivable cars:
+- small (Smart Fortwo)
+- medium (Pontiac GTO)
+- large (Nissan Datsun)
+
+Cars that are not controlled by the human participants can be instructed to follow a trajectory before the experiment or can be programmed to respond to other road users. The advertisements are programmable and can be used as visual distractions (e.g., for research on visual attention distribution).
 
 ![](ReadmeFiles/world_top_view.png)
 
