@@ -1,6 +1,13 @@
 # coupled-sim
 Coupled simulator for research on driver-pedestrian interactions made in Unity.
 
+## 1. Installing the project
+Current support only for Windows (Windows 10). After checking out the project, you need to use Unity Hub to run it with the correct version of Unity.
+![](ReadmeFiles/unityhub.png)
+
+The current version to be used is 2018.4.6f1, see figure below for the view of the installed versions.
+![](ReadmeFiles/unityhub_versions.png)
+
 ## 2. Running the project
 ![](ReadmeFiles/hub.png)
 
