@@ -1,21 +1,26 @@
 # Coupled simulator for research on driver-pedestrian interactions made in Unity.
-## Description of simulator
-### Environment
-![](ReadmeFiles/night_mode_view.png)
-
-The coupled simulator supports both day and night-time settings; Figure above shows a view of the night mode. Figure below shows the top view of the environment: a model of a city centre containing a road network with ten intersections with traffic lights and 34 zebra crossings. Traffic lights can be turned on and off before the experiment or programmatically in real-time. Some parked cars, trees, advertisements, and other static objects are placed throughout the city. Small, medium, and large cars are supported for driving and are represented by the models similar to Smart Fortwo, Pontiac GTO, and Nissan Datsun, respectively. Cars that are not controlled by the human participants can be instructed to follow a trajectory before the experiment or can be programmed to respond to other road users. The advertisements are programmable and can be used as visual distractions (e.g., for research on visual attention distribution).
-
-![](ReadmeFiles/world_top_view.png)
-
 ## Usage of the simualator
-The simulator is open-source and free to use. It is aimed, but not limited, for academic research. We welcome forking of this repository, pull requests, and any contributions in the spirit of open science and open-source code :heart_eyes:. For enquiries, you may contact p.bazilinskyy@tudelft.nl.
+The simulator is open-source and free to use. It is aimed for, but not limited to, academic research. We welcome forking of this repository, pull requests, and any contributions in the spirit of open science and open-source code :heart_eyes:. For enquiries about collaboration, you may contact p.bazilinskyy@tudelft.nl.
 
 ### Citation
 If you use coupled-sim for academic work please cite the following paper.
 
 > Bazilinskyy, P., Kooijman, L., Dodou, D., & De Winter, J. C. F. (2020). Coupled simulator for research on the interaction between pedestrians and (automated) vehicles.
 
-## Installing the project
+## Description of the simulator
+### Environment
+![](ReadmeFiles/night_mode_view.png)
+
+The coupled simulator supports both day and night-time settings. Figure above shows a view of the night mode. Figure below shows the top view of the environment. It is a model of a city centre containing:
+- a road network with static objects liked parked cars, trees, advertisements
+- 10 intersections with traffic lights
+- 34 zebra crossings
+
+Traffic lights can be turned on and off before the experiment or programmatically in real-time. Small, medium, and large cars are supported for driving and are represented by the models similar to Smart Fortwo, Pontiac GTO, and Nissan Datsun, respectively. Cars that are not controlled by the human participants can be instructed to follow a trajectory before the experiment or can be programmed to respond to other road users. The advertisements are programmable and can be used as visual distractions (e.g., for research on visual attention distribution).
+
+![](ReadmeFiles/world_top_view.png)
+
+## Installation
 Current support only for Windows (Windows 10). After checking out the project, you need to use Unity Hub to run it with the correct version of Unity.
 
 ![](ReadmeFiles/unityhub.png)
