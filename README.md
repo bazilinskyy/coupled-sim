@@ -7,6 +7,14 @@ The coupled simulator supports both day and night-time settings; Figure above sh
 
 ![](ReadmeFiles/world_top_view.png)
 
+## Usage of the simualator
+The simulator is open-source and free to use. It is aimed, but not limited, for academic research. We welcome forking of this repository, pull requests, and any contributions in the spirit of open science and open-source code :heart_eyes:. For enquiries, you may contact p.bazilinskyy@tudelft.nl.
+
+### Citation
+If you use coupled-sim for academic work please cite the following paper.
+
+> Bazilinskyy, P., Kooijman, L., Dodou, D., & De Winter, J. C. F. (2020). Coupled simulator for research on the interaction between pedestrians and (automated) vehicles.
+
 ## Installing the project
 Current support only for Windows (Windows 10). After checking out the project, you need to use Unity Hub to run it with the correct version of Unity.
 
