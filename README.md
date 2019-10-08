@@ -3,21 +3,27 @@ Coupled simulator for research on driver-pedestrian interactions made in Unity.
 
 ## 2. Running the project
 ![](ReadmeFiles/hub.png)
+
 Select the project from the Unity Hub projects list. Wait until the project loads in.
 If it is not on the Unity Hub list (it is the first time you are running the project), it has to be added first - click Add and select a folder containing project files.
 
 ## 3. Configuring the project
 ![](ReadmeFiles/playerSystem.png)
 ![](ReadmeFiles/networkingManager.png)
+
 A central point for configuring the project is _Managers_ game object from the _StartScene_ scene. It has two components:
 - _PlayerSystem_ - gathering references to player avatar prefabs,
 - _NetworkingManager_ - gathering references to experiment definitions and elements spawned during networked experiment runtime (currently only waypoint-tracking cars - _AICar_).
 
 ![](ReadmeFiles/experimentDefinition.png)
+
 The experiment is defined solely with prefab containing the _ExperimentDefinition_ component in the root object.
 To edit the experiment definition double click prefab in the _Project_ window.
+
 ![](ReadmeFiles/project.png)
+
 Prefab will be opened in edit mode along with the currently defined _Regular Prefab Editing Environment_. When defining the experiment it is worth setting _Regular Prefab Editing Environment_ variable to the Unity scene defined in the experiment (_Edit -> Project Settings -> Editor -> Prefab Editing Environments -> Regular Environment).
+
 ![](ReadmeFiles/projectSettings.png)
 
 _ExperimentDefinition_ component defines the following fields:
@@ -59,6 +65,7 @@ For _Passenger_ type of agent following additional fields has to be defined:
 
 ### 3.2 Configuration of non-playable characters
 ![](ReadmeFiles/TrafficCircuit.png)
+
 Paths for both non-playable pedestrians and vehicles are defined with WaypointCircuit component.
 To add waypoint press plus sign and drag waypoint Transform into the newly added field.
 To remove waypoint press a minus sign next to the waypoint.
@@ -71,10 +78,12 @@ Additionally, for vehicles, SpeedSetting along with Collider component might be 
 
 #### 3.3.1 Configuration of daylight conditions
 ![](ReadmeFiles/DayNightControl.png)
+
 DayNightControl component helps to define different experiment daylight conditions. It gathers lighting-related objects and allows defining two lightings presets - Day and Night, that can be quickly switched for a scene. This component is intended to be used at the experiment definition setup stage. When the development of the environment is complete, it is advised, to save the environment into two separate scenes (with different light setups) and bake lightmaps.
 
 #### 3.3.2 Configuration of traffic lights
 ![](ReadmeFiles/StreetLightManager.png)
+
 Creating a traffic street lights system is best started with creating an instance of _ExampleStreetLightCrossSection_ and adjusting it. 
 Traffic light sequence is defined in _StreetLightManager_ component as a list of _StreetLightEvents_. Events are processed sequentially. Each event is defined with the following fields:
 - Name - descriptive name of an event
