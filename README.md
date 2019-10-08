@@ -1,6 +1,6 @@
 # Coupled simulator for research on driver-pedestrian interactions made in Unity.
 ## Usage of the simualator
-The simulator is open-source and free to use. It is aimed for, but not limited to, academic research. We welcome forking of this repository, pull requests, and any contributions in the spirit of open science and open-source code :heart_eyes:. For enquiries about collaboration, you may contact p.bazilinskyy@tudelft.nl.
+The simulator is open-source and free to use. It is aimed for, but not limited to, academic research. We welcome forking of this repository, pull requests, and any contributions in the spirit of open science and open-source code :heart_eyes::grimacing: For enquiries about collaboration, you may contact p.bazilinskyy@tudelft.nl.
 
 ### Citation
 If you use coupled-sim for academic work please cite the following paper.
@@ -8,7 +8,7 @@ If you use coupled-sim for academic work please cite the following paper.
 > Bazilinskyy, P., Kooijman, L., Dodou, D., & De Winter, J. C. F. (2020). Coupled simulator for research on the interaction between pedestrians and (automated) vehicles.
 
 ## Description of the simulator
-A video is better than a million words, the image below points to a youtube video of the recording of a demo of the simulator with 3 agents:
+:tv: These days, a video is worth more than a million words, the image below points to a youtube video of the recording of a demo of the simulator with 3 agents:
 [![demo video](ReadmeFiles/thumbnail_demo_video.png)](https://www.youtube.com/watch?v=W2VWLYnTYrM)
 
 ### Environment
