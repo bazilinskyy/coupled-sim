@@ -110,3 +110,31 @@ Traffic light sequence is defined in _StreetLightManager_ component as a list of
 - CarSections - cars traffic light group that the event applies to
 - PedestrianSections - pedestrian traffic light group that the event applies to
 - State - state to be set on the lights specified by sections, LOOP_BACK is a special state that restarts the whole sequence
+
+## Troubleshooting
+### Troubleshooting MVN suit
+Refer to file: https://docs.google.com/document/d/1OtHDYjrljizBaa4FOK2Ttua-4hrYuKo7tsCOlLlzivE/edit
+
+### Troubleshooting Oculus Rift
+Always run Oculus Home software when using Oculus Rift. Otherwise you will encounter black screens. Make sure your graphics driver and USB 3.0 connections are up to date. If Oculus gives a critical hardware error, disconnect oculus and set Oculus Home software to Beta (Public Test Channel, 1st figure below) and check if Oculus Home setting is set to allow Unknown apps (2nd figure below).
+![](ReadmeFiles/troubleshooting_rift_1.png)
+
+![](ReadmeFiles/troubleshooting_rift_2.png)
+
+
+### Troubleshooting connection
+The agent PCs need to be connected via a local network. If you cannot reach the host machine, try to ping it.
+
+#### Windows firewall
+![](ReadmeFiles/windows_firewall.png)
+
+Inbound rules: Set correct Unity Editor version to allow all connections.
+
+![](ReadmeFiles/inbound_rules.png)
+
+### Troubleshooting steering wheel
+Check if supporting software is installed (e.g., logitech gaming software G27 is used in our case). In Unity, you can check which button corresponds to your specific wheel. You can find this out by using the following asset in an empty project: https://assetstore.unity.com/packages/tools/input-management/controller-tester-43621
+
+Then make sure you assign the correct inputs in Unity under _Edit -> Project Settings -> Input_ (see figure below).
+
+![](ReadmeFiles/wheel_inputs.png)
