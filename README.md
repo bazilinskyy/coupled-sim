@@ -9,7 +9,7 @@ If you use coupled-sim for academic work please cite the following paper.
 
 ## Description of the simulator
 A video is better than a million words, so below is a recording of a demo of the simulator with 3 agents:
-[![demo video](http://img.youtube.com/vi/W2VWLYnTYrM/0.jpg)](https://www.youtube.com/watch?v=W2VWLYnTYrM "Demo of coupled simulator for research on interaction between pedestrians and vehicles")
+[![demo video](ReadmeFiles/thumbnail_demo_video.png)](https://www.youtube.com/watch?v=W2VWLYnTYrM)
 
 ### Environment
 ![](ReadmeFiles/night_mode_view.png)
