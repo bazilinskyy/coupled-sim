@@ -43,9 +43,7 @@ The simualator was tested on Windows 10 and macOS Mojave. All functionality is s
 After checking out this project, launch Unity Hub to run the simulator with the correct version of Unity (currently **2018.4.6f1**).
 
 ## Running the project
-![](ReadmeFiles/hub.png)
-
-Select the project from the Unity Hub projects list. Wait until the project loads in. If it is not in the Unity Hub list (it is the first time you are running the project), it has to be added first - click *Add* and select a folder containing project files.
+Select the project from the Unity Hub projects list. Wait until the project loads in. If it is not in the Unity Hub list (it is the first time you are running the project), it has to be added first - click *Add* and select a folder containing the project files.
 
 ## Configuring the project
 The world in the simulator 
