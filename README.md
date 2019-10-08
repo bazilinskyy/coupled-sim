@@ -16,10 +16,8 @@ A video is better than a million words, the image below points to a youtube vide
 
 The coupled simulator supports both day and night-time settings. Figure above shows a view of the night mode. Figure below shows the top view of the environment. It is a model of a city centre containing:
 - a road network with static objects liked parked cars, trees, advertisements
-- 10 intersections with traffic lights
+- 10 intersections with traffic lights that can be turned on and off before the experiment or programmatically in real-time.
 - 34 zebra crossings
-
-Traffic lights can be turned on and off before the experiment or programmatically in real-time.
 
 Drivable cars:
 - small (Smart Fortwo)
@@ -30,20 +28,24 @@ Cars that are not controlled by the human participants can be instructed to foll
 
 ![](ReadmeFiles/world_top_view.png)
 
+#### Input
+The coupled simulator supports a keyboard and a gaming steering wheel as input sources for the driver of the manual car, a keyboard for the passenger of the AV to control the external human-machine interface, and a motion suit for the pedestrian. At the moment, supported motion suit is Xsens Motion Suit.
+
+#### Output
+The supported sources of output are a head-mounted display (HMD) and computer screen for the driver, a computer screen for the passenger, and a head-mounted display for the pedestrian. At the moment, supported HDM is Oculus Rift CV1.
+
+#### Input
+The current number of human participants supported by the coupled simulator is three. However, this number can be expanded up to the number of agents supported by the network. Synchronisation in a local network is handled by a custom-made network manager designed to support the exchange of information between agents with low latency and real-time data logging at 50 Hz for variables from the Unity environment and up to 700Hz from the motion suit. The data that are logged include the three-dimensional position and rotation of the manual car and the AV, the use of blinkers by the driver of the manual car, and 150 position and angular variables from the motion suit. The data are stored in binary format, and the coupled simulator contains a function to convert the saved data into a CSV file. The host agent initiates a red bar that is displayed across all agents for 1 s to allow for visual synchronisation in case screen capture software is used.
+
 ## Installation
-Current support only for Windows (Windows 10). After checking out the project, you need to use Unity Hub to run it with the correct version of Unity.
+The simualator was tested on Windows 10 and macOS Mojave. All functionality is supported by both platforms. However, support for input and output devices was tested only on Windows 10.
 
-![](ReadmeFiles/unityhub.png)
-
-The current version to be used is 2018.4.6f1, see figure below for the view of the installed versions.
-
-![](ReadmeFiles/unityhub_versions.png)
+After checking out this project, launch Unity Hub to run the simulator with the correct version of Unity (currently **2018.4.6f1**).
 
 ## Running the project
 ![](ReadmeFiles/hub.png)
 
-Select the project from the Unity Hub projects list. Wait until the project loads in.
-If it is not on the Unity Hub list (it is the first time you are running the project), it has to be added first - click Add and select a folder containing project files.
+Select the project from the Unity Hub projects list. Wait until the project loads in. If it is not in the Unity Hub list (it is the first time you are running the project), it has to be added first - click *Add* and select a folder containing project files.
 
 ## Configuring the project
 The world in the simulator 
