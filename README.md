@@ -8,7 +8,7 @@ If you use coupled-sim for academic work please cite the following paper.
 > Bazilinskyy, P., Kooijman, L., Dodou, D., & De Winter, J. C. F. (2020). Coupled simulator for research on the interaction between pedestrians and (automated) vehicles.
 
 ## Description of the simulator
-A video is better than a million words, so below is a recording of a demo of the simulator with 3 agents:
+A video is better than a million words, the image below points to a youtube video of the recording of a demo of the simulator with 3 agents:
 [![demo video](ReadmeFiles/thumbnail_demo_video.png)](https://www.youtube.com/watch?v=W2VWLYnTYrM)
 
 ### Environment
