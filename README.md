@@ -4,7 +4,7 @@
 
 The coupled simulator supports both day and night-time settings; Figure above shows a view of the night mode. Figure below shows the top view of the environment: a model of a city centre containing a road network with ten intersections with traffic lights and 34 zebra crossings. Traffic lights can be turned on and off before the experiment or programmatically in real-time. Some parked cars, trees, advertisements, and other static objects are placed throughout the city. Small, medium, and large cars are supported for driving and are represented by the models similar to Smart Fortwo, Pontiac GTO, and Nissan Datsun, respectively. Cars that are not controlled by the human participants can be instructed to follow a trajectory before the experiment or can be programmed to respond to other road users. The advertisements are programmable and can be used as visual distractions (e.g., for research on visual attention distribution).
 
-![image](ReadmeFiles/world_top_view.png)
+![image](ReadmeFiles/world_top_view.png){:width="400px"}
 
 
 ## Installing the project
