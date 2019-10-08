@@ -9,9 +9,11 @@ The coupled simulator supports both day and night-time settings; Figure above sh
 
 ## Installing the project
 Current support only for Windows (Windows 10). After checking out the project, you need to use Unity Hub to run it with the correct version of Unity.
+
 ![](ReadmeFiles/unityhub.png)
 
 The current version to be used is 2018.4.6f1, see figure below for the view of the installed versions.
+
 ![](ReadmeFiles/unityhub_versions.png)
 
 ## Running the project
@@ -38,7 +40,7 @@ To edit the experiment definition double click prefab in the _Project_ window.
 
 ![](ReadmeFiles/project.png)
 
-Prefab will be opened in edit mode along with the currently defined _Regular Prefab Editing Environment_. When defining the experiment it is worth setting _Regular Prefab Editing Environment_ variable to the Unity scene defined in the experiment (_Edit -> Project Settings -> Editor -> Prefab Editing Environments -> Regular Environment).
+Prefab will be opened in edit mode along with the currently defined _Regular Prefab Editing Environment_. When defining the experiment it is worth setting _Regular Prefab Editing Environment_ variable to the Unity scene defined in the experiment (_Edit -> Project Settings -> Editor -> Prefab Editing Environments -> Regular Environment_).
 
 ![](ReadmeFiles/project_settings.png)
 
