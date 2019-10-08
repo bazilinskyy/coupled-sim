@@ -134,10 +134,33 @@ Traffic light sequence is defined in _StreetLightManager_ component as a list of
 
 ## Troubleshooting
 ### Troubleshooting MVN suit
-Refer to file: https://docs.google.com/document/d/1OtHDYjrljizBaa4FOK2Ttua-4hrYuKo7tsCOlLlzivE/edit
+#### Running the simulation
+Connect the Asus Router with the USB Adapter to the PC and plug the Ethernet in a yellow port of the router. Let it boot up for some time while you prepare the software and the suit. Connect the Oculus Rift HDMI and USB 3.0 to the computer.
+Plug in the black MVN dongle in a USB 3.0 port of the computer Run the latest version of MVN Analyze. Fill out the anthropometric data and participant name by creating a new recording (1).
+
+Check under _Options -> Preferences -> Miscellaneous -> Network Streamer_ that the data streamer is set to _Unity3D_.
+
+Note: if you find out later on that somehow the avatar looks buggy in Unity, play around with the down sampling skip factor in the _Network Streamer_ overview to improve rendering.
+
+Turn on the Body Pack with all the sensors connected. This will sound like one beep. Wait for 30 seconds and press the WPS button on the router. When the Body Pack of the suit beeps again, continuously press the button for 2 seconds until you hear two sequential beeps. Look if the light of the button becomes a strobe light. If this does not happen within a minute or 5, you’ve got a problem named Windows.
+
+##### The problem named Windows
+Delete the following software from the pc and re-install the latest version of MVN Analyze. This will re-install also the bonjour print services.
+
+![](ReadmeFiles/mvn_windows.png)
+ 
+##### The post era of having problems with Windows
+If you have an avatar in MVN Analyze and all the sensors are working, boot Unity 5.5.0 for the stimulation. See figure below: press play to launch the simulation, use the dropdown menu to select a participant and press the trial button to launch a trial.
+
+![](ReadmeFiles/mvn_unity.png)
+
+**Important!**
+If you want to match the orientation of the Oculus to the orientation of the avatar’s head, make sure you have left-clicked the game screen in Unity and press the R-key on your keyboard. Pressing the R-key to match the visuals with the head orientation is an iterative process which requires feedback from the participants.
+
+If you want to start a new trial, click play again at the top of the Unity screen to end the simulation. Also match the head orientations again with the R-key loop.
 
 ### Troubleshooting Oculus Rift
-Always run Oculus Home software when using Oculus Rift. Otherwise you will encounter black screens. Make sure your graphics driver and USB 3.0 connections are up to date. If Oculus gives a critical hardware error, disconnect oculus and set Oculus Home software to Beta (Public Test Channel, 1st figure below) and check if Oculus Home setting is set to allow Unknown apps (2nd figure below).
+Always run Oculus Home software when using Oculus Rift. Otherwise you will encounter black screens. Make sure your graphics driver and USB 3.0 connections are up to date. If Oculus gives a critical hardware error, disconnect Rift and set Oculus Home software to Beta (Public Test Channel, 1st figure below) and check if Oculus Home setting is set to allow Unknown apps (2nd figure below).
 ![](ReadmeFiles/troubleshooting_rift_1.png)
 
 ![](ReadmeFiles/troubleshooting_rift_2.png)
@@ -154,7 +177,7 @@ Inbound rules: Set correct Unity Editor version to allow all connections.
 ![](ReadmeFiles/inbound_rules.png)
 
 ### Troubleshooting steering wheel
-Check if supporting software is installed (e.g., logitech gaming software G27 is used in our case). In Unity, you can check which button corresponds to your specific wheel. You can find this out by using the following asset in an empty project: https://assetstore.unity.com/packages/tools/input-management/controller-tester-43621
+Check if supporting software is installed (e.g., Logitech gaming software G27 is used in our case). In Unity, you can check which button corresponds to your specific wheel. You can find this out by using the following asset in an empty project: https://assetstore.unity.com/packages/tools/input-management/controller-tester-43621
 
 Then make sure you assign the correct inputs in Unity under _Edit -> Project Settings -> Input_ (see figure below).
 
