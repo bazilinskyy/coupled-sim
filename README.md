@@ -42,10 +42,10 @@ The simualator was tested on Windows 10 and macOS Mojave. All functionality is s
 
 After checking out this project, launch Unity Hub to run the simulator with the correct version of Unity (currently **2018.4.6f1**).
 
-## Running the project
+## How to run
 Select the project from the Unity Hub projects list. Wait until the project loads in. If it is not in the Unity Hub list (it is the first time you are running the project), it has to be added first - click *Add* and select a folder containing the project files.
 
-## Configuring the project
+## Configuration
 The central point for configuring the simulator is _Managers_ game object from the _StartScene_ scene. It has two components:
 - _PlayerSystem_ - gathering references to player avatar prefabs,
 - _NetworkingManager_ - gathering references to experiment definitions and elements spawned during networked experiment runtime (currently only waypoint-tracking cars - _AICar_).
@@ -154,8 +154,7 @@ If you have an avatar in MVN Analyze and all the sensors are working, boot Unity
 
 ![](ReadmeFiles/mvn_unity.png)
 
-**Important!**
-If you want to match the orientation of the Oculus to the orientation of the avatar’s head, make sure you have left-clicked the game screen in Unity and press the R-key on your keyboard. Pressing the R-key to match the visuals with the head orientation is an iterative process which requires feedback from the participants.
+**Note.**If you want to match the orientation of the Oculus to the orientation of the avatar’s head, make sure you have left-clicked the game screen in Unity and press the R-key on your keyboard. Pressing the R-key to match the visuals with the head orientation is an iterative process which requires feedback from the participants.
 
 If you want to start a new trial, click play again at the top of the Unity screen to end the simulation. Also match the head orientations again with the R-key loop.
 
