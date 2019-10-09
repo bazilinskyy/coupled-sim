@@ -5,7 +5,7 @@ The simulator is open-source and free to use. It is aimed for, but not limited t
 ### Citation
 If you use coupled-sim for academic work please cite the following paper.
 
-> Bazilinskyy, P., Kooijman, L., Dodou, D., & De Winter, J. C. F. (2020). Coupled simulator for research on the interaction between pedestrians and (automated) vehicles.
+> Bazilinskyy, P., Kooijman, L., Dodou, D., & De Winter, J. C. F. (2020). Coupled simulator for research on the interaction between pedestrians and (automated) vehicles. Under review.
 
 ## Description of the simulator
 :tv: These days, a video is worth more than a million words, the image below points to a youtube video of the recording of a demo of the simulator with 3 agents:
