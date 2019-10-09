@@ -15,17 +15,18 @@ If you use coupled-sim for academic work please cite the following paper.
 ![](ReadmeFiles/night_mode_view.png)
 
 The coupled simulator supports both day and night-time settings. Figure above shows a view of the night mode. Figure below shows the top view of the environment. It is a model of a city centre containing:
-- Netwrok of 2-lane roads
-- Static objects (buildings, parked cars, trees, advertisements)
+- Network of 2-lane roads
 - 10 intersections with traffic lights that can be turned on and off before the experiment or programmatically in real-time
 - 34 zebra crossings
+- Static objects (buildings, parked cars, trees)
+- Advertisements (programmable and can be used as visual distractions)
 
 Drivable cars:
 - small (similar to Smart Fortwo)
 - medium (similar to Pontiac GTO)
 - large (similar to Nissan Datsun)
 
-Cars that are not controlled by the human participants can be instructed to follow a trajectory before the experiment or can be programmed to respond to other road users. The advertisements are programmable and can be used as visual distractions (e.g., for research on visual attention distribution).
+Cars that are not controlled by the human participants can be instructed to follow a trajectory before the experiment or can be programmed to respond to other road users.
 
 ![](ReadmeFiles/world_top_view.png)
 
