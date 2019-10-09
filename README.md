@@ -15,14 +15,15 @@ If you use coupled-sim for academic work please cite the following paper.
 ![](ReadmeFiles/night_mode_view.png)
 
 The coupled simulator supports both day and night-time settings. Figure above shows a view of the night mode. Figure below shows the top view of the environment. It is a model of a city centre containing:
-- a road network with static objects liked parked cars, trees, advertisements
-- 10 intersections with traffic lights that can be turned on and off before the experiment or programmatically in real-time.
+- Netwrok of 2-lane roads
+- Static objects (buildings, parked cars, trees, advertisements)
+- 10 intersections with traffic lights that can be turned on and off before the experiment or programmatically in real-time
 - 34 zebra crossings
 
 Drivable cars:
-- small (Smart Fortwo)
-- medium (Pontiac GTO)
-- large (Nissan Datsun)
+- small (similar to Smart Fortwo)
+- medium (similar to Pontiac GTO)
+- large (similar to Nissan Datsun)
 
 Cars that are not controlled by the human participants can be instructed to follow a trajectory before the experiment or can be programmed to respond to other road users. The advertisements are programmable and can be used as visual distractions (e.g., for research on visual attention distribution).
 
@@ -47,8 +48,8 @@ Select the project from the Unity Hub projects list. Wait until the project load
 
 ## Configuration
 The central point for configuring the simulator is _Managers_ game object from the _StartScene_ scene. It has two components:
-- _PlayerSystem_ - gathering references to player avatar prefabs,
-- _NetworkingManager_ - gathering references to experiment definitions and elements spawned during networked experiment runtime (currently only waypoint-tracking cars - _AICar_).
+- _PlayerSystem_: gathering references to player avatar prefabs,
+- _NetworkingManager_: gathering references to experiment definitions and elements spawned during networked experiment runtime (currently only waypoint-tracking cars - _AICar_).
 
 ![](ReadmeFiles/player_system.png)
 
@@ -66,20 +67,20 @@ Prefab will be opened in edit mode along with the currently defined _Regular Pre
 ![](ReadmeFiles/project_settings.png)
 
 _ExperimentDefinition_ component defines the following fields:
-- _Name_ - the name of the experiment
-- _Scene_ - Unity scene name to be loaded as an experiment environment
-- _Roles_ - list defining roles that can be taken during an experiment by participants
-- _Points of Interest_ - static points that are logged in experiment logs to be used in the log processing and analysis
-- _Car Spawners_ - references to game objects spawning non-player controlled cars
+- _Name_: the name of the experiment
+- _Scene_: Unity scene name to be loaded as an experiment environment
+- _Roles_: list defining roles that can be taken during an experiment by participants
+- _Points of Interest_: static points that are logged in experiment logs to be used in the log processing and analysis
+- _Car Spawners_: references to game objects spawning non-player controlled cars
 
 _Points of interest_ is a list of _Transform_ references.
 _CarSpawners_ list references game objects containing component inheriting from _CarSpawnerBase_. It defines, with overridden _IEnumerator SpawnCoroutine()_  method, spawn sequence (see _TestSyncedCarSpawner_ for reference implementation). Car prefabs spawned by the coroutine with _AICar Spawn(AICar prefab, bool yielding)_ method must be one of the referenced prefabs in _AICarSystem_ list on _NetworkManager_ component. 
 
 ### Configuration of agents
 Roles field is a list of _ExperimentRoleDefinition_ struct's defining experiment roles with the following data fields:
-- _Name_ - short name/description of the role
-- _SpawnPoint.Point_ - defines where player avatar will be spawned
-- _SpawnPoint.Type_ - a type of player avatar. It may be either _Pedestrian_, _Driver_, _Passenger_ of an autonomous car.
+- _Name_: short name/description of the role
+- _SpawnPoint.Point_: defines where player avatar will be spawned
+- _SpawnPoint.Type_: a type of player avatar. It may be either _Pedestrian_, _Driver_, _Passenger_ of an autonomous car.
 
 #### Adding and removing agents
 To add a new agent either increase the size of Roles array or duplicate existing role by right-clicking on the role name and selecting Duplicate from the context menu.
@@ -126,11 +127,11 @@ DayNightControl component helps to define different experiment daylight conditio
 
 Creating a traffic street lights system is best started with creating an instance of _ExampleStreetLightCrossSection_ and adjusting it. 
 Traffic light sequence is defined in _StreetLightManager_ component as a list of _StreetLightEvents_. Events are processed sequentially. Each event is defined with the following fields:
-- Name - descriptive name of an event
-- Delta Time - relative time that has to pass since previous event to activate the event
-- CarSections - cars traffic light group that the event applies to
-- PedestrianSections - pedestrian traffic light group that the event applies to
-- State - state to be set on the lights specified by sections, LOOP_BACK is a special state that restarts the whole sequence
+- _Name_: descriptive name of an event
+- _Delta Time_: relative time that has to pass since previous event to activate the event
+- _CarSections_: cars traffic light group that the event applies to
+- _PedestrianSections_: pedestrian traffic light group that the event applies to
+- _State_: state to be set on the lights specified by sections, LOOP_BACK is a special state that restarts the whole sequence
 
 ## Troubleshooting
 ### Troubleshooting MVN suit
