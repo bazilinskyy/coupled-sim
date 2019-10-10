@@ -1,6 +1,6 @@
 # Coupled simulator for research on driver-pedestrian interactions made in Unity.
 ## Usage of the simualator
-The simulator is open-source and free to use. It is aimed for, but not limited to, academic research. We welcome forking of this repository, pull requests, and any contributions in the spirit of open science and open-source code :heart_eyes::grimacing: For enquiries about collaboration, you may contact p.bazilinskyy@tudelft.nl.
+The simulator is open-source and free to use. It is aimed for, but not limited to, academic research. We welcome forking of this repository, pull requests, and any contributions in the spirit of open science and open-source code :heart_eyes::smile: For enquiries about collaboration, you may contact p.bazilinskyy@tudelft.nl.
 
 ### Citation
 If you use coupled-sim for academic work please cite the following paper.
@@ -8,7 +8,7 @@ If you use coupled-sim for academic work please cite the following paper.
 > Bazilinskyy, P., Kooijman, L., Dodou, D., & De Winter, J. C. F. (2020). Coupled simulator for research on the interaction between pedestrians and (automated) vehicles. Under review.
 
 ## Description of the simulator
-:tv: These days, a video is worth more than a million words, the image below points to a youtube video of the recording of a demo of the simulator with 3 agents:
+:tv: These days, a video is worth more than a million words. The image below points to a youtube video of the recording of a demo of the simulator with 3 agents:
 [![demo video](ReadmeFiles/thumbnail_demo_video.png)](https://www.youtube.com/watch?v=W2VWLYnTYrM)
 
 ### Environment
@@ -152,7 +152,7 @@ Delete the following software from the pc and re-install the latest version of M
 ![](ReadmeFiles/mvn_windows.png)
  
 ##### The post era of having problems with Windows
-If you have an avatar in MVN Analyze and all the sensors are working, boot Unity 5.5.0 for the stimulation. See figure below: press play to launch the simulation, use the dropdown menu to select a participant and press the trial button to launch a trial.
+If you have an avatar in MVN Analyze and all the sensors are working, boot Unity for the simulation. See figure below: press play to launch the simulation, use the dropdown menu to select a participant and press the trial button to launch a trial.
 
 ![](ReadmeFiles/mvn_unity.png)
 
