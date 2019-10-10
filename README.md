@@ -46,16 +46,16 @@ After checking out this project, launch Unity Hub to run the simulator with the 
 
 ## How to run
 Select the project from the Unity Hub projects list. Wait until the project loads in. If it is not in the Unity Hub list (it is the first time you are running the project), it has to be added first - click *Add* and select a folder containing the project files.
-Once the project is loaded into Unity editor press Play button to run it.
+Once the project is loaded into the Unity editor press the Play button to run it.
 
 Steps to run an experiment:
 1. Start host and wait for clients to join if needed.
-To start host press _Start Host_ button.
-To start client press _Start Client_ button, enter hosts IP adress and press _Connect_.
-2. Once all clients has joined, on host, select one of experiments listed under _Experiment:_.
-3. On host, assign roles to participants.
-4. On both host and clients each participant has to select control mode.
-5. Start an experiment with _Start Game_ button.
+To start host press _Start Host_ button. 
+To start the client press _Start Client_ button, enter the host IP address and press _Connect_.
+2. Once all clients have joined, on the host, select one of the experiments listed under _Experiment:_.
+3. On the host, assign roles to participants.
+4. On both host and clients, each participant has to select control mode.
+5. Start an experiment with the _Start Game_ button.
 
 ## Configuration
 The central point for configuring the simulator is _Managers_ game object from the _StartScene_ scene. It has two components:
