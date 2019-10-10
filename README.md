@@ -144,6 +144,15 @@ Traffic light sequence is defined in _StreetLightManager_ component as a list of
 - _PedestrianSections_: pedestrian traffic light group that the event applies to
 - _State_: state to be set on the lights specified by sections, LOOP_BACK is a special state that restarts the whole sequence
 
+### Details on editing car prefabs
+_Speedometer_ component controls a speed indicator. 
+To use digital display, set the _Speedometer Text_ field in order to do that.
+To use analog display, set the following fields:
+- _Pivot_ - the pivot of an arrow
+- _PivotMinSpeedAngle_ - the inclination of an arrow for 0 speed
+- _PivotMaxSpeedAngle_ - the inclination of an arrow for max speed
+- _MaxSpeed_ - max speed displayed on the analog display
+
 ## Troubleshooting
 ### Troubleshooting MVN suit
 #### Running the simulation
