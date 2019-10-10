@@ -68,6 +68,7 @@ The central point for configuring the simulator is _Managers_ game object from t
 
 The experiment is defined solely with prefab containing the _ExperimentDefinition_ component in the root object.
 To edit the experiment definition, double click the prefab in the _Project_ window.
+To make newly created experiment selectable you have to add its prefab to _Experiments_ list on _NetworkingManager_ component.
 
 ![](ReadmeFiles/experiment_definition.png)
 
