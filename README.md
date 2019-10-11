@@ -206,6 +206,7 @@ Then make sure you assign the correct inputs in Unity under _Edit -> Project Set
 
 ## Used assets
 We have used the following free assets:
+
 | Name | Link | Developer | License
 | --- | --- | --- | ---
 | ACP | https://github.com/Saarg/Arcade_Car_Physics | Saarg | MIT
