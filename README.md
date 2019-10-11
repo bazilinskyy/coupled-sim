@@ -203,3 +203,17 @@ Check if supporting software is installed (e.g., Logitech gaming software G27 is
 Then make sure you assign the correct inputs in Unity under _Edit -> Project Settings -> Input_ (see figure below).
 
 ![](ReadmeFiles/wheel_inputs.png)
+
+## Used assets
+We have used the following free assets:
+- ACP https://github.com/Saarg/Arcade_Car_Physics (MIT)
+- Textures https://cc0textures.com/ (Creative Commons CC0 license)
+- Oculus Integration by Oculus
+- Simple modular street Kit by Jacek Jankowski
+- Realistic Tree 10 by Rakshi Games
+- Small Town America - Streets - FREE by MultiFlagStudios
+- Cars Free - Muscle Car Pack by Super Icon LTD
+- Mini Cargo Truck by Marcobian Games
+- Street Bench by Rakshi Games
+- waste bin by Lowpoly Master
+- Smart fortwo by Filippo Citati
