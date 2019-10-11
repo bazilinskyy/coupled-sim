@@ -220,8 +220,8 @@ We have used the following free assets:
 
 | Name | Link | Developer | License
 | --- | --- | --- | ---
-| ACP | https://github.com/Saarg/Arcade_Car_Physics | | MIT
-| Textures | https://cc0textures.com | | Creative Commons CC0
+| ACP | https://github.com/Saarg/Arcade_Car_Physics | Saarg | MIT
+| Textures | https://cc0textures.com | Various | Creative Commons CC0
 | Oculus Integration | https://assetstore.unity.com/packages/tools/integration/oculus-integration-82022 | Oculus | Oculus SDK License
 | Simple modular street Kit | https://assetstore.unity.com/packages/3d/environments/urban/simple-modular-street-kit-13811 | Jacek Jankowski | Unity asset
 | Realistic Tree 10 | https://assetstore.unity.com/packages/3d/vegetation/trees/realistic-tree-10-54724 | Rakshi Games | Unity asset
