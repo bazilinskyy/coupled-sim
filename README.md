@@ -1,6 +1,6 @@
 # Coupled simulator for research on driver-pedestrian interactions made in Unity.
 ## Usage of the simualator
-The simulator is open-source and free to use. It is aimed for, but not limited to, academic research. We welcome forking of this repository, pull requests, and any contributions in the spirit of open science and open-source code :heart_eyes::grimacing: For enquiries about collaboration, you may contact p.bazilinskyy@tudelft.nl.
+The simulator is open-source and free to use. It is aimed for, but not limited to, academic research. We welcome forking of this repository, pull requests, and any contributions in the spirit of open science and open-source code :heart_eyes::smile: For enquiries about collaboration, you may contact p.bazilinskyy@tudelft.nl.
 
 ### Citation
 If you use coupled-sim for academic work please cite the following paper.
@@ -8,7 +8,7 @@ If you use coupled-sim for academic work please cite the following paper.
 > Bazilinskyy, P., Kooijman, L., Dodou, D., & De Winter, J. C. F. (2020). Coupled simulator for research on the interaction between pedestrians and (automated) vehicles. Under review.
 
 ## Description of the simulator
-:tv: These days, a video is worth more than a million words, the image below points to a youtube video of the recording of a demo of the simulator with 3 agents:
+:tv: These days, a video is worth more than a million words. The image below points to a youtube video of the recording of a demo of the simulator with 3 agents:
 [![demo video](ReadmeFiles/thumbnail_demo_video.png)](https://www.youtube.com/watch?v=W2VWLYnTYrM)
 
 ### Environment
@@ -46,6 +46,16 @@ After checking out this project, launch Unity Hub to run the simulator with the 
 
 ## How to run
 Select the project from the Unity Hub projects list. Wait until the project loads in. If it is not in the Unity Hub list (it is the first time you are running the project), it has to be added first - click *Add* and select a folder containing the project files.
+Once the project is loaded into the Unity editor press the Play button to run it.
+
+Steps to run an experiment:
+1. Start host and wait for clients to join if needed.
+To start host press _Start Host_ button. 
+To start the client press _Start Client_ button, enter the host IP address and press _Connect_.
+2. Once all clients have joined, on the host, select one of the experiments listed under _Experiment:_.
+3. On the host, assign roles to participants.
+4. On both host and clients, each participant has to select control mode.
+5. Start an experiment with the _Start Game_ button.
 
 ## Configuration
 The central point for configuring the simulator is _Managers_ game object from the _StartScene_ scene. It has two components:
@@ -58,6 +68,7 @@ The central point for configuring the simulator is _Managers_ game object from t
 
 The experiment is defined solely with prefab containing the _ExperimentDefinition_ component in the root object.
 To edit the experiment definition, double click the prefab in the _Project_ window.
+To make newly created experiment selectable you have to add its prefab to _Experiments_ list on _NetworkingManager_ component.
 
 ![](ReadmeFiles/experiment_definition.png)
 
@@ -134,6 +145,15 @@ Traffic light sequence is defined in _StreetLightManager_ component as a list of
 - _PedestrianSections_: pedestrian traffic light group that the event applies to
 - _State_: state to be set on the lights specified by sections, LOOP_BACK is a special state that restarts the whole sequence
 
+### Details on editing car prefabs
+_Speedometer_ component controls a speed indicator. 
+To use digital display, set the _Speedometer Text_ field in order to do that.
+To use analog display, set the following fields:
+- _Pivot_ - the pivot of an arrow
+- _PivotMinSpeedAngle_ - the inclination of an arrow for 0 speed
+- _PivotMaxSpeedAngle_ - the inclination of an arrow for max speed
+- _MaxSpeed_ - max speed displayed on the analog display
+
 ## Troubleshooting
 ### Troubleshooting MVN suit
 #### Running the simulation
@@ -152,7 +172,7 @@ Delete the following software from the pc and re-install the latest version of M
 ![](ReadmeFiles/mvn_windows.png)
  
 ##### The post era of having problems with Windows
-If you have an avatar in MVN Analyze and all the sensors are working, boot Unity 5.5.0 for the stimulation. See figure below: press play to launch the simulation, use the dropdown menu to select a participant and press the trial button to launch a trial.
+If you have an avatar in MVN Analyze and all the sensors are working, boot Unity for the simulation. See figure below: press play to launch the simulation, use the dropdown menu to select a participant and press the trial button to launch a trial.
 
 ![](ReadmeFiles/mvn_unity.png)
 
