@@ -218,5 +218,5 @@ We have used the following free assets:
 | Cars Free - Muscle Car Pack | https://assetstore.unity.com/packages/3d/small-town-america-streets-free-59759 | Super Icon LTD | Depricated, Unity asset
 | Mini Cargo Truck | https://assetstore.unity.com/packages/3d/vehicles/land/mini-cargo-truck-68663 | Marcobian Games | Unity asset
 | Street Bench | https://assetstore.unity.com/packages/3d/props/exterior/street-bench-656 | Rakshi Games | Unity asset
-| waste bin | https://assetstore.unity.com/packages/3d/waste-bin-73303 | Oculus | Unity asset
+| waste bin | https://assetstore.unity.com/packages/3d/waste-bin-73303 | Lowpoly_Master | Unity asset
 | Smart fortwo | https://grabcad.com/library/smart-fortwo-1 | Filippo Citati | Unity asset
