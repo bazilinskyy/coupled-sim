@@ -217,3 +217,18 @@ We have used the following free assets:
 - Street Bench by Rakshi Games https://assetstore.unity.com/packages/3d/props/exterior/street-bench-656 (Oculus SDK License)
 - waste bin by Lowpoly Master https://assetstore.unity.com/packages/3d/waste-bin-73303 (Oculus SDK License)
 - Smart fortwo by Filippo Citati
+
+| Name | Link | Developer | License
+| --- | --- | --- | ---
+| ACP | https://github.com/Saarg/Arcade_Car_Physics | | MIT
+| Textures | https://cc0textures.com | | Creative Commons CC0
+| Oculus Integration | https://assetstore.unity.com/packages/tools/integration/oculus-integration-82022 | Oculus | Oculus SDK License
+| Simple modular street Kit | https://assetstore.unity.com/packages/3d/environments/urban/simple-modular-street-kit-13811 | Jacek Jankowski | Unity asset
+| Realistic Tree 10 | https://assetstore.unity.com/packages/3d/vegetation/trees/realistic-tree-10-54724 | Rakshi Games | Unity asset
+| Small Town America - Streets | https://assetstore.unity.com/packages/3d/small-town-america-streets-free-59759 | MultiFlagStudios | Unity asset
+| Realistic Tree 10 | https://assetstore.unity.com/packages/3d/vegetation/trees/realistic-tree-10-54724 | Rakshi Games | Unity asset
+| Cars Free - Muscle Car Pack by Super Icon LTD | https://assetstore.unity.com/packages/3d/small-town-america-streets-free-59759 | Oculus | Depricated, Unity asset
+| Mini Cargo Truck | https://assetstore.unity.com/packages/3d/vehicles/land/mini-cargo-truck-68663 | Marcobian Games | Unity asset
+| Street Bench | https://assetstore.unity.com/packages/3d/props/exterior/street-bench-656 | Rakshi Games | Unity asset
+| waste bin | https://assetstore.unity.com/packages/3d/waste-bin-73303 | Oculus | Unity asset
+| Smart fortwo | | Filippo Citati | Unity asset
