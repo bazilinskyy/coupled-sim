@@ -208,12 +208,12 @@ Then make sure you assign the correct inputs in Unity under _Edit -> Project Set
 We have used the following free assets:
 - ACP https://github.com/Saarg/Arcade_Car_Physics (MIT)
 - Textures https://cc0textures.com/ (Creative Commons CC0 license)
-- Oculus Integration by Oculus
-- Simple modular street Kit by Jacek Jankowski
-- Realistic Tree 10 by Rakshi Games
-- Small Town America - Streets - FREE by MultiFlagStudios
-- Cars Free - Muscle Car Pack by Super Icon LTD
-- Mini Cargo Truck by Marcobian Games
-- Street Bench by Rakshi Games
-- waste bin by Lowpoly Master
+- Oculus Integration by Oculus https://assetstore.unity.com/packages/tools/integration/oculus-integration-82022 (Oculus SDK License)
+- Simple modular street Kit by Jacek Jankowski https://assetstore.unity.com/packages/3d/environments/urban/simple-modular-street-kit-13811 (Oculus SDK License)
+- Realistic Tree 10 by Rakshi Games https://assetstore.unity.com/packages/3d/vegetation/trees/realistic-tree-10-54724 (Oculus SDK License)
+- Small Town America - Streets - FREE by MultiFlagStudios https://assetstore.unity.com/packages/3d/small-town-america-streets-free-59759 (Oculus SDK License)
+- Cars Free - Muscle Car Pack by Super Icon LTD https://assetstore.unity.com/packages/3d/vehicles/land/cars-free-muscle-car-pack-79854 (depricated, Oculus SDK License)
+- Mini Cargo Truck by Marcobian Games https://assetstore.unity.com/packages/3d/vehicles/land/mini-cargo-truck-68663 (Oculus SDK License)
+- Street Bench by Rakshi Games https://assetstore.unity.com/packages/3d/props/exterior/street-bench-656 (Oculus SDK License)
+- waste bin by Lowpoly Master https://assetstore.unity.com/packages/3d/waste-bin-73303 (Oculus SDK License)
 - Smart fortwo by Filippo Citati
