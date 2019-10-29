@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using UnityEngine.Assertions;
 
+//dispatched network messages to subscribed handlers
 public class MessageDispatcher
 {
     public delegate void MessageHandler(ISynchronizer sync, int srcPlayerId);
@@ -36,6 +38,7 @@ public class MessageDispatcher
 
     public void Dispatch(int msgId, Deserializer reader, int playerId)
     {
+        Assert.IsTrue(_dispatchIndex.ContainsKey(msgId), "The message handler was not registered in the dispatcher");
         _dispatchIndex[msgId](reader, playerId);
     }
 

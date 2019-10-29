@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+//debug keyboard controller for pedestrian role
 public class KeyboardPlayerMovement : MonoBehaviour
 {
     Rigidbody _rb;
