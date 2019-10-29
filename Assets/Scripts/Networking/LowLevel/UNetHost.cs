@@ -18,6 +18,7 @@ public struct TransportEvent
     public int dataSize;
 }
 
+//low level UNET networking host implementation - message sending and handling
 public class UNetHost
 {
     const int MaxPlayers = UNetConfig.MaxPlayers;
@@ -64,6 +65,7 @@ public class UNetHost
         }
     }
 
+    //processing network messages comming from clients
     public void Update(MessageDispatcher dispatch)
     {
         Assert.IsTrue(_initialized, "Update() should not be called before Initialize()");

@@ -6,23 +6,40 @@ using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
 
+//updates speedometer 
+//it can be configured with as analog (with arrow) and digital "display"
 public class Speedometer : MonoBehaviour
 {
-    private int count;
-    private int remainder;
-    [SerializeField]
-    private Text speedometerText;
-
     [SerializeField]
     private Rigidbody carBody;
 
+    [Header("Digital")]
+    private float lastUpdate;
+    [SerializeField]
+    private Text speedometerText;
+
+    [Header("Analog")]
+    [SerializeField]
+    private Transform pivot; //arrow pivot
+    [SerializeField]
+    private float pivotMinSpeedAngle = 120f; //arrow inclination when speed = 0
+    [SerializeField]
+    private float pivotMaxSpeedAngle = -120f; //arrow inclination when speed = maxSpeed
+    [SerializeField]
+    private float maxSpeed = 160f;
+
     private void Update()
     {
-        count = count + 1;
-        Math.DivRem(count, 20, out remainder);
-        if (remainder == 0)
+        float v = carBody.velocity.magnitude * SpeedConvertion.Mps2Kmph;
+
+        if (lastUpdate + 0.5f < Time.time)
         {
-            speedometerText.text = (carBody.velocity.magnitude * 3.6f).ToString("0");
-        }        
+            lastUpdate = Time.time;
+            speedometerText.text = v.ToString("0");
+        }
+        var angle = Mathf.Lerp(pivotMinSpeedAngle, pivotMaxSpeedAngle, v/maxSpeed);
+        if (pivot != null) {
+            pivot.localRotation = Quaternion.AngleAxis(angle, Vector3.forward);
+        }
     }
 }

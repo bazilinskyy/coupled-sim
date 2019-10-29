@@ -14,6 +14,8 @@ public struct EnviromentalLightData
     public float intensity;
 }
 
+//helper script that allows switching between two (day/night) lightning/environment settings
+//scene lightmaps have to be rebaked manually after such a switch
 public class DayNightControl : MonoBehaviour
 {
     public GameObject[] lamps;

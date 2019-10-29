@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.Assertions;
 using UnityStandardAssets.Utility;
 
+//spawns, initializes and manages avatar at runtime
 [Serializable]
 public class AICarSyncSystem
 {
@@ -82,7 +83,7 @@ public class AICarSyncSystem
         });
         return aiCar;
     }
-
+    //handle ai car spawn message on client
     private void ClientHandleSpawnAICar(ISynchronizer sync, int srcPlayerId)
     {
         var msg = NetMsg.Read<SpawnAICarMsg>(sync);
@@ -91,7 +92,7 @@ public class AICarSyncSystem
         avatar.Initialize(PlayerSystem.Mode.Remote);
         Cars.Add(avatar);
     }
-
+    //handle ai car position update message on client
     private void ClientHandleUpdatePoses(ISynchronizer sync, int srcPlayerId)
     {
         var msg = NetMsg.Read<UpdateAICarPosesMsg>(sync);
@@ -122,6 +123,8 @@ public class AICarSyncSystem
             synchronizer.SyncListSubmessage(ref Poses);
         }
     }
+
+    //dispatches position updates of ai controlled cars
     public void UpdateHost()
     {
         _host.BroadcastUnreliable(new UpdateAICarPosesMsg
