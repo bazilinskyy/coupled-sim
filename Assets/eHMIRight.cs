@@ -4,15 +4,9 @@ using UnityEngine;
 
 public class eHMIRight : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
+    public GameObject ShoweHMI;
+    private void OnTriggerEnter()
     {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
+        ShoweHMI.SetActive(true);
     }
 }
