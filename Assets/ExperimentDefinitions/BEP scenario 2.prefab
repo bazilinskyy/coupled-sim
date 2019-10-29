@@ -118,7 +118,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 30
+  speed: 10
   acceleration: 2
   jerk: 5
   resetSpeedAfterStop: 0
@@ -179,7 +179,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 30
+  speed: 10
   acceleration: 2
   jerk: 5
   resetSpeedAfterStop: 0
@@ -240,7 +240,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 30
+  speed: 10
   acceleration: 2
   jerk: 5
   resetSpeedAfterStop: 0
@@ -301,10 +301,39 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 30
+  speed: 10
   acceleration: 2
   jerk: 5
   resetSpeedAfterStop: 0
+--- !u!114 &2322082073198785805
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2068974891957543982}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b100b64279042ff46b83465c27e51ad0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  set_speed: 10
+  set_acceleration: 2
+  jerk: 2
+  turn_rate_degree: 360
+  speed: 0
+  acceleration: 0
+  t: 0
+  HasPitch: 1
+  SpeedReset: 1
+  target: {fileID: 0}
+  Wheels: []
+  Accident: 0
+  TrialEnd: 0
+  crashbutton: 0
+  trialbutton: 0
+  paused: 0
+  anim: {fileID: 0}
 --- !u!114 &3610610650669424740
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -325,35 +354,6 @@ MonoBehaviour:
   progressStyle: 1
   pointToPointThreshold: 4
   target: {fileID: 2432011995773100527}
---- !u!114 &2322082073198785805
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2068974891957543982}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b100b64279042ff46b83465c27e51ad0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  set_speed: 50
-  set_acceleration: 2
-  jerk: 2
-  turn_rate_degree: 360
-  speed: 0
-  acceleration: 0
-  t: 0
-  HasPitch: 1
-  SpeedReset: 1
-  target: {fileID: 0}
-  Wheels: []
-  Accident: 0
-  TrialEnd: 0
-  crashbutton: 0
-  trialbutton: 0
-  paused: 0
-  anim: {fileID: 0}
 --- !u!1 &2462383046094187650
 GameObject:
   m_ObjectHideFlags: 0
@@ -364,6 +364,7 @@ GameObject:
   m_Component:
   - component: {fileID: 278990057835993384}
   - component: {fileID: 9143305964898023542}
+  - component: {fileID: 7040962488287715088}
   m_Layer: 5
   m_Name: WP2
   m_TagString: WP
@@ -398,6 +399,22 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 8, y: 4, z: 1}
   m_Center: {x: 0, y: 1, z: 0}
+--- !u!114 &7040962488287715088
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2462383046094187650}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  speed: 10
+  acceleration: 0
+  jerk: 5
+  resetSpeedAfterStop: 0
 --- !u!1 &2809297018185165376
 GameObject:
   m_ObjectHideFlags: 0
@@ -499,7 +516,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 30
+  speed: 10
   acceleration: 2
   jerk: 5
   resetSpeedAfterStop: 0
@@ -513,6 +530,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6188228741500751639}
   - component: {fileID: 4275490019496166529}
+  - component: {fileID: 4727559036218573239}
   m_Layer: 5
   m_Name: WP4
   m_TagString: WP
@@ -547,6 +565,22 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 8, y: 4, z: 1}
   m_Center: {x: 0, y: 1, z: 0}
+--- !u!114 &4727559036218573239
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6067233870868753124}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  speed: 10
+  acceleration: 0
+  jerk: 5
+  resetSpeedAfterStop: 0
 --- !u!1 &6303661086249617179
 GameObject:
   m_ObjectHideFlags: 0
@@ -678,7 +712,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 30
+  speed: 10
   acceleration: 2
   jerk: 5
   resetSpeedAfterStop: 0
@@ -759,7 +793,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6726785507186278507}
   m_LocalRotation: {x: -0, y: -0.7071068, z: 0, w: -0.7071068}
-  m_LocalPosition: {x: 241.7, y: 0, z: 62}
+  m_LocalPosition: {x: 241.7, y: 0, z: 73.8}
   m_LocalScale: {x: 1.0000005, y: 1, z: 1.0000005}
   m_Children: []
   m_Father: {fileID: 509934677808792579}
@@ -790,7 +824,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 30
+  speed: 10
   acceleration: 0
   jerk: 0
   resetSpeedAfterStop: 0
@@ -851,7 +885,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 30
+  speed: 10
   acceleration: 0
   jerk: 0
   resetSpeedAfterStop: 0
@@ -912,7 +946,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 30
+  speed: 10
   acceleration: 2
   jerk: 5
   resetSpeedAfterStop: 0
@@ -973,7 +1007,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 30
+  speed: 10
   acceleration: 2
   jerk: 5
   resetSpeedAfterStop: 0
