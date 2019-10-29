@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+//Animator based HMI implementation
 public class AnimatorHMI : HMI
 {
     [SerializeField]
@@ -9,12 +10,16 @@ public class AnimatorHMI : HMI
     Material material;
     [SerializeField]
     Animator animator;
+
+    //Animator triggers
     [SerializeField]
     string stopTrigger = "stop";
     [SerializeField]
     string walkTrigger = "walk";
     [SerializeField]
     string disabledTrigger = "disabled";
+
+    //texture to be set on certain state changes
     [SerializeField]
     Texture2D stop;
     [SerializeField]

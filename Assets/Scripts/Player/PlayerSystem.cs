@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.Assertions;
 using UnityStandardAssets.Utility;
 
+//spawns, initializes and manages avatar at runtime
 public class PlayerSystem : MonoBehaviour
 {
     public enum Mode
@@ -156,6 +157,7 @@ public class PlayerSystem : MonoBehaviour
         }
     }
 
+    //displays controler selection GUI
     public void SelectModeGUI()
     {
         GUILayout.Label($"Mode: {PlayerMode}");

@@ -9,7 +9,7 @@ public enum BlinkerState
     Left,
     Right
 }
-
+//manages car blinkers both light and dashboard indicators
 public class CarBlinkers : MonoBehaviour
 {
     public BlinkerState State;
@@ -22,6 +22,11 @@ public class CarBlinkers : MonoBehaviour
     MeshRenderer[] rightBlinkers;
 
     [SerializeField]
+    GameObject[] leftBlinkerObjects;
+    [SerializeField]
+    GameObject[] rightBlinkerObjects;
+
+    [SerializeField]
     Material lightOn;
     [SerializeField]
     Material lightOff;
@@ -32,20 +37,20 @@ public class CarBlinkers : MonoBehaviour
 
     public void StartLeftBlinkers()
     {
-        TurnOnBlinkers(leftBlinkers);
+        TurnOnBlinkers(leftBlinkers, leftBlinkerObjects);
         State = BlinkerState.Left;
     }
 
     public void StartRightBlinkers()
     {
-        TurnOnBlinkers(rightBlinkers);
+        TurnOnBlinkers(rightBlinkers, rightBlinkerObjects);
         State = BlinkerState.Right;
     }
 
-    private void TurnOnBlinkers(MeshRenderer[] blinkerRenderers)
+    private void TurnOnBlinkers(MeshRenderer[] blinkerRenderers, GameObject[] blinkerObjects)
     {
         Stop();
-        StartCoroutine(Blink(blinkerRenderers));
+        StartCoroutine(Blink(blinkerRenderers, blinkerObjects));
     }
 
     public void Stop()
@@ -66,21 +71,39 @@ public class CarBlinkers : MonoBehaviour
         {
             renderer.material = lightOff;
         }
+
+        foreach (var obj in leftBlinkerObjects)
+        {
+            obj.SetActive(false);
+        }
+
+        foreach (var obj in rightBlinkerObjects)
+        {
+            obj.SetActive(false);
+        }
     }
 
-    private IEnumerator Blink(MeshRenderer[] blinkerRenderers)
+    private IEnumerator Blink(MeshRenderer[] blinkerRenderers, GameObject[] blinkerObjects)
     {
         while(true)
         {
             yield return new WaitForSeconds(blinkInterval);
-            foreach(MeshRenderer renderer in blinkerRenderers)
+            foreach (MeshRenderer rend in blinkerRenderers)
             {
-                renderer.material = lightOn;
+                rend.material = lightOn;
+            }
+            foreach (var obj in blinkerObjects)
+            {
+                obj.SetActive(true);
             }
             yield return new WaitForSeconds(blinkInterval);
-            foreach (MeshRenderer renderer in blinkerRenderers)
+            foreach (MeshRenderer rend in blinkerRenderers)
             {
-                renderer.material = lightOff;
+                rend.material = lightOff;
+            }
+            foreach(var obj in blinkerObjects)
+            {
+                obj.SetActive(false);
             }
         }
     }

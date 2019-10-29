@@ -2,6 +2,7 @@
 using UnityEngine;
 using UnityEngine.Assertions;
 
+//low level UNET networking client implementation - message sending and handling
 public class UNetClient
 {
     const int NotConnected = -1;
@@ -45,6 +46,7 @@ public class UNetClient
         _connectionId = NotConnected;
     }
 
+    //processing network messages comming from clients
     public void Update(MessageDispatcher dispatch)
     {
         if (HasError) return;
