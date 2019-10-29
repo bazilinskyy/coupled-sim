@@ -133,30 +133,10 @@ public static class SerializationHelpers
     public static Quaternion ReadQuaternion(this BinaryReader reader)
     {
         Quaternion q;
-        if (reader.BaseStream.Position == reader.BaseStream.Length)
-        {
-            Debug.Log("Test");
-        }
         q.w = reader.ReadSingle();
-        if (reader.BaseStream.Position == reader.BaseStream.Length)
-        {
-            Debug.Log("Test");
-        }
         q.x = reader.ReadSingle();
-        if (reader.BaseStream.Position == reader.BaseStream.Length)
-        {
-            Debug.Log("Test");
-        }
         q.y = reader.ReadSingle();
-        if (reader.BaseStream.Position == reader.BaseStream.Length)
-        {
-            Debug.Log("Test");
-        }
         q.z = reader.ReadSingle();
-        if (reader.BaseStream.Position == reader.BaseStream.Length)
-        {
-            Debug.Log("Test");
-        }
         return q;
     }
 

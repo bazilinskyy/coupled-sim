@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
 
-// high level host networking script
 public class Host : NetworkSystem
 {
     public const int PlayerId = 0;
@@ -13,9 +12,7 @@ public class Host : NetworkSystem
     PlayerSystem _playerSys;
     AICarSyncSystem _aiCarSystem;
     WorldLogger _logger;
-    WorldLogger _fixedTimeLogger;
     HMIManager _hmiManager;
-    VisualSyncManager _visualSyncManager;
 
     List<int> _playerRoles = new List<int>();
     bool[] _playerReadyStatus = new bool[UNetConfig.MaxPlayers];
@@ -23,30 +20,24 @@ public class Host : NetworkSystem
     int _selectedExperiment;
     const float PoseUpdateInterval = 0.01f;
 
-    TrafficLightsSystem _lights;
+    StreetLightsSystem _lights;
 
-    public Host(LevelManager levelManager, PlayerSystem playerSys, AICarSyncSystem aiCarSystem, WorldLogger logger, WorldLogger fixedLogger)
+    public Host(LevelManager levelManager, PlayerSystem playerSys, AICarSyncSystem aiCarSystem, WorldLogger logger)
     {
         _playerSys = playerSys;
         _lvlManager = levelManager;
         _aiCarSystem = aiCarSystem;
         _logger = logger;
-        _fixedTimeLogger = fixedLogger;
         _host = new UNetHost();
         _host.Init();
 
         _hmiManager = GameObject.FindObjectOfType<HMIManager>();
         Assert.IsNotNull(_hmiManager, "Missing HMI manager");
-        _visualSyncManager = GameObject.FindObjectOfType<VisualSyncManager>();
-        Assert.IsNotNull(_visualSyncManager, "Missing VS manager");
 
         _currentState = NetState.Lobby;
         _msgDispatcher = new MessageDispatcher();
-
-        //set up message handlers
         _msgDispatcher.AddStaticHandler((int)MsgId.C_UpdatePose, OnClientPoseUpdate);
         _msgDispatcher.AddStaticHandler((int)MsgId.C_Ready, OnClientReady);
-        _msgDispatcher.AddStaticHandler((int)MsgId.B_Ping, OnPing);
         _hmiManager.InitHost(_host, _msgDispatcher);
         aiCarSystem.InitHost(_host);
         for (int i = 0; i < UNetConfig.MaxPlayers; i++)
@@ -55,21 +46,12 @@ public class Host : NetworkSystem
         }
     }
 
-    //handles ping message
-    private void OnPing(ISynchronizer sync, int srcPlayerId)
-    {
-        var msg = NetMsg.Read<PingMsg>(sync);
-        _host.SendUnreliableToPlayer(msg, srcPlayerId);
-    }
-    
-    //handles client ready message
     void OnClientReady(ISynchronizer sync, int player)
     {
         NetMsg.Read<ReadyMsg>(sync);
         _playerReadyStatus[player] = true;
     }
 
-    //applies pose updates received from other players
     void OnClientPoseUpdate(ISynchronizer sync, int player)
     {
         var msg = NetMsg.Read<UpdateClientPose>(sync);
@@ -78,14 +60,6 @@ public class Host : NetworkSystem
 
     public void BroadcastMessage<T>(T msg) where T : INetMessage 
         => _host.BroadcastReliable(msg);
-
-    public override void FixedUpdate()
-    {
-        if (_currentState == NetState.InGame)
-        {
-            _fixedTimeLogger.LogFrame(0, Time.fixedTime);
-        }
-    }
 
     public override void Update()
     {
@@ -109,7 +83,7 @@ public class Host : NetworkSystem
                         _playerReadyStatus[Host.PlayerId] = true;
                         if (AllReady())
                         {
-                            _lights = GameObject.FindObjectOfType<TrafficLightsSystem>();
+                            _lights = GameObject.FindObjectOfType<StreetLightsSystem>();
                             foreach (var carSpawner in _lvlManager.ActiveExperiment.CarSpawners)
                             {
                                 carSpawner.Init(_aiCarSystem);
@@ -118,9 +92,7 @@ public class Host : NetworkSystem
                             _host.BroadcastReliable(new AllReadyMsg());
                             _transitionPhase = TransitionPhase.None;
                             _currentState = NetState.InGame;
-                            var roleName = _lvlManager.ActiveExperiment.Roles[_playerRoles[Host.PlayerId]].Name;
-                            _logger.BeginLog($"HostLog-{roleName}-", _lvlManager.ActiveExperiment, _lights, Time.realtimeSinceStartup);
-                            _fixedTimeLogger.BeginLog($"HostFixedTimeLog-{roleName}-", _lvlManager.ActiveExperiment, _lights, Time.fixedTime);
+                            _logger.BeginLog("HostLog", _lvlManager.ActiveExperiment, _lights);
                         }
                         break;
                 }
@@ -128,7 +100,7 @@ public class Host : NetworkSystem
             case NetState.InGame:
                 _host.Update(_msgDispatcher);
                 UpdateGame();
-                _logger.LogFrame(0, Time.realtimeSinceStartup);
+                _logger.LogFrame();
                 break;
         }
     }
@@ -156,7 +128,6 @@ public class Host : NetworkSystem
         }
     }
 
-    //displays role selection GUI for a single player
     static void SelectRoleGUI(int player, Host host, ExperimentRoleDefinition[] roles)
     {
         GUILayout.BeginHorizontal();
@@ -172,7 +143,6 @@ public class Host : NetworkSystem
         GUILayout.EndHorizontal();
     }
 
-    //displays role selection GUI
     void PlayerRolesGUI()
     {
         var roles = _lvlManager.Experiments[_selectedExperiment].Roles;
@@ -180,13 +150,12 @@ public class Host : NetworkSystem
         ForEachConnectedPlayer((player, host) => SelectRoleGUI(player, host, roles));
     }
 
-    //initializes experiment - sets it up locally and broadcasts experiment configuration message
     void StartGame()
     {
         _msgDispatcher.ClearLevelMessageHandlers();
         _host.BroadcastReliable(new StartGameMsg
         {
-            Roles = _playerRoles,
+            StartingPositionIdxs = _playerRoles,
             Experiment = _selectedExperiment
         });
         for (int i = 0; i < UNetConfig.MaxPlayers; i++)
@@ -203,7 +172,7 @@ public class Host : NetworkSystem
         }
         _transitionPhase = TransitionPhase.LoadingLevel;
     }
-    
+
     void UpdateGame()
     {
         if (Time.realtimeSinceStartup - _lastPoseUpdateSent > PoseUpdateInterval)
@@ -249,7 +218,6 @@ public class Host : NetworkSystem
         return !failRoleCheck;
     }
 
-    //displays host GUI
     public override void OnGUI()
     {
         GUILayout.Label($"Host mode: {_currentState}");
@@ -279,7 +247,6 @@ public class Host : NetworkSystem
             case NetState.InGame:
             {
                 _hmiManager.DoHostGUI(this);
-                _visualSyncManager.DoHostGUI(this);
             }
             break;
         }

@@ -4,7 +4,6 @@ using UnityEngine;
 using UnityEngine.Assertions;
 using UnityStandardAssets.Utility;
 
-//spawns, initializes and manages avatar at runtime
 [Serializable]
 public class AICarSyncSystem
 {
@@ -70,7 +69,7 @@ public class AICarSyncSystem
         waypointProgressTracker.enabled = true;
         waypointProgressTracker.Init(track);
         var avatar = aiCar.GetComponent<PlayerAvatar>();
-        avatar.Initialize(PlayerSystem.Mode.HostAI);
+        avatar.Initialize(PlayerSystem.Mode.LocalAI);
         var rb = aiCar.GetComponent<Rigidbody>();
         rb.isKinematic = false;
         rb.GetComponent<Rigidbody>().useGravity = true;
@@ -83,7 +82,7 @@ public class AICarSyncSystem
         });
         return aiCar;
     }
-    //handle ai car spawn message on client
+
     private void ClientHandleSpawnAICar(ISynchronizer sync, int srcPlayerId)
     {
         var msg = NetMsg.Read<SpawnAICarMsg>(sync);
@@ -92,7 +91,7 @@ public class AICarSyncSystem
         avatar.Initialize(PlayerSystem.Mode.Remote);
         Cars.Add(avatar);
     }
-    //handle ai car position update message on client
+
     private void ClientHandleUpdatePoses(ISynchronizer sync, int srcPlayerId)
     {
         var msg = NetMsg.Read<UpdateAICarPosesMsg>(sync);
@@ -123,8 +122,6 @@ public class AICarSyncSystem
             synchronizer.SyncListSubmessage(ref Poses);
         }
     }
-
-    //dispatches position updates of ai controlled cars
     public void UpdateHost()
     {
         _host.BroadcastUnreliable(new UpdateAICarPosesMsg

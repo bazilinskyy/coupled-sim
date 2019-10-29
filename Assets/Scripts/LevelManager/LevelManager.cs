@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-//sets up a scene and players avatars based on experiment definition
 public class LevelManager
 {
     public PlayerSystem _playerSystem;

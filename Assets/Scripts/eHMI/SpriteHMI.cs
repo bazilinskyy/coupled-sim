@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-//simple sprite swapping implementation of HMI base class
 public class SpriteHMI : HMI
 {
     [SerializeField]

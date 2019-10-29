@@ -10,7 +10,6 @@ public enum HMIState
     WALK,
 }
 
-//script that synchronizes hmi state between all players
 public class HMIManager : MonoBehaviour
 {
     List<HMI> _hmis = new List<HMI>();
@@ -37,7 +36,6 @@ public class HMIManager : MonoBehaviour
         _hmis.Add(hmi);
     }
 
-    //host GUI displaying controls for all HMI present in the game session
     public void DoHostGUI(Host host)
     {
         for (int i = 0; i < _hmis.Count; i++)
@@ -63,9 +61,8 @@ public class HMIManager : MonoBehaviour
 
             GUILayout.EndHorizontal();
         }
-	}
+    }
 
-    //hmi syncing message
     struct RequestHMIChangeMsg : INetMessage
     {
         public int MessageId => (int)MsgId.C_RequestHMIChange;
@@ -79,9 +76,6 @@ public class HMIManager : MonoBehaviour
         }
     }
 
-    //called when hmi state should be changed
-    //on host - changes hmi state and dispatches sync message
-    //on client - sends a request to the host to broadcast hmi state change message, requesting client (same as other clients) will change its hmi state as a result of message sent by the host
     public void RequestHMIChange(HMI hmiToChange, HMIState requestedState)
     {
         var idx = _hmis.IndexOf(hmiToChange);
@@ -105,7 +99,7 @@ public class HMIManager : MonoBehaviour
         }
     }
 
-    // Client only - handling hmi state sync message
+    // Client only
     public void OnChangeHMI(ISynchronizer sync, int _)
     {
         var msg = NetMsg.Read<ChangeHMI>(sync);
@@ -113,7 +107,7 @@ public class HMIManager : MonoBehaviour
     }
 
 
-    // Host only - handling client requests to changes hmi state
+    // Host only
     void OnRequestHMIChange(ISynchronizer sync, int _)
     {
         var msg = NetMsg.Read<RequestHMIChangeMsg>(sync);

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-//base class for client and server implementation
 public abstract class NetworkSystem
 {
     protected enum TransitionPhase
@@ -25,6 +24,5 @@ public abstract class NetworkSystem
     protected TransitionPhase _transitionPhase;
 
     public abstract void Update();
-    public abstract void FixedUpdate();
     public abstract void OnGUI();
 }

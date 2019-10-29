@@ -1,6 +1,5 @@
 ﻿using System.IO;
 
-//base interface for all network messages
 public interface INetMessage
 {
     int MessageId { get; }

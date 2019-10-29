@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-//allows controlling HMI state with keyboard buttons
 public class ClientHMIController : MonoBehaviour
 {
     PlayerAvatar _avatar;

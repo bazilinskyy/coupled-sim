@@ -60,7 +60,7 @@ namespace UnityStandardAssets.Utility
             // then this component will update it, and the AI can read it.
 
             target = new GameObject(name + "Waypoint Target").transform;
-            //print("Makes Target");
+            Debug.Log("Makes Target");
 
             Reset();
 

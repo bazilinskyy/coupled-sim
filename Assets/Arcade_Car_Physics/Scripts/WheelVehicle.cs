@@ -73,7 +73,6 @@ namespace VehicleBehaviour {
          *  the longer the curve the faster it gets
          */
         [SerializeField] AnimationCurve motorTorque = new AnimationCurve(new Keyframe(0, 200), new Keyframe(50, 300), new Keyframe(200, 0));
-        [SerializeField] AnimationCurve deaccelerateMotorTorque = new AnimationCurve(new Keyframe(0, 400), new Keyframe(200, 600));
 
         // Differential gearing ratio
         [Range(2, 16)]
@@ -235,6 +234,16 @@ namespace VehicleBehaviour {
             // Get all the inputs!
             if (isPlayer)
             {
+                // Accelerate & brake
+                if (throttleInput != "" && throttleInput != null)
+                {
+                    throttle = GetInput(throttleInput) * (reverse ? -1f : 1);
+                }
+                breaking = Mathf.Clamp01(GetInput(brakeInput));
+
+                // Turn
+                steering = turnInputCurve.Evaluate(GetInput(turnInput)) * steerAngle;
+
                 if (Input.GetButtonDown("forward"))
                 {
                     reverse = false;
@@ -272,31 +281,10 @@ namespace VehicleBehaviour {
             }
         }
 
-        float steeringWheelAngle = 0;
-        public Transform steeringWheel;
-        public float steeringWheelMul = -2;
         // Update everything
         void FixedUpdate () {
             // Mesure current speed
             speed = transform.InverseTransformDirection(_rb.velocity).z * 3.6f;
-
-            // Get all the inputs!
-            if (isPlayer) {
-                // Accelerate & brake
-                if (throttleInput != "" && throttleInput != null)
-                {
-                    throttle = GetInput(throttleInput) * (reverse?-1f:1);
-                }
-                breaking = Mathf.Clamp01(GetInput(brakeInput));
-
-                // Turn
-                steering = turnInputCurve.Evaluate(GetInput(turnInput)) * steerAngle;
-            }
-
-            steeringWheelAngle = Mathf.Lerp(steeringWheelAngle, steering * steeringWheelMul, steerSpeed);
-            if (steeringWheel != null) {
-                steeringWheel.localRotation = Quaternion.AngleAxis(steeringWheelAngle, Vector3.forward);
-            }
 
             // Direction
             foreach (WheelCollider wheel in turnWheel)
@@ -310,7 +298,7 @@ namespace VehicleBehaviour {
             }
 
             // Handbrake
-            if (Mathf.Abs(speed) < 2 && GetInput(throttleInput) < 0.1f)
+            if (Mathf.Abs(speed) < 2 && Mathf.Abs(throttle) < 0.1f)
             {
                 foreach (WheelCollider wheel in wheels)
                 {
@@ -328,12 +316,7 @@ namespace VehicleBehaviour {
                         wheel.motorTorque = 0;
                     } else
                     {
-                        if (throttle > 0) {
-                            wheel.motorTorque = throttle * motorTorque.Evaluate(speed) * diffGearing / driveWheel.Length;
-                        } else
-                        {
-                            wheel.motorTorque = throttle * deaccelerateMotorTorque.Evaluate(speed) * diffGearing / driveWheel.Length;
-                        }
+                        wheel.motorTorque = throttle * motorTorque.Evaluate(speed) * diffGearing / driveWheel.Length;
                     }
                 }
                 foreach (WheelCollider wheel in wheels)

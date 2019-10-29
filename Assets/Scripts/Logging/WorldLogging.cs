@@ -1,16 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
 using UnityEngine;
-using UnityEngine.Assertions;
 
-//logger class
 public class WorldLogger
 {
-    TrafficLightsSystem _lights;
+    StreetLightsSystem _lights;
     PlayerSystem _playerSystem;
     BinaryWriter _fileWriter;
     float _startTime;
@@ -21,9 +18,7 @@ public class WorldLogger
     }
 
     List<PlayerAvatar> _driverBuffer = new List<PlayerAvatar>();
-
-    //writes metadata header in binary log file
-    public void BeginLog(string fileName, ExperimentDefinition experiment, TrafficLightsSystem lights, float time)
+    public void BeginLog(string fileName, ExperimentDefinition experiment, StreetLightsSystem lights)
     {
         _lights = lights;
         if (!Directory.Exists("ExperimentLogs"))
@@ -31,12 +26,11 @@ public class WorldLogger
             Directory.CreateDirectory("ExperimentLogs");
         }
         _fileWriter = new BinaryWriter(File.Create("ExperimentLogs/" + fileName + DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss") + ".binLog"));
-        _startTime = time;
+        _startTime = Time.realtimeSinceStartup;
         _fileWriter.Write(DateTime.Now.ToBinary());
         _driverBuffer.Clear();
         _driverBuffer.AddRange(_playerSystem.Drivers);
         _driverBuffer.AddRange(_playerSystem.Passengers);
-        _fileWriter.Write(_driverBuffer.IndexOf(_playerSystem.LocalPlayer));
         _fileWriter.Write(_driverBuffer.Count);
         _fileWriter.Write(_playerSystem.Pedestrians.Count);
         _fileWriter.Write(experiment.PointsOfInterest.Length);
@@ -78,12 +72,11 @@ public class WorldLogger
         return string.Join("/", names);
     }
 
-    //main logging logic
-    //adds a single entry to the logfile
-    public void LogFrame(float ping, float time)
+
+    public void LogFrame()
     {
-        _fileWriter.Write(time - _startTime);
-        _fileWriter.Write(ping);
+        // We write time directly first, then all other values are written as ",val" by the LogWriter
+        _fileWriter.Write(Time.realtimeSinceStartup - _startTime);
 
         _driverBuffer.Clear();
         _driverBuffer.AddRange(_playerSystem.Drivers);
@@ -93,13 +86,6 @@ public class WorldLogger
             _fileWriter.Write(driver.transform.position);
             _fileWriter.Write(driver.transform.rotation);
             _fileWriter.Write((int)driver._carBlinkers.State);
-            if (driver == _playerSystem.LocalPlayer)
-            {
-                var rb = driver.GetComponent<Rigidbody>();
-                Assert.IsNotNull(rb);
-                Assert.IsFalse(rb.isKinematic);
-                _fileWriter.Write(rb.velocity);
-            }
         }
         foreach (var pedestrian in _playerSystem.Pedestrians)
         {
@@ -117,8 +103,6 @@ public class WorldLogger
             }
         }
     }
-
-    //cleans up after logging has ended
     public void EndLog()
     {
         // TODO(jacek): for now we just call EndLog in NetworkingManager.OnDestroy, so we close the log when the game finishes
@@ -130,7 +114,6 @@ public class WorldLogger
     }
 }
 
-//convert binary log into human readable csv
 public class LogConverter
 {
     public struct SerializedPOI
@@ -162,33 +145,17 @@ public class LogConverter
         using (var reader = new BinaryReader(File.OpenRead(sourceFile)))
         {
             var unusedTimestamp = reader.ReadInt64();
-            var unusedLocalDriver = reader.ReadInt32();
             var unusedDriverCount = reader.ReadInt32();
             var unusedPedestrianCount = reader.ReadInt32();
             return ParsePOI(reader);
         }
     }
 
-    public const string UNITY_WORLD_ROOT = "World Root";
-
-    const int NumFramesInVelocityRunningAverage = 10;
-
-    Vector3[] _driverPositions;
-    RunningAverage[] _driverVels;
-    bool _firstFrame;
-    float _prevTime;
-    //translation logic
-    //referenceName, referencePos, referenceRot - parameters specifining new origin point, allowing transforming data into new coordinate system
-    public void TranslateBinaryLogToCsv(string sourceFile, string dstFile, string[] pedestrianSkeletonNames, string referenceName, Vector3 referencePos, Quaternion referenceRot)
+    public static void TranslateBinaryLogToCsv(string sourceFile, string dstFile, string[] pedestrianSkeletonNames, string referenceName, Vector3 referencePos, Quaternion referenceRot)
     {
-        _driverPositions = null;
-        _driverVels = null;
-        _firstFrame = true;
-
         System.Threading.Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
         const string separator = ";";
-        const int columnsPerDriver = 3 /*pos x,y,z*/ + 3 /*rot x,y,z */ + 1 /*blinkers*/ + 3 /* local velocity */ + 3 /* local smooth velocity */ + 3 /* world velocity */ + 3 /* world velocity smooth */;
-        const int columnsForLocalDriver = columnsPerDriver + 3 /* rb velocity x,y,z */ + 3 /* rb velocity local x,y,z */;
+        const int columnsPerDriver = 7;
         const int columnsPerBone = 6;
         int columnsPerPedestrian = pedestrianSkeletonNames.Length * columnsPerBone + columnsPerBone; // + columnsPerBone is for the root transform;
         var toRefRot = Quaternion.Inverse(referenceRot);
@@ -201,16 +168,14 @@ public class LogConverter
             var startTime = DateTime.FromBinary(reader.ReadInt64());
             var startString = startTime.ToString("HH:mm:ss") + ":" + startTime.Millisecond.ToString();
             writer.WriteLine($"Start Time;{startString}");
-            var localDriver = reader.ReadInt32();
             var numDrivers = reader.ReadInt32();
             var numPedestrians = reader.ReadInt32();
 
             // POI
             var pois = new List<SerializedPOI>(ParsePOI(reader));
-            pois.AddRange(customPois);
             pois.Add(new SerializedPOI()
             {
-                Name = UNITY_WORLD_ROOT,
+                Name = "World Root",
                 Position = Vector3.zero,
                 Rotation = Quaternion.identity
             });
@@ -238,22 +203,15 @@ public class LogConverter
             }
 
             //****************
-            // HEADER ROWS
+            // HEADER ROW
             //****************
 
-            writer.Write("Timestamp;Roundtrip Time to Host;");
+            writer.Write("Timestamp;");
 
             // Drivers header
             for (int i = 0; i < numDrivers; i++)
             {
-                if (i == localDriver)
-                {
-                    writer.Write(string.Join(separator, Enumerable.Repeat($"Driver{i}", columnsForLocalDriver)));
-                }
-                else
-                {
-                    writer.Write(string.Join(separator, Enumerable.Repeat($"Driver{i}", columnsPerDriver)));
-                }
+                writer.Write(string.Join(separator, Enumerable.Repeat($"Driver{i}", columnsPerDriver)));
                 if (i < numDrivers - 1)
                 {
                     writer.Write(separator);
@@ -282,15 +240,7 @@ public class LogConverter
 
             // No bone names for drivers
             writer.Write(separator); // for the Timestamp column
-            writer.Write(separator); // for the Ping column
-            if (localDriver == -1)
-            {
-                writer.Write(string.Join(separator, new string(';', numDrivers * columnsPerDriver)));
-            }
-            else
-            {
-                writer.Write(string.Join(separator, new string(';', (numDrivers - 1) * columnsPerDriver + columnsForLocalDriver)));
-            }
+            writer.Write(string.Join(separator, new string(';', numDrivers * columnsPerDriver)));
             var sb = new StringBuilder();
             sb.Append(string.Join(separator, Enumerable.Repeat("Root", columnsPerBone)));
             sb.Append(";");
@@ -310,23 +260,9 @@ public class LogConverter
             writer.Write("\n");
 
             writer.Write(separator); // for the Timestamp column
-            writer.Write(separator); // for the Ping column
 
-            const string driverTransformHeader = "pos_x;pos_y;pos_z;rot_x;rot_y;rot_z;blinkers;vel_local_x;vel_local_y;vel_local_z;vel_local_smooth_x;vel_local_smooth_y;vel_local_smooth_z;vel_x;vel_y;vel_z;vel_smooth_x;vel_smooth_y;vel_smooth_z";
-            const string localDriverTransformHeader = driverTransformHeader + ";rb_vel_x;rb_vel_y;rb_vel_z;rb_vel_local_x;rb_vel_local_y;rb_vel_local_z";
-            List<string> headers = new List<string>();
-            for (int i = 0; i < numDrivers; i++)
-            {
-                if (i == localDriver)
-                {
-                    headers.Add(localDriverTransformHeader);
-                }
-                else
-                {
-                    headers.Add(driverTransformHeader);
-                }
-            }
-            writer.Write(string.Join(separator, headers));
+            const string driverTransformHeader = "pos_x;pos_y;pos_z;rot_x;rot_y;rot_z;blinkers";
+            writer.Write(string.Join(separator, Enumerable.Repeat(driverTransformHeader, numDrivers)));
             if (numPedestrians > 0)
             {
                 writer.Write(separator);
@@ -335,72 +271,18 @@ public class LogConverter
             writer.Write(string.Join(separator, Enumerable.Repeat(boneTransformHeader, numPedestrians * (pedestrianSkeletonNames.Length + 1))));
 
             writer.Write("\n");
-
-            //****************
-            // ACTUAL DATA
-            //****************
-
             List<string> line = new List<string>();
             while (srcFile.Position < srcFile.Length)
             {
                 line.Clear();
-                float timeStamp = reader.ReadSingle();
-                float roundtrip = reader.ReadSingle();
-                line.Add(timeStamp.ToString());
-                line.Add(roundtrip.ToString());
-                if (_driverPositions == null)
-                {
-                    _driverPositions = new Vector3[numDrivers];
-                    _driverVels = new RunningAverage[numDrivers];
-                    for (int i = 0; i < numDrivers; i++)
-                    {
-                        _driverVels[i] = new RunningAverage(NumFramesInVelocityRunningAverage);
-                    }
-                }
+                line.Add(reader.ReadSingle().ToString());
                 for (int i = 0; i < numDrivers; i++)
                 {
                     var pos = PosToRefPoint(reader.ReadVector3());
-                    var rot = reader.ReadQuaternion();
-                    var euler = RotToRefPoint(rot).eulerAngles;
+                    var rot = RotToRefPoint(reader.ReadQuaternion()).eulerAngles;
                     var blinkers = reader.ReadInt32();
-                    var lastPos = _driverPositions[i];
-                    _driverPositions[i] = pos;
-                    var dt = timeStamp - _prevTime;
-                    var vel = (pos - lastPos) / dt * SpeedConvertion.Mps2Kmph;
-                    var inverseRotation = Quaternion.Inverse(rot);
-                    var speed = inverseRotation * vel;
-                    if (i == localDriver)
-                    {
-                        var rbVel = reader.ReadVector3() * SpeedConvertion.Mps2Kmph;
-                        if (_firstFrame)
-                        {
-                            line.Add($"{pos.x};{pos.y};{pos.z};{euler.x};{euler.y};{euler.z};{(BlinkerState)blinkers};0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0");
-                        }
-                        else
-                        {
-                            _driverVels[i].Add(vel);
-                            var velSmooth = _driverVels[i].Get();
-                            var localSmooth = rot * velSmooth;
-                            var rbVelLocal = inverseRotation * rbVel;
-                            line.Add($"{pos.x};{pos.y};{pos.z};{euler.x};{euler.y};{euler.z};{(BlinkerState)blinkers};{speed.x};{speed.y};{speed.z};{localSmooth.x};{localSmooth.y};{localSmooth.z};{vel.x};{vel.y};{vel.z};{velSmooth.x};{velSmooth.y};{velSmooth.z};{rbVel.x};{rbVel.y};{rbVel.z};{rbVelLocal.x};{rbVelLocal.y};{rbVelLocal.z}");
-                        }
-                    }
-                    else
-                    {
-                        if (_firstFrame)
-                        {
-                            line.Add($"{pos.x};{pos.y};{pos.z};{euler.x};{euler.y};{euler.z};{(BlinkerState)blinkers};0;0;0;0;0;0;0;0;0;0;0;0");
-                        }
-                        else
-                        {
-                            _driverVels[i].Add(vel);
-                            var velSmooth = _driverVels[i].Get();
-                            var localSmooth = rot * velSmooth;
-                            line.Add($"{pos.x};{pos.y};{pos.z};{euler.x};{euler.y};{euler.z};{(BlinkerState)blinkers};{speed.x};{speed.y};{speed.z};{localSmooth.x};{localSmooth.y};{localSmooth.z};{vel.x};{vel.y};{vel.z};{velSmooth.x};{velSmooth.y};{velSmooth.z}");
-                        }
-                    }
+                    line.Add($"{pos.x};{pos.y};{pos.z};{rot.x};{rot.y};{rot.z};{(BlinkerState)blinkers}");
                 }
-                _firstFrame = false;
                 for (int i = 0; i < numPedestrians; i++)
                 {
                     var pos = reader.ReadListVector3();
@@ -423,7 +305,6 @@ public class LogConverter
                 }
                 writer.Write(string.Join(separator, line));
                 writer.Write("\n");
-                _prevTime = timeStamp;
             }
         }
     }
@@ -444,86 +325,11 @@ public class LogConverter
     string _selectedFileName = "";
     SerializedPOI[] _pois;
 
-    List<SerializedPOI> customPois = new List<SerializedPOI>() {
-        new SerializedPOI()
-        {
-            Name = "ldist",
-            Position = new Vector3(0, 0, 7.75f),
-            Rotation = Quaternion.Euler(new Vector3())
-        },
-                new SerializedPOI()
-        {
-            Name = "rdist",
-            Position = new Vector3(0, 0, 2.75f),
-            Rotation = Quaternion.Euler(new Vector3())
-        },
-        new SerializedPOI()
-        {
-            Name = "spawn point",
-            Position = new Vector3(0, 0.2224625f, 0),
-            Rotation = Quaternion.Euler(new Vector3())
-        },
-
-    };
-
-    //displays GUI and handles interactions for a single POI
-    public void OnGUI_CustomPoiButton(int i, string name)
-    {
-        SerializedPOI serializedPOI = customPois[i];
-        GUILayout.BeginHorizontal();
-
-        GUILayout.BeginVertical();
-        GUILayout.Label("name:");
-        serializedPOI.Name = GUILayout.TextField(serializedPOI.Name, GUILayout.Width(100));
-        GUILayout.EndVertical();
-
-        GUILayout.BeginVertical();
-        GUILayout.Label("position:");
-        var tmp = serializedPOI.Position;
-        GUILayout.BeginHorizontal();
-        OnGUI_FloatField(ref tmp.x); OnGUI_FloatField(ref tmp.y); OnGUI_FloatField(ref tmp.z);
-        GUILayout.EndHorizontal();
-        serializedPOI.Position = tmp;
-        GUILayout.EndVertical();
-
-        GUILayout.BeginVertical();
-        GUILayout.Label("rotation:");
-        tmp = serializedPOI.Rotation.eulerAngles;
-        GUILayout.BeginHorizontal();
-        OnGUI_FloatField(ref tmp.x); OnGUI_FloatField(ref tmp.y); OnGUI_FloatField(ref tmp.z);
-        GUILayout.EndHorizontal();
-        serializedPOI.Rotation = Quaternion.Euler(tmp);
-        GUILayout.EndVertical();
-
-        GUILayout.EndHorizontal();
-
-        if (GUILayout.Button("Transform with " + serializedPOI.Name))
-        {
-            var fullName = "ExperimentLogs/" + name;
-            var csvName = "ExperimentLogs/" + serializedPOI.Name + "-" + name.Replace("binLog", "csv");
-            TranslateBinaryLogToCsv(fullName, csvName, _pedestrianSkeletonNames, serializedPOI.Name, serializedPOI.Position, serializedPOI.Rotation);
-        }
-    }
-
-    //helper function displaying text field accepting float numbers
-    private void OnGUI_FloatField(ref float x)
-    {
-        string tmp;
-        float ftmp;
-        tmp = GUILayout.TextField(x.ToString(CultureInfo.InvariantCulture.NumberFormat), GUILayout.Width(100));
-        if (float.TryParse(tmp, NumberStyles.Any, CultureInfo.InvariantCulture.NumberFormat, out ftmp))
-        {
-            x = ftmp;
-        }
-    }
-
-    //displays GUI and handles interactions of a log transforming logic
     public void OnGUI()
     {
         if (!_open && GUILayout.Button("Convert log to csv"))
         {
             var files = Directory.GetFiles("ExperimentLogs/");
-            _fileNames.Clear();
             foreach (var file in files)
             {
                 if (file.EndsWith("binLog"))
@@ -538,47 +344,34 @@ public class LogConverter
             if (GUILayout.Button("Close"))
             {
                 _open = false;
-                _selectedFileName = null;
             }
             foreach (var name in _fileNames)
             {
-                if (string.IsNullOrEmpty(_selectedFileName))
+                if (GUILayout.Button(name))
                 {
-                    if (GUILayout.Button(name))
-                    {
-                        _selectedFileName = name;
-                        _pois = GetPOIs("ExperimentLogs/" + name);
-                    }
+                    _selectedFileName = name;
+                    _pois = GetPOIs("ExperimentLogs/" + name);
                 }
-                else if (_selectedFileName == name)
+                if (_selectedFileName == name)
                 {
-
-                    GUILayout.BeginVertical();
-                    GUILayout.Label(_selectedFileName);
-
-                    GUILayout.Label("Custom reference points:");
-                    for (int i = 0; i < customPois.Count(); i++)
-                    {
-                        OnGUI_CustomPoiButton(i, name);
-                    }
-                    GUILayout.Label("Stored reference Point:");
-
-                    if (GUILayout.Button("Transform with " + UNITY_WORLD_ROOT))
+                    GUILayout.Label("Reference Point:");
+                    GUILayout.BeginHorizontal();
+                    if (GUILayout.Button("World root"))
                     {
                         var fullName = "ExperimentLogs/" + name;
-                        var csvName = "ExperimentLogs/" + UNITY_WORLD_ROOT + "-" + name.Replace("binLog", "csv");
-                        TranslateBinaryLogToCsv(fullName, csvName, _pedestrianSkeletonNames, UNITY_WORLD_ROOT, default, Quaternion.identity);
+                        var csvName = "ExperimentLogs/" + "World Root-" + name.Replace("binLog", "csv");
+                        TranslateBinaryLogToCsv(fullName, csvName, _pedestrianSkeletonNames, "World Root", default, Quaternion.identity);
                     }
                     foreach (var poi in _pois)
                     {
-                        if (GUILayout.Button("Transform with " + poi.Name))
+                        if (GUILayout.Button(poi.Name))
                         {
                             var fullName = "ExperimentLogs/" + name;
                             var csvName = "ExperimentLogs/" + poi.Name + "-" + name.Replace("binLog", "csv");
                             TranslateBinaryLogToCsv(fullName, csvName, _pedestrianSkeletonNames, poi.Name, poi.Position, poi.Rotation);
                         }
                     }
-                    GUILayout.EndVertical();
+                    GUILayout.EndHorizontal();
                 }
             }
         }
