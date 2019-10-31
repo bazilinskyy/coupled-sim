@@ -14,7 +14,8 @@ using UnityEngine;
 
 namespace VehicleBehaviour {
     [RequireComponent(typeof(Rigidbody))]
-    public class WheelVehicle : MonoBehaviour {
+    public class WheelVehicle : MonoBehaviour
+    {
         
         [Header("Inputs")]
     #if MULTIOSCONTROLS
@@ -27,7 +28,7 @@ namespace VehicleBehaviour {
         // Input names to read using GetAxis
         [SerializeField] string throttleInput = "Throttle";
         [SerializeField] string brakeInput = "Brake";
-        [SerializeField] string turnInput = "Horizontal";
+        [SerializeField] string turnInput = "Horizontal"; 
         [SerializeField] string jumpInput = "Jump";
         [SerializeField] string driftInput = "Drift";
 	    [SerializeField] string boostInput = "Boost";
@@ -47,7 +48,8 @@ namespace VehicleBehaviour {
         [SerializeField] WheelCollider[] turnWheel;
 
         public WheelCollider[] TurnWheel { get { return turnWheel; } }
-
+        public GameObject lefteHMI;
+        public GameObject RighteHMI;
         // This code checks if the car is grounded only when needed and the data is old enough
         bool isGrounded = false;
         int lastGroundCheck = 0;
@@ -243,7 +245,14 @@ namespace VehicleBehaviour {
 
                 // Turn
                 steering = turnInputCurve.Evaluate(GetInput(turnInput)) * steerAngle;
-
+                if(steering<0)
+                {
+                    lefteHMI.SetActive(true);
+                }
+                if (steering>0)
+                {
+                    RighteHMI.SetActive(true);
+                }
                 if (Input.GetButtonDown("forward"))
                 {
                     reverse = false;
@@ -251,7 +260,7 @@ namespace VehicleBehaviour {
                 {
                     reverse = true;
                 }
-
+                   
                 if (Input.GetButtonDown("blinker_left"))
                 {
                     if (blinkers.State != BlinkerState.Left)
