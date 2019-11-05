@@ -48,8 +48,11 @@ namespace VehicleBehaviour {
         [SerializeField] WheelCollider[] turnWheel;
 
         public WheelCollider[] TurnWheel { get { return turnWheel; } }
+
+        //Dit heef Lucas toegevoegd
         public GameObject lefteHMI;
         public GameObject RighteHMI;
+        public bool eHMIinput = false;
         // This code checks if the car is grounded only when needed and the data is old enough
         bool isGrounded = false;
         int lastGroundCheck = 0;
@@ -245,8 +248,8 @@ namespace VehicleBehaviour {
 
                 // Turn
                 steering = turnInputCurve.Evaluate(GetInput(turnInput)) * steerAngle;
-               
-                if(steering<0)
+                //Deze if statments activeren de eHMI's
+                if(steering<-0)
                 {
                    lefteHMI.SetActive(false);
                     RighteHMI.SetActive(true);
