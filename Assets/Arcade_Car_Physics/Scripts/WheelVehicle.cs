@@ -248,11 +248,13 @@ namespace VehicleBehaviour {
                
                 if(steering<0)
                 {
-                    lefteHMI.SetActive(true);
+                   lefteHMI.SetActive(false);
+                    RighteHMI.SetActive(true);
                 }
                 if(steering>0)
                 {
-                    RighteHMI.SetActive(true);
+                    RighteHMI.SetActive(false);
+                    lefteHMI.SetActive(true);
                 }
                     
                 if (Input.GetButtonDown("forward"))
