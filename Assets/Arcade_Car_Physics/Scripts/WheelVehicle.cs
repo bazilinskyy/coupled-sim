@@ -245,14 +245,16 @@ namespace VehicleBehaviour {
 
                 // Turn
                 steering = turnInputCurve.Evaluate(GetInput(turnInput)) * steerAngle;
+               
                 if(steering<0)
                 {
                     lefteHMI.SetActive(true);
                 }
-                if (steering>0)
+                if(steering>0)
                 {
                     RighteHMI.SetActive(true);
                 }
+                    
                 if (Input.GetButtonDown("forward"))
                 {
                     reverse = false;

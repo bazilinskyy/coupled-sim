@@ -617,7 +617,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2068974891957543982}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b100b64279042ff46b83465c27e51ad0, type: 3}
   m_Name: 
@@ -646,7 +646,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2068974891957543982}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c5cb22d331ef7d64796f917c6a455a32, type: 3}
   m_Name: 
@@ -3580,6 +3580,21 @@ PrefabInstance:
       propertyPath: m_Enabled
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 772200647187876941, guid: 159afda85b50b432db510ee8d5b9dd3e,
+        type: 3}
+      propertyPath: isPlayer
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 772200647187876941, guid: 159afda85b50b432db510ee8d5b9dd3e,
+        type: 3}
+      propertyPath: RighteHMI
+      value: 
+      objectReference: {fileID: 3192021886358135207}
+    - target: {fileID: 772200647187876941, guid: 159afda85b50b432db510ee8d5b9dd3e,
+        type: 3}
+      propertyPath: lefteHMI
+      value: 
+      objectReference: {fileID: 2322982200181508637}
     - target: {fileID: 6333064239792103844, guid: 159afda85b50b432db510ee8d5b9dd3e,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -3594,6 +3609,26 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalPosition.y
       value: 1.2964251
+      objectReference: {fileID: 0}
+    - target: {fileID: 1261694926, guid: 159afda85b50b432db510ee8d5b9dd3e, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 1.79
+      objectReference: {fileID: 0}
+    - target: {fileID: 1261694926, guid: 159afda85b50b432db510ee8d5b9dd3e, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 10.65
+      objectReference: {fileID: 0}
+    - target: {fileID: 1261694926, guid: 159afda85b50b432db510ee8d5b9dd3e, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0.9998936
+      objectReference: {fileID: 0}
+    - target: {fileID: 1261694926, guid: 159afda85b50b432db510ee8d5b9dd3e, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: -0.014590696
+      objectReference: {fileID: 0}
+    - target: {fileID: 1261694926, guid: 159afda85b50b432db510ee8d5b9dd3e, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 181.672
       objectReference: {fileID: 0}
     - target: {fileID: 1633739904859758, guid: 159afda85b50b432db510ee8d5b9dd3e, type: 3}
       propertyPath: m_IsActive
