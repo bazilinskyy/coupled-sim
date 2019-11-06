@@ -2120,6 +2120,11 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5338325867927314009, guid: 849e6abc46b6346d0b8b1d058d7ead46,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 2532435847897884016, guid: 849e6abc46b6346d0b8b1d058d7ead46,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -2134,11 +2139,6 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalPosition.z
       value: -0.01010406
-      objectReference: {fileID: 0}
-    - target: {fileID: 5338325867927314009, guid: 849e6abc46b6346d0b8b1d058d7ead46,
-        type: 3}
-      propertyPath: m_IsActive
-      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8897671610645220167, guid: 849e6abc46b6346d0b8b1d058d7ead46,
         type: 3}
@@ -3955,6 +3955,31 @@ PrefabInstance:
       propertyPath: m_Name
       value: BEP scenario 2
       objectReference: {fileID: 0}
+    - target: {fileID: 8692043556341430772, guid: b926b10511fadba469ccfdcf12a76d11,
+        type: 3}
+      propertyPath: Roles.Array.size
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 8692043556341430772, guid: b926b10511fadba469ccfdcf12a76d11,
+        type: 3}
+      propertyPath: Name
+      value: BEP Environment 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 8692043556341430772, guid: b926b10511fadba469ccfdcf12a76d11,
+        type: 3}
+      propertyPath: Roles.Array.data[1].SpawnPoint.Type
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8692043556341430772, guid: b926b10511fadba469ccfdcf12a76d11,
+        type: 3}
+      propertyPath: Roles.Array.data[1].Name
+      value: Driver
+      objectReference: {fileID: 0}
+    - target: {fileID: 8692043556341430772, guid: b926b10511fadba469ccfdcf12a76d11,
+        type: 3}
+      propertyPath: Roles.Array.data[2].Name
+      value: Pedestrian
+      objectReference: {fileID: 0}
     - target: {fileID: 7609667120526454229, guid: b926b10511fadba469ccfdcf12a76d11,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -4015,11 +4040,21 @@ PrefabInstance:
       propertyPath: m_LocalPosition.x
       value: 0.5
       objectReference: {fileID: 0}
+    - target: {fileID: 9159237485790225925, guid: b926b10511fadba469ccfdcf12a76d11,
+        type: 3}
+      propertyPath: target
+      value: 
+      objectReference: {fileID: 878948109}
     - target: {fileID: 3610610650669424740, guid: b926b10511fadba469ccfdcf12a76d11,
         type: 3}
       propertyPath: target
       value: 
       objectReference: {fileID: 1645249637}
+    - target: {fileID: 5897481824129730196, guid: b926b10511fadba469ccfdcf12a76d11,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -0.5599365
+      objectReference: {fileID: 0}
     - target: {fileID: 5427879874650162476, guid: b926b10511fadba469ccfdcf12a76d11,
         type: 3}
       propertyPath: m_LocalPosition.y
@@ -4070,16 +4105,6 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5897481824129730196, guid: b926b10511fadba469ccfdcf12a76d11,
-        type: 3}
-      propertyPath: m_LocalPosition.z
-      value: -0.5599365
-      objectReference: {fileID: 0}
-    - target: {fileID: 9159237485790225925, guid: b926b10511fadba469ccfdcf12a76d11,
-        type: 3}
-      propertyPath: target
-      value: 
-      objectReference: {fileID: 878948109}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: b926b10511fadba469ccfdcf12a76d11, type: 3}
 --- !u!1 &271394765

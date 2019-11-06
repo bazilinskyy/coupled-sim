@@ -249,12 +249,12 @@ namespace VehicleBehaviour {
                 // Turn
                 steering = turnInputCurve.Evaluate(GetInput(turnInput)) * steerAngle;
                 //Deze if statments activeren de eHMI's
-                if(steering<-0)
+                if(steering < -0)
                 {
                    lefteHMI.SetActive(false);
                     RighteHMI.SetActive(true);
                 }
-                if(steering>0)
+                if(steering >0)
                 {
                     RighteHMI.SetActive(false);
                     lefteHMI.SetActive(true);
