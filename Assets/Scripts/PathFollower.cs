@@ -13,8 +13,9 @@ public class PathFollower : MonoBehaviour {
     static Quaternion CurrentOrientationHolder;
     private Vector3 startPosition;
     private Quaternion startOrientation;
-    private bool moveLeft = false;
-    private bool moveRight = false;
+    private bool Left = false;
+    private bool Right = false;
+    private bool FirstChoice = false;
     private bool moveStraight = true;
     private int Counter = 0;
 
@@ -30,35 +31,53 @@ public class PathFollower : MonoBehaviour {
     {
         Timer += Time.deltaTime * MoveSpeed;
         float moveHorizontal = Input.GetAxis("Horizontal");
-
-        if (CurrentNode > 9 && moveHorizontal < 0f && moveStraight == true)
+        if (CurrentNode >= 44 && CurrentNode <= 45)
+        {
+            if (moveHorizontal < 0f && FirstChoice == false)
+            {
+                Left = true;
+                Right = false;
+                FirstChoice = true;
+            }
+        }
+        if (CurrentNode >= 44 && CurrentNode <= 45)
+        {
+            if (moveHorizontal > 0f && FirstChoice == false)
+            {
+                Left = false;
+                Right = true;
+                FirstChoice = true;
+            }
+        }
+        if (CurrentNode == 45 && Left == true && moveStraight == true)
         {
             moveStraight = false;
-            moveLeft = true;
-            CurrentNode = 14;            
+            Left = true;
+            CurrentNode = 50;            
 
         }
-        else if (CurrentNode > 9 && moveHorizontal > 0f && moveStraight == true)
+        else if (CurrentNode ==45  && Right == true && moveStraight == true)
         {
             moveStraight = false;
-            moveRight = true;
-            CurrentNode = 18;
+            Right = true;
+            CurrentNode = 58;
         }
         else
         
-        if (moveLeft == true)
+        if (Left == true)
         {
-            if (CurrentNode >= 18)
+            if (CurrentNode >= 57)
             {
-                moveLeft = false;
-                CurrentNode = 22;
+                Left = false;
+                CurrentNode = 65;
             }
         }
-        else if (moveRight == true)
+        else if (Right == true)
         {
-            if (CurrentNode >= 21)
+            if (CurrentNode >= 50)
             {
-                moveRight = false;
+                Right = false;
+               
             }
         }
 
