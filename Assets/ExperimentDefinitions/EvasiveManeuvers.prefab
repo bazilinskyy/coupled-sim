@@ -827,54 +827,8 @@ MonoBehaviour:
     - {fileID: 2205677779055882153}
     - {fileID: 6871671385291334899}
     - {fileID: 1006282605009764861}
-  smoothRoute: 0
+  smoothRoute: 1
   editorVisualisationSubsteps: 500
---- !u!1 &4562847683052891485
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 7382776143524615853}
-  - component: {fileID: 728568821365242139}
-  m_Layer: 0
-  m_Name: Car Spawner
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &7382776143524615853
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4562847683052891485}
-  m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: -117.64, y: -0.087488174, z: 4.97}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 7609667120526454229}
-  m_RootOrder: 5
-  m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
---- !u!114 &728568821365242139
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4562847683052891485}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a981201a2cb3a744d98abf717096af49, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  SpawnPoint: {fileID: 7382776143524615853}
-  Track: {fileID: 8043761391078894673}
-  TestCar: {fileID: 352613617798921809, guid: aae808c6abda1df4395af0e9c3aa41fe, type: 3}
 --- !u!1 &4845196738854411470
 GameObject:
   m_ObjectHideFlags: 0
@@ -1310,7 +1264,6 @@ Transform:
   - {fileID: 7492252986797691323}
   - {fileID: 7613172863951723817}
   - {fileID: 4312964457461756476}
-  - {fileID: 7382776143524615853}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -1326,7 +1279,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 59c48fb28c5ea2548ac5dacf3ce11ad7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Name: Evasive Maneuvers
+  Name: SampleExperiment
   Scene: MainScene
   Roles:
   - Name: Automated - Passenger
@@ -1362,8 +1315,7 @@ MonoBehaviour:
     AutonomousPath: {fileID: 0}
     AutonomousIsYielding: 0
   PointsOfInterest: []
-  CarSpawners:
-  - {fileID: 728568821365242139}
+  CarSpawners: []
 --- !u!1 &7005373354728422933
 GameObject:
   m_ObjectHideFlags: 0
@@ -1434,6 +1386,16 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 7609667120526454229}
     m_Modifications:
+    - target: {fileID: 7207718017691476130, guid: 132bebb0650c6984a9b02d142e538bde,
+        type: 3}
+      propertyPath: m_Name
+      value: LightSet
+      objectReference: {fileID: 0}
+    - target: {fileID: 7207718017691476130, guid: 132bebb0650c6984a9b02d142e538bde,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7207718017691476140, guid: 132bebb0650c6984a9b02d142e538bde,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -1487,16 +1449,6 @@ PrefabInstance:
     - target: {fileID: 7207718017691476140, guid: 132bebb0650c6984a9b02d142e538bde,
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7207718017691476130, guid: 132bebb0650c6984a9b02d142e538bde,
-        type: 3}
-      propertyPath: m_Name
-      value: LightSet
-      objectReference: {fileID: 0}
-    - target: {fileID: 7207718017691476130, guid: 132bebb0650c6984a9b02d142e538bde,
-        type: 3}
-      propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []

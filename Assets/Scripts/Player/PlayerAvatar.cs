@@ -5,7 +5,6 @@ using System;
 using UnityEngine;
 using UnityEngine.Serialization;
 using UnityEngine.Assertions;
-using UnityEngine.Networking;
 using VehicleBehaviour;
 
 public enum HMISlot
@@ -69,6 +68,7 @@ public enum AvatarType
 // These are used for more than Players (AI cars have these as well)
 public class PlayerAvatar : MonoBehaviour
 {
+
     [Serializable]
     public struct ModeElements
     {

@@ -56,11 +56,11 @@ public class AICar : MonoBehaviour
         speed = set_speed;                                                 // Sets speed of object
         acceleration = set_acceleration;                                   // Sets acceleration of object
         target = GetComponent<WaypointProgressTracker>().target;           // Sets intermediate target on the circuit
-        //ManualCarTrigger = GameObject.FindWithTag("StartAV");
+        ManualCarTrigger = GameObject.FindWithTag("StartAV");
     }
     void Update()
     {
-        //InitiateAV = ManualCarTrigger.GetComponent<StartAV>().InitiateAV;
+       // InitiateAV = ManualCarTrigger.GetComponent<StartAV>().InitiateAV;
     }
 
     void FixedUpdate()
@@ -178,7 +178,7 @@ public class AICar : MonoBehaviour
                 {
                     this.transform.Rotate(pitch, 0, 0);
                 }
-                //Debug.Log(Timer2);
+                Debug.Log(Timer2);
 
                 if (Timer2 >= 2f) // After standing still for two seconds, passenger can initiate driving again by pressing space.
                 {
