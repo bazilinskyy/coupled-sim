@@ -10,6 +10,7 @@ public struct Mirror
     public Transform mirror;
 }
 
+//updates cameras rendering mirror view to match position of players head
 [ExecuteInEditMode]
 public class RearMirrorsReflection : MonoBehaviour
 {

@@ -7,6 +7,7 @@ using UnityEngine;
 public class SpeedSettings : MonoBehaviour
 {
     //Simple Kinematics
+    public int WaypointNumber = 1;
     public float speed = 50;            //km/h
     public float acceleration = 0;      //m/s^2
     //Advanced Kinematics

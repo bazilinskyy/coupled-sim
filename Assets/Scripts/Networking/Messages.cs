@@ -1,4 +1,4 @@
-﻿// The convention for message ids is:
+﻿// The convention for network message ids is:
 // negative numbers are internal networking messages (establishing connection etc.)
 // 1-1000 are server to client
 // 1001-2000 are client to server
@@ -15,6 +15,10 @@ enum MsgId
     S_ChangeLights = 5,
     S_SpawnAICar = 6,
     S_UpdateAICarPoses = 7,
+
+    S_VisualSync = 123,
+
+    B_Ping = 500,
 
     C_Ready = 1001,
     C_UpdatePose = 1002,
@@ -43,6 +47,15 @@ public static class NetMsg
     }
 }
 
+//network messages payload syncing implementation
+//Sync depending on wheter Serializer or Deserializer is provided as a parameter it will either write or read the message
+
+public struct VisualSyncMessage : INetMessage
+{
+    public int MessageId => (int)MsgId.S_VisualSync;
+    public void Sync<T>(T synchronizer) where T : ISynchronizer { }
+}
+
 public struct ReadyMsg : INetMessage
 {
     public int MessageId => (int)MsgId.C_Ready;
@@ -59,12 +72,12 @@ public struct AllReadyMsg : INetMessage
 public struct StartGameMsg : INetMessage
 {
     public int MessageId => (int)MsgId.S_StartGame;
-    public List<int> StartingPositionIdxs;
+    public List<int> Roles;
     public int Experiment;
 
     public void Sync<T>(T synchronizer) where T : ISynchronizer
     {
-        synchronizer.Sync(ref StartingPositionIdxs);
+        synchronizer.Sync(ref Roles);
         synchronizer.Sync(ref Experiment);
     }
 }
@@ -105,5 +118,18 @@ public struct ChangeHMI : INetMessage
     {
         synchronizer.Sync(ref HMI);
         synchronizer.Sync(ref State);
+    }
+}
+
+public struct PingMsg : INetMessage
+{
+    public int MessageId => (int)MsgId.B_Ping;
+    public float Timestamp;
+    public int PingId;
+
+    public void Sync<T>(T synchronizer) where T : ISynchronizer
+    {
+        synchronizer.Sync(ref Timestamp);
+        synchronizer.Sync(ref PingId);
     }
 }

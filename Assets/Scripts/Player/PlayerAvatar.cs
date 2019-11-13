@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.Assertions;
+using UnityEngine.Networking;
 using VehicleBehaviour;
 
 public enum HMISlot
@@ -14,6 +16,7 @@ public enum HMISlot
     Windshield,
 }
 
+// stores Transform state for every "bone" of an Avatar
 // The pose represents both a pedestrian and car (for simplicity)
 // so we have some redundancy
 public struct AvatarPose : INetSubMessage
@@ -66,7 +69,6 @@ public enum AvatarType
 // These are used for more than Players (AI cars have these as well)
 public class PlayerAvatar : MonoBehaviour
 {
-
     [Serializable]
     public struct ModeElements
     {
@@ -80,8 +82,10 @@ public class PlayerAvatar : MonoBehaviour
     public ModeElements FlatModeElements;
     public ModeElements RemoteModeElements;
     public ModeElements SuiteModeElements;
-    public ModeElements LocalModeElements;
+    [FormerlySerializedAs("LocalModeElements")]
+    public ModeElements HostDrivenAIElements;
 
+    //set up an Avatar (disabling and enabling needed components) for different control methods
     public void Initialize(PlayerSystem.Mode mode)
     {
         ModeElements modeElements = default(ModeElements);
@@ -99,8 +103,8 @@ public class PlayerAvatar : MonoBehaviour
             case PlayerSystem.Mode.Remote:
                 modeElements = RemoteModeElements;
                 break;
-            case PlayerSystem.Mode.LocalAI:
-                modeElements = LocalModeElements;
+            case PlayerSystem.Mode.HostAI:
+                modeElements = HostDrivenAIElements;
                 break;
         }
         foreach (var go in modeElements.gameObjects) {
@@ -130,7 +134,7 @@ public class PlayerAvatar : MonoBehaviour
         }
     }
 
-
+    // defines HMI to be spawned on the car
     [Serializable]
     public struct HMIAnchors
     {

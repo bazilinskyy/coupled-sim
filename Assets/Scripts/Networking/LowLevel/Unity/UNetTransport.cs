@@ -4,11 +4,13 @@ using UnityEngine.Networking;
 using UnityEngine.Networking.Types;
 using UnityEngine.Profiling;
 
+//UNET-based network communication pipe
 public class UNETTransport
 {
     public const int MaxPackageSize = 2048;
     public int hostId => m_HostId;
 
+    //initializes and configures Unity networking
     public bool Init(int port = 0, int maxConnections = 16)
     {
         var config = new GlobalConfig
@@ -52,6 +54,7 @@ public class UNETTransport
         }
     }
 
+    //connects to specified host
     public int Connect(string ip, int port, out int error)
     {
         int res;
@@ -85,6 +88,7 @@ public class UNETTransport
         NetworkTransport.Disconnect(m_HostId, connectionId, out error);
     }
 
+    //network messages handling logic
     public bool NextEvent(ref TransportEvent res)
     {
         Debug.Assert(m_HostId > -1, "Trying to update transport with no host id");
@@ -139,6 +143,7 @@ public class UNETTransport
     public void SendUnreliable(int connectionId, byte[] data, int sendSize)
         => SendData(connectionId, data, sendSize, m_ChannelUnreliable);
 
+    //sends network message
     void SendData(int connectionId, byte[] data, int sendSize, int channel)
     {
         Profiler.BeginSample("UNETTransform.SendData()");

@@ -14,8 +14,7 @@ using UnityEngine;
 
 namespace VehicleBehaviour {
     [RequireComponent(typeof(Rigidbody))]
-    public class WheelVehicle : MonoBehaviour
-    {
+    public class WheelVehicle : MonoBehaviour {
         
         [Header("Inputs")]
     #if MULTIOSCONTROLS
@@ -28,7 +27,7 @@ namespace VehicleBehaviour {
         // Input names to read using GetAxis
         [SerializeField] string throttleInput = "Throttle";
         [SerializeField] string brakeInput = "Brake";
-        [SerializeField] string turnInput = "Horizontal"; 
+        [SerializeField] string turnInput = "Horizontal";
         [SerializeField] string jumpInput = "Jump";
         [SerializeField] string driftInput = "Drift";
 	    [SerializeField] string boostInput = "Boost";
@@ -49,10 +48,6 @@ namespace VehicleBehaviour {
 
         public WheelCollider[] TurnWheel { get { return turnWheel; } }
 
-        //Dit heef Lucas toegevoegd
-        public GameObject lefteHMI;
-        public GameObject RighteHMI;
-        public bool eHMIinput = false;
         // This code checks if the car is grounded only when needed and the data is old enough
         bool isGrounded = false;
         int lastGroundCheck = 0;
@@ -78,6 +73,7 @@ namespace VehicleBehaviour {
          *  the longer the curve the faster it gets
          */
         [SerializeField] AnimationCurve motorTorque = new AnimationCurve(new Keyframe(0, 200), new Keyframe(50, 300), new Keyframe(200, 0));
+        [SerializeField] AnimationCurve deaccelerateMotorTorque = new AnimationCurve(new Keyframe(0, 400), new Keyframe(200, 600));
 
         // Differential gearing ratio
         [Range(2, 16)]
@@ -239,27 +235,6 @@ namespace VehicleBehaviour {
             // Get all the inputs!
             if (isPlayer)
             {
-                // Accelerate & brake
-                if (throttleInput != "" && throttleInput != null)
-                {
-                    throttle = GetInput(throttleInput) * (reverse ? -1f : 1);
-                }
-                breaking = Mathf.Clamp01(GetInput(brakeInput));
-
-                // Turn
-                steering = turnInputCurve.Evaluate(GetInput(turnInput)) * steerAngle;
-                //Deze if statments activeren de eHMI's
-                if(steering < -0)
-                {
-                   lefteHMI.SetActive(false);
-                    RighteHMI.SetActive(true);
-                }
-                if(steering >0)
-                {
-                    RighteHMI.SetActive(false);
-                    lefteHMI.SetActive(true);
-                }
-                    
                 if (Input.GetButtonDown("forward"))
                 {
                     reverse = false;
@@ -267,7 +242,7 @@ namespace VehicleBehaviour {
                 {
                     reverse = true;
                 }
-                   
+
                 if (Input.GetButtonDown("blinker_left"))
                 {
                     if (blinkers.State != BlinkerState.Left)
@@ -297,10 +272,31 @@ namespace VehicleBehaviour {
             }
         }
 
+        float steeringWheelAngle = 0;
+        public Transform steeringWheel;
+        public float steeringWheelMul = -2;
         // Update everything
         void FixedUpdate () {
             // Mesure current speed
             speed = transform.InverseTransformDirection(_rb.velocity).z * 3.6f;
+
+            // Get all the inputs!
+            if (isPlayer) {
+                // Accelerate & brake
+                if (throttleInput != "" && throttleInput != null)
+                {
+                    throttle = GetInput(throttleInput) * (reverse?-1f:1);
+                }
+                breaking = Mathf.Clamp01(GetInput(brakeInput));
+
+                // Turn
+                steering = turnInputCurve.Evaluate(GetInput(turnInput)) * steerAngle;
+            }
+
+            steeringWheelAngle = Mathf.Lerp(steeringWheelAngle, steering * steeringWheelMul, steerSpeed);
+            if (steeringWheel != null) {
+                steeringWheel.localRotation = Quaternion.AngleAxis(steeringWheelAngle, Vector3.forward);
+            }
 
             // Direction
             foreach (WheelCollider wheel in turnWheel)
@@ -314,7 +310,7 @@ namespace VehicleBehaviour {
             }
 
             // Handbrake
-            if (Mathf.Abs(speed) < 2 && Mathf.Abs(throttle) < 0.1f)
+            if (Mathf.Abs(speed) < 2 && GetInput(throttleInput) < 0.1f)
             {
                 foreach (WheelCollider wheel in wheels)
                 {
@@ -332,7 +328,12 @@ namespace VehicleBehaviour {
                         wheel.motorTorque = 0;
                     } else
                     {
-                        wheel.motorTorque = throttle * motorTorque.Evaluate(speed) * diffGearing / driveWheel.Length;
+                        if (throttle > 0) {
+                            wheel.motorTorque = throttle * motorTorque.Evaluate(speed) * diffGearing / driveWheel.Length;
+                        } else
+                        {
+                            wheel.motorTorque = throttle * deaccelerateMotorTorque.Evaluate(speed) * diffGearing / driveWheel.Length;
+                        }
                     }
                 }
                 foreach (WheelCollider wheel in wheels)

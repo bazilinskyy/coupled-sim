@@ -101,6 +101,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  WaypointNumber: 1
   speed: 10
   acceleration: 2
   jerk: 5
@@ -162,6 +163,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  WaypointNumber: 1
   speed: 50
   acceleration: 2
   jerk: 5
@@ -223,128 +225,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 50
-  acceleration: 2
-  jerk: 5
-  resetSpeedAfterStop: 0
---- !u!1 &3158356726557445963
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 4287892415144389922}
-  - component: {fileID: 6516303265295863066}
-  - component: {fileID: 987883190073209583}
-  m_Layer: 5
-  m_Name: WP11
-  m_TagString: WP
-  m_Icon: {fileID: -964228994112308473, guid: 0000000000000000d000000000000000, type: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &4287892415144389922
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3158356726557445963}
-  m_LocalRotation: {x: -0, y: -0.7071068, z: 0, w: -0.7071068}
-  m_LocalPosition: {x: 112.85, y: 0, z: 60.17}
-  m_LocalScale: {x: 1.0000005, y: 1, z: 1.0000005}
-  m_Children: []
-  m_Father: {fileID: 4479431538822812642}
-  m_RootOrder: 11
-  m_LocalEulerAnglesHint: {x: 0, y: -270, z: 0}
---- !u!65 &6516303265295863066
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3158356726557445963}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 1
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Size: {x: 8, y: 4, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
---- !u!114 &987883190073209583
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3158356726557445963}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  speed: 0
-  acceleration: 0
-  jerk: 0
-  resetSpeedAfterStop: 0
---- !u!1 &3227359291168002926
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 5938235655514393057}
-  - component: {fileID: 1139863265049287278}
-  - component: {fileID: 207519668885174838}
-  m_Layer: 5
-  m_Name: WP10
-  m_TagString: WP
-  m_Icon: {fileID: -964228994112308473, guid: 0000000000000000d000000000000000, type: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &5938235655514393057
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3227359291168002926}
-  m_LocalRotation: {x: 0, y: -1, z: 0, w: 0}
-  m_LocalPosition: {x: 121.8, y: 0, z: 51.7}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 4479431538822812642}
-  m_RootOrder: 10
-  m_LocalEulerAnglesHint: {x: 0, y: -180, z: 0}
---- !u!65 &1139863265049287278
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3227359291168002926}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 1
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Size: {x: 8, y: 4, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
---- !u!114 &207519668885174838
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3227359291168002926}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  WaypointNumber: 1
   speed: 50
   acceleration: 2
   jerk: 5
@@ -406,6 +287,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  WaypointNumber: 1
   speed: 60
   acceleration: 2
   jerk: 5
@@ -467,70 +349,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  WaypointNumber: 1
   speed: 30
   acceleration: 2
   jerk: 5
-  resetSpeedAfterStop: 0
---- !u!1 &7825499264478212264
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 460728822729924274}
-  - component: {fileID: 8841250571370105283}
-  - component: {fileID: 2038845914318196475}
-  m_Layer: 5
-  m_Name: WP12
-  m_TagString: WP
-  m_Icon: {fileID: -964228994112308473, guid: 0000000000000000d000000000000000, type: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &460728822729924274
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7825499264478212264}
-  m_LocalRotation: {x: -0, y: -0.7071068, z: 0, w: -0.7071068}
-  m_LocalPosition: {x: 11.22, y: 0, z: 60.2}
-  m_LocalScale: {x: 1.0000005, y: 1, z: 1.0000005}
-  m_Children: []
-  m_Father: {fileID: 4479431538822812642}
-  m_RootOrder: 12
-  m_LocalEulerAnglesHint: {x: 0, y: -270, z: 0}
---- !u!65 &8841250571370105283
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7825499264478212264}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 1
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Size: {x: 8, y: 4, z: 1}
-  m_Center: {x: 0, y: 1, z: 0}
---- !u!114 &2038845914318196475
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7825499264478212264}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  speed: 0
-  acceleration: 0
-  jerk: 0
   resetSpeedAfterStop: 0
 --- !u!1 &7827330837466819366
 GameObject:
@@ -570,9 +392,6 @@ Transform:
   - {fileID: 7215383609407211466}
   - {fileID: 5138558134016650736}
   - {fileID: 472565230008346282}
-  - {fileID: 5938235655514393057}
-  - {fileID: 4287892415144389922}
-  - {fileID: 460728822729924274}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -601,9 +420,9 @@ MonoBehaviour:
     - {fileID: 7215383609407211466}
     - {fileID: 5138558134016650736}
     - {fileID: 472565230008346282}
-    - {fileID: 5938235655514393057}
-    - {fileID: 4287892415144389922}
-    - {fileID: 460728822729924274}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
   smoothRoute: 0
   editorVisualisationSubsteps: 500
 --- !u!1 &8264331946725655866
@@ -663,6 +482,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  WaypointNumber: 1
   speed: 0
   acceleration: -5
   jerk: 0
@@ -768,6 +588,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  WaypointNumber: 1
   speed: 50
   acceleration: 2
   jerk: 5
@@ -829,6 +650,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  WaypointNumber: 1
   speed: 5
   acceleration: -5
   jerk: 5

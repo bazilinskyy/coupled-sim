@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+//creates grid of lightprobes
 [ExecuteInEditMode]
 [RequireComponent(typeof(LightProbeGroup))]
 public class LightProbePlacer : MonoBehaviour
