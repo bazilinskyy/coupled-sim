@@ -9,7 +9,7 @@
     <ProductVersion>10.0.20506</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <RootNamespace></RootNamespace>
-    <ProjectGuid>{422E9A94-27B4-2235-BBBE-233712C99E15}</ProjectGuid>
+    <ProjectGuid>{00BC79B6-2763-6EFE-F03B-4933054EE80E}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <AssemblyName>Assembly-CSharp</AssemblyName>
@@ -69,10 +69,7 @@
     <Compile Include="Assets\Arcade_Car_Physics\Scripts\Trails\Trail.cs" />
     <Compile Include="Assets\Arcade_Car_Physics\Scripts\Trails\TrailEmitter.cs" />
     <Compile Include="Assets\Arcade_Car_Physics\Scripts\WheelVehicle.cs" />
-    <Compile Include="Assets\CarSpawnerSynced.cs" />
-    <Compile Include="Assets\CheckID.cs" />
     <Compile Include="Assets\DistanceTool\DistanceTool.cs" />
-    <Compile Include="Assets\PathStop.cs" />
     <Compile Include="Assets\Prefabs\Cars\Z4\PimpZ4.cs" />
     <Compile Include="Assets\Scripts\Adapted\AICar.cs" />
     <Compile Include="Assets\Scripts\Adapted\VR\DisableTracking.cs" />
@@ -116,7 +113,6 @@
     <Compile Include="Assets\Scripts\New\MainScene.cs" />
     <Compile Include="Assets\Scripts\New\ParticipantLoad.cs" />
     <Compile Include="Assets\Scripts\New\ParticipantReset.cs" />
-    <Compile Include="Assets\Scripts\New\PathFollower.cs" />
     <Compile Include="Assets\Scripts\New\PlayerController.cs" />
     <Compile Include="Assets\Scripts\New\SetFPSScript.cs" />
     <Compile Include="Assets\Scripts\New\SpeedSettings.cs" />
@@ -152,6 +148,7 @@
     <Compile Include="Assets\Scripts\Xsens\XsStreamReader.cs" />
     <Compile Include="Assets\Scripts\Xsens\XsStreamReaderThread.cs" />
     <Compile Include="Assets\StartAV.cs" />
+    <Compile Include="Assets\SyncedCarSpawner.cs" />
     <Compile Include="Assets\Virtual Reality\Oculus\AudioManager\Scenes\Scripts\TestScript.cs" />
     <Compile Include="Assets\Virtual Reality\Oculus\AudioManager\Scripts\Audio\AmbienceEmitter.cs" />
     <Compile Include="Assets\Virtual Reality\Oculus\AudioManager\Scripts\Audio\AudioManager.cs" />
@@ -360,34 +357,34 @@
     <None Include="Assets\Assets_links.txt" />
     <None Include="Assets\DistanceTool\READ ME.txt" />
     <Reference Include="Unity.Timeline.Editor">
-      <HintPath>D:/CoupledSim/BEPVersion/Library/ScriptAssemblies/Unity.Timeline.Editor.dll</HintPath>
+      <HintPath>C:/Users/Studenten/Documents/GitHub/coupled-sim/Library/ScriptAssemblies/Unity.Timeline.Editor.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Formats.Fbx.Editor">
-      <HintPath>D:/CoupledSim/BEPVersion/Library/ScriptAssemblies/Unity.Formats.Fbx.Editor.dll</HintPath>
+      <HintPath>C:/Users/Studenten/Documents/GitHub/coupled-sim/Library/ScriptAssemblies/Unity.Formats.Fbx.Editor.dll</HintPath>
     </Reference>
     <Reference Include="Unity.TextMeshPro.Editor">
-      <HintPath>D:/CoupledSim/BEPVersion/Library/ScriptAssemblies/Unity.TextMeshPro.Editor.dll</HintPath>
+      <HintPath>C:/Users/Studenten/Documents/GitHub/coupled-sim/Library/ScriptAssemblies/Unity.TextMeshPro.Editor.dll</HintPath>
     </Reference>
     <Reference Include="Unity.PackageManagerUI.Editor">
-      <HintPath>D:/CoupledSim/BEPVersion/Library/ScriptAssemblies/Unity.PackageManagerUI.Editor.dll</HintPath>
+      <HintPath>C:/Users/Studenten/Documents/GitHub/coupled-sim/Library/ScriptAssemblies/Unity.PackageManagerUI.Editor.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Timeline">
-      <HintPath>D:/CoupledSim/BEPVersion/Library/ScriptAssemblies/Unity.Timeline.dll</HintPath>
+      <HintPath>C:/Users/Studenten/Documents/GitHub/coupled-sim/Library/ScriptAssemblies/Unity.Timeline.dll</HintPath>
     </Reference>
     <Reference Include="Unity.CollabProxy.Editor">
-      <HintPath>D:/CoupledSim/BEPVersion/Library/ScriptAssemblies/Unity.CollabProxy.Editor.dll</HintPath>
+      <HintPath>C:/Users/Studenten/Documents/GitHub/coupled-sim/Library/ScriptAssemblies/Unity.CollabProxy.Editor.dll</HintPath>
     </Reference>
     <Reference Include="Autodesk.Fbx">
-      <HintPath>D:/CoupledSim/BEPVersion/Library/ScriptAssemblies/Autodesk.Fbx.dll</HintPath>
+      <HintPath>C:/Users/Studenten/Documents/GitHub/coupled-sim/Library/ScriptAssemblies/Autodesk.Fbx.dll</HintPath>
     </Reference>
     <Reference Include="Unity.TextMeshPro">
-      <HintPath>D:/CoupledSim/BEPVersion/Library/ScriptAssemblies/Unity.TextMeshPro.dll</HintPath>
+      <HintPath>C:/Users/Studenten/Documents/GitHub/coupled-sim/Library/ScriptAssemblies/Unity.TextMeshPro.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Analytics.DataPrivacy">
-      <HintPath>D:/CoupledSim/BEPVersion/Library/ScriptAssemblies/Unity.Analytics.DataPrivacy.dll</HintPath>
+      <HintPath>C:/Users/Studenten/Documents/GitHub/coupled-sim/Library/ScriptAssemblies/Unity.Analytics.DataPrivacy.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Formats.Fbx.Runtime">
-      <HintPath>D:/CoupledSim/BEPVersion/Library/ScriptAssemblies/Unity.Formats.Fbx.Runtime.dll</HintPath>
+      <HintPath>C:/Users/Studenten/Documents/GitHub/coupled-sim/Library/ScriptAssemblies/Unity.Formats.Fbx.Runtime.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.AIModule">
       <HintPath>C:/Program Files/Unity/Hub/Editor/2018.4.6f1/Editor/Data/Managed/UnityEngine/UnityEngine.AIModule.dll</HintPath>
@@ -591,13 +588,13 @@
       <HintPath>C:/Program Files/Unity/Hub/Editor/2018.4.6f1/Editor/Data/UnityExtensions/Unity/UnitySpatialTracking/RuntimeEditor/UnityEngine.SpatialTracking.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Analytics.Editor">
-      <HintPath>D:/CoupledSim/BEPVersion/Library/PackageCache/com.unity.analytics@3.2.2/Unity.Analytics.Editor.dll</HintPath>
+      <HintPath>C:/Users/Studenten/Documents/GitHub/coupled-sim/Library/PackageCache/com.unity.analytics@3.2.2/Unity.Analytics.Editor.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Analytics.StandardEvents">
-      <HintPath>D:/CoupledSim/BEPVersion/Library/PackageCache/com.unity.analytics@3.2.2/Unity.Analytics.StandardEvents.dll</HintPath>
+      <HintPath>C:/Users/Studenten/Documents/GitHub/coupled-sim/Library/PackageCache/com.unity.analytics@3.2.2/Unity.Analytics.StandardEvents.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Analytics.Tracker">
-      <HintPath>D:/CoupledSim/BEPVersion/Library/PackageCache/com.unity.analytics@3.2.2/Unity.Analytics.Tracker.dll</HintPath>
+      <HintPath>C:/Users/Studenten/Documents/GitHub/coupled-sim/Library/PackageCache/com.unity.analytics@3.2.2/Unity.Analytics.Tracker.dll</HintPath>
     </Reference>
     <Reference Include="mscorlib">
       <HintPath>C:/Program Files/Unity/Hub/Editor/2018.4.6f1/Editor/Data/MonoBleedingEdge/lib/mono/4.7.1-api/mscorlib.dll</HintPath>
@@ -956,15 +953,15 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="Oculus.VR.Editor.csproj">
-      <Project>{13C9B72B-E2D2-637C-7101-00E7213AD5AD}</Project>
+      <Project>{6A20ABD3-2271-984E-AAE2-9F5C6A89EDCE}</Project>
       <Name>Oculus.VR.Editor</Name>
     </ProjectReference>
     <ProjectReference Include="Oculus.VR.Scripts.Editor.csproj">
-      <Project>{ED746091-0FC5-D5B4-B191-C74384DBB827}</Project>
+      <Project>{DA822BEF-6053-C11D-CA17-E60E8D2BE8EE}</Project>
       <Name>Oculus.VR.Scripts.Editor</Name>
     </ProjectReference>
     <ProjectReference Include="Oculus.VR.csproj">
-      <Project>{4EACDDD6-F593-E930-2C14-389EF8055078}</Project>
+      <Project>{C5F600BC-CF13-8499-1B7E-24CA8B231453}</Project>
       <Name>Oculus.VR</Name>
     </ProjectReference>
   </ItemGroup>
