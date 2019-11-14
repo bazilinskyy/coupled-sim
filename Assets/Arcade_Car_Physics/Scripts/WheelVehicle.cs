@@ -34,7 +34,11 @@ namespace VehicleBehaviour {
         [SerializeField] string blinkersLeftInput = "blinker_left";
         [SerializeField] string blinkersRightInput = "blinker_right";
         [SerializeField] string blinkersClearInput = "blinker_clear";
-        
+        public GameObject LeftHMI;
+        public GameObject RightHMI;
+        private bool left = false;
+        private bool right = false;
+        private bool firstinput = false;
         /* 
          *  Turn input curve: x real input, y value used
          *  My advice (-1, -1) tangent x, (0, 0) tangent 0 and (1, 1) tangent x
@@ -292,10 +296,30 @@ namespace VehicleBehaviour {
                 // Turn
                 steering = turnInputCurve.Evaluate(GetInput(turnInput)) * steerAngle;
             }
+            if (steering < 0f && firstinput == false)
+            {
+                left = true;
+                firstinput = true;
+            }
 
+            if (steering > 0f && firstinput == false)
+            {
+                right = true;
+                firstinput = true;
+            }
+
+            if (right == true)
+            {
+                RightHMI.SetActive(true);
+            }
+
+            if (left == true)
+            {
+                LeftHMI.SetActive(true);
+            }
             steeringWheelAngle = Mathf.Lerp(steeringWheelAngle, steering * steeringWheelMul, steerSpeed);
             if (steeringWheel != null) {
-                steeringWheel.localRotation = Quaternion.AngleAxis(steeringWheelAngle, Vector3.forward);
+               steeringWheel.localRotation = Quaternion.AngleAxis(steeringWheelAngle, Vector3.forward);
             }
 
             // Direction
