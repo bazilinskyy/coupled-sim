@@ -57,7 +57,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3554233099709049976}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -17.24, y: 0.53, z: 52.07}
+  m_LocalPosition: {x: -17.6, y: 0.53, z: 8.9}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 7609667120526454229}
@@ -74,7 +74,7 @@ BoxCollider:
   m_IsTrigger: 1
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 7, y: 4, z: 13}
+  m_Size: {x: 14, y: 4, z: 13}
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &4711828492989227366
 GameObject:
@@ -99,13 +99,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4711828492989227366}
-  m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: -10.1, y: 0, z: -1}
+  m_LocalRotation: {x: 0, y: 0.42261827, z: 0, w: 0.9063079}
+  m_LocalPosition: {x: -269.1, y: 0, z: -88.6}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 935614564}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 50, z: 0}
 --- !u!1 &6249560820597256568
 GameObject:
   m_ObjectHideFlags: 0
@@ -130,7 +130,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6249560820597256568}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 38.4, y: 0, z: -62.9}
+  m_LocalPosition: {x: 55.1, y: 0, z: -54.7}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 935614564}
@@ -161,7 +161,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6692014269374732414}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.4, y: 0, z: -0.3}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 935614564}
@@ -182,16 +182,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Name: BEP_Scenario3
-  Scene: Environment 1
+  Scene: Environment 3
   Roles:
-  - Name: Auto-Passenger
+  - Name: Pedestrian
     TopHMI: {fileID: 0}
     WindshieldHMI: {fileID: 0}
     HoodHMI: {fileID: 0}
     carIdx: 0
     SpawnPoint:
-      Point: {fileID: 0}
-      Type: 2
+      Point: {fileID: 441045706869372421}
+      Type: 0
     AutonomousPath: {fileID: 0}
     AutonomousIsYielding: 1
   - Name: Driver

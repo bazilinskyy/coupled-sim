@@ -36,6 +36,9 @@ namespace VehicleBehaviour {
         [SerializeField] string blinkersClearInput = "blinker_clear";
         public GameObject LeftHMI;
         public GameObject RightHMI;
+        public GameObject Black;
+        public GameObject Warning;
+        private bool InputField = false;
         private bool left = false;
         private bool right = false;
         private bool firstinput = false;
@@ -296,26 +299,35 @@ namespace VehicleBehaviour {
                 // Turn
                 steering = turnInputCurve.Evaluate(GetInput(turnInput)) * steerAngle;
             }
-            if (steering < 0f && firstinput == false)
+            if(InputField == true)
+            {
+                Warning.SetActive(true);
+            }
+
+            if (steering < 0f && firstinput == false && InputField == true)
             {
                 left = true;
                 firstinput = true;
+                
             }
 
-            if (steering > 0f && firstinput == false)
+            if (steering > 0f && firstinput == false && InputField == true)
             {
                 right = true;
                 firstinput = true;
+                
             }
 
             if (right == true)
             {
                 RightHMI.SetActive(true);
+                Black.SetActive(false);
             }
 
             if (left == true)
             {
                 LeftHMI.SetActive(true);
+                Black.SetActive(false);
             }
             steeringWheelAngle = Mathf.Lerp(steeringWheelAngle, steering * steeringWheelMul, steerSpeed);
             if (steeringWheel != null) {
@@ -434,7 +446,10 @@ namespace VehicleBehaviour {
         {
             handbrake = h;
         }
-
+        private void OnTriggerEnter()
+        {
+            InputField = true;
+        }
         // MULTIOSCONTROLS is another package I'm working on ignore it I don't know if it will get a release.
 #if MULTIOSCONTROLS
         private static MultiOSControls _controls;
