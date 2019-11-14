@@ -36,9 +36,11 @@ namespace VehicleBehaviour {
         [SerializeField] string blinkersClearInput = "blinker_clear";
         public GameObject LeftHMI;
         public GameObject RightHMI;
+        public GameObject Black;
         private bool left = false;
         private bool right = false;
         private bool firstinput = false;
+        public bool InputField = false;
         /* 
          *  Turn input curve: x real input, y value used
          *  My advice (-1, -1) tangent x, (0, 0) tangent 0 and (1, 1) tangent x
@@ -296,26 +298,28 @@ namespace VehicleBehaviour {
                 // Turn
                 steering = turnInputCurve.Evaluate(GetInput(turnInput)) * steerAngle;
             }
-            if (steering < 0f && firstinput == false)
+            if (steering < 0f && firstinput == false && InputField == true)
             {
                 left = true;
                 firstinput = true;
             }
 
-            if (steering > 0f && firstinput == false)
+            if (steering > 0f && firstinput == false && InputField == true)
             {
                 right = true;
                 firstinput = true;
             }
 
-            if (right == true)
+            if (right == true && InputField == true)
             {
                 RightHMI.SetActive(true);
+                Black.SetActive(false);
             }
 
-            if (left == true)
+            if (left == true && InputField == true)
             {
                 LeftHMI.SetActive(true);
+                Black.SetActive(false);
             }
             steeringWheelAngle = Mathf.Lerp(steeringWheelAngle, steering * steeringWheelMul, steerSpeed);
             if (steeringWheel != null) {
@@ -433,6 +437,11 @@ namespace VehicleBehaviour {
         public void toogleHandbrake(bool h)
         {
             handbrake = h;
+        }
+
+        private void OnTriggerEnter()
+        {
+            InputField = true;
         }
 
         // MULTIOSCONTROLS is another package I'm working on ignore it I don't know if it will get a release.
