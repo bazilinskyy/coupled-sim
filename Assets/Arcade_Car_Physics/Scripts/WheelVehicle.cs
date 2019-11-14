@@ -42,6 +42,7 @@ namespace VehicleBehaviour {
         private bool left = false;
         private bool right = false;
         private bool firstinput = false;
+        public int countCollisions = 0;
         /* 
          *  Turn input curve: x real input, y value used
          *  My advice (-1, -1) tangent x, (0, 0) tangent 0 and (1, 1) tangent x
@@ -299,32 +300,36 @@ namespace VehicleBehaviour {
                 // Turn
                 steering = turnInputCurve.Evaluate(GetInput(turnInput)) * steerAngle;
             }
-            if(InputField == true)
+            if(countCollisions ==1)
+            {
+                Black.SetActive(true);
+            }
+            if (countCollisions == 2)
             {
                 Warning.SetActive(true);
             }
 
-            if (steering < 0f && firstinput == false && InputField == true)
+            if (steering < 0f && firstinput == false && countCollisions == 2)
             {
                 left = true;
                 firstinput = true;
                 
             }
 
-            if (steering > 0f && firstinput == false && InputField == true)
+            if (steering > 0f && firstinput == false && countCollisions == 2)
             {
                 right = true;
                 firstinput = true;
                 
             }
 
-            if (right == true)
+            if (right == true && countCollisions == 2)
             {
                 RightHMI.SetActive(true);
                 Black.SetActive(false);
             }
 
-            if (left == true)
+            if (left == true && countCollisions == 2)
             {
                 LeftHMI.SetActive(true);
                 Black.SetActive(false);
@@ -446,10 +451,16 @@ namespace VehicleBehaviour {
         {
             handbrake = h;
         }
+        //private void OnTriggerEnter()
+        //{
+        //    InputField = true;
+        //}
         private void OnTriggerEnter()
         {
-            InputField = true;
+           // if (gameObject.name == "HMIversion" || gameObject.name == "HMIField")
+                countCollisions++;
         }
+
         // MULTIOSCONTROLS is another package I'm working on ignore it I don't know if it will get a release.
 #if MULTIOSCONTROLS
         private static MultiOSControls _controls;
