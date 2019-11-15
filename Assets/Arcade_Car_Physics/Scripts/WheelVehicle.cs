@@ -43,6 +43,8 @@ namespace VehicleBehaviour {
         private bool right = false;
         private bool firstinput = false;
         public int countCollisions = 0;
+        public AudioClip WarningSound;
+        public AudioSource WarningObject;
         /* 
          *  Turn input curve: x real input, y value used
          *  My advice (-1, -1) tangent x, (0, 0) tangent 0 and (1, 1) tangent x
@@ -300,36 +302,37 @@ namespace VehicleBehaviour {
                 // Turn
                 steering = turnInputCurve.Evaluate(GetInput(turnInput)) * steerAngle;
             }
-            if(countCollisions ==1)
+            if(countCollisions ==2)
             {
                 Black.SetActive(true);
             }
-            if (countCollisions == 2)
+            if (countCollisions == 1 || countCollisions==3)
             {
                 Warning.SetActive(true);
+                WarningObject.Play();
             }
 
-            if (steering < 0f && firstinput == false && countCollisions == 2)
+            if (steering < 0f && firstinput == false && countCollisions == 3)
             {
                 left = true;
                 firstinput = true;
                 
             }
 
-            if (steering > 0f && firstinput == false && countCollisions == 2)
+            if (steering > 0f && firstinput == false && countCollisions == 3)
             {
                 right = true;
                 firstinput = true;
                 
             }
 
-            if (right == true && countCollisions == 2)
+            if (right == true && countCollisions == 3)
             {
                 RightHMI.SetActive(true);
                 Black.SetActive(false);
             }
 
-            if (left == true && countCollisions == 2)
+            if (left == true && countCollisions == 3)
             {
                 LeftHMI.SetActive(true);
                 Black.SetActive(false);
