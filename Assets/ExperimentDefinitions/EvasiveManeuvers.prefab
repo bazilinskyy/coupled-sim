@@ -1264,6 +1264,7 @@ Transform:
   - {fileID: 7492252986797691323}
   - {fileID: 7613172863951723817}
   - {fileID: 4312964457461756476}
+  - {fileID: 5091369192103512573}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -1279,7 +1280,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 59c48fb28c5ea2548ac5dacf3ce11ad7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Name: SampleExperiment
+  Name: Evasive Maneuvers
   Scene: MainScene
   Roles:
   - Name: Automated - Passenger
@@ -1315,7 +1316,54 @@ MonoBehaviour:
     AutonomousPath: {fileID: 0}
     AutonomousIsYielding: 0
   PointsOfInterest: []
-  CarSpawners: []
+  CarSpawners:
+  - {fileID: 5290746757051337082}
+--- !u!1 &6731739411145890886
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5091369192103512573}
+  - component: {fileID: 5290746757051337082}
+  m_Layer: 0
+  m_Name: Car Spawner
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5091369192103512573
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6731739411145890886}
+  m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+  m_LocalPosition: {x: -122, y: 0, z: 6}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 7609667120526454229}
+  m_RootOrder: 5
+  m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
+--- !u!114 &5290746757051337082
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6731739411145890886}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a981201a2cb3a744d98abf717096af49, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  SpawnPoint: {fileID: 5091369192103512573}
+  Track: {fileID: 8043761391078894673}
+  TestCar: {fileID: 352613617798921809, guid: 568fe77cfc898694fad6a63eff98d905, type: 3}
 --- !u!1 &7005373354728422933
 GameObject:
   m_ObjectHideFlags: 0
