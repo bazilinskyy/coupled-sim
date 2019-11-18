@@ -7,17 +7,26 @@ using System.Text;
 using UnityEngine;
 using UnityEngine.Assertions;
 
+enum LogFrameType
+{
+    PositionsUpdate,
+    AICarSpawn,
+}
+
 //logger class
 public class WorldLogger
 {
     TrafficLightsSystem _lights;
     PlayerSystem _playerSystem;
+    AICarSyncSystem _aiCarSystem;
+    int _lastFrameAICarCount;
     BinaryWriter _fileWriter;
     float _startTime;
 
-    public WorldLogger(PlayerSystem playerSys)
+    public WorldLogger(PlayerSystem playerSys, AICarSyncSystem aiCarSystem)
     {
         _playerSystem = playerSys;
+        _aiCarSystem = aiCarSystem;
     }
 
     List<PlayerAvatar> _driverBuffer = new List<PlayerAvatar>();
@@ -82,12 +91,20 @@ public class WorldLogger
     //adds a single entry to the logfile
     public void LogFrame(float ping, float time)
     {
+        var aiCars = _aiCarSystem.Cars;
+        while (aiCars.Count > _lastFrameAICarCount)
+        {
+            _fileWriter.Write((int)LogFrameType.AICarSpawn);
+            _lastFrameAICarCount++;
+        }
+        _fileWriter.Write((int)LogFrameType.PositionsUpdate);
         _fileWriter.Write(time - _startTime);
         _fileWriter.Write(ping);
 
         _driverBuffer.Clear();
         _driverBuffer.AddRange(_playerSystem.Drivers);
         _driverBuffer.AddRange(_playerSystem.Passengers);
+        _driverBuffer.AddRange(_aiCarSystem.Cars);
         foreach (var driver in _driverBuffer)
         {
             _fileWriter.Write(driver.transform.position);
@@ -173,17 +190,45 @@ public class LogConverter
 
     const int NumFramesInVelocityRunningAverage = 10;
 
-    Vector3[] _driverPositions;
-    RunningAverage[] _driverVels;
-    bool _firstFrame;
-    float _prevTime;
+    struct Log
+    {
+        public DateTime StartTime;
+        public int LocalDriver;
+        public List<SerializedPOI> POIs;
+        public List<string> CarLightNames;
+        public List<string> PedestrianLightsNames;
+        public List<SerializedFrame> Frames;
+        public static Log New() => new Log
+        {
+            POIs = new List<SerializedPOI>(),
+            CarLightNames = new List<string>(),
+            PedestrianLightsNames = new List<string>(),
+            Frames = new List<SerializedFrame>(),
+        };
+    }
+
+    class SerializedFrame
+    {
+        public float Timestamp;
+        public float RoundtripTime;
+        public List<Vector3> DriverPositions = new List<Vector3>();
+        public List<Quaternion> DriverRotations = new List<Quaternion>();
+        public List<BlinkerState> BlinkerStates = new List<BlinkerState>();
+        public List<List<Vector3>> PedestrianPositions = new List<List<Vector3>>();
+        public List<List<Quaternion>> PedestrianRotations = new List<List<Quaternion>>();
+        public List<LightState> CarLightStates = new List<LightState>();
+        public List<LightState> PedestrianLightStates = new List<LightState>();
+        public Vector3 LocalDriverRbVelocity;
+    }
+
+    List<Vector3> _driverPositions;
+    List<RunningAverage> _driverVels;
     //translation logic
     //referenceName, referencePos, referenceRot - parameters specifining new origin point, allowing transforming data into new coordinate system
     public void TranslateBinaryLogToCsv(string sourceFile, string dstFile, string[] pedestrianSkeletonNames, string referenceName, Vector3 referencePos, Quaternion referenceRot)
     {
         _driverPositions = null;
         _driverVels = null;
-        _firstFrame = true;
 
         System.Threading.Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
         const string separator = ";";
@@ -194,26 +239,89 @@ public class LogConverter
         var toRefRot = Quaternion.Inverse(referenceRot);
 
         var srcFile = File.OpenRead(sourceFile);
+        Log log = Log.New();
         using (var reader = new BinaryReader(srcFile))
-        using (var writer = new StreamWriter(File.Create(dstFile)))
         {
-            writer.WriteLine($"Root;{referenceName}");
-            var startTime = DateTime.FromBinary(reader.ReadInt64());
-            var startString = startTime.ToString("HH:mm:ss") + ":" + startTime.Millisecond.ToString();
-            writer.WriteLine($"Start Time;{startString}");
-            var localDriver = reader.ReadInt32();
-            var numDrivers = reader.ReadInt32();
-            var numPedestrians = reader.ReadInt32();
-
-            // POI
-            var pois = new List<SerializedPOI>(ParsePOI(reader));
-            pois.AddRange(customPois);
-            pois.Add(new SerializedPOI()
+            log.StartTime = DateTime.FromBinary(reader.ReadInt64());
+            log.LocalDriver = reader.ReadInt32();
+            int numPersistentDrivers = reader.ReadInt32();
+            int numPedestrians = reader.ReadInt32();
+            log.POIs.AddRange(ParsePOI(reader));
+            log.POIs.AddRange(customPois);
+            log.POIs.Add(new SerializedPOI()
             {
                 Name = UNITY_WORLD_ROOT,
                 Position = Vector3.zero,
                 Rotation = Quaternion.identity
             });
+            int numCarLights = reader.ReadInt32();
+            for (int i = 0; i < numCarLights; i++)
+            {
+                log.CarLightNames.Add(reader.ReadString());
+            }
+            int numPedestrianLights = reader.ReadInt32();
+            for (int i = 0; i < numPedestrianLights; i++)
+            {
+                log.PedestrianLightsNames.Add(reader.ReadString());
+            }
+            int numAICars = 0;
+            while (srcFile.Position < srcFile.Length)
+            {
+                var eventType = (LogFrameType)reader.ReadInt32();
+                if (eventType == LogFrameType.AICarSpawn)
+                {
+                    numAICars++;
+                    continue;
+                }
+                Assert.AreEqual(LogFrameType.PositionsUpdate, eventType);
+                var frame = new SerializedFrame();
+                log.Frames.Add(frame);
+                frame.Timestamp = reader.ReadSingle();
+                frame.RoundtripTime = reader.ReadSingle();
+
+                int numDriversThisFrame = numAICars + numPersistentDrivers;
+                for (int i = 0; i < numDriversThisFrame; i++)
+                {
+                    frame.DriverPositions.Add(reader.ReadVector3());
+                    frame.DriverRotations.Add(reader.ReadQuaternion());
+                    frame.BlinkerStates.Add((BlinkerState)reader.ReadInt32());
+                    if (i == log.LocalDriver)
+                    {
+                        frame.LocalDriverRbVelocity = reader.ReadVector3() * SpeedConvertion.Mps2Kmph;
+                    }
+                }
+
+                for (int i = 0; i < numPedestrians; i++)
+                {
+                    frame.PedestrianPositions.Add(reader.ReadListVector3());
+                    frame.PedestrianRotations.Add(reader.ReadListQuaternion());
+                    _ = reader.ReadInt32(); // Blinkers, unused
+                }
+                for (int i = 0; i < numCarLights; i++)
+                {
+                    frame.CarLightStates.Add((LightState)reader.ReadByte());
+                }
+                for (int i = 0; i < numPedestrianLights; i++)
+                {
+                    frame.PedestrianLightStates.Add((LightState)reader.ReadByte());
+                }
+            }
+        }
+        using (var writer = new StreamWriter(File.Create(dstFile)))
+        {
+            writer.WriteLine($"Root;{referenceName}");
+
+            var startTime = log.StartTime;
+            var startString = startTime.ToString("HH:mm:ss") + ":" + startTime.Millisecond.ToString();
+
+            writer.WriteLine($"Start Time;{startString}");
+            var localDriver = log.LocalDriver;
+            var lastFrame = log.Frames[log.Frames.Count - 1];
+            var numDrivers = lastFrame.DriverPositions.Count;
+            var numPedestrians = lastFrame.PedestrianPositions.Count;
+
+            // POI
+            var pois = log.POIs;
             Vector3 PosToRefPoint(Vector3 p) => toRefRot * (p - referencePos);
             Quaternion RotToRefPoint(Quaternion q) => toRefRot * q;
             for (int i = 0; i < pois.Count; i++)
@@ -224,18 +332,6 @@ public class LogConverter
                 writer.WriteLine(poi);
             }
 
-            int numCarLights = reader.ReadInt32();
-            List<string> carLights = new List<string>();
-            for (int i = 0; i < numCarLights; i++)
-            {
-                carLights.Add(reader.ReadString());
-            }
-            int numPedestrianLights = reader.ReadInt32();
-            List<string> pedestrianLights = new List<string>();
-            for (int i = 0; i < numPedestrianLights; i++)
-            {
-                pedestrianLights.Add(reader.ReadString());
-            }
 
             //****************
             // HEADER ROWS
@@ -268,15 +364,15 @@ public class LogConverter
                 var pedestrianName = $"Pedestrian{i}";
                 writer.Write(string.Join(separator, Enumerable.Repeat(pedestrianName, columnsPerPedestrian)));
             }
-            if (numCarLights > 0)
+            if (log.CarLightNames.Count > 0)
             {
                 writer.Write(separator);
-                writer.Write(string.Join(separator, carLights));
+                writer.Write(string.Join(separator, log.CarLightNames));
             }
-            if (numPedestrianLights > 0)
+            if (log.PedestrianLightsNames.Count > 0)
             {
                 writer.Write(separator);
-                writer.Write(string.Join(separator, pedestrianLights));
+                writer.Write(string.Join(separator, log.PedestrianLightsNames));
             }
             writer.Write("\n");
 
@@ -341,71 +437,72 @@ public class LogConverter
             //****************
 
             List<string> line = new List<string>();
-            while (srcFile.Position < srcFile.Length)
+            SerializedFrame prevFrame = default;
+            float prevTime = 0;
+            foreach (var frame in log.Frames)
             {
                 line.Clear();
-                float timeStamp = reader.ReadSingle();
-                float roundtrip = reader.ReadSingle();
-                line.Add(timeStamp.ToString());
-                line.Add(roundtrip.ToString());
-                if (_driverPositions == null)
+                line.Add(frame.Timestamp.ToString());
+                line.Add(frame.RoundtripTime.ToString());
+                int numDriversThisFrame = frame.DriverPositions.Count;
+                if (_driverVels == null)
                 {
-                    _driverPositions = new Vector3[numDrivers];
-                    _driverVels = new RunningAverage[numDrivers];
-                    for (int i = 0; i < numDrivers; i++)
-                    {
-                        _driverVels[i] = new RunningAverage(NumFramesInVelocityRunningAverage);
-                    }
+                    _driverVels = new List<RunningAverage>(numDriversThisFrame);
                 }
-                for (int i = 0; i < numDrivers; i++)
+                for (int i = _driverVels.Count; i < numDriversThisFrame; i++)
                 {
-                    var pos = PosToRefPoint(reader.ReadVector3());
-                    var rot = reader.ReadQuaternion();
+                    _driverVels.Add(new RunningAverage(NumFramesInVelocityRunningAverage));
+                }
+
+                var dt = frame.Timestamp - prevTime;
+                for (int i = 0; i < numDriversThisFrame; i++)
+                {
+                    var pos = PosToRefPoint(frame.DriverPositions[i]);
+                    var rot = frame.DriverRotations[i];
                     var euler = RotToRefPoint(rot).eulerAngles;
-                    var blinkers = reader.ReadInt32();
-                    var lastPos = _driverPositions[i];
-                    _driverPositions[i] = pos;
-                    var dt = timeStamp - _prevTime;
-                    var vel = (pos - lastPos) / dt * SpeedConvertion.Mps2Kmph;
+                    var blinkers = frame.BlinkerStates[i];
                     var inverseRotation = Quaternion.Inverse(rot);
-                    var speed = inverseRotation * vel;
-                    if (i == localDriver)
+                    if (prevFrame == null || prevFrame.DriverPositions.Count <= i)
                     {
-                        var rbVel = reader.ReadVector3() * SpeedConvertion.Mps2Kmph;
-                        if (_firstFrame)
+                        if (i == localDriver)
                         {
                             line.Add($"{pos.x};{pos.y};{pos.z};{euler.x};{euler.y};{euler.z};{(BlinkerState)blinkers};0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0");
                         }
                         else
                         {
-                            _driverVels[i].Add(vel);
-                            var velSmooth = _driverVels[i].Get();
-                            var localSmooth = rot * velSmooth;
-                            var rbVelLocal = inverseRotation * rbVel;
-                            line.Add($"{pos.x};{pos.y};{pos.z};{euler.x};{euler.y};{euler.z};{(BlinkerState)blinkers};{speed.x};{speed.y};{speed.z};{localSmooth.x};{localSmooth.y};{localSmooth.z};{vel.x};{vel.y};{vel.z};{velSmooth.x};{velSmooth.y};{velSmooth.z};{rbVel.x};{rbVel.y};{rbVel.z};{rbVelLocal.x};{rbVelLocal.y};{rbVelLocal.z}");
+                            line.Add($"{pos.x};{pos.y};{pos.z};{euler.x};{euler.y};{euler.z};{(BlinkerState)blinkers};0;0;0;0;0;0;0;0;0;0;0;0");
                         }
                     }
                     else
                     {
-                        if (_firstFrame)
+                        var vel = (pos - PosToRefPoint(prevFrame.DriverPositions[i])) / dt * SpeedConvertion.Mps2Kmph;
+                        var speed = inverseRotation * vel;
+                        var runningAvg = _driverVels[i];
+                        runningAvg.Add(vel);
+                        _driverVels[i] = runningAvg;
+                        var velSmooth = runningAvg.Get();
+                        var localSmooth = rot * velSmooth;
+                        if (i == localDriver)
                         {
-                            line.Add($"{pos.x};{pos.y};{pos.z};{euler.x};{euler.y};{euler.z};{(BlinkerState)blinkers};0;0;0;0;0;0;0;0;0;0;0;0");
+                            var rbVel = frame.LocalDriverRbVelocity;
+                            var rbVelLocal = inverseRotation * rbVel;
+                            line.Add($"{pos.x};{pos.y};{pos.z};{euler.x};{euler.y};{euler.z};{(BlinkerState)blinkers};{speed.x};{speed.y};{speed.z};{localSmooth.x};{localSmooth.y};{localSmooth.z};{vel.x};{vel.y};{vel.z};{velSmooth.x};{velSmooth.y};{velSmooth.z};{rbVel.x};{rbVel.y};{rbVel.z};{rbVelLocal.x};{rbVelLocal.y};{rbVelLocal.z}");
+
                         }
                         else
                         {
-                            _driverVels[i].Add(vel);
-                            var velSmooth = _driverVels[i].Get();
-                            var localSmooth = rot * velSmooth;
                             line.Add($"{pos.x};{pos.y};{pos.z};{euler.x};{euler.y};{euler.z};{(BlinkerState)blinkers};{speed.x};{speed.y};{speed.z};{localSmooth.x};{localSmooth.y};{localSmooth.z};{vel.x};{vel.y};{vel.z};{velSmooth.x};{velSmooth.y};{velSmooth.z}");
                         }
                     }
                 }
-                _firstFrame = false;
-                for (int i = 0; i < numPedestrians; i++)
+                for (int i = numDriversThisFrame; i < numDrivers; i++)
                 {
-                    var pos = reader.ReadListVector3();
-                    var rot = reader.ReadListQuaternion();
-                    var unused = reader.ReadInt32();
+                    line.Add(";;;;;;;;;;;;;;;;;;");
+                }
+                for (int i = 0; i < frame.PedestrianPositions.Count; i++)
+                {
+                    var pos = frame.PedestrianPositions[i];
+                    var rot = frame.PedestrianRotations[i];
                     for (int j = 0; j < pos.Count; j++)
                     {
                         var p = PosToRefPoint(pos[j]);
@@ -413,17 +510,18 @@ public class LogConverter
                         line.Add($"{p.x};{p.y};{p.z};{r.x};{r.y};{r.z}");
                     }
                 }
-                for (int i = 0; i < numCarLights; i++)
+                foreach (LightState v in frame.CarLightStates)
                 {
-                    line.Add(((LightState)reader.ReadByte()).ToString());
+                    line.Add(v.ToString());
                 }
-                for (int i = 0; i < numPedestrianLights; i++)
+                foreach (LightState v in frame.PedestrianLightStates)
                 {
-                    line.Add(((LightState)reader.ReadByte()).ToString());
+                    line.Add(v.ToString());
                 }
                 writer.Write(string.Join(separator, line));
                 writer.Write("\n");
-                _prevTime = timeStamp;
+                prevTime = frame.Timestamp;
+                prevFrame = frame;
             }
         }
     }
