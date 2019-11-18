@@ -21,8 +21,8 @@ public class NetworkingManager : MonoBehaviour
         DontDestroyOnLoad(gameObject);
         _playerSystem = GetComponent<PlayerSystem>();
         _levelManager = new LevelManager(_playerSystem, Experiments);
-        _logger = new WorldLogger(_playerSystem);
-        _fixedLogger = new WorldLogger(_playerSystem);
+        _logger = new WorldLogger(_playerSystem, _aiCarSystem);
+        _fixedLogger = new WorldLogger(_playerSystem, _aiCarSystem);
         _logConverter = new LogConverter(_playerSystem.PedestrianPrefab);
     }
 

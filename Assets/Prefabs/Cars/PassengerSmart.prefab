@@ -3123,7 +3123,8 @@ MonoBehaviour:
     - {fileID: 4530647973924792293}
     collider: {fileID: 0}
   RemoteModeElements:
-    gameObjects: []
+    gameObjects:
+    - {fileID: 7613626435346195252}
     monoBehaviours: []
     collider: {fileID: 0}
   SuiteModeElements:
@@ -6602,9 +6603,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 714dcd86769921345a0786e011d20ae9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speedometerText: {fileID: 8437300312785061871}
   carBody: {fileID: 54329053537499438}
+  speedometerText: {fileID: 8437300312785061871}
   pivot: {fileID: 1367165417760144304}
+  pivotMinSpeedAngle: 120
+  pivotMaxSpeedAngle: -120
+  maxSpeed: 160
 --- !u!1 &2846605226229269803
 GameObject:
   m_ObjectHideFlags: 0
@@ -11390,7 +11394,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &7098170303935514140
 Transform:
   m_ObjectHideFlags: 0

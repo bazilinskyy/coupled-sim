@@ -164,6 +164,7 @@ namespace UnityStandardAssets.Utility
 
         private void DrawGizmos(bool selected)
         {
+            return;
             waypointList.circuit = this;
             if (Waypoints.Length > 1)
             {

@@ -60,7 +60,12 @@ public class AICar : MonoBehaviour
     }
     void Update()
     {
-        InitiateAV = ManualCarTrigger.GetComponent<StartAV>().InitiateAV;
+        // TODO(jacek): This null check is a quick hack to fix the errors
+        // we probably want a more elegant solution
+        if (ManualCarTrigger != null)
+        {
+            InitiateAV = ManualCarTrigger.GetComponent<StartAV>().InitiateAV;
+        }
     }
 
     void FixedUpdate()
