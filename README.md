@@ -42,7 +42,7 @@ The current number of human participants supported by the coupled simulator is t
 ## Installation
 The simualator was tested on Windows 10 and macOS Mojave. All functionality is supported by both platforms. However, support for input and output devices was tested only on Windows 10.
 
-After checking out this project, launch Unity Hub to run the simulator with the correct version of Unity (currently **2018.4.6f1**).
+After checking out this project, launch Unity Hub to run the simulator with the correct version of Unity (currently **2019.3.5f1**).
 
 ## How to run
 Select the project from the Unity Hub projects list. Wait until the project loads in. If it is not in the Unity Hub list (it is the first time you are running the project), it has to be added first - click *Add* and select a folder containing the project files.
