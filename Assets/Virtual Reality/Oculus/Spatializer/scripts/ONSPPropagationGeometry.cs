@@ -288,8 +288,8 @@ public class ONSPPropagationGeometry : MonoBehaviour
             TerrainMaterial t = terrains[i];
             TerrainData terrain = t.terrain.terrainData;
 
-            int w = terrain.heightmapWidth;
-            int h = terrain.heightmapHeight;
+            int w = terrain.heightmapResolution;
+            int h = terrain.heightmapResolution;
             int wRes = (w - 1) / terrainDecimation + 1;
             int hRes = (h - 1) / terrainDecimation + 1;
             int vertexCount = wRes * hRes;
@@ -365,8 +365,8 @@ public class ONSPPropagationGeometry : MonoBehaviour
             // Compute the combined transform to go from mesh-local to geometry-local space.
             Matrix4x4 matrix = worldToLocal * t.terrain.gameObject.transform.localToWorldMatrix;
 
-            int w = terrain.heightmapWidth;
-            int h = terrain.heightmapHeight;
+            int w = terrain.heightmapResolution;
+            int h = terrain.heightmapResolution;
             float[,] tData = terrain.GetHeights(0, 0, w, h);
 
             Vector3 meshScale = terrain.size;
