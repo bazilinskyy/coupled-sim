@@ -9,6 +9,7 @@ If you use coupled-sim for academic work please cite the following paper.
 
 ## Description of the simulator
 :tv: These days, a video is worth more than a million words. The image below points to a youtube video of the recording of a demo of the simulator with 3 agents:
+
 [![demo video](ReadmeFiles/thumbnail_demo_video.png)](https://www.youtube.com/watch?v=W2VWLYnTYrM)
 
 ### Environment
@@ -40,9 +41,9 @@ The supported sources of output are a head-mounted display (HMD) and computer sc
 The current number of human participants supported by the coupled simulator is three. However, this number can be expanded up to the number of agents supported by the network. Synchronisation in a local network is handled by a custom-made network manager designed to support the exchange of information between agents with low latency and real-time data logging at 50 Hz for variables from the Unity environment and up to 700Hz from the motion suit. The data that are logged include the three-dimensional position and rotation of the manual car and the AV, the use of blinkers by the driver of the manual car, and 150 position and angular variables from the motion suit. The data are stored in binary format, and the coupled simulator contains a function to convert the saved data into a CSV file. The host agent initiates a red bar that is displayed across all agents for 1 s to allow for visual synchronisation in case screen capture software is used.
 
 ## Installation
-The simualator was tested on Windows 10 and macOS Mojave. All functionality is supported by both platforms. However, support for input and output devices was tested only on Windows 10.
+The simualator was tested on Windows 10 and macOS Catalina. All functionality is supported by both platforms. However, support for input and output devices was tested only on Windows 10.
 
-After checking out this project, launch Unity Hub to run the simulator with the correct version of Unity (currently **2019.3.5f1**).
+After checking out this project, launch Unity Hub to run the simulator with the correct version of Unity (currently **2019.3.12f1**).
 
 ## How to run
 Select the project from the Unity Hub projects list. Wait until the project loads in. If it is not in the Unity Hub list (it is the first time you are running the project), it has to be added first - click *Add* and select a folder containing the project files.
