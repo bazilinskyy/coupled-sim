@@ -9,6 +9,7 @@ If you use coupled-sim for academic work please cite the following paper.
 
 ## Description of the simulator
 :tv: These days, a video is worth more than a million words. The image below points to a youtube video of the recording of a demo of the simulator with 3 agents:
+
 [![demo video](ReadmeFiles/thumbnail_demo_video.png)](https://www.youtube.com/watch?v=W2VWLYnTYrM)
 
 ### Environment
