@@ -63,7 +63,7 @@ public class HMIManager : MonoBehaviour
 
             GUILayout.EndHorizontal();
         }
-	}
+    }
 
     //hmi syncing message
     struct RequestHMIChangeMsg : INetMessage
@@ -117,6 +117,7 @@ public class HMIManager : MonoBehaviour
     void OnRequestHMIChange(ISynchronizer sync, int _)
     {
         var msg = NetMsg.Read<RequestHMIChangeMsg>(sync);
-        RequestHMIChange(_hmis[msg.HMI], (HMIState)msg.State);
+        RequestHMIChange(_hmis[msg.HMI
+], (HMIState)msg.State);
     }
 }

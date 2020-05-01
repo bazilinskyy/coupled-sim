@@ -45,14 +45,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 19afacb4684e0468b9467a16e4dc57aa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  CurrentState: 2
   meshRenderer: {fileID: 5686624085658925095}
   animator: {fileID: 6022275925309530708}
   stopTrigger: stop
   walkTrigger: walk
   disabledTrigger: disabled
-  stop: {fileID: 2800000, guid: c9b1a72289d444fa386d050138ee6c47, type: 3}
-  walk: {fileID: 2800000, guid: 5bf9e569c75fc40dbb6fbc65a115ca04, type: 3}
-  disabled: {fileID: 2800000, guid: 2b603ce05be3bb143ae492a8d8e16fa4, type: 3}
+  stop: {fileID: 2800000, guid: 8c3a5839a4d196e4b91825b3bc517f2f, type: 3}
+  walk: {fileID: 2800000, guid: e4474bb74cf24c1468259cb6b29b570e, type: 3}
+  disabled: {fileID: 2800000, guid: 5bdc9f00aecf4437b8a13e2a8f68722d, type: 3}
 --- !u!95 &6022275925309530708
 Animator:
   serializedVersion: 3
@@ -126,6 +127,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -137,6 +139,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0

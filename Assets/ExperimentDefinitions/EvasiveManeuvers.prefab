@@ -57,7 +57,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1311683244}
   m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: -106.42, y: -0.06, z: 4.95}
+  m_LocalPosition: {x: -50, y: -0.06, z: 0.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 935614564}
@@ -1284,17 +1284,18 @@ MonoBehaviour:
   Scene: MainScene
   Roles:
   - Name: Automated - Passenger
-    TopHMI: {fileID: 114674626593462642, guid: 9eaaf159fd53e9043a6a0f42f3729fa0, type: 3}
-    WindshieldHMI: {fileID: 114674626593462642, guid: 9eaaf159fd53e9043a6a0f42f3729fa0,
+    TopHMI: {fileID: 4798302349921966502, guid: 9eaaf159fd53e9043a6a0f42f3729fa0,
       type: 3}
-    HoodHMI: {fileID: 114674626593462642, guid: 9eaaf159fd53e9043a6a0f42f3729fa0,
+    WindshieldHMI: {fileID: 4798302349921966502, guid: 9eaaf159fd53e9043a6a0f42f3729fa0,
+      type: 3}
+    HoodHMI: {fileID: 4798302349921966502, guid: 9eaaf159fd53e9043a6a0f42f3729fa0,
       type: 3}
     carIdx: 0
     SpawnPoint:
       Point: {fileID: 1311683245}
       Type: 2
     AutonomousPath: {fileID: 8043761391078894673}
-    AutonomousIsYielding: 1
+    AutonomousIsYielding: 0
   - Name: Pedestrian
     TopHMI: {fileID: 0}
     WindshieldHMI: {fileID: 0}
@@ -1306,9 +1307,11 @@ MonoBehaviour:
     AutonomousPath: {fileID: 0}
     AutonomousIsYielding: 0
   - Name: Driver
-    TopHMI: {fileID: 0}
-    WindshieldHMI: {fileID: 0}
-    HoodHMI: {fileID: 0}
+    TopHMI: {fileID: 385886030260377646, guid: d50d288faf2844c448bf202c87437f24, type: 3}
+    WindshieldHMI: {fileID: 385886030260377646, guid: d50d288faf2844c448bf202c87437f24,
+      type: 3}
+    HoodHMI: {fileID: 385886030260377646, guid: d50d288faf2844c448bf202c87437f24,
+      type: 3}
     carIdx: 0
     SpawnPoint:
       Point: {fileID: 571469619656576747}

@@ -9,12 +9,12 @@ public class SpriteHMI : HMI
     SpriteRenderer _renderer;
     [SerializeField]
     Sprite stop;
-	[SerializeField]
-	Sprite walk;
-	[SerializeField]
-	Sprite disabled;
+    [SerializeField]
+    Sprite walk;
+    [SerializeField]
+    Sprite disabled;
 
-	public override void Display(HMIState state)
+    public override void Display(HMIState state)
     {
         base.Display(state);
         Sprite spr = null;
@@ -31,6 +31,7 @@ public class SpriteHMI : HMI
                 break;
         }
         _renderer.sprite = spr;
+
     }
 }
 

@@ -36,15 +36,15 @@ public class ClientHMIController : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Alpha1))
+        if (Input.GetKeyDown(KeyCode.Keypad1))
         {
             ChangeToState(HMIState.DISABLED);
         }
-        else if (Input.GetKeyDown(KeyCode.Alpha2))
+        else if (Input.GetKeyDown(KeyCode.Keypad2))
         {
             ChangeToState(HMIState.STOP);
         }
-        else if (Input.GetKeyDown(KeyCode.Alpha3))
+        else if (Input.GetKeyDown(KeyCode.Keypad3))
         {
             ChangeToState(HMIState.WALK);
         }
