@@ -24,7 +24,7 @@ public class posChange : MonoBehaviour
         y_count = 0f;
 
         Vector3 newPosition = transform.position; // We store the current position
-        newPosition.y = newPosition.y + 0.13f; // We set an axis, in this case the y axis
+        newPosition.y = newPosition.y + 0.03f; // We set an axis, in this case the y axis
         transform.position = newPosition; // We pass it back
 
         if (HMI_On == 1)

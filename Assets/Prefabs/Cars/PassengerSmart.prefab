@@ -3494,6 +3494,8 @@ GameObject:
   - component: {fileID: 352613617798921809}
   - component: {fileID: 3674258661364839874}
   - component: {fileID: 4530647973924792293}
+  - component: {fileID: 4586904486996042984}
+  - component: {fileID: 6700167309094435302}
   m_Layer: 9
   m_Name: PassengerSmart
   m_TagString: AutonomousCar
@@ -3671,6 +3673,46 @@ MonoBehaviour:
   RearLeft: {fileID: 8414590981671948444}
   RearRight: {fileID: 2590204308891740255}
   WheelDiameter: 0.54
+--- !u!320 &4586904486996042984
+PlayableDirector:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1787876385652902}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_PlayableAsset: {fileID: 11400000, guid: b177f469bd74d664c81b2a45756e79af, type: 2}
+  m_InitialState: 1
+  m_WrapMode: 2
+  m_DirectorUpdateMode: 1
+  m_InitialTime: 0
+  m_SceneBindings:
+  - key: {fileID: 5765723906405241743, guid: b177f469bd74d664c81b2a45756e79af, type: 2}
+    value: {fileID: 6700167309094435302}
+  - key: {fileID: 8508543013738526179, guid: b177f469bd74d664c81b2a45756e79af, type: 2}
+    value: {fileID: 0}
+  m_ExposedReferences:
+    m_References: []
+--- !u!95 &6700167309094435302
+Animator:
+  serializedVersion: 3
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1787876385652902}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 0}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorControllerStateOnDisable: 0
 --- !u!1 &1819827312411906
 GameObject:
   m_ObjectHideFlags: 0

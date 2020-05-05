@@ -2044,9 +2044,9 @@ GameObject:
   - component: {fileID: 1256699367}
   - component: {fileID: 1256699366}
   - component: {fileID: 1256699365}
-  - component: {fileID: 1256699369}
   - component: {fileID: 1256699371}
   - component: {fileID: 1256699370}
+  - component: {fileID: 1256699369}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: Untagged
@@ -2135,18 +2135,12 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1256699364}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 96089e7fbbea74562bbc046597f5b526, type: 3}
+  m_Script: {fileID: 11500000, guid: 301eca71255100647bb9bad1d5641921, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_RecordingTexture: {fileID: 0}
-  mBlitToRecorder: 0
-  blitToRecorder: 1
-  mBlitToScreen: 0
-  blitToScreen: 1
-  m_Camera: {fileID: 0}
-  m_IsQuitting: 0
+  shader: {fileID: 4800000, guid: 3d417cf48fde7da46b5a79811115e87f, type: 3}
 --- !u!95 &1256699370
 Animator:
   serializedVersion: 3
@@ -2842,6 +2836,7 @@ GameObject:
   - component: {fileID: 2060822771}
   - component: {fileID: 2060822770}
   - component: {fileID: 2060822769}
+  - component: {fileID: 2060822773}
   m_Layer: 0
   m_Name: ClearCamera
   m_TagString: Untagged
@@ -2922,6 +2917,19 @@ Transform:
   m_Father: {fileID: 301934532}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2060822773
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2060822768}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 301eca71255100647bb9bad1d5641921, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  shader: {fileID: 4800000, guid: 3d417cf48fde7da46b5a79811115e87f, type: 3}
 --- !u!1 &2086447183
 GameObject:
   m_ObjectHideFlags: 0
