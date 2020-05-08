@@ -3112,8 +3112,9 @@ GameObject:
   - component: {fileID: 352613617798921809}
   - component: {fileID: 3674258661364839874}
   - component: {fileID: 4530647973924792293}
+  - component: {fileID: 3996704615529426946}
   m_Layer: 9
-  m_Name: PassengerSmartNPC
+  m_Name: PassengerSmart_eHMI
   m_TagString: AutonomousCar
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3244,7 +3245,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1787876385652902}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b100b64279042ff46b83465c27e51ad0, type: 3}
   m_Name: 
@@ -3262,6 +3263,8 @@ MonoBehaviour:
   WaitInputX: 0
   WaitTrialX: 0
   WaitTrialZ: 0
+  BrakeX: 0
+  BrakeZ: 0
   target: {fileID: 0}
 --- !u!114 &3674258661364839874
 MonoBehaviour:
@@ -3300,6 +3303,21 @@ MonoBehaviour:
   RearLeft: {fileID: 8414590981671948444}
   RearRight: {fileID: 2590204308891740255}
   WheelDiameter: 0.54
+--- !u!114 &3996704615529426946
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1787876385652902}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 396ddf25b2e1fd749b5a30cff2178b0d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ShowDisabled: 0
+  ShowStop: 0
+  ShowWalk: 1
 --- !u!1 &1819827312411906
 GameObject:
   m_ObjectHideFlags: 0

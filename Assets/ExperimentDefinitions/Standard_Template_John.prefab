@@ -29,7 +29,6 @@ Transform:
   m_Children:
   - {fileID: 1311683245}
   - {fileID: 9168689610437224543}
-  - {fileID: 571469619656576747}
   m_Father: {fileID: 7609667120526454229}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -610,7 +609,7 @@ GameObject:
   - component: {fileID: 7609667120526454229}
   - component: {fileID: 8692043556341430772}
   m_Layer: 0
-  m_Name: TrolleyProblem_John
+  m_Name: Standard_Template_John
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -672,16 +671,6 @@ MonoBehaviour:
       Type: 0
     AutonomousPath: {fileID: 0}
     AutonomousIsYielding: 0
-  - Name: Driver
-    TopHMI: {fileID: 0}
-    WindshieldHMI: {fileID: 0}
-    HoodHMI: {fileID: 0}
-    carIdx: 0
-    SpawnPoint:
-      Point: {fileID: 571469619656576747}
-      Type: 1
-    AutonomousPath: {fileID: 0}
-    AutonomousIsYielding: 0
   PointsOfInterest: []
   CarSpawners: []
 --- !u!1 &7119670785824305140
@@ -716,36 +705,6 @@ Transform:
   m_Father: {fileID: 7609667120526454229}
   m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &7533570759686457814
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 571469619656576747}
-  m_Layer: 0
-  m_Name: Driver
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!4 &571469619656576747
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7533570759686457814}
-  m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: -165.5, y: 0.22246248, z: 5.6}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 935614564}
-  m_RootOrder: 2
-  m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
 --- !u!1 &8405330708473215665
 GameObject:
   m_ObjectHideFlags: 0

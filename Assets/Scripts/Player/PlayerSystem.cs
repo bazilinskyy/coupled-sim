@@ -17,6 +17,8 @@ public class PlayerSystem : MonoBehaviour
         HostAI
     }
 
+    public bool eHMIFixed = false;
+
     [SerializeField]
     Mode PlayerMode;
     [SerializeField]
@@ -89,8 +91,17 @@ public class PlayerSystem : MonoBehaviour
             waypointFollow.Init(role.AutonomousPath);
             LocalPlayer.gameObject.layer = LayerMask.NameToLayer(role.AutonomousIsYielding ? "Yielding" : "Car");
 
-            var hmiControl = LocalPlayer.GetComponent<ClientHMIController>();
-            hmiControl.Init(_hmiManager);
+            if(eHMIFixed == true)
+            {
+                var hmiControl = LocalPlayer.GetComponent<eHMIShowJohn>();
+                hmiControl.Init(_hmiManager);
+            }
+            else
+            {
+                var hmiControl = LocalPlayer.GetComponent<ClientHMIController>();
+                hmiControl.Init(_hmiManager);
+            }
+
         }
     }
 
