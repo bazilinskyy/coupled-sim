@@ -5,7 +5,7 @@ using UnityStandardAssets.Utility;
 public abstract class CarSpawnerBase : MonoBehaviour
 {
     [SerializeField]
-    protected Transform SpawnPoint;
+    protected Transform SpawnPointDistraction;
     [SerializeField]
     protected WaypointCircuit Track;
     protected AICarSyncSystem _syncSystem;
@@ -18,6 +18,8 @@ public abstract class CarSpawnerBase : MonoBehaviour
     }
 
     protected abstract IEnumerator SpawnCoroutine();
-    protected AICar Spawn(AICar prefab, bool yielding) 
-        => _syncSystem.Spawn(prefab, SpawnPoint.position, SpawnPoint.rotation, Track, yielding);
+    /*protected AICar Spawn(AICar prefab, bool yielding) 
+        => _syncSystem.Spawn(prefab, SpawnPoint.position, SpawnPoint.rotation, Track, yielding);*/
+    protected AICar SpawnDistraction(AICar prefab, bool yielding)
+    => _syncSystem.SpawnDistraction(prefab, SpawnPointDistraction.position, SpawnPointDistraction.rotation, Track, yielding);
 }

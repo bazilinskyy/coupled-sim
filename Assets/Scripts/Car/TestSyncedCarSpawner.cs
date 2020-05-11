@@ -7,11 +7,11 @@ public class TestSyncedCarSpawner : CarSpawnerBase
     public AICar TestCar;
     protected override IEnumerator SpawnCoroutine()
     {
-        yield return new WaitForSeconds(5);
+        yield return new WaitForSeconds(1);
+        SpawnDistraction(TestCar, false);
+        /*yield return new WaitForSeconds(5);
         Spawn(TestCar, false);
         yield return new WaitForSeconds(5);
-        Spawn(TestCar, false);
-        yield return new WaitForSeconds(5);
-        Spawn(TestCar, false);
+        Spawn(TestCar, false);*/
     }
 }

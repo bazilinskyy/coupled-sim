@@ -125,7 +125,7 @@ public class PlayerSystem : MonoBehaviour
     PlayerAvatar SpawnAvatar(SpawnPoint spawnPoint, PlayerAvatar prefab, int player, ExperimentRoleDefinition role)
     {
         var avatar = GameObject.Instantiate(prefab);
-        avatar.transform.position = spawnPoint.position;
+        avatar.transform.position = spawnPoint.position; // Spawn player position
         avatar.transform.rotation = spawnPoint.rotation;
         Avatars.Add(avatar);
         GetAvatarsOfType(avatar.Type).Add(avatar);
