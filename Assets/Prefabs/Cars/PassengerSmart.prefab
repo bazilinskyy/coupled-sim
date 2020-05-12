@@ -3496,6 +3496,7 @@ GameObject:
   - component: {fileID: 4530647973924792293}
   - component: {fileID: 4586904486996042984}
   - component: {fileID: 6700167309094435302}
+  - component: {fileID: 5999842045386121702}
   m_Layer: 9
   m_Name: PassengerSmart
   m_TagString: AutonomousCar
@@ -3626,7 +3627,7 @@ MonoBehaviour:
   jerk: 0
   turn_rate_degree: 360
   speed: 50
-  speed_m: 0
+  speed_m: 13.8889
   acceleration: 3.5
   t: 0
   HasPitch: 0
@@ -3713,6 +3714,18 @@ Animator:
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorControllerStateOnDisable: 0
+--- !u!114 &5999842045386121702
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1787876385652902}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 82ac515ab1095c64295a04596dbe9a45, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1819827312411906
 GameObject:
   m_ObjectHideFlags: 0

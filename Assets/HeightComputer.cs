@@ -13,7 +13,6 @@ public class HeightComputer : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        float width = GetComponent<GameObject>().bounds.size.y;
-        Debug.Log(width);
+        
     }
 }

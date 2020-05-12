@@ -92,53 +92,28 @@ public class AICar : MonoBehaviour
         // This statement is applied when the car is just driving.
         if ((braking == false) && (reset == false))
         {
+            speed = set_speed;
+            //if (acceleration != 0 && Mathf.Abs(speed) < Mathf.Abs(set_speed) * (1 + tolerance) + tolerance * 10 && Mathf.Abs(speed) > Mathf.Abs(set_speed) * (1 - tolerance) - tolerance * 10)
+            //{
+            //    jerk = 0;
+            //    speed = set_speed;
+            //}
 
-            if (acceleration != 0 && Mathf.Abs(speed) < Mathf.Abs(set_speed) * (1 + tolerance) + tolerance * 10 && Mathf.Abs(speed) > Mathf.Abs(set_speed) * (1 - tolerance) - tolerance * 10)
-            {
-                jerk = 0;
-                speed = set_speed;
-            }
-
-            theRigidbody.velocity = rotationAxis.forward * speed / conversion; // Application of calculated velocity to Rigidbody
+            theRigidbody.velocity = rotationAxis.forward * set_speed / conversion; // Application of calculated velocity to Rigidbody
 
         }
 
         if (TimerTest >= 8.64f && TimerTest < 8.7f && Yield != 1)
         {
             //Debug.Log(this.gameObject.transform.position.x.ToString());
-            triggerlocation = -35;
+            triggerlocation = -30;
             braking = true;
             WaitInputX = true;
-            //set_speed = other.GetComponent<SpeedSettings>().speed;
-            //set_acceleration = other.GetComponent<SpeedSettings>().acceleration;
-            // jerk = -Mathf.Abs(other.GetComponent<SpeedSettings>().jerk);
+           
         }
 
-        else if ((braking == true) && (reset == false))
+        if ((braking == true) && (reset == false))
         {
-            //Debug.Log(TimerTest.ToString());
-            //Debug.Log(triggerlocation.ToString());
-            //Debug.Log(this.gameObject.transform.position.x.ToString());
-            //Debug.Log(Time.deltaTime.ToString());
-            // Compute delta distance for deceleration
-            //if (WaitInputX == true)
-            //{
-            //    delta_distance = Mathf.Abs(this.gameObject.transform.position.x - triggerlocation);
-            //}
-
-            //else if (WaitTrialZ == true)
-            //{
-            //    delta_distance = Mathf.Abs(this.gameObject.transform.position.z - triggerlocation);
-            //}
-
-            //else if (WaitTrialX == true)
-            //{
-            //    delta_distance = Mathf.Abs(this.gameObject.transform.position.x - triggerlocation);
-            //}
-            // Apply delta_distance for deceleration 
-            // Formula: v = sqrt(u^2 + 2*a*s) with v = final velocity; u = initial velocity; a = acceleration; s = distance covered. 
-
-            // speed = Mathf.Sqrt(900 + 2 * set_acceleration * Mathf.Pow(conversion, 2) * delta_distance); // Application of conversion of km/h to m/s which needs to be squared
 
             if (speed > 0)
             {
@@ -150,7 +125,7 @@ public class AICar : MonoBehaviour
 
             // Slowing down            
             // Compute pitch for deceleration
-            if (speed > 10f && delta_distance < 17f) // When speed larger than 10 km/h, pitch increases to 0.5 degrees
+            if (speed > 10f) // When speed larger than 10 km/h, pitch increases to 0.5 degrees
             {
                 Timer1 += Time.deltaTime;
                 pitch = Timer1 * 6;
@@ -165,7 +140,7 @@ public class AICar : MonoBehaviour
                 }
             }
 
-            else if (speed < 10f && delta_distance < 17f) // When speed smaller than 10 km/h, pitch slowely decreases from 0.5 degrees
+            else if (speed < 10f) // When speed smaller than 10 km/h, pitch slowely decreases from 0.5 degrees
             {
                 Timer2 += Time.deltaTime;
                 pitch = 0.5f - (Timer2);
@@ -187,7 +162,7 @@ public class AICar : MonoBehaviour
                     this.transform.Rotate(pitch, 0, 0);
                 }
 
-                speed = 0f;
+                // speed = 0f;
                 theRigidbody.velocity = new Vector3(0, 0, 0); // Apply zero velocity 
             }
 
@@ -195,6 +170,7 @@ public class AICar : MonoBehaviour
             if (speed <= 0)  // If car is standing still, change pitch back to zero.
 
             {
+                speed = 0f;
                 Timer2 += Time.deltaTime;
                 pitch = 0.5f - (Timer2);
 
@@ -212,11 +188,11 @@ public class AICar : MonoBehaviour
 
                     braking = false;
                     reset = true;
-                    set_acceleration = 1f;
-                    set_speed = 30;
+                    set_acceleration = 2f;
+                    set_speed = 50;
                     startlocation = this.gameObject.transform.position.x - 0.10f;
 
-                    
+
 
                 }
             }
@@ -227,126 +203,9 @@ public class AICar : MonoBehaviour
         {
             speed_m = (speed / conversion) + set_acceleration * Time.deltaTime;
             speed = speed_m * conversion;
-            //// Accelerating in the X direction
-            //if (WaitInputX == true)
-            //{
-            //    delta_distance = Mathf.Abs(this.gameObject.transform.position.x - startlocation);
-            //}
-
-            //// Accelerating in the Z direction
-            //else if (WaitTrialZ == true)
-            //{
-            //    delta_distance = Mathf.Abs(this.gameObject.transform.position.z - startlocation);
-            //}
-
-            //// Accelerating in the X direction
-            //else if (WaitTrialX == true)
-            //{
-            //    delta_distance = Mathf.Abs(this.gameObject.transform.position.x - startlocation);
-            //}
-
-            //speed = Mathf.Sqrt(2 * set_acceleration * Mathf.Pow(conversion, 2) * delta_distance);
-            //if (speed < 2f)
-            //{
-            //    speed = 2f;
-            //}
+            
             theRigidbody.velocity = rotationAxis.forward * speed / conversion; // Application of calculated velocity to Rigidbody 
-            //Debug.Log(speed.ToString());
 
-            if (speed >= 50f)
-            {
-                reset = false;
-                WaitInputX = false;
-                WaitTrialZ = false;
-                WaitTrialX = false;
-            }
         }
     }
-
-    // If gameObject is set invisible, destroy gameObject.
-    void OnBecameInvisible()
-    {
-        Destroy(gameObject);
-    }
-
-    //void OnTriggerEnter(Collider other)
-    //{
-    //    // Do nothing if trigger isn't enabled
-    //    //if (this.enabled == true)
-    //    if (Yield == 1)
-    //    {
-    //        return;
-    //    }
-    //    //Take over Waypoint Data
-    //    //else if (other.gameObject.CompareTag("WP"))
-    //    //{
-    //    //    // If WaypointNumber is one, take over settings
-    //    //    if (other.GetComponent<SpeedSettings>().WaypointNumber == 1)
-    //    //    {
-    //    //        set_speed = other.GetComponent<SpeedSettings>().speed;
-    //    //        set_acceleration = other.GetComponent<SpeedSettings>().acceleration;
-    //    //    }
-    //    //    // If WaypointNumber is two, destroy gameobject.
-    //    //    else if (other.GetComponent<SpeedSettings>().WaypointNumber == 2)
-    //    //    {
-    //    //        gameObject.SetActive(false);
-    //    //        Destroy(gameObject);
-    //    //        Destroy(target.gameObject);
-    //    //    }
-    //    //}
-
-    //    // Change of tag here that causes deceleration when hitting trigger in X direction
-    //    //This statement is applied when the car starts braking
-    //    // else if (this.gameObject.transform.position.x >= -35 && this.gameObject.transform.position.x < -30)
-    //    else if (TimerTest >= 8.28f && TimerTest < 8.5f && Yield != 1)
-    //    {
-    //        Debug.Log(this.gameObject.transform.position.x.ToString());
-    //        triggerlocation = -35;
-    //        braking = true;
-    //        WaitInputX = true;
-    //        //set_speed = other.GetComponent<SpeedSettings>().speed;
-    //        //set_acceleration = other.GetComponent<SpeedSettings>().acceleration;
-    //        jerk = -Mathf.Abs(other.GetComponent<SpeedSettings>().jerk);
-    //    }
-
-    //    //else if (other.gameObject.CompareTag("WaitInput_X"))
-    //    //{
-    //    //    Debug.Log("WaitInput_X");
-    //    //    Debug.Log(other.gameObject.transform.position.x.ToString());
-
-    //    //    triggerlocation = other.gameObject.transform.position.x;
-    //    //    braking = true;
-    //    //    WaitInputX = true;
-    //    //    set_speed = other.GetComponent<SpeedSettings>().speed;
-    //    //    set_acceleration = other.GetComponent<SpeedSettings>().acceleration;
-    //    //    jerk = -Mathf.Abs(other.GetComponent<SpeedSettings>().jerk);
-    //    //}
-    //    //// Change of tag here that causes deceleration when hitting trigger in Z direction
-    //    //else if (other.gameObject.CompareTag("StartTrial_Z"))
-    //    //{
-    //    //    Debug.Log("StartTrial_Z");
-    //    //    Debug.Log(other.gameObject.transform.position.z.ToString());
-
-    //    //    triggerlocation = other.gameObject.transform.position.z;
-    //    //    braking = true;
-    //    //    WaitTrialZ = true;
-    //    //    set_speed = other.GetComponent<SpeedSettings>().speed;
-    //    //    set_acceleration = other.GetComponent<SpeedSettings>().acceleration;
-    //    //    jerk = -Mathf.Abs(other.GetComponent<SpeedSettings>().jerk);
-    //    //}
-
-    //    //// Change of tag here that causes deceleration when hitting trigger in Z direction
-    //    //else if ((other.gameObject.CompareTag("StartTrial_X")))
-    //    //{
-    //    //    Debug.Log("StartTrial_X");
-    //    //    Debug.Log(other.gameObject.transform.position.x.ToString());
-
-    //    //    triggerlocation = other.gameObject.transform.position.x;
-    //    //    braking = true;
-    //    //    WaitTrialX = true;
-    //    //    set_speed = other.GetComponent<SpeedSettings>().speed;
-    //    //    set_acceleration = other.GetComponent<SpeedSettings>().acceleration;
-    //    //    jerk = -Mathf.Abs(other.GetComponent<SpeedSettings>().jerk);
-    //    //}
-    //}
 }
