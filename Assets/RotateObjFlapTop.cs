@@ -40,13 +40,13 @@ public class RotateObjFlapTop : MonoBehaviour
                 //    transform.rotation = originalRot * Quaternion.AngleAxis(angle, Vector3.up);
                 //}
 
-                if (allTimer >= 8.28f && allTimer < 15.78f)
+                if (allTimer >= 8.64f && allTimer < 16.14f)
                 {
                     Timer2 += Time.deltaTime;
                     float angle = Mathf.Sin(Mathf.PI * 2 * Timer2 - 0.5f * Mathf.PI) * (10) - (15) + 45; //tweak this to change frequency
                     transform.rotation = originalRot * Quaternion.AngleAxis(-angle, Vector3.up);
                 }
-                if (allTimer >= 15.78f && allTimer < 21.28f)
+                if (allTimer >= 16.14f && allTimer < 21.28f)
                 {
                     Timer3 += Time.deltaTime;
                     float angle = Mathf.Sin(Mathf.PI * 2 * Timer3) * (90 / 2) - (45/2) - 45; //tweak this to change frequency
@@ -67,7 +67,7 @@ public class RotateObjFlapTop : MonoBehaviour
                 //    float angle = Mathf.Sin(Mathf.PI * 2 * Timer3 - 0.5f * Mathf.PI) * 45 + 45; //tweak this to change frequency
                 //    transform.rotation = originalRot * Quaternion.AngleAxis(-angle, Vector3.up);
                 //}
-                if (allTimer >= 8.28f && allTimer < 11.28f)
+                if (allTimer >= 8.64f && allTimer < 11.28f)
                 {
                     Timer += Time.deltaTime;
                     float angle = Mathf.Sin(Mathf.PI * 2 * Timer + 0.5f * Mathf.PI) * (90 / 2) - (45 / 2) - 45; //tweak this to change frequency

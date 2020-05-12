@@ -30,13 +30,13 @@ public class LightbarHMI : MonoBehaviour
 
             if (Yielding == 1)
             {
-                StartCoroutine(Go(15.78f));
-                StartCoroutine(Yield(8.28f));
-                StartCoroutine(Disable(21.28f));
+                StartCoroutine(Go(16.14f));
+                StartCoroutine(Yield(8.64f));
+                StartCoroutine(Disable(21.78f));
             }
             else
             {
-                StartCoroutine(Go(8.28f));
+                StartCoroutine(Go(8.64f));
                 StartCoroutine(Disable(11.78f));
             }
         }

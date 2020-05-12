@@ -180,7 +180,7 @@ MonoBehaviour:
   m_Name: MovieRecorderSettings
   m_EditorClassIdentifier: 
   enabled: 1
-  take: 15
+  take: 23
   captureEveryNthFrame: 1
   fileNameGenerator:
     m_Path:
@@ -189,7 +189,7 @@ MonoBehaviour:
       m_ForceAssetFolder: 0
     m_FileName: movie<Take>
   outputFormat: 0
-  videoBitRateMode: 1
+  videoBitRateMode: 2
   captureAlpha: 0
   m_ImageInputSelector:
     m_Selected: gameViewInputSettings
@@ -208,8 +208,8 @@ MonoBehaviour:
       m_OutputResolution:
         m_CustomWidth: 1024
         m_CustomHeight: 1024
-        imageHeight: 0
-        maxSupportedHeight: 4320
+        imageHeight: 1080
+        maxSupportedHeight: 2160
         m_AspectRatio:
           m_CustomAspectX: 1
           m_CustomAspectY: 1
@@ -219,7 +219,7 @@ MonoBehaviour:
       flipFinalOutput: 0
       captureUI: 0
     camera360InputSettings:
-      source: 2
+      source: 4
       cameraTag: 
       flipFinalOutput: 0
       renderStereo: 1
@@ -232,10 +232,10 @@ MonoBehaviour:
       flipFinalOutput: 0
     renderTextureSamplerSettings:
       source: 1
-      m_RenderWidth: 1280
-      m_RenderHeight: 720
-      m_OutputWidth: 1280
-      m_OutputHeight: 720
+      m_RenderWidth: 1920
+      m_RenderHeight: 1080
+      m_OutputWidth: 1920
+      m_OutputHeight: 1080
       outputAspectRatio:
         m_CustomAspectX: 1
         m_CustomAspectY: 1
@@ -247,4 +247,4 @@ MonoBehaviour:
       colorSpace: 0
       flipFinalOutput: 0
   m_AudioInputSettings:
-    preserveAudio: 1
+    preserveAudio: 0

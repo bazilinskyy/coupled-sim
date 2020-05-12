@@ -13,7 +13,7 @@ public class AICar : MonoBehaviour
     // Motion related variables
     public float set_speed = 50;                                           // Velocity of cars in simulation
     public float set_acceleration = 3.5f;                                     // Acceleration of cars in simulation
-    public float jerk = 2;                                                 // Jerk of cars in simulation
+    public float jerk = 0;                                                 // Jerk of cars in simulation
     public float turn_rate_degree = 360;
     private float conversion = 3.6f;
     public float speed;                                                    // Speed variable used for computations in this script
@@ -22,7 +22,7 @@ public class AICar : MonoBehaviour
     public float t = 0;                                                    // Time variable used for computations in this script
     private float pitch = 0;                                               // Pitch of the car
     private float tolerance = 0.05f;                                       // Used to determine if the changed variable reached its target value. 2% seems to fit. (De Clercq)
-    public int HasPitch = 1;
+    public int HasPitch = 0;
     private Transform rotationAxis;
     private float Timer1;
     private float Timer2;
@@ -93,21 +93,6 @@ public class AICar : MonoBehaviour
         if ((braking == false) && (reset == false))
         {
 
-            if (jerk != 0)
-            {
-                acceleration = set_acceleration;
-                t += Mathf.Abs(jerk) / Mathf.Abs(set_acceleration) * Time.fixedDeltaTime;
-                pitch = acceleration / 3 * HasPitch;
-                this.transform.Rotate(-pitch, 0, 0);
-            }
-
-            if (set_acceleration > 0f && set_speed > speed || set_acceleration < 0f && set_speed < speed)
-            {
-                speed = speed + set_acceleration * Time.fixedDeltaTime * conversion;
-                pitch = acceleration / 3 * HasPitch;
-                this.transform.Rotate(-pitch, 0, 0);
-            }
-
             if (acceleration != 0 && Mathf.Abs(speed) < Mathf.Abs(set_speed) * (1 + tolerance) + tolerance * 10 && Mathf.Abs(speed) > Mathf.Abs(set_speed) * (1 - tolerance) - tolerance * 10)
             {
                 jerk = 0;
@@ -118,7 +103,7 @@ public class AICar : MonoBehaviour
 
         }
 
-        if (TimerTest >= 8.28f && TimerTest < 8.34f && Yield != 1)
+        if (TimerTest >= 8.64f && TimerTest < 8.7f && Yield != 1)
         {
             //Debug.Log(this.gameObject.transform.position.x.ToString());
             triggerlocation = -35;
@@ -136,20 +121,20 @@ public class AICar : MonoBehaviour
             //Debug.Log(this.gameObject.transform.position.x.ToString());
             //Debug.Log(Time.deltaTime.ToString());
             // Compute delta distance for deceleration
-            if (WaitInputX == true)
-            {
-                delta_distance = Mathf.Abs(this.gameObject.transform.position.x - triggerlocation);
-            }
+            //if (WaitInputX == true)
+            //{
+            //    delta_distance = Mathf.Abs(this.gameObject.transform.position.x - triggerlocation);
+            //}
 
-            else if (WaitTrialZ == true)
-            {
-                delta_distance = Mathf.Abs(this.gameObject.transform.position.z - triggerlocation);
-            }
+            //else if (WaitTrialZ == true)
+            //{
+            //    delta_distance = Mathf.Abs(this.gameObject.transform.position.z - triggerlocation);
+            //}
 
-            else if (WaitTrialX == true)
-            {
-                delta_distance = Mathf.Abs(this.gameObject.transform.position.x - triggerlocation);
-            }
+            //else if (WaitTrialX == true)
+            //{
+            //    delta_distance = Mathf.Abs(this.gameObject.transform.position.x - triggerlocation);
+            //}
             // Apply delta_distance for deceleration 
             // Formula: v = sqrt(u^2 + 2*a*s) with v = final velocity; u = initial velocity; a = acceleration; s = distance covered. 
 
@@ -159,7 +144,7 @@ public class AICar : MonoBehaviour
             {
                 speed_m = (speed / conversion) - set_acceleration * Time.deltaTime;
                 speed = speed_m * conversion;
-              //  speed = Mathf.Sqrt(900 + 2 * set_acceleration * Mathf.Pow(conversion, 2) * delta_distance); // Application of conversion of km/h to m/s which needs to be squared
+                //  speed = Mathf.Sqrt(900 + 2 * set_acceleration * Mathf.Pow(conversion, 2) * delta_distance); // Application of conversion of km/h to m/s which needs to be squared
                 Debug.Log(speed.ToString());
             }
 
@@ -206,7 +191,9 @@ public class AICar : MonoBehaviour
                 theRigidbody.velocity = new Vector3(0, 0, 0); // Apply zero velocity 
             }
 
-            if (speed <= 0 && delta_distance > 16f)  // If car is standing still, change pitch back to zero.
+            //if (speed <= 0 && delta_distance > 16f)  // If car is standing still, change pitch back to zero.
+            if (speed <= 0)  // If car is standing still, change pitch back to zero.
+
             {
                 Timer2 += Time.deltaTime;
                 pitch = 0.5f - (Timer2);
@@ -218,7 +205,7 @@ public class AICar : MonoBehaviour
                 {
                     this.transform.Rotate(pitch, 0, 0);
                 }
-                //Debug.Log(Timer2);
+                Debug.Log(Timer2);
 
                 if (TimerStop >= 5f) // After standing still for two seconds, passenger can initiate driving again by pressing space.
                 {
@@ -228,6 +215,9 @@ public class AICar : MonoBehaviour
                     set_acceleration = 1f;
                     set_speed = 30;
                     startlocation = this.gameObject.transform.position.x - 0.10f;
+
+                    
+
                 }
             }
             theRigidbody.velocity = rotationAxis.forward * speed / conversion; // Application of calculated velocity to Rigidbody 
@@ -235,29 +225,31 @@ public class AICar : MonoBehaviour
         // This statement is applied when the car stood still and is resetting its speed.
         else if ((braking == false) && (reset == true))
         {
-            // Accelerating in the X direction
-            if (WaitInputX == true)
-            {
-                delta_distance = Mathf.Abs(this.gameObject.transform.position.x - startlocation);
-            }
+            speed_m = (speed / conversion) + set_acceleration * Time.deltaTime;
+            speed = speed_m * conversion;
+            //// Accelerating in the X direction
+            //if (WaitInputX == true)
+            //{
+            //    delta_distance = Mathf.Abs(this.gameObject.transform.position.x - startlocation);
+            //}
 
-            // Accelerating in the Z direction
-            else if (WaitTrialZ == true)
-            {
-                delta_distance = Mathf.Abs(this.gameObject.transform.position.z - startlocation);
-            }
+            //// Accelerating in the Z direction
+            //else if (WaitTrialZ == true)
+            //{
+            //    delta_distance = Mathf.Abs(this.gameObject.transform.position.z - startlocation);
+            //}
 
-            // Accelerating in the X direction
-            else if (WaitTrialX == true)
-            {
-                delta_distance = Mathf.Abs(this.gameObject.transform.position.x - startlocation);
-            }
+            //// Accelerating in the X direction
+            //else if (WaitTrialX == true)
+            //{
+            //    delta_distance = Mathf.Abs(this.gameObject.transform.position.x - startlocation);
+            //}
 
-            speed = Mathf.Sqrt(2 * set_acceleration * Mathf.Pow(conversion, 2) * delta_distance);
-            if (speed < 2f)
-            {
-                speed = 2f;
-            }
+            //speed = Mathf.Sqrt(2 * set_acceleration * Mathf.Pow(conversion, 2) * delta_distance);
+            //if (speed < 2f)
+            //{
+            //    speed = 2f;
+            //}
             theRigidbody.velocity = rotationAxis.forward * speed / conversion; // Application of calculated velocity to Rigidbody 
             //Debug.Log(speed.ToString());
 
