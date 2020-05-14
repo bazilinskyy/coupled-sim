@@ -83,38 +83,39 @@ public class AICarSyncSystem
         return aiCar;
     }
 
-    public AICar SpawnDistraction(AICar prefab, Vector3 position, Quaternion rotation, WaypointCircuit track, bool yielding) // Added by John
+    public AICar SpawnDistraction(AICar prefab, Vector3 position, Quaternion rotation, WaypointCircuit track, bool yielding) 
     {
-        // Check car set up
-        Assert.AreEqual(Mode.Host, _mode, "Only host can spawn synced objects");
-        var prefabIdx = FindPrefabIndex(prefab);
-        Assert.AreNotEqual(-1, prefabIdx, $"The prefab {prefab} was not added to NetworkingManager -> AICarSyncSystem -> Prefabs");
+            // Check car set up
+            Assert.AreEqual(Mode.Host, _mode, "Only host can spawn synced objects");
+            var prefabIdx = FindPrefabIndex(prefab);
+            Assert.AreNotEqual(-1, prefabIdx, $"The prefab {prefab} was not added to NetworkingManager -> AICarSyncSystem -> Prefabs");
 
-        // Instantiate distraction car
-        var aiCar = GameObject.Instantiate(Prefabs[prefabIdx], position, rotation);
-        aiCar.gameObject.layer = LayerMask.NameToLayer(yielding ? "Yielding" : "Car");
-        aiCar.enabled = true;
+            // Instantiate distraction car
+            var aiCar = GameObject.Instantiate(Prefabs[prefabIdx], position, rotation); 
+            aiCar.gameObject.layer = LayerMask.NameToLayer(yielding ? "Yielding" : "Car");
+            aiCar.enabled = true;
 
-        // Set waypoint for distraction car
-        var waypointProgressTracker = aiCar.GetComponent<WaypointProgressTracker>();
-        waypointProgressTracker.enabled = true;
-        waypointProgressTracker.Init(track);
+            // Set waypoint for distraction car
+            var waypointProgressTracker = aiCar.GetComponent<WaypointProgressTracker>();
+            waypointProgressTracker.enabled = true;
+            waypointProgressTracker.Init(track);
 
-        // Initialize the host ai
-        var avatar = aiCar.GetComponent<PlayerAvatar>();
-        avatar.Initialize(PlayerSystem.Mode.HostAI);
+            // Initialize the host ai
+            var avatar = aiCar.GetComponent<PlayerAvatar>();
+            avatar.Initialize(PlayerSystem.Mode.HostAI);
 
-        // Add rigid body to car
-        var rb = aiCar.GetComponent<Rigidbody>();
-        rb.isKinematic = false;
-        rb.GetComponent<Rigidbody>().useGravity = true;
-        Cars.Add(avatar);
-        _host.BroadcastReliable(new SpawnAICarMsg()
-        {
-            PrefabIdx = prefabIdx,
-            Position = position,
-            Rotation = rotation,
-        });
+            // Add rigid body to car
+            var rb = aiCar.GetComponent<Rigidbody>();
+            rb.isKinematic = false;
+            rb.GetComponent<Rigidbody>().useGravity = true;
+            Cars.Add(avatar);
+            _host.BroadcastReliable(new SpawnAICarMsg()
+            {
+                PrefabIdx = prefabIdx,
+                Position = position,
+                Rotation = rotation,
+            });
+
         return aiCar;
     }
 

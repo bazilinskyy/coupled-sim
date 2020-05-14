@@ -35,26 +35,39 @@ public class WorldLogger
     public void BeginLog(string fileName, ExperimentDefinition experiment, TrafficLightsSystem lights, float time)
     {
         _lights = lights;
+
+        // Create logging directory
         if (!Directory.Exists("ExperimentLogs"))
         {
             Directory.CreateDirectory("ExperimentLogs");
         }
+
+        // Filename log data
         _fileWriter = new BinaryWriter(File.Create("ExperimentLogs/" + fileName + DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss") + ".binLog"));
+
+        // Add time to log file
         _startTime = time;
         _fileWriter.Write(DateTime.Now.ToBinary());
+
+        // Add drivers and passengers avatars to the log file
         _driverBuffer.Clear();
         _driverBuffer.AddRange(_playerSystem.Drivers);
         _driverBuffer.AddRange(_playerSystem.Passengers);
+
+        // Add player index of local player, number of avatars, number of pedestrians, number of POI.
         _fileWriter.Write(_driverBuffer.IndexOf(_playerSystem.LocalPlayer));
         _fileWriter.Write(_driverBuffer.Count);
         _fileWriter.Write(_playerSystem.Pedestrians.Count);
         _fileWriter.Write(experiment.PointsOfInterest.Length);
+
+        // For each POI, log the name, position and rotation (Use this to log data?)(To Add: eye-gaze passenger/pedestrian, eHMI activation)
         foreach (var poi in experiment.PointsOfInterest)
         {
             _fileWriter.Write(poi.name);
             _fileWriter.Write(poi.position);
             _fileWriter.Write(poi.rotation);
         }
+        // Add light info (not relevant for me)
         if (_lights != null)
         {
             _fileWriter.Write(_lights.CarLights.Length);
@@ -80,10 +93,10 @@ public class WorldLogger
         List<string> names = new List<string>();
         while (trans != null)
         {
-            names.Add(trans.name);
-            trans = trans.parent;
+            names.Add(trans.name);      // Put the transform/input name into the list "names"
+            trans = trans.parent;       // Turn the transform into its own parent 
         }
-        names.Reverse();
+        names.Reverse();                // Why reverse the list?
         return string.Join("/", names);
     }
 
@@ -91,6 +104,7 @@ public class WorldLogger
     //adds a single entry to the logfile
     public void LogFrame(float ping, float time)
     {
+        // Log down the AI cars, position, time and ping
         var aiCars = _aiCarSystem.Cars;
         while (aiCars.Count > _lastFrameAICarCount)
         {
@@ -101,15 +115,19 @@ public class WorldLogger
         _fileWriter.Write(time - _startTime);
         _fileWriter.Write(ping);
 
+        // Add drivers and passengers avatars, and AI cars to the log file
         _driverBuffer.Clear();
         _driverBuffer.AddRange(_playerSystem.Drivers);
         _driverBuffer.AddRange(_playerSystem.Passengers);
         _driverBuffer.AddRange(_aiCarSystem.Cars);
+
+        // Log the drivers position, rotation, carblinker state. ( No drivers, so unused)
         foreach (var driver in _driverBuffer)
         {
             _fileWriter.Write(driver.transform.position);
             _fileWriter.Write(driver.transform.rotation);
             _fileWriter.Write((int)driver._carBlinkers.State);
+            // Only log car velocity if local player
             if (driver == _playerSystem.LocalPlayer)
             {
                 var rb = driver.GetComponent<Rigidbody>();
@@ -118,6 +136,7 @@ public class WorldLogger
                 _fileWriter.Write(rb.velocity);
             }
         }
+        // Log position and rotation of pedestrian (from the GetPose function)
         foreach (var pedestrian in _playerSystem.Pedestrians)
         {
             pedestrian.GetPose().SerializeTo(_fileWriter);
@@ -156,12 +175,14 @@ public class LogConverter
         public Vector3 Position;
         public Quaternion Rotation;
 
+        // To string return structure 
         public override string ToString()
         {
             var rot = Rotation.eulerAngles;
             return $"{Name};{Position.x};{Position.y};{Position.z};{rot.x};{rot.y};{rot.z}";
         }
     }
+    // Assigning the name, pos, and rot to the "pois" list
     static SerializedPOI[] ParsePOI(BinaryReader reader)
     {
         var count = reader.ReadInt32();
@@ -174,6 +195,7 @@ public class LogConverter
         }
         return pois;
     }
+    // Source file reader???
     public static SerializedPOI[] GetPOIs(string sourceFile)
     {
         using (var reader = new BinaryReader(File.OpenRead(sourceFile)))
@@ -207,6 +229,7 @@ public class LogConverter
         };
     }
 
+    // To Do: add more items here.
     class SerializedFrame
     {
         public float Timestamp;
@@ -224,7 +247,7 @@ public class LogConverter
     List<Vector3> _driverPositions;
     List<RunningAverage> _driverVels;
     //translation logic
-    //referenceName, referencePos, referenceRot - parameters specifining new origin point, allowing transforming data into new coordinate system
+    //referenceName, referencePos, referenceRot - parameters specifying new origin point, allowing transforming data into new coordinate system
     public void TranslateBinaryLogToCsv(string sourceFile, string dstFile, string[] pedestrianSkeletonNames, string referenceName, Vector3 referencePos, Quaternion referenceRot)
     {
         _driverPositions = null;

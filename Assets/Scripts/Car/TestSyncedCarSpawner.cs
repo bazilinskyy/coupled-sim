@@ -8,7 +8,8 @@ public class TestSyncedCarSpawner : CarSpawnerBase
     protected override IEnumerator SpawnCoroutine()
     {
         yield return new WaitForSeconds(1);
-        SpawnDistraction(TestCar, false);
+        SpawnDistraction(TestCar, false); // Bool for yielding
+
         /*yield return new WaitForSeconds(5);
         Spawn(TestCar, false);
         yield return new WaitForSeconds(5);

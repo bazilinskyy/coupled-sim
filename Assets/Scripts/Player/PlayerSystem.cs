@@ -88,7 +88,7 @@ public class PlayerSystem : MonoBehaviour
         {
             var waypointFollow = LocalPlayer.GetComponent<WaypointProgressTracker>();
             Assert.IsNotNull(waypointFollow);
-            waypointFollow.Init(role.AutonomousPath);
+            waypointFollow.Init(role.AutonomousPath);   // WaypointCircuit of Passenger
             LocalPlayer.gameObject.layer = LayerMask.NameToLayer(role.AutonomousIsYielding ? "Yielding" : "Car");
 
             if(eHMIFixed == true)

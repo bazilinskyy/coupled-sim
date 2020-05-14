@@ -107,6 +107,7 @@ public class PlayerAvatar : MonoBehaviour
                 modeElements = HostDrivenAIElements;
                 break;
         }
+
         foreach (var go in modeElements.gameObjects) {
             go.SetActive(true);
         }
@@ -131,6 +132,10 @@ public class PlayerAvatar : MonoBehaviour
             {
                 su.enabled = false;
             }
+        }
+        if (mode == PlayerSystem.Mode.HostAI)
+        {
+            GetComponentInChildren<Camera>().gameObject.SetActive(false);
         }
     }
 

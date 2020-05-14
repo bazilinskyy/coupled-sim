@@ -14,6 +14,7 @@ public class Host : NetworkSystem
     AICarSyncSystem _aiCarSystem;
     WorldLogger _logger;
     WorldLogger _fixedTimeLogger;
+    LoggingTry _loggingtry;
     HMIManager _hmiManager;
     VisualSyncManager _visualSyncManager;
 
@@ -25,13 +26,14 @@ public class Host : NetworkSystem
 
     TrafficLightsSystem _lights;
 
-    public Host(LevelManager levelManager, PlayerSystem playerSys, AICarSyncSystem aiCarSystem, WorldLogger logger, WorldLogger fixedLogger)
+    public Host(LevelManager levelManager, PlayerSystem playerSys, AICarSyncSystem aiCarSystem, WorldLogger logger, WorldLogger fixedLogger, LoggingTry loggingtry)
     {
         _playerSys = playerSys;
         _lvlManager = levelManager;
         _aiCarSystem = aiCarSystem;
         _logger = logger;
         _fixedTimeLogger = fixedLogger;
+        _loggingtry = loggingtry;
         _host = new UNetHost();
         _host.Init();
 
@@ -121,6 +123,7 @@ public class Host : NetworkSystem
                             var roleName = _lvlManager.ActiveExperiment.Roles[_playerRoles[Host.PlayerId]].Name;
                             _logger.BeginLog($"HostLog-{roleName}-", _lvlManager.ActiveExperiment, _lights, Time.realtimeSinceStartup);
                             _fixedTimeLogger.BeginLog($"HostFixedTimeLog-{roleName}-", _lvlManager.ActiveExperiment, _lights, Time.fixedTime);
+                            _loggingtry.BeginLog();
                         }
                         break;
                 }
