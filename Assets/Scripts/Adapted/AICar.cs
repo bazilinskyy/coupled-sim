@@ -34,11 +34,11 @@ public class AICar : MonoBehaviour
     private float startlocation;
     private float delta_distance;
 
-    public bool WaitInputX = false; // deletee later
     public bool WaitTrialX = false;
     public bool WaitTrialZ = false;
     public bool BrakeX = false;
     public bool BrakeZ = false;
+    public bool SpaceBar = false;
 
     private GameObject ManualCarTrigger;
     private bool InitiateAV;
@@ -68,6 +68,12 @@ public class AICar : MonoBehaviour
         if (ManualCarTrigger != null)
         {
             InitiateAV = ManualCarTrigger.GetComponent<StartAV>().InitiateAV;
+        }
+
+        // Brake using spacebar
+        if (Input.GetKeyDown("space") == true)
+        {
+            Brake_Spacebar();
         }
     }
 
@@ -147,7 +153,7 @@ public class AICar : MonoBehaviour
             WaitTrialZ = true;
             triggerlocation = other.gameObject.transform.position.z;
         }
-        else if (other.gameObject.CompareTag("Brake_Z"))                // Change tage, stop completely.
+        else if (other.gameObject.CompareTag("Brake_Z"))                // Change tag, stop completely.
         {
             BrakeZ = true;
             triggerlocation = other.gameObject.transform.position.z;
@@ -157,7 +163,7 @@ public class AICar : MonoBehaviour
             WaitTrialX = true;
             triggerlocation = other.gameObject.transform.position.x;
         }
-        else if (other.gameObject.CompareTag("Brake_X"))                // Change tage, stop completely.
+        else if (other.gameObject.CompareTag("Brake_X"))                // Change tag, stop completely.
         {
             BrakeX = true;
             triggerlocation = other.gameObject.transform.position.x;
@@ -172,6 +178,18 @@ public class AICar : MonoBehaviour
         set_acceleration = other.GetComponent<SpeedSettings>().acceleration;
         jerk = -Mathf.Abs(other.GetComponent<SpeedSettings>().jerk);
     }
+
+    // Break using spacebar input
+    void Brake_Spacebar()
+    {
+        SpaceBar = true;
+        triggerlocation = this.gameObject.transform.position.z;
+        braking = true;
+        set_speed = 0;
+        set_acceleration = -2;
+        jerk = -Mathf.Abs(-6);
+    }
+
 
     // Function to set car behaviour during driving
     void Car_Driving_Behaviour()
@@ -268,13 +286,14 @@ public class AICar : MonoBehaviour
     {
         if (Timer2 >= breaktime)
         {
-            if (WaitTrialZ == true) 
+            if (WaitTrialZ == true || SpaceBar == true) 
             {
                 braking = false;
                 reset = true;
                 set_acceleration = 1f;
                 set_speed = 30;
                 startlocation = this.gameObject.transform.position.z - 0.10f;
+                SpaceBar = false;
             }
             else if (WaitTrialX == true)
             {
@@ -296,7 +315,7 @@ public class AICar : MonoBehaviour
             delta_distance = Mathf.Abs(this.gameObject.transform.position.x - triggerlocation);
         }
 
-        else if (WaitTrialZ == true || BrakeZ == true)
+        else if (WaitTrialZ == true || BrakeZ == true || SpaceBar == true) // John: input key only put in the z direction for now, since in the experiment the car drives in the z-direction
         {
             delta_distance = Mathf.Abs(this.gameObject.transform.position.z - triggerlocation);
         }
@@ -314,7 +333,7 @@ public class AICar : MonoBehaviour
     void Reset_Speed_After_Stopping()
     {
         // Accelerating in the Z direction
-        if (WaitTrialZ == true)
+        if (WaitTrialZ == true || SpaceBar)
         {
             delta_distance = Mathf.Abs(this.gameObject.transform.position.z - startlocation);
         }
