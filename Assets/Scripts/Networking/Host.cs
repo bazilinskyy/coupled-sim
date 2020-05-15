@@ -281,8 +281,11 @@ public class Host : NetworkSystem
             }
             case NetState.InGame:
             {
-                _hmiManager.DoHostGUI(this);
-                _visualSyncManager.DoHostGUI(this);
+                if (_playerSys.eHMIFixed == false)
+                {
+                    _hmiManager.DoHostGUI(this);
+                    _visualSyncManager.DoHostGUI(this);
+                }
             }
             break;
         }
