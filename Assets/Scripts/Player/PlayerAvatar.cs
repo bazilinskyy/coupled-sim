@@ -189,19 +189,25 @@ public class PlayerAvatar : MonoBehaviour
     List<Vector3> _pos = new List<Vector3>();
     List<Quaternion> _rot = new List<Quaternion>();
 
-    public AvatarPose GetPose()
+    public AvatarPose GetPose(bool bodySuit)
     {
         _pos.Clear();
         _rot.Clear();
         _pos.Add(transform.position);
         _rot.Add(transform.rotation);
-        for (int i = 0; i < SyncTransforms.Length; i++)
+        int i_end = 0;
+        if (bodySuit == true)
+        {
+            i_end = SyncTransforms.Length;
+        }
+        for (int i = 0; i < i_end; i++) //for (int i = 0; i < SyncTransforms.Length; i++)
         {
             var trans = SyncTransforms[i];
             _pos.Add(trans.localPosition);
             _rot.Add(trans.localRotation);
         }
         return new AvatarPose
+
         {
             LocalPositions = _pos,
             LocalRotations = _rot,

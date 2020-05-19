@@ -72,8 +72,10 @@ public class Client : NetworkSystem
         _playerSys.ActivatePlayerAICar();
         _currentState = NetState.InGame;
         var roleName = _lvlManager.ActiveExperiment.Roles[_roles[_client.MyPlayerId]].Name;
-        _logger.BeginLog($"ClientLog-{roleName}-", _lvlManager.ActiveExperiment, lights, Time.realtimeSinceStartup);
-        _fixedTimeLogger.BeginLog($"ClientFixedTimeLog-{roleName}-", _lvlManager.ActiveExperiment, lights, Time.fixedTime);
+        //_logger.BeginLog($"ClientLog-{roleName}-", _lvlManager.ActiveExperiment, lights, Time.realtimeSinceStartup);
+        //_fixedTimeLogger.BeginLog($"ClientFixedTimeLog-{roleName}-", _lvlManager.ActiveExperiment, lights, Time.fixedTime);
+        _logger.BeginLog($"ClientLog-{roleName}-", _lvlManager.ActiveExperiment, null, Time.realtimeSinceStartup);
+        _fixedTimeLogger.BeginLog($"ClientFixedTimeLog-{roleName}-", _lvlManager.ActiveExperiment, null, Time.fixedTime);
         _loggingtry.BeginLog(); 
     }
     //handles game configuration message - spawns level and players
@@ -149,7 +151,7 @@ public class Client : NetworkSystem
         {
             var msg = new UpdateClientPose
             {
-                Pose = _playerSys.LocalPlayer.GetPose(),
+                Pose = _playerSys.LocalPlayer.GetPose(true),
             };
             _client.SendUnreliable(msg);
             _lastPoseUpdateSent = Time.realtimeSinceStartup;

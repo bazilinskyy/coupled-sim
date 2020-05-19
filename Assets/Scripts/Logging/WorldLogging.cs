@@ -31,6 +31,14 @@ public class WorldLogger
 
     List<PlayerAvatar> _driverBuffer = new List<PlayerAvatar>();
 
+    // Set to true for logging bodySuit data.
+    public static Boolean bodySuit = false;
+
+    public static Boolean returnBodySuit()
+    {
+        return bodySuit;
+    }
+
     //writes metadata header in binary log file
     public void BeginLog(string fileName, ExperimentDefinition experiment, TrafficLightsSystem lights, float time)
     {
@@ -67,7 +75,8 @@ public class WorldLogger
             _fileWriter.Write(poi.position);
             _fileWriter.Write(poi.rotation);
         }
-        // Add light info (not relevant for me)
+
+        // Add light info (not relevant for me, can set _lights = null)
         if (_lights != null)
         {
             _fileWriter.Write(_lights.CarLights.Length);
@@ -100,6 +109,7 @@ public class WorldLogger
         return string.Join("/", names);
     }
 
+    
     //main logging logic
     //adds a single entry to the logfile
     public void LogFrame(float ping, float time)
@@ -139,7 +149,7 @@ public class WorldLogger
         // Log position and rotation of pedestrian (from the GetPose function)
         foreach (var pedestrian in _playerSystem.Pedestrians)
         {
-            pedestrian.GetPose().SerializeTo(_fileWriter);
+            pedestrian.GetPose(returnBodySuit()).SerializeTo(_fileWriter); // to do: remove non root pose
         }
         if (_lights != null)
         {
@@ -247,7 +257,7 @@ public class LogConverter
     List<Vector3> _driverPositions;
     List<RunningAverage> _driverVels;
     //translation logic
-    //referenceName, referencePos, referenceRot - parameters specifying new origin point, allowing transforming data into new coordinate system
+    //referenceName, referencePos, rLoeferenceRot - parameters specifying new origin point, allowing transforming data into new coordinate system
     public void TranslateBinaryLogToCsv(string sourceFile, string dstFile, string[] pedestrianSkeletonNames, string referenceName, Vector3 referencePos, Quaternion referenceRot)
     {
         _driverPositions = null;
@@ -258,8 +268,12 @@ public class LogConverter
         const int columnsPerDriver = 3 /*pos x,y,z*/ + 3 /*rot x,y,z */ + 1 /*blinkers*/ + 3 /* local velocity */ + 3 /* local smooth velocity */ + 3 /* world velocity */ + 3 /* world velocity smooth */;
         const int columnsForLocalDriver = columnsPerDriver + 3 /* rb velocity x,y,z */ + 3 /* rb velocity local x,y,z */;
         const int columnsPerBone = 6;
-        int columnsPerPedestrian = pedestrianSkeletonNames.Length * columnsPerBone + columnsPerBone; // + columnsPerBone is for the root transform;
+        int columnsPerPedestrian = 6;
+        if (WorldLogger.returnBodySuit()) { 
+            columnsPerPedestrian = pedestrianSkeletonNames.Length * columnsPerBone + columnsPerBone; // + columnsPerBone is for the root transform;
+        }
         var toRefRot = Quaternion.Inverse(referenceRot);
+        
 
         var srcFile = File.OpenRead(sourceFile);
         Log log = Log.New();
@@ -413,12 +427,15 @@ public class LogConverter
             var sb = new StringBuilder();
             sb.Append(string.Join(separator, Enumerable.Repeat("Root", columnsPerBone)));
             sb.Append(";");
-            for (int i = 0; i < pedestrianSkeletonNames.Length; i++)
+            if (WorldLogger.returnBodySuit())
             {
-                sb.Append(string.Join(separator, Enumerable.Repeat(pedestrianSkeletonNames[i], columnsPerBone)));
-                if (i < pedestrianSkeletonNames.Length - 1)
+                for (int i = 0; i < pedestrianSkeletonNames.Length; i++)
                 {
-                    sb.Append(separator);
+                    sb.Append(string.Join(separator, Enumerable.Repeat(pedestrianSkeletonNames[i], columnsPerBone)));
+                    if (i < pedestrianSkeletonNames.Length - 1)
+                    {
+                        sb.Append(separator);
+                    }
                 }
             }
             for (int i = 0; i < numPedestrians; i++)
@@ -451,8 +468,14 @@ public class LogConverter
                 writer.Write(separator);
             }
             const string boneTransformHeader = "pos_x;pos_y;pos_z;rot_x;rot_y;rot_z";
-            writer.Write(string.Join(separator, Enumerable.Repeat(boneTransformHeader, numPedestrians * (pedestrianSkeletonNames.Length + 1))));
-
+            if (WorldLogger.returnBodySuit())
+            {
+                writer.Write(string.Join(separator, Enumerable.Repeat(boneTransformHeader, numPedestrians * (pedestrianSkeletonNames.Length + 1))));
+            }
+            else
+            {
+                writer.Write(string.Join(separator, Enumerable.Repeat(boneTransformHeader, numPedestrians)));
+            }
             writer.Write("\n");
 
             //****************
@@ -549,6 +572,7 @@ public class LogConverter
         }
     }
 
+    // Gets the names of the components the pedestrian is made of.
     public LogConverter(PlayerAvatar pedestrianPrefab)
     {
         var transforms = pedestrianPrefab.SyncTransforms;

@@ -151,7 +151,7 @@ public class PlayerSystem : MonoBehaviour
         _poses.Clear();
         foreach (var avatar in Avatars)
         {
-            _poses.Add(avatar.GetPose());
+            _poses.Add(avatar.GetPose(true));
         }
         return _poses;
     }

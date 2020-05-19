@@ -143,7 +143,7 @@ public class AICarSyncSystem
         _poses.Clear();
         foreach (var car in Cars)
         {
-            _poses.Add(car.GetPose());
+            _poses.Add(car.GetPose(true));
         }
         return _poses;
     }
