@@ -28,6 +28,7 @@ namespace VarjoExample
         Vector3 gazeRayDirection;
         Vector3 gazePosition;
         Vector3 gazeRayOrigin;
+        LineDrawer lineDrawer;
 
         public enum Eye
         {
@@ -43,6 +44,7 @@ namespace VarjoExample
                 Debug.LogError("Failed to initialize gaze");
                 gameObject.SetActive(false);
             }
+            lineDrawer = new LineDrawer();
         }
 
         void Update()
@@ -85,11 +87,13 @@ namespace VarjoExample
                 {
                     // Use layers or tags preferably to identify looked objects in your application.
                     // This is done here via GetComponent for clarity's sake as example.
-                    VarjoGazeTarget target = gazeRayHit.collider.gameObject.GetComponent<VarjoGazeTarget>();
+                    VarjoGazeTarget target = gazeRayHit.collider.gameObject.GetComponent<VarjoGazeTarget>(); // Now set to return msg when gazetarget is hit. To do later: change to pedestrian as target
                     if (target != null)
                     {
-                        target.OnHit();
+                        target.OnHit(); // Define what to do when the target is hit.
                     }
+
+                    lineDrawer.DrawLineInGameView(gameObject, gazeRayOrigin, gazeRayOrigin + gazeRayDirection * 10.0f, Color.green);
 
                     if (drawDebug)
                     {
@@ -106,6 +110,64 @@ namespace VarjoExample
 
             }
 
+        }
+    }
+
+    // Helper function gaze vector visualization
+    public struct LineDrawer
+    {
+        private LineRenderer lineRenderer;
+
+        /*public LineDrawer(float lineSize = 0.2f)
+        {
+            this.gameObject.AddComponent<LineRenderer>();
+            lineRenderer = gameObject.GetComponent<LineRenderer>();
+            //Particles/Additive
+            lineRenderer.material = new Material(Shader.Find("Hidden/Internal-Colored"));
+
+            this.lineSize = lineSize;
+        }*/
+
+        private void init(GameObject gameObject)
+        {
+            if (lineRenderer == null)
+            {
+                lineRenderer = gameObject.AddComponent<LineRenderer>();
+                //Particles/Additive
+                lineRenderer.material = new Material(Shader.Find("Hidden/Internal-Colored"));
+            }
+        }
+
+        //Draws lines through the provided vertices
+        public void DrawLineInGameView(GameObject gameObject, Vector3 start, Vector3 end, Color color)
+        {
+            if (lineRenderer == null)
+            {
+                init(gameObject);
+            }
+
+            //Set color
+            lineRenderer.startColor = color;
+            lineRenderer.endColor = color;
+
+            //Set width
+            lineRenderer.startWidth = 0.01f;
+            lineRenderer.endWidth = 0.01f;
+
+            //Set line count which is 2
+            lineRenderer.positionCount = 2;
+
+            //Set the postion of both two lines
+            lineRenderer.SetPosition(0, start);
+            lineRenderer.SetPosition(1, end);
+        }
+
+        public void Destroy()
+        {
+            if (lineRenderer != null)
+            {
+                UnityEngine.Object.Destroy(lineRenderer.gameObject);
+            }
         }
     }
 }
