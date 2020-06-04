@@ -17,7 +17,6 @@ public class Client : NetworkSystem
     PlayerSystem _playerSys;
     WorldLogger _logger;
     WorldLogger _fixedTimeLogger;
-    LoggingTry _loggingtry;
     HMIManager _hmiManager;
     VisualSyncManager _visualSyncManager;
     float _lastPoseUpdateSent;
@@ -76,7 +75,6 @@ public class Client : NetworkSystem
         //_fixedTimeLogger.BeginLog($"ClientFixedTimeLog-{roleName}-", _lvlManager.ActiveExperiment, lights, Time.fixedTime);
         _logger.BeginLog($"ClientLog-{roleName}-", _lvlManager.ActiveExperiment, null, Time.realtimeSinceStartup);
         _fixedTimeLogger.BeginLog($"ClientFixedTimeLog-{roleName}-", _lvlManager.ActiveExperiment, null, Time.fixedTime);
-        _loggingtry.BeginLog(); 
     }
     //handles game configuration message - spawns level and players
     void OnGameStart(ISynchronizer sync, int _)

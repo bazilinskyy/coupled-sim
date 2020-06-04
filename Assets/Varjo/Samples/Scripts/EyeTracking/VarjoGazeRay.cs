@@ -1,4 +1,6 @@
 ﻿// Copyright 2019 Varjo Technologies Oy. All rights reserved.
+// Adapted by Johnson Mok
+// Gaze ray visualized
 
 using System.Collections;
 using System.Collections.Generic;

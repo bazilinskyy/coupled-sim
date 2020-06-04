@@ -11,7 +11,6 @@ public class NetworkingManager : MonoBehaviour
     WorldLogger _logger;
     WorldLogger _fixedLogger;
     LogConverter _logConverter;
-    LoggingTry _loggingtry;
 
     [SerializeField]
     AICarSyncSystem _aiCarSystem;
@@ -24,7 +23,6 @@ public class NetworkingManager : MonoBehaviour
         _levelManager = new LevelManager(_playerSystem, Experiments);
         _logger = new WorldLogger(_playerSystem, _aiCarSystem);
         _fixedLogger = new WorldLogger(_playerSystem, _aiCarSystem);
-        _loggingtry = new LoggingTry(_playerSystem, _aiCarSystem);
         _logConverter = new LogConverter(_playerSystem.PedestrianPrefab);
     }
 
@@ -62,7 +60,7 @@ public class NetworkingManager : MonoBehaviour
         {
             if (GUILayout.Button("Start Host"))
             {
-                _netSystem = new Host(_levelManager, _playerSystem, _aiCarSystem, _logger, _fixedLogger, _loggingtry);
+                _netSystem = new Host(_levelManager, _playerSystem, _aiCarSystem, _logger, _fixedLogger);
             }
             if (GUILayout.Button("Start Client"))
             {
