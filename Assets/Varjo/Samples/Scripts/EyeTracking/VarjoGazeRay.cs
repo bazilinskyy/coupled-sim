@@ -120,16 +120,6 @@ namespace VarjoExample
     {
         private LineRenderer lineRenderer;
 
-        /*public LineDrawer(float lineSize = 0.2f)
-        {
-            this.gameObject.AddComponent<LineRenderer>();
-            lineRenderer = gameObject.GetComponent<LineRenderer>();
-            //Particles/Additive
-            lineRenderer.material = new Material(Shader.Find("Hidden/Internal-Colored"));
-
-            this.lineSize = lineSize;
-        }*/
-
         private void init(GameObject gameObject)
         {
             if (lineRenderer == null)

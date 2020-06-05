@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityEngine.SocialPlatforms;
 using UnityStandardAssets.Utility;
 
 //spawns, initializes and manages avatar at runtime
@@ -84,6 +85,7 @@ public class PlayerSystem : MonoBehaviour
     {
         LocalPlayer = SpawnAvatar(spawnPoint, GetAvatarPrefab(spawnPoint.Type, role.carIdx), player, role);
         LocalPlayer.Initialize(PlayerMode);
+
         if (spawnPoint.Type == SpawnPointType.Passenger)
         {
             var waypointFollow = LocalPlayer.GetComponent<WaypointProgressTracker>();
@@ -127,6 +129,7 @@ public class PlayerSystem : MonoBehaviour
         var avatar = GameObject.Instantiate(prefab);
         avatar.transform.position = spawnPoint.position; // Spawn player position
         avatar.transform.rotation = spawnPoint.rotation;
+
         Avatars.Add(avatar);
         GetAvatarsOfType(avatar.Type).Add(avatar);
         Player2Avatar[player] = avatar;
