@@ -4,6 +4,7 @@
 
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime;
 using UnityEngine;
 using Varjo;
 
@@ -13,7 +14,7 @@ namespace VarjoExample
     /// Shoots rays to where user is looking at and send hit events to VarjoGazeTargets.
     /// Requires gaze calibration first.
     /// </summary>
-    public class VarjoGazeRay : MonoBehaviour
+    public class VarjoGazeRay_CS : MonoBehaviour
     {
         [Header("Eye to use for raycasting into the world")]
         public Eye eye = Eye.both;
@@ -84,29 +85,32 @@ namespace VarjoExample
                 gazeRayDirection = transform.TransformVector(gazeRayForward);
                 gazeRayOrigin = transform.TransformPoint(gazePosition);
 
+                // Visualize the gaze vector
                 lineDrawer.DrawLineInGameView(gameObject, gazeRayOrigin, gazeRayOrigin + gazeRayDirection * 10.0f, Color.green);
 
                 // Raycast into world
-                //if (Physics.SphereCast(gazeRayOrigin, gazeRayRadius, gazeRayDirection, out gazeRayHit))
                 if (Physics.SphereCast(gazeRayOrigin, gazeRayRadius, gazeRayDirection, out gazeRayHit, Mathf.Infinity, 1 << LayerMask.NameToLayer("Pedestrian")))
                 {
                     // Use layers or tags preferably to identify looked objects in your application.
                     // This is done here via GetComponent for clarity's sake as example.
-                    VarjoGazeTarget target = gazeRayHit.collider.gameObject.GetComponent<VarjoGazeTarget>(); // Now set to return msg when gazetarget is hit. To do later: change to pedestrian as target
+                    /*VarjoGazeTarget target =  gazeRayHit.collider.gameObject.GetComponent<VarjoGazeTarget>(); // Now set to return msg when gazetarget is hit. To do later: change to pedestrian as target
+
                     if (target != null)
                     {
                         target.OnHit(); // Define what to do when the target is hit.
-                    }
+                    }*/
 
-                    if (gazeRayHit.collider.gameObject.CompareTag("testTarget"))
-                    {
-                        Debug.Log("varjo Test target HIT");
-                    }
-                    if (gazeRayHit.collider.gameObject.CompareTag("Pedestrian"))
-                    {
-                        Debug.Log("varjo Pedestrian HIT");
-                    }
-                    
+                    //if (Physics.Raycast(gazeRayOrigin, gazeRayDirection, out gazeRayHit, Mathf.Infinity, 1 << LayerMask.NameToLayer("Pedestrian")))
+                    //{
+                        Debug.Log($"Gaze ray target: {gazeRayHit.collider.gameObject.name}");
+                        Debug.Log($"Gaze ray target tag: {gazeRayHit.collider.gameObject.tag}");
+                        if (gazeRayHit.collider.gameObject.CompareTag("Pedestrian"))
+                        {
+                            Debug.Log("Pedestrian HIT");
+                            Debug.Log($"Pedestrian to car distance: {gazeRayHit.distance}");
+                        }
+                    //}
+
 
                     if (drawDebug)
                     {
@@ -126,7 +130,7 @@ namespace VarjoExample
         }
     }
 
-    /*// Helper function gaze vector visualization
+    // Helper function gaze vector visualization
     public struct LineDrawer
     {
         private LineRenderer lineRenderer;
@@ -172,5 +176,5 @@ namespace VarjoExample
                 UnityEngine.Object.Destroy(lineRenderer.gameObject);
             }
         }
-    }*/
+    }
 }

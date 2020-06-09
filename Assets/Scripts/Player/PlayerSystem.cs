@@ -104,6 +104,8 @@ public class PlayerSystem : MonoBehaviour
                 hmiControl.Init(_hmiManager);
             }
 
+
+
         }
     }
 

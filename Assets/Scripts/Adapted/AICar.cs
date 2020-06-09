@@ -38,7 +38,8 @@ public class AICar : MonoBehaviour
     public bool WaitTrialZ = false;
     public bool BrakeX = false;
     public bool BrakeZ = false;
-    public bool SpaceBar = false;
+    private bool SpaceBar = false;
+    private bool startCar = false;
 
     private GameObject ManualCarTrigger;
     private bool InitiateAV;
@@ -67,13 +68,19 @@ public class AICar : MonoBehaviour
         // we probably want a more elegant solution
         if (ManualCarTrigger != null)
         {
-            InitiateAV = ManualCarTrigger.GetComponent<StartAV>().InitiateAV;
+                InitiateAV = ManualCarTrigger.GetComponent<StartAV>().InitiateAV;
         }
 
         // Brake using spacebar
         if (Input.GetKeyDown("space") == true)
         {
             Brake_Spacebar();
+        }
+
+        // Start car using arrow up
+        if(Input.GetKeyDown("up") == true)
+        {
+            startCar = true;
         }
     }
 
@@ -90,7 +97,7 @@ public class AICar : MonoBehaviour
         theRigidbody.angularVelocity = new Vector3(0f, psi * turn_rate_degree * Mathf.PI / 360f, 0f);
         
         // This statement is applied when the car is just driving.
-        if ((braking == false) && (reset == false))
+        if ((braking == false) && (reset == false) && (startCar == true))
         {
             Car_Driving_Behaviour();
         }
