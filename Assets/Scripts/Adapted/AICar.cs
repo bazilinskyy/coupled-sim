@@ -38,8 +38,12 @@ public class AICar : MonoBehaviour
     public bool WaitTrialZ = false;
     public bool BrakeX = false;
     public bool BrakeZ = false;
+
+    public bool StopWithEyeGaze = false;
     private bool SpaceBar = false;
     private bool startCar = false;
+    private bool boolVarjoSaysStop;
+    private int n = 0;
 
     private GameObject ManualCarTrigger;
     private bool InitiateAV;
@@ -71,9 +75,11 @@ public class AICar : MonoBehaviour
                 InitiateAV = ManualCarTrigger.GetComponent<StartAV>().InitiateAV;
         }
 
+        Debug.Log($"varjo bool = {boolVarjoSaysStop}");
         // Brake using spacebar
-        if (Input.GetKeyDown("space") == true)
+        if ((Input.GetKeyDown("space") == true || (StopWithEyeGaze == true && boolVarjoSaysStop == true && n == 1)) && startCar == true)
         {
+            Debug.Log("Entered if bool is true statement");
             Brake_Spacebar();
         }
 
@@ -99,17 +105,20 @@ public class AICar : MonoBehaviour
         // This statement is applied when the car is just driving.
         if ((braking == false) && (reset == false) && (startCar == true))
         {
+            Debug.Log("Car driving");
             Car_Driving_Behaviour();
         }
 
         // This statement is applied when the car starts braking
         else if ((braking == true) && (reset == false))
         {
+            Debug.Log("Car braking");
             Decelerate_Car();
         }
         // This statement is applied when the car stood still and is resetting its speed.
         else if ((braking == false) && (reset == true))
         {
+            Debug.Log("Car resetting");
             Reset_Speed_After_Stopping();
         }
     }
@@ -155,7 +164,7 @@ public class AICar : MonoBehaviour
     
     void Brake_AV(Collider other)
     {
-        if (other.gameObject.CompareTag("StartTrial_Z"))                // Change tag, resume driving after stopping for 2 seconds in the Z direction.
+        if (other.gameObject.CompareTag("StartTrial_Z") && StopWithEyeGaze == false)                // Change tag, resume driving after stopping for 2 seconds in the Z direction.
         {
             WaitTrialZ = true;
             triggerlocation = other.gameObject.transform.position.z;
@@ -165,7 +174,7 @@ public class AICar : MonoBehaviour
             BrakeZ = true;
             triggerlocation = other.gameObject.transform.position.z;
         }
-        else if (other.gameObject.CompareTag("StartTrial_X"))           // Change tag, resume driving after stopping for 2 seconds in the X direction.
+        else if (other.gameObject.CompareTag("StartTrial_X") && StopWithEyeGaze == false)           // Change tag, resume driving after stopping for 2 seconds in the X direction.
         {
             WaitTrialX = true;
             triggerlocation = other.gameObject.transform.position.x;
@@ -175,7 +184,12 @@ public class AICar : MonoBehaviour
             BrakeX = true;
             triggerlocation = other.gameObject.transform.position.x;
         }
-        Brake_Set_Variables(other);
+
+        if(StopWithEyeGaze == false)
+        {
+            Brake_Set_Variables(other);
+        }
+        
     }
 
     void Brake_Set_Variables(Collider other)
@@ -189,6 +203,7 @@ public class AICar : MonoBehaviour
     // Break using spacebar input
     void Brake_Spacebar()
     {
+        Debug.Log("Entered brake spacebar function");
         SpaceBar = true;
         triggerlocation = this.gameObject.transform.position.z;
         braking = true;
@@ -227,6 +242,7 @@ public class AICar : MonoBehaviour
 
     void Compute_Pitch_Deceleration()
     {
+        Debug.Log("Entered comput pitch deceleration");
         // When speed larger than 10 km/h, pitch increases to 0.5 degrees
         if (speed > 10f && delta_distance < 17f) 
         {
@@ -284,13 +300,14 @@ public class AICar : MonoBehaviour
             Debug.Log(Timer2);
 
             // After standing still for two seconds, passenger can initiate driving again by pressing space.
-            Resume_Driving_After_Stop(2f);
+            Resume_Driving_After_Stop(4f);
         }
     }
 
     // Function to resume driving after stopping for 'breaktime' seconds.
     void Resume_Driving_After_Stop(float breaktime)
     {
+        Debug.Log("Entered resume driving after stop");
         if (Timer2 >= breaktime)
         {
             if (WaitTrialZ == true || SpaceBar == true) 
@@ -316,6 +333,7 @@ public class AICar : MonoBehaviour
     // Function to decelerate car when braking
     void Decelerate_Car()
     {
+        Debug.Log("Entered decelerate car");
         // Compute delta distance for deceleration
         if (WaitTrialX == true || BrakeX == true)
         {
@@ -364,5 +382,11 @@ public class AICar : MonoBehaviour
             WaitTrialZ = false;
             WaitTrialX = false;
         }
+    }
+
+    public void VarjoSaysStop()
+    {
+        boolVarjoSaysStop = true;
+        n += 1;
     }
 }

@@ -25,6 +25,8 @@ namespace VarjoExample
         [Header("Should we draw debug lines to scene view")]
         public bool drawDebug = true;
 
+        private AICar aicar;
+
         VarjoPlugin.GazeData data;
         RaycastHit gazeRayHit;
         Vector3 gazeRayForward;
@@ -88,29 +90,33 @@ namespace VarjoExample
                 // Visualize the gaze vector
                 lineDrawer.DrawLineInGameView(gameObject, gazeRayOrigin, gazeRayOrigin + gazeRayDirection * 10.0f, Color.green);
 
-                // Raycast into world
+                //aicar = this.GetComponentInParent<AICar>();
+                //Debug.Log($"varjo: parent script aicar: {this.GetComponentInParent<AICar>()}");
+                //Debug.Log($"varjo: parent script aicar waittrialz: {aicar.WaitTrialZ}");
+
+                // Raycast into world, only see objects in the "Pedestrian layer"
                 if (Physics.SphereCast(gazeRayOrigin, gazeRayRadius, gazeRayDirection, out gazeRayHit, Mathf.Infinity, 1 << LayerMask.NameToLayer("Pedestrian")))
                 {
                     // Use layers or tags preferably to identify looked objects in your application.
                     // This is done here via GetComponent for clarity's sake as example.
                     /*VarjoGazeTarget target =  gazeRayHit.collider.gameObject.GetComponent<VarjoGazeTarget>(); // Now set to return msg when gazetarget is hit. To do later: change to pedestrian as target
-
                     if (target != null)
                     {
                         target.OnHit(); // Define what to do when the target is hit.
                     }*/
 
-                    //if (Physics.Raycast(gazeRayOrigin, gazeRayDirection, out gazeRayHit, Mathf.Infinity, 1 << LayerMask.NameToLayer("Pedestrian")))
-                    //{
-                        Debug.Log($"Gaze ray target: {gazeRayHit.collider.gameObject.name}");
-                        Debug.Log($"Gaze ray target tag: {gazeRayHit.collider.gameObject.tag}");
-                        if (gazeRayHit.collider.gameObject.CompareTag("Pedestrian"))
+                    // Determine when the raycast collides with object with the "Pedestrian" tag
+                    if (gazeRayHit.collider.gameObject.CompareTag("Pedestrian"))
+                    {
+                        // Take action if the distance between the pedestrian and car is smaller than 20m
+                        if(gazeRayHit.distance < 25.0f)
                         {
-                            Debug.Log("Pedestrian HIT");
-                            Debug.Log($"Pedestrian to car distance: {gazeRayHit.distance}");
+                            Debug.Log($"varjo: entered if statement");
+                            //aicar.SetWaitTrialz();
+                            this.GetComponentInParent<AICar>().VarjoSaysStop();
+                            Debug.Log($"Entered: Distance = {gazeRayHit.distance}");
                         }
-                    //}
-
+                    }
 
                     if (drawDebug)
                     {
