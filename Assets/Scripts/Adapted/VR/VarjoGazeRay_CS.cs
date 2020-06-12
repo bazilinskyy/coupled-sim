@@ -33,6 +33,7 @@ namespace VarjoExample
         Vector3 gazeRayDirection;
         Vector3 gazePosition;
         Vector3 gazeRayOrigin;
+
         LineDrawer lineDrawer;
 
         public enum Eye
@@ -90,31 +91,17 @@ namespace VarjoExample
                 // Visualize the gaze vector
                 lineDrawer.DrawLineInGameView(gameObject, gazeRayOrigin, gazeRayOrigin + gazeRayDirection * 10.0f, Color.green);
 
-                //aicar = this.GetComponentInParent<AICar>();
-                //Debug.Log($"varjo: parent script aicar: {this.GetComponentInParent<AICar>()}");
-                //Debug.Log($"varjo: parent script aicar waittrialz: {aicar.WaitTrialZ}");
-
                 // Raycast into world, only see objects in the "Pedestrian layer"
                 if (Physics.SphereCast(gazeRayOrigin, gazeRayRadius, gazeRayDirection, out gazeRayHit, Mathf.Infinity, 1 << LayerMask.NameToLayer("Pedestrian")))
                 {
                     // Use layers or tags preferably to identify looked objects in your application.
-                    // This is done here via GetComponent for clarity's sake as example.
-                    /*VarjoGazeTarget target =  gazeRayHit.collider.gameObject.GetComponent<VarjoGazeTarget>(); // Now set to return msg when gazetarget is hit. To do later: change to pedestrian as target
-                    if (target != null)
-                    {
-                        target.OnHit(); // Define what to do when the target is hit.
-                    }*/
-
                     // Determine when the raycast collides with object with the "Pedestrian" tag
                     if (gazeRayHit.collider.gameObject.CompareTag("Pedestrian"))
                     {
                         // Take action if the distance between the pedestrian and car is smaller than 20m
                         if(gazeRayHit.distance < 25.0f)
                         {
-                            Debug.Log($"varjo: entered if statement");
-                            //aicar.SetWaitTrialz();
                             this.GetComponentInParent<AICar>().VarjoSaysStop();
-                            Debug.Log($"Entered: Distance = {gazeRayHit.distance}");
                         }
                     }
 
@@ -133,6 +120,30 @@ namespace VarjoExample
 
             }
 
+        }
+        public RaycastHit getGazeRayHit()
+        {
+            return gazeRayHit;
+        }
+
+        public Vector3 getGazeRayForward() // HMD space
+        {
+            return gazeRayForward;
+        }
+
+        public Vector3 getGazePosition() // HMD space
+        {
+            return gazePosition;
+        }
+
+        public Vector3 getGazeRayDirection() // world space
+        {
+            return gazeRayDirection;
+        }
+
+        public Vector3 getGazeRayOrigin() // world space
+        {
+            return gazeRayOrigin;
         }
     }
 

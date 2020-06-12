@@ -119,6 +119,7 @@ public class Host : NetworkSystem
                             _transitionPhase = TransitionPhase.None;
                             _currentState = NetState.InGame;
                             var roleName = _lvlManager.ActiveExperiment.Roles[_playerRoles[Host.PlayerId]].Name;
+
                             _logger.BeginLog($"HostLog-{roleName}-", _lvlManager.ActiveExperiment, _lights, Time.realtimeSinceStartup);
                             _fixedTimeLogger.BeginLog($"HostFixedTimeLog-{roleName}-", _lvlManager.ActiveExperiment, _lights, Time.fixedTime);
                         }

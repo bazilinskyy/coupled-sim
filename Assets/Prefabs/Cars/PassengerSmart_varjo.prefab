@@ -4879,6 +4879,7 @@ GameObject:
   - component: {fileID: 7916772425544574836}
   - component: {fileID: 8943811584157154710}
   - component: {fileID: 6343650400298252959}
+  - component: {fileID: 1904011065294554682}
   m_Layer: 0
   m_Name: Gaze
   m_TagString: Untagged
@@ -4932,6 +4933,23 @@ MonoBehaviour:
   useCalibrationParameters: 0
   calibrationType: 0
   outputFilterType: 0
+--- !u!114 &1904011065294554682
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1871284139307566424}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eb7cb6545a05bb246be872081f2b69cc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  oneGazeDataPerFrame: 0
+  startAutomatically: 0
+  toggleLoggingKey: 274
+  useCustomLogPath: 0
+  customLogPath: 
 --- !u!1 &1891962787529133484
 GameObject:
   m_ObjectHideFlags: 0

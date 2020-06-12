@@ -1,6 +1,4 @@
 ﻿// Copyright 2019 Varjo Technologies Oy. All rights reserved.
-// Adapted by Johnson Mok
-// Gaze ray visualized
 
 using System.Collections;
 using System.Collections.Generic;
@@ -30,7 +28,6 @@ namespace VarjoExample
         Vector3 gazeRayDirection;
         Vector3 gazePosition;
         Vector3 gazeRayOrigin;
-        LineDrawer lineDrawer;
 
         public enum Eye
         {
@@ -46,7 +43,6 @@ namespace VarjoExample
                 Debug.LogError("Failed to initialize gaze");
                 gameObject.SetActive(false);
             }
-            lineDrawer = new LineDrawer();
         }
 
         void Update()
@@ -84,29 +80,16 @@ namespace VarjoExample
                 gazeRayDirection = transform.TransformVector(gazeRayForward);
                 gazeRayOrigin = transform.TransformPoint(gazePosition);
 
-                lineDrawer.DrawLineInGameView(gameObject, gazeRayOrigin, gazeRayOrigin + gazeRayDirection * 10.0f, Color.green);
-
                 // Raycast into world
-                //if (Physics.SphereCast(gazeRayOrigin, gazeRayRadius, gazeRayDirection, out gazeRayHit))
-                if (Physics.SphereCast(gazeRayOrigin, gazeRayRadius, gazeRayDirection, out gazeRayHit, Mathf.Infinity, 1 << LayerMask.NameToLayer("Pedestrian")))
+                if (Physics.SphereCast(gazeRayOrigin, gazeRayRadius, gazeRayDirection, out gazeRayHit))
                 {
                     // Use layers or tags preferably to identify looked objects in your application.
                     // This is done here via GetComponent for clarity's sake as example.
-                    VarjoGazeTarget target = gazeRayHit.collider.gameObject.GetComponent<VarjoGazeTarget>(); // Now set to return msg when gazetarget is hit. To do later: change to pedestrian as target
+                    VarjoGazeTarget target = gazeRayHit.collider.gameObject.GetComponent<VarjoGazeTarget>();
                     if (target != null)
                     {
-                        target.OnHit(); // Define what to do when the target is hit.
+                        target.OnHit();
                     }
-
-                    if (gazeRayHit.collider.gameObject.CompareTag("testTarget"))
-                    {
-                        Debug.Log("varjo Test target HIT");
-                    }
-                    if (gazeRayHit.collider.gameObject.CompareTag("Pedestrian"))
-                    {
-                        Debug.Log("varjo Pedestrian HIT");
-                    }
-                    
 
                     if (drawDebug)
                     {
@@ -125,52 +108,4 @@ namespace VarjoExample
 
         }
     }
-
-    /*// Helper function gaze vector visualization
-    public struct LineDrawer
-    {
-        private LineRenderer lineRenderer;
-
-        private void init(GameObject gameObject)
-        {
-            if (lineRenderer == null)
-            {
-                lineRenderer = gameObject.AddComponent<LineRenderer>();
-                //Particles/Additive
-                lineRenderer.material = new Material(Shader.Find("Hidden/Internal-Colored"));
-            }
-        }
-
-        //Draws lines through the provided vertices
-        public void DrawLineInGameView(GameObject gameObject, Vector3 start, Vector3 end, Color color)
-        {
-            if (lineRenderer == null)
-            {
-                init(gameObject);
-            }
-
-            //Set color
-            lineRenderer.startColor = color;
-            lineRenderer.endColor = color;
-
-            //Set width
-            lineRenderer.startWidth = 0.01f;
-            lineRenderer.endWidth = 0.01f;
-
-            //Set line count which is 2
-            lineRenderer.positionCount = 2;
-
-            //Set the postion of both two lines
-            lineRenderer.SetPosition(0, start);
-            lineRenderer.SetPosition(1, end);
-        }
-
-        public void Destroy()
-        {
-            if (lineRenderer != null)
-            {
-                UnityEngine.Object.Destroy(lineRenderer.gameObject);
-            }
-        }
-    }*/
 }

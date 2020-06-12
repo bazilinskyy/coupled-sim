@@ -13,7 +13,7 @@ namespace VarjoExample
     /// Requires gaze calibration first.
     /// </summary>
     ///
-    public class VarjoGazeLog : MonoBehaviour
+    public class VarjoGazeLog_CS : MonoBehaviour
     {
         StreamWriter writer = null;
 
@@ -21,6 +21,15 @@ namespace VarjoExample
 
         Vector3 hmdPosition;
         Vector3 hmdRotation;
+
+        // Data to log
+        RaycastHit gazeRayHit;
+        Vector3 gazeRayForward;
+        Vector3 gazeRayDirection;
+        Vector3 gazePosition;
+        Vector3 gazeRayOrigin;
+        float distance;
+        float time = 0.0f;
 
         [Header("Should only the latest data be logged on each update")]
         public bool oneGazeDataPerFrame = false;
@@ -37,13 +46,15 @@ namespace VarjoExample
 
         bool logging = false;
 
-        static readonly string[] ColumnNames = { "Frame", "CaptureTime", "LogTime", "HMDPosition", "HMDRotation", "GazeStatus", "CombinedGazeForward", "CombinedGazePosition", "LeftEyeStatus", "LeftEyeForward", "LeftEyePosition", "LeftEyePupilSize", "RightEyeStatus", "RightEyeForward", "RightEyePosition", "RightEyePupilSize", "FocusDistance", "FocusStability"};
+        //static readonly string[] ColumnNames = { "Frame", "CaptureTime", "LogTime", "HMDPosition", "HMDRotation", "GazeStatus", "CombinedGazeForward", "CombinedGazePosition", "LeftEyeStatus", "LeftEyeForward", "LeftEyePosition", "LeftEyePupilSize", "RightEyeStatus", "RightEyeForward", "RightEyePosition", "RightEyePupilSize", "FocusDistance", "FocusStability", "distance"};
+        static readonly string[] ColumnNames = { "Time", "Distance", "HMDPosition", "HMDRotation", "Gaze Forward (HMD)", "Gaze Position (HMD)", "Gaze Direction (world)", "Gaze Origin (world)" };
 
         const string ValidString = "VALID";
         const string InvalidString = "INVALID";
 
         void Update()
         {
+            time += Time.deltaTime;
             // Do not run update if the application is not visible
             if (!VarjoManager.Instance.IsLayerVisible() || VarjoManager.Instance.IsInStandBy())
             {
@@ -55,6 +66,7 @@ namespace VarjoExample
                 if (!logging)
                 {
                     StartLogging();
+                    Debug.Log("Varjo Logging started key press");
                 }
                 else
                 {
@@ -63,43 +75,74 @@ namespace VarjoExample
                 return;
             }
 
-            if (logging)
+            if (logging) // Enters after calling "StartLogging()"
             {
                 if (oneGazeDataPerFrame)
                 {
                     // Get and log latest gaze data
-                    LogGazeData(VarjoPlugin.GetGaze());
+                    //LogGazeData(VarjoPlugin.GetGaze());
+                    Debug.Log("Varjo entered one gaze data per frame");
                 }
                 else
                 {
                     // Get and log all gaze data since last update
-                    dataSinceLastUpdate = VarjoPlugin.GetGazeList();
+                    dataSinceLastUpdate = VarjoPlugin.GetGazeList(); // error here???
                     Debug.Log($"Data count {dataSinceLastUpdate.Count}");
-                    foreach (var data in dataSinceLastUpdate)
+                    /*foreach (var data in dataSinceLastUpdate)
                     {
                         LogGazeData(data);
-                        Debug.Log("data logged");
-                    }
+                        Debug.Log($"Varjo logged at {time}");
+                    }*/
+                    LogGazeData();
                 }
             }
             else if (startAutomatically)
             {
                 if (VarjoPlugin.GetGaze().status == VarjoPlugin.GazeStatus.VALID)
                 {
-                    StartLogging();
+                    StartLogging(); // Creates the log file and set the bool "logging" to true
+                    Debug.Log($"Varjo Logging started automatically at {time}");
                 }
             }
         }
 
-        void LogGazeData(VarjoPlugin.GazeData data)
+        void LogGazeData()//(VarjoPlugin.GazeData data)
         {
+            Debug.Log("Data logged");
+
+            // Load car-pedestrian distance during eye contact
+            gazeRayHit = this.GetComponent<VarjoGazeRay_CS>().getGazeRayHit();
+            distance = gazeRayHit.distance;
+            gazeRayForward = this.GetComponent<VarjoGazeRay_CS>().getGazeRayForward();      // hmd space
+            gazeRayDirection = this.GetComponent<VarjoGazeRay_CS>().getGazeRayDirection();  // hmd space
+            gazePosition = this.GetComponent<VarjoGazeRay_CS>().getGazePosition();          // world space
+            gazeRayOrigin = this.GetComponent<VarjoGazeRay_CS>().getGazeRayOrigin();        // world space
+
             // Get HMD position and rotation
             hmdPosition = VarjoManager.Instance.HeadTransform.position;
             hmdRotation = VarjoManager.Instance.HeadTransform.rotation.eulerAngles;
 
-            string[] logData = new string[18];
+            string[] logData = new string[8]; //new string[19];
 
-            // Gaze data frame number
+            // Time
+            logData[0] = time.ToString();
+
+            // Distance
+            logData[1] = distance.ToString("F3");
+
+            // HMD
+            logData[2] = hmdPosition.ToString("F3");
+            logData[3] = hmdRotation.ToString("F3");
+
+            // Gaze in HMD space
+            logData[4] = gazeRayForward.ToString("F3");
+            logData[5] = gazePosition.ToString("F3");
+
+            // Gaze in world space
+            logData[6] = gazeRayDirection.ToString("F3");
+            logData[7] = gazeRayOrigin.ToString("F3");
+
+            /*// Gaze data frame number
             logData[0] = data.frameNumber.ToString();
 
             // Gaze data capture time (nanoseconds)
@@ -136,6 +179,9 @@ namespace VarjoExample
             logData[16] = invalid ? "" : data.focusDistance.ToString();
             logData[17] = invalid ? "" : data.focusStability.ToString();
 
+            // Pedestrian car distance
+            logData[18] = distance.ToString("F3");
+            */
             Log(logData);
         }
 
