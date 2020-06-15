@@ -6,6 +6,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Runtime;
 using UnityEngine;
+using UnityEngine.UIElements;
 using Varjo;
 
 namespace VarjoExample
@@ -33,6 +34,8 @@ namespace VarjoExample
         Vector3 gazeRayDirection;
         Vector3 gazePosition;
         Vector3 gazeRayOrigin;
+        string role_varjo;
+        string target;
 
         LineDrawer lineDrawer;
 
@@ -55,6 +58,18 @@ namespace VarjoExample
 
         void Update()
         {
+            // Determine whether this script is attached to a passenger or pedestrian:
+            if (transform.parent.CompareTag("Pedestrian"))
+            {
+                role_varjo = "Pedestrian";
+                target = "Passenger";
+            }
+            else if (transform.parent.CompareTag("AutonomousCar"))
+            {
+                role_varjo = "Passenger";
+                target = "Pedestrian";
+            }
+
             // Returns current state of the gaze
             data = VarjoPlugin.GetGaze();
 
@@ -92,14 +107,14 @@ namespace VarjoExample
                 lineDrawer.DrawLineInGameView(gameObject, gazeRayOrigin, gazeRayOrigin + gazeRayDirection * 10.0f, Color.green);
 
                 // Raycast into world, only see objects in the "Pedestrian layer"
-                if (Physics.SphereCast(gazeRayOrigin, gazeRayRadius, gazeRayDirection, out gazeRayHit, Mathf.Infinity, 1 << LayerMask.NameToLayer("Pedestrian")))
+                if (Physics.SphereCast(gazeRayOrigin, gazeRayRadius, gazeRayDirection, out gazeRayHit, Mathf.Infinity, 1 << LayerMask.NameToLayer(target)))
                 {
                     // Use layers or tags preferably to identify looked objects in your application.
                     // Determine when the raycast collides with object with the "Pedestrian" tag
-                    if (gazeRayHit.collider.gameObject.CompareTag("Pedestrian"))
+                    if (gazeRayHit.collider.gameObject.CompareTag(target) && target == "Pedestrian")
                     {
                         // Take action if the distance between the pedestrian and car is smaller than 20m
-                        if(gazeRayHit.distance < 25.0f)
+                        if(gazeRayHit.distance < 25.0f )
                         {
                             this.GetComponentInParent<AICar>().VarjoSaysStop();
                         }
@@ -144,6 +159,11 @@ namespace VarjoExample
         public Vector3 getGazeRayOrigin() // world space
         {
             return gazeRayOrigin;
+        }
+
+        public string getRoleVarjo()
+        {
+            return role_varjo;
         }
     }
 

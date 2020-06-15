@@ -28,7 +28,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1207130846115938}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: -0.2, z: 0}
   m_LocalScale: {x: 1.1, y: 1.1, z: 1.1}
   m_Children:
   - {fileID: 3953972418111556352}
@@ -7965,6 +7965,7 @@ GameObject:
   - component: {fileID: 5344804248368546699}
   - component: {fileID: 5502618789888018826}
   - component: {fileID: 5496693032710509801}
+  - component: {fileID: 8367531341265533540}
   m_Layer: 0
   m_Name: Gaze
   m_TagString: Untagged
@@ -8018,6 +8019,23 @@ MonoBehaviour:
   eye: 0
   gazeRayRadius: 0.01
   drawDebug: 1
+--- !u!114 &8367531341265533540
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4127890842416630236}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eb7cb6545a05bb246be872081f2b69cc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  oneGazeDataPerFrame: 0
+  startAutomatically: 0
+  toggleLoggingKey: 274
+  useCustomLogPath: 0
+  customLogPath: 
 --- !u!1 &5338325867927314009
 GameObject:
   m_ObjectHideFlags: 0
@@ -8169,6 +8187,10 @@ PrefabInstance:
     - target: {fileID: 1018523678192792, guid: 3fae7923a8aec364bb24e25c4aa6f079, type: 3}
       propertyPath: m_Name
       value: VarjoCameraRig
+      objectReference: {fileID: 0}
+    - target: {fileID: 4273082167229002, guid: 3fae7923a8aec364bb24e25c4aa6f079, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4502135317825226, guid: 3fae7923a8aec364bb24e25c4aa6f079, type: 3}
       propertyPath: m_LocalPosition.x

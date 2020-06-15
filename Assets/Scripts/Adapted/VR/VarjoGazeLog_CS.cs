@@ -28,6 +28,7 @@ namespace VarjoExample
         Vector3 gazeRayDirection;
         Vector3 gazePosition;
         Vector3 gazeRayOrigin;
+        string role_varjo;
         float distance;
         float time = 0.0f;
 
@@ -47,7 +48,7 @@ namespace VarjoExample
         bool logging = false;
 
         //static readonly string[] ColumnNames = { "Frame", "CaptureTime", "LogTime", "HMDPosition", "HMDRotation", "GazeStatus", "CombinedGazeForward", "CombinedGazePosition", "LeftEyeStatus", "LeftEyeForward", "LeftEyePosition", "LeftEyePupilSize", "RightEyeStatus", "RightEyeForward", "RightEyePosition", "RightEyePupilSize", "FocusDistance", "FocusStability", "distance"};
-        static readonly string[] ColumnNames = { "Time", "Distance", "HMDPosition", "HMDRotation", "Gaze Forward (HMD)", "Gaze Position (HMD)", "Gaze Direction (world)", "Gaze Origin (world)" };
+        static readonly string[] ColumnNames = { "Role", "Time", "Distance", "HMDPosition", "HMDRotation", "Gaze Forward (HMD)", "Gaze Position (HMD)", "Gaze Direction (world)", "Gaze Origin (world)" };
 
         const string ValidString = "VALID";
         const string InvalidString = "INVALID";
@@ -117,30 +118,34 @@ namespace VarjoExample
             gazeRayDirection = this.GetComponent<VarjoGazeRay_CS>().getGazeRayDirection();  // hmd space
             gazePosition = this.GetComponent<VarjoGazeRay_CS>().getGazePosition();          // world space
             gazeRayOrigin = this.GetComponent<VarjoGazeRay_CS>().getGazeRayOrigin();        // world space
+            role_varjo = this.GetComponent<VarjoGazeRay_CS>().getRoleVarjo();
 
             // Get HMD position and rotation
             hmdPosition = VarjoManager.Instance.HeadTransform.position;
             hmdRotation = VarjoManager.Instance.HeadTransform.rotation.eulerAngles;
 
-            string[] logData = new string[8]; //new string[19];
+            string[] logData = new string[9]; //new string[19];
+
+            // Role varjo user
+            logData[0] = role_varjo;
 
             // Time
-            logData[0] = time.ToString();
+            logData[1] = time.ToString();
 
             // Distance
-            logData[1] = distance.ToString("F3");
+            logData[2] = distance.ToString("F3");
 
             // HMD
-            logData[2] = hmdPosition.ToString("F3");
-            logData[3] = hmdRotation.ToString("F3");
+            logData[3] = hmdPosition.ToString("F3");
+            logData[4] = hmdRotation.ToString("F3");
 
             // Gaze in HMD space
-            logData[4] = gazeRayForward.ToString("F3");
-            logData[5] = gazePosition.ToString("F3");
+            logData[5] = gazeRayForward.ToString("F3");
+            logData[6] = gazePosition.ToString("F3");
 
             // Gaze in world space
-            logData[6] = gazeRayDirection.ToString("F3");
-            logData[7] = gazeRayOrigin.ToString("F3");
+            logData[7] = gazeRayDirection.ToString("F3");
+            logData[8] = gazeRayOrigin.ToString("F3");
 
             /*// Gaze data frame number
             logData[0] = data.frameNumber.ToString();
