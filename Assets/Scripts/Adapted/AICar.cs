@@ -11,14 +11,14 @@ using UnityStandardAssets.Utility;
 public class AICar : MonoBehaviour
 {
     // Motion related variables
-    public float set_speed = 50;                                           // Velocity of cars in simulation
-    public float set_acceleration = 3.5f;                                     // Acceleration of cars in simulation
+    float set_speed = 51;                                           // Velocity of cars in simulation
+    float set_acceleration = 3.52f;                                     // Acceleration of cars in simulation
     public float jerk = 0;                                                 // Jerk of cars in simulation
     public float turn_rate_degree = 360;
     private float conversion = 3.6f;
-    public float speed;                                                    // Speed variable used for computations in this script
-    public float speed_m;
-    public float acceleration;                                             // Acceleration variable used for computations in this script
+    float speed;                                                    // Speed variable used for computations in this script
+    float speed_m;
+    float acceleration;                                             // Acceleration variable used for computations in this script
     public float t = 0;                                                    // Time variable used for computations in this script
     private float pitch = 0;                                               // Pitch of the car
     private float tolerance = 0.05f;                                       // Used to determine if the changed variable reached its target value. 2% seems to fit. (De Clercq)
@@ -64,6 +64,12 @@ public class AICar : MonoBehaviour
         acceleration = set_acceleration;                                   // Sets acceleration of object
         target = GetComponent<WaypointProgressTracker>().target;           // Sets intermediate target on the circuit
         ManualCarTrigger = GameObject.FindWithTag("StartAV");
+
+        if (Yield != 1)
+            {
+            StartCoroutine(Restart(17.60f));
+        }
+
     }
     void Update()
     {
@@ -183,18 +189,6 @@ public class AICar : MonoBehaviour
                 }
                 Debug.Log(Timer2);
 
-                if (TimerStop >= 5f) // After standing still for two seconds, passenger can initiate driving again by pressing space.
-                {
-
-                    braking = false;
-                    reset = true;
-                    set_acceleration = 2f;
-                    set_speed = 50;
-                    startlocation = this.gameObject.transform.position.x - 0.10f;
-
-
-
-                }
             }
             theRigidbody.velocity = rotationAxis.forward * speed / conversion; // Application of calculated velocity to Rigidbody 
         }
@@ -207,5 +201,15 @@ public class AICar : MonoBehaviour
             theRigidbody.velocity = rotationAxis.forward * speed / conversion; // Application of calculated velocity to Rigidbody 
 
         }
+    }
+
+    IEnumerator Restart(float time)
+    {
+        yield return new WaitForSeconds(time);
+        braking = false;
+        reset = true;
+        set_acceleration = 2f;
+        set_speed = 50;
+        startlocation = this.gameObject.transform.position.x - 0.10f;
     }
 }

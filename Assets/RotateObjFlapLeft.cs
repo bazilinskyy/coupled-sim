@@ -41,13 +41,13 @@ public class RotateObjFlapLeft : MonoBehaviour
                 if (allTimer >= 8.64f && allTimer < 16.14f)
                 {
                     Timer2 += Time.deltaTime;
-                    float angle = Mathf.Sin(Mathf.PI * 2 * Timer2 - 0.5f * Mathf.PI) * (10) - (15) + 45; //tweak this to change frequency
+                    float angle = Mathf.Sin(0.8f*(Mathf.PI * 2 * Timer2 - 0.5f * Mathf.PI)) * (10) - (30) + 45; //tweak this to change frequency
                     transform.rotation = originalRot * Quaternion.AngleAxis(angle, Vector3.up);
                 }
                 if (allTimer >= 16.14f && allTimer < 21.28f)
                 {
                     Timer3 += Time.deltaTime;
-                    float angle = Mathf.Sin(Mathf.PI * 2 * Timer3) * (90 / 2) - (45 / 2) - 45; //tweak this to change frequency
+                    float angle = Mathf.Sin(0.8f*(Mathf.PI * 2 * Timer3 + 0.5f * Mathf.PI)) * (120 / 2) - 65; //tweak this to change frequency
                     transform.rotation = originalRot * Quaternion.AngleAxis(-angle, Vector3.up);
                 }
                 if (allTimer >= 21.28f && allTimer < 21.78f)
@@ -67,8 +67,8 @@ public class RotateObjFlapLeft : MonoBehaviour
                 //}
                 if (allTimer >= 8.64f && allTimer < 11.28f)
                 {
-                    Timer += Time.deltaTime;
-                    float angle = Mathf.Sin(Mathf.PI * 2 * Timer + 0.5f * Mathf.PI) * (90 / 2) - (45 / 2) - 45; //tweak this to change frequency
+                    Timer3 += Time.deltaTime;
+                    float angle = Mathf.Sin(0.8f * (Mathf.PI * 2 * Timer3 + 0.5f * Mathf.PI)) * (120 / 2) - 65; //tweak this to change frequency
                     transform.rotation = originalRot * Quaternion.AngleAxis(-angle, Vector3.up);
                 }
                 if (allTimer >= 11.28f && allTimer < 11.78f)

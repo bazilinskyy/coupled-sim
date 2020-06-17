@@ -21,7 +21,7 @@ public class CarMovementLoggerNew_4 : MonoBehaviour
    private string logfile;
     float timer;
 
-   private string headers =@"timestamp;pos_x;pos_y;pos_z";
+  private string headers =@"C = [";
 
    void Start() 
    {
@@ -41,7 +41,7 @@ public class CarMovementLoggerNew_4 : MonoBehaviour
 
         using (StreamWriter sw = File.CreateText(logfile))
         {
-            sw.WriteLine(headers);
+          sw.WriteLine(headers);
         }
 
     }
@@ -75,7 +75,7 @@ public class CarMovementLoggerNew_4 : MonoBehaviour
        {
        using (StreamWriter sw = new StreamWriter(logfile,true))
        {
-        sw.WriteLine($"{Time.timeSinceLevelLoad};{transform.position.x};{transform.position.y};{transform.position.z}");
+        sw.WriteLine($"{Time.timeSinceLevelLoad},{transform.position.x},{transform.position.y},{transform.position.z}");
        }
        }
    }   
