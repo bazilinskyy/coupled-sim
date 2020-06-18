@@ -220,3 +220,6 @@ We have used the following free assets:
 | [Street Bench](https://assetstore.unity.com/packages/3d/props/exterior/street-bench-656) | Rakshi Games | Unity asset
 | [waste bin](https://assetstore.unity.com/packages/3d/waste-bin-73303) | Lowpoly_Master | Unity asset
 | [Smart fortwo](https://grabcad.com/library/smart-fortwo-1) | Filippo Citati | MIT
+
+## Addition Master Thesis Johnson Mok
+[Link to the additions](coupled-sim/README_ADDITION.md)

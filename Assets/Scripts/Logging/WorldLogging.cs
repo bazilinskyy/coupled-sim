@@ -140,7 +140,7 @@ public class WorldLogger
             _fileWriter.Write(driver.transform.rotation);
             _fileWriter.Write((int)driver._carBlinkers.State);
             //_fileWriter.Write(-1.0f); // test value -- WORKS IF PUT OUTSIDE THE IF STATEMENT
-            /*Debug.LogError($"debug: {driver.transform.FindChild("Gaze")}");
+            Debug.LogError($"debug: {driver.transform.FindChild("Gaze")}");
             if (VarjoPlugin.GetGaze().status == VarjoPlugin.GazeStatus.VALID)
             {
                 Debug.LogError("debug: Entered getgaze");
@@ -151,7 +151,7 @@ public class WorldLogger
             else
             {
                 _fileWriter.Write(-1.0f);
-            }*/
+            }
 
             // Only log car velocity if local player
             if (driver == _playerSystem.LocalPlayer)
