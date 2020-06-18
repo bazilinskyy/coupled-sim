@@ -222,4 +222,4 @@ We have used the following free assets:
 | [Smart fortwo](https://grabcad.com/library/smart-fortwo-1) | Filippo Citati | MIT
 
 ## Addition Master Thesis Johnson Mok
-[Link to the additions](coupled-sim/README_ADDITION.md)
+[Link to the additions](README_ADDITION.md)
