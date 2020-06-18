@@ -180,11 +180,7 @@ public class AICar : MonoBehaviour
             triggerlocation = other.gameObject.transform.position.x;
         }
 
-        if(StopWithEyeGaze == false)
-        {
             Brake_Set_Variables(other);
-        }
-        
     }
 
     void Brake_Set_Variables(Collider other)

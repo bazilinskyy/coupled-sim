@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net;
 using UnityEngine;
 using UnityEngine.Assertions;
+using Varjo;
 
 // high level client networking script
 // - handles messages recieved from the host 
@@ -73,6 +74,13 @@ public class Client : NetworkSystem
         var roleName = _lvlManager.ActiveExperiment.Roles[_roles[_client.MyPlayerId]].Name;
         //_logger.BeginLog($"ClientLog-{roleName}-", _lvlManager.ActiveExperiment, lights, Time.realtimeSinceStartup);
         //_fixedTimeLogger.BeginLog($"ClientFixedTimeLog-{roleName}-", _lvlManager.ActiveExperiment, lights, Time.fixedTime);
+
+        // Do not run update if the application is not visible
+        if (VarjoPlugin.GetGaze().status == VarjoPlugin.GazeStatus.VALID)
+        {
+            VarjoPlugin.RequestGazeCalibration(); // initiate eye-tracking
+        }
+
         _logger.BeginLog($"ClientLog-{roleName}-", _lvlManager.ActiveExperiment, null, Time.realtimeSinceStartup);
         _fixedTimeLogger.BeginLog($"ClientFixedTimeLog-{roleName}-", _lvlManager.ActiveExperiment, null, Time.fixedTime);
     }

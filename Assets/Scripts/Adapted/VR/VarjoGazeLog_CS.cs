@@ -115,8 +115,8 @@ namespace VarjoExample
             gazeRayHit = this.GetComponent<VarjoGazeRay_CS>().getGazeRayHit();
             distance = gazeRayHit.distance;
             gazeRayForward = this.GetComponent<VarjoGazeRay_CS>().getGazeRayForward();      // hmd space
-            gazeRayDirection = this.GetComponent<VarjoGazeRay_CS>().getGazeRayDirection();  // hmd space
-            gazePosition = this.GetComponent<VarjoGazeRay_CS>().getGazePosition();          // world space
+            gazeRayDirection = this.GetComponent<VarjoGazeRay_CS>().getGazeRayDirection();  // world space
+            gazePosition = this.GetComponent<VarjoGazeRay_CS>().getGazePosition();          // hmd space
             gazeRayOrigin = this.GetComponent<VarjoGazeRay_CS>().getGazeRayOrigin();        // world space
             role_varjo = this.GetComponent<VarjoGazeRay_CS>().getRoleVarjo();
 
@@ -147,46 +147,6 @@ namespace VarjoExample
             logData[7] = gazeRayDirection.ToString("F3");
             logData[8] = gazeRayOrigin.ToString("F3");
 
-            /*// Gaze data frame number
-            logData[0] = data.frameNumber.ToString();
-
-            // Gaze data capture time (nanoseconds)
-            logData[1] = data.captureTime.ToString();
-
-            // Log time (milliseconds)
-            logData[2] = (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond).ToString();
-
-            // HMD
-            logData[3] = hmdPosition.ToString("F3");
-            logData[4] = hmdRotation.ToString("F3");
-
-            // Combined gaze
-            bool invalid = data.status == VarjoPlugin.GazeStatus.INVALID;
-            logData[5] = invalid ? InvalidString : ValidString;
-            logData[6] = invalid ? "" : Double3ToString(data.gaze.forward);
-            logData[7] = invalid ? "" : Double3ToString(data.gaze.position);
-
-            // Left eye
-            bool leftInvalid = data.leftStatus == VarjoPlugin.GazeEyeStatus.EYE_INVALID;
-            logData[8] = leftInvalid ? InvalidString : ValidString;
-            logData[9] = leftInvalid ? "" : Double3ToString(data.left.forward);
-            logData[10] = leftInvalid ? "" : Double3ToString(data.left.position);
-            logData[11] = leftInvalid ? "" : data.leftPupilSize.ToString();
-
-            // Right eye
-            bool rightInvalid = data.rightStatus == VarjoPlugin.GazeEyeStatus.EYE_INVALID;
-            logData[12] = rightInvalid ? InvalidString : ValidString;
-            logData[13] = rightInvalid ? "" : Double3ToString(data.right.forward);
-            logData[14] = rightInvalid ? "" : Double3ToString(data.right.position);
-            logData[15] = rightInvalid ? "" : data.rightPupilSize.ToString();
-
-            // Focus
-            logData[16] = invalid ? "" : data.focusDistance.ToString();
-            logData[17] = invalid ? "" : data.focusStability.ToString();
-
-            // Pedestrian car distance
-            logData[18] = distance.ToString("F3");
-            */
             Log(logData);
         }
 

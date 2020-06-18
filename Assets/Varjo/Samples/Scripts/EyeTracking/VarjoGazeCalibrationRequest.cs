@@ -53,7 +53,7 @@ namespace VarjoExample
             }
         }
 
-        void RequestGazeCalibration()
+        public void RequestGazeCalibration()
         {
             if (!useCalibrationParameters)
             {

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
+using Varjo;
 
 // high level host networking script
 public class Host : NetworkSystem
@@ -119,6 +120,13 @@ public class Host : NetworkSystem
                             _transitionPhase = TransitionPhase.None;
                             _currentState = NetState.InGame;
                             var roleName = _lvlManager.ActiveExperiment.Roles[_playerRoles[Host.PlayerId]].Name;
+
+                            // Do not run update if the application is not visible
+                            //if (VarjoManager.Instance.IsLayerVisible() || !VarjoManager.Instance.IsInStandBy())
+                            if(VarjoPlugin.GetGaze().status == VarjoPlugin.GazeStatus.VALID)
+                            {
+                                VarjoPlugin.RequestGazeCalibration(); // initiate eye-tracking
+                            }
 
                             _logger.BeginLog($"HostLog-{roleName}-", _lvlManager.ActiveExperiment, _lights, Time.realtimeSinceStartup);
                             _fixedTimeLogger.BeginLog($"HostFixedTimeLog-{roleName}-", _lvlManager.ActiveExperiment, _lights, Time.fixedTime);

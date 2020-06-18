@@ -6,6 +6,8 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 using UnityEngine.Assertions;
+using Varjo;
+using VarjoExample;
 
 enum LogFrameType
 {
@@ -56,8 +58,8 @@ public class WorldLogger
         // Add time to log file
         _startTime = time;
         _fileWriter.Write(DateTime.Now.ToBinary());
-
-        // Add drivers and passengers avatars to the log file
+        
+        // Add drivers and passengers avatars to the playeravatar list
         _driverBuffer.Clear();
         _driverBuffer.AddRange(_playerSystem.Drivers);
         _driverBuffer.AddRange(_playerSystem.Passengers);
@@ -68,7 +70,7 @@ public class WorldLogger
         _fileWriter.Write(_playerSystem.Pedestrians.Count);
         _fileWriter.Write(experiment.PointsOfInterest.Length);
 
-        // For each POI, log the name, position and rotation (Use this to log data?)(To Add: eye-gaze passenger/pedestrian, eHMI activation)
+        // For each POI, log the name, position and rotation 
         foreach (var poi in experiment.PointsOfInterest)
         {
             _fileWriter.Write(poi.name);
@@ -125,18 +127,32 @@ public class WorldLogger
         _fileWriter.Write(time - _startTime);
         _fileWriter.Write(ping);
 
-        // Add drivers and passengers avatars, and AI cars to the log file
+        // Add drivers and passengers avatars, and AI cars to the playeravatar list
         _driverBuffer.Clear();
         _driverBuffer.AddRange(_playerSystem.Drivers);
         _driverBuffer.AddRange(_playerSystem.Passengers);
         _driverBuffer.AddRange(_aiCarSystem.Cars);
 
-        // Log the drivers position, rotation, carblinker state. ( No drivers, so unused)
+        // Log the drivers position, rotation, carblinker state. Log the drivers/passengers Varjo HMD data  
         foreach (var driver in _driverBuffer)
         {
             _fileWriter.Write(driver.transform.position);
             _fileWriter.Write(driver.transform.rotation);
             _fileWriter.Write((int)driver._carBlinkers.State);
+            //_fileWriter.Write(-1.0f); // test value -- WORKS IF PUT OUTSIDE THE IF STATEMENT
+            /*Debug.LogError($"debug: {driver.transform.FindChild("Gaze")}");
+            if (VarjoPlugin.GetGaze().status == VarjoPlugin.GazeStatus.VALID)
+            {
+                Debug.LogError("debug: Entered getgaze");
+                Debug.LogError($"debug: distance value = {driver.transform.GetComponentInChildren<VarjoGazeRay_CS>().getGazeRayHit().distance}");
+                _fileWriter.Write(driver.transform.GetComponentInChildren<VarjoGazeRay_CS>().getGazeRayHit().distance);  // float
+                Debug.LogError("debug: Written distance data to filewriter");
+            }
+            else
+            {
+                _fileWriter.Write(-1.0f);
+            }*/
+
             // Only log car velocity if local player
             if (driver == _playerSystem.LocalPlayer)
             {
@@ -144,8 +160,30 @@ public class WorldLogger
                 Assert.IsNotNull(rb);
                 Assert.IsFalse(rb.isKinematic);
                 _fileWriter.Write(rb.velocity);
+
+                // Varjo data driver/passenger (WIP) // Only works after eye-calibration.
+                //_fileWriter.Write(-1.0f); // test value -- ERROR WHEN PUT IN THE IF LOCALPLAYER STATEMENT
+
+                /*if (VarjoPlugin.GetGaze().status == VarjoPlugin.GazeStatus.VALID)
+                {
+                    _fileWriter.Write(driver.transform.GetComponentInChildren<VarjoGazeRay_CS>().getGazeRayHit().distance);  // float
+                    _fileWriter.Write(driver.transform.GetComponentInChildren<VarjoGazeRay_CS>().getGazeRayForward());       // hmd space, Vector 3
+                    _fileWriter.Write(driver.transform.GetComponentInChildren<VarjoGazeRay_CS>().getGazeRayDirection());     // world space, Vector 3
+                    _fileWriter.Write(driver.transform.GetComponentInChildren<VarjoGazeRay_CS>().getGazePosition());         // hmd space, Vector 3
+                    _fileWriter.Write(driver.transform.GetComponentInChildren<VarjoGazeRay_CS>().getGazeRayOrigin());        // world space, Vector 3
+                }
+                else // still fill in data when the eye-calibration has not been done yet.
+                {
+                    Vector3 beforeCalibration = new Vector3(0, 0, 0);
+                    _fileWriter.Write(0.0f);  // float
+                    _fileWriter.Write(beforeCalibration);   // hmd space, Vector 3
+                    _fileWriter.Write(beforeCalibration);   // world space, Vector 3
+                    _fileWriter.Write(beforeCalibration);   // hmd space, Vector 3
+                    _fileWriter.Write(beforeCalibration);   // world space, Vector 3
+                }*/
             }
         }
+
         // Log position and rotation of pedestrian (from the GetPose function)
         foreach (var pedestrian in _playerSystem.Pedestrians)
         {
@@ -192,7 +230,7 @@ public class LogConverter
             return $"{Name};{Position.x};{Position.y};{Position.z};{rot.x};{rot.y};{rot.z}";
         }
     }
-    // Assigning the name, pos, and rot to the "pois" list
+    // Assigning the name, pos, and rot to the "pois" list [unused for world coordinates]
     static SerializedPOI[] ParsePOI(BinaryReader reader)
     {
         var count = reader.ReadInt32();
@@ -205,7 +243,7 @@ public class LogConverter
         }
         return pois;
     }
-    // Source file reader???
+    
     public static SerializedPOI[] GetPOIs(string sourceFile)
     {
         using (var reader = new BinaryReader(File.OpenRead(sourceFile)))
@@ -239,7 +277,6 @@ public class LogConverter
         };
     }
 
-    // To Do: add more items here.
     class SerializedFrame
     {
         public float Timestamp;
@@ -252,6 +289,7 @@ public class LogConverter
         public List<LightState> CarLightStates = new List<LightState>();
         public List<LightState> PedestrianLightStates = new List<LightState>();
         public Vector3 LocalDriverRbVelocity;
+        public float Distance; // test
     }
 
     List<Vector3> _driverPositions;
@@ -265,8 +303,12 @@ public class LogConverter
 
         System.Threading.Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
         const string separator = ";";
-        const int columnsPerDriver = 3 /*pos x,y,z*/ + 3 /*rot x,y,z */ + 1 /*blinkers*/ + 3 /* local velocity */ + 3 /* local smooth velocity */ + 3 /* world velocity */ + 3 /* world velocity smooth */;
-        const int columnsForLocalDriver = columnsPerDriver + 3 /* rb velocity x,y,z */ + 3 /* rb velocity local x,y,z */;
+
+        // Column headers
+        const int columnsPerDriver = 3 /*pos x,y,z*/ + 3 /*rot x,y,z */ + 1 /*blinkers*/ + 1 /*distance*/ + 3 /* local velocity */ + 3 /* local smooth velocity */ + 3 /* world velocity */ + 3 /* world velocity smooth */;
+        const int columnsForLocalDriver = columnsPerDriver + 3 /* rb velocity x,y,z */ + 3 /* rb velocity local x,y,z */; // + 3 /* Gaze Forward (HMD) x,y,z */ + 1 /* Gaze Position (HMD) x,y,z */ + 1 /* Gaze Direction (World) x,y,z */ + 1 /* Gaze Origin (World) x,y,z */ ;
+       
+        // Column headers for bodysuit tracking
         const int columnsPerBone = 6;
         int columnsPerPedestrian = 6;
         if (WorldLogger.returnBodySuit()) { 
@@ -274,7 +316,7 @@ public class LogConverter
         }
         var toRefRot = Quaternion.Inverse(referenceRot);
         
-
+        // Load binary file
         var srcFile = File.OpenRead(sourceFile);
         Log log = Log.New();
         using (var reader = new BinaryReader(srcFile))
@@ -291,26 +333,36 @@ public class LogConverter
                 Position = Vector3.zero,
                 Rotation = Quaternion.identity
             });
+            Debug.Log($"eve: local driver = {log.LocalDriver}");
+            Debug.Log($"eve: numPersistentDrivers = {numPersistentDrivers}");
+            Debug.Log($"eve: numPedestrians = {numPedestrians}");
+
             int numCarLights = reader.ReadInt32();
+            Debug.Log($"eve: numCarLights = {numCarLights}");
             for (int i = 0; i < numCarLights; i++)
             {
                 log.CarLightNames.Add(reader.ReadString());
             }
             int numPedestrianLights = reader.ReadInt32();
+            Debug.Log($"eve: numPedestrianLights = {numPedestrianLights}");
             for (int i = 0; i < numPedestrianLights; i++)
             {
                 log.PedestrianLightsNames.Add(reader.ReadString());
             }
             int numAICars = 0;
+            int n = 0; // test
             while (srcFile.Position < srcFile.Length)
             {
+                n++;
                 var eventType = (LogFrameType)reader.ReadInt32();
+                Debug.Log($"eve: eventtype before = {eventType}, {n} of {srcFile.Length}" );
                 if (eventType == LogFrameType.AICarSpawn)
                 {
                     numAICars++;
                     continue;
                 }
-                Assert.AreEqual(LogFrameType.PositionsUpdate, eventType);
+                Debug.Log($"eve: eventtype after = {eventType}, {n} of {srcFile.Length}");
+                Assert.AreEqual(LogFrameType.PositionsUpdate, eventType); // error. assertion not equal
                 var frame = new SerializedFrame();
                 log.Frames.Add(frame);
                 frame.Timestamp = reader.ReadSingle();
@@ -322,11 +374,13 @@ public class LogConverter
                     frame.DriverPositions.Add(reader.ReadVector3());
                     frame.DriverRotations.Add(reader.ReadQuaternion());
                     frame.BlinkerStates.Add((BlinkerState)reader.ReadInt32());
+                    frame.Distance = reader.ReadSingle(); // test varjo data logging
                     if (i == log.LocalDriver)
                     {
                         frame.LocalDriverRbVelocity = reader.ReadVector3() * SpeedConvertion.Mps2Kmph;
                     }
                 }
+
 
                 for (int i = 0; i < numPedestrians; i++)
                 {
@@ -448,7 +502,7 @@ public class LogConverter
             writer.Write(separator); // for the Timestamp column
             writer.Write(separator); // for the Ping column
 
-            const string driverTransformHeader = "pos_x;pos_y;pos_z;rot_x;rot_y;rot_z;blinkers;vel_local_x;vel_local_y;vel_local_z;vel_local_smooth_x;vel_local_smooth_y;vel_local_smooth_z;vel_x;vel_y;vel_z;vel_smooth_x;vel_smooth_y;vel_smooth_z";
+            const string driverTransformHeader = "pos_x;pos_y;pos_z;rot_x;rot_y;rot_z;blinkers;distance;vel_local_x;vel_local_y;vel_local_z;vel_local_smooth_x;vel_local_smooth_y;vel_local_smooth_z;vel_x;vel_y;vel_z;vel_smooth_x;vel_smooth_y;vel_smooth_z"; // added distance after blinkers
             const string localDriverTransformHeader = driverTransformHeader + ";rb_vel_x;rb_vel_y;rb_vel_z;rb_vel_local_x;rb_vel_local_y;rb_vel_local_z";
             List<string> headers = new List<string>();
             for (int i = 0; i < numDrivers; i++)
@@ -507,16 +561,17 @@ public class LogConverter
                     var rot = frame.DriverRotations[i];
                     var euler = RotToRefPoint(rot).eulerAngles;
                     var blinkers = frame.BlinkerStates[i];
+                    var distance = frame.Distance;
                     var inverseRotation = Quaternion.Inverse(rot);
                     if (prevFrame == null || prevFrame.DriverPositions.Count <= i)
                     {
                         if (i == localDriver)
                         {
-                            line.Add($"{pos.x};{pos.y};{pos.z};{euler.x};{euler.y};{euler.z};{(BlinkerState)blinkers};0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0");
+                            line.Add($"{pos.x};{pos.y};{pos.z};{euler.x};{euler.y};{euler.z};{(BlinkerState)blinkers};{distance};0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0");
                         }
                         else
                         {
-                            line.Add($"{pos.x};{pos.y};{pos.z};{euler.x};{euler.y};{euler.z};{(BlinkerState)blinkers};0;0;0;0;0;0;0;0;0;0;0;0");
+                            line.Add($"{pos.x};{pos.y};{pos.z};{euler.x};{euler.y};{euler.z};{(BlinkerState)blinkers};{distance};0;0;0;0;0;0;0;0;0;0;0;0");
                         }
                     }
                     else
@@ -532,12 +587,12 @@ public class LogConverter
                         {
                             var rbVel = frame.LocalDriverRbVelocity;
                             var rbVelLocal = inverseRotation * rbVel;
-                            line.Add($"{pos.x};{pos.y};{pos.z};{euler.x};{euler.y};{euler.z};{(BlinkerState)blinkers};{speed.x};{speed.y};{speed.z};{localSmooth.x};{localSmooth.y};{localSmooth.z};{vel.x};{vel.y};{vel.z};{velSmooth.x};{velSmooth.y};{velSmooth.z};{rbVel.x};{rbVel.y};{rbVel.z};{rbVelLocal.x};{rbVelLocal.y};{rbVelLocal.z}");
+                            line.Add($"{pos.x};{pos.y};{pos.z};{euler.x};{euler.y};{euler.z};{(BlinkerState)blinkers};{distance};{speed.x};{speed.y};{speed.z};{localSmooth.x};{localSmooth.y};{localSmooth.z};{vel.x};{vel.y};{vel.z};{velSmooth.x};{velSmooth.y};{velSmooth.z};{rbVel.x};{rbVel.y};{rbVel.z};{rbVelLocal.x};{rbVelLocal.y};{rbVelLocal.z}");
 
                         }
                         else
                         {
-                            line.Add($"{pos.x};{pos.y};{pos.z};{euler.x};{euler.y};{euler.z};{(BlinkerState)blinkers};{speed.x};{speed.y};{speed.z};{localSmooth.x};{localSmooth.y};{localSmooth.z};{vel.x};{vel.y};{vel.z};{velSmooth.x};{velSmooth.y};{velSmooth.z}");
+                            line.Add($"{pos.x};{pos.y};{pos.z};{euler.x};{euler.y};{euler.z};{(BlinkerState)blinkers};{distance};{speed.x};{speed.y};{speed.z};{localSmooth.x};{localSmooth.y};{localSmooth.z};{vel.x};{vel.y};{vel.z};{velSmooth.x};{velSmooth.y};{velSmooth.z}");
                         }
                     }
                 }
