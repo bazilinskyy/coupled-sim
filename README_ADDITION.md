@@ -15,7 +15,9 @@ I added the distance between the start (passenger) and end the point (pedestrian
 This script is attached to a GameObject called *Gaze*, which is a child of the vehicle prefab. 
 
 **The first step is to make the data usable in other script**, which is done as follows:
+
 **1.** Calculate/define the wanted variable in the corresponding script. In this case, the *VarjoGazeRay_CS.cs* script.
+
 **2.** Make sure that the variable is public, or create a public function to retrieve the variable. 
 ```
 public DataType variable;
@@ -52,6 +54,7 @@ _fileWriter.Write(distance);
 **5.** All variables which are logged in the *LogFrame* function need to be declared in the class *SerializedFrame* publicly so that the *TranslateBinaryLogToCsv* function can access the variable.
 
 **The third step is to translate from binary to csv.**
+
 **6.** In the *TranslateBinaryLogToCsv* function, add a column header for your variable at the appropriate position. Since the distance data is written after the blinker state, the *columnsPerDriver* will be as follows:
 ```
 const int columnsPerDriver = 3 /*pos x,y,z*/ + 3 /*rot x,y,z */ + 1 /*blinkers*/ + 1 /*distance*/ + 3 /* local velocity */ + 3 /* local smooth velocity */ + 3 /* world velocity */ + 3 /* world velocity smooth */;
