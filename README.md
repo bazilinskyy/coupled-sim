@@ -226,10 +226,11 @@ We have used the following free assets:
 In this section, the additions made by Johnson Mok during his Master Thesis are outlined.
 
 ## Table of Content
+- Add variable to the worldlogger.
+- Fixed eHMI msg.
+- Remove eHMI GUI when eHMI is fixed.
+- Distraction car spawner.
 - 
--
--
--
 -
 -
 
@@ -323,7 +324,74 @@ if (prevFrame == null || prevFrame.DriverPositions.Count <= i)
 
 
 
+## Fixed eHMI message
+I copied and adapted the *ClientHMIController.cs* script to show a fixed eHMI message on the autonomous car. This newly adapted script is renamed into *eHMIShowJohn.cs*. 
 
+First, I changed the *update* function, such that the eHMI is only dependent on public variables which can be set in the inspector as opposed to being dependent on key input.
+```
+public bool ShowDisabled = false;
+public bool ShowStop = false;
+public bool ShowWalk = false;
+
+if (ShowDisabled == true)
+{
+	ChangeToState(HMIState.DISABLED);
+}
+else if (ShowStop == true)
+{
+	ChangeToState(HMIState.STOP);
+}
+else if (ShowWalk == true)
+{
+	ChangeToState(HMIState.WALK);
+}
+```
+
+Next, you need to attach the *eHMIShowJohn.cs* script to the car prefab that you want to use it on. Select in the inspector the desired message to show.
+
+Lastly, you need to tell the playersystem when to use the fixed eHMI. This is done in the *PlayerSystem.cs* script. For this you need a public variable to turn on the fixed eHMI in the inspector.
+```
+public bool eHMIFixed = false;
+```
+On top of that, an if-statement is needed to use the *eHMIShowJohn.cs* script instead of the *ClientHMIController.cs* script when the eHMIFixed bool is set to true. This is done in the function *SpawnLocalPlayer*
+```
+...
+if(eHMIFixed == true)
+{
+	var hmiControl = LocalPlayer.GetComponent<eHMIShowJohn>();
+	hmiControl.Init(_hmiManager);
+}
+else
+{
+	var hmiControl = LocalPlayer.GetComponent<ClientHMIController>();
+	hmiControl.Init(_hmiManager);
+}
+```
+
+
+
+## Remove eHMI GUI when eHMI is fixed
+The GUI for the ehMI is removed when the eHMI is fixed. To do this one needs to adapt the *Host.cs* script.
+One simply needs to add a condition on when to activate the GUI, which in this case is done with an if-statement.
+```
+if (_playerSys.eHMIFixed == false)
+{
+	_hmiManager.DoHostGUI(this);
+	_visualSyncManager.DoHostGUI(this);
+}
+```
+
+
+## Distraction car spawner
+To spawn a(n unmanned) distraction car, I used the *TestSyncedCarSpawner.cs* script. 
+The passenger used to "teleport" to the distraction car, due to the camera object in the car prefab. 
+To solve this "teleportation" problem, I disabled the camera in the *PlayerAvatar.cs* script for the mode HostAI in the initialization function.
+```
+if(mode == PlayerSystem.Mode.HostAI)
+{
+	GetComponentInChildren<Camera>().gameObject.SetActive(false);
+}
+```
 
 
 
