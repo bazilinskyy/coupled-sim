@@ -65,6 +65,7 @@ for (int i = 0; i < numDriversThisFrame; i++)
 	frame.BlinkerStates.Add((BlinkerState)reader.ReadInt32());
 	frame.Distance = reader.ReadSingle(); // Varjo data distance
 }
+```
 8. Next, in the *TranslateBinaryLogToCsv* function under the HEADER ROWS section. You need to add the name of the variable to the const string *driverTransformHeader*.
 ```
 const string driverTransformHeader = "pos_x;pos_y;pos_z;rot_x;rot_y;rot_z;blinkers;*distance*;vel_local_x;vel_local_y;vel_local_z;vel_local_smooth_x;vel_local_smooth_y;vel_local_smooth_z;vel_x;vel_y;vel_z;vel_smooth_x;vel_smooth_y;vel_smooth_z"; 
