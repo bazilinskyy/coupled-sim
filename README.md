@@ -226,14 +226,23 @@ We have used the following free assets:
 In this section, the additions made by Johnson Mok during his Master Thesis are outlined.
 
 ## Table of Content
-- Add variable to the worldlogger.
-- Fixed eHMI msg.
-- Remove eHMI GUI when eHMI is fixed.
+- Logging
+	- Add variable to the worldlogger.
+	- Logging bodysuit bool.
+- eHMI
+	- Fixed eHMI msg.
+	- Remove eHMI GUI when eHMI is fixed.
 - Distraction car spawner.
-- 
--
--
+- Restructure AICar.cs.
+	- Brake on input.
+	- AV driving initiation (to write)
+- Varjo
+	- Varjo camera on prefab.
+	- Visualize eye-gaze vector.
+	- Adding eye-tracking to the prefab.
+	- Gaze Ray hit pedestrian (to write)
 
+# Logging
 ## Add variable to the worldlogger
 The logger makes use of a byte stream, thus the order is of importance. The location of where to add the variable depends on your own preference. In this chapter, I describe how to add data from the varjo HMD to the logger.
 I added the distance between the start (passenger) and end the point (pedestrian) of the eye-gaze ray as the variable *distance*. The *distance* variable is defined in the *VarjoGazeRay_CS.cs* script. 
@@ -284,6 +293,7 @@ _fileWriter.Write(distance);
 ```
 const int columnsPerDriver = 3 /*pos x,y,z*/ + 3 /*rot x,y,z */ + 1 /*blinkers*/ + 1 /*distance*/ + 3 /* local velocity */ + 3 /* local smooth velocity */ + 3 /* world velocity */ + 3 /* world velocity smooth */;
 ```
+
 **7.** Read the data from the binary file. The *distance* data is stored in the *frame* from *LogFrame*. On top of that, it needs to be read from every avatar in the game (vehicle and pedestrian). Thus the read line for distance is added in the for-statement of the *numDriversThisFrame*.
 ```
 int numDriversThisFrame = numAICars + numPersistentDrivers;
@@ -295,10 +305,12 @@ for (int i = 0; i < numDriversThisFrame; i++)
 	frame.Distance = reader.ReadSingle(); // Varjo data distance
 }
 ```
+
 **8.** Next, in the *TranslateBinaryLogToCsv* function under the HEADER ROWS section. You need to add the name of the variable to the const string *driverTransformHeader*.
 ```
 const string driverTransformHeader = "pos_x;pos_y;pos_z;rot_x;rot_y;rot_z;blinkers;*distance*;vel_local_x;vel_local_y;vel_local_z;vel_local_smooth_x;vel_local_smooth_y;vel_local_smooth_z;vel_x;vel_y;vel_z;vel_smooth_x;vel_smooth_y;vel_smooth_z"; 
 ```
+
 **9.** Lastly, in the *TranslateBinaryLogToCsv* function under the ACTUAL DATA section. You need to add the distance variable again in the for-statement of the *numDriversThisFrame to retrieve the data, which in a few lines later is then added to the *line*.
 ```
 for (int i = 0; i < numDriversThisFrame; i++)
@@ -322,8 +334,75 @@ if (prevFrame == null || prevFrame.DriverPositions.Count <= i)
 }
 ```
 
+## Logging bodysuit bool
+In the worldlogger the bodysuit data would automatically be logged for a pedestrian. However, in my experiments no bodysuits are used. 
+Resulting in a large number of empty columns in the logged data file. Thus, I created a bool to turn off/on the logging of the bodysuit data.
+In the *WorldLogging.cs* script:
+
+**1.** Create bool and get function:
+```
+public static Boolean bodySuit = false;
+
+public static Boolean returnBodySuit()
+{
+	return bodySuit;
+}
+```
+
+**2.** In the *PlayerAvatar.cs* script, change the AvatarPose GetPose function such that it only gets the bodysuit pose when the input is set to true.
+```
+public AvatarPose GetPose(bool bodySuit)
+{
+...
+int i_end = 0;
+if (bodySuit == true)
+{
+	i_end = SyncTransforms.Length;
+}
+```
+
+**3.** In the *LogFrame* function, add the condition to only get the pose when the bool is set to true.
+```
+foreach (var pedestrian in _playerSystem.Pedestrians)
+{
+	pedestrian.GetPose(**returnBodySuit()**).SerializeTo(_fileWriter); 
+}
+```
+
+**4.** Only set column headers for bodysuit when the bool is set to true. Changes in the *TranslateBinaryLogToCsv.cs* script:
+```
+if (WorldLogger.returnBodySuit()) { 
+	columnsPerPedestrian = pedestrianSkeletonNames.Length * columnsPerBone + columnsPerBone; // + columnsPerBone is for the root transform;
+}
+```
+
+**5.** Same thing as for step 3 in the HEADER ROWS section:
+```
+if (WorldLogger.returnBodySuit())
+{
+	for (int i = 0; i < pedestrianSkeletonNames.Length; i++)
+	{
+		sb.Append(string.Join(separator, Enumerable.Repeat(pedestrianSkeletonNames[i], columnsPerBone)));
+		if (i < pedestrianSkeletonNames.Length - 1)
+		{
+			sb.Append(separator);
+		}
+	}
+}
+...
+if (WorldLogger.returnBodySuit())
+{
+	writer.Write(string.Join(separator, Enumerable.Repeat(boneTransformHeader, numPedestrians * (pedestrianSkeletonNames.Length + 1))));
+}
+else
+{
+	writer.Write(string.Join(separator, Enumerable.Repeat(boneTransformHeader, numPedestrians)));
+}
+writer.Write("\n");
+```
 
 
+# eHMI
 ## Fixed eHMI message
 I copied and adapted the *ClientHMIController.cs* script to show a fixed eHMI message on the autonomous car. This newly adapted script is renamed into *eHMIShowJohn.cs*. 
 
@@ -382,7 +461,7 @@ if (_playerSys.eHMIFixed == false)
 ```
 
 
-## Distraction car spawner
+# Distraction car spawner
 To spawn a(n unmanned) distraction car, I used the *TestSyncedCarSpawner.cs* script. 
 The passenger used to "teleport" to the distraction car, due to the camera object in the car prefab. 
 To solve this "teleportation" problem, I disabled the camera in the *PlayerAvatar.cs* script for the mode HostAI in the initialization function.
@@ -392,6 +471,171 @@ if(mode == PlayerSystem.Mode.HostAI)
 	GetComponentInChildren<Camera>().gameObject.SetActive(false);
 }
 ```
+
+
+
+## Restructure AICar
+Having structured and clear code is important in maintaining workable code, especially in large projects. 
+I restructured the *AICar.cs* script using functions such that making adaptations to the code becomes easier.
+The *FixedUpdate* function describes all the main tasks. These main tasks are further divided into functions. 
+The overall overview has now become as follows:
+- Normal driving
+- Braking
+- Restarting AV after braking
+
+
+
+
+# Brake on input
+The AV was only able to brake on collision with brake triggers. To brake the AV using input adaptations are made to the *AICar.cs* script. 
+The adaptations are made such that the input will activate the same sequence of code as would have happend in a collision with a brake trigger.
+
+**1.** First, a new bool is needed to determine the state of activation of the braking. 
+
+**2.** Second, in the *Update* function, write the condition to stop the AV when a button is pressed. Here is an example using the spacebar. 
+```
+// Brake using spacebar
+if (Input.GetKeyDown("space") == true)
+{
+            Brake_Spacebar();
+        }
+```
+When the spacebar is pressed, the function *Brake_Spacebar* is executed. This function sets the necessary variables to brake the AV.
+```
+void Brake_Spacebar()
+{
+	SpaceBar = true;
+	triggerlocation = this.gameObject.transform.position.z;
+	braking = true;
+	set_speed = 0;
+	set_acceleration = -2;
+	jerk = -Mathf.Abs(-6);
+}
+```
+
+**3.** Now that we have set the variables to the right values and triggered the SpaceBar bool. The next step is to change the braking conditions in the helper functions found in the *FixedUpdate* function.
+The first one is the *Decelerate_Car* function. The braking is direction dependend, the braking condition is adapted in the z-direction, since in my experiment the AV drives in the z-direction.
+```
+else if (WaitTrialZ == true || BrakeZ == true || SpaceBar == true)
+{
+	delta_distance = Mathf.Abs(this.gameObject.transform.position.z - triggerlocation);
+}
+```
+
+**4.** Next, in my experiment, the AV needs to drive again after standing still for a certain amount of time. Thus changes are made in the *Reset_Speed_After_Stopping* function.
+Similarily to step 4, the resetting condition is adapted.
+```
+if (WaitTrialZ == true || SpaceBar)
+{
+	delta_distance = Mathf.Abs(this.gameObject.transform.position.z - startlocation);
+}
+```
+
+# Varjo
+The varjo headset requires varjobase and SteamVR to work. To implement the varjo into unity, one needs the varjo plugin.
+
+These can all be found in the list below:
+- VarjoBase: [https://varjo.com/downloads/#varjo-base](https://varjo.com/downloads/#varjo-base)
+- Varjo plugin (for unity + examples): [https://developer.varjo.com/downloads#unreal-developer-assets](https://developer.varjo.com/downloads#unreal-developer-assets)
+- Steam: [https://store.steampowered.com/](https://store.steampowered.com/)
+- SteamVR: [https://store.steampowered.com/app/250820/SteamVR/](https://store.steampowered.com/app/250820/SteamVR/)
+
+
+## Varjo camera on prefab
+To make use of the varjo headset in the coupled-sim, one needs to adapt the existing player avatar prefabs. This holds for both the pedestrian (participant) and the AV's.
+For this purpose, I duplicated the existing participant prefab and created a new "Participant_varjo" prefab.
+
+**1.** Add the VarjoCameraRig prefab on the same level as the CameraPositionSet. Make sure to set the same transform values for the VarjoCameraRig as the CameraPositionSet
+
+**2.** Add the *Position Setter* script to the VarjoCameraRig and set as the target "CameraPosition".
+
+With these two steps you should be able to see the world from the perspective of the pedestrian.
+
+## Visualize eye=gaze vector
+The visualization of the eye=gaze vector is done by adapting the provided *VarjoGazeRay* script. 
+The visualization is done by drawing a line between the origin (the eyes) and the end (the gaze point).
+
+**1.** To fulfill this task, I created the LineDrawer helper function.
+```
+public struct LineDrawer
+{
+	private LineRenderer lineRenderer;
+...
+```
+
+**2.** The init function adds the [LineRenderer](https://docs.unity3d.com/Manual/class-LineRenderer.html) to the gameobject which this script is attached to.
+```  
+private void init(GameObject gameObject)
+{
+	if (lineRenderer == null)
+	{
+		lineRenderer = gameObject.AddComponent<LineRenderer>();
+                //Particles/Additive
+                lineRenderer.material = new Material(Shader.Find("Hidden/Internal-Colored"));
+	}
+}
+```
+
+**3.** Adds the linerenderer to the gameobject if it has not been done yet and set the properties of the linerenderer.
+```
+public void DrawLineInGameView(GameObject gameObject, Vector3 start, Vector3 end, Color color)
+{
+	if (lineRenderer == null)
+	{
+		init(gameObject);
+	}
+
+	//Set color
+	lineRenderer.startColor = color;
+	lineRenderer.endColor = color;
+
+	//Set width
+	lineRenderer.startWidth = 0.01f;
+	lineRenderer.endWidth = 0.01f;
+
+	//Set line count which is 2
+	lineRenderer.positionCount = 2;
+
+	//Set the postion of both two lines
+	lineRenderer.SetPosition(0, start);
+	lineRenderer.SetPosition(1, end);
+}
+```
+
+**4.** Destroy the gameobject after use.
+```
+public void Destroy()
+{
+	if (lineRenderer != null)
+	{
+		UnityEngine.Object.Destroy(lineRenderer.gameObject);
+	}
+}
+```
+
+**5.** Now, one simply has to fill in the *DrawLineInGameView* arguments to visualize the eye-gaze
+```
+lineDrawer.DrawLineInGameView(gameObject, gazeRayOrigin, gazeRayOrigin + gazeRayDirection * 10.0f, Color.green);
+```
+
+## Adding eye-tracking to the prefab
+Additional scripts need to be added to initialize the eye-tracking calibration and visualize the eye-gaze vector in the coupled-sim.
+
+**1.** Create an empty on the particpant_varjo prefab. Put it on the same level as the VarjoCameraRig prefab and name the empty "Gaze".
+
+**2.** Add the "Varjo Gaze Calibration Request" and "Varjo Gaze Ray" script to the "Gaze".
+
+One should be able to see their eye-gaze visualized after performing the eye-calibration.
+
+
+
+
+
+
+
+
+
+
 
 
 

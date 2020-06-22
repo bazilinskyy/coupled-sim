@@ -295,7 +295,7 @@ public class LogConverter
     List<Vector3> _driverPositions;
     List<RunningAverage> _driverVels;
     //translation logic
-    //referenceName, referencePos, rLoeferenceRot - parameters specifying new origin point, allowing transforming data into new coordinate system
+    //referenceName, referencePos, referenceRot - parameters specifying new origin point, allowing transforming data into new coordinate system
     public void TranslateBinaryLogToCsv(string sourceFile, string dstFile, string[] pedestrianSkeletonNames, string referenceName, Vector3 referencePos, Quaternion referenceRot)
     {
         _driverPositions = null;
