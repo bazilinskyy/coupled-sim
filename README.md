@@ -229,18 +229,20 @@ In this section, the additions made by Johnson Mok during his Master Thesis are 
 - Logging
 	- Add variable to the worldlogger.
 	- Logging bodysuit bool.
+	- Varjo's own logger
 - eHMI
 	- Fixed eHMI msg.
 	- Remove eHMI GUI when eHMI is fixed.
 - Distraction car spawner.
 - Restructure AICar.cs.
 	- Brake on input.
-	- AV driving initiation (to write)
+	- AV driving initiation 
 - Varjo
 	- Varjo camera on prefab.
 	- Visualize eye-gaze vector.
 	- Adding eye-tracking to the prefab.
-	- Gaze Ray hit pedestrian (to write)
+	- Gaze Ray hit pedestrian.
+	- Brake AV based on eye-gaze
 
 # Logging
 ## Add variable to the worldlogger
@@ -401,6 +403,110 @@ else
 writer.Write("\n");
 ```
 
+## Varjo's own logger
+The varjo plugin provides it's own logger. However, it does not seem to work with the coupled-sim without some modifications. 
+This script is not used, since it is desired to log all data into one file. Synchronizing data requires a lot of manual work.
+
+This logger logs the following:
+- Role (of the HMD wearer)
+- Time, starting after eye-calibration
+- Eye gaze ray distance between the passenger and the pedestrian.
+- Direction of the eye gaze ray in both the coordinate system of the world and the HMD.
+- Origin of the eye gaze ray in both  the coordinate system of the world and the HMD.
+- HMD position.
+- HMD rotation.
+
+**1.** The *VarjoGazeRay* script must first be modified to recognize the role. This is done by looking at the tag assigned to the prefab on which this script is assigned to.
+In the *Update* function:
+```
+if (transform.parent.CompareTag("Pedestrian"))
+{
+	role_varjo = "Pedestrian";
+	target = "Passenger";
+}
+else if (transform.parent.CompareTag("AutonomousCar"))
+{
+	role_varjo = "Passenger";
+	target = "Pedestrian";
+}
+```
+
+The data is taken from the *VarjoGazeRay* script directly. For this to work the scripts must be attached to the same object.
+**2.** Create a get function in the *VarjoGazeRay* script to get all the wanted data.
+```
+public string getRoleVarjo()
+{
+	return role_varjo;
+}
+
+public RaycastHit getGazeRayHit()
+{
+	return gazeRayHit;
+}
+
+public Vector3 getGazeRayForward() // HMD space
+{
+	return gazeRayForward;
+}
+
+public Vector3 getGazePosition() // HMD space
+{
+	return gazePosition;
+}
+
+public Vector3 getGazeRayDirection() // world space
+{
+	return gazeRayDirection;
+}
+
+public Vector3 getGazeRayOrigin() // world space
+{
+	return gazeRayOrigin;
+}
+```
+
+**2.** In the *VarjoGazeLog* script, define the data to log. 
+```
+RaycastHit gazeRayHit;
+Vector3 gazeRayForward;
+Vector3 gazeRayDirection;
+Vector3 gazePosition;
+Vector3 gazeRayOrigin;
+string role_varjo;
+float distance;
+float time = 0.0f;
+```
+
+**3.** Modify the header rows by changing the names in the static string ColumnNames:
+```
+static readonly string[] ColumnNames = { Role, "Time", "Distance", "HMDPosition", "HMDRotation", "Gaze Forward (HMD)", "Gaze Position (HMD)", "Gaze Direction (world)", "Gaze Origin (world)" };
+```
+
+**4.** Update the time vaiable inside the *Update* function:
+
+**5.** In the *LogGazeData* function, get the varjo HMD datat using the previously created get functions.
+```
+gazeRayHit = this.GetComponent<VarjoGazeRay_CS>().getGazeRayHit();
+distance = gazeRayHit.distance;
+gazeRayForward = this.GetComponent<VarjoGazeRay_CS>().getGazeRayForward();      // hmd space
+gazeRayDirection = this.GetComponent<VarjoGazeRay_CS>().getGazeRayDirection();  // hmd space
+gazePosition = this.GetComponent<VarjoGazeRay_CS>().getGazePosition();          // world space
+gazeRayOrigin = this.GetComponent<VarjoGazeRay_CS>().getGazeRayOrigin();        // world space
+role_varjo = this.GetComponent<VarjoGazeRay_CS>().getRoleVarjo();
+
+hmdPosition = VarjoManager.Instance.HeadTransform.position;
+hmdRotation = VarjoManager.Instance.HeadTransform.rotation.eulerAngles;
+```
+
+**6.** Convert the data to type string and add to the logdata matrix.
+```
+string[] logData = new string[9]; 
+
+logData[0] = role_varjo;
+logData[1] = time.ToString();
+logData[2] = distance.ToString("F3");
+etc...
+```
 
 # eHMI
 ## Fixed eHMI message
@@ -531,6 +637,28 @@ if (WaitTrialZ == true || SpaceBar)
 }
 ```
 
+## AI Driving initiation
+A manual start of the AV driving initiation is added to give the passenger enough time to perform the eye-calibration. Otherwise the AV would start driving as soon as the experiment starts. 
+Leaving no time for the participant to perform the eye-calibration.
+For the implementation of the manual initiation, adaptations needs to be made in the *AICar.cs* script.
+**1.** First, a new bool is needed to determine the state of activation of the braking. 
+
+**2.** Second, in the *Update* function, write the condition to start the AV when a button is pressed. Here is an example using the up arrow key.
+```
+if(Input.GetKeyDown("up") == true)
+{
+	startCar = true;
+}
+```
+
+**3.** Lastly, in the *FixedUpdate* function. Add the condition that the AV only starts driving when the startCar boolean is set to true.
+```
+if ((braking == false) && (reset == false) && (startCar == true))
+{
+Car_Driving_Behaviour();
+}
+```
+
 # Varjo
 The varjo headset requires varjobase and SteamVR to work. To implement the varjo into unity, one needs the varjo plugin.
 
@@ -627,15 +755,68 @@ Additional scripts need to be added to initialize the eye-tracking calibration a
 
 One should be able to see their eye-gaze visualized after performing the eye-calibration.
 
+## Gaze ray hit pedestran
+The next part of the eye gaze ray interaction is to register the "hits" ONLY with the pedestrian. 
+For this purpose, a new layer is created.
+**1.** Create new layer. I called this layer "target".
 
+**2.** Assign the pedestrian prefab with the layer "target".
 
+**3.** Assign the pedetrian with the tag "Pedestrian".
 
+**4.** In the *VarjoGazeRay.cs* script, adapt the raycast physics condition such that it only sees objects in the "target" layer.
+```
+if (Physics.SphereCast(gazeRayOrigin, gazeRayRadius, gazeRayDirection, out gazeRayHit, Mathf.Infinity, 1 << LayerMask.NameToLayer(target)))
+```
 
+**5.** Next, inside the target layer, add a condition to perform a certain action on objects with the tag "Pedestrian".
+```
+if (gazeRayHit.collider.gameObject.CompareTag(target) && target == "Pedestrian")
+```
 
+## Brake AV based on eye-gaze
+To brake the AV based on eye-gaze, both the *AICar* script and the *VarjoGazeRay* script need to be modified. 
+In the previous section I already set up the condition for target hits. The first step is to send a message from the *VarjoGazeRay* script to the *AICar* script when the passenger gazes at the pedestrian.
 
+**1.** In the *AICar* script, create a bool and a function to change the bool from another script. 
+In the code snippet below, a counter "n" is added. This is because we want the message to be send only once. 
+```
+private bool boolVarjoSaysStop;
+public void VarjoSaysStop()
+{
+	boolVarjoSaysStop = true;
+	n += 1;
+}
+```
 
+**2.** In the *VarjoGazeRay* script, add the condition to send the message when the distance between the passenger
+and the pedestrian is under a certain threshold.
+```
+if (gazeRayHit.collider.gameObject.CompareTag(target) && target == "Pedestrian")
+{
+	if(gazeRayHit.distance < 25.0f ) // threshold set at 25m
+	{
+		this.GetComponentInParent<AICar>().VarjoSaysStop();
+	}
+}
+```
 
+**3.** Now I use the boolVarjoSaysStop to activate the manual braking (previously activated with the spacebar button).
+Inside the *AICar* script, in the *Update* function.
+```
+if ((Input.GetKeyDown("space") == true || (StopWithEyeGaze == true && boolVarjoSaysStop == true && n == 1)) && startCar == true)
+```
 
+**4.** A new public bool is introduced to activate/deactivate the eye-gaze stopping, since it's not always desired to use the eye-gaze to stop the car.
+This bool is set in the inspector of the vehicle prefab. **Note: this bool is also set in the condition in the previous code snippet**.
+```
+public bool StopWithEyeGaze = false;
+
+```
+Modify the braking conditions inside the Brake_AV(Collider other) function. 
+```
+if (other.gameObject.CompareTag("StartTrial_Z") && StopWithEyeGaze == false)  
+```
 
 
 
