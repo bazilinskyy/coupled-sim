@@ -679,7 +679,7 @@ For this purpose, I duplicated the existing participant prefab and created a new
 
 With these two steps you should be able to see the world from the perspective of the pedestrian.
 
-## Visualize eye=gaze vector
+## Visualize eye-gaze vector
 The visualization of the eye=gaze vector is done by adapting the provided *VarjoGazeRay* script. 
 The visualization is done by drawing a line between the origin (the eyes) and the end (the gaze point).
 
