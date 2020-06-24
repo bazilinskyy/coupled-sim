@@ -24,6 +24,7 @@ public class WorldLogger
     int _lastFrameAICarCount;
     BinaryWriter _fileWriter;
     float _startTime;
+    float distance;
 
     public WorldLogger(PlayerSystem playerSys, AICarSyncSystem aiCarSystem)
     {
@@ -139,19 +140,17 @@ public class WorldLogger
             _fileWriter.Write(driver.transform.position);
             _fileWriter.Write(driver.transform.rotation);
             _fileWriter.Write((int)driver._carBlinkers.State);
-            //_fileWriter.Write(-1.0f); // test value -- WORKS IF PUT OUTSIDE THE IF STATEMENT
-            Debug.LogError($"debug: {driver.transform.FindChild("Gaze")}");
-            if (VarjoPlugin.GetGaze().status == VarjoPlugin.GazeStatus.VALID)
+            
+            // Code enters the invalid statement and afterwards the valid statement (eye-calibration)
+            if (VarjoPlugin.GetGaze().status == VarjoPlugin.GazeStatus.VALID && driver.transform.Find("Gaze"))
             {
-                Debug.LogError("debug: Entered getgaze");
-                Debug.LogError($"debug: distance value = {driver.transform.GetComponentInChildren<VarjoGazeRay_CS>().getGazeRayHit().distance}");
-                _fileWriter.Write(driver.transform.GetComponentInChildren<VarjoGazeRay_CS>().getGazeRayHit().distance);  // float
-                Debug.LogError("debug: Written distance data to filewriter");
+                distance = driver.transform.GetComponentInChildren<VarjoGazeRay_CS>().getGazeRayHit().distance;
             }
-            else
+            else if(VarjoPlugin.GetGaze().status != VarjoPlugin.GazeStatus.VALID)
             {
-                _fileWriter.Write(-1.0f);
+                distance = -1.0f;
             }
+            _fileWriter.Write(distance);
 
             // Only log car velocity if local player
             if (driver == _playerSystem.LocalPlayer)
@@ -160,27 +159,6 @@ public class WorldLogger
                 Assert.IsNotNull(rb);
                 Assert.IsFalse(rb.isKinematic);
                 _fileWriter.Write(rb.velocity);
-
-                // Varjo data driver/passenger (WIP) // Only works after eye-calibration.
-                //_fileWriter.Write(-1.0f); // test value -- ERROR WHEN PUT IN THE IF LOCALPLAYER STATEMENT
-
-                /*if (VarjoPlugin.GetGaze().status == VarjoPlugin.GazeStatus.VALID)
-                {
-                    _fileWriter.Write(driver.transform.GetComponentInChildren<VarjoGazeRay_CS>().getGazeRayHit().distance);  // float
-                    _fileWriter.Write(driver.transform.GetComponentInChildren<VarjoGazeRay_CS>().getGazeRayForward());       // hmd space, Vector 3
-                    _fileWriter.Write(driver.transform.GetComponentInChildren<VarjoGazeRay_CS>().getGazeRayDirection());     // world space, Vector 3
-                    _fileWriter.Write(driver.transform.GetComponentInChildren<VarjoGazeRay_CS>().getGazePosition());         // hmd space, Vector 3
-                    _fileWriter.Write(driver.transform.GetComponentInChildren<VarjoGazeRay_CS>().getGazeRayOrigin());        // world space, Vector 3
-                }
-                else // still fill in data when the eye-calibration has not been done yet.
-                {
-                    Vector3 beforeCalibration = new Vector3(0, 0, 0);
-                    _fileWriter.Write(0.0f);  // float
-                    _fileWriter.Write(beforeCalibration);   // hmd space, Vector 3
-                    _fileWriter.Write(beforeCalibration);   // world space, Vector 3
-                    _fileWriter.Write(beforeCalibration);   // hmd space, Vector 3
-                    _fileWriter.Write(beforeCalibration);   // world space, Vector 3
-                }*/
             }
         }
 
@@ -289,7 +267,7 @@ public class LogConverter
         public List<LightState> CarLightStates = new List<LightState>();
         public List<LightState> PedestrianLightStates = new List<LightState>();
         public Vector3 LocalDriverRbVelocity;
-        public float Distance; // test
+        public float Distance;
     }
 
     List<Vector3> _driverPositions;
@@ -333,36 +311,27 @@ public class LogConverter
                 Position = Vector3.zero,
                 Rotation = Quaternion.identity
             });
-            Debug.Log($"eve: local driver = {log.LocalDriver}");
-            Debug.Log($"eve: numPersistentDrivers = {numPersistentDrivers}");
-            Debug.Log($"eve: numPedestrians = {numPedestrians}");
 
             int numCarLights = reader.ReadInt32();
-            Debug.Log($"eve: numCarLights = {numCarLights}");
             for (int i = 0; i < numCarLights; i++)
             {
                 log.CarLightNames.Add(reader.ReadString());
             }
             int numPedestrianLights = reader.ReadInt32();
-            Debug.Log($"eve: numPedestrianLights = {numPedestrianLights}");
             for (int i = 0; i < numPedestrianLights; i++)
             {
                 log.PedestrianLightsNames.Add(reader.ReadString());
             }
             int numAICars = 0;
-            int n = 0; // test
-            while (srcFile.Position < srcFile.Length)
+             while (srcFile.Position < srcFile.Length)
             {
-                n++;
                 var eventType = (LogFrameType)reader.ReadInt32();
-                Debug.Log($"eve: eventtype before = {eventType}, {n} of {srcFile.Length}" );
                 if (eventType == LogFrameType.AICarSpawn)
                 {
                     numAICars++;
                     continue;
                 }
-                Debug.Log($"eve: eventtype after = {eventType}, {n} of {srcFile.Length}");
-                Assert.AreEqual(LogFrameType.PositionsUpdate, eventType); // error. assertion not equal
+                Assert.AreEqual(LogFrameType.PositionsUpdate, eventType); 
                 var frame = new SerializedFrame();
                 log.Frames.Add(frame);
                 frame.Timestamp = reader.ReadSingle();
