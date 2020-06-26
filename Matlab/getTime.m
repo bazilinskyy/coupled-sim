@@ -1,39 +1,49 @@
 function output = getTime(distance, dt, display)
 % Time stamps
-t_start_tracking = find(distance==0, 1, 'first');
-t_end_tracking = find(distance==0, 1, 'last');
-t_start_gazing = find(distance>0, 1, 'first');
-t_end_gazing = find(distance>0, 1, 'last');
-time_total = length(distance)*dt;
+t.timeStamps.start_tracking = find(distance==0, 1, 'first');
+t.timeStamps.end_tracking = find(distance==0, 1, 'last');
+t.timeStamps.start_gazing = find(distance>0, 1, 'first');
+t.timeStamps.end_gazing = find(distance>0, 1, 'last');
+t.time_total = length(distance)*dt;
+
+% Variables for time stamps
+t_st = t.timeStamps.start_tracking;
+t_et = t.timeStamps.end_tracking;
+t_sg = t.timeStamps.start_gazing;
+t_eg = t.timeStamps.end_gazing;
+t_tt = t.time_total;
 
 % Phase 1: Eye-calibration
-time1_total = dt*t_start_tracking;
+t.time1.phase = "Eye-calibration";
+t.time1.total = dt*t_st;
 
 % Phase 2: Tracking till AV stop
-distance_2 = distance(t_start_tracking:t_end_gazing);
-idx_2_0 = (distance_2 == 0);
-idx_2_1 = (distance_2 == -1);
-time2_nowatch = sum(idx_2_0(:))*dt;
-time2_invalid = sum(idx_2_1(:))*dt;
-time2_total = length(distance_2)*dt;
-time2_watch = time2_total - time2_nowatch - time2_invalid;
+t.time2.phase = "Tracking till pedestrian";
+t.time2.distance = distance(t_st:t_eg);
+idx_2_0 = (t.time2.distance == 0);
+idx_2_1 = (t.time2.distance == -1);
+t.time2.nowatch = sum(idx_2_0(:))*dt;
+t.time2.invalid = sum(idx_2_1(:))*dt;
+t.time2.total = length(t.time2.distance)*dt;
+t.time2.watch = t.time2.total - t.time2.nowatch - t.time2.invalid;
 
 
 % Phase 3: After reset
-distance_3 = distance(t_end_gazing:t_end_tracking);
-idx_3_0 = (distance_3 == 0);
-idx_3_1 = (distance_3 == -1);
-time3_nowatch = sum(idx_3_0(:))*dt;
-time3_invalid = sum(idx_3_1(:))*dt;
-time3_total = length(distance_3)*dt;
-time3_watch = time3_total - time3_nowatch - time3_invalid;
+t.time3.phase = "Tracking after pedestrian";
+t.time3.distance = distance(t_eg:t_et);
+idx_3_0 = (t.time3.distance == 0);
+idx_3_1 = (t.time3.distance == -1);
+t.time3.nowatch = sum(idx_3_0(:))*dt;
+t.time3.invalid = sum(idx_3_1(:))*dt;
+t.time3.total = length(t.time3.distance)*dt;
+t.time3.watch = t.time3.total - t.time3.nowatch - t.time3.invalid;
 
 % Table
 Phase = {'Total'; 'Eye-calibration'; 'Tracking till pedestrian'; 'Tracking after pedestrian'};
-Duration_total = [time_total; time1_total; time2_total; time3_total];
-Duration_invalid = [nan; nan; time2_invalid; time3_invalid];
-Duration_nowatch = [nan; nan; time2_nowatch; time3_nowatch];
-Duration_watch = [nan; nan; time2_watch; time3_watch];
+Duration_total = [t.time_total; t.time1.total; t.time2.total; t.time3.total];
+Duration_invalid = [nan; nan; t.time2.invalid; t.time3.invalid];
+Duration_nowatch = [nan; nan; t.time2.nowatch; t.time3.nowatch];
+Duration_watch = [nan; nan; t.time2.watch; t.time3.watch];
 T = table(Phase, Duration_total, Duration_invalid, Duration_nowatch, Duration_watch);
 
 % Display table
@@ -41,5 +51,5 @@ if(display==1)
     disp(T);
 end
 
-output = T;
+output = t;
 return

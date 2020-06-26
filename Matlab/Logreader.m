@@ -13,7 +13,7 @@ dt = Data.dt;
 pos_z = Data.pos.z;
 
 %% Time
-T = getTime(distance, dt, 1);
+T = getTime(distance, dt, 1); % Set last argument to 1 to display table.
 
 %% Graphs
 figure;
