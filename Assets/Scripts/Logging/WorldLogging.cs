@@ -24,27 +24,48 @@ public class WorldLogger
     int _lastFrameAICarCount;
     BinaryWriter _fileWriter;
     float _startTime;
-    float distance;
 
-    Vector3 gazeRayForward;
-    float gazeRayForward_x;
-    float gazeRayForward_y;
-    float gazeRayForward_z;
+    float distance_pa;
+    Vector3 gazeRayForward_pa;
+    float gazeRayForward_pa_x;
+    float gazeRayForward_pa_y;
+    float gazeRayForward_pa_z;
 
-    Vector3 gazeRayDirection;
-    float gazeRayDirection_x;
-    float gazeRayDirection_y;
-    float gazeRayDirection_z;
+    Vector3 gazeRayDirection_pa;
+    float gazeRayDirection_pa_x;
+    float gazeRayDirection_pa_y;
+    float gazeRayDirection_pa_z;
 
-    Vector3 gazePosition;
-    float gazePosition_x;
-    float gazePosition_y;
-    float gazePosition_z;
+    Vector3 gazePosition_pa;
+    float gazePosition_pa_x;
+    float gazePosition_pa_y;
+    float gazePosition_pa_z;
 
-    Vector3 gazeRayOrigin;
-    float gazeRayOrigin_x;
-    float gazeRayOrigin_y;
-    float gazeRayOrigin_z;
+    Vector3 gazeRayOrigin_pa;
+    float gazeRayOrigin_pa_x;
+    float gazeRayOrigin_pa_y;
+    float gazeRayOrigin_pa_z;
+
+    float distance_pe;
+    Vector3 gazeRayForward_pe;
+    float gazeRayForward_pe_x;
+    float gazeRayForward_pe_y;
+    float gazeRayForward_pe_z;
+
+    Vector3 gazeRayDirection_pe;
+    float gazeRayDirection_pe_x;
+    float gazeRayDirection_pe_y;
+    float gazeRayDirection_pe_z;
+
+    Vector3 gazePosition_pe;
+    float gazePosition_pe_x;
+    float gazePosition_pe_y;
+    float gazePosition_pe_z;
+
+    Vector3 gazeRayOrigin_pe;
+    float gazeRayOrigin_pe_x;
+    float gazeRayOrigin_pe_y;
+    float gazeRayOrigin_pe_z;
 
     public WorldLogger(PlayerSystem playerSys, AICarSyncSystem aiCarSystem)
     {
@@ -164,65 +185,72 @@ public class WorldLogger
             // Code enters the invalid statement and afterwards the valid statement (eye-calibration)
             if (VarjoPlugin.GetGaze().status == VarjoPlugin.GazeStatus.VALID && driver.transform.Find("Gaze"))
             {
-                distance = driver.transform.GetComponentInChildren<VarjoGazeRay_CS>().getGazeRayHit().distance;
+                if(driver.transform.GetComponentInChildren<VarjoGazeRay_CS>().getRoleVarjo() == "Passenger")
+                {
+                    distance_pa = driver.transform.GetComponentInChildren<VarjoGazeRay_CS>().getGazeRayHit().distance;
 
-                gazeRayForward = driver.transform.GetComponentInChildren<VarjoGazeRay_CS>().getGazeRayForward();        // hmd space
-                gazeRayForward_x = gazeRayForward.x;
-                gazeRayForward_y = gazeRayForward.y;
-                gazeRayForward_z = gazeRayForward.z;
+                    gazeRayForward_pa = driver.transform.GetComponentInChildren<VarjoGazeRay_CS>().getGazeRayForward();        // hmd space
+                    gazeRayForward_pa_x = gazeRayForward_pa.x;
+                    gazeRayForward_pa_y = gazeRayForward_pa.y;
+                    gazeRayForward_pa_z = gazeRayForward_pa.z;
 
-                gazeRayDirection = driver.transform.GetComponentInChildren<VarjoGazeRay_CS>().getGazeRayDirection();    // world space
-                gazeRayDirection_x = gazeRayDirection.x;
-                gazeRayDirection_y = gazeRayDirection.y;
-                gazeRayDirection_z = gazeRayDirection.z;
+                    gazeRayDirection_pa = driver.transform.GetComponentInChildren<VarjoGazeRay_CS>().getGazeRayDirection();    // world space
+                    gazeRayDirection_pa_x = gazeRayDirection_pa.x;
+                    gazeRayDirection_pa_y = gazeRayDirection_pa.y;
+                    gazeRayDirection_pa_z = gazeRayDirection_pa.z;
 
-                gazePosition = driver.transform.GetComponentInChildren<VarjoGazeRay_CS>().getGazePosition();            // hmd space
-                gazePosition_x = gazePosition.x;
-                gazePosition_y = gazePosition.y;
-                gazePosition_z = gazePosition.z;
+                    gazePosition_pa = driver.transform.GetComponentInChildren<VarjoGazeRay_CS>().getGazePosition();            // hmd space
+                    gazePosition_pa_x = gazePosition_pa.x;
+                    gazePosition_pa_y = gazePosition_pa.y;
+                    gazePosition_pa_z = gazePosition_pa.z;
 
-                gazeRayOrigin = driver.transform.GetComponentInChildren<VarjoGazeRay_CS>().getGazeRayOrigin();          // world space
-                gazeRayOrigin_x = gazeRayOrigin.x;
-                gazeRayOrigin_y = gazeRayOrigin.y;
-                gazeRayOrigin_z = gazeRayOrigin.z;
+                    gazeRayOrigin_pa = driver.transform.GetComponentInChildren<VarjoGazeRay_CS>().getGazeRayOrigin();          // world space
+                    gazeRayOrigin_pa_x = gazeRayOrigin_pa.x;
+                    gazeRayOrigin_pa_y = gazeRayOrigin_pa.y;
+                    gazeRayOrigin_pa_z = gazeRayOrigin_pa.z;
+                }
+                else
+                {
+                    distance_pa = -1.0f;
+                }
             }
             else if(VarjoPlugin.GetGaze().status != VarjoPlugin.GazeStatus.VALID)
             {
-                distance = -1.0f;
+                distance_pa = -1.0f;
 
-                gazeRayForward_x = -1.0f;
-                gazeRayForward_y = -1.0f;
-                gazeRayForward_z = -1.0f;
+                gazeRayForward_pa_x = -1.0f;
+                gazeRayForward_pa_y = -1.0f;
+                gazeRayForward_pa_z = -1.0f;
 
-                gazeRayDirection_x = -1.0f;
-                gazeRayDirection_y = -1.0f;
-                gazeRayDirection_z = -1.0f;
+                gazeRayDirection_pa_x = -1.0f;
+                gazeRayDirection_pa_y = -1.0f;
+                gazeRayDirection_pa_z = -1.0f;
 
-                gazePosition_x = -1.0f;
-                gazePosition_y = -1.0f;
-                gazePosition_z = -1.0f;
+                gazePosition_pa_x = -1.0f;
+                gazePosition_pa_y = -1.0f;
+                gazePosition_pa_z = -1.0f;
 
-                gazeRayOrigin_x = -1.0f;
-                gazeRayOrigin_y = -1.0f;
-                gazeRayOrigin_z = -1.0f;
+                gazeRayOrigin_pa_x = -1.0f;
+                gazeRayOrigin_pa_y = -1.0f;
+                gazeRayOrigin_pa_z = -1.0f;
             }
-            _fileWriter.Write(distance);
+            _fileWriter.Write(distance_pa);
 
-            _fileWriter.Write(gazeRayForward_x);
-            _fileWriter.Write(gazeRayForward_y);
-            _fileWriter.Write(gazeRayForward_z);
+            _fileWriter.Write(gazeRayForward_pa_x);
+            _fileWriter.Write(gazeRayForward_pa_y);
+            _fileWriter.Write(gazeRayForward_pa_z);
 
-            _fileWriter.Write(gazeRayDirection_x);
-            _fileWriter.Write(gazeRayDirection_y);
-            _fileWriter.Write(gazeRayDirection_z);
+            _fileWriter.Write(gazeRayDirection_pa_x);
+            _fileWriter.Write(gazeRayDirection_pa_y);
+            _fileWriter.Write(gazeRayDirection_pa_z);
 
-            _fileWriter.Write(gazePosition_x);
-            _fileWriter.Write(gazePosition_y);
-            _fileWriter.Write(gazePosition_z);
+            _fileWriter.Write(gazePosition_pa_x);
+            _fileWriter.Write(gazePosition_pa_y);
+            _fileWriter.Write(gazePosition_pa_z);
 
-            _fileWriter.Write(gazeRayOrigin_x);
-            _fileWriter.Write(gazeRayOrigin_y);
-            _fileWriter.Write(gazeRayOrigin_z);
+            _fileWriter.Write(gazeRayOrigin_pa_x);
+            _fileWriter.Write(gazeRayOrigin_pa_y);
+            _fileWriter.Write(gazeRayOrigin_pa_z);
 
             // Only log car velocity if local player
             if (driver == _playerSystem.LocalPlayer)
@@ -238,6 +266,75 @@ public class WorldLogger
         foreach (var pedestrian in _playerSystem.Pedestrians)
         {
             pedestrian.GetPose(returnBodySuit()).SerializeTo(_fileWriter); // to do: remove non root pose
+
+            if (VarjoPlugin.GetGaze().status == VarjoPlugin.GazeStatus.VALID && pedestrian.transform.Find("Gaze"))
+            {
+                if (pedestrian.transform.GetComponentInChildren<VarjoGazeRay_CS>().getRoleVarjo() == "Pedestrian")
+                {
+                    distance_pe = pedestrian.transform.GetComponentInChildren<VarjoGazeRay_CS>().getGazeRayHit().distance;
+
+                    gazeRayForward_pe = pedestrian.transform.GetComponentInChildren<VarjoGazeRay_CS>().getGazeRayForward();        // hmd space
+                    gazeRayForward_pe_x = gazeRayForward_pe.x;
+                    gazeRayForward_pe_y = gazeRayForward_pe.y;
+                    gazeRayForward_pe_z = gazeRayForward_pe.z;
+
+                    gazeRayDirection_pe = pedestrian.transform.GetComponentInChildren<VarjoGazeRay_CS>().getGazeRayDirection();    // world space
+                    gazeRayDirection_pe_x = gazeRayDirection_pe.x;
+                    gazeRayDirection_pe_y = gazeRayDirection_pe.y;
+                    gazeRayDirection_pe_z = gazeRayDirection_pe.z;
+
+                    gazePosition_pe = pedestrian.transform.GetComponentInChildren<VarjoGazeRay_CS>().getGazePosition();            // hmd space
+                    gazePosition_pe_x = gazePosition_pe.x;
+                    gazePosition_pe_y = gazePosition_pe.y;
+                    gazePosition_pe_z = gazePosition_pe.z;
+
+                    gazeRayOrigin_pe = pedestrian.transform.GetComponentInChildren<VarjoGazeRay_CS>().getGazeRayOrigin();          // world space
+                    gazeRayOrigin_pe_x = gazeRayOrigin_pe.x;
+                    gazeRayOrigin_pe_y = gazeRayOrigin_pe.y;
+                    gazeRayOrigin_pe_z = gazeRayOrigin_pe.z;
+                }
+                else
+                {
+                    distance_pe = -1.0f;
+                }
+            }
+            else if (VarjoPlugin.GetGaze().status != VarjoPlugin.GazeStatus.VALID)
+            {
+                distance_pe = -1.0f;
+
+                gazeRayForward_pe_x = -1.0f;
+                gazeRayForward_pe_y = -1.0f;
+                gazeRayForward_pe_z = -1.0f;
+
+                gazeRayDirection_pe_x = -1.0f;
+                gazeRayDirection_pe_y = -1.0f;
+                gazeRayDirection_pe_z = -1.0f;
+
+                gazePosition_pe_x = -1.0f;
+                gazePosition_pe_y = -1.0f;
+                gazePosition_pe_z = -1.0f;
+
+                gazeRayOrigin_pe_x = -1.0f;
+                gazeRayOrigin_pe_y = -1.0f;
+                gazeRayOrigin_pe_z = -1.0f;
+            }
+            _fileWriter.Write(distance_pe);
+
+            _fileWriter.Write(gazeRayForward_pe_x);
+            _fileWriter.Write(gazeRayForward_pe_y);
+            _fileWriter.Write(gazeRayForward_pe_z);
+
+            _fileWriter.Write(gazeRayDirection_pe_x);
+            _fileWriter.Write(gazeRayDirection_pe_y);
+            _fileWriter.Write(gazeRayDirection_pe_z);
+
+            _fileWriter.Write(gazePosition_pe_x);
+            _fileWriter.Write(gazePosition_pe_y);
+            _fileWriter.Write(gazePosition_pe_z);
+
+            _fileWriter.Write(gazeRayOrigin_pe_x);
+            _fileWriter.Write(gazeRayOrigin_pe_y);
+            _fileWriter.Write(gazeRayOrigin_pe_z);
         }
         if (_lights != null)
         {
@@ -339,23 +436,43 @@ public class LogConverter
         public List<LightState> CarLightStates = new List<LightState>();
         public List<LightState> PedestrianLightStates = new List<LightState>();
         public Vector3 LocalDriverRbVelocity;
-        public float Distance;
+        // Varjo data of the passenger
+        public float distance_pa;
 
-        public float gazeRayForward_x;
-        public float gazeRayForward_y;
-        public float gazeRayForward_z;
+        public float gazeRayForward_pa_x;
+        public float gazeRayForward_pa_y;
+        public float gazeRayForward_pa_z;
 
-        public float gazeRayDirection_x;
-        public float gazeRayDirection_y;
-        public float gazeRayDirection_z;
+        public float gazeRayDirection_pa_x;
+        public float gazeRayDirection_pa_y;
+        public float gazeRayDirection_pa_z;
 
-        public float gazePosition_x;
-        public float gazePosition_y;
-        public float gazePosition_z;
+        public float gazePosition_pa_x;
+        public float gazePosition_pa_y;
+        public float gazePosition_pa_z;
 
-        public float gazeRayOrigin_x;
-        public float gazeRayOrigin_y;
-        public float gazeRayOrigin_z;
+        public float gazeRayOrigin_pa_x;
+        public float gazeRayOrigin_pa_y;
+        public float gazeRayOrigin_pa_z;
+
+        // Varjo data of the pedestrian
+        public float distance_pe;
+
+        public float gazeRayForward_pe_x;
+        public float gazeRayForward_pe_y;
+        public float gazeRayForward_pe_z;
+
+        public float gazeRayDirection_pe_x;
+        public float gazeRayDirection_pe_y;
+        public float gazeRayDirection_pe_z;
+
+        public float gazePosition_pe_x;
+        public float gazePosition_pe_y;
+        public float gazePosition_pe_z;
+
+        public float gazeRayOrigin_pe_x;
+        public float gazeRayOrigin_pe_y;
+        public float gazeRayOrigin_pe_z;
     }
 
     List<Vector3> _driverPositions;
@@ -371,14 +488,14 @@ public class LogConverter
         const string separator = ";";
 
         // Column headers
-        const int columnsPerDriver = 3 /*pos x,y,z*/ + 3 /*rot x,y,z */ + 1 /*blinkers*/ + 1 /*distance*/+ 1 /*gazeForward_x*/+ 1 /*gazeForward_y*/+ 1 /*gazeForward_z*/  + 1 /* gazeDirection_x */ + 1 /* gazeDirection_y */+ 1 /* gazeDirection_z */+ 1 /* gazePosition_x */+ 1 /* gazePosition_y */+ 1 /* gazePosition_z */+ 1 /* gazeOrigin_x */+ 1 /* gazeOrigin_y */+ 1 /* gazeOrigin_z */ + 3 /* local velocity */ + 3 /* local smooth velocity */ + 3 /* world velocity */ + 3 /* world velocity smooth */;
+        const int columnsPerDriver = 3 /*pos x,y,z*/ + 3 /*rot x,y,z */ + 1 /*blinkers*/ + 1 /*distance_pa*/+ 3 /*gazeForward_xyz*/  + 3 /* gazeDirection_xyz */+ 3 /*gazePosition_xyz*/ + 3 /*gazeOrigin_xyz*/ + 3 /* local velocity */ + 3 /* local smooth velocity */ + 3 /* world velocity */ + 3 /* world velocity smooth */;
         const int columnsForLocalDriver = columnsPerDriver + 3 /* rb velocity x,y,z */ + 3 /* rb velocity local x,y,z */; 
 
         // Column headers for bodysuit tracking
         const int columnsPerBone = 6;
-        int columnsPerPedestrian = 6;
+        int columnsPerPedestrian = 3 /*pos x,y,z*/+ 3/*rot x,y,z */ + 1 /*distance_pe*/ + 3 /*gazeForward_xyz*/  + 3 /* gazeDirection_xyz */+ 3 /*gazePosition_xyz*/ + 3 /*gazeOrigin_xyz*/;
         if (WorldLogger.returnBodySuit()) { 
-            columnsPerPedestrian = pedestrianSkeletonNames.Length * columnsPerBone + columnsPerBone; // + columnsPerBone is for the root transform;
+            columnsPerPedestrian = pedestrianSkeletonNames.Length * columnsPerBone + columnsPerBone + 1; // + columnsPerBone is for the root transform;
         }
         var toRefRot = Quaternion.Inverse(referenceRot);
         
@@ -431,23 +548,23 @@ public class LogConverter
                     frame.DriverPositions.Add(reader.ReadVector3());
                     frame.DriverRotations.Add(reader.ReadQuaternion());
                     frame.BlinkerStates.Add((BlinkerState)reader.ReadInt32());
-                    frame.Distance = reader.ReadSingle(); // test varjo data logging
+                    frame.distance_pa = reader.ReadSingle(); // test varjo data logging
 
-                    frame.gazeRayForward_x = reader.ReadSingle();
-                    frame.gazeRayForward_y = reader.ReadSingle();
-                    frame.gazeRayForward_z = reader.ReadSingle();
+                    frame.gazeRayForward_pa_x = reader.ReadSingle();
+                    frame.gazeRayForward_pa_y = reader.ReadSingle();
+                    frame.gazeRayForward_pa_z = reader.ReadSingle();
 
-                    frame.gazeRayDirection_x = reader.ReadSingle();
-                    frame.gazeRayDirection_y = reader.ReadSingle();
-                    frame.gazeRayDirection_z = reader.ReadSingle();
+                    frame.gazeRayDirection_pa_x = reader.ReadSingle();
+                    frame.gazeRayDirection_pa_y = reader.ReadSingle();
+                    frame.gazeRayDirection_pa_z = reader.ReadSingle();
 
-                    frame.gazePosition_x = reader.ReadSingle();
-                    frame.gazePosition_y = reader.ReadSingle();
-                    frame.gazePosition_z = reader.ReadSingle();
+                    frame.gazePosition_pa_x = reader.ReadSingle();
+                    frame.gazePosition_pa_y = reader.ReadSingle();
+                    frame.gazePosition_pa_z = reader.ReadSingle();
 
-                    frame.gazeRayOrigin_x = reader.ReadSingle();
-                    frame.gazeRayOrigin_y = reader.ReadSingle();
-                    frame.gazeRayOrigin_z = reader.ReadSingle();
+                    frame.gazeRayOrigin_pa_x = reader.ReadSingle();
+                    frame.gazeRayOrigin_pa_y = reader.ReadSingle();
+                    frame.gazeRayOrigin_pa_z = reader.ReadSingle();
 
                     if (i == log.LocalDriver)
                     {
@@ -461,6 +578,23 @@ public class LogConverter
                     frame.PedestrianPositions.Add(reader.ReadListVector3());
                     frame.PedestrianRotations.Add(reader.ReadListQuaternion());
                     _ = reader.ReadInt32(); // Blinkers, unused
+
+                    frame.distance_pe = reader.ReadSingle();
+                    frame.gazeRayForward_pe_x = reader.ReadSingle();
+                    frame.gazeRayForward_pe_y = reader.ReadSingle();
+                    frame.gazeRayForward_pe_z = reader.ReadSingle();
+
+                    frame.gazeRayDirection_pe_x = reader.ReadSingle();
+                    frame.gazeRayDirection_pe_y = reader.ReadSingle();
+                    frame.gazeRayDirection_pe_z = reader.ReadSingle();
+
+                    frame.gazePosition_pe_x = reader.ReadSingle();
+                    frame.gazePosition_pe_y = reader.ReadSingle();
+                    frame.gazePosition_pe_z = reader.ReadSingle();
+
+                    frame.gazeRayOrigin_pe_x = reader.ReadSingle();
+                    frame.gazeRayOrigin_pe_y = reader.ReadSingle();
+                    frame.gazeRayOrigin_pe_z = reader.ReadSingle();
                 }
                 for (int i = 0; i < numCarLights; i++)
                 {
@@ -576,7 +710,7 @@ public class LogConverter
             writer.Write(separator); // for the Timestamp column
             writer.Write(separator); // for the Ping column
 
-            const string driverTransformHeader = "pos_x;pos_y;pos_z;rot_x;rot_y;rot_z;blinkers;distance;gazeRayForward_x;gazeRayForward_y;gazeRayForward_z;gazeRayDirection_x;gazeRayDirection_y;gazeRayDirection_z;gazePosition_x;gazePosition_y;gazePosition_z;gazeOrigin_x;gazeOrigin_y;gazeOrigin_z;vel_local_x;vel_local_y;vel_local_z;vel_local_smooth_x;vel_local_smooth_y;vel_local_smooth_z;vel_x;vel_y;vel_z;vel_smooth_x;vel_smooth_y;vel_smooth_z"; // added distance after blinkers
+            const string driverTransformHeader = "pos_x;pos_y;pos_z;rot_x;rot_y;rot_z;blinkers;distance_pa;gazeRayForward_x;gazeRayForward_y;gazeRayForward_z;gazeRayDirection_x;gazeRayDirection_y;gazeRayDirection_z;gazePosition_x;gazePosition_y;gazePosition_z;gazeOrigin_x;gazeOrigin_y;gazeOrigin_z;vel_local_x;vel_local_y;vel_local_z;vel_local_smooth_x;vel_local_smooth_y;vel_local_smooth_z;vel_x;vel_y;vel_z;vel_smooth_x;vel_smooth_y;vel_smooth_z"; // added distance after blinkers
             const string localDriverTransformHeader = driverTransformHeader + ";rb_vel_x;rb_vel_y;rb_vel_z;rb_vel_local_x;rb_vel_local_y;rb_vel_local_z";
             List<string> headers = new List<string>();
             for (int i = 0; i < numDrivers; i++)
@@ -595,7 +729,7 @@ public class LogConverter
             {
                 writer.Write(separator);
             }
-            const string boneTransformHeader = "pos_x;pos_y;pos_z;rot_x;rot_y;rot_z";
+            const string boneTransformHeader = "pos_x;pos_y;pos_z;rot_x;rot_y;rot_z;distance_pe;gazeRayForward_x;gazeRayForward_y;gazeRayForward_z;gazeRayDirection_x;gazeRayDirection_y;gazeRayDirection_z;gazePosition_x;gazePosition_y;gazePosition_z;gazeOrigin_x;gazeOrigin_y;gazeOrigin_z;";
             if (WorldLogger.returnBodySuit())
             {
                 writer.Write(string.Join(separator, Enumerable.Repeat(boneTransformHeader, numPedestrians * (pedestrianSkeletonNames.Length + 1))));
@@ -635,34 +769,34 @@ public class LogConverter
                     var rot = frame.DriverRotations[i];
                     var euler = RotToRefPoint(rot).eulerAngles;
                     var blinkers = frame.BlinkerStates[i];
-                    var distance = frame.Distance;
+                    var distance_pa = frame.distance_pa;
 
-                    var gazeRayForward_x = frame.gazeRayForward_x;
-                    var gazeRayForward_y = frame.gazeRayForward_y;
-                    var gazeRayForward_z = frame.gazeRayForward_z;
+                    var gazeRayForward_pa_x = frame.gazeRayForward_pa_x;
+                    var gazeRayForward_pa_y = frame.gazeRayForward_pa_y;
+                    var gazeRayForward_pa_z = frame.gazeRayForward_pa_z;
 
-                    var gazeRayDirection_x = frame.gazeRayDirection_x;
-                    var gazeRayDirection_y = frame.gazeRayDirection_y;
-                    var gazeRayDirection_z = frame.gazeRayDirection_z;
+                    var gazeRayDirection_pa_x = frame.gazeRayDirection_pa_x;
+                    var gazeRayDirection_pa_y = frame.gazeRayDirection_pa_y;
+                    var gazeRayDirection_pa_z = frame.gazeRayDirection_pa_z;
 
-                    var gazePosition_x = frame.gazePosition_x;
-                    var gazePosition_y = frame.gazePosition_y;
-                    var gazePosition_z = frame.gazePosition_z;
+                    var gazePosition_pa_x = frame.gazePosition_pa_x;
+                    var gazePosition_pa_y = frame.gazePosition_pa_y;
+                    var gazePosition_pa_z = frame.gazePosition_pa_z;
 
-                    var gazeRayOrigin_x = frame.gazeRayOrigin_x;
-                    var gazeRayOrigin_y = frame.gazeRayOrigin_y;
-                    var gazeRayOrigin_z = frame.gazeRayOrigin_z;
+                    var gazeRayOrigin_pa_x = frame.gazeRayOrigin_pa_x;
+                    var gazeRayOrigin_pa_y = frame.gazeRayOrigin_pa_y;
+                    var gazeRayOrigin_pa_z = frame.gazeRayOrigin_pa_z;
 
                     var inverseRotation = Quaternion.Inverse(rot);
                     if (prevFrame == null || prevFrame.DriverPositions.Count <= i)
                     {
                         if (i == localDriver)
                         {
-                            line.Add($"{pos.x};{pos.y};{pos.z};{euler.x};{euler.y};{euler.z};{(BlinkerState)blinkers};{distance};{gazeRayForward_x};{gazeRayForward_y};{gazeRayForward_z};{gazeRayDirection_x};{gazeRayDirection_y};{gazeRayDirection_z};{gazePosition_x};{gazePosition_y};{gazePosition_z};{gazeRayOrigin_x};{gazeRayOrigin_y};{gazeRayOrigin_z};0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0");
+                            line.Add($"{pos.x};{pos.y};{pos.z};{euler.x};{euler.y};{euler.z};{(BlinkerState)blinkers};{distance_pa};{gazeRayForward_pa_x};{gazeRayForward_pa_y};{gazeRayForward_pa_z};{gazeRayDirection_pa_x};{gazeRayDirection_pa_y};{gazeRayDirection_pa_z};{gazePosition_pa_x};{gazePosition_pa_y};{gazePosition_pa_z};{gazeRayOrigin_pa_x};{gazeRayOrigin_pa_y};{gazeRayOrigin_pa_z};0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0");
                         }
                         else
                         {
-                            line.Add($"{pos.x};{pos.y};{pos.z};{euler.x};{euler.y};{euler.z};{(BlinkerState)blinkers};{distance};{gazeRayForward_x};{gazeRayForward_y};{gazeRayForward_z};{gazeRayDirection_x};{gazeRayDirection_y};{gazeRayDirection_z};{gazePosition_x};{gazePosition_y};{gazePosition_z};{gazeRayOrigin_x};{gazeRayOrigin_y};{gazeRayOrigin_z};0;0;0;0;0;0;0;0;0;0;0;0");
+                            line.Add($"{pos.x};{pos.y};{pos.z};{euler.x};{euler.y};{euler.z};{(BlinkerState)blinkers};{distance_pa};{gazeRayForward_pa_x};{gazeRayForward_pa_y};{gazeRayForward_pa_z};{gazeRayDirection_pa_x};{gazeRayDirection_pa_y};{gazeRayDirection_pa_z};{gazePosition_pa_x};{gazePosition_pa_y};{gazePosition_pa_z};{gazeRayOrigin_pa_x};{gazeRayOrigin_pa_y};{gazeRayOrigin_pa_z};0;0;0;0;0;0;0;0;0;0;0;0");
                         }
                     }
                     else
@@ -678,11 +812,11 @@ public class LogConverter
                         {
                             var rbVel = frame.LocalDriverRbVelocity;
                             var rbVelLocal = inverseRotation * rbVel;
-                            line.Add($"{pos.x};{pos.y};{pos.z};{euler.x};{euler.y};{euler.z};{(BlinkerState)blinkers};{distance};{gazeRayForward_x};{gazeRayForward_y};{gazeRayForward_z};{gazeRayDirection_x};{gazeRayDirection_y};{gazeRayDirection_z};{gazePosition_x};{gazePosition_y};{gazePosition_z};{gazeRayOrigin_x};{gazeRayOrigin_y};{gazeRayOrigin_z};{speed.x};{speed.y};{speed.z};{localSmooth.x};{localSmooth.y};{localSmooth.z};{vel.x};{vel.y};{vel.z};{velSmooth.x};{velSmooth.y};{velSmooth.z};{rbVel.x};{rbVel.y};{rbVel.z};{rbVelLocal.x};{rbVelLocal.y};{rbVelLocal.z}");
+                            line.Add($"{pos.x};{pos.y};{pos.z};{euler.x};{euler.y};{euler.z};{(BlinkerState)blinkers};{distance_pa};{gazeRayForward_pa_x};{gazeRayForward_pa_y};{gazeRayForward_pa_z};{gazeRayDirection_pa_x};{gazeRayDirection_pa_y};{gazeRayDirection_pa_z};{gazePosition_pa_x};{gazePosition_pa_y};{gazePosition_pa_z};{gazeRayOrigin_pa_x};{gazeRayOrigin_pa_y};{gazeRayOrigin_pa_z};{speed.x};{speed.y};{speed.z};{localSmooth.x};{localSmooth.y};{localSmooth.z};{vel.x};{vel.y};{vel.z};{velSmooth.x};{velSmooth.y};{velSmooth.z};{rbVel.x};{rbVel.y};{rbVel.z};{rbVelLocal.x};{rbVelLocal.y};{rbVelLocal.z}");
                         }
                         else
                         {
-                            line.Add($"{pos.x};{pos.y};{pos.z};{euler.x};{euler.y};{euler.z};{(BlinkerState)blinkers};{distance};{gazeRayForward_x};{gazeRayForward_y};{gazeRayForward_z};{gazeRayDirection_x};{gazeRayDirection_y};{gazeRayDirection_z};{gazePosition_x};{gazePosition_y};{gazePosition_z};{gazeRayOrigin_x};{gazeRayOrigin_y};{gazeRayOrigin_z};{speed.x};{speed.y};{speed.z};{localSmooth.x};{localSmooth.y};{localSmooth.z};{vel.x};{vel.y};{vel.z};{velSmooth.x};{velSmooth.y};{velSmooth.z}");
+                            line.Add($"{pos.x};{pos.y};{pos.z};{euler.x};{euler.y};{euler.z};{(BlinkerState)blinkers};{distance_pa};{gazeRayForward_pa_x};{gazeRayForward_pa_y};{gazeRayForward_pa_z};{gazeRayDirection_pa_x};{gazeRayDirection_pa_y};{gazeRayDirection_pa_z};{gazePosition_pa_x};{gazePosition_pa_y};{gazePosition_pa_z};{gazeRayOrigin_pa_x};{gazeRayOrigin_pa_y};{gazeRayOrigin_pa_z};{speed.x};{speed.y};{speed.z};{localSmooth.x};{localSmooth.y};{localSmooth.z};{vel.x};{vel.y};{vel.z};{velSmooth.x};{velSmooth.y};{velSmooth.z}");
                         }
                     }
                 }
@@ -694,11 +828,28 @@ public class LogConverter
                 {
                     var pos = frame.PedestrianPositions[i];
                     var rot = frame.PedestrianRotations[i];
+                    var distance_pe = frame.distance_pe;
+                    var gazeRayForward_pe_x = frame.gazeRayForward_pe_x;
+                    var gazeRayForward_pe_y = frame.gazeRayForward_pe_y;
+                    var gazeRayForward_pe_z = frame.gazeRayForward_pe_z;
+
+                    var gazeRayDirection_pe_x = frame.gazeRayDirection_pe_x;
+                    var gazeRayDirection_pe_y = frame.gazeRayDirection_pe_y;
+                    var gazeRayDirection_pe_z = frame.gazeRayDirection_pe_z;
+
+                    var gazePosition_pe_x = frame.gazePosition_pe_x;
+                    var gazePosition_pe_y = frame.gazePosition_pe_y;
+                    var gazePosition_pe_z = frame.gazePosition_pe_z;
+
+                    var gazeRayOrigin_pe_x = frame.gazeRayOrigin_pe_x;
+                    var gazeRayOrigin_pe_y = frame.gazeRayOrigin_pe_y;
+                    var gazeRayOrigin_pe_z = frame.gazeRayOrigin_pe_z;
+
                     for (int j = 0; j < pos.Count; j++)
                     {
                         var p = PosToRefPoint(pos[j]);
                         var r = RotToRefPoint(rot[j]).eulerAngles;
-                        line.Add($"{p.x};{p.y};{p.z};{r.x};{r.y};{r.z}");
+                        line.Add($"{p.x};{p.y};{p.z};{r.x};{r.y};{r.z};{distance_pe};{gazeRayForward_pe_x};{gazeRayForward_pe_y};{gazeRayForward_pe_z};{gazeRayDirection_pe_x};{gazeRayDirection_pe_y};{gazeRayDirection_pe_z};{gazePosition_pe_x};{gazePosition_pe_y};{gazePosition_pe_z};{gazeRayOrigin_pe_x};{gazeRayOrigin_pe_y};{gazeRayOrigin_pe_z};");
                     }
                 }
                 foreach (LightState v in frame.CarLightStates)
