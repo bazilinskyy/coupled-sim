@@ -228,8 +228,9 @@ In this section, the additions made by Johnson Mok during his Master Thesis are 
 ## Table of Content
 - Logging
 	- Add variable to the worldlogger.
+	- Logging varjo eye-tracking data.
 	- Logging bodysuit bool.
-	- Varjo's own logger
+	- Varjo's own logger.
 - eHMI
 	- Fixed eHMI msg.
 	- Remove eHMI GUI when eHMI is fixed.
@@ -333,6 +334,20 @@ if (prevFrame == null || prevFrame.DriverPositions.Count <= i)
 	{
 		line.Add($"{pos.x};{pos.y};{pos.z};{euler.x};{euler.y};{euler.z};{(BlinkerState)blinkers};{*distance*};0;0;0;0;0;0;0;0;0;0;0;0");
 	}
+}
+```
+
+## Logging varjo eye-tracking data
+To add varjo eye-tracking data, you need to follow the same steps as described above. Additionally, you need to add a check beforehand.
+The varjo eye-tracking data is only available after the eye-tracking calibration. Thus the following if-statements are added:
+```
+if (VarjoPlugin.GetGaze().status == VarjoPlugin.GazeStatus.VALID && driver.transform.Find("Gaze"))
+{
+	// do stuff with eye-tracking data
+}
+else if(VarjoPlugin.GetGaze().status != VarjoPlugin.GazeStatus.VALID)
+{
+	// Fill in variable with arbitrary value.
 }
 ```
 
