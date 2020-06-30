@@ -1,0 +1,23 @@
+% Test script to read the logfiles 
+clear
+clc
+close all
+
+%% Get data
+filename = "LOG_N.csv";
+Data = loadData(filename);
+
+% Variables to use
+distance = Data.distance;
+dt = Data.dt;
+pos_z = Data.pos.z;
+
+%% Time
+T = getTime(distance, dt, 1); % Set last argument to 1 to display table.
+
+%% Graphs
+figure;
+yyaxis left
+plot(distance);
+yyaxis right
+plot(pos_z);
