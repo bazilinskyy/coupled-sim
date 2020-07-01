@@ -838,8 +838,10 @@ if (other.gameObject.CompareTag("StartTrial_Z") && StopWithEyeGaze == false)
 # Vive controller
 ## Trigger input
 Rather than copy pasting the guide I followed to set up the vive controller, I put some links down referring to the guides I follwed. 
-[A Complete Guide to the SteamVR 2.0 Input System in Unity](https://medium.com/@sarthakghosh/a-complete-guide-to-the-steamvr-2-0-input-system-in-unity-380e3b1b3311)
-[Video: Unity SteamVR 2.0 Input using actions](https://www.youtube.com/watch?v=bn8eMxBcI70)
+
+-[A Complete Guide to the SteamVR 2.0 Input System in Unity](https://medium.com/@sarthakghosh/a-complete-guide-to-the-steamvr-2-0-input-system-in-unity-380e3b1b3311)
+
+-[Video: Unity SteamVR 2.0 Input using actions](https://www.youtube.com/watch?v=bn8eMxBcI70)
 
 In this section, I will briefly explain the *ViveInput* script.
 In the start function one needs to define the actions to be used. Here we take the GapAcceptance button defined in the UI button layout called viveController. 
