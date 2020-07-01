@@ -25,6 +25,7 @@ public class WorldLogger
     BinaryWriter _fileWriter;
     float _startTime;
 
+    // Data from varjo HMD
     float distance_pa;
     Vector3 gazeRayForward_pa;
     float gazeRayForward_pa_x;
@@ -66,6 +67,9 @@ public class WorldLogger
     float gazeRayOrigin_pe_x;
     float gazeRayOrigin_pe_y;
     float gazeRayOrigin_pe_z;
+
+    // Data from Vive controller
+    float gapAcceptance;
 
     public WorldLogger(PlayerSystem playerSys, AICarSyncSystem aiCarSystem)
     {
@@ -335,6 +339,19 @@ public class WorldLogger
             _fileWriter.Write(gazeRayOrigin_pe_x);
             _fileWriter.Write(gazeRayOrigin_pe_y);
             _fileWriter.Write(gazeRayOrigin_pe_z);
+
+            // Vive controller
+            if(pedestrian.transform.GetComponentInChildren<ViveInput>() != null)
+            {
+                gapAcceptance = pedestrian.transform.GetComponentInChildren<ViveInput>().getGapAcceptance();
+            }
+            else if (pedestrian.transform.GetComponentInChildren<ViveInput>() != null)
+            {
+                Debug.LogError("Vive controller action script called ViveInput is missing");
+                gapAcceptance = -1.0f;
+            }
+            _fileWriter.Write(gapAcceptance);
+
         }
         if (_lights != null)
         {
@@ -473,6 +490,9 @@ public class LogConverter
         public float gazeRayOrigin_pe_x;
         public float gazeRayOrigin_pe_y;
         public float gazeRayOrigin_pe_z;
+
+        // Vive controller data of the pedestrian
+        public float gapAcceptance;
     }
 
     List<Vector3> _driverPositions;
@@ -493,9 +513,9 @@ public class LogConverter
 
         // Column headers for bodysuit tracking
         const int columnsPerBone = 6;
-        int columnsPerPedestrian = 3 /*pos x,y,z*/+ 3/*rot x,y,z */ + 1 /*distance_pe*/ + 3 /*gazeForward_xyz*/  + 3 /* gazeDirection_xyz */+ 3 /*gazePosition_xyz*/ + 3 /*gazeOrigin_xyz*/;
+        int columnsPerPedestrian = 3 /*pos x,y,z*/+ 3/*rot x,y,z */ + 1 /*distance_pe*/ + 3 /*gazeForward_xyz*/  + 3 /* gazeDirection_xyz */+ 3 /*gazePosition_xyz*/ + 3 /*gazeOrigin_xyz*/ + 1 /*gapAcceptance*/;
         if (WorldLogger.returnBodySuit()) { 
-            columnsPerPedestrian = pedestrianSkeletonNames.Length * columnsPerBone + columnsPerBone + 1; // + columnsPerBone is for the root transform;
+            columnsPerPedestrian = pedestrianSkeletonNames.Length * columnsPerBone + columnsPerBone + 14; // + columnsPerBone is for the root transform;
         }
         var toRefRot = Quaternion.Inverse(referenceRot);
         
@@ -595,6 +615,8 @@ public class LogConverter
                     frame.gazeRayOrigin_pe_x = reader.ReadSingle();
                     frame.gazeRayOrigin_pe_y = reader.ReadSingle();
                     frame.gazeRayOrigin_pe_z = reader.ReadSingle();
+
+                    frame.gapAcceptance = reader.ReadSingle();
                 }
                 for (int i = 0; i < numCarLights; i++)
                 {
@@ -729,7 +751,7 @@ public class LogConverter
             {
                 writer.Write(separator);
             }
-            const string boneTransformHeader = "pos_x;pos_y;pos_z;rot_x;rot_y;rot_z;distance_pe;gazeRayForward_x;gazeRayForward_y;gazeRayForward_z;gazeRayDirection_x;gazeRayDirection_y;gazeRayDirection_z;gazePosition_x;gazePosition_y;gazePosition_z;gazeOrigin_x;gazeOrigin_y;gazeOrigin_z;";
+            const string boneTransformHeader = "pos_x;pos_y;pos_z;rot_x;rot_y;rot_z;distance_pe;gazeRayForward_x;gazeRayForward_y;gazeRayForward_z;gazeRayDirection_x;gazeRayDirection_y;gazeRayDirection_z;gazePosition_x;gazePosition_y;gazePosition_z;gazeOrigin_x;gazeOrigin_y;gazeOrigin_z;gapAcceptance;";
             if (WorldLogger.returnBodySuit())
             {
                 writer.Write(string.Join(separator, Enumerable.Repeat(boneTransformHeader, numPedestrians * (pedestrianSkeletonNames.Length + 1))));
@@ -845,11 +867,13 @@ public class LogConverter
                     var gazeRayOrigin_pe_y = frame.gazeRayOrigin_pe_y;
                     var gazeRayOrigin_pe_z = frame.gazeRayOrigin_pe_z;
 
+                    var gapAcceptance = frame.gapAcceptance;
+
                     for (int j = 0; j < pos.Count; j++)
                     {
                         var p = PosToRefPoint(pos[j]);
                         var r = RotToRefPoint(rot[j]).eulerAngles;
-                        line.Add($"{p.x};{p.y};{p.z};{r.x};{r.y};{r.z};{distance_pe};{gazeRayForward_pe_x};{gazeRayForward_pe_y};{gazeRayForward_pe_z};{gazeRayDirection_pe_x};{gazeRayDirection_pe_y};{gazeRayDirection_pe_z};{gazePosition_pe_x};{gazePosition_pe_y};{gazePosition_pe_z};{gazeRayOrigin_pe_x};{gazeRayOrigin_pe_y};{gazeRayOrigin_pe_z};");
+                        line.Add($"{p.x};{p.y};{p.z};{r.x};{r.y};{r.z};{distance_pe};{gazeRayForward_pe_x};{gazeRayForward_pe_y};{gazeRayForward_pe_z};{gazeRayDirection_pe_x};{gazeRayDirection_pe_y};{gazeRayDirection_pe_z};{gazePosition_pe_x};{gazePosition_pe_y};{gazePosition_pe_z};{gazeRayOrigin_pe_x};{gazeRayOrigin_pe_y};{gazeRayOrigin_pe_z};{gapAcceptance};");
                     }
                 }
                 foreach (LightState v in frame.CarLightStates)
