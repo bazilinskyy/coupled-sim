@@ -244,6 +244,8 @@ In this section, the additions made by Johnson Mok during his Master Thesis are 
 	- Adding eye-tracking to the prefab.
 	- Gaze Ray hit pedestrian.
 	- Brake AV based on eye-gaze
+- Vive controller
+	- Trigger input.
 
 # Logging
 ## Add variable to the worldlogger
@@ -833,12 +835,36 @@ Modify the braking conditions inside the Brake_AV(Collider other) function.
 if (other.gameObject.CompareTag("StartTrial_Z") && StopWithEyeGaze == false)  
 ```
 
+# Vive controller
+## Trigger input
+Rather than copy pasting the guide I followed to set up the vive controller, I put some links down referring to the guides I follwed. 
+[A Complete Guide to the SteamVR 2.0 Input System in Unity](https://medium.com/@sarthakghosh/a-complete-guide-to-the-steamvr-2-0-input-system-in-unity-380e3b1b3311)
+[Video: Unity SteamVR 2.0 Input using actions](https://www.youtube.com/watch?v=bn8eMxBcI70)
 
+In this section, I will briefly explain the *ViveInput* script.
+In the start function one needs to define the actions to be used. Here we take the GapAcceptance button defined in the UI button layout called viveController. 
+Two lines are added to define the actions to be taken for trigger pressed and trigger released.
+```
+private void Start()
+{
+	SteamVR_Actions.viveController_GapAcceptance.AddOnStateDownListener(OnTriggerPressed, SteamVR_Input_Sources.Any);
+        SteamVR_Actions.viveController_GapAcceptance.AddOnStateUpListener(OnTriggerReleased, SteamVR_Input_Sources.Any);
+}
+```
+Inside the two functions called *OnTriggerPressed* and *OnTriggerReleased* one can define the actions to be taken.
+```
+private void OnTriggerPressed(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
+{
+	//Debug.Log("Trigger is pressed");
+        triggerPulled = 1.0f;
+}
 
-
-
-
-
+private void OnTriggerReleased(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
+{
+        //Debug.Log("Trigger is released");
+        triggerPulled = 0.0f;
+}
+```
 
 
 
