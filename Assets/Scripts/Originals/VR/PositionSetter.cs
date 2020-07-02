@@ -31,10 +31,10 @@ public class PositionSetter : MonoBehaviour {
             transform.position = target.position; //  + new Vector3(-0.03f,+0.16f,-0.7f);
         }
 
-        Debug.LogError($"Target pos = {target.position}");
-        Debug.LogError($"HMD pos = {hmdPosition}");
+        //Debug.LogError($"Target pos = {target.position}");
+        //Debug.LogError($"HMD pos = {hmdPosition}");
         //Debug.LogError($"change pos = {changePos}");
-        Debug.LogError($"transform position {gameObject.transform.position}");
+        //Debug.LogError($"transform position {gameObject.transform.position}");
         //Debug.LogError($"transform local pos = {transform.localPosition}");
     }
 }

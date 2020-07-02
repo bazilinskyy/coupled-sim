@@ -240,6 +240,7 @@ In this section, the additions made by Johnson Mok during his Master Thesis are 
 	- AV driving initiation 
 - Varjo
 	- Varjo camera on prefab.
+	- Position setter for varjo.
 	- Visualize eye-gaze vector.
 	- Adding eye-tracking to the prefab.
 	- Gaze Ray hit pedestrian.
@@ -761,6 +762,21 @@ public void Destroy()
 **5.** Now, one simply has to fill in the *DrawLineInGameView* arguments to visualize the eye-gaze
 ```
 lineDrawer.DrawLineInGameView(gameObject, gazeRayOrigin, gazeRayOrigin + gazeRayDirection * 10.0f, Color.green);
+```
+
+## Positionsetter for varjo.
+With the old positionsetter you would appear floating on top of the prefab. This is due the headtracking of the HMD. 
+To solve this problem I adjusted the *PositionSetter* script. This snippet of code removes the height tracking of the HMD. 
+Resetting you back to the position of the prefab.
+
+```
+hmdPosition = VarjoManager.Instance.GetHMDPosition(VarjoPlugin.PoseType.CENTER);
+changePos = target.position;
+if (hmdPosition.y > 0.0f)
+{
+	changePos.y = changePos.y - hmdPosition.y; 
+}
+transform.position = changePos;
 ```
 
 ## Adding eye-tracking to the prefab
