@@ -4879,7 +4879,6 @@ GameObject:
   - component: {fileID: 7916772425544574836}
   - component: {fileID: 8943811584157154710}
   - component: {fileID: 6343650400298252959}
-  - component: {fileID: 1904011065294554682}
   m_Layer: 0
   m_Name: Gaze
   m_TagString: Untagged
@@ -4933,23 +4932,6 @@ MonoBehaviour:
   useCalibrationParameters: 0
   calibrationType: 0
   outputFilterType: 0
---- !u!114 &1904011065294554682
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1871284139307566424}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: eb7cb6545a05bb246be872081f2b69cc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  oneGazeDataPerFrame: 0
-  startAutomatically: 0
-  toggleLoggingKey: 274
-  useCustomLogPath: 0
-  customLogPath: 
 --- !u!1 &1891962787529133484
 GameObject:
   m_ObjectHideFlags: 0
@@ -8084,19 +8066,20 @@ Transform:
   m_Father: {fileID: 229245033697251502}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &448038178682038077
+--- !u!114 &7438025104375897420
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3729475398938245895}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 21e7d9b01d672fe4b800eab0b95dde39, type: 3}
+  m_Script: {fileID: 11500000, guid: 9f3b512015f8af34b88a38ca451c0312, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   target: {fileID: 3578419541186353635}
+  Use_HMD: 1
 --- !u!1 &3777002921513794471
 GameObject:
   m_ObjectHideFlags: 0
@@ -9624,6 +9607,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   target: {fileID: 3578419541186353635}
+  Use_HMD: 0
 --- !u!1 &5532720195093533121
 GameObject:
   m_ObjectHideFlags: 0
@@ -13055,7 +13039,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4502135317825226, guid: 3fae7923a8aec364bb24e25c4aa6f079, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1.1641164
+      value: 1.3641164
       objectReference: {fileID: 0}
     - target: {fileID: 4502135317825226, guid: 3fae7923a8aec364bb24e25c4aa6f079, type: 3}
       propertyPath: m_LocalPosition.z
