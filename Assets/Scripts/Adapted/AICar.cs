@@ -369,7 +369,8 @@ public class AICar : MonoBehaviour
             WaitTrialZ = false;
             WaitTrialX = false;
         }
-    }
+        Debug.LogError($"Vehicle speed at reset=  {speed}");
+    }   
 
     public void VarjoSaysStop()
     {
