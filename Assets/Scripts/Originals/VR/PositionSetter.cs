@@ -5,6 +5,7 @@ using Varjo;
 // To Solve: position setting during turns.
 public enum enumRot
 {
+    None,
     Zero,
     NineZero,
     OneEightZero,
@@ -20,6 +21,7 @@ public class PositionSetter : MonoBehaviour {
     private Vector3 changePos;
     private float rot;
     private enumRot rot_;
+    public float head_corr = 0.20f;
 
 
     void LateUpdate () {
@@ -33,7 +35,7 @@ public class PositionSetter : MonoBehaviour {
 
             // Effect of HMD on target pos
             rot = gameObject.transform.rotation.eulerAngles.y;
-            determineAngle(rot);
+            determineAngle(rot, 25);
             effectHMD(rot_);
 
             transform.position = changePos;
@@ -44,23 +46,27 @@ public class PositionSetter : MonoBehaviour {
         } 
     }
 
-    private void determineAngle(float rot)
+    private void determineAngle(float rot, float diff)
     {
-        if (rot < 40 || rot > 320)          // 0 +- 40
+        if (rot < (0+diff) || rot > (360-diff))          
         {
             rot_ = enumRot.Zero;
         }
-        else if (rot > 50 && rot < 130)     // 90 +- 40
+        else if (rot > (90-diff) && rot < (90+diff))     
         {
             rot_ = enumRot.NineZero;
         }
-        else if (rot > 140 && rot < 220)    // 180 +- 40
+        else if (rot > (180-diff) && rot < (180+diff))    
         {
             rot_ = enumRot.OneEightZero;
         }
-        else if (rot > 230 && rot < 310)    // 270 +- 40
+        else if (rot > (270-diff) && rot < (270+diff))    
         {
             rot_ = enumRot.TwoSevenZero;
+        }
+        else
+        {
+            rot_ = enumRot.None;
         }
     }
 
@@ -70,14 +76,14 @@ public class PositionSetter : MonoBehaviour {
         {
             case enumRot.Zero:
                 changePos.x = changePos.x - hmdPosition.x; 
-                changePos.z = changePos.z - hmdPosition.z;
+                changePos.z = changePos.z - hmdPosition.z + head_corr;
                 if (hmdPosition.y > 0.0f)
                 {
                     changePos.y = changePos.y - hmdPosition.y;
                 }
                 break;
             case enumRot.NineZero:
-                changePos.x = changePos.x - hmdPosition.z;
+                changePos.x = changePos.x - hmdPosition.z + head_corr;
                 changePos.z = changePos.z + hmdPosition.x;
                 if (hmdPosition.y > 0.0f)
                 {
@@ -86,15 +92,21 @@ public class PositionSetter : MonoBehaviour {
                 break;
             case enumRot.OneEightZero:
                 changePos.x = changePos.x + hmdPosition.x;
-                changePos.z = changePos.z + hmdPosition.z;
+                changePos.z = changePos.z + hmdPosition.z - head_corr;
                 if (hmdPosition.y > 0.0f)
                 {
                     changePos.y = changePos.y - hmdPosition.y;
                 }
                 break;
             case enumRot.TwoSevenZero:
-                changePos.x = changePos.x + hmdPosition.z;
+                changePos.x = changePos.x + hmdPosition.z - head_corr;
                 changePos.z = changePos.z - hmdPosition.x;
+                if (hmdPosition.y > 0.0f)
+                {
+                    changePos.y = changePos.y - hmdPosition.y;
+                }
+                break;
+            case enumRot.None:
                 if (hmdPosition.y > 0.0f)
                 {
                     changePos.y = changePos.y - hmdPosition.y;
