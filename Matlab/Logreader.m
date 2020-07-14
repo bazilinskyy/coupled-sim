@@ -4,7 +4,9 @@ clc
 close all
 
 %% Get data
-filename = "LOG_N.csv";
+% filename = "LOG_N.csv";
+filename = getlatestfile("Logdata");
+filename = "Logdata/" + filename;
 Data = loadData(filename);
 
 % Variables to use
@@ -19,5 +21,7 @@ T = getTime(distance, dt, 1); % Set last argument to 1 to display table.
 figure;
 yyaxis left
 plot(distance);
+ylabel("eye gaze distance");
 yyaxis right
 plot(pos_z);
+ylabel("AV pos_z");
