@@ -79,12 +79,24 @@ public class AICar : MonoBehaviour
         if ((Input.GetKeyDown("space") == true || (StopWithEyeGaze == true && boolVarjoSaysStop == true && n == 1)) && startCar == true)
         {
             Brake_Spacebar();
+            Debug.LogError($"entered brake");
         }
 
         // Start car using arrow up
         if(Input.GetKeyDown("up") == true)
         {
             startCar = true;
+        }
+
+        // This statement is applied when the car is just driving.
+        if ((braking == false) && (reset == false) && (startCar == true))
+        {
+            Car_Driving_Behaviour();
+        }
+        // This statement is applied when the car stood still and is resetting its speed.
+        else if ((braking == false) && (reset == true))
+        {
+            Reset_Speed_After_Stopping();
         }
     }
 
@@ -99,22 +111,11 @@ public class AICar : MonoBehaviour
 
         //  Change of Ambient Traffic rotations based on current heading and target position
         theRigidbody.angularVelocity = new Vector3(0f, psi * turn_rate_degree * Mathf.PI / 360f, 0f);
-        
-        // This statement is applied when the car is just driving.
-        if ((braking == false) && (reset == false) && (startCar == true))
-        {
-            Car_Driving_Behaviour();
-        }
 
         // This statement is applied when the car starts braking
-        else if ((braking == true) && (reset == false))
+        if ((braking == true) && (reset == false))
         {
             Decelerate_Car();
-        }
-        // This statement is applied when the car stood still and is resetting its speed.
-        else if ((braking == false) && (reset == true))
-        {
-            Reset_Speed_After_Stopping();
         }
     }
 
@@ -226,7 +227,7 @@ public class AICar : MonoBehaviour
             jerk = 0;
             speed = set_speed;
         }
-
+        
         theRigidbody.velocity = rotationAxis.forward * speed / conversion; // Application of calculated velocity to Rigidbody
     }
 
@@ -288,7 +289,7 @@ public class AICar : MonoBehaviour
             }
             Debug.Log(Timer2);
 
-            // After standing still for two seconds, passenger can initiate driving again by pressing space.
+            // After standing still for x seconds, start driving again
             Resume_Driving_After_Stop(4f);
         }
     }
@@ -334,7 +335,7 @@ public class AICar : MonoBehaviour
 
         // Apply delta_distance for deceleration 
         // Formula: v = sqrt(u^2 + 2*a*s) with v = final velocity; u = initial velocity; a = acceleration; s = distance covered. 
-        speed = Mathf.Sqrt(900 + 2 * set_acceleration * Mathf.Pow(conversion, 2) * delta_distance); // Application of conversion of km/h to m/s which needs to be squared
+        speed = Mathf.Sqrt(900 + 2 * set_acceleration * Mathf.Pow(conversion, 2) * delta_distance); // Application of conversion of km/h to m/s which needs to be squared //900
 
         // Slowing down            
         // Compute pitch for deceleration
@@ -361,6 +362,7 @@ public class AICar : MonoBehaviour
         {
             speed = 2f;
         }
+
         theRigidbody.velocity = rotationAxis.forward * speed / conversion; // Application of calculated velocity to Rigidbody 
 
         if (speed >= 10f)
@@ -368,8 +370,8 @@ public class AICar : MonoBehaviour
             reset = false;
             WaitTrialZ = false;
             WaitTrialX = false;
+            SpaceBar = false;
         }
-        Debug.LogError($"Vehicle speed at reset=  {speed}");
     }   
 
     public void VarjoSaysStop()

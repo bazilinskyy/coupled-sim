@@ -4927,7 +4927,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8e9f4bafa72496f4789889ea9effde81, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  key: 32
+  key: 274
   useApplicationButton: 1
   useCalibrationParameters: 0
   calibrationType: 0
@@ -8080,6 +8080,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   target: {fileID: 3578419541186353635}
   Use_HMD: 1
+  head_corr: 0.2
 --- !u!1 &3777002921513794471
 GameObject:
   m_ObjectHideFlags: 0
@@ -9608,6 +9609,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   target: {fileID: 3578419541186353635}
   Use_HMD: 0
+  head_corr: 0.2
 --- !u!1 &5532720195093533121
 GameObject:
   m_ObjectHideFlags: 0
@@ -13033,6 +13035,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: VarjoCameraRig
       objectReference: {fileID: 0}
+    - target: {fileID: 1018523678192792, guid: 3fae7923a8aec364bb24e25c4aa6f079, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 4502135317825226, guid: 3fae7923a8aec364bb24e25c4aa6f079, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0.30700037
@@ -13043,7 +13049,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4502135317825226, guid: 3fae7923a8aec364bb24e25c4aa6f079, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -1.8441861
+      value: -1.644186
       objectReference: {fileID: 0}
     - target: {fileID: 4502135317825226, guid: 3fae7923a8aec364bb24e25c4aa6f079, type: 3}
       propertyPath: m_LocalRotation.x
