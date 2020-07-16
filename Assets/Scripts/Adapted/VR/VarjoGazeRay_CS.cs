@@ -38,6 +38,7 @@ namespace VarjoExample
         string target;
 
         LineDrawer lineDrawer;
+        LineDrawer crossHair;
 
         public enum Eye
         {
@@ -54,6 +55,7 @@ namespace VarjoExample
                 gameObject.SetActive(false);
             }
             lineDrawer = new LineDrawer();
+            crossHair = new LineDrawer();
         }
 
         void Update()
@@ -103,8 +105,11 @@ namespace VarjoExample
                 gazeRayDirection = transform.TransformVector(gazeRayForward);
                 gazeRayOrigin = transform.TransformPoint(gazePosition);
 
-                // Visualize the gaze vector
-                lineDrawer.DrawLineInGameView(gameObject, gazeRayOrigin, gazeRayOrigin + gazeRayDirection * 10.0f, Color.green);
+                // Visualize the gaze vector for the pedestrian (hide for passenger)
+                lineDrawer.DrawLineInGameView(gameObject, gazeRayOrigin, gazeRayOrigin + gazeRayDirection * 10.0f, Color.red, 0.01f, true);
+
+                // Crosshair for passenger
+                crossHair.DrawLineInGameView(gameObject, gazeRayOrigin + gazeRayDirection * 5.0f, gazeRayOrigin + gazeRayDirection * 10.0f, Color.green, 0.07f, false);
 
                 // Raycast into world, only see objects in the "Pedestrian layer"
                 if (Physics.SphereCast(gazeRayOrigin, gazeRayRadius, gazeRayDirection, out gazeRayHit, Mathf.Infinity, 1 << LayerMask.NameToLayer(target)))
@@ -134,8 +139,8 @@ namespace VarjoExample
                 }
 
             }
-
         }
+
         public RaycastHit getGazeRayHit()
         {
             return gazeRayHit;
@@ -172,22 +177,34 @@ namespace VarjoExample
     {
         private LineRenderer lineRenderer;
 
-        private void init(GameObject gameObject)
+        private void init(GameObject gameObject, bool laser)
         {
             if (lineRenderer == null)
             {
-                lineRenderer = gameObject.AddComponent<LineRenderer>();
+                if (laser == false)
+                {
+                    // Crosshair
+                    lineRenderer = gameObject.AddComponent<LineRenderer>();
+                }
+                else if (laser == true)
+                {
+                    // Create empty game object for the linerenderer to add layer. Laser
+                    var LaserObject = new GameObject();
+                    LaserObject.transform.parent = gameObject.transform.parent;
+                    LaserObject.layer = LayerMask.NameToLayer("IgnoreForPassenger");
+                    lineRenderer = LaserObject.AddComponent<LineRenderer>();
+                }
                 //Particles/Additive
                 lineRenderer.material = new Material(Shader.Find("Hidden/Internal-Colored"));
             }
         }
 
         //Draws lines through the provided vertices
-        public void DrawLineInGameView(GameObject gameObject, Vector3 start, Vector3 end, Color color)
+        public void DrawLineInGameView(GameObject gameObject, Vector3 start, Vector3 end, Color color, float width, bool laser)
         {
             if (lineRenderer == null)
             {
-                init(gameObject);
+                init(gameObject, laser);
             }
 
             //Set color
@@ -195,8 +212,8 @@ namespace VarjoExample
             lineRenderer.endColor = color;
 
             //Set width
-            lineRenderer.startWidth = 0.01f;
-            lineRenderer.endWidth = 0.01f;
+            lineRenderer.startWidth = width;
+            lineRenderer.endWidth = width;
 
             //Set line count which is 2
             lineRenderer.positionCount = 2;

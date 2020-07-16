@@ -345,6 +345,7 @@ public class AICar : MonoBehaviour
 
     void Reset_Speed_After_Stopping()
     {
+        Debug.LogError("Resetting speed");
         // Accelerating in the Z direction
         if (WaitTrialZ == true || SpaceBar)
         {
