@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityEngine.SceneManagement;
 using Varjo;
 
 // high level host networking script
@@ -17,6 +18,9 @@ public class Host : NetworkSystem
     WorldLogger _fixedTimeLogger;
     HMIManager _hmiManager;
     VisualSyncManager _visualSyncManager;
+    SceneSelector _SceneSelector;
+
+    public int hostRole;
 
     List<int> _playerRoles = new List<int>();
     bool[] _playerReadyStatus = new bool[UNetConfig.MaxPlayers];
@@ -54,6 +58,10 @@ public class Host : NetworkSystem
         {
             _playerRoles.Add(-1);
         }
+
+        // test
+        _SceneSelector = new SceneSelector(_lvlManager);
+        hostRole = _SceneSelector.getHostRole();
     }
 
     //handles ping message
@@ -166,18 +174,23 @@ public class Host : NetworkSystem
     }
 
     //displays role selection GUI for a single player
-    static void SelectRoleGUI(int player, Host host, ExperimentRoleDefinition[] roles)
+    static void SelectRoleGUI(int player, Host host, ExperimentRoleDefinition[] roles, int hostRole)
     {
         GUILayout.BeginHorizontal();
         string playerName = player == Host.PlayerId ? "Host" : $"Player {player}";
-        GUILayout.Label($"{playerName} role: {host._playerRoles[player]}");
-        for (int i = 0; i < roles.Length; i++)
+        //GUILayout.Label($"{playerName} role: {host._playerRoles[player]}");
+
+        //test
+        GUILayout.Label($"{playerName} role: {roles[hostRole].Name}");
+        host._playerRoles[player] = hostRole;
+        
+        /*for (int i = 0; i < roles.Length; i++)
         {
             if (GUILayout.Button(roles[i].Name))
             {
                 host._playerRoles[player] = i;
             }
-        }
+        }*/
         GUILayout.EndHorizontal();
     }
 
@@ -185,8 +198,8 @@ public class Host : NetworkSystem
     void PlayerRolesGUI()
     {
         var roles = _lvlManager.Experiments[_selectedExperiment].Roles;
-        SelectRoleGUI(Host.PlayerId, this, roles);
-        ForEachConnectedPlayer((player, host) => SelectRoleGUI(player, host, roles));
+        SelectRoleGUI(Host.PlayerId, this, roles, _SceneSelector.getHostRole());
+        ForEachConnectedPlayer((player, host) => SelectRoleGUI(player, host, roles, _SceneSelector.getHostRole()));
     }
 
     //initializes experiment - sets it up locally and broadcasts experiment configuration message
@@ -270,17 +283,21 @@ public class Host : NetworkSystem
                 GUI.enabled = AllRolesSelected();
                 if (GUILayout.Button("Start Game"))
                 {
-                    StartGame();
+                    StartGame(); 
                 }
                 GUI.enabled = true;
-                GUILayout.Label("Experiment:");
-                for (int i = 0; i < _lvlManager.Experiments.Length; i++)
+                    //GUILayout.Label("Experiment:");
+                    // test
+                    GUILayout.Label($"Experiment: {_lvlManager.Experiments[_SceneSelector.getSceneSelect()].Name}");
+                    _selectedExperiment = _SceneSelector.getSceneSelect();
+                    
+                /*for (int i = 0; i < _lvlManager.Experiments.Length; i++)
                 {
                     if (GUILayout.Button(_lvlManager.Experiments[i].Name + (i == _selectedExperiment ? " <--" : "")))
                     {
                         _selectedExperiment = i;
                     }
-                }
+                }*/
                 PlayerRolesGUI();
                 _playerSys.SelectModeGUI();
                 break;

@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using Varjo;
+using UnityEngine.SceneManagement;
 
 //logic entry point 
 // - presents main menu
@@ -12,6 +13,7 @@ public class NetworkingManager : MonoBehaviour
     WorldLogger _logger;
     WorldLogger _fixedLogger;
     LogConverter _logConverter;
+    SceneSelector _SceneSelector;
 
     [SerializeField]
     AICarSyncSystem _aiCarSystem;
@@ -25,6 +27,7 @@ public class NetworkingManager : MonoBehaviour
         _logger = new WorldLogger(_playerSystem, _aiCarSystem);
         _fixedLogger = new WorldLogger(_playerSystem, _aiCarSystem);
         _logConverter = new LogConverter(_playerSystem.PedestrianPrefab);
+        Debug.LogError("Awake entered");
     }
 
     bool hideGui = false;
@@ -41,6 +44,18 @@ public class NetworkingManager : MonoBehaviour
         if (_netSystem != null)
         {
             _netSystem.Update();
+        }
+
+        if (Input.GetKeyDown("r"))
+        {
+            if (_playerSystem != null)
+            {
+                Debug.LogError("Destroy GO");
+                Destroy(gameObject);
+            }
+
+            //SceneManager.UnloadSceneAsync($"{SceneManager.GetActiveScene().name}");
+            SceneManager.LoadScene("StartScene");
         }
     }
     void FixedUpdate()
@@ -61,7 +76,10 @@ public class NetworkingManager : MonoBehaviour
         {
             if (GUILayout.Button("Start Host"))
             {
-                _netSystem = new Host(_levelManager, _playerSystem, _aiCarSystem, _logger, _fixedLogger);
+                if (_netSystem == null)
+                {
+                    _netSystem = new Host(_levelManager, _playerSystem, _aiCarSystem, _logger, _fixedLogger);
+                }
             }
             if (GUILayout.Button("Start Client"))
             {
