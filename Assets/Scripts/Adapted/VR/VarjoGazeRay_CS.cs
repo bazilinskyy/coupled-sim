@@ -106,7 +106,7 @@ namespace VarjoExample
                 gazeRayOrigin = transform.TransformPoint(gazePosition);
 
                 // Visualize the gaze vector for the pedestrian (hide for passenger)
-                lineDrawer.DrawLineInGameView(gameObject, gazeRayOrigin, gazeRayOrigin + gazeRayDirection * 10.0f, Color.red, 0.01f, true);
+                lineDrawer.DrawLineInGameView(gameObject, gazeRayOrigin, gazeRayOrigin + gazeRayDirection * 10.0f, Color.green, 0.01f, true);
 
                 // Crosshair for passenger
                 crossHair.DrawLineInGameView(gameObject, gazeRayOrigin + gazeRayDirection * 5.0f, gazeRayOrigin + gazeRayDirection * 10.0f, Color.green, 0.07f, false);
