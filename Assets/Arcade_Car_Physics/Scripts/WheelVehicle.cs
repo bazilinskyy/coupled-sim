@@ -235,40 +235,41 @@ namespace VehicleBehaviour {
             // Get all the inputs!
             if (isPlayer)
             {
-                if (Input.GetButtonDown("forward"))
-                {
-                    reverse = false;
-                } else if (Input.GetButtonDown("reverse"))
-                {
-                    reverse = true;
-                }
+                //TODO find out what is going on here?
+                //if (Input.GetButtonDown("forward"))
+                //{
+                //    reverse = false;
+                //} else if (Input.GetButtonDown("reverse"))
+                //{
+                //    reverse = true;
+                //}
 
-                if (Input.GetButtonDown("blinker_left"))
-                {
-                    if (blinkers.State != BlinkerState.Left)
-                    {
-                        blinkers.StartLeftBlinkers();
-                    }
-                    else
-                    {
-                        blinkers.Stop();
-                    }
-                }
-                else if (Input.GetButtonDown("blinker_right"))
-                {
-                    if (blinkers.State != BlinkerState.Right)
-                    {
-                        blinkers.StartRightBlinkers();
-                    }
-                    else
-                    {
-                        blinkers.Stop();
-                    }
-                }
-                else if (Input.GetButtonDown("blinker_clear"))
-                {
-                    blinkers.Stop();
-                }
+                //if (Input.GetButtonDown("blinker_left"))
+                //{
+                //    if (blinkers.State != BlinkerState.Left)
+                //    {
+                //        blinkers.StartLeftBlinkers();
+                //    }
+                //    else
+                //    {
+                //        blinkers.Stop();
+                //    }
+                //}
+                //else if (Input.GetButtonDown("blinker_right"))
+                //{
+                //    if (blinkers.State != BlinkerState.Right)
+                //    {
+                //        blinkers.StartRightBlinkers();
+                //    }
+                //    else
+                //    {
+                //        blinkers.Stop();
+                //    }
+                //}
+                //else if (Input.GetButtonDown("blinker_clear"))
+                //{
+                //    blinkers.Stop();
+                //}
             }
         }
 

@@ -4,388 +4,212 @@
 Material:
   serializedVersion: 6
   m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   m_Name: z4-body
-  m_Shader: {fileID: 46, guid: 0000000000000000f000000000000000, type: 0}
-  m_ShaderKeywords: _EMISSION
+  m_Shader: {fileID: 10800, guid: 0000000000000000f000000000000000, type: 0}
+  m_ShaderKeywords: _ALPHAPREMULTIPLY_ON _EMISSION
   m_LightmapFlags: 1
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
   m_CustomRenderQueue: -1
   stringTagMap: {}
+  disabledShaderPasses: []
   m_SavedProperties:
-    serializedVersion: 2
+    serializedVersion: 3
     m_TexEnvs:
-    - first:
-        name: _BodyTex
-      second:
+    - _AlphaTex:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - first:
-        name: _Bottom
-      second:
+    - _BodyTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Bottom:
         m_Texture: {fileID: 2800000, guid: 75e04598ead9c8247b506a53bc924f72, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - first:
-        name: _BumpMap
-      second:
+    - _BumpMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - first:
-        name: _ColorControl
-      second:
+    - _ColorControl:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - first:
-        name: _ColorTex
-      second:
+    - _ColorTex:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - first:
-        name: _Cube
-      second:
+    - _Cube:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - first:
-        name: _DetailAlbedoMap
-      second:
+    - _DetailAlbedoMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - first:
-        name: _DetailMask
-      second:
+    - _DetailMask:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - first:
-        name: _DetailNormalMap
-      second:
+    - _DetailNormalMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - first:
-        name: _EmissionMap
-      second:
+    - _EmissionMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - first:
-        name: _FalloffTex
-      second:
+    - _FalloffTex:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - first:
-        name: _Fresnel
-      second:
+    - _Fresnel:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - first:
-        name: _MainTex
-      second:
+    - _MainTex:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - first:
-        name: _MetalMap
-      second:
+    - _MetalMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - first:
-        name: _MetallicGlossMap
-      second:
+    - _MetallicGlossMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - first:
-        name: _NormalMap
-      second:
+    - _NormalMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - first:
-        name: _OcclusionMap
-      second:
+    - _OcclusionMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - first:
-        name: _ParallaxMap
-      second:
+    - _ParallaxMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - first:
-        name: _RSRM
-      second:
+    - _RSRM:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - first:
-        name: _Ramp
-      second:
+    - _Ramp:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - first:
-        name: _ReflectionTex
-      second:
+    - _ReflectionTex:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - first:
-        name: _ReflectiveColor
-      second:
+    - _ReflectiveColor:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - first:
-        name: _RefractionTex
-      second:
+    - _RefractionTex:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - first:
-        name: _ShadowTex
-      second:
+    - _ShadowTex:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - first:
-        name: _ShoreTex
-      second:
+    - _ShoreTex:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - first:
-        name: _Side
-      second:
+    - _Side:
         m_Texture: {fileID: 2800000, guid: 75e04598ead9c8247b506a53bc924f72, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - first:
-        name: _SmoothMap
-      second:
+    - _SmoothMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - first:
-        name: _SpecGlossMap
-      second:
+    - _SpecGlossMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - first:
-        name: _ToonShade
-      second:
+    - _ToonShade:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - first:
-        name: _Top
-      second:
+    - _Top:
         m_Texture: {fileID: 2800000, guid: 75e04598ead9c8247b506a53bc924f72, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Floats:
-    - first:
-        name: _Amount
-      second: 1
-    - first:
-        name: _BottomScale
-      second: 1
-    - first:
-        name: _BumpDepth
-      second: 1
-    - first:
-        name: _BumpScale
-      second: 1
-    - first:
-        name: _ColorFlipH
-      second: 0
-    - first:
-        name: _ColorFlipV
-      second: 1
-    - first:
-        name: _Cutoff
-      second: 1
-    - first:
-        name: _DetailNormalMapScale
-      second: 1
-    - first:
-        name: _DstBlend
-      second: 0
-    - first:
-        name: _EdgeLength
-      second: 10
-    - first:
-        name: _FresnelScale
-      second: 0.75
-    - first:
-        name: _GerstnerIntensity
-      second: 1
-    - first:
-        name: _GlossMapScale
-      second: 0.82
-    - first:
-        name: _Glossiness
-      second: 0.85
-    - first:
-        name: _GlossyReflections
-      second: 1
-    - first:
-        name: _InvFade
-      second: 1
-    - first:
-        name: _Metallic
-      second: 0.5
-    - first:
-        name: _Metallicity
-      second: 0
-    - first:
-        name: _Mode
-      second: 0
-    - first:
-        name: _OcclusionStrength
-      second: 1
-    - first:
-        name: _Outline
-      second: 0.005
-    - first:
-        name: _Parallax
-      second: 1
-    - first:
-        name: _ReflDistort
-      second: 0.44
-    - first:
-        name: _RefrDistort
-      second: 0.4
-    - first:
-        name: _Shininess
-      second: 1
-    - first:
-        name: _SideScale
-      second: 1
-    - first:
-        name: _Smoothness
-      second: 2
-    - first:
-        name: _SmoothnessTextureChannel
-      second: 0
-    - first:
-        name: _SpecularHighlights
-      second: 1
-    - first:
-        name: _SrcBlend
-      second: 1
-    - first:
-        name: _TopScale
-      second: 3
-    - first:
-        name: _UVSec
-      second: 0
-    - first:
-        name: _WaveScale
-      second: 0.063
-    - first:
-        name: _Wrap
-      second: 0.25
-    - first:
-        name: _ZWrite
-      second: 1
+    - PixelSnap: 0
+    - _Amount: 1
+    - _BottomScale: 1
+    - _BumpDepth: 1
+    - _BumpScale: 1
+    - _ColorFlipH: 0
+    - _ColorFlipV: 1
+    - _Cutoff: 1
+    - _DetailNormalMapScale: 1
+    - _DstBlend: 10
+    - _EdgeLength: 10
+    - _EnableExternalAlpha: 0
+    - _FresnelScale: 0.75
+    - _GerstnerIntensity: 1
+    - _GlossMapScale: 0.82
+    - _Glossiness: 0.85
+    - _GlossyReflections: 1
+    - _InvFade: 1
+    - _Metallic: 0.5
+    - _Metallicity: 0
+    - _Mode: 3
+    - _OcclusionStrength: 1
+    - _Outline: 0.005
+    - _Parallax: 1
+    - _ReflDistort: 0.44
+    - _RefrDistort: 0.4
+    - _Shininess: 1
+    - _SideScale: 1
+    - _Smoothness: 2
+    - _SmoothnessTextureChannel: 0
+    - _SpecularHighlights: 1
+    - _SrcBlend: 1
+    - _TopScale: 3
+    - _UVSec: 0
+    - _WaveScale: 0.063
+    - _Wrap: 0.25
+    - _ZWrite: 0
     m_Colors:
-    - first:
-        name: WaveSpeed
-      second: {r: 19, g: 9, b: -16, a: -7}
-    - first:
-        name: _AnimationDirection
-      second: {r: 1, g: 1, b: 1, a: 1}
-    - first:
-        name: _AnimationTiling
-      second: {r: 2.2, g: 2.2, b: -1.1, a: -1.1}
-    - first:
-        name: _BaseColor
-      second: {r: 0.54, g: 0.95, b: 0.99, a: 0.5}
-    - first:
-        name: _BumpDirection
-      second: {r: 1, g: 1, b: -1, a: 1}
-    - first:
-        name: _BumpTiling
-      second: {r: 1, g: 1, b: -2, a: 3}
-    - first:
-        name: _Color
-      second: {r: 1, g: 0, b: 0, a: 0}
-    - first:
-        name: _DistortParams
-      second: {r: 1, g: 1, b: 2, a: 1.15}
-    - first:
-        name: _EmisColor
-      second: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 0}
-    - first:
-        name: _EmissionColor
-      second: {r: 0, g: 0, b: 0, a: 1}
-    - first:
-        name: _Foam
-      second: {r: 0.1, g: 0.375, b: 0, a: 0}
-    - first:
-        name: _GAmplitude
-      second: {r: 0.3, g: 0.35, b: 0.25, a: 0.25}
-    - first:
-        name: _GDirectionAB
-      second: {r: 0.3, g: 0.85, b: 0.85, a: 0.25}
-    - first:
-        name: _GDirectionCD
-      second: {r: 0.1, g: 0.9, b: 0.5, a: 0.5}
-    - first:
-        name: _GFrequency
-      second: {r: 1.3, g: 1.35, b: 1.25, a: 1.25}
-    - first:
-        name: _GSpeed
-      second: {r: 1.2, g: 1.375, b: 1.1, a: 1.5}
-    - first:
-        name: _GSteepness
-      second: {r: 1, g: 1, b: 1, a: 1}
-    - first:
-        name: _HorizonColor
-      second: {r: 0.172, g: 0.463, b: 0.435, a: 1}
-    - first:
-        name: _InvFadeParemeter
-      second: {r: 0.15, g: 0.15, b: 0.5, a: 1}
-    - first:
-        name: _MainColor
-      second: {r: 0.5, g: 0.5, b: 0.5, a: 0.5}
-    - first:
-        name: _OutlineColor
-      second: {r: 0, g: 0, b: 0, a: 1}
-    - first:
-        name: _ReflectColor
-      second: {r: 0.30147058, g: 0.4219067, b: 1, a: 0.484}
-    - first:
-        name: _ReflectionColor
-      second: {r: 0.54, g: 0.95, b: 0.99, a: 0.5}
-    - first:
-        name: _RefrColor
-      second: {r: 0.34, g: 0.85, b: 0.92, a: 1}
-    - first:
-        name: _SpecColor
-      second: {r: 0, g: 0, b: 0, a: 1}
-    - first:
-        name: _SpecularColor
-      second: {r: 0.72, g: 0.72, b: 0.72, a: 1}
-    - first:
-        name: _TintColor
-      second: {r: 0.5, g: 0.5, b: 0.5, a: 0.5}
-    - first:
-        name: _WorldLightDir
-      second: {r: 0, g: 0.1, b: -0.5, a: 0}
-    - first:
-        name: _horizonColor
-      second: {r: 0.172, g: 0.463, b: 0.435, a: 0}
+    - WaveSpeed: {r: 19, g: 9, b: -16, a: -7}
+    - _AnimationDirection: {r: 1, g: 1, b: 1, a: 1}
+    - _AnimationTiling: {r: 2.2, g: 2.2, b: -1.1, a: -1.1}
+    - _BaseColor: {r: 0.54, g: 0.95, b: 0.99, a: 0.5}
+    - _BumpDirection: {r: 1, g: 1, b: -1, a: 1}
+    - _BumpTiling: {r: 1, g: 1, b: -2, a: 3}
+    - _Color: {r: 0.94718194, g: 1, b: 0, a: 0.33}
+    - _DistortParams: {r: 1, g: 1, b: 2, a: 1.15}
+    - _EmisColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 0}
+    - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
+    - _Flip: {r: 1, g: 1, b: 1, a: 1}
+    - _Foam: {r: 0.1, g: 0.375, b: 0, a: 0}
+    - _GAmplitude: {r: 0.3, g: 0.35, b: 0.25, a: 0.25}
+    - _GDirectionAB: {r: 0.3, g: 0.85, b: 0.85, a: 0.25}
+    - _GDirectionCD: {r: 0.1, g: 0.9, b: 0.5, a: 0.5}
+    - _GFrequency: {r: 1.3, g: 1.35, b: 1.25, a: 1.25}
+    - _GSpeed: {r: 1.2, g: 1.375, b: 1.1, a: 1.5}
+    - _GSteepness: {r: 1, g: 1, b: 1, a: 1}
+    - _HorizonColor: {r: 0.172, g: 0.463, b: 0.435, a: 1}
+    - _InvFadeParemeter: {r: 0.15, g: 0.15, b: 0.5, a: 1}
+    - _MainColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.5}
+    - _OutlineColor: {r: 0, g: 0, b: 0, a: 1}
+    - _ReflectColor: {r: 0.30147058, g: 0.4219067, b: 1, a: 0.484}
+    - _ReflectionColor: {r: 0.54, g: 0.95, b: 0.99, a: 0.5}
+    - _RefrColor: {r: 0.34, g: 0.85, b: 0.92, a: 1}
+    - _RendererColor: {r: 1, g: 1, b: 1, a: 1}
+    - _SpecColor: {r: 0, g: 0, b: 0, a: 1}
+    - _SpecularColor: {r: 0.72, g: 0.72, b: 0.72, a: 1}
+    - _TintColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.5}
+    - _WorldLightDir: {r: 0, g: 0.1, b: -0.5, a: 0}
+    - _horizonColor: {r: 0.172, g: 0.463, b: 0.435, a: 0}

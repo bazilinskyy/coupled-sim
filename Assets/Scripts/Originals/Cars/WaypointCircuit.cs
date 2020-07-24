@@ -11,6 +11,7 @@ namespace UnityStandardAssets.Utility
     public class WaypointCircuit : MonoBehaviour
     {
         public WaypointList waypointList = new WaypointList();
+        public Transform some;
         [SerializeField] private bool smoothRoute = true;
         private int numPoints;
         private Vector3[] points;
@@ -23,7 +24,6 @@ namespace UnityStandardAssets.Utility
         {
             get { return waypointList.items; }
         }
-
         //this being here will save GC allocs
         private int p0n;
         private int p1n;

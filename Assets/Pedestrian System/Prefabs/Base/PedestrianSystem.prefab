@@ -1,0 +1,69 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &171830
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 471830}
+  - component: {fileID: 11471830}
+  m_Layer: 0
+  m_Name: PedestrianSystem
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &471830
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 171830}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &11471830
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 171830}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 13f56b3422b050f428590471fbb676b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_showGizmos: 1
+  m_nodePrefab: {fileID: 11444436, guid: b5d1e76460194cc4f990cb26e3d0ec10, type: 3}
+  m_autoLink: 1
+  m_linkBothDir: 1
+  m_globalSpeedVariation: 0.5
+  m_globalLanePosVariation: 1
+  TextureIconAnchor: {fileID: 2800000, guid: 92372f1393cc16d468d17458d993beba, type: 3}
+  TextureIconEdit: {fileID: 2800000, guid: f676311ed725b5943b14a86e271e384a, type: 3}
+  TextureIconAnchorToEdit: {fileID: 2800000, guid: 6cd9c61899bd54d438fbcd60eabc42f9,
+    type: 3}
+  TextureIconEditToAnchor: {fileID: 2800000, guid: dd1607f5d01aa3d47be37366dc324bc6,
+    type: 3}
+  TextureIconRemoveAnchor: {fileID: 2800000, guid: 09e5fdf670e78594b8b2f92b9930d9ec,
+    type: 3}
+  TextureIconRemoveEdit: {fileID: 2800000, guid: 150d25c987c26c94b84c1fb4e9d91e78,
+    type: 3}
+  TextureIconRemoveAll: {fileID: 2800000, guid: a4376a2a79f83f548aee25396e606c00,
+    type: 3}
+  m_objectSpawnCountMax: -1
+  m_randomObjectSpawnPerNode: 0
+  m_randomObjectSpawnChancePerNode: 0.5
+  m_numOfObjectsSpawnedPerNode: 1
+  m_objectPrefabs:
+  - {fileID: 0}
