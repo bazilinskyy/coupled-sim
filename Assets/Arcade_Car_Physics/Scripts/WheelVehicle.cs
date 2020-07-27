@@ -231,45 +231,47 @@ namespace VehicleBehaviour {
                 boost += Time.deltaTime * boostRegen;
                 if (boost > maxBoost) { boost = maxBoost; }
             }
+            
 
             // Get all the inputs!
             if (isPlayer)
             {
                 //TODO find out what is going on here?
-                //if (Input.GetButtonDown("forward"))
-                //{
-                //    reverse = false;
-                //} else if (Input.GetButtonDown("reverse"))
-                //{
-                //    reverse = true;
-                //}
+                if (Input.GetButtonDown("forward"))
+                {
+                    reverse = false;
+                }
+                else if (Input.GetButtonDown("reverse"))
+                {
+                    reverse = true;
+                }
 
-                //if (Input.GetButtonDown("blinker_left"))
-                //{
-                //    if (blinkers.State != BlinkerState.Left)
-                //    {
-                //        blinkers.StartLeftBlinkers();
-                //    }
-                //    else
-                //    {
-                //        blinkers.Stop();
-                //    }
-                //}
-                //else if (Input.GetButtonDown("blinker_right"))
-                //{
-                //    if (blinkers.State != BlinkerState.Right)
-                //    {
-                //        blinkers.StartRightBlinkers();
-                //    }
-                //    else
-                //    {
-                //        blinkers.Stop();
-                //    }
-                //}
-                //else if (Input.GetButtonDown("blinker_clear"))
-                //{
-                //    blinkers.Stop();
-                //}
+                /*if (Input.GetButtonDown("blinker_left"))
+                {
+                    if (blinkers.State != BlinkerState.Left)
+                    {
+                        blinkers.StartLeftBlinkers();
+                    }
+                    else
+                    {
+                        blinkers.Stop();
+                    }
+                }
+                else if (Input.GetButtonDown("blinker_right"))
+                {
+                    if (blinkers.State != BlinkerState.Right)
+                    {
+                        blinkers.StartRightBlinkers();
+                    }
+                    else
+                    {
+                        blinkers.Stop();
+                    }
+                }
+                else if (Input.GetButtonDown("blinker_clear"))
+                {
+                    blinkers.Stop();
+                }*/
             }
         }
 
@@ -286,11 +288,19 @@ namespace VehicleBehaviour {
                 // Accelerate & brake
                 if (throttleInput != "" && throttleInput != null)
                 {
-                    throttle = GetInput(throttleInput) * (reverse?-1f:1);
-                    Debug.Log(throttle);
+                    // inputting throttle using gas pedal Logitech 
+                    if (GetInput(throttleInput) >= 0)
+                    {
+                        throttle = GetInput(throttleInput) * (reverse ? -1f : 1);
+                    }
+                    else { throttle = 0; }
+                    if (GetInput(throttleInput) < 0)
+                    {
+                        breaking = Mathf.Clamp01(Mathf.Abs(GetInput(throttleInput)));
+                    }
+                    else { breaking = 0; }
                 }
-
-                breaking = Mathf.Clamp01(GetInput(brakeInput));
+                //Debug.Log(throttleInput + ": " + GetInput(throttleInput) + ", breaking: " + breaking);
 
                 // Turn
                 steering = turnInputCurve.Evaluate(GetInput(turnInput)) * steerAngle;

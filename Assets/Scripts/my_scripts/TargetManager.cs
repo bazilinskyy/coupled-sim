@@ -136,6 +136,7 @@ public class TargetManager : MonoBehaviour
                     // print("HIT " + hit.collider.gameObject.name);
                     if (hit.collider.gameObject.tag == "Target")
                     {
+                        Debug.DrawLine(cam.transform.position, cam.transform.position + currentDirection * 500, Color.cyan, Time.deltaTime, false);
                         print(target.name + " is visible");
                         isVisible = true;
                         break;
@@ -202,3 +203,5 @@ public class TargetManager : MonoBehaviour
     }
 
 }
+
+
