@@ -87,8 +87,13 @@ public class WaypointManagerWindow : EditorWindow
             if (GUILayout.Button("Start navigation tree"))
             {
                 CreateFirstWaypoint();
-                UpdateWaypointOrderList(); 
+                
                 CreateNewWaypoint(Operation.Straight);
+                UpdateWaypointOrderList();
+            }
+            if(GUILayout.Button("Add children waypoints"))
+            {
+                waypointOrderList = new List<Waypoint>();
                 UpdateWaypointOrderList();
             }
         }
@@ -181,12 +186,14 @@ public class WaypointManagerWindow : EditorWindow
             //Quaternion rotation = selectedWaypoint.previousWaypoint.transform.rotation;
             //selectedWaypoint.transform.rotation = Quaternion.Euler(rotation.x, rotation.y + 90, rotation.z);
             selectedWaypoint.transform.Rotate(Vector3.up * 90, Space.World);
+            selectedWaypoint.extraSplinePoint = true;
         }
         else if (operation == Operation.TurnLeft)
         {
             //Quaternion rotation = selectedWaypoint.previousWaypoint.transform.rotation;
             //selectedWaypoint.transform.rotation = Quaternion.Euler(rotation.x, rotation.y - 90, rotation.z);
             selectedWaypoint.transform.Rotate(Vector3.up * -90, Space.World);
+            selectedWaypoint.extraSplinePoint = true;
         }
 
         //set attributes of new waypoint
@@ -197,6 +204,7 @@ public class WaypointManagerWindow : EditorWindow
         newWaypoint.orderId = selectedWaypoint.orderId + 1;
         newWaypoint.previousWaypoint = selectedWaypoint;
         newWaypoint.operation = Operation.None;
+        newWaypoint.extraSplinePoint = false;
 
         //If this is a spline point then we set shapePoint attribute to true so that it gets skipped during the navigation of the car.
         if (splinePoint)

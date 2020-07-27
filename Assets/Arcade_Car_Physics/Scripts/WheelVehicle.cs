@@ -287,7 +287,9 @@ namespace VehicleBehaviour {
                 if (throttleInput != "" && throttleInput != null)
                 {
                     throttle = GetInput(throttleInput) * (reverse?-1f:1);
+                    Debug.Log(throttle);
                 }
+
                 breaking = Mathf.Clamp01(GetInput(brakeInput));
 
                 // Turn
