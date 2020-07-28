@@ -237,14 +237,14 @@ namespace VehicleBehaviour {
             if (isPlayer)
             {
                 //TODO find out what is going on here?
-                if (Input.GetButtonDown("forward"))
+                /*if (Input.GetButtonDown("forward"))
                 {
                     reverse = false;
                 }
                 else if (Input.GetButtonDown("reverse"))
                 {
                     reverse = true;
-                }
+                }*/
 
                 /*if (Input.GetButtonDown("blinker_left"))
                 {
@@ -288,21 +288,34 @@ namespace VehicleBehaviour {
                 // Accelerate & brake
                 if (throttleInput != "" && throttleInput != null)
                 {
+                    //Debug.Log("Throttle input: " + GetInput(throttleInput));
                     // inputting throttle using gas pedal Logitech 
-                    if (GetInput(throttleInput) >= 0)
+                    
+                    throttle = GetInput(throttleInput) * (reverse ? -1f : 1);
+
+                    if(GetInput(throttleInput) < 0)
                     {
-                        throttle = GetInput(throttleInput) * (reverse ? -1f : 1);
+                        throttle = 0;
                     }
-                    else { throttle = 0; }
-                    if (GetInput(throttleInput) < 0)
+                  
+                    
+                }
+                
+                if (brakeInput != "" && brakeInput != null)
+                {
+                    //                    Debug.Log("Brake input: " +  GetInput(brakeInput));
+                    if (GetInput(brakeInput) > 0)
                     {
-                        breaking = Mathf.Clamp01(Mathf.Abs(GetInput(throttleInput)));
+                        breaking = Mathf.Clamp01(Mathf.Abs(GetInput(brakeInput)));
                     }
                     else { breaking = 0; }
                 }
+                else { breaking = 0; }//                Debug.Log("Brake input: " + GetInput(brakeInput)); }
+                
                 //Debug.Log(throttleInput + ": " + GetInput(throttleInput) + ", breaking: " + breaking);
 
                 // Turn
+                //Debug.Log("Turn input: " + GetInput(turnInput));
                 steering = turnInputCurve.Evaluate(GetInput(turnInput)) * steerAngle;
             }
 

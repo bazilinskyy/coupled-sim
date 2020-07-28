@@ -12,39 +12,79 @@ public class ExperimentManager : MonoBehaviour
     private NavigationManager activeNavigationManager;
 
     public XMLManager XMLManager;
-    public GameObject startScreen;
+    
 
+    public bool usingVarjo;
+    public Transform varjoCam;
+    public Transform normalCam;
+    private Transform usedCam;
     //UI objects
-    private Image background;
-    private Button button;
-    private Text text;
-    //private Navigator navigator;
+    public Text UIText;
+    public KeyCode key = KeyCode.F1;
 
+    private GameStates gameState;
+    public GameStates _gameState;
+
+    public Transform waitingRoom;
+
+    public enum GameStates{
+        Experiment,
+        Waiting,
+        Transition,
+        Ended
+    }
 
     // Start is called before the first frame update
     void Awake()
     {
-        SetUIObjects();
+        
+        //_gameState = GameStates.Experiment;
+        if (usingVarjo) { usedCam = varjoCam; }
+        else { usedCam = normalCam; }
+
+        
+        GoToWaitingRoom();
         SetupFirstExperiment();
+        
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (NavigationFinished())
+       
+        if (gameState == GameStates.Transition)
         {
+            gameState = GameStates.Waiting;
+            GoToWaitingRoom();
+        }
+        
+        if (gameState == GameStates.Waiting)
+        {
+            if (Input.GetKeyDown(key)){
+                //should dim lights in here and than start experiment
+                gameState = GameStates.Experiment;
+                StartExperiment();
+            }
+        }
+        //if we finished a navigation we go to the waiting room
+        if (NavigationFinished())
+         {
+            gameState = GameStates.Transition;
+            //Should dim lights and then go to waiting room
+            
             Debug.Log("Navigation finished...");
             if (IsNextNavigation())
             {
                 Debug.Log("Loading next experiment...");
                 //RenderUI
-                StartCoroutine(RenderStartScreen());
+                //StartCoroutine(RenderStartScreenText());
                 SetupNextExperiment();
             }
             else
             {
                 StartCoroutine(RenderEndSimulation());
-                EndSimulation();
+                Debug.Log("Simulation finished");
+                activeExperiment = null;
             }
         }
     }
@@ -61,13 +101,7 @@ public class ExperimentManager : MonoBehaviour
         if(car.target.operation == Operation.EndPoint && car.reachedTarget && car.navigation == activeExperiment.navigation) { return true; }
         else { return false; }
     }
-    
-    void EndSimulation()
-    {
-        Debug.Log("Simulation finished");
-        activeExperiment = null;
 
-    }
 
     void SetupNextExperiment()
     {
@@ -81,65 +115,42 @@ public class ExperimentManager : MonoBehaviour
         //change rootwaypoints and datafile names etc etc
     }
 
-    void SetUIObjects()
-    {
-        Debug.Log("Setting up UI objects...");
-
-        //Find background object
-        background = startScreen.transform.GetChild(0).gameObject.GetComponent<Image>();
-        if (background.gameObject.name != "Background") { throw new System.Exception("Something went wrong in Experiment Manager --> RenderStartScreen()"); }
-
-        //set background to black
-        background.color = Color.black;
-
-
-        button = startScreen.transform.GetChild(1).GetComponent<Button>();
-        if (button.gameObject.name != "Button") { throw new System.Exception("Something went wrong in Experiment Manager --> RenderStartScreen()"); }
-        
-        //Add event listener to button
-        button.onClick.AddListener(ClickedStartExperiment);
-
-
-        //find text object
-        text = startScreen.transform.GetChild(2).GetComponent<Text>();
-        if (text.gameObject.name != "Text") { throw new System.Exception("Something went wrong in Experiment Manager --> RenderStartScreen()"); }
-        text.gameObject.SetActive(false);
-    }
-    IEnumerator RenderStartScreen()
+    IEnumerator RenderStartScreenText()
     {
         Debug.Log("Rendering startscreen...");
-        background.CrossFadeAlpha(1, 2.5f, false);
-
+        UIText.GetComponent<CanvasRenderer>().SetAlpha(0f);
         yield return new WaitForSeconds(2.0f);
-        text.gameObject.SetActive(true);
-        text.CrossFadeAlpha(1, 2f, false);
-        yield return new WaitForSeconds(2f);
-        button.gameObject.SetActive(true);
-   
+        UIText.CrossFadeAlpha(1, 2.5f, false);
     }
-
-    
-    void ClickedStartExperiment()
+    void ReturnToCar()
     {
-        Debug.Log("Clicked button...");
-        button.gameObject.SetActive(false);
-        background.CrossFadeAlpha(0, 2.5f, false);
-        text.CrossFadeAlpha(0, 2f, false);
-        StartExperiment();
+        Debug.Log("Returning to car...");
+        usedCam.transform.position = car.transform.position + new Vector3(0,0.2f,0);
+        usedCam.transform.rotation = car.transform.rotation;
+        usedCam.transform.Rotate(new Vector3(0, 1f, 0), -90);
+
     }
 
+    void GoToWaitingRoom()
+    {
+        Debug.Log("Going to waiting room...");
+        usedCam.transform.position = waitingRoom.transform.position + new Vector3(0, 1f, 0);
+
+        StartCoroutine(RenderStartScreenText());
+    }
     IEnumerator RenderEndSimulation()
     {
-        background.CrossFadeAlpha(1, 2.5f, false);
-
+        UIText.GetComponent<CanvasRenderer>().SetAlpha(0f);
         yield return new WaitForSeconds(2.0f);
-        text.text = "End of experiment\nThank you!";
-        text.gameObject.SetActive(true);
+        UIText.text = "Thanks for participating!";
+        UIText.CrossFadeAlpha(1, 2.5f, false);
+
     }
 
     void StartExperiment()
     {
         Debug.Log("Starting Experiment....");
+
         //Set new navigation for car
         car.navigation = activeExperiment.navigation;
 
@@ -151,6 +162,9 @@ public class ExperimentManager : MonoBehaviour
         Transform startLocation = activeNavigationManager.GetStartPointNavigation();
         car.transform.position = startLocation.position;
         car.transform.rotation = startLocation.rotation;
+
+        ReturnToCar();
+        
     }
     bool IsNextNavigation()
     {
@@ -160,13 +174,10 @@ public class ExperimentManager : MonoBehaviour
         if (index != (experimentList.Count - 1)) { return true; }
         else { return false; }
     }
-
     int GetIndexCurrentExperiment()
     {
         return experimentList.FindIndex(a => a.navigation == activeExperiment.navigation);
     }
-
-
     void ActivateNextExperiment()
     {
         int currentIndex = GetIndexCurrentExperiment();

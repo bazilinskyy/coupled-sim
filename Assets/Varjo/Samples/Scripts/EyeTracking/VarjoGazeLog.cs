@@ -48,8 +48,7 @@ namespace VarjoExample
 
         private void Start()
         {
-            LineDrawer lineDrawer = new LineDrawer();
-
+            
         }
         void Update()
         {
@@ -99,32 +98,10 @@ namespace VarjoExample
                     StartLogging();
                 }
             }
-            dataSinceLastUpdate = VarjoPlugin.GetGazeList();
-            if (dataSinceLastUpdate.Any())
-            {
-                DisplayGaze(dataSinceLastUpdate[dataSinceLastUpdate.Count-1]);
-            }
+          
 
         }
 
-        void DisplayGaze(VarjoPlugin.GazeData data)
-        {
-            bool invalid = data.status == VarjoPlugin.GazeStatus.INVALID;
-
-            if (!invalid)
-            {
-                Debug.Log("Should cast a ray!");
-                Vector3 start = new Vector3((float)data.gaze.position[0], (float)data.gaze.position[1], (float)data.gaze.position[2]);
-
-                start += cam.position;
-                Vector3 forward = new Vector3((float)data.gaze.forward[0], (float)data.gaze.forward[1], (float)data.gaze.forward[2]);
-
-                Vector3 end = start + 10 * forward;
-                lineDrawer.Destroy();
-                lineDrawer.DrawLineInGameView(start, end, Color.green);
-            }
-
-        }
         void LogGazeData(VarjoPlugin.GazeData data)
         {
             // Get HMD position and rotation

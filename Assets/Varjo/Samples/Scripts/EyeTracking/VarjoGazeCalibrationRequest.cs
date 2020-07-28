@@ -39,15 +39,18 @@ namespace VarjoExample
 
         void Update()
         {
-            if (VarjoManager.Instance.IsLayerVisible())
+            /*if (VarjoManager.Instance.IsLayerVisible())
             {
                 if (Input.GetKeyDown(key))
                 {
                     RequestGazeCalibration();
                 }
+            }*/
+            if (Input.GetKeyDown(key))
+            {
+                RequestGazeCalibration();
             }
-
-            if(VarjoManager.Instance.GetButtonDown() && useApplicationButton)
+            if (VarjoManager.Instance.GetButtonDown() && useApplicationButton)
             {
                 RequestGazeCalibration();
             }

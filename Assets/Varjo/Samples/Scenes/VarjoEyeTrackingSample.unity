@@ -611,7 +611,7 @@ MonoBehaviour:
   startAutomatically: 1
   toggleLoggingKey: 13
   useCustomLogPath: 1
-  customLogPath: C:\Users\m_a_s\Documents\dev\coupled-sim
+  customLogPath: C:\Users\Marc\Documents\dev\Data\
 --- !u!1 &367575304
 GameObject:
   m_ObjectHideFlags: 0
@@ -1299,8 +1299,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   eye: 0
-  gazeRayRadius: 0.01
-  drawDebug: 0
+  gazeRayRadius: 0.1
+  drawDebug: 1
 --- !u!4 &897631567
 Transform:
   m_ObjectHideFlags: 0
@@ -2677,7 +2677,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4502135317825226, guid: 3fae7923a8aec364bb24e25c4aa6f079, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0
+      value: -0.7071068
       objectReference: {fileID: 0}
     - target: {fileID: 4502135317825226, guid: 3fae7923a8aec364bb24e25c4aa6f079, type: 3}
       propertyPath: m_LocalRotation.z
@@ -2685,11 +2685,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4502135317825226, guid: 3fae7923a8aec364bb24e25c4aa6f079, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 1
+      value: 0.7071068
       objectReference: {fileID: 0}
     - target: {fileID: 4502135317825226, guid: 3fae7923a8aec364bb24e25c4aa6f079, type: 3}
       propertyPath: m_RootOrder
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4502135317825226, guid: 3fae7923a8aec364bb24e25c4aa6f079, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: -90
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 3fae7923a8aec364bb24e25c4aa6f079, type: 3}

@@ -62,3 +62,4 @@ public struct LineDrawer
             UnityEngine.Object.Destroy(lineRenderer.gameObject);
         }
     }
+}
