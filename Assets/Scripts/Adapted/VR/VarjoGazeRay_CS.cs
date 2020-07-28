@@ -106,10 +106,11 @@ namespace VarjoExample
                 gazeRayOrigin = transform.TransformPoint(gazePosition);
 
                 // Visualize the gaze vector for the pedestrian (hide for passenger)
-                lineDrawer.DrawLineInGameView(gameObject, gazeRayOrigin, gazeRayOrigin + gazeRayDirection * 10.0f, Color.green, 0.01f, true);
+                //lineDrawer.DrawLineInGameView(gameObject, gazeRayOrigin, gazeRayOrigin + gazeRayDirection * 10.0f, Color.green, 0.01f, true);
 
                 // Crosshair for passenger
-                crossHair.DrawLineInGameView(gameObject, gazeRayOrigin + gazeRayDirection * 5.0f, gazeRayOrigin + gazeRayDirection * 10.0f, Color.green, 0.07f, false);
+                //crossHair.DrawLineInGameView(gameObject, gazeRayOrigin + gazeRayDirection * 5.0f, gazeRayOrigin + gazeRayDirection * 10.0f, Color.green, 0.07f, false);
+                crossHair.DrawLineInGameView(gameObject, gazeRayOrigin, gazeRayOrigin + gazeRayDirection * 10.0f, Color.green, 0.07f, false);
 
                 // Raycast into world, only see objects in the "Pedestrian layer"
                 if (Physics.SphereCast(gazeRayOrigin, gazeRayRadius, gazeRayDirection, out gazeRayHit, Mathf.Infinity, 1 << LayerMask.NameToLayer(target)))
@@ -206,6 +207,10 @@ namespace VarjoExample
             {
                 init(gameObject, laser);
             }
+
+            //Set material transparancy
+            //lineRenderer.material = new Material(Shader.Find("Particles/Additive(Soft)"));
+            color.a = 0.2f;
 
             //Set color
             lineRenderer.startColor = color;
