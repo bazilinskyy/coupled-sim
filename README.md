@@ -238,10 +238,13 @@ In this section, the additions made by Johnson Mok during his Master Thesis are 
 - Restructure AICar.cs.
 	- Brake on input.
 	- AV driving initiation 
+	- Driving behaviour Update
+- Sequencing
 - Varjo
 	- Varjo camera on prefab.
 	- Position setter for varjo.
 	- Visualize eye-gaze vector.
+	- Crosshair + visibility
 	- Adding eye-tracking to the prefab.
 	- Gaze Ray hit pedestrian.
 	- Brake AV based on eye-gaze
@@ -677,6 +680,15 @@ Car_Driving_Behaviour();
 }
 ```
 
+## Driving behaviour Update
+Whenever the vehicle started driving again after having stopped for a while, the vehicle would translate stuttered. This was 
+due to the driving and resetting behaviour being put into the FixedUpdate. Generally, the FixedUpdate is used for physics calculations
+and nonlinear movements. Update is more suitable for linear movements such as driving. Moving the *Car_Driving_Behaviour* and the *Reset_Speed_After_Stopping* 
+function to the Update function solved the stuttering problem.
+
+# Sequencing
+WIP
+
 # Varjo
 The varjo headset requires varjobase and SteamVR to work. To implement the varjo into unity, one needs the varjo plugin.
 
@@ -764,19 +776,128 @@ public void Destroy()
 lineDrawer.DrawLineInGameView(gameObject, gazeRayOrigin, gazeRayOrigin + gazeRayDirection * 10.0f, Color.green);
 ```
 
-## Positionsetter for varjo.
-With the old positionsetter you would appear floating on top of the prefab. This is due the headtracking of the HMD. 
-To solve this problem I adjusted the *PositionSetter* script. This snippet of code removes the height tracking of the HMD. 
-Resetting you back to the position of the prefab.
+## Crosshair + visibility
+Having to look at a laser which comes out of your eyes can be distracting. Thus, the laser is only made visible to the 
+pedestrian. The passenger sees a crosshair instead. 
+
+The crosshair is another laser, which is cut off at an arbitrary distance. Thus, the crosshair is the cross-section of a second laser.
 
 ```
+// Visualize the gaze vector for the pedestrian (hide for passenger)
+lineDrawer.DrawLineInGameView(gameObject, gazeRayOrigin, gazeRayOrigin + gazeRayDirection * 10.0f, Color.red, 0.01f, true);
+
+// Crosshair for passenger
+crossHair.DrawLineInGameView(gameObject, gazeRayOrigin + gazeRayDirection * 5.0f, gazeRayOrigin + gazeRayDirection * 10.0f, Color.green, 0.07f, false);
+```
+
+To hide the laser for the passenger, an *IgnoreForPassenger* layer is added. Linerenderers do not have layers by themselves. Thus a new gameobject is created
+with the layer set to *IgnoreForPassenger*. Next, on the varjocamera in the prefab, one needs to cull the mask by ignoring the *IgnoreForPassenger* layer.
+
+```
+// Create empty game object for the linerenderer to add layer. Laser
+var LaserObject = new GameObject();
+LaserObject.transform.parent = gameObject.transform.parent;
+LaserObject.layer = LayerMask.NameToLayer("IgnoreForPassenger");
+lineRenderer = LaserObject.AddComponent<LineRenderer>();
+```
+
+## Positionsetter for varjo.
+With the old positionsetter you would appear floating on top of the prefab. This is due the headtracking of the HMD. 
+To solve this problem I adjusted the *PositionSetter* script. This snippet of code removes the effect of the HMD position as compared to the passenger position. 
+Resetting you back to the position of the prefab.
+
+Firstly, we get the HMD position from the varjomanager, the head (target) position of the passenger and apply the changes by substracting the effect of the HMD.
+
+```
+// Get HMD pos
 hmdPosition = VarjoManager.Instance.GetHMDPosition(VarjoPlugin.PoseType.CENTER);
+
+// Get target pos
 changePos = target.position;
-if (hmdPosition.y > 0.0f)
-{
-	changePos.y = changePos.y - hmdPosition.y; 
-}
+
+// Effect of HMD on target pos
+rot = gameObject.transform.rotation.eulerAngles.y;
+determineAngle(rot, 25);
+effectHMD(rot_);
+
 transform.position = changePos;
+```
+
+The effect of the HMD is dependent on the rotation of the car prefab in the simulation world, thus two functions are created. 
+The effectHMD function removes the effect of the HMD from the position setter, however, the removal is dependent on the rotation of the HMD and the car prefab. 
+Thus, the function determineAngle is created to assign the corresponding angle, up to an angle difference diff, to a rotation category.
+
+```
+private void determineAngle(float rot, float diff)
+{
+	if (rot < (0+diff) || rot > (360-diff))          
+        {
+            rot_ = enumRot.Zero;
+        }
+        else if (rot > (90-diff) && rot < (90+diff))     
+        {
+            rot_ = enumRot.NineZero;
+        }
+        else if (rot > (180-diff) && rot < (180+diff))    
+        {
+            rot_ = enumRot.OneEightZero;
+        }
+        else if (rot > (270-diff) && rot < (270+diff))    
+        {
+            rot_ = enumRot.TwoSevenZero;
+        }
+        else
+        {
+            rot_ = enumRot.None;
+        }
+}
+```
+
+```
+private void effectHMD(enumRot rot_)
+{
+	switch (rot_)
+        {
+            case enumRot.Zero:
+                changePos.x = changePos.x - hmdPosition.x; 
+                changePos.z = changePos.z - hmdPosition.z + head_corr;
+                if (hmdPosition.y > 0.0f)
+                {
+                    changePos.y = changePos.y - hmdPosition.y;
+                }
+                break;
+            case enumRot.NineZero:
+                changePos.x = changePos.x - hmdPosition.z + head_corr;
+                changePos.z = changePos.z + hmdPosition.x;
+                if (hmdPosition.y > 0.0f)
+                {
+                    changePos.y = changePos.y - hmdPosition.y;
+                }
+                break;
+            case enumRot.OneEightZero:
+                changePos.x = changePos.x + hmdPosition.x;
+                changePos.z = changePos.z + hmdPosition.z - head_corr;
+                if (hmdPosition.y > 0.0f)
+                {
+                    changePos.y = changePos.y - hmdPosition.y;
+                }
+                break;
+            case enumRot.TwoSevenZero:
+                changePos.x = changePos.x + hmdPosition.z - head_corr;
+                changePos.z = changePos.z - hmdPosition.x;
+                if (hmdPosition.y > 0.0f)
+                {
+                    changePos.y = changePos.y - hmdPosition.y;
+                }
+                break;
+            case enumRot.None:
+                if (hmdPosition.y > 0.0f)
+                {
+                    changePos.y = changePos.y - hmdPosition.y;
+                }
+                break;
+	}
+}
 ```
 
 ## Adding eye-tracking to the prefab
