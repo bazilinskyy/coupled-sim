@@ -40,7 +40,8 @@ public class ExperimentManager : MonoBehaviour
         gameState.SetGameState(GameStates.Waiting);
 
         GoToWaitingRoom();
-        SetupExperiments();
+        SetUpExperiments();
+        SetUpCar();
 
         
     }
@@ -74,8 +75,6 @@ public class ExperimentManager : MonoBehaviour
             if (IsNextNavigation())
             {
                 Debug.Log("Loading next experiment...");
-                //RenderUI
-                //StartCoroutine(RenderStartScreenText());
                 SetupNextExperiment();
             }
             else
@@ -87,7 +86,7 @@ public class ExperimentManager : MonoBehaviour
         }
     }
 
-    void SetupExperiments()
+    void SetUpExperiments()
     {
         //Get ordered lit of navigations
         experimentList = new List<Experiment>();
@@ -118,9 +117,6 @@ public class ExperimentManager : MonoBehaviour
 
     void SetupNextExperiment()
     {
-        //Set current navigation to inactive
-        activeExperiment.SetActive(false);
-
         //Activate next experiment (should only get here if we actually hjave anext experiment)
         ActivateNextExperiment();
 
@@ -134,7 +130,7 @@ public class ExperimentManager : MonoBehaviour
 
     void SetUpCar()
     {
-        Debug.Log("Moving the car!");
+        Debug.Log("Setting up car...");
         //Set new navigation for car
         car.navigation = activeExperiment.navigation;
 
@@ -146,6 +142,7 @@ public class ExperimentManager : MonoBehaviour
 
         //Put car in right position
         Transform startLocation = activeNavigationManager.GetStartPointNavigation();
+
         car.transform.position = startLocation.position;
         car.transform.rotation = startLocation.rotation;
     }
@@ -196,12 +193,17 @@ public class ExperimentManager : MonoBehaviour
     }
     void ActivateNextExperiment()
     {
+        //Deactivate current experiment
+        activeExperiment.SetActive(false);
+
         int currentIndex = GetIndexCurrentExperiment();
         activeExperiment = experimentList[currentIndex + 1];
         if (activeExperiment == null) { throw new System.Exception("Something went wrong in ExperimentManager --> ActivateNextExperiment "); }
 
         activeExperiment.SetActive(true);
         activeNavigationManager = activeExperiment.navigation.GetComponent<NavigationManager>();
+
+        Debug.Log("Experiment " + activeExperiment.navigation.name + " loaded");
     }
 }
 [System.Serializable]

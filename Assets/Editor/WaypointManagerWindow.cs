@@ -62,7 +62,7 @@ public class WaypointManagerWindow : EditorWindow
             }
             if (GUILayout.Button("Create spline point"))
             {
-                CreateNewWaypoint(Operation.TurnLeft, true);
+                CreateNewWaypoint(Operation.None, true);
                 UpdateWaypointOrderList();
             }
 
@@ -181,7 +181,7 @@ public class WaypointManagerWindow : EditorWindow
             selectedWaypoint.extraSplinePoint = false;
         }
 
-        if (operation == Operation.TurnRight)
+        else if (operation == Operation.TurnRight)
         {
             //Quaternion rotation = selectedWaypoint.previousWaypoint.transform.rotation;
             //selectedWaypoint.transform.rotation = Quaternion.Euler(rotation.x, rotation.y + 90, rotation.z);
@@ -194,6 +194,10 @@ public class WaypointManagerWindow : EditorWindow
             //selectedWaypoint.transform.rotation = Quaternion.Euler(rotation.x, rotation.y - 90, rotation.z);
             selectedWaypoint.transform.Rotate(Vector3.up * -90, Space.World);
             selectedWaypoint.extraSplinePoint = true;
+        }
+        else if (operation == Operation.None)
+        {
+            selectedWaypoint.operation = operation;
         }
 
         //set attributes of new waypoint
