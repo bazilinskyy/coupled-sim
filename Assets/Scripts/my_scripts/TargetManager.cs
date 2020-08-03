@@ -15,6 +15,8 @@ public class TargetManager : MonoBehaviour
     public int maxRandomRayHits = 40;
     public XMLManager dataManager;
 
+    public GameState gameState;
+
     // Start is called before the first frame update
     void Awake()
     {
@@ -26,10 +28,9 @@ public class TargetManager : MonoBehaviour
     void Update()
     {
  
-        if (Input.GetKeyDown(pressKeyCode))
+        if (Input.GetKeyDown(pressKeyCode) && gameState.isExperiment())
         {
             ProcessUserInput();
-            print("You pressed " + pressKeyCode);
         }
     }
 
@@ -66,9 +67,6 @@ public class TargetManager : MonoBehaviour
             throw new System.Exception("Counting two visible targets.... This is not implemented yet");
         }
     }
-
-   
-
 
     Vector3 GetRandomPerpendicularVector(Vector3 vec) {
         

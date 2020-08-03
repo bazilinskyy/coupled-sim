@@ -2,11 +2,12 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using System.Linq;
 
 public class ExperimentManager : MonoBehaviour
 {
-    
-    public List<Experiment> experimentList;
+    public Transform navigationRoot;
+    private List<Experiment> experimentList;
     public Navigator car;
     private Experiment activeExperiment;
     private NavigationManager activeNavigationManager;
@@ -18,21 +19,15 @@ public class ExperimentManager : MonoBehaviour
     public Transform varjoCam;
     public Transform normalCam;
     private Transform usedCam;
+    public Transform headPosition;
     //UI objects
     public Text UIText;
     public KeyCode key = KeyCode.F1;
 
-    private GameStates gameState;
-    public GameStates _gameState;
+    public GameState gameState;
+    
 
     public Transform waitingRoom;
-
-    public enum GameStates{
-        Experiment,
-        Waiting,
-        Transition,
-        Ended
-    }
 
     // Start is called before the first frame update
     void Awake()
@@ -42,9 +37,11 @@ public class ExperimentManager : MonoBehaviour
         if (usingVarjo) { usedCam = varjoCam; }
         else { usedCam = normalCam; }
 
-        
+        gameState.SetGameState(GameStates.Waiting);
+
         GoToWaitingRoom();
-        SetupFirstExperiment();
+        SetupExperiments();
+
         
     }
 
@@ -52,24 +49,25 @@ public class ExperimentManager : MonoBehaviour
     void Update()
     {
        
-        if (gameState == GameStates.Transition)
+        if (gameState.isTransition())
         {
-            gameState = GameStates.Waiting;
+            gameState.SetGameState(GameStates.Waiting);
+            //should dim lights in here and than go to the waiting room
             GoToWaitingRoom();
         }
         
-        if (gameState == GameStates.Waiting)
+        if (gameState.isWaiting())
         {
             if (Input.GetKeyDown(key)){
                 //should dim lights in here and than start experiment
-                gameState = GameStates.Experiment;
-                StartExperiment();
+                gameState.SetGameState(GameStates.Experiment);
+                ReturnToCar(); 
             }
         }
         //if we finished a navigation we go to the waiting room
         if (NavigationFinished())
          {
-            gameState = GameStates.Transition;
+            gameState.SetGameState(GameStates.Transition);
             //Should dim lights and then go to waiting room
             
             Debug.Log("Navigation finished...");
@@ -89,9 +87,24 @@ public class ExperimentManager : MonoBehaviour
         }
     }
 
-    void SetupFirstExperiment()
+    void SetupExperiments()
     {
+        //Get ordered lit of navigations
+        experimentList = new List<Experiment>();
+        List<Experiment> unOrderedList = new List<Experiment>();
+
+        foreach ( Transform child in navigationRoot)
+        {
+            Experiment experiment = new Experiment(); ;
+            experiment.navigation = child.gameObject;
+            experiment.SetActive(false);
+            unOrderedList.Add(experiment);
+        }
+        experimentList = unOrderedList.OrderBy(a => a.navigation.name).ToList();
+
+        // Set active experiment
         activeExperiment = experimentList[0];
+        activeExperiment.SetActive(true);
         activeNavigationManager = activeExperiment.navigation.GetComponent<NavigationManager>();
     }
 
@@ -108,13 +121,34 @@ public class ExperimentManager : MonoBehaviour
         //Set current navigation to inactive
         activeExperiment.SetActive(false);
 
-        //Activate next experiment
+        //Activate next experiment (should only get here if we actually hjave anext experiment)
         ActivateNextExperiment();
-        
+
+        //set up car (Should always be after activating the new experiment!)
+        SetUpCar();
+
+
         //TODO do stuff with XML manager
         //change rootwaypoints and datafile names etc etc
     }
 
+    void SetUpCar()
+    {
+        Debug.Log("Moving the car!");
+        //Set new navigation for car
+        car.navigation = activeExperiment.navigation;
+
+        //Set new waypoint target
+        Waypoint target = activeNavigationManager.GetFirstTarget();
+        car.target = target;
+
+        car.reachedTarget = false;
+
+        //Put car in right position
+        Transform startLocation = activeNavigationManager.GetStartPointNavigation();
+        car.transform.position = startLocation.position;
+        car.transform.rotation = startLocation.rotation;
+    }
     IEnumerator RenderStartScreenText()
     {
         Debug.Log("Rendering startscreen...");
@@ -125,9 +159,9 @@ public class ExperimentManager : MonoBehaviour
     void ReturnToCar()
     {
         Debug.Log("Returning to car...");
-        usedCam.transform.position = car.transform.position + new Vector3(0,0.2f,0);
-        usedCam.transform.rotation = car.transform.rotation;
-        usedCam.transform.Rotate(new Vector3(0, 1f, 0), -90);
+        usedCam.transform.position = headPosition.position;
+        usedCam.transform.rotation = headPosition.rotation;
+        //usedCam.transform.Rotate(new Vector3(0, 1f, 0), -90);
 
     }
 
@@ -147,25 +181,7 @@ public class ExperimentManager : MonoBehaviour
 
     }
 
-    void StartExperiment()
-    {
-        Debug.Log("Starting Experiment....");
-
-        //Set new navigation for car
-        car.navigation = activeExperiment.navigation;
-
-        //Set new waypoint target
-        Waypoint target = activeNavigationManager.GetFirstTarget();
-        car.target = target;
-
-        //Put car in right position
-        Transform startLocation = activeNavigationManager.GetStartPointNavigation();
-        car.transform.position = startLocation.position;
-        car.transform.rotation = startLocation.rotation;
-
-        ReturnToCar();
-        
-    }
+ 
     bool IsNextNavigation()
     {
         //If this is not the last experiment in the list return true else false

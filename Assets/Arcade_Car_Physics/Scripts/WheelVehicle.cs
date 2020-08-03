@@ -16,14 +16,15 @@ namespace VehicleBehaviour {
     [RequireComponent(typeof(Rigidbody))]
     public class WheelVehicle : MonoBehaviour {
         
+        
         [Header("Inputs")]
     #if MULTIOSCONTROLS
         [SerializeField] PlayerNumber playerId;
     #endif
         // If isPlayer is false inputs are ignored
         [SerializeField] bool isPlayer = true;
-        public bool IsPlayer { get{ return isPlayer; } set{ isPlayer = value; } } 
-
+        public bool IsPlayer { get{ return isPlayer; } set{ isPlayer = value; } }
+        public GameState gameState;
         // Input names to read using GetAxis
         [SerializeField] string throttleInput = "Throttle";
         [SerializeField] string brakeInput = "Brake";
@@ -280,6 +281,14 @@ namespace VehicleBehaviour {
         public float steeringWheelMul = -2;
         // Update everything
         void FixedUpdate () {
+            //If we have a gamestate variable and experiment is not in progress -> skip any movement
+            if(gameState != null)
+            {
+                if (!gameState.isExperiment())
+                {
+                    return;
+                }
+            }
             // Mesure current speed
             speed = transform.InverseTransformDirection(_rb.velocity).z * 3.6f;
 
@@ -293,12 +302,10 @@ namespace VehicleBehaviour {
                     
                     throttle = GetInput(throttleInput) * (reverse ? -1f : 1);
 
-                    if(GetInput(throttleInput) < 0)
+                   /* if(GetInput(throttleInput) < 0)
                     {
                         throttle = 0;
-                    }
-                  
-                    
+                    }       */                 
                 }
                 
                 if (brakeInput != "" && brakeInput != null)
@@ -311,10 +318,11 @@ namespace VehicleBehaviour {
                     else { breaking = 0; }
                 }
                 else { breaking = 0; }//                Debug.Log("Brake input: " + GetInput(brakeInput)); }
-                
+
+                //Debug.Log(throttle);
                 //Debug.Log(throttleInput + ": " + GetInput(throttleInput) + ", breaking: " + breaking);
 
-                // Turn
+                //// Turn
                 //Debug.Log("Turn input: " + GetInput(turnInput));
                 steering = turnInputCurve.Evaluate(GetInput(turnInput)) * steerAngle;
             }
