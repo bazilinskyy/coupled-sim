@@ -6,6 +6,11 @@ using UnityEngine;
 [RequireComponent(typeof(MeshFilter))]
 public class SplineCreator : MonoBehaviour
 {
+
+	public RoadParameters roadParameters;
+
+	public int pointsPerSpline = 100;
+
 	//Has to be at least 4 points
 	public Vector3[] pointList;
 	public bool showGizmos = true;
@@ -107,33 +112,283 @@ public class SplineCreator : MonoBehaviour
 	//Display without having to press play
 	void OnDrawGizmos()
 	{
-		UpdateControlPoints();
-		CheckForChanges();
-		//if number of children change --> update mesh
-		if (currentChildCount != transform.childCount)
+
+		Gizmos.color = Color.cyan;
+		if (showGizmos)
 		{
-			UpdateMesh();
-			currentChildCount = transform.childCount;
+			List<Waypoint> waypointList = transform.GetComponent<NavigationManager>().GetOrderedWaypointList();
+
+			Vector3[] points = GetNavigationLine(waypointList);
+			//Set forward direction of splinepoints based on acquired spline
+			SetForwardDirectionSplinePoints(waypointList, points);
+			//Check if repearting elements in spline points
+			printRepeating(points);
+
+			DrawGizmoLines(points);
+		}
+	}
+
+	void DrawGizmoLines(Vector3[] points)
+	{
+		for(int i =0; i<(points.Length-1); i++)
+		{
+			Gizmos.DrawLine(points[i], points[i + 1]);
+		}
+	}
+
+	void printRepeating(Vector3[] arr)
+	{
+		int size = arr.Length;
+		int i, j;
+		
+		for (i = 0; i < size; i++)
+			for (j = i + 1; j < size; j++)
+				if (arr[i] == arr[j])
+					Debug.Log($"Index {i} == {j} = {arr[i].ToString()}....");
+	}
+	private Vector3[] GetNavigationLine(List<Waypoint> waypointList)
+	{
+
+		//List of potetnial spline points
+		List<Waypoint> splineList = new List<Waypoint>();
+		bool addedSplineWaypoints = false;
+
+		Vector3[] points = new Vector3[0];//Array of navigation points
+		Vector3[] pointSet; //Array of splinePoints
+
+		//loop trough points and draw gizmos based on operation of waypoints and roadParameters
+		foreach (Waypoint waypoint in waypointList)
+		{
+			//If we encounter spline points we will add these to splineList untill we reach a non-spline point
+			if (waypoint.operation == Operation.SplinePoint) {
+				splineList.Add(waypoint);
+				addedSplineWaypoints = true;
+				continue;
+				}
+			//Draw all the spline points and clear the list
+			if (addedSplineWaypoints) {
+				//Adds this non-spline point as spline point (As we have to finish here)
+				splineList.Add(waypoint);
+				pointSet = GetSplinePoints(splineList);
+				points = AppendArrays(points, pointSet);
+				// Clear list and set bool to false
+				splineList.Clear();
+				addedSplineWaypoints = false;
+			}
+			//Then continue as normal
+			pointSet = GetPointsWaypoint(waypoint);
+			points = AppendArrays(points, pointSet);
+			
+		}
+		return points;
+	}
+
+	private Vector3[] GetPointsWaypoint(Waypoint waypoint)
+	{
+		//Never adds the next waypoints to the point list
+		//So we add up to the current waypoint
+		Vector3[] points = new Vector3[0];
+		if (waypoint.operation == Operation.StartPoint || waypoint.operation == Operation.Straight || waypoint.operation == Operation.None || waypoint.operation == Operation.EndPoint) { 
+			points = new Vector3[] { waypoint.transform.position }; }
+		else if (waypoint.operation == Operation.TurnRightLong || waypoint.operation == Operation.TurnRightShort || waypoint.operation == Operation.TurnLeftLong) { 
+			points = GetPointsCorner(waypoint); }
+		
+		return points;
 		}
 
-		Gizmos.color = Color.white;
 
-		if (pointList.Length > 4)
+	private Vector3[] GetPointsCorner(Waypoint waypoint)
+	{
+		//get radius based on waypoint oepration and raodParameter scriptable variable
+		float radius;
+		if (waypoint.operation == Operation.TurnRightShort) { radius = roadParameters.radiusShort; }
+		else { radius = roadParameters.radiusLong; }
+		
+		//Get half circle in x,y frame
+		Vector2[] quarterCircle = GetQuarterCircle(radius, pointsPerSpline, waypoint.operation);
+
+		//Transpose circle to the current waypoint position and rotation
+		Vector3[] points = TransformVector2ToVector3(quarterCircle);
+		points = TransposePoints(waypoint, points);
+
+		return points;
+		
+	}
+
+	private Vector3[] RemoveLastElementVector3(Vector3[] array)
+	{
+		Vector3[] arrayOut = new Vector3[array.Length - 1];
+		System.Array.Copy(array, 0, arrayOut, 0, arrayOut.Length);
+		return arrayOut;
+	}
+	private Vector3[] TransposePoints(Waypoint waypoint, Vector3[] circle)
+	{
+		//Transposes points to be in a frame (forward,perpendicular2forward, worldY)  
+		//Input circle is vector3[] in the x,y,z frame
+
+		//z = worldy
+		//y = forward
+		//x = perp2forward
+		Vector3 worldY = new Vector3(0, 1f, 0);
+		Vector3 forward = waypoint.transform.forward;
+		Vector3 perp2forward = -Vector3.Cross(forward, worldY); //Has two possibilities, has to be the minus one
+
+		Vector3 waypointPosition = waypoint.transform.position;
+		
+
+		//Make homogeneous transformation matrix
+		Vector4 x = new Vector4(perp2forward.x, perp2forward.y, perp2forward.z, 0);
+		Vector4 y = new Vector4(forward.x, forward.y, forward.z, 0);
+		Vector4 z = new Vector4(worldY.x, worldY.y, worldY.z, 0);
+		Vector4 t = new Vector4(waypointPosition.x, waypointPosition.y, waypointPosition.z, 1);
+
+		Matrix4x4 rotationMatrix = new Matrix4x4(x, y, z, t);
+
+		//Transpose points
+		for (int v = 0; v < circle.Length; v++)
 		{
-			//Draw the Catmull-Rom spline between the points
-			for (int i = 0; i < pointList.Length; i++)
+			circle[v] = rotationMatrix.MultiplyPoint3x4(circle[v]);
+		}
+		return circle;
+	}
+
+	private Vector3[] TransformVector2ToVector3(Vector2[] points, float z = 0)
+	{
+		//Transform array of vector2 to vector3 with z
+		Vector3[] newPoints = new Vector3[points.Length];
+		for(int i = 0; i < points.Length; i++)
+		{
+			newPoints[i] = new Vector3(points[i].x, points[i].y, z);
+		}
+		return newPoints;
+	}
+	private Vector2[] GetQuarterCircle(float radius, int numberOfPoints, Operation operation)
+	{
+		//returns quarter circle in the x,y frame 
+		//operation -> right --> (0,0) to (radius,radius)
+		//operation -> left --> (0,0) to (-radius, radius)
+		Vector2[] pointsCircle = new Vector2[numberOfPoints];
+
+		float radStep = Mathf.PI / 2 / numberOfPoints;
+
+		int sign = 1;
+		if(operation == Operation.TurnLeftLong) { sign = -1; }
+		//- PI to 0 gets a half circle to the right
+		for (int i = 0; i < numberOfPoints; i++)
+		{
+			float radians = -Mathf.PI / 2 + i * radStep;
+			float x = sign * (radius * Mathf.Sin(radians) + radius);
+			float y = radius * Mathf.Cos(radians);
+
+			pointsCircle[i] = new Vector2(x,y);
+		}
+		return pointsCircle;
+	}
+
+	private Vector3[] GetSplinePoints(List<Waypoint> splineList)
+	{
+		//Contains points which have to be used for the creation of the spline
+		Vector3[] mainSplinePoints = GetMainSplinePoints(splineList);
+		//WIll contain all points in the spline
+		Vector3[] allSplinePoints = new Vector3[0];
+		//Will contain points for each specific spline
+		Vector3[] catmullRomSpline;
+		for ( int i=1; i<(mainSplinePoints.Length-2); i++)
+		{
+			Vector3 p0 = mainSplinePoints[i - 1];
+			Vector3 p1 = mainSplinePoints[i];
+			Vector3 p2 = mainSplinePoints[i + 1];
+			Vector3 p3 = mainSplinePoints[i + 2];
+
+			catmullRomSpline = CatmullRomSpline(p0, p1, p2, p3);
+			allSplinePoints = AppendArrays(allSplinePoints, catmullRomSpline);
+
+			DrawCatmullSpline(catmullRomSpline);
+		}
+
+		allSplinePoints = RemoveLastElementVector3(allSplinePoints);
+
+		return allSplinePoints;
+	}
+
+	private Vector3[] AppendArrays( Vector3[] arr1, Vector3[] arr2)
+	{
+		Vector3[] arrOut = new Vector3[arr1.Length + arr2.Length];
+		System.Array.Copy(arr1, arrOut, arr1.Length);
+		System.Array.Copy(arr2, 0, arrOut, arr1.Length, arr2.Length);
+		return arrOut;
+	}
+
+	void SetForwardDirectionSplinePoints(List<Waypoint> waypoints, Vector3[] splinePoints)
+	{
+
+		bool lastPointWasSpline = false;
+		foreach ( Waypoint waypoint in waypoints)
+		{
+			
+			if (waypoint.operation == Operation.SplinePoint)
 			{
-				//Cant draw between the endpoints
-				//Neither do we need to draw from the second to the last endpoint
-				//...if we are not making a looping line
-				if ((i == 0 || i == pointList.Length - 2 || i == pointList.Length - 1))
+				lastPointWasSpline = true;
+				//Set forward direction of waypoint
+				int index = System.Array.FindIndex(splinePoints, element => (element == waypoint.transform.position));
+				Vector3 forward = splinePoints[index + 1] - splinePoints[index];
+				if (!(forward == Vector3.zero))
 				{
-					continue;
+					waypoint.transform.forward = forward.normalized;
 				}
 
-				DisplayCatmullRomSpline(i);
 			}
-		}		
+			else if (lastPointWasSpline)
+			{
+				//This is the waypoint which the last spline point is connected to
+				//Set forward direction of waypoint
+				int index = System.Array.FindIndex(splinePoints, element => (element == waypoint.transform.position));
+				if (index >= 0)
+				{
+					Vector3 forward = splinePoints[index] - splinePoints[index - 1];
+					if (!(forward == Vector3.zero))
+					{
+						waypoint.transform.forward = forward.normalized;
+					}
+
+				}
+				lastPointWasSpline = false;
+
+			}
+		}
+
+	}
+	void DrawCatmullSpline(Vector3[] spline)
+	{
+		for(int i=0; i<(spline.Length-1); i++)
+		{
+			Gizmos.DrawLine(spline[i], spline[i + 1]);
+		}
+	}
+	private Vector3[] GetMainSplinePoints(List<Waypoint> waypoints)
+	{
+		//We want a spline starting at waypoints [0] up to waypoint[waypoints.Count]
+		//CatmullRomSpline doesnt render the first and last point
+		//So we add a point to the beginning and to the end in proper directions
+
+		Vector3[] mainSplinePoints = new Vector3[waypoints.Count + 2];
+		//First and last waypoints
+		Waypoint firstWaypoint = waypoints[0]; Waypoint lastWaypoint = waypoints.Last();
+		//Extra splinepoints to beginning and end
+		Vector3 firstSplinePoint = firstWaypoint.transform.position - firstWaypoint.transform.forward;
+		Vector3 lastSplinePoint = lastWaypoint.transform.position + lastWaypoint.transform.forward;
+		mainSplinePoints[0] = firstSplinePoint;
+		mainSplinePoints[waypoints.Count + 1] = lastSplinePoint;
+
+		//Add positions of all spline points
+		int splineCnt = 1;
+		foreach (Waypoint waypoint in waypoints)
+		{
+			mainSplinePoints[splineCnt] = waypoint.transform.position;
+			splineCnt++;
+		}
+		
+		return mainSplinePoints;
 	}
 	//Populate controlpoint list with children form waypointROot
 	public void UpdateControlPoints()
@@ -390,60 +645,30 @@ public class SplineCreator : MonoBehaviour
 	}
 
 	//Display a spline between 2 points derived with the Catmull-Rom spline algorithm
-	void DisplayCatmullRomSpline(int pos)
-	{
-		if (showGizmos)
+	private Vector3[] CatmullRomSpline(Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3)
+	{ 
+		//Initiate spline
+		Vector3[] catmullRomSpline = new Vector3[pointsPerSpline ];
+		//Add startpoint
+		catmullRomSpline[0] = p1;
+
+		//The start position of the line
+		Vector3 lastPos = p1;		
+		//Get spline points
+		for (int i = 1; i < pointsPerSpline; i++)
 		{
-			Vector3 verticeA, verticeB, yDirection, sideDirection;
-			yDirection = new Vector3(0, 1, 0);
+			//Which t position are we at?
+			float t = (float)i / (float)pointsPerSpline;
 
-			//The 4 points we need to form a spline between p1 and p2
-			Vector3 p0 = pointList[ClampListPos(pos - 1)];
-			Vector3 p1 = pointList[pos];
-			Vector3 p2 = pointList[ClampListPos(pos + 1)];
-			Vector3 p3 = pointList[ClampListPos(pos + 2)];
+			//Find the coordinate between the end points with a Catmull-Rom spline
+			Vector3 newPos = GetCatmullRomPosition(t, p0, p1, p2, p3);
 
-			//The start position of the line
-			Vector3 lastPos = p1;
-			Gizmos.color = Color.yellow;
-			float noise_level = .5f;
-			float noise = UnityEngine.Random.Range(-noise_level, noise_level);
-			Vector3 p1_random = new Vector3(p1.x + noise, p1.y + noise, p1.z + noise);
-			Gizmos.DrawSphere(p1, 0.35f);
-			//The spline's resolution
-
-
-			//How many times should we loop?
-			int loops = Mathf.FloorToInt(1f / resolution);
-
-			for (int i = 1; i <= loops; i++)
-			{
-				//Which t position are we at?
-				float t = i * resolution;
-
-				//Find the coordinate between the end points with a Catmull-Rom spline
-				Vector3 newPos = GetCatmullRomPosition(t, p0, p1, p2, p3);
-
-				sideDirection = Vector3.Normalize(Vector3.Cross(newPos - lastPos, yDirection));
-				verticeA = lastPos + sideDirection * navWidth;
-				verticeB = lastPos - sideDirection * navWidth;
-
-				{
-					Gizmos.color = Color.red;
-					Gizmos.DrawSphere(verticeA, 0.1f);
-				}
-				{
-					Gizmos.color = Color.green;
-					Gizmos.DrawSphere(verticeB, 0.1f);
-				}
-				
-				//Draw this line segment
-				Gizmos.DrawLine(lastPos, newPos);
-
-				//Save this pos so we can draw the next line segment
-				lastPos = newPos;
-			}
+			//Add to spline list
+			catmullRomSpline[i] = newPos;
+			//Save this pos so we can draw the next line segment
+			lastPos = newPos;
 		}
+		return catmullRomSpline;
 	}
 
 	//Clamp the list positions to allow looping

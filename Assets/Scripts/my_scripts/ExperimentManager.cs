@@ -46,25 +46,31 @@ public class ExperimentManager : MonoBehaviour
         
     }
 
-    // Update is called once per frame
-    void Update()
+    private void LateUpdate()
     {
-       
         if (gameState.isTransition())
         {
             gameState.SetGameState(GameStates.Waiting);
             //should dim lights in here and than go to the waiting room
             GoToWaitingRoom();
         }
-        
         if (gameState.isWaiting())
         {
-            if (Input.GetKeyDown(key)){
+            if (Input.GetKeyDown(key))
+            {
                 //should dim lights in here and than start experiment
                 gameState.SetGameState(GameStates.Experiment);
-                ReturnToCar(); 
+                ReturnToCar();
             }
         }
+    }
+    // Update is called once per frame
+    void Update()
+    {
+       
+        
+        
+        
         //if we finished a navigation we go to the waiting room
         if (NavigationFinished())
          {
@@ -165,7 +171,7 @@ public class ExperimentManager : MonoBehaviour
     void GoToWaitingRoom()
     {
         Debug.Log("Going to waiting room...");
-        usedCam.transform.position = waitingRoom.transform.position + new Vector3(0, 1f, 0);
+        usedCam.transform.position = waitingRoom.transform.position + new Vector3(0, 3f, -3f);
 
         StartCoroutine(RenderStartScreenText());
     }

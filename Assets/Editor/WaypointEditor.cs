@@ -31,15 +31,15 @@ public class WaypointEditor
 
         DrawGameObjectName(waypoint, gizmoType);
 
-        Gizmos.DrawSphere(waypoint.transform.position, .1f);
+      /*  Gizmos.DrawSphere(waypoint.transform.position, .1f);
         Gizmos.color = Color.green;
        
         if(waypoint.nextWaypoint != null){
 
             Gizmos.DrawLine(waypoint.transform.position, waypoint.nextWaypoint.transform.position);
-        }
+        }*/
         Gizmos.color = Color.red;
-        Gizmos.DrawLine(waypoint.transform.position, waypoint.transform.position + waypoint.transform.forward * 1f);
+        Gizmos.DrawLine(waypoint.transform.position, waypoint.transform.position + waypoint.transform.forward * 3f);
     }
 
 }

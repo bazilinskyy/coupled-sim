@@ -23,7 +23,7 @@ namespace VarjoExample
 
         void Update()
         {
-            float turnLeft = Input.GetKey(KeyCode.Z) ? -1.0f : 0.0f;
+            float TurnLeftLong = Input.GetKey(KeyCode.Z) ? -1.0f : 0.0f;
             float turnRight = Input.GetKey(KeyCode.X) ? 1.0f : 0.0f;
 
             float forward = Input.GetKey(KeyCode.W) ? 1.0f : 0.0f;
@@ -35,7 +35,7 @@ namespace VarjoExample
             float up = Input.GetKey(KeyCode.E) ? 1.0f : 0.0f;
             float down = Input.GetKey(KeyCode.Q) ? 1.0f : 0.0f;
 
-            transform.RotateAround(VarjoManager.Instance.HeadTransform.position, Vector3.up, turnSpeed * turnLeft * Time.deltaTime);
+            transform.RotateAround(VarjoManager.Instance.HeadTransform.position, Vector3.up, turnSpeed * TurnLeftLong * Time.deltaTime);
             transform.RotateAround(VarjoManager.Instance.HeadTransform.position, Vector3.up, turnSpeed * turnRight * Time.deltaTime);
 
             transform.Translate(VarjoManager.Instance.HeadTransform.up * moveSpeed * up * Time.deltaTime, Space.World);

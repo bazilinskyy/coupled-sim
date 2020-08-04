@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
 
 public class NavigationManager : MonoBehaviour
 {
@@ -14,9 +15,9 @@ public class NavigationManager : MonoBehaviour
         if (child.GetComponent<Waypoint>().operation == Operation.StartPoint)
         {
             //Reduce height by height of system (the waypoint system is above the ground....) 
-            startPoint = child;
+            
             float heightSystem = this.GetComponent<SplineCreator>().heightSystem;
-            startPoint.position = startPoint.position - new Vector3(0, heightSystem, 0);
+            startPoint.position = child.position - new Vector3(0, heightSystem, 0);
         }
     }
     return startPoint;
@@ -37,5 +38,19 @@ public class NavigationManager : MonoBehaviour
         if (waypoint == null) { throw new System.Exception("Something went wrong in NavigationManager --> GetFirstTarget()"); }
 
         return waypoint;
+    }
+
+    public List<Waypoint> GetOrderedWaypointList()
+    {
+        List<Waypoint> waypointList = new List<Waypoint>();
+        foreach(Transform child in transform)
+        {
+            waypointList.Add(child.GetComponent<Waypoint>());
+        }
+         
+        //Order by id's
+        List<Waypoint> orderedWaypointList = waypointList.OrderBy(a => a.orderId).ToList();
+        return orderedWaypointList;
+
     }
 }

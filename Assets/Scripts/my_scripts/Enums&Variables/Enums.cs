@@ -1,11 +1,13 @@
 ﻿
 public enum Operation
 {
-    TurnRight,
-    TurnLeft,
+    TurnRightShort,
+    TurnRightLong,
+    TurnLeftLong,
     Straight,
     EndPoint,
     StartPoint,
+    SplinePoint,
     None
 }
 

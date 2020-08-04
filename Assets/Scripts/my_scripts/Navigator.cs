@@ -289,12 +289,12 @@ public class Navigator : MonoBehaviour
     void RenderNavigationArrow()
     {
         Transform arrows = HUD.transform.Find("Arrows");
-        if (target.operation == Operation.TurnRight)
+        if (target.operation == Operation.TurnRightShort)
         {
             //Debug.Log("Should render right");
             arrows.gameObject.GetComponent<MeshRenderer>().material = right;
         }
-        else if (target.operation == Operation.TurnLeft)
+        else if (target.operation == Operation.TurnLeftLong)
         {
             //Debug.Log("Should render left");
             arrows.gameObject.GetComponent<MeshRenderer>().material = left;
@@ -324,11 +324,11 @@ public class Navigator : MonoBehaviour
         {
             rendered_distance = 0;
         }
-        if (target.operation == Operation.TurnRight)
+        if (target.operation == Operation.TurnRightShort)
         {
             text_mesh.text = rendered_distance + "m";
         }
-        else if (target.operation == Operation.TurnLeft)
+        else if (target.operation == Operation.TurnLeftLong)
         {
             text_mesh.text = rendered_distance + "m";
         }

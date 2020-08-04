@@ -237,6 +237,7 @@ namespace VehicleBehaviour {
             // Get all the inputs!
             if (isPlayer)
             {
+                reverse = false;
                 //TODO find out what is going on here?
                 /*if (Input.GetButtonDown("forward"))
                 {
@@ -245,9 +246,9 @@ namespace VehicleBehaviour {
                 else if (Input.GetButtonDown("reverse"))
                 {
                     reverse = true;
-                }*/
+                }
 
-                /*if (Input.GetButtonDown("blinker_left"))
+                if (Input.GetButtonDown("blinker_left"))
                 {
                     if (blinkers.State != BlinkerState.Left)
                     {
@@ -286,6 +287,9 @@ namespace VehicleBehaviour {
             {
                 if (!gameState.isExperiment())
                 {
+                    speed = 0;
+                    _rb.velocity = new Vector3(0,0,0);
+                    _rb.angularVelocity = new Vector3(0, 0, 0);
                     return;
                 }
             }
@@ -307,6 +311,7 @@ namespace VehicleBehaviour {
                         throttle = 0;
                     }       */                 
                 }
+                else { throttle = 0; }
                 
                 if (brakeInput != "" && brakeInput != null)
                 {
@@ -455,7 +460,11 @@ namespace VehicleBehaviour {
 #if MULTIOSCONTROLS
         return MultiOSControls.GetValue(input, playerId);
 #else
+        
+        
         return Input.GetAxis(input);
+
+
 #endif
         }
     }

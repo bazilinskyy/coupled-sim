@@ -13,13 +13,13 @@ public class WaypointManagerWindow : EditorWindow
 
     public Transform waypointRoot;
     public GameObject targetPrefab;
-    public List<Waypoint> waypointOrderList;
-
+    public RoadParameters roadParameters;
     private void OnGUI()
     {
         SerializedObject obj = new SerializedObject(this);
         EditorGUILayout.PropertyField(obj.FindProperty("waypointRoot"));
         EditorGUILayout.PropertyField(obj.FindProperty("targetPrefab"));
+        EditorGUILayout.PropertyField(obj.FindProperty("roadParameters"));
 
         if (waypointRoot == null)
         {
@@ -36,8 +36,6 @@ public class WaypointManagerWindow : EditorWindow
             DrawButtons();
             EditorGUILayout.EndVertical();
         }
-
-
         obj.ApplyModifiedProperties();
     }
 
@@ -45,108 +43,76 @@ public class WaypointManagerWindow : EditorWindow
     {
         if (Selection.activeGameObject != null && Selection.activeGameObject.GetComponent<Waypoint>())
         {
-            if (GUILayout.Button("Create straight"))
-            {
-                CreateNewWaypoint(Operation.Straight);
-                UpdateWaypointOrderList();
-            }
-            if (GUILayout.Button("Create right"))
-            {
-                CreateNewWaypoint(Operation.TurnRight);
-                UpdateWaypointOrderList();
-            }
-            if (GUILayout.Button("Create left"))
-            {
-                CreateNewWaypoint(Operation.TurnLeft);
-                UpdateWaypointOrderList();
-            }
-            if (GUILayout.Button("Create spline point"))
-            {
-                CreateNewWaypoint(Operation.None, true);
-                UpdateWaypointOrderList();
-            }
+            if (GUILayout.Button("Create straight")) { CreateNewWaypoint(Operation.Straight); }
 
-            if (GUILayout.Button("Remove Waypoint"))
-            {
-                RemoveWaypoint();
-                UpdateWaypointOrderList();
-            }
+            if (GUILayout.Button("Create short right turn")) { CreateNewWaypoint(Operation.TurnRightShort); }
 
-            if (GUILayout.Button("Create end point"))
-            {
-                CreateEndWaypoint(Operation.EndPoint);
-            }
+            if (GUILayout.Button("Create long right turn")) { CreateNewWaypoint(Operation.TurnRightLong); }
+            
+            if (GUILayout.Button("Create left")) { CreateNewWaypoint(Operation.TurnLeftLong); }
 
-            if(GUILayout.Button("Add target"))
-            {
-                AddTarget();
-            }
+            if (GUILayout.Button("Create spline point")) { CreateNewWaypoint(Operation.SplinePoint); }
+            
+            
+
+            if (GUILayout.Button("Create end point")) { CreateEndWaypoint(Operation.EndPoint); }
+
+            if (GUILayout.Button("Add target")) { AddTarget(); }
+
+            if (GUILayout.Button("Remove Waypoint")) { RemoveWaypoint(); }
         }
         else
         {
             if (GUILayout.Button("Start navigation tree"))
             {
                 CreateFirstWaypoint();
-                
-                CreateNewWaypoint(Operation.Straight);
-                UpdateWaypointOrderList();
-            }
-            if(GUILayout.Button("Add children waypoints"))
-            {
-                waypointOrderList = new List<Waypoint>();
-                UpdateWaypointOrderList();
+                CreateNewWaypoint(Operation.StartPoint);
             }
         }
+    }
 
+    void SetTargetAttributes(GameObject target, Waypoint selectedWaypoint)
+    {
+        target.name = "Target " + (selectedWaypoint.TargetCount() + 1);
+        target.transform.SetParent(selectedWaypoint.transform, true);
+        target.GetComponent<Target>().waypoint = selectedWaypoint;
     }
     void AddTarget()
     {
         //Let user know if target prefab is missing for some reason
-        if(targetPrefab == null)
-        {
-            EditorUtility.DisplayDialog("No target Prefab", "No target prefab available!", "ok", "cancel");
-        }
+        if(targetPrefab == null){ EditorUtility.DisplayDialog("No target Prefab", "No target prefab available!", "ok", "cancel"); }
 
         //Make target associated with the selected waypoint
         Waypoint selectedWaypoint = Selection.activeGameObject.GetComponent<Waypoint>();
-        GameObject targetObject = Instantiate(targetPrefab, selectedWaypoint.transform.position, Quaternion.identity);
+        GameObject target = Instantiate(targetPrefab, selectedWaypoint.transform.position, Quaternion.identity);
 
         //set name, waypoint and parent
-        targetObject.name = "Target " + (selectedWaypoint.TargetCount() + 1);
-        targetObject.transform.SetParent(selectedWaypoint.gameObject.transform, true);
-        targetObject.GetComponent<Target>().waypoint = selectedWaypoint;
+        SetTargetAttributes(target, selectedWaypoint);
+       
 
         //Set all IDs and names for the targets associated to this wayu point.
         //This way we make sure they are unique even if we deleted some targets 
         selectedWaypoint.SetTargetIDsAndNames();
 
         //Select it
-        Selection.activeGameObject = targetObject;
+        Selection.activeGameObject = target;
 
         }
     void CreateFirstWaypoint()
 
     {
-        //Make the starting point and the next point
-        if (waypointRoot.transform.childCount < 1)
+        //Make the starting point only if there are no children
+        if (waypointRoot.childCount < 1)
         {
             GameObject newWaypointObject = new GameObject("Waypoint " + waypointRoot.childCount, typeof(Waypoint));
+
             newWaypointObject.transform.SetParent(waypointRoot, false);
             Waypoint waypoint = newWaypointObject.GetComponent<Waypoint>();
 
             waypoint.operation = Operation.StartPoint;
-            Selection.activeGameObject = newWaypointObject;
 
-            //Clear any old residues of order list
-            if (waypointOrderList != null)
-            {
-                waypointOrderList.Clear();
-            }
-            waypointOrderList = new List<Waypoint>();
-            waypointOrderList.Add(waypoint);
             waypoint.orderId = 0;
-            waypoint.extraSplinePoint = false;
-
+            //Select this object
             Selection.activeGameObject = waypoint.gameObject;
         }
     }
@@ -155,73 +121,69 @@ public class WaypointManagerWindow : EditorWindow
     {
         Waypoint selectedWaypoint = Selection.activeGameObject.GetComponent<Waypoint>();
         selectedWaypoint.operation = operation;
-        selectedWaypoint.extraSplinePoint = false;
-
     }
 
-    void CreateNewWaypoint(Operation operation, bool splinePoint= false)
+    void SetAttributesNewWaypoint(Waypoint newWaypoint, Waypoint selectedWaypoint, Operation operation)
+    {
+        //set attributes of new waypoint
+        newWaypoint.transform.SetParent(waypointRoot, false);
+
+        newWaypoint.transform.SetSiblingIndex(selectedWaypoint.transform.GetSiblingIndex());
+        newWaypoint.transform.forward = selectedWaypoint.transform.forward;
+        newWaypoint.transform.rotation = selectedWaypoint.transform.rotation;
+
+        //Turn waypoint and set position based on operation and road radius
+        //If last point was a spline point we change rotaiton based on this;
+        
+        if (operation == Operation.TurnRightLong)
+        {
+            newWaypoint.transform.Rotate(Vector3.up * 90, Space.World);
+            newWaypoint.transform.position = selectedWaypoint.transform.position + roadParameters.radiusLong * (newWaypoint.transform.forward + selectedWaypoint.transform.forward);
+        }
+        else if (operation == Operation.TurnRightShort)
+        {
+            newWaypoint.transform.Rotate(Vector3.up * 90, Space.World);
+            newWaypoint.transform.position = selectedWaypoint.transform.position + roadParameters.radiusShort * (newWaypoint.transform.forward + selectedWaypoint.transform.forward);
+        }
+        else if (operation == Operation.TurnLeftLong)
+        {
+            newWaypoint.transform.Rotate(Vector3.up * -90, Space.World);
+            newWaypoint.transform.position = selectedWaypoint.transform.position + roadParameters.radiusLong * (newWaypoint.transform.forward + selectedWaypoint.transform.forward);
+        }
+        else { newWaypoint.transform.position = selectedWaypoint.transform.position + 5 * newWaypoint.transform.forward; }
+      
+        newWaypoint.orderId = selectedWaypoint.orderId + 1;
+        newWaypoint.previousWaypoint = selectedWaypoint;
+        newWaypoint.operation = Operation.None;
+        //Set to spline point if we are creating a spline
+        //if (selectedWaypoint.operation == Operation.SplinePoint) { newWaypoint.operation = Operation.SplinePoint; }
+        //else { newWaypoint.operation = Operation.None; }
+    }
+
+    void SetAttributesSelectedWaypoint( Waypoint newWaypoint, Waypoint selectedWaypoint, Operation operation)
+    {
+        selectedWaypoint.nextWaypoint = newWaypoint;
+        selectedWaypoint.operation = operation;
+        
+    }
+    void CreateNewWaypoint(Operation operation)
     {
         //create new game object with a waypoint
         GameObject newWaypointObject = new GameObject("Waypoint " + waypointRoot.childCount, typeof(Waypoint));
 
-        Debug.Log("CVhild count: " + waypointRoot.childCount);
-        newWaypointObject.transform.SetParent(waypointRoot, false);
+        Debug.Log($"Created {newWaypointObject.name}...");
 
         Waypoint newWaypoint = newWaypointObject.GetComponent<Waypoint>();
         Waypoint selectedWaypoint = Selection.activeGameObject.GetComponent<Waypoint>();
 
+        //Set attributes of new waypoint
+        SetAttributesNewWaypoint(newWaypoint, selectedWaypoint, operation);
 
-        //Set attributes of selected waypoint
-        selectedWaypoint.nextWaypoint = newWaypoint;
-        if (selectedWaypoint.operation != Operation.StartPoint) { 
-        selectedWaypoint.operation = operation; }
-       
-        //set extra spline points to false for start and end points automatically
-        if (operation == Operation.EndPoint || operation ==Operation.StartPoint ) {
-            selectedWaypoint.extraSplinePoint = false;
-        }
+        //Set attributes slected waypoint
+        SetAttributesSelectedWaypoint(newWaypoint, selectedWaypoint, operation);
 
-        else if (operation == Operation.TurnRight)
-        {
-            //Quaternion rotation = selectedWaypoint.previousWaypoint.transform.rotation;
-            //selectedWaypoint.transform.rotation = Quaternion.Euler(rotation.x, rotation.y + 90, rotation.z);
-            selectedWaypoint.transform.Rotate(Vector3.up * 90, Space.World);
-            selectedWaypoint.extraSplinePoint = true;
-        }
-        else if (operation == Operation.TurnLeft)
-        {
-            //Quaternion rotation = selectedWaypoint.previousWaypoint.transform.rotation;
-            //selectedWaypoint.transform.rotation = Quaternion.Euler(rotation.x, rotation.y - 90, rotation.z);
-            selectedWaypoint.transform.Rotate(Vector3.up * -90, Space.World);
-            selectedWaypoint.extraSplinePoint = true;
-        }
-        else if (operation == Operation.None)
-        {
-            selectedWaypoint.operation = operation;
-        }
-
-        //set attributes of new waypoint
-        newWaypointObject.transform.SetSiblingIndex(selectedWaypoint.transform.GetSiblingIndex());
-        newWaypointObject.transform.forward = selectedWaypoint.transform.forward;
-        newWaypointObject.transform.position = selectedWaypoint.transform.position + selectedWaypoint.transform.forward;
-        newWaypointObject.transform.rotation = selectedWaypoint.transform.rotation;
-        newWaypoint.orderId = selectedWaypoint.orderId + 1;
-        newWaypoint.previousWaypoint = selectedWaypoint;
-        newWaypoint.operation = Operation.None;
-        newWaypoint.extraSplinePoint = false;
-
-        //If this is a spline point then we set shapePoint attribute to true so that it gets skipped during the navigation of the car.
-        if (splinePoint)
-        {
-            selectedWaypoint.shapePoint = true;
-            selectedWaypoint.extraSplinePoint = false;
-        }
-        //newWaypoint
+        //select the new Waypoint
         Selection.activeGameObject = newWaypoint.gameObject;
-
-        //update orderids
-        waypointOrderList.Add(newWaypoint);
-        UpdateWaypointOrderList();
 
     }
     void RemoveWaypoint()
@@ -239,47 +201,21 @@ public class WaypointManagerWindow : EditorWindow
             Selection.activeGameObject = selectedWaypoint.previousWaypoint.gameObject;
         };
 
-        //remove from order list
-        int listIndexSelectedWaypoint = waypointOrderList.FindIndex(a => a == selectedWaypoint);
-        waypointOrderList.RemoveAt(listIndexSelectedWaypoint);
-        UpdateWaypointOrderList();
-
         DestroyImmediate(selectedWaypoint.gameObject);
-    }
-    void UpdateWaypointOrderList()
-    {
-        if (waypointRoot.transform.childCount != waypointOrderList.Count)
-        {
-            List<Waypoint> sortedWaypointOrderList = new List<Waypoint>();
-            foreach (Transform child in waypointRoot.transform)
-            {
-                Waypoint waypoint = child.gameObject.GetComponent<Waypoint>();
-                int index = waypoint.orderId;
-                sortedWaypointOrderList.Add(waypoint);
 
-            }
-            waypointOrderList.Clear();
-            waypointOrderList = sortedWaypointOrderList.OrderBy(d => d.orderId).ToList();
-            UpdateWaypointOrderIds();
-        }
+        UpdateOrderIds();
     }
-    void UpdateWaypointOrderIds()
-    {
-        if (waypointOrderList.Count > 0)
-        {
-            int index = 0;
 
-            foreach (Waypoint waypoint in waypointOrderList)
-            {
-                if (waypoint != null)
-                {
-                    waypoint.orderId = index;
-                    //string nameWaypoint = new string("waypoint " + waypoint.orderId);
-                    waypoint.transform.name = "waypoint " + waypoint.orderId;
-                    waypoint.transform.gameObject.name = "waypoint " + waypoint.orderId;
-                    index++;
-                }
-            }
+    void UpdateOrderIds()
+    {
+        
+        List<Waypoint> waypointList = waypointRoot.GetComponent<NavigationManager>().GetOrderedWaypointList();
+        
+        int lastOrderId = 0;
+        foreach (Waypoint waypoint in waypointList)
+        {
+           waypoint.orderId = lastOrderId + 1;
+           lastOrderId ++;
         }
     }
 }
