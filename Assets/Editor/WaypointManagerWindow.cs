@@ -13,18 +13,14 @@ public class WaypointManagerWindow : EditorWindow
 
     public Transform waypointRoot;
     public GameObject targetPrefab;
-    public RoadParameters roadParameters;
+    
     private void OnGUI()
     {
         SerializedObject obj = new SerializedObject(this);
         EditorGUILayout.PropertyField(obj.FindProperty("waypointRoot"));
         EditorGUILayout.PropertyField(obj.FindProperty("targetPrefab"));
-        EditorGUILayout.PropertyField(obj.FindProperty("roadParameters"));
 
-        if (waypointRoot == null)
-        {
-            EditorGUILayout.HelpBox("Root transform must be selected. Please assign a root transform", MessageType.Warning);
-        }
+        if (waypointRoot == null) { EditorGUILayout.HelpBox("Root transform must be selected. Please assign a root transform", MessageType.Warning); }
         else
         {
             //ALlow creating of waypoints but warn for not working target functionaility
@@ -38,22 +34,19 @@ public class WaypointManagerWindow : EditorWindow
         }
         obj.ApplyModifiedProperties();
     }
-
     void DrawButtons()
     {
         if (Selection.activeGameObject != null && Selection.activeGameObject.GetComponent<Waypoint>())
         {
             if (GUILayout.Button("Create straight")) { CreateNewWaypoint(Operation.Straight); }
 
-            if (GUILayout.Button("Create short right turn")) { CreateNewWaypoint(Operation.TurnRightShort); }
+            //if (GUILayout.Button("Create short right turn")) { CreateNewWaypoint(Operation.TurnRightShort); }
 
-            if (GUILayout.Button("Create long right turn")) { CreateNewWaypoint(Operation.TurnRightLong); }
+            if (GUILayout.Button("Create right")) { CreateNewWaypoint(Operation.TurnRightShort); }
             
             if (GUILayout.Button("Create left")) { CreateNewWaypoint(Operation.TurnLeftLong); }
 
             if (GUILayout.Button("Create spline point")) { CreateNewWaypoint(Operation.SplinePoint); }
-            
-            
 
             if (GUILayout.Button("Create end point")) { CreateEndWaypoint(Operation.EndPoint); }
 
@@ -70,7 +63,6 @@ public class WaypointManagerWindow : EditorWindow
             }
         }
     }
-
     void SetTargetAttributes(GameObject target, Waypoint selectedWaypoint)
     {
         target.name = "Target " + (selectedWaypoint.TargetCount() + 1);
@@ -116,13 +108,11 @@ public class WaypointManagerWindow : EditorWindow
             Selection.activeGameObject = waypoint.gameObject;
         }
     }
-
     void CreateEndWaypoint(Operation operation)
     {
         Waypoint selectedWaypoint = Selection.activeGameObject.GetComponent<Waypoint>();
         selectedWaypoint.operation = operation;
     }
-
     void SetAttributesNewWaypoint(Waypoint newWaypoint, Waypoint selectedWaypoint, Operation operation)
     {
         //set attributes of new waypoint
@@ -134,7 +124,7 @@ public class WaypointManagerWindow : EditorWindow
 
         //Turn waypoint and set position based on operation and road radius
         //If last point was a spline point we change rotaiton based on this;
-        
+        RoadParameters roadParameters = waypointRoot.GetComponent<SplineCreator>().roadParameters;
         if (operation == Operation.TurnRightLong)
         {
             newWaypoint.transform.Rotate(Vector3.up * 90, Space.World);
@@ -159,7 +149,6 @@ public class WaypointManagerWindow : EditorWindow
         //if (selectedWaypoint.operation == Operation.SplinePoint) { newWaypoint.operation = Operation.SplinePoint; }
         //else { newWaypoint.operation = Operation.None; }
     }
-
     void SetAttributesSelectedWaypoint( Waypoint newWaypoint, Waypoint selectedWaypoint, Operation operation)
     {
         selectedWaypoint.nextWaypoint = newWaypoint;
@@ -203,20 +192,7 @@ public class WaypointManagerWindow : EditorWindow
 
         DestroyImmediate(selectedWaypoint.gameObject);
 
-        UpdateOrderIds();
-    }
-
-    void UpdateOrderIds()
-    {
-        
-        List<Waypoint> waypointList = waypointRoot.GetComponent<NavigationManager>().GetOrderedWaypointList();
-        
-        int lastOrderId = 0;
-        foreach (Waypoint waypoint in waypointList)
-        {
-           waypoint.orderId = lastOrderId + 1;
-           lastOrderId ++;
-        }
+        waypointRoot.gameObject.GetComponent<NavigationHelper>().UpdateOrderIds();
     }
 }
 

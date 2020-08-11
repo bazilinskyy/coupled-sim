@@ -25,3 +25,9 @@ public enum GameStates
     Transition,
     Ended
 }
+
+public enum NavigationType
+{
+    VirtualCable,
+    HighlightedRoad
+}

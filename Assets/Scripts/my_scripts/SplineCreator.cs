@@ -1,133 +1,356 @@
 ﻿using System.Collections.Generic;
+using System;
 using System.Linq;
 using UnityEngine;
 
 //Interpolation between points with a Catmull-Rom spline
-[RequireComponent(typeof(MeshFilter))]
 public class SplineCreator : MonoBehaviour
 {
 
 	public RoadParameters roadParameters;
 
-	public int pointsPerSpline = 100;
-
-	//Has to be at least 4 points
-	public Vector3[] pointList;
 	public bool showGizmos = true;
 
-	[Range(0.01f, 0.2f)]    //Make sure it's is adding up to 1, so 0.3 will give a gap, but 0.2 will work
-	public float resolution = 0.05f; private float my_resolution = 0.05f;
+	public Material navigationPartMaterial;
 
-	//Up to how many waypoints do we render?
-	public int numberOfSegmentsToRender = 4;
+	public NavigationHelper navigationHelper;
 
-
-	public bool _renderConformal1 = true; private bool renderConformal1 = true;
-	public float pipeRadius = 1f;
-	public int pipeSegmentCount = 9;
-	private Vector3[] verticesConformal1;
-	private int[] trianglesConformal1;
-
-
-	public bool _renderConformal2 = true; private bool renderConformal2 = true;
-	public float widthRoad = 3f;
-	public float heightSystem = 10f;
-	private Vector3[] verticesConformal2;
-	private int[] trianglesConformal2;
-
-
-	public bool _renderConformal3 = true; private bool renderConformal3 = true;
-	private Vector3[] verticesConformal3;
-	private int[] trianglesConformal3;
-
-
+	//booleans for each navigation type
+	public bool _renderVirtualCable = true; private bool renderVirtualCable = true;
+	public bool _renderHighlightedRoad = true; private bool renderHighlightedRoad = true;
 	public bool _pressMeToRerender = true; private bool pressMeToRerender = true;
-	private Mesh mesh;
-	private int currentChildCount = 0;
-	
-	private float navWidth = 1;
+
+	//Holds the rendered navbigation parts;
+	private GameObject navigationPartsParent;
+
+	//Amount of points used per spline
+	private int pointsPerSpline = 50;
+
 	private void Awake()
 	{
-		renderConformal1 = _renderConformal1;
-		renderConformal2 = _renderConformal2;
-		renderConformal3 = _renderConformal3;
-
-		UpdateControlPoints();
-		UpdateMesh();
+		renderVirtualCable = _renderVirtualCable;
+		renderHighlightedRoad = _renderHighlightedRoad;
+		pressMeToRerender = _pressMeToRerender;
 	}
-
 	private void Update()
 	{
 		CheckForChanges();
 	}
-
 	void CheckForChanges()
 	{
-		//if number of children change --> update mesh
-		if (currentChildCount != transform.childCount)
-		{
-			UpdateMesh();
-			currentChildCount = transform.childCount;
-		}
-
-		//if resolution change --> update mesh
-		if (resolution != my_resolution)
-		{
-			my_resolution = resolution;
-			UpdateMesh();
-		}
-
 		//if render booleans change --> update mesh
-		if (renderConformal1 != _renderConformal1 || renderConformal2 != _renderConformal2 || renderConformal3 != _renderConformal3)
+		if (renderVirtualCable != _renderVirtualCable || renderHighlightedRoad != _renderHighlightedRoad)
 		{
-			renderConformal1 = _renderConformal1;
-			renderConformal2 = _renderConformal2;
-			renderConformal3 = _renderConformal3;
-			UpdateMesh();
+			renderVirtualCable = _renderVirtualCable;
+			renderHighlightedRoad = _renderHighlightedRoad;
+			UpdateNavigationPartsToRender();
+			navigationHelper.RenderAllWaypoints(true);
 		}
 
 		if(pressMeToRerender != _pressMeToRerender)
 		{
-			UpdateMesh();
+			pressMeToRerender = _pressMeToRerender;
+			MakeNavigation();
 		}
 	}
-	public void UpdateMesh()
-	{
-		//Debug.Log("UPDATING MESH");
-		if (renderConformal1 || renderConformal2 || renderConformal3)
-		{
-			
-			GetComponent<MeshFilter>().mesh = mesh = new Mesh();
-			mesh.name = "Pipe";
-			SetVertices();
-			SetTriangles();
-			mesh.RecalculateNormals();
-		}
-		else
-		{
-			GetComponent<MeshFilter>().mesh = mesh = new Mesh();
-			mesh.name = "nothing!";
-		}
-	}
-	//Display without having to press play
 	void OnDrawGizmos()
 	{
+		CheckForChanges();
 
 		Gizmos.color = Color.cyan;
 		if (showGizmos)
 		{
-			List<Waypoint> waypointList = transform.GetComponent<NavigationManager>().GetOrderedWaypointList();
-
-			Vector3[] points = GetNavigationLine(waypointList);
+			Vector3[] points = GetNavigationLine();
 			//Set forward direction of splinepoints based on acquired spline
-			SetForwardDirectionSplinePoints(waypointList, points);
-			//Check if repearting elements in spline points
-			printRepeating(points);
-
+			SetForwardDirectionSplinePoints(points);
+	
 			DrawGizmoLines(points);
 		}
 	}
+	void UpdateNavigationPartsToRender()
+	{
+		navigationHelper.RenderNavigationType(NavigationType.VirtualCable, renderVirtualCable);
+		navigationHelper.RenderNavigationType(NavigationType.HighlightedRoad, renderHighlightedRoad);
+	}
+	private void MakeNavigation()
+	{
+		//Destoy current navigation if existent
+		foreach(Transform child in transform)
+		{
+			if(child.name == "NavigationParts")
+			{
+				DestroyImmediate(child.gameObject);
+				break;
+			}
+		}
+		//Delete navigationParts from all waypoints
+		gameObject.GetComponent<NavigationHelper>().RemoveNavigationPartsFromWaypoints();
+		//Make it again
+		SetNavigationPartParents();
+		CreateNavigationParts();
+	}
+	private void SetNavigationPartParents()
+	{		
+		navigationPartsParent = new GameObject("NavigationParts");
+		navigationPartsParent.transform.SetParent(transform);
 
+		var navigationTypeOptions = EnumUtil.GetValues<NavigationType>();
+
+		foreach (NavigationType navigationType in navigationTypeOptions)
+		{
+			GameObject navigationTypeParent = new GameObject(navigationType.ToString());
+			navigationTypeParent.transform.SetParent(navigationPartsParent.transform);
+		}		
+	}
+	private void CreateNavigationParts()
+	{
+		//Get waypoint list
+		List<Waypoint> waypointList = navigationHelper.GetOrderedWaypointList();
+
+		//List of potetnial spline points
+		List<Waypoint> currentWaypointList = new List<Waypoint>();
+		bool addedSplineWaypoints = false;
+
+		Vector3[] points;
+
+		//loop trough points and draw gizmos based on operation of waypoints and roadParameters
+		foreach (Waypoint waypoint in waypointList)
+		{
+			//Stop if its the endpoint or last point in the list (except when its the ending of a spline)
+			if((waypoint.operation == Operation.EndPoint || waypoint == waypointList.Last()) && !addedSplineWaypoints) { break; }
+
+			
+			//If we encounter spline points we will add these to splineList untill we reach a non-spline point
+			if (waypoint.operation == Operation.SplinePoint)
+			{
+				currentWaypointList.Add(waypoint);
+				addedSplineWaypoints = true;
+				continue;
+			}
+
+			if (addedSplineWaypoints) {
+				currentWaypointList.Add(waypoint);
+				points = GetSplinePoints(currentWaypointList);
+				currentWaypointList.Clear();
+				addedSplineWaypoints = false; 
+			}
+			else { points = GetPointsWaypoint(waypoint); }			
+			
+			CreateNavigationPart(points, waypoint);
+			
+		}
+
+	}
+	private void CreateNavigationPart(Vector3[] points, Waypoint waypoint)
+	{
+		var navigationTypeOptions = EnumUtil.GetValues<NavigationType>();
+		Mesh mesh;
+		
+		foreach (NavigationType navigationType in navigationTypeOptions)
+		{
+			//Make gameobejct with mesh and navigationpart component
+			GameObject navigationPartGameObject = new GameObject(waypoint.operation.ToString());
+			navigationPartGameObject.AddComponent(typeof(MeshRenderer));
+			navigationPartGameObject.AddComponent(typeof(MeshFilter));
+			navigationPartGameObject.AddComponent(typeof(NavigationPart));
+
+			//Sets parent toi appropriate gameobject
+			navigationPartGameObject.transform.SetParent(navigationPartsParent.transform.Find(navigationType.ToString()));
+
+			//Set attributes of NavigationPart Class
+			NavigationPart navigationPart = navigationPartGameObject.GetComponent<NavigationPart>();
+			navigationPart.waypoint = waypoint;
+			navigationPart.navigationType = navigationType;
+
+			//Set navigationPart on the waypoint to this navigationPart
+			waypoint.AddNavigationPart(navigationPart);
+
+			//Set the mesh
+			navigationPartGameObject.GetComponent<MeshFilter>().mesh = mesh = new Mesh();
+			navigationPartGameObject.GetComponent<MeshRenderer>().material = navigationPartMaterial;
+
+			mesh.name = waypoint.operation.ToString();
+			mesh.vertices = GetVertices( points, navigationType);
+			mesh.triangles = GetTriangles(mesh.vertices, navigationType);
+		}
+
+	}
+	private Vector3[] GetVertices(Vector3[] points, NavigationType navigationType)
+	{
+
+		if (navigationType == NavigationType.VirtualCable) { return GetVerticesVirtualCable(points); }
+		else if (navigationType == NavigationType.HighlightedRoad) { return GetVerticesHighlightedRoad(points); }
+		else { return new Vector3[0]; }
+	}
+	private Vector3[] GetVerticesVirtualCable(Vector3[] points)
+	{
+		//Set legnth of vertices arrays	
+		Vector3[] vertices = new Vector3[points.Length * roadParameters.pipeSegmentCount];
+		 
+		Vector3 worldY = new Vector3(0, 1, 0);
+		Vector3 directionFirstLine = Vector3.Normalize(points[1] - points[0]);
+		Vector3 lastPos = points[0] - directionFirstLine;
+
+		int vertice_cnt = 0;
+		//Loop through navigation points
+		for (int i = 0; i < points.Length; i++)
+		{
+			Vector3 newPos = points[i];
+
+			Vector3 directionOfPipe = Vector3.Normalize(newPos - lastPos);
+			Vector3 perpendicularToPipe = Vector3.Normalize(Vector3.Cross(newPos - lastPos, worldY));
+			Vector3[] circle = getCircle(roadParameters.pipeSegmentCount, roadParameters.radiusPipe);
+
+			circle = transformCircle(circle, perpendicularToPipe, worldY, directionOfPipe, newPos);
+
+			for (int v = 0; v < roadParameters.pipeSegmentCount; v++)
+			{
+				vertices[vertice_cnt] = circle[v] + worldY * roadParameters.heightVirtualCable;
+				vertice_cnt += 1;
+			}
+			//Save this pos so we can draw the next line segment
+			lastPos = newPos;
+		}
+
+		return vertices;
+	}
+	private Vector3[] GetVerticesHighlightedRoad(Vector3[] points)
+	{
+		Vector3[] vertices = new Vector3[points.Length * 2];
+
+		Vector3 worldY = new Vector3(0, 1, 0);
+		Vector3 directionFirstLine = Vector3.Normalize(points[1] - points[0]);
+		Vector3 lastPos = points[0] - directionFirstLine;
+
+		int vertice_cnt = 0;
+		//Loop through navigation points
+		for (int i = 0; i < points.Length; i++)
+		{
+			Vector3 newPos = points[i];
+
+			Vector3 sideDirection = Vector3.Normalize(Vector3.Cross(newPos - lastPos, worldY));
+			Vector3 verticeA = newPos + sideDirection * roadParameters.widthRoad;
+			Vector3 verticeB = newPos - sideDirection * roadParameters.widthRoad;
+
+
+			vertices[vertice_cnt] = verticeA;
+			vertices[vertice_cnt + 1] = verticeB;
+			vertice_cnt += 2;
+
+			//Save this pos so we can draw the next line segment
+			lastPos = newPos;
+		}
+
+		return vertices;
+	}
+	private Vector3[] GetPointsWaypoint(Waypoint waypoint)
+	{
+		//Never adds the next waypoints to the point list
+		//So we add up to the current waypoint
+		Vector3[] points = new Vector3[0];
+		if (waypoint.operation == Operation.StartPoint || waypoint.operation == Operation.Straight || waypoint.operation == Operation.None)
+		{
+			if (waypoint.nextWaypoint != null)
+			{
+				points = new Vector3[] { waypoint.transform.position, waypoint.nextWaypoint.transform.position };
+			}
+			
+		}
+		else if (waypoint.operation == Operation.TurnRightLong || waypoint.operation == Operation.TurnRightShort || waypoint.operation == Operation.TurnLeftLong)
+		{
+			points = GetPointsCorner(waypoint);
+		}
+
+		return points;
+	}
+	private Vector3[] GetPointsCorner(Waypoint waypoint)
+	{
+		//get radius based on waypoint oepration and raodParameter scriptable variable
+		float radius;
+		if (waypoint.operation == Operation.TurnRightShort) { radius = roadParameters.radiusShort; }
+		else { radius = roadParameters.radiusLong; }
+
+		//Get half circle in x,y frame
+		Vector2[] quarterCircle = GetQuarterCircle(radius, pointsPerSpline, waypoint.operation);
+
+		//Transpose circle to the current waypoint position and rotation
+		Vector3[] points = TransformVector2ToVector3(quarterCircle);
+		points = TransposePoints(waypoint, points);
+		points = AddNextWaypoint(waypoint, points);
+
+		return points;
+
+	}
+	private Vector3[] AddNextWaypoint(Waypoint waypoint ,Vector3[] points)
+	{
+		if(waypoint.nextWaypoint == null)
+		{
+			throw new Exception($"Error in SplineCreator -> Add next waypoint. Next waypoint is missing...... waypoint opertaion is {waypoint.operation.ToString()}");
+		}
+
+		//Make new array with icreased length
+		Vector3[] newPoints = new Vector3[points.Length + 1];
+
+		for(int i =0; i<points.Length; i++)
+		{
+			newPoints[i] = points[i];
+		}
+		//Add waypoint
+		newPoints[points.Length] = waypoint.nextWaypoint.transform.position;
+		
+		return newPoints;
+	}
+	private int[] GetTriangles(Vector3[] vertices, NavigationType navigationType)
+	{
+
+		if (navigationType == NavigationType.VirtualCable) { return GetTrianglesVirtualCable(vertices); }
+		else if (navigationType == NavigationType.HighlightedRoad) { return GetTrianglesHighlightedRoad(vertices); }
+		else { return new int[0]; }
+	}
+	private int[] GetTrianglesVirtualCable(Vector3[] vertices)
+	{
+		int pipeSegmentCount = roadParameters.pipeSegmentCount;
+		int[] triangles = new int[(vertices.Length - pipeSegmentCount) * 2 * 3];
+
+		for (int t = 0, i = 0; t < triangles.Length; i += pipeSegmentCount)
+		{
+			for (int v = 0; v < pipeSegmentCount; v++)
+			{
+				int index = v + i;
+				if (v == (pipeSegmentCount - 1))
+				{
+					triangles[t] = triangles[t + 3] = index;
+					triangles[t + 1] = triangles[t + 5] = i + 1 + pipeSegmentCount;
+					triangles[t + 2] = i + 1;
+					triangles[t + 4] = index + pipeSegmentCount;
+				}
+				else
+				{
+					triangles[t] = triangles[t + 3] = index;
+					triangles[t + 1] = triangles[t + 5] = index + 1 + pipeSegmentCount;
+					triangles[t + 2] = index + 1;
+					triangles[t + 4] = index + pipeSegmentCount;
+
+				}
+				t += 6;
+			}
+		}
+		return triangles;
+	}
+	private int[] GetTrianglesHighlightedRoad(Vector3[] vertices)
+	{
+		int[] triangles = new int[(vertices.Length - 2) * 3];
+
+		for (int t = 0, i = 0; t < triangles.Length; t += 6, i += 2)
+		{
+
+			triangles[t] = i;
+			triangles[t + 1] = triangles[t + 4] = i + 2;
+			triangles[t + 2] = triangles[t + 3] = i + 1;
+			triangles[t + 5] = i + 3;
+		}
+		return triangles;
+	}
 	void DrawGizmoLines(Vector3[] points)
 	{
 		for(int i =0; i<(points.Length-1); i++)
@@ -135,19 +358,10 @@ public class SplineCreator : MonoBehaviour
 			Gizmos.DrawLine(points[i], points[i + 1]);
 		}
 	}
-
-	void printRepeating(Vector3[] arr)
+	private Vector3[] GetNavigationLine()
 	{
-		int size = arr.Length;
-		int i, j;
-		
-		for (i = 0; i < size; i++)
-			for (j = i + 1; j < size; j++)
-				if (arr[i] == arr[j])
-					Debug.Log($"Index {i} == {j} = {arr[i].ToString()}....");
-	}
-	private Vector3[] GetNavigationLine(List<Waypoint> waypointList)
-	{
+		//Get waypoint list
+		List<Waypoint> waypointList = navigationHelper.GetOrderedWaypointList();
 
 		//List of potetnial spline points
 		List<Waypoint> splineList = new List<Waypoint>();
@@ -159,6 +373,7 @@ public class SplineCreator : MonoBehaviour
 		//loop trough points and draw gizmos based on operation of waypoints and roadParameters
 		foreach (Waypoint waypoint in waypointList)
 		{
+			if (!waypoint.renderMe) { continue; }
 			//If we encounter spline points we will add these to splineList untill we reach a non-spline point
 			if (waypoint.operation == Operation.SplinePoint) {
 				splineList.Add(waypoint);
@@ -177,44 +392,12 @@ public class SplineCreator : MonoBehaviour
 			}
 			//Then continue as normal
 			pointSet = GetPointsWaypoint(waypoint);
-			points = AppendArrays(points, pointSet);
-			
-		}
-		return points;
-	}
 
-	private Vector3[] GetPointsWaypoint(Waypoint waypoint)
-	{
-		//Never adds the next waypoints to the point list
-		//So we add up to the current waypoint
-		Vector3[] points = new Vector3[0];
-		if (waypoint.operation == Operation.StartPoint || waypoint.operation == Operation.Straight || waypoint.operation == Operation.None || waypoint.operation == Operation.EndPoint) { 
-			points = new Vector3[] { waypoint.transform.position }; }
-		else if (waypoint.operation == Operation.TurnRightLong || waypoint.operation == Operation.TurnRightShort || waypoint.operation == Operation.TurnLeftLong) { 
-			points = GetPointsCorner(waypoint); }
-		
-		return points;
+			points = AppendArrays(points, pointSet);	
 		}
 
-
-	private Vector3[] GetPointsCorner(Waypoint waypoint)
-	{
-		//get radius based on waypoint oepration and raodParameter scriptable variable
-		float radius;
-		if (waypoint.operation == Operation.TurnRightShort) { radius = roadParameters.radiusShort; }
-		else { radius = roadParameters.radiusLong; }
-		
-		//Get half circle in x,y frame
-		Vector2[] quarterCircle = GetQuarterCircle(radius, pointsPerSpline, waypoint.operation);
-
-		//Transpose circle to the current waypoint position and rotation
-		Vector3[] points = TransformVector2ToVector3(quarterCircle);
-		points = TransposePoints(waypoint, points);
-
 		return points;
-		
 	}
-
 	private Vector3[] RemoveLastElementVector3(Vector3[] array)
 	{
 		Vector3[] arrayOut = new Vector3[array.Length - 1];
@@ -251,7 +434,6 @@ public class SplineCreator : MonoBehaviour
 		}
 		return circle;
 	}
-
 	private Vector3[] TransformVector2ToVector3(Vector2[] points, float z = 0)
 	{
 		//Transform array of vector2 to vector3 with z
@@ -284,7 +466,6 @@ public class SplineCreator : MonoBehaviour
 		}
 		return pointsCircle;
 	}
-
 	private Vector3[] GetSplinePoints(List<Waypoint> splineList)
 	{
 		//Contains points which have to be used for the creation of the spline
@@ -302,15 +483,11 @@ public class SplineCreator : MonoBehaviour
 
 			catmullRomSpline = CatmullRomSpline(p0, p1, p2, p3);
 			allSplinePoints = AppendArrays(allSplinePoints, catmullRomSpline);
-
-			DrawCatmullSpline(catmullRomSpline);
 		}
-
 		allSplinePoints = RemoveLastElementVector3(allSplinePoints);
 
 		return allSplinePoints;
 	}
-
 	private Vector3[] AppendArrays( Vector3[] arr1, Vector3[] arr2)
 	{
 		Vector3[] arrOut = new Vector3[arr1.Length + arr2.Length];
@@ -318,51 +495,39 @@ public class SplineCreator : MonoBehaviour
 		System.Array.Copy(arr2, 0, arrOut, arr1.Length, arr2.Length);
 		return arrOut;
 	}
-
-	void SetForwardDirectionSplinePoints(List<Waypoint> waypoints, Vector3[] splinePoints)
+	void SetForwardDirectionSplinePoints(Vector3[] splinePoints)
 	{
-
+		//Turns the forward direction of waypoints based on spline
+		//Get waypoint list
+		List<Waypoint> waypoints = navigationHelper.GetOrderedWaypointList();
+		
 		bool lastPointWasSpline = false;
 		foreach ( Waypoint waypoint in waypoints)
 		{
-			
 			if (waypoint.operation == Operation.SplinePoint)
 			{
-				lastPointWasSpline = true;
 				//Set forward direction of waypoint
 				int index = System.Array.FindIndex(splinePoints, element => (element == waypoint.transform.position));
-				Vector3 forward = splinePoints[index + 1] - splinePoints[index];
-				if (!(forward == Vector3.zero))
-				{
-					waypoint.transform.forward = forward.normalized;
-				}
+				//If non valid index found we skip
+				if (!(index >= 0)) { continue;}
+				//First spline point we dont change forward direction
+				if (!lastPointWasSpline) { lastPointWasSpline = true; continue; }
 
+				Vector3 forward = splinePoints[index + 1] - splinePoints[index];
+				waypoint.transform.forward = forward.normalized;
 			}
 			else if (lastPointWasSpline)
 			{
 				//This is the waypoint which the last spline point is connected to
 				//Set forward direction of waypoint
 				int index = System.Array.FindIndex(splinePoints, element => (element == waypoint.transform.position));
-				if (index >= 0)
-				{
-					Vector3 forward = splinePoints[index] - splinePoints[index - 1];
-					if (!(forward == Vector3.zero))
-					{
-						waypoint.transform.forward = forward.normalized;
-					}
+				//If non valid index found we skip
+				if (!(index >= 0)) { continue; }
 
-				}
+				Vector3 forward = splinePoints[index] - splinePoints[index - 1];
+				waypoint.transform.forward = forward.normalized;
 				lastPointWasSpline = false;
-
 			}
-		}
-
-	}
-	void DrawCatmullSpline(Vector3[] spline)
-	{
-		for(int i=0; i<(spline.Length-1); i++)
-		{
-			Gizmos.DrawLine(spline[i], spline[i + 1]);
 		}
 	}
 	private Vector3[] GetMainSplinePoints(List<Waypoint> waypoints)
@@ -390,163 +555,6 @@ public class SplineCreator : MonoBehaviour
 		
 		return mainSplinePoints;
 	}
-	//Populate controlpoint list with children form waypointROot
-	public void UpdateControlPoints()
-	{
-		List<Waypoint> orderedWaypointOrderList =  GetOrderedWaypointList();
-		pointList = new Vector3[CalculateNumberOfSplinePoints(orderedWaypointOrderList)];
-			
-		int i = 0;
-		foreach (Waypoint waypoint in orderedWaypointOrderList)
-		{
-			//If not rendering skip 
-			if (!waypoint.renderMe)
-			{
-				continue;
-			}
-			if (waypoint.extraSplinePoint)
-			{
-				Vector3 directionLastPoint = Vector3.Normalize(orderedWaypointOrderList[waypoint.orderId-1].transform.position - waypoint.transform.position);
-				pointList[i] = waypoint.transform.position + waypoint.firstPointDistance * directionLastPoint;
-				pointList[i + 1] = waypoint.transform.position;
-				pointList[i + 2] = waypoint.transform.position + waypoint.secondPointDistance * waypoint.transform.forward;
-				i += 3;
-			}
-			else if (waypoint.operation == Operation.StartPoint)
-			{
-				pointList[i] = waypoint.transform.position;
-				pointList[i + 1] = waypoint.transform.position - waypoint.transform.forward;
-				i+= 2;
-			}
-			else if(waypoint.operation == Operation.EndPoint)
-			{
-				pointList[i] = waypoint.transform.position;
-				pointList[i + 1] = waypoint.transform.position + waypoint.transform.forward;
-				i += 2;
-			}
-			else
-			{
-				pointList[i] = waypoint.transform.position;
-				i++;
-			}
-				
-		}
-	}
-	private List<Waypoint> GetOrderedWaypointList()
-	{
-		List<Waypoint> waypointOrderList = new List<Waypoint>();
-		foreach (Transform child in transform)
-		{
-			Waypoint waypoint = child.gameObject.GetComponent<Waypoint>();
-			if (waypoint != null)
-			{
-				waypointOrderList.Add(waypoint);
-			}
-		}
-		List<Waypoint> orderedWaypointOrderList = waypointOrderList.OrderBy(d => d.orderId).ToList();
-		return orderedWaypointOrderList;
-	}
-
-	int CalculateNumberOfSplinePoints(List<Waypoint> waypointList)
-	{
-		int pointCount = 0;
-		foreach( Waypoint waypoint in waypointList)
-		{
-			//skip if it shouldnt be rendered
-			if (!waypoint.renderMe) { continue; }
-			if (waypoint.extraSplinePoint)
-			{
-				pointCount += 3;
-			}
-			else if (waypoint.operation == Operation.StartPoint || waypoint.operation == Operation.EndPoint) { pointCount+=2; }
-			else { pointCount++; }
-
-		}
-
-		return pointCount;
-	}
-	void SetVertices()
-	{
-		int loops = Mathf.FloorToInt(1f / resolution);
-		
-		if (renderConformal1) { verticesConformal1 = new Vector3[loops * (pointList.Length - 3) * pipeSegmentCount]; } else { verticesConformal1 = new Vector3[0]; }
-		if (renderConformal2) { verticesConformal2 = new Vector3[loops * (pointList.Length - 3) * 2]; } else { verticesConformal2 = new Vector3[0]; }
-		if (renderConformal3) { verticesConformal3 = new Vector3[0]; } else { verticesConformal3 = new Vector3[0];  }
-		int vertice_cnt_conf1 = 0;  int vertice_cnt_conf2 = 0;  int vertice_cnt_conf3 = 0;
-
-		Vector3 basePosition = -transform.position;
-		Vector3 worldY = new Vector3(0, 1, 0);
-
-		//Draw the Catmull-Rom spline between the points
-		for (int i = 0; i < pointList.Length; i++)
-		{
-			//Cant draw between the endpoints
-			//Neither do we need to draw from the second to the last endpoint
-			//...if we are not making a looping line
-			if ((i == 0 || i == pointList.Length - 2 || i == pointList.Length - 1))
-			{
-				continue;
-			}
-
-			//The 4 points we need to form a spline between p1 and p2
-			Vector3 p0 = pointList[ClampListPos(i - 1)];
-			Vector3 p1 = pointList[i];
-			Vector3 p2 = pointList[ClampListPos(i + 1)];
-			Vector3 p3 = pointList[ClampListPos(i + 2)];
-
-			//The start position of the line
-			Vector3 lastPos = p1 + basePosition;
-
-			for (int k = 1; k <= loops; k++)
-			{
-				//Which t position are we at?
-				float t = k * resolution;
-
-				//Find the coordinate between the end points with a Catmull-Rom spline
-				Vector3 newPos = basePosition + GetCatmullRomPosition(t, p0, p1, p2, p3);
-
-				//If we are making a pipe construct the following vertices:
-				if (renderConformal1)
-				{
-					Vector3 directionOfPipe = Vector3.Normalize(newPos - lastPos);
-					Vector3 perpendicularToPipe = Vector3.Normalize(Vector3.Cross(newPos - lastPos, worldY));
-					Vector3[] points = getCircle();
-
-					points = transformCircle(points, perpendicularToPipe, worldY, directionOfPipe, newPos);
-
-					for (int v = 0; v < pipeSegmentCount; v++)
-					{
-						verticesConformal1[vertice_cnt_conf1] = points[v];
-						vertice_cnt_conf1 += 1;
-					}
-				}
-				//constructing surface
-				if (renderConformal2)
-				{
-					Vector3 sideDirection = Vector3.Normalize(Vector3.Cross(newPos - lastPos, worldY));
-					Vector3 verticeA = lastPos + sideDirection * widthRoad - worldY * heightSystem;
-					Vector3 verticeB = lastPos - sideDirection * widthRoad - worldY * heightSystem;
-
-					verticesConformal2[vertice_cnt_conf2] = verticeA;
-					verticesConformal2[vertice_cnt_conf2 + 1] = verticeB;
-					vertice_cnt_conf2 += 2;
-					
-				}
-
-				//Save this pos so we can draw the next line segment
-				lastPos = newPos;
-			}
-		}
-
-		//Concat arays and set to mesh
-		Vector3[] vertices = new Vector3[verticesConformal1.Length + verticesConformal2.Length + verticesConformal3.Length];
-		verticesConformal1.CopyTo(vertices, 0);
-		verticesConformal2.CopyTo(vertices, verticesConformal1.Length);
-		verticesConformal3.CopyTo(vertices, verticesConformal1.Length + verticesConformal2.Length);
-
-		mesh.vertices = vertices;
-	}
-
 	private Vector3[] transformCircle(Vector3[] points, Vector3 x, Vector3 y, Vector3 z, Vector3 t)
 	{
 		x = new Vector4(x.x, x.y, x.z, 0);
@@ -562,98 +570,28 @@ public class SplineCreator : MonoBehaviour
 		}
 		return points;
 	}
-	private Vector3[] getCircle()
+	private Vector3[] getCircle(int SegmentCount, float radius)
 	{
-		Vector3[] points = new Vector3[pipeSegmentCount];
-		float vStep = (2f * Mathf.PI) / pipeSegmentCount;
-		for (int v = 0; v < pipeSegmentCount; v++)
+		Vector3[] points = new Vector3[SegmentCount];
+		float vStep = (2f * Mathf.PI) / SegmentCount;
+		for (int v = 0; v < SegmentCount; v++)
 		{
 			Vector3 p;
 
-			p.x = pipeRadius * Mathf.Cos(v * vStep);
-			p.y = pipeRadius * Mathf.Sin(v * vStep);
+			p.x = radius * Mathf.Cos(v * vStep);
+			p.y = radius * Mathf.Sin(v * vStep);
 			p.z = 0;
 
 			points[v] = p;
 		}
 		return points;
 	}
-	void SetTriangles()
-	{
-		if (renderConformal1) { trianglesConformal1 = new int[(verticesConformal1.Length - pipeSegmentCount) * 2 * 3]; } else { trianglesConformal1 = new int[0]; }
-		if (renderConformal2) { trianglesConformal2 = new int[(verticesConformal2.Length -2 ) * 3]; } else { trianglesConformal2 = new int[0]; }
-		if (renderConformal3) { trianglesConformal3 = new int[0]; } else { trianglesConformal3 = new int[0]; }
-
-		if (renderConformal1)
-		{
-			for (int t = 0, i = 0; t < trianglesConformal1.Length; i += pipeSegmentCount)
-			{
-				for (int v = 0; v < pipeSegmentCount; v++)
-				{
-					int index = v + i;
-					if (v == (pipeSegmentCount - 1))
-					{
-						trianglesConformal1[t] = trianglesConformal1[t + 3] = index;
-						trianglesConformal1[t + 1] = trianglesConformal1[t + 5] = i + 1 + pipeSegmentCount;
-						trianglesConformal1[t + 2] = i + 1;
-						trianglesConformal1[t + 4] = index + pipeSegmentCount;
-					}
-					else
-					{
-						trianglesConformal1[t] = trianglesConformal1[t + 3] = index;
-						trianglesConformal1[t + 1] = trianglesConformal1[t + 5] = index + 1 + pipeSegmentCount;
-						trianglesConformal1[t + 2] = index + 1;
-						trianglesConformal1[t + 4] = index + pipeSegmentCount;
-
-					}
-					t += 6;
-				}
-
-			}
-		}
-		if (renderConformal2)
-		{
-			//As triangles point to indeces of vertices we have to start at the vertex index that corresponds to these elements
-			int startPoint = verticesConformal1.Length;
-			for (int t = 0, i = startPoint; t < trianglesConformal2.Length; t+=6, i += 2)
-			{
-
-				trianglesConformal2[t] = i;
-				trianglesConformal2[t + 1] = trianglesConformal2[t + 4] = i + 2;
-				trianglesConformal2[t + 2] = trianglesConformal2[t + 3] = i + 1;
-				trianglesConformal2[t + 5] = i + 3;
-			}
-		}
-		if (renderConformal3)
-		{
-			//As triangles point to indeces of vertices we have to start at the vertex index that corresponds to these elements
-			int startPoint = verticesConformal1.Length + verticesConformal2.Length;
-			for (int t = 0, i = startPoint; t < trianglesConformal2.Length; t += 6, i += 2)
-			{
-
-				
-			}
-		}
-
-		//Concat arays and set to mesh
-		int[] triangles = new int[trianglesConformal1.Length + trianglesConformal2.Length + trianglesConformal3.Length];
-		trianglesConformal1.CopyTo(triangles, 0);
-		trianglesConformal2.CopyTo(triangles, trianglesConformal1.Length);
-		trianglesConformal3.CopyTo(triangles, trianglesConformal1.Length + trianglesConformal2.Length);
-
-		mesh.triangles = triangles;
-	}
-
-	//Display a spline between 2 points derived with the Catmull-Rom spline algorithm
 	private Vector3[] CatmullRomSpline(Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3)
 	{ 
 		//Initiate spline
-		Vector3[] catmullRomSpline = new Vector3[pointsPerSpline ];
+		Vector3[] catmullRomSpline = new Vector3[pointsPerSpline];
 		//Add startpoint
-		catmullRomSpline[0] = p1;
-
-		//The start position of the line
-		Vector3 lastPos = p1;		
+		catmullRomSpline[0] = p1;	
 		//Get spline points
 		for (int i = 1; i < pointsPerSpline; i++)
 		{
@@ -665,34 +603,9 @@ public class SplineCreator : MonoBehaviour
 
 			//Add to spline list
 			catmullRomSpline[i] = newPos;
-			//Save this pos so we can draw the next line segment
-			lastPos = newPos;
 		}
 		return catmullRomSpline;
 	}
-
-	//Clamp the list positions to allow looping
-	int ClampListPos(int pos)
-	{
-		if (pos < 0)
-		{
-			pos = pointList.Length - 1;
-		}
-
-		if (pos > pointList.Length)
-		{
-			pos = 1;
-		}
-		else if (pos > pointList.Length - 1)
-		{
-			pos = 0;
-		}
-
-		return pos;
-	}
-
-	//Returns a position between 4 Vector3 with Catmull-Rom spline algorithm
-	//http://www.iquilezles.org/www/articles/minispline/minispline.htm
 	Vector3 GetCatmullRomPosition(float t, Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3)
 	{
 		//The coefficients of the cubic polynomial (except the 0.5f * which I added later for performance)
@@ -706,5 +619,4 @@ public class SplineCreator : MonoBehaviour
 
 		return pos;
 	}
-
 }

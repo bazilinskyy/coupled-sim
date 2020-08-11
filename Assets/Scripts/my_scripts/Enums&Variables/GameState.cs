@@ -27,4 +27,8 @@ public class GameState : ScriptableObject
     {
         gameState = _gameState;
     }
+    public GameStates GetGameState()
+    {
+        return gameState;
+    }
 }

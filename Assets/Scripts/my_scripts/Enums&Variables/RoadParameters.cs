@@ -10,4 +10,6 @@ public class RoadParameters : ScriptableObject
     public float radiusShort = 0;
     public float radiusLong = 0;
     public float widthRoad = 2f;
+    public float radiusPipe = 1f;
+    public int pipeSegmentCount = 9;
 }

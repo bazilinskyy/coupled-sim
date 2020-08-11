@@ -13,16 +13,20 @@ public class XMLManager : MonoBehaviour
     //singleton pattern
     public static XMLManager ins;
 
+    private string carDataFileName = "carData.xml";
+    private string targetDetectionDataFileName = "targetData.xml";
+
     //our car
-    public GameObject car;
-    public Transform rootWaypoints;
-    public string mainDataFolder;
-    public string carDataFileName;
-    public string targetDetectionDataFileName;
-    public string experimentName;
+    private GameObject car;
+
+    //Current Navigation
+    private Transform navigation;
+    private NavigationHelper navigationHelper;
+
+    private string subjectName;
     //list of items
-    public VehicleData vehicleData;
-    public TargetDetectionData targetDetectionData;
+    private VehicleData vehicleData;
+    private TargetDetectionData targetDetectionData;
 
     // Start is called before the first frame update
     private void Awake()
@@ -37,8 +41,50 @@ public class XMLManager : MonoBehaviour
         AddVehicleData();
         AddEyeTrackingData();
     }
+    public void SetAllInputs(GameObject _car, Transform _navigation, string _subjectName)
+    {
+        car = _car;
+        navigation = _navigation;
 
-    void AddVehicleData()
+        navigationHelper = navigation.GetComponent<NavigationHelper>();
+
+        string dateTime = System.DateTime.Now.ToString("MM-dd-HH-mm");
+        if (_subjectName == null || _subjectName == "") { _subjectName = "JohnDoe"; }
+        subjectName = _subjectName + "-"+ dateTime;
+    }
+
+    public void SaveData()
+    {
+        SaveVehicleData();
+
+        FinalizeTargetDetectionData();
+
+        SaveTargetDetectionData();
+    }
+
+    public void StartNewMeasurement()
+    {
+        vehicleData = new VehicleData();
+        targetDetectionData = new TargetDetectionData();
+    }
+    public void SetNavigation(Transform _navigation)
+    {
+        navigation = _navigation;
+    }
+    private string saveFolder()
+    {
+        //Save folder will be .../unityproject/Data/subjectName-date/subjectName/navigationName
+
+        string assetsFolder = Application.dataPath;
+        //Removing the assets folder remove last 6 chars
+        string unityFolder = assetsFolder.Remove(assetsFolder.Length - 6);
+
+        string saveFolder = string.Join(Path.DirectorySeparatorChar.ToString(), unityFolder, "Data", subjectName, navigation.name);
+        Directory.CreateDirectory(saveFolder);
+
+        return saveFolder;
+    }
+    private void AddVehicleData()
     {   
         //TODO : Make this position of the Varjo camera
         //Add vehicle inputs
@@ -47,11 +93,10 @@ public class XMLManager : MonoBehaviour
         //vehicleData.positionList.Add(car.transform.position);
     }
 
-    void AddEyeTrackingData()
+    private void AddEyeTrackingData()
     {
         //TODO: Add the eye tracking data
     }
-
     public void AddFalseAlarm()
     {
         print("Adding false alarm");
@@ -66,16 +111,14 @@ public class XMLManager : MonoBehaviour
         alarm.targetID = target.GetComponent<Target>().ID;
         targetDetectionData.trueAlarmList.Add(alarm);
     }
-
-
-    public void SaveVehicleData()
+    private void SaveVehicleData()
     {
         XmlSerializer serializer = new XmlSerializer(typeof(VehicleData));
 
         //overwrites mydata.xml
-        string filePath = mainDataFolder + "\\" + carDataFileName + ".xml";
+        string filePath = string.Join("/", saveFolder(), carDataFileName);
 
-        Debug.Log("Saving to " + filePath);
+        Debug.Log($"Saving to vehicle data to {filePath}...");
 
         FileStream stream = new FileStream(filePath, FileMode.Create);
         serializer.Serialize(stream, vehicleData);
@@ -83,24 +126,23 @@ public class XMLManager : MonoBehaviour
         
     }
 
-    public void SaveTargetDetectionData()
+    private void SaveTargetDetectionData()
     {
         XmlSerializer serializer = new XmlSerializer(typeof(TargetDetectionData));
-        string filePath = mainDataFolder + "\\" + targetDetectionDataFileName + ".xml";
-
-        Debug.Log("Saving to " + filePath);
+        
+        string filePath = string.Join("/", saveFolder(), targetDetectionDataFileName);
+        
+        Debug.Log($"Saving to target detection data to {filePath}...");
 
         FileStream stream = new FileStream(filePath, FileMode.Create);
         serializer.Serialize(stream, targetDetectionData);
         stream.Close();
     }
-    public void FinalizeTargetDetectionData()
+    private void FinalizeTargetDetectionData()
     {
         //Get total targets
-        foreach(Transform child in rootWaypoints)
-        {
-            Waypoint waypoint = child.GetComponent<Waypoint>();
-            
+        foreach(Waypoint waypoint in navigationHelper.GetOrderedWaypointList())
+        {            
             targetDetectionData.totalTargets += waypoint.GetTargets().Count;
         }
 
@@ -118,9 +160,7 @@ public class XMLManager : MonoBehaviour
         }
         else
         {
-            targetDetectionData.missRate = targetDetectionData.hitRate = 0f;
-            throw new System.Exception("No hits or misses were recorded......");
-            
+            targetDetectionData.missRate = targetDetectionData.hitRate = 0f;            
         }
 
         //detectionRate
@@ -131,11 +171,8 @@ public class XMLManager : MonoBehaviour
 
     private void OnApplicationQuit()
     {
-        SaveVehicleData();
 
-        FinalizeTargetDetectionData();
-
-        SaveTargetDetectionData();
+        SaveData();
     }
 }
 
