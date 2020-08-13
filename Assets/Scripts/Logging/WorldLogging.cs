@@ -179,6 +179,7 @@ public class WorldLogger
         _driverBuffer.AddRange(_playerSystem.Passengers);
         _driverBuffer.AddRange(_aiCarSystem.Cars);
 
+
         // Log the drivers position, rotation, carblinker state. Log the drivers/passengers Varjo HMD data  
         foreach (var driver in _driverBuffer)
         {

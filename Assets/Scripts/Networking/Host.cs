@@ -5,6 +5,7 @@ using UnityEngine.Assertions;
 using UnityEngine.SceneManagement;
 using Varjo;
 
+
 // high level host networking script
 public class Host : NetworkSystem
 {
@@ -29,6 +30,8 @@ public class Host : NetworkSystem
     const float PoseUpdateInterval = 0.01f;
 
     TrafficLightsSystem _lights;
+
+    public bool gameStarted = false; // test
 
     public Host(LevelManager levelManager, PlayerSystem playerSys, AICarSyncSystem aiCarSystem, WorldLogger logger, WorldLogger fixedLogger)
     {
@@ -61,7 +64,7 @@ public class Host : NetworkSystem
 
         // test
         _SceneSelector = new SceneSelector(_lvlManager);
-        hostRole = _SceneSelector.getHostRole();
+        hostRole = _SceneSelector.hostRole;
     }
 
     //handles ping message
@@ -90,6 +93,7 @@ public class Host : NetworkSystem
 
     public override void FixedUpdate()
     {
+        //Debug.LogError($"Netstate = {_currentState}");
         if (_currentState == NetState.InGame)
         {
             _fixedTimeLogger.LogFrame(0, Time.fixedTime);
@@ -130,7 +134,6 @@ public class Host : NetworkSystem
                             var roleName = _lvlManager.ActiveExperiment.Roles[_playerRoles[Host.PlayerId]].Name;
 
                             // Do not run update if the application is not visible
-                            //if (VarjoManager.Instance.IsLayerVisible() || !VarjoManager.Instance.IsInStandBy())
                             if(VarjoPlugin.GetGaze().status == VarjoPlugin.GazeStatus.VALID)
                             {
                                 VarjoPlugin.RequestGazeCalibration(); // initiate eye-tracking
@@ -198,8 +201,8 @@ public class Host : NetworkSystem
     void PlayerRolesGUI()
     {
         var roles = _lvlManager.Experiments[_selectedExperiment].Roles;
-        SelectRoleGUI(Host.PlayerId, this, roles, _SceneSelector.getHostRole());
-        ForEachConnectedPlayer((player, host) => SelectRoleGUI(player, host, roles, _SceneSelector.getHostRole()));
+        SelectRoleGUI(Host.PlayerId, this, roles, _SceneSelector.hostRole);
+        ForEachConnectedPlayer((player, host) => SelectRoleGUI(player, host, roles, _SceneSelector.hostRole));
     }
 
     //initializes experiment - sets it up locally and broadcasts experiment configuration message
@@ -281,15 +284,15 @@ public class Host : NetworkSystem
             case NetState.Lobby:
             {
                 GUI.enabled = AllRolesSelected();
-                if (GUILayout.Button("Start Game"))
+                /*if (GUILayout.Button("Start Game"))
                 {
-                    StartGame(); 
-                }
+                    StartGame();
+                }*/
                 GUI.enabled = true;
                     //GUILayout.Label("Experiment:");
-                    // test
-                    GUILayout.Label($"Experiment: {_lvlManager.Experiments[_SceneSelector.getSceneSelect()].Name}");
-                    _selectedExperiment = _SceneSelector.getSceneSelect();
+                    // test: select experiment definition via sceneselector
+                    GUILayout.Label($"Experiment: {_lvlManager.Experiments[_SceneSelector.sceneSelect].Name}"); //GUILayout.Label($"Experiment: {_lvlManager.Experiments[_SceneSelector.getSceneSelect()].Name}");
+                    _selectedExperiment = _SceneSelector.sceneSelect; //_SceneSelector.getSceneSelect();
                     
                 /*for (int i = 0; i < _lvlManager.Experiments.Length; i++)
                 {
@@ -300,15 +303,28 @@ public class Host : NetworkSystem
                 }*/
                 PlayerRolesGUI();
                 _playerSys.SelectModeGUI();
+
+                    if(gameStarted == false)
+                    {
+                        StartGame();
+                        gameStarted = true;
+                    }
                 break;
             }
             case NetState.InGame:
             {
-                if (_playerSys.eHMIFixed == false)
+                    if(PersistentManager.Instance.nextScene == true)
+                    {
+                        _currentState = NetState.Lobby;
+                        PersistentManager.Instance.nextScene = false;
+                        gameStarted = false;
+                    }
+                // commented out eHMI GUI since it's not needed
+                /*if (_playerSys.eHMIFixed == false)
                 {
                     _hmiManager.DoHostGUI(this);
                     _visualSyncManager.DoHostGUI(this);
-                }
+                }*/
             }
             break;
         }

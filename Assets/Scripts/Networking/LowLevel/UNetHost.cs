@@ -48,12 +48,13 @@ public class UNetHost
                 return i;
             }
         }
-        Assert.IsFalse(true);
+        Assert.IsFalse(true); // Q:what is this for?
         return NoPlayer;
     }
 
     public void Init()
     {
+        // put a check here for the init? if already init the no more init
         _transport.Init(UNetConfig.Port, UNetConfig.MaxHostConnections);
         _initialized = true;
         _writerStream = new MemoryStream(_sendBuffer);
@@ -70,7 +71,7 @@ public class UNetHost
     {
         Assert.IsTrue(_initialized, "Update() should not be called before Initialize()");
         TransportEvent tEvent = new TransportEvent();
-        while (_transport.NextEvent(ref tEvent))
+        while (_transport.NextEvent(ref tEvent)) 
         {
             switch (tEvent.type)
             {

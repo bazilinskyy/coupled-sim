@@ -7,19 +7,41 @@ public class SceneSelector : MonoBehaviour
 {
     LevelManager _lvlManager;
     public int sceneSelect;
-    private int hostRole;
+    public int hostRole;
+    public int n = 0;
 
-    public void Update()
+    private void Update()
     {
-        if (Input.GetKeyDown("r"))
+        // This function should keep reloading the startscene.
+        if (Input.GetKeyDown("1"))
         {
-            //SceneManager.UnloadSceneAsync($"{SceneManager.GetActiveScene().name}");
-            SceneManager.LoadScene("StartScene 1");
-            if (sceneSelect == 4)
-            {
-                sceneSelect = 5;
-            }
+            nextExperiment();
         }
+        if (Input.GetKeyDown("2"))
+        {
+            SceneManager.LoadSceneAsync("Varjotesting");
+        }
+    }
+
+    void OnTriggerEnter(Collider other)
+    {
+        if (other.transform.tag == "NEXT")
+        {
+            Invoke("nextExperiment", 2);
+            //Application.Quit(); // build version
+            //UnityEditor.EditorApplication.isPlaying = false; // editor version
+
+            PersistentManager.Instance.stopLogging = true;
+            PersistentManager.Instance.nextScene = true;
+        }
+    }
+
+    public void nextExperiment()
+    {
+        SceneManager.LoadSceneAsync("StartScene");
+        n++;
+        //PersistentManager.Instance.nextScene = true;
+        Debug.LogError($"n = {n}");
     }
 
     public SceneSelector(LevelManager levelManager) // actually selects the experiment definition
@@ -27,23 +49,14 @@ public class SceneSelector : MonoBehaviour
         _lvlManager = levelManager;
 
         // manually select the experiment definition nr for now
-        //sceneSelect = 4; 
+        sceneSelect = 1+n;
+        Debug.LogError($"experiment nr = {sceneSelect}");
         if (sceneSelect > _lvlManager.Experiments.Length)
         {
             Debug.LogError("Selected experiment definition out of bounds.");
         }
 
         // manually select the role nr for the host for now
-        hostRole = 0;
-    }
-
-    public int getSceneSelect()
-    {
-        return sceneSelect;
-    }
-
-    public int getHostRole()
-    {
-        return hostRole;
+        //hostRole = 0;
     }
 }

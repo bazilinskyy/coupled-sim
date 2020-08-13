@@ -239,6 +239,7 @@ GameObject:
   - component: {fileID: 301934533}
   - component: {fileID: 301934534}
   - component: {fileID: 301934535}
+  - component: {fileID: 301934536}
   m_Layer: 0
   m_Name: Managers
   m_TagString: Untagged
@@ -275,19 +276,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1b85ac67be17069438aade52a87eace5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _SceneSelector: {fileID: 0}
+  _nextScene: 0
   _aiCarSystem:
     Prefabs:
     - {fileID: 352613617798921809, guid: 568fe77cfc898694fad6a63eff98d905, type: 3}
     - {fileID: 352613617798921809, guid: 7b87a0422a786584db64df11ac169f96, type: 3}
   Experiments:
   - {fileID: 8692043556341430772, guid: b0863b64ab54d0e48878846393ab54f1, type: 3}
-  - {fileID: 8692043556341430772, guid: b0863b64ab54b0868878846393ab54f1, type: 3}
-  - {fileID: 8692043556341430772, guid: ba072abc12c27c143acb5441e8d23191, type: 3}
-  - {fileID: 8692043556341430772, guid: 98f1dd8d50e5bc34083f7866a56b5970, type: 3}
   - {fileID: 8692043556341430772, guid: 120893349a044664db30fa9d9d4345bf, type: 3}
   - {fileID: 8692043556341430772, guid: 13e12e1479ea0664882399652e8c6845, type: 3}
-  - {fileID: 8692043556341430772, guid: 81719cd449fa80b4488c32b3500234a1, type: 3}
-  - {fileID: 8692043556341430772, guid: 22bc39d1364c0a0469a7616560154340, type: 3}
 --- !u!114 &301934534
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -323,6 +321,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5f320a49bc72c234b9dff48d5a15b071, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &301934536
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 301934531}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb29410d7d2605c45a8fa1ca166c11df, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  nextScene: 0
 --- !u!1 &1256699364
 GameObject:
   m_ObjectHideFlags: 0
@@ -459,7 +470,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 499a39d01396b8d4189b3693729c5f71, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  sceneSelect: 4
+  hostRole: 0
 --- !u!1 &1531541351
 GameObject:
   m_ObjectHideFlags: 0

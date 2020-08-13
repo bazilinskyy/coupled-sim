@@ -9,8 +9,9 @@ public class UNETTransport
 {
     public const int MaxPackageSize = 2048;
     public int hostId => m_HostId;
+ 
 
-    //initializes and configures Unity networking
+    // 1) initializes and configures Unity networking
     public bool Init(int port = 0, int maxConnections = 16)
     {
         var config = new GlobalConfig
@@ -21,13 +22,15 @@ public class UNETTransport
 
         m_ReadBuffer = new byte[MaxPackageSize + 1024];
 
+        // 2) configure the network topology
         m_ConnectionConfig = new ConnectionConfig();
-        m_ConnectionConfig.SendDelay = 0;
+        m_ConnectionConfig.SendDelay = 0; // Property change
 
-        m_ChannelUnreliable = m_ConnectionConfig.AddChannel(QosType.UnreliableFragmented);
-        m_ChannelReliable = m_ConnectionConfig.AddChannel(QosType.ReliableSequenced);
-        m_Topology = new HostTopology(m_ConnectionConfig, maxConnections);
+        m_ChannelUnreliable = m_ConnectionConfig.AddChannel(QosType.UnreliableFragmented);  // faster, but no ensurance 
+        m_ChannelReliable = m_ConnectionConfig.AddChannel(QosType.ReliableSequenced);       // ensures that the msg is delivered
+        m_Topology = new HostTopology(m_ConnectionConfig, maxConnections);                  // Topology definition, allow up to maxConnections -> 16
 
+        // 3) Create a host (open socket)
         if (Debug.isDebugBuild && m_isNetworkSimuationActive)
         {
             m_HostId = NetworkTransport.AddHostWithSimulator(m_Topology, 1, 300, port);
@@ -59,6 +62,8 @@ public class UNETTransport
     {
         int res;
         byte err;
+
+        // 4) Start communicating
         if (Debug.isDebugBuild && m_isNetworkSimuationActive)
         {
             var simulationConfig = new ConnectionSimulatorConfig(48, 50, 48, 50, 10);
@@ -88,7 +93,7 @@ public class UNETTransport
         NetworkTransport.Disconnect(m_HostId, connectionId, out error);
     }
 
-    //network messages handling logic
+    //network messages handling logic, polls data from Receive
     public bool NextEvent(ref TransportEvent res)
     {
         Debug.Assert(m_HostId > -1, "Trying to update transport with no host id");
@@ -100,16 +105,17 @@ public class UNETTransport
         int receivedSize;
         byte error;
 
+        //Debug.LogError($"host id = {m_HostId}"); // test
         var ne = NetworkTransport.ReceiveFromHost(m_HostId, out connectionId, out channelId, m_ReadBuffer, m_ReadBuffer.Length, out receivedSize, out error);
 
         switch (ne)
         {
             default:
-            case NetworkEventType.Nothing:
+            case NetworkEventType.Nothing:      // The event queue has nothing to report.
                 Profiler.EndSample();
                 return false;
-            case NetworkEventType.ConnectEvent:
-            {
+            case NetworkEventType.ConnectEvent: // You have received a connect event. This can be either a successful connect request, or a connection response.
+                {
                 string address;
                 int port;
                 NetworkID network;
@@ -121,11 +127,11 @@ public class UNETTransport
                 res.connectionId = connectionId;
                 break;
             }
-            case NetworkEventType.DisconnectEvent:
+            case NetworkEventType.DisconnectEvent:  // Connection has disconnected, or connest request has failed
                 res.type = TransportEvent.Type.Disconnect;
                 res.connectionId = connectionId;
                 break;
-            case NetworkEventType.DataEvent:
+            case NetworkEventType.DataEvent:    // Data is ready to be received. 
                 res.type = TransportEvent.Type.Data;
                 res.data = m_ReadBuffer;
                 res.dataSize = receivedSize;
@@ -143,7 +149,7 @@ public class UNETTransport
     public void SendUnreliable(int connectionId, byte[] data, int sendSize)
         => SendData(connectionId, data, sendSize, m_ChannelUnreliable);
 
-    //sends network message
+    //sends network message, aftre the connection is done
     void SendData(int connectionId, byte[] data, int sendSize, int channel)
     {
         Profiler.BeginSample("UNETTransform.SendData()");
