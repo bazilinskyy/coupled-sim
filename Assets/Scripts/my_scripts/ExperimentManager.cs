@@ -25,6 +25,8 @@ public class ExperimentManager : MonoBehaviour
     public Transform usedCam;
     public Transform headPosition;
 
+    private Transform originalParentCamera;
+
     //UI objects
     public Text UIText;
     //Scriptable gameState object
@@ -175,12 +177,14 @@ public class ExperimentManager : MonoBehaviour
         Debug.Log("Returning to car...");
         usedCam.transform.position = headPosition.position;
         usedCam.transform.rotation = headPosition.rotation;
-        usedCam.SetParent(car.transform);
+        usedCam.SetParent(originalParentCamera);
         //usedCam.transform.Rotate(new Vector3(0, 1f, 0), -90);
     }
     void GoToWaitingRoom()
     {
         Debug.Log("Going to waiting room...");
+        if (originalParentCamera == null) { originalParentCamera = usedCam.parent; }
+
         usedCam.transform.position = waitingRoom.transform.position + new Vector3(0, 3f, -3f);
         usedCam.transform.rotation = waitingRoom.transform.rotation;
         usedCam.SetParent(waitingRoom);
