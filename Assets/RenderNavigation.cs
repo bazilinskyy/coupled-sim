@@ -22,9 +22,9 @@ public class RenderNavigation : MonoBehaviour
     }
     void Update()
     {
-        if(target != navigator.target)
+        if(target != navigator.GetCurrentTarget())
         {
-            target = navigator.target;
+            target = navigator.GetCurrentTarget();
             SetAllRenderMeToFalse();
             SetRenderMeAttributes();
         }
@@ -32,9 +32,9 @@ public class RenderNavigation : MonoBehaviour
     public void ResetRendering()
     {
         //Set navigation variables and such
-        navigationHelper = navigator.navigation.GetComponent<NavigationHelper>();
+        navigationHelper = navigator.GetNavigationHelper();
         navigation = navigator.navigation;
-        target = navigator.target;
+        target = navigator.GetCurrentTarget();
         waypoints = navigationHelper.GetOrderedWaypointList();
 
         //Set rendering attributes

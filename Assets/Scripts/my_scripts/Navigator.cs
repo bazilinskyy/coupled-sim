@@ -3,12 +3,17 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using System.Linq;
+
+[RequireComponent(typeof(RenderNavigation))]
 public class Navigator : MonoBehaviour
 {
     //Current target waypoint and waypoint tree
     public Transform navigation;
-    public Waypoint target;
+    
     public RoadParameters roadParameters;
+
+    private Waypoint target { get; set; }
+    private NavigationHelper navigationHelper { get; set; }
 
     public bool navigationFinished = false;
     public float distanceAfterWaypoint = 5f;
@@ -19,9 +24,9 @@ public class Navigator : MonoBehaviour
     [Range(0.01f, 1f)]
     public float _transparency = 0.3f; private float transparency = 0.3f;
 
-    public bool _renderVirtualCable = true; private bool renderVirtualCable = true;
-    public bool _renderHighlightedRoad = true; private bool renderHighlightedRoad = true;
-    public bool _renderHUD = true; private bool renderHUD = true;
+    public bool _renderVirtualCable = true; private bool renderVirtualCable { get; set; }
+    public bool _renderHighlightedRoad = true; private bool renderHighlightedRoad { get; set; }
+    public bool _renderHUD = true; private bool renderHUD { get; set; }
 
 
     public GameObject HUD;
@@ -32,6 +37,14 @@ public class Navigator : MonoBehaviour
 
     private void Awake()
     {
+        //Set some variables
+        navigationHelper = navigation.GetComponent<NavigationHelper>();
+        navigationFinished = false;
+        CheckOptionInput();
+
+        if (target == null) {target = navigationHelper.GetFirstTarget();}
+
+        //Render the HUDs if needed
         if (renderHUD) { 
             RenderNavigationArrow();
             RenderNavigationDistance();
@@ -48,6 +61,23 @@ public class Navigator : MonoBehaviour
         }
         //Renders the instructions on HUD
         if (renderHUD) { RenderNavigationDistance(); }
+    }
+    
+    public Waypoint GetCurrentTarget()
+    {
+        return target;
+    }
+
+    public void SetNewNavigation(Transform _navigation)
+    {
+        navigation = _navigation;
+        navigationHelper = navigation.GetComponent<NavigationHelper>();
+        target = navigationHelper.GetFirstTarget();
+        navigationFinished = false;
+    }
+    public Transform GetNavigation()
+    {
+        return navigation;
     }
     void CheckOptionInput()
     {
@@ -96,8 +126,8 @@ public class Navigator : MonoBehaviour
         text.GetComponent<TextMesh>().color = color;
 
         //change Conformal transparancy
-        color = navigation.GetComponent<SplineCreator>().navigationPartMaterial.color; color.a = transparency;
-        navigation.GetComponent<SplineCreator>().navigationPartMaterial.color = color;
+        color = GetNavigation().GetComponent<SplineCreator>().navigationPartMaterial.color; color.a = transparency;
+        GetNavigation().GetComponent<SplineCreator>().navigationPartMaterial.color = color;
     }
     void RenderNavigationArrow()
     {
@@ -176,4 +206,6 @@ public class Navigator : MonoBehaviour
             navigationFinished = true;
         }
     }
+
+    public NavigationHelper GetNavigationHelper() { return navigationHelper;}
 }

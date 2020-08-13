@@ -4,6 +4,7 @@ using System.Linq;
 using UnityEngine;
 
 //Interpolation between points with a Catmull-Rom spline
+[RequireComponent(typeof(NavigationHelper))]
 public class SplineCreator : MonoBehaviour
 {
 
@@ -154,7 +155,7 @@ public class SplineCreator : MonoBehaviour
 			navigationPartGameObject.AddComponent(typeof(MeshFilter));
 			navigationPartGameObject.AddComponent(typeof(NavigationPart));
 
-			//Sets parent toi appropriate gameobject
+			//Sets parent to appropriate gameobject
 			navigationPartGameObject.transform.SetParent(navigationPartsParent.transform.Find(navigationType.ToString()));
 
 			//Set attributes of NavigationPart Class
@@ -168,6 +169,7 @@ public class SplineCreator : MonoBehaviour
 			//Set the mesh
 			navigationPartGameObject.GetComponent<MeshFilter>().mesh = mesh = new Mesh();
 			navigationPartGameObject.GetComponent<MeshRenderer>().material = navigationPartMaterial;
+			navigationPartGameObject.GetComponent<MeshRenderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 
 			mesh.name = waypoint.operation.ToString();
 			mesh.vertices = GetVertices( points, navigationType);

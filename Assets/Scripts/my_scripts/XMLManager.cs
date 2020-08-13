@@ -15,7 +15,7 @@ public class XMLManager : MonoBehaviour
 
     private string carDataFileName = "carData.xml";
     private string targetDetectionDataFileName = "targetData.xml";
-
+    private string dataFolder = "Data";
     //our car
     private GameObject car;
 
@@ -48,7 +48,7 @@ public class XMLManager : MonoBehaviour
 
         navigationHelper = navigation.GetComponent<NavigationHelper>();
 
-        string dateTime = System.DateTime.Now.ToString("MM-dd-HH-mm");
+        string dateTime = System.DateTime.Now.ToString("MM-dd_HH-mm");
         if (_subjectName == null || _subjectName == "") { _subjectName = "JohnDoe"; }
         subjectName = _subjectName + "-"+ dateTime;
     }
@@ -79,7 +79,7 @@ public class XMLManager : MonoBehaviour
         //Removing the assets folder remove last 6 chars
         string unityFolder = assetsFolder.Remove(assetsFolder.Length - 6);
 
-        string saveFolder = string.Join(Path.DirectorySeparatorChar.ToString(), unityFolder, "Data", subjectName, navigation.name);
+        string saveFolder = string.Join(Path.DirectorySeparatorChar.ToString(), unityFolder, dataFolder, subjectName, navigation.name);
         Directory.CreateDirectory(saveFolder);
 
         return saveFolder;

@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Linq;
 
+[RequireComponent(typeof(XMLManager))]
 public class ExperimentManager : MonoBehaviour
 {
     //Attachted to the object with the experiment manager should be a XMLManager for handling the saving of the data.
@@ -134,7 +135,7 @@ public class ExperimentManager : MonoBehaviour
     bool NavigationFinished()
     {
         //Checks wheter current navigation path is finished.
-        if(car.target.operation == Operation.EndPoint && car.navigationFinished && car.navigation == activeExperiment.navigation) { return true; }
+        if(car.GetCurrentTarget().operation == Operation.EndPoint && car.navigationFinished && car.navigation == activeExperiment.navigation) { return true; }
         else { return false; }
     }
     void SetupNextExperiment()
@@ -152,13 +153,9 @@ public class ExperimentManager : MonoBehaviour
     {
         Debug.Log("Setting up car...");
         //Set new navigation for car
-        car.navigation = activeExperiment.navigation;
 
-        //Set new waypoint target
-        Waypoint target = activeNavigationHelper.GetFirstTarget();
-        car.target = target;
+        car.SetNewNavigation(activeExperiment.navigation);
 
-        car.navigationFinished = false;
 
         //Put car in right position
         Transform startLocation = activeNavigationHelper.GetStartPointNavigation();
