@@ -75,11 +75,20 @@ public class XMLManager : MonoBehaviour
     {
         //Save folder will be .../unityproject/Data/subjectName-date/subjectName/navigationName
 
-        string assetsFolder = Application.dataPath;
-        //Removing the assets folder remove last 6 chars
-        string unityFolder = assetsFolder.Remove(assetsFolder.Length - 6);
+        string[] assetsFolderArray = Application.dataPath.Split('/'); //Gives .../unityproject/assest
 
-        string saveFolder = string.Join(Path.DirectorySeparatorChar.ToString(), unityFolder, dataFolder, subjectName, navigation.name);
+        //emmit unityfolder/assets and keep root folder
+
+        /*     Debug.Log(assetsFolder[0]);
+             for (int i = 0; i < (assetsFolder.Length); i++)
+             {
+                 Debug.Log(assetsFolder[i]);
+             }*/
+        string[] baseFolderArray = new string[assetsFolderArray.Length - 2];
+        for (int i = 0; i < (assetsFolderArray.Length - 2); i++) { baseFolderArray[i] = assetsFolderArray[i]; }
+
+        string baseFolder = string.Join("/", baseFolderArray);
+        string saveFolder = string.Join("/", baseFolder, dataFolder, subjectName, navigation.name);
         Directory.CreateDirectory(saveFolder);
 
         return saveFolder;
