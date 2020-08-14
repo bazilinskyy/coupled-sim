@@ -306,16 +306,17 @@ namespace VehicleBehaviour {
                     
                     throttle = GetInput(throttleInput) * (reverse ? -1f : 1);
 
-                   /* if(GetInput(throttleInput) < 0)
+                    //The gas pedal outputs a constant output thus when not pressing down it gives negative (actually psotiive but we invert it in the input manager)
+                    if (GetInput(throttleInput) < 0)
                     {
                         throttle = 0;
-                    }       */                 
+                    }
                 }
                 else { throttle = 0; }
                 
                 if (brakeInput != "" && brakeInput != null)
                 {
-                    //                    Debug.Log("Brake input: " +  GetInput(brakeInput));
+                    //Similar to 10 lines above in the gas pedal. Brake pedal constantly outputs a value, thus should only be activated when postiive not negative
                     if (GetInput(brakeInput) > 0)
                     {
                         breaking = Mathf.Clamp01(Mathf.Abs(GetInput(brakeInput)));

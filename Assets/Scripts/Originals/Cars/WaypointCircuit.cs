@@ -11,7 +11,7 @@ namespace UnityStandardAssets.Utility
     public class WaypointCircuit : MonoBehaviour
     {
         public WaypointList waypointList = new WaypointList();
-        public Transform some;
+        
         [SerializeField] private bool smoothRoute = true;
         private int numPoints;
         private Vector3[] points;

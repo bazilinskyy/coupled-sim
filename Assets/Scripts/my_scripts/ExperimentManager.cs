@@ -20,10 +20,13 @@ public class ExperimentManager : MonoBehaviour
     [Header("GameObejcts")]
     public Transform navigationRoot;
     public Navigator car;
- 
+
     //The camera used and head position inside the car
-    public Transform usedCam;
+    public bool usingVarjo = false;
+    public Transform normalCam;
+    public Transform varjoCamRig;
     public Transform headPosition;
+    private Transform usedCam;
 
     private Transform originalParentCamera;
 
@@ -45,6 +48,14 @@ public class ExperimentManager : MonoBehaviour
     // Start is called before the first frame update
     void Awake()
     { 
+        if (usingVarjo)
+        {
+            headPosition.position = headPosition.parent.position + new Vector3(0,0.2f, 0.1f);
+            headPosition.rotation  = varjoCamRig.rotation;
+            usedCam = varjoCamRig;
+        }
+        else { usedCam = normalCam; }
+        
         
         //Set gamestate to waiting
         gameState.SetGameState(GameStates.Waiting);
@@ -175,8 +186,10 @@ public class ExperimentManager : MonoBehaviour
     void ReturnToCar()
     {
         Debug.Log("Returning to car...");
-        usedCam.transform.position = headPosition.position;
-        usedCam.transform.rotation = headPosition.rotation;
+        usedCam.position = headPosition.position;
+        usedCam.rotation = headPosition.rotation;
+        //Only do rotation when not using varjo
+        //if (!usingVarjo) { usedCam.transform.rotation = headPosition.rotation; }
         usedCam.SetParent(originalParentCamera);
         //usedCam.transform.Rotate(new Vector3(0, 1f, 0), -90);
     }
@@ -184,9 +197,10 @@ public class ExperimentManager : MonoBehaviour
     {
         Debug.Log("Going to waiting room...");
         if (originalParentCamera == null) { originalParentCamera = usedCam.parent; }
-
-        usedCam.transform.position = waitingRoom.transform.position + new Vector3(0, 3f, -3f);
-        usedCam.transform.rotation = waitingRoom.transform.rotation;
+        
+        usedCam.position = waitingRoom.position + new Vector3(0, 3f, -3f);
+        usedCam.rotation = waitingRoom.rotation;
+        if (usingVarjo) { usedCam.Rotate(new Vector3(0, 1f, 0), -90); }
         usedCam.SetParent(waitingRoom);
         StartCoroutine(RenderStartScreenText());
     }

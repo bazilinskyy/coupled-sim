@@ -9,12 +9,14 @@ public class EyeTrackingVisuals : MonoBehaviour
     public VarjoPlugin.GazeData gazeData;
     public Transform cam;
     public Transform gazeHighlights;
+    public KeyCode switchGazeHighlight;
     public bool highlightGaze = false;
 
     // Update is called once per frame
     void Update()
     {
 
+        if (Input.GetKeyDown(switchGazeHighlight)) { Debug.Log("Pressing key!"); highlightGaze = !highlightGaze; }
         if (highlightGaze)
         {
 
