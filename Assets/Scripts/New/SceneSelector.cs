@@ -33,27 +33,28 @@ public class SceneSelector : MonoBehaviour
 
             PersistentManager.Instance.stopLogging = true;
             PersistentManager.Instance.nextScene = true;
+            Debug.LogError("Hit, going to the next scene");
+            PersistentManager.Instance.experimentnr++;
+            Debug.LogError($"persistent experiment nr = {PersistentManager.Instance.experimentnr}");
         }
     }
 
     public void nextExperiment()
     {
         SceneManager.LoadSceneAsync("StartScene");
-        n++;
-        //PersistentManager.Instance.nextScene = true;
-        Debug.LogError($"n = {n}");
     }
 
     public SceneSelector(LevelManager levelManager) // actually selects the experiment definition
     {
         _lvlManager = levelManager;
+        Debug.LogError($"persistent experiment nr = {PersistentManager.Instance.experimentnr}");
 
         // manually select the experiment definition nr for now
-        sceneSelect = 1+n;
-        Debug.LogError($"experiment nr = {sceneSelect}");
+        sceneSelect = 1+ PersistentManager.Instance.experimentnr;
         if (sceneSelect > _lvlManager.Experiments.Length)
         {
             Debug.LogError("Selected experiment definition out of bounds.");
+            Debug.LogError($"experiment nr = {sceneSelect}");
         }
 
         // manually select the role nr for the host for now

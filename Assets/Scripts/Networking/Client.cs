@@ -100,6 +100,11 @@ public class Client : NetworkSystem
         _playerSys.ApplyPoses(msg.Poses);
     }
 
+    public override void SelectNextScene()
+    {
+        throw new NotImplementedException();
+    }
+
     public override void FixedUpdate()
     {
         if (_currentState == NetState.InGame)

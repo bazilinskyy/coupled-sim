@@ -30,7 +30,6 @@ public class NetworkingManager : MonoBehaviour
         _logger = new WorldLogger(_playerSystem, _aiCarSystem);
         _fixedLogger = new WorldLogger(_playerSystem, _aiCarSystem);
         _logConverter = new LogConverter(_playerSystem.PedestrianPrefab);
-        //Debug.LogError("Awake entered");
     }
 
     void Start()
@@ -50,7 +49,7 @@ public class NetworkingManager : MonoBehaviour
         {
             hideGui = !hideGui;
         }
-        if (_netSystem != null)// && _nextScene == false) //if (_netSystem != null) test // stop updating when going to the next scene
+        if (_netSystem != null)
         {
             _netSystem.Update();
         }
@@ -67,7 +66,7 @@ public class NetworkingManager : MonoBehaviour
     }
     void FixedUpdate()
     {
-        if (_netSystem != null)// && _nextScene == false) //nextScene should be set at true when entering new scene. How come it is set back to false? // if (_netSystem != null)
+        if (_netSystem != null)
         {
             _netSystem.FixedUpdate();
         }
@@ -75,21 +74,17 @@ public class NetworkingManager : MonoBehaviour
 
     void OnGUI()
     {
-        //Debug.LogError($"Netsystem = {_netSystem}");
         if (hideGui)
         {
             return;
         }
-        if (_netSystem == null) //if (_netSystem == null)
+        if (_netSystem == null) 
         {
-            //Debug.LogError("NetSystem is null");
             if (GUILayout.Button("Start Host"))
             {
-                //Debug.LogError($"netsystem 1 = {_netSystem}");
                 if (_netSystem == null)
                 {
                     _netSystem = new Host(_levelManager, _playerSystem, _aiCarSystem, _logger, _fixedLogger);
-                    //Debug.LogError($"netsystem 2 = {_netSystem}");
                     PersistentManager.Instance.nextScene = false;
                 }
                 else if (_netSystem != null)
@@ -105,7 +100,7 @@ public class NetworkingManager : MonoBehaviour
         }
         else
         {
-            //Debug.LogError("NetSystem is NOT null");
+            _netSystem.SelectNextScene();
             _netSystem.OnGUI();
         }
     }

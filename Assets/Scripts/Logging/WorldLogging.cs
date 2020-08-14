@@ -557,7 +557,14 @@ public class LogConverter
                     numAICars++;
                     continue;
                 }
-                Assert.AreEqual(LogFrameType.PositionsUpdate, eventType); 
+                /*Debug.LogError($"logframe type = {LogFrameType.PositionsUpdate}");
+                Debug.LogError($"event type = {eventType}");
+                if(eventType != LogFrameType.PositionsUpdate)
+                {
+                    Debug.LogError("event type is not equal to the logframe type");
+                    return;
+                }*/
+                Assert.AreEqual(LogFrameType.PositionsUpdate, eventType); // What type should it be?
                 var frame = new SerializedFrame();
                 log.Frames.Add(frame);
                 frame.Timestamp = reader.ReadSingle();
@@ -1033,7 +1040,7 @@ public class LogConverter
                     {
                         var fullName = "ExperimentLogs/" + name;
                         var csvName = "ExperimentLogs/" + UNITY_WORLD_ROOT + "-" + name.Replace("binLog", "csv");
-                        TranslateBinaryLogToCsv(fullName, csvName, _pedestrianSkeletonNames, UNITY_WORLD_ROOT, default, Quaternion.identity);
+                        TranslateBinaryLogToCsv(fullName, csvName, _pedestrianSkeletonNames, UNITY_WORLD_ROOT, default, Quaternion.identity); // Error: assertion failure
                     }
                     foreach (var poi in _pois)
                     {

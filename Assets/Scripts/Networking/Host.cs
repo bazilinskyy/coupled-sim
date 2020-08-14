@@ -91,6 +91,12 @@ public class Host : NetworkSystem
     public void BroadcastMessage<T>(T msg) where T : INetMessage 
         => _host.BroadcastReliable(msg);
 
+    public override void SelectNextScene()
+    {
+        _SceneSelector = new SceneSelector(_lvlManager);
+        hostRole = _SceneSelector.hostRole;
+    }
+
     public override void FixedUpdate()
     {
         //Debug.LogError($"Netstate = {_currentState}");
