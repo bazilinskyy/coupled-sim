@@ -161,7 +161,6 @@ public class AICar : MonoBehaviour
     
     void Brake_AV(Collider other)
     {
-        Debug.LogError($"Hit box tag = {other.tag}");
         if (other.gameObject.CompareTag("StartTrial_Z") && StopWithEyeGaze == false)                // Change tag, resume driving after stopping for 2 seconds in the Z direction.
         {
             WaitTrialZ = true;
@@ -346,7 +345,6 @@ public class AICar : MonoBehaviour
 
     void Reset_Speed_After_Stopping()
     {
-        Debug.LogError("Resetting speed");
         // Accelerating in the Z direction
         if (WaitTrialZ == true || SpaceBar)
         {

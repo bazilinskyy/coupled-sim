@@ -36,6 +36,7 @@ public class NetworkingManager : MonoBehaviour
     {
         _SceneSelector = transform.GetComponentInChildren<SceneSelector>();
         _SceneSelector.GazeEffectOnAV();
+        _SceneSelector.UseEyeTracking();
     }
 
     bool hideGui = false;

@@ -299,7 +299,9 @@ public class Host : NetworkSystem
                 GUI.enabled = true;
                     //GUILayout.Label("Experiment:");
                     // test: select experiment definition via sceneselector
-                    GUILayout.Label($"Experiment: {_lvlManager.Experiments[_SceneSelector.sceneSelect].Name}"); //GUILayout.Label($"Experiment: {_lvlManager.Experiments[_SceneSelector.getSceneSelect()].Name}");
+                    
+                    // ERROR:
+                    //GUILayout.Label($"Experiment: {_lvlManager.Experiments[_SceneSelector.sceneSelect].Name}"); //GUILayout.Label($"Experiment: {_lvlManager.Experiments[_SceneSelector.getSceneSelect()].Name}");
                     _selectedExperiment = _SceneSelector.sceneSelect; //_SceneSelector.getSceneSelect();
                     
                 /*for (int i = 0; i < _lvlManager.Experiments.Length; i++)

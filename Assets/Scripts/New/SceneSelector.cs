@@ -33,6 +33,7 @@ public class SceneSelector : MonoBehaviour
             PersistentManager.Instance.stopLogging = true;
             PersistentManager.Instance.nextScene = true;
             Debug.LogError("Hit, going to the next scene");
+
             PersistentManager.Instance.experimentnr++;
             Debug.LogError($"persistent experiment nr = {PersistentManager.Instance.experimentnr}");
         }
@@ -71,5 +72,18 @@ public class SceneSelector : MonoBehaviour
         {
             PersistentManager.Instance._StopWithEyeGaze = true;
         }
+    }
+
+    public void UseEyeTracking()
+    {
+        if (PersistentManager.Instance.experimentnr < 4)
+        {
+            PersistentManager.Instance.useEyeTracking = false;
+        }
+        if (PersistentManager.Instance.experimentnr >= 4)
+        {
+            PersistentManager.Instance.useEyeTracking = true;
+        }
+        Debug.LogError($"exp nr = {PersistentManager.Instance.experimentnr}; 1if = {PersistentManager.Instance.experimentnr < 4}; 2if = {PersistentManager.Instance.experimentnr >= 4}; tracking = {PersistentManager.Instance.useEyeTracking} ");
     }
 }
