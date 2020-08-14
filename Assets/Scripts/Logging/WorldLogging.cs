@@ -525,6 +525,14 @@ public class LogConverter
         Log log = Log.New();
         using (var reader = new BinaryReader(srcFile))
         {
+            /*Debug.LogError($"1 Local driver = {reader.ReadInt32()}");
+            Debug.LogError($"2 numPersistentDrivers = {reader.ReadInt32()}");
+            Debug.LogError($"3 numPedestrians = {reader.ReadInt32()}");
+            Debug.LogError($"4 numCarlights = {reader.ReadInt32()}");
+            Debug.LogError($"5 numPedestrianLights = {reader.ReadInt32()}");
+            Debug.LogError($"6 eventType = {reader.ReadInt32()}");
+            Debug.LogError($"------------------End List------------------");*/
+
             log.StartTime = DateTime.FromBinary(reader.ReadInt64());
             log.LocalDriver = reader.ReadInt32();
             int numPersistentDrivers = reader.ReadInt32();

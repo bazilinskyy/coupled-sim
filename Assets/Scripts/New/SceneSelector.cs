@@ -8,7 +8,6 @@ public class SceneSelector : MonoBehaviour
     LevelManager _lvlManager;
     public int sceneSelect;
     public int hostRole;
-    public int n = 0;
 
     private void Update()
     {
@@ -27,7 +26,7 @@ public class SceneSelector : MonoBehaviour
     {
         if (other.transform.tag == "NEXT")
         {
-            Invoke("nextExperiment", 2);
+            Invoke("nextExperiment", 4);
             //Application.Quit(); // build version
             //UnityEditor.EditorApplication.isPlaying = false; // editor version
 
@@ -47,17 +46,30 @@ public class SceneSelector : MonoBehaviour
     public SceneSelector(LevelManager levelManager) // actually selects the experiment definition
     {
         _lvlManager = levelManager;
-        Debug.LogError($"persistent experiment nr = {PersistentManager.Instance.experimentnr}");
+        //Debug.LogError($"persistent experiment nr = {PersistentManager.Instance.experimentnr}");
 
         // manually select the experiment definition nr for now
-        sceneSelect = 1+ PersistentManager.Instance.experimentnr;
+        sceneSelect = PersistentManager.Instance.experimentnr;
         if (sceneSelect > _lvlManager.Experiments.Length)
         {
             Debug.LogError("Selected experiment definition out of bounds.");
             Debug.LogError($"experiment nr = {sceneSelect}");
         }
+        
 
         // manually select the role nr for the host for now
         //hostRole = 0;
+    }
+
+    public void GazeEffectOnAV()
+    {
+        if (PersistentManager.Instance.experimentnr < 4 || PersistentManager.Instance.experimentnr > 8)
+        {
+            PersistentManager.Instance._StopWithEyeGaze = false;
+        }
+        if (PersistentManager.Instance.experimentnr >= 4 && PersistentManager.Instance.experimentnr <= 8)
+        {
+            PersistentManager.Instance._StopWithEyeGaze = true;
+        }
     }
 }

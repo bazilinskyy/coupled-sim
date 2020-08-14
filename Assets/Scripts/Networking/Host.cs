@@ -104,6 +104,8 @@ public class Host : NetworkSystem
         {
             _fixedTimeLogger.LogFrame(0, Time.fixedTime);
         }
+
+        // Set AV behaviour
     }
 
     public override void Update()

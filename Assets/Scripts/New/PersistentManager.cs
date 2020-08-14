@@ -10,6 +10,7 @@ public class PersistentManager : MonoBehaviour
     public bool nextScene;
     public bool stopLogging;
     public int experimentnr;
+    public bool _StopWithEyeGaze;
 
     private void Awake()
     {

@@ -68,6 +68,7 @@ public class AICar : MonoBehaviour
     }
     void Update()
     {
+        StopWithEyeGaze = PersistentManager.Instance._StopWithEyeGaze;
         // TODO(jacek): This null check is a quick hack to fix the errors
         // we probably want a more elegant solution
         if (ManualCarTrigger != null)
@@ -160,6 +161,7 @@ public class AICar : MonoBehaviour
     
     void Brake_AV(Collider other)
     {
+        Debug.LogError($"Hit box tag = {other.tag}");
         if (other.gameObject.CompareTag("StartTrial_Z") && StopWithEyeGaze == false)                // Change tag, resume driving after stopping for 2 seconds in the Z direction.
         {
             WaitTrialZ = true;
