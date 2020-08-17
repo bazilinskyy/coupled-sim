@@ -24,6 +24,9 @@ public class WorldLogger
     int _lastFrameAICarCount;
     BinaryWriter _fileWriter;
     float _startTime;
+    int _expDefnr;
+    int _trialNr;
+    int _participantNr;
 
     // Data from varjo HMD
     float distance_pa;
@@ -104,6 +107,18 @@ public class WorldLogger
         // Add time to log file
         _startTime = time;
         _fileWriter.Write(DateTime.Now.ToBinary());
+
+        // Experiment Definition nr:
+        _expDefnr = PersistentManager.Instance.experimentnr;
+        _fileWriter.Write(_expDefnr);
+
+        // Experiment trial nr:
+        _trialNr = PersistentManager.Instance.listNr;
+        _fileWriter.Write(_trialNr);
+
+        // Participant nr:
+        _participantNr = PersistentManager.Instance.ParticipantNr;
+        _fileWriter.Write(_participantNr);
         
         // Add drivers and passengers avatars to the playeravatar list
         _driverBuffer.Clear();
@@ -428,6 +443,9 @@ public class LogConverter
     struct Log
     {
         public DateTime StartTime;
+        public int ExperimentDefinitionNr;
+        public int TrialNr;
+        public int ParticipantNr;
         public int LocalDriver;
         public List<SerializedPOI> POIs;
         public List<string> CarLightNames;
@@ -534,6 +552,9 @@ public class LogConverter
             Debug.LogError($"------------------End List------------------");*/
 
             log.StartTime = DateTime.FromBinary(reader.ReadInt64());
+            log.ExperimentDefinitionNr = reader.ReadInt32();
+            log.TrialNr = reader.ReadInt32();
+            log.ParticipantNr = reader.ReadInt32();
             log.LocalDriver = reader.ReadInt32();
             int numPersistentDrivers = reader.ReadInt32();
             int numPedestrians = reader.ReadInt32();
@@ -652,6 +673,11 @@ public class LogConverter
             var startString = startTime.ToString("HH:mm:ss") + ":" + startTime.Millisecond.ToString();
 
             writer.WriteLine($"Start Time;{startString}");
+
+            writer.WriteLine($"Exp Def Nr; {log.ExperimentDefinitionNr}");
+            writer.WriteLine($"Trial nr; {log.TrialNr}");
+            writer.WriteLine($"Participant nr; {log.ParticipantNr}");
+
             var localDriver = log.LocalDriver;
             var lastFrame = log.Frames[log.Frames.Count - 1];
             var numDrivers = lastFrame.DriverPositions.Count;
@@ -926,7 +952,7 @@ public class LogConverter
     SerializedPOI[] _pois;
 
     List<SerializedPOI> customPois = new List<SerializedPOI>() {
-        new SerializedPOI()
+        /*new SerializedPOI()
         {
             Name = "ldist",
             Position = new Vector3(0, 0, 7.75f),
@@ -943,7 +969,7 @@ public class LogConverter
             Name = "spawn point",
             Position = new Vector3(0, 0.2224625f, 0),
             Rotation = Quaternion.Euler(new Vector3())
-        },
+        },*/
 
     };
 

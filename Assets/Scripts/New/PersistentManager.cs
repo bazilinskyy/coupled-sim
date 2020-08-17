@@ -13,6 +13,11 @@ public class PersistentManager : MonoBehaviour
     public bool _StopWithEyeGaze;
     public bool useEyeTracking;
 
+    public List<int> ExpOrder;
+    public bool createOrder = true;
+    public int listNr = 0;
+    public int ParticipantNr;
+
     private void Awake()
     {
         if (Instance == null)

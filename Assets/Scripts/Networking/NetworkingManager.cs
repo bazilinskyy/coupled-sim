@@ -15,6 +15,7 @@ public class NetworkingManager : MonoBehaviour
     LogConverter _logConverter;
     public SceneSelector _SceneSelector;
     public bool _nextScene;
+    public string _participantNr = "Participant Number";
 
     [SerializeField]
     AICarSyncSystem _aiCarSystem;
@@ -82,6 +83,13 @@ public class NetworkingManager : MonoBehaviour
         }
         if (_netSystem == null) 
         {
+            GUILayout.Label("Participant number:");
+            _participantNr = GUILayout.TextField(_participantNr);
+            if (_participantNr != "")
+            {
+                PersistentManager.Instance.ParticipantNr = int.Parse(_participantNr);
+            }
+
             if (GUILayout.Button("Start Host"))
             {
                 if (_netSystem == null)

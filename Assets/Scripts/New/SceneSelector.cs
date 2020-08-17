@@ -24,7 +24,12 @@ public class SceneSelector : MonoBehaviour
 
     private void Start()
     {
-        SceneRandomizer();
+        if (PersistentManager.Instance.createOrder == true)
+        {
+            PersistentManager.Instance.ExpOrder = SceneRandomizer();
+            PersistentManager.Instance.createOrder = false;
+            PersistentManager.Instance.experimentnr = PersistentManager.Instance.ExpOrder[0];
+        }
     }
 
     void OnTriggerEnter(Collider other)
@@ -37,10 +42,10 @@ public class SceneSelector : MonoBehaviour
 
             PersistentManager.Instance.stopLogging = true;
             PersistentManager.Instance.nextScene = true;
-            Debug.LogError("Hit, going to the next scene");
 
             // Select next exp
-            PersistentManager.Instance.experimentnr++;
+            PersistentManager.Instance.listNr++;
+            PersistentManager.Instance.experimentnr = PersistentManager.Instance.ExpOrder[PersistentManager.Instance.listNr];
             Debug.LogError($"persistent experiment nr = {PersistentManager.Instance.experimentnr}");
         }
     }
@@ -90,10 +95,9 @@ public class SceneSelector : MonoBehaviour
         {
             PersistentManager.Instance.useEyeTracking = true;
         }
-        Debug.LogError($"exp nr = {PersistentManager.Instance.experimentnr}; 1if = {PersistentManager.Instance.experimentnr < 4}; 2if = {PersistentManager.Instance.experimentnr >= 4}; tracking = {PersistentManager.Instance.useEyeTracking} ");
     }
 
-    private void SceneRandomizer()
+    private List<int> SceneRandomizer()
     {
         // Randomize exp 0-3, every exp 3 times
         List<int> Block_one = makeList(0, 3, 3);
@@ -122,11 +126,12 @@ public class SceneSelector : MonoBehaviour
             Block_one.AddRange(Block_two);
         }
 
-        Debug.LogError($"Randomint = {randomInt}");
+        /*Debug.LogError($"Randomint = {randomInt}");
         for (int i = 0; i < Block_one.Count; i++)
         {
             Debug.LogError($"List one = {Block_one[i]}");
-        }
+        }*/
+        return Block_one;
     }
 
     private List<int> Shuffler(List<int> _Block)
