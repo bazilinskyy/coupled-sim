@@ -14,7 +14,10 @@ public abstract class CarSpawnerBase : MonoBehaviour
     public void Init(AICarSyncSystem syncSystem)
     {
         _syncSystem = syncSystem;
-        StartCoroutine(SpawnCoroutine());
+        if (this.isActiveAndEnabled)
+        { 
+            StartCoroutine(SpawnCoroutine());
+        }
     }
 
     protected abstract IEnumerator SpawnCoroutine();
