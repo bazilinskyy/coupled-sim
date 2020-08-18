@@ -53,6 +53,7 @@ public class SceneSelector : MonoBehaviour
     public void nextExperiment()
     {
         SceneManager.LoadSceneAsync("StartScene");
+        Debug.LogError("SWITCHING SCENES");
     }
 
     public SceneSelector(LevelManager levelManager) // actually selects the experiment definition

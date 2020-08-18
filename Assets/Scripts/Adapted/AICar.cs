@@ -153,7 +153,7 @@ public class AICar : MonoBehaviour
         // Change of tag here that causes deceleration when hitting a trigger.
         else
         {
-                Brake_AV(other); 
+            Brake_AV(other);
         }
     }
 

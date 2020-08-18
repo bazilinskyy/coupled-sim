@@ -330,6 +330,7 @@ GameObject:
   - component: {fileID: 7144739205557529183}
   - component: {fileID: 4326725873185761219}
   - component: {fileID: 3275387869317760714}
+  - component: {fileID: 5662089904387396957}
   m_Layer: 0
   m_Name: NextLvl
   m_TagString: NEXT
@@ -411,6 +412,23 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &5662089904387396957
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2921850483625368820}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  WaypointNumber: 1
+  speed: 0
+  acceleration: -2
+  jerk: -6
+  resetSpeedAfterStop: 0
 --- !u!1 &3091696738358873832
 GameObject:
   m_ObjectHideFlags: 0

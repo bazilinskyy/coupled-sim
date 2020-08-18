@@ -15,7 +15,7 @@ public class NetworkingManager : MonoBehaviour
     LogConverter _logConverter;
     public SceneSelector _SceneSelector;
     public bool _nextScene;
-    public string _participantNr = "Participant Number";
+    public string _participantNr = "enter";
 
     [SerializeField]
     AICarSyncSystem _aiCarSystem;
@@ -31,6 +31,7 @@ public class NetworkingManager : MonoBehaviour
         _logger = new WorldLogger(_playerSystem, _aiCarSystem);
         _fixedLogger = new WorldLogger(_playerSystem, _aiCarSystem);
         _logConverter = new LogConverter(_playerSystem.PedestrianPrefab);
+        _participantNr = "enter";
     }
 
     void Start()
@@ -85,7 +86,7 @@ public class NetworkingManager : MonoBehaviour
         {
             GUILayout.Label("Participant number:");
             _participantNr = GUILayout.TextField(_participantNr);
-            if (_participantNr != "")
+            if (_participantNr != "enter")
             {
                 PersistentManager.Instance.ParticipantNr = int.Parse(_participantNr);
             }
