@@ -44,9 +44,17 @@ public class SceneSelector : MonoBehaviour
             PersistentManager.Instance.nextScene = true;
 
             // Select next exp
-            PersistentManager.Instance.listNr++;
-            PersistentManager.Instance.experimentnr = PersistentManager.Instance.ExpOrder[PersistentManager.Instance.listNr];
-            Debug.LogError($"persistent experiment nr = {PersistentManager.Instance.experimentnr}");
+            if (PersistentManager.Instance.listNr < PersistentManager.Instance.ExpOrder.Count-1) 
+            {
+                PersistentManager.Instance.listNr++;
+                PersistentManager.Instance.experimentnr = PersistentManager.Instance.ExpOrder[PersistentManager.Instance.listNr];
+                Debug.LogError($"persistent experiment nr = {PersistentManager.Instance.experimentnr}");
+            }
+            else
+            {
+                //Application.Quit(); // build version
+                UnityEditor.EditorApplication.isPlaying = false; // editor version
+            }
         }
     }
 
