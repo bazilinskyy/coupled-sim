@@ -22,7 +22,7 @@ public class SceneSelector : MonoBehaviour
         }
     }
 
-    private void Start()
+    private void Awake()
     {
         if (PersistentManager.Instance.createOrder == true)
         {

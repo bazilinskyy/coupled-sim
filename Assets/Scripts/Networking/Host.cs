@@ -142,10 +142,10 @@ public class Host : NetworkSystem
                             var roleName = _lvlManager.ActiveExperiment.Roles[_playerRoles[Host.PlayerId]].Name;
 
                             // Do not run update if the application is not visible
-                            if(VarjoPlugin.GetGaze().status == VarjoPlugin.GazeStatus.VALID)
+                            /*if(VarjoPlugin.GetGaze().status == VarjoPlugin.GazeStatus.VALID)
                             {
                                 VarjoPlugin.RequestGazeCalibration(); // initiate eye-tracking
-                            }
+                            }*/
 
                             _logger.BeginLog($"HostLog-{roleName}-", _lvlManager.ActiveExperiment, _lights, Time.realtimeSinceStartup);
                             _fixedTimeLogger.BeginLog($"HostFixedTimeLog-{roleName}-", _lvlManager.ActiveExperiment, _lights, Time.fixedTime);
