@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -8,19 +9,8 @@ public class SceneSelector : MonoBehaviour
     LevelManager _lvlManager;
     public int sceneSelect;
     public int hostRole;
-
-    private void Update()
-    {
-        // This function should keep reloading the startscene.
-        if (Input.GetKeyDown("1"))
-        {
-            nextExperiment();
-        }
-        if (Input.GetKeyDown("2"))
-        {
-            SceneManager.LoadSceneAsync("Varjotesting");
-        }
-    }
+    public int manualSelection;
+    public bool useManualSelection;
 
     private void Awake()
     {
@@ -28,7 +18,14 @@ public class SceneSelector : MonoBehaviour
         {
             PersistentManager.Instance.ExpOrder = SceneRandomizer();
             PersistentManager.Instance.createOrder = false;
-            PersistentManager.Instance.experimentnr = PersistentManager.Instance.ExpOrder[0];
+            if (useManualSelection == false)
+            {
+                PersistentManager.Instance.experimentnr = PersistentManager.Instance.ExpOrder[0];
+            }
+            else if(useManualSelection == true)
+            {
+                PersistentManager.Instance.experimentnr = manualSelection;
+            }
         }
     }
 
@@ -36,21 +33,27 @@ public class SceneSelector : MonoBehaviour
     {
         if (other.transform.tag == "NEXT")
         {
-            Invoke("nextExperiment", 4);
-            //Application.Quit(); // build version
-            //UnityEditor.EditorApplication.isPlaying = false; // editor version
-
-            PersistentManager.Instance.stopLogging = true;
-            PersistentManager.Instance.nextScene = true;
-
-            // Select next exp
-            if (PersistentManager.Instance.listNr < PersistentManager.Instance.ExpOrder.Count-1) 
+            if (useManualSelection == false)
             {
-                PersistentManager.Instance.listNr++;
-                PersistentManager.Instance.experimentnr = PersistentManager.Instance.ExpOrder[PersistentManager.Instance.listNr];
-                Debug.LogError($"persistent experiment nr = {PersistentManager.Instance.experimentnr}");
+                Invoke("nextExperiment", 4);
+
+                PersistentManager.Instance.stopLogging = true;
+                PersistentManager.Instance.nextScene = true;
+
+                // Select next exp
+                if (PersistentManager.Instance.listNr < PersistentManager.Instance.ExpOrder.Count - 1)
+                {
+                    PersistentManager.Instance.listNr++;
+                    PersistentManager.Instance.experimentnr = PersistentManager.Instance.ExpOrder[PersistentManager.Instance.listNr];
+                    Debug.LogError($"persistent experiment nr = {PersistentManager.Instance.experimentnr}");
+                }
+                else
+                {
+                    //Application.Quit(); // build version
+                    UnityEditor.EditorApplication.isPlaying = false; // editor version
+                }
             }
-            else
+            else if (useManualSelection == true)
             {
                 //Application.Quit(); // build version
                 UnityEditor.EditorApplication.isPlaying = false; // editor version
@@ -69,7 +72,7 @@ public class SceneSelector : MonoBehaviour
         _lvlManager = levelManager;
         //Debug.LogError($"persistent experiment nr = {PersistentManager.Instance.experimentnr}");
 
-        // manually select the experiment definition nr for now
+        // experiment definition selection
         sceneSelect = PersistentManager.Instance.experimentnr;
         if (sceneSelect > _lvlManager.Experiments.Length)
         {
@@ -92,6 +95,7 @@ public class SceneSelector : MonoBehaviour
         {
             PersistentManager.Instance._StopWithEyeGaze = true;
         }
+        Debug.LogError($"Stop with eye gaze = {PersistentManager.Instance._StopWithEyeGaze}");
     }
 
     public void UseEyeTracking()
@@ -109,22 +113,22 @@ public class SceneSelector : MonoBehaviour
     private List<int> SceneRandomizer()
     {
         // Randomize exp 0-3, every exp 3 times
-        List<int> Block_one = makeList(0, 3, 3);
+        List<int> Block_one = makeList(0, 3, 1);    // (0, 3, 4)
         Block_one = Shuffler(Block_one);
 
         // Randomize Mapping 1, exp 4-7
-        List<int> Block_two = makeList(4, 7, 3);
+        List<int> Block_two = makeList(4, 7, 4); 
         Block_two = Shuffler(Block_two);
 
         // Randomize Mapping 2, exp 8-11
-        List<int> Block_three = makeList(8, 11, 3);
+        List<int> Block_three = makeList(8, 11, 4);
         Block_three = Shuffler(Block_three);
 
         // Randomize choosing mapping 1 or 2
         int randomInt = Random.Range(1, 2);
 
         // Set order of the blocks
-        if(randomInt == 1)
+        /*if(randomInt == 1)
         {
             Block_one.AddRange(Block_two);
             Block_one.AddRange(Block_three);
@@ -133,13 +137,14 @@ public class SceneSelector : MonoBehaviour
         {
             Block_one.AddRange(Block_three);
             Block_one.AddRange(Block_two);
-        }
-
-        /*Debug.LogError($"Randomint = {randomInt}");
-        for (int i = 0; i < Block_one.Count; i++)
-        {
-            Debug.LogError($"List one = {Block_one[i]}");
         }*/
+
+        //Debug.LogError($"Randomint = {randomInt}");
+        /*for (int i = 0; i < Block_two.Count; i++)
+        {
+            Debug.LogError($"List one = {Block_two[i]}");
+        }*/
+
         return Block_one;
     }
 
