@@ -97,6 +97,7 @@ public class NetworkingManager : MonoBehaviour
                 {
                     _netSystem = new Host(_levelManager, _playerSystem, _aiCarSystem, _logger, _fixedLogger);
                     PersistentManager.Instance.nextScene = false;
+                    PersistentManager.Instance.hostRole = 0; // Host = passenger
                 }
                 else if (_netSystem != null)
                 {
@@ -106,12 +107,12 @@ public class NetworkingManager : MonoBehaviour
             if (GUILayout.Button("Start Client"))
             {
                 _netSystem = new Client(_levelManager, _playerSystem, _aiCarSystem, _logger, _fixedLogger);
+                PersistentManager.Instance.hostRole = 0; // Host = passenger
             }
             _logConverter.OnGUI();
         }
         else
         {
-            _netSystem.SelectNextScene();
             _netSystem.OnGUI();
         }
     }

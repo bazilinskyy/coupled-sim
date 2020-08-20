@@ -18,6 +18,8 @@ public class PersistentManager : MonoBehaviour
     public int listNr = 0;
     public int ParticipantNr;
 
+    public int hostRole;
+
     private void Awake()
     {
         if (Instance == null)

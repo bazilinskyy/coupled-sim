@@ -72,6 +72,7 @@ public class Client : NetworkSystem
         _playerSys.ActivatePlayerAICar();
         _currentState = NetState.InGame;
         var roleName = _lvlManager.ActiveExperiment.Roles[_roles[_client.MyPlayerId]].Name;
+        Debug.LogError($"rolename = {roleName}");
         //_logger.BeginLog($"ClientLog-{roleName}-", _lvlManager.ActiveExperiment, lights, Time.realtimeSinceStartup);
         //_fixedTimeLogger.BeginLog($"ClientFixedTimeLog-{roleName}-", _lvlManager.ActiveExperiment, lights, Time.fixedTime);
 
@@ -81,6 +82,7 @@ public class Client : NetworkSystem
             VarjoPlugin.RequestGazeCalibration(); // initiate eye-tracking
         }
 
+        // Don't need light information so set to zero.
         _logger.BeginLog($"ClientLog-{roleName}-", _lvlManager.ActiveExperiment, null, Time.realtimeSinceStartup);
         _fixedTimeLogger.BeginLog($"ClientFixedTimeLog-{roleName}-", _lvlManager.ActiveExperiment, null, Time.fixedTime);
     }
@@ -98,11 +100,6 @@ public class Client : NetworkSystem
     {
         var msg = NetMsg.Read<UpdatePoses>(sync);
         _playerSys.ApplyPoses(msg.Poses);
-    }
-
-    public override void SelectNextScene()
-    {
-        throw new NotImplementedException();
     }
 
     public override void FixedUpdate()
@@ -199,7 +196,8 @@ public class Client : NetworkSystem
             {
                 if (!_client.ConnectionEstablished)
                 {
-                    _ip = GUILayout.TextField(_ip);
+                    //_ip = GUILayout.TextField(_ip); // for manual input
+                    _ip = "127.0.0.1";
                     IPAddress addr;
                     if (IPAddress.TryParse(_ip, out addr))
                     {

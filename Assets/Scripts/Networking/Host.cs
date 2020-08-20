@@ -21,8 +21,6 @@ public class Host : NetworkSystem
     VisualSyncManager _visualSyncManager;
     SceneSelector _SceneSelector;
 
-    public int hostRole;
-
     List<int> _playerRoles = new List<int>();
     bool[] _playerReadyStatus = new bool[UNetConfig.MaxPlayers];
     float _lastPoseUpdateSent;
@@ -63,8 +61,8 @@ public class Host : NetworkSystem
         }
 
         // test
+        // Sceneselector
         _SceneSelector = new SceneSelector(_lvlManager);
-        hostRole = _SceneSelector.hostRole;
     }
 
     //handles ping message
@@ -90,12 +88,6 @@ public class Host : NetworkSystem
 
     public void BroadcastMessage<T>(T msg) where T : INetMessage 
         => _host.BroadcastReliable(msg);
-
-    public override void SelectNextScene()
-    {
-        _SceneSelector = new SceneSelector(_lvlManager);
-        hostRole = _SceneSelector.hostRole;
-    }
 
     public override void FixedUpdate()
     {
@@ -209,8 +201,8 @@ public class Host : NetworkSystem
     void PlayerRolesGUI()
     {
         var roles = _lvlManager.Experiments[_selectedExperiment].Roles;
-        SelectRoleGUI(Host.PlayerId, this, roles, _SceneSelector.hostRole);
-        ForEachConnectedPlayer((player, host) => SelectRoleGUI(player, host, roles, _SceneSelector.hostRole));
+        SelectRoleGUI(Host.PlayerId, this, roles, PersistentManager.Instance.hostRole);
+        ForEachConnectedPlayer((player, host) => SelectRoleGUI(player, host, roles, PersistentManager.Instance.hostRole));
     }
 
     //initializes experiment - sets it up locally and broadcasts experiment configuration message

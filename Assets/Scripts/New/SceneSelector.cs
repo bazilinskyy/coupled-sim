@@ -8,9 +8,18 @@ public class SceneSelector : MonoBehaviour
 {
     LevelManager _lvlManager;
     public int sceneSelect;
-    public int hostRole;
     public int manualSelection;
     public bool useManualSelection;
+
+    private void Update()
+    {
+        if(Input.GetKeyDown("1") == true)
+        {
+            PersistentManager.Instance.stopLogging = true;
+            PersistentManager.Instance.nextScene = true;
+            nextExperiment();
+        }
+    }
 
     private void Awake()
     {
@@ -113,7 +122,7 @@ public class SceneSelector : MonoBehaviour
     private List<int> SceneRandomizer()
     {
         // Randomize exp 0-3, every exp 3 times
-        List<int> Block_one = makeList(0, 3, 1);    // (0, 3, 4)
+        List<int> Block_one = makeList(0, 3, 4);    // (0, 3, 4)
         Block_one = Shuffler(Block_one);
 
         // Randomize Mapping 1, exp 4-7
