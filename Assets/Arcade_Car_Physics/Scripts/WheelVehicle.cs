@@ -437,16 +437,6 @@ namespace VehicleBehaviour {
             // Downforce
             _rb.AddForce(-transform.up * speed * downforce);
         }
-
-        public float GetThrottle()
-        {
-            return 0f;
-        }
-        public float GetSteering()
-        {
-            return 0f;
-        }
-        public float GetBraking() { return 0f; }
         // Reposition the car to the start position
         public void ResetPos() {
             transform.position = spawnPosition;
