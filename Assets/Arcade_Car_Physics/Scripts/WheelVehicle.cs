@@ -127,8 +127,10 @@ namespace VehicleBehaviour {
 
         // When IsPlayer is false you can use this to control the throttle
         float throttle;
-        public float Throttle { get{ return throttle; } set{ throttle = Mathf.Clamp(value, -1f, 1f); } } 
+        public float Throttle { get{ return throttle; } set{ throttle = Mathf.Clamp(value, -1f, 1f); } }
 
+        float braking;
+        public float Braking { get { return braking; } set { braking = Mathf.Clamp(value, -1f, 1f); } }
         // Like your own car handbrake, if it's true the car will not move
         [SerializeField] bool handbrake;
         public bool Handbrake { get{ return handbrake; } set{ handbrake = value; } } 
@@ -173,7 +175,7 @@ namespace VehicleBehaviour {
         // Use this to boost when IsPlayer is set to false
         public bool boosting = false;
 
-        public float breaking;
+        
         // Use this to jump when IsPlayer is set to false
         public bool jumping = false;
 
@@ -320,14 +322,14 @@ namespace VehicleBehaviour {
                     //                    Debug.Log("Brake input: " +  GetInput(brakeInput));
                     if (GetInput(brakeInput) > 0)
                     {
-                        breaking = Mathf.Clamp01(Mathf.Abs(GetInput(brakeInput)));
+                        braking = Mathf.Clamp01(Mathf.Abs(GetInput(brakeInput)));
                     }
-                    else { breaking = 0; }
+                    else { braking = 0; }
                 }
-                else { breaking = 0; }//                Debug.Log("Brake input: " + GetInput(brakeInput)); }
+                else { braking = 0; }//                Debug.Log("Brake input: " + GetInput(brakeInput)); }
 
                 //Debug.Log(throttle);
-                //Debug.Log(throttleInput + ": " + GetInput(throttleInput) + ", breaking: " + breaking);
+                //Debug.Log(throttleInput + ": " + GetInput(throttleInput) + ", braking: " + braking);
 
                 //// Turn
                 //Debug.Log("Turn input: " + GetInput(turnInput));
@@ -379,7 +381,7 @@ namespace VehicleBehaviour {
                 }
                 foreach (WheelCollider wheel in wheels)
                 {
-                    wheel.brakeTorque = Mathf.Abs(breaking) * brakeForce;
+                    wheel.brakeTorque = Mathf.Abs(braking) * brakeForce;
                 }
             }
 

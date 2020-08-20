@@ -116,9 +116,9 @@ public class XMLManager : MonoBehaviour
         VehicleDataPoint dataPoint = new VehicleDataPoint();
         dataPoint.position = car.transform.position;
         dataPoint.time = experimentManager.activeExperiment.experimentTime;
-        dataPoint.throttleInput = vehicleBehaviour.GetThrottle();
-        dataPoint.brakeInput = vehicleBehaviour.GetBraking();
-        dataPoint.steerInput = vehicleBehaviour.GetSteering();
+        dataPoint.throttleInput = vehicleBehaviour.Throttle;
+        dataPoint.brakeInput = vehicleBehaviour.Braking;
+        dataPoint.steerInput = vehicleBehaviour.Steering;
 
         vehicleData.Add(dataPoint);
 
