@@ -17,7 +17,8 @@ public class ExperimentManager : MonoBehaviour
     public KeyCode keyUserReady = KeyCode.F1;
     public KeyCode keyTargetDetected = KeyCode.Space;
 
-    [Header("GameObejcts")]
+    [Header("GameObjects")]
+    public LayerMask layerToIgnore;
     public Transform navigationRoot;
     public Navigator car;
  
@@ -29,29 +30,30 @@ public class ExperimentManager : MonoBehaviour
 
     //UI objects
     public Text UIText;
+    public Image BlackOutScreen;
     //Scriptable gameState object
     public GameState gameState;
     //Waiting room transform
     public Transform waitingRoom;
 
     // expriment objects and lists
-    private Experiment activeExperiment;
+    public Experiment activeExperiment;
     private List<Experiment> experimentList;
     private NavigationHelper activeNavigationHelper;
     //The data manger handling the saving of vehicle and target detection data Should be added to the experiment manager object 
     private XMLManager dataManager;
     //Maximum raycasts used in determining visbility:  We use Physics.RayCast to check if we can see the target. We cast this to a random positin on the targets edge to see if it is partly visible.
-    private int maxRandomRayHits = 40;
-    // Start is called before the first frame update
+    private int maxNumberOfRandomRayHits = 40;
+    private bool turningOffLightsFinished =false;
+    private bool turningOnLightsFinished = false;
+    private float animationTime = 2f; //time for lighting aniimation in seconds
     void Awake()
-    { 
-        
+    {
+        BlackOutScreen.color = new Color(0, 0, 0, 1f);
+        BlackOutScreen.CrossFadeAlpha(0f, 0f, true);
         //Set gamestate to waiting
         gameState.SetGameState(GameStates.Waiting);
         
-        //Get main camera to waiting room
-        GoToWaitingRoom();
-
         //Check exerimentStartPoint input
         if(experimentStartPoint >= navigationRoot.transform.childCount) { throw new System.Exception("Start point should be lower than the number of navigations available"); }
         
@@ -63,28 +65,27 @@ public class ExperimentManager : MonoBehaviour
         SetDataManager();
 
         SetUpCar();
+
+        //Get main camera to waiting room
+        GoToWaitingRoom();
+    }
+    private void FixedUpdate()
+    {
+        //Start coroutines to dimlights and change the position of the camera to desired locations
+        if (gameState.isTransitionToWaitingRoom()) { StartCoroutine(GoToWaitingRoomCoroutine()); }
+        else if (gameState.isTransitionToCar()) { StartCoroutine(GoToCarCoroutine()); }
     }
     void Update()
     {
-        if (gameState.isTransition())
-        {
-            gameState.SetGameState(GameStates.Waiting);
-            //should dim lights in here and than go to the waiting room
-            GoToWaitingRoom();
-        }
         if (gameState.isWaiting())
         {
-            if (Input.GetKeyDown(keyUserReady))
-            {
-                Debug.Log("User is ready...");
-                //should dim lights in here and than start experiment
-                gameState.SetGameState(GameStates.Experiment);
-                ReturnToCar();
-            }
+            if (Input.GetKeyDown(keyUserReady)) { gameState.SetGameState(GameStates.TransitionToCar); }
         }
 
         //During experiment check for target deteciton key to be pressed
-        if (gameState.isExperiment()) {
+        else if (gameState.isExperiment()) {
+            activeExperiment.experimentTime += Time.deltaTime;
+            SetTargetVisibilityTime();
             if (Input.GetKeyDown(keyTargetDetected))
             {
                 ProcessUserInputTargetDetection();
@@ -95,24 +96,53 @@ public class ExperimentManager : MonoBehaviour
         if (NavigationFinished() && gameState.isExperiment())
          {
             //Save the data
-            HandleData();
-            //Set gamestate to transition
-            gameState.SetGameState(GameStates.Transition);
-            //Should dim lights and then go to waiting room
+            SaveData();
             
             Debug.Log("Navigation finished...");
             if (IsNextNavigation())
             {
-                Debug.Log("Loading next experiment...");
-                SetupNextExperiment();
+                //Set gamestate to transition
+                gameState.SetGameState(GameStates.TransitionToWaitingRoom);
             }
             else
             {
-                StartCoroutine(RenderEndSimulation());
+                gameState.SetGameState(GameStates.Finished);
+                StartCoroutine(EndSimulation());
                 Debug.Log("Simulation finished");
-                activeExperiment = null;
             }
         }
+    }
+
+    IEnumerator GoToWaitingRoomCoroutine()
+    {
+        gameState.SetGameState(GameStates.Waiting);
+        BlackOutScreen.CrossFadeAlpha(1f, animationTime, false);
+        yield return new WaitForSeconds(animationTime + 0.5f);
+        SetupNextExperiment();
+        GoToWaitingRoom();
+    }
+    IEnumerator GoToCarCoroutine()
+    {
+        gameState.SetGameState(GameStates.Waiting);
+        GoToCar();
+        
+        BlackOutScreen.CrossFadeAlpha(1f, 0f, true);
+        //For some reason crossfading to zero goes way faster so we increase the animationTime by 4.....
+        BlackOutScreen.CrossFadeAlpha(0f, animationTime * 4, false);
+
+        yield return new WaitForSeconds(1f);
+        gameState.SetGameState(GameStates.Experiment);
+
+    }
+    IEnumerator EndSimulation()
+    {
+        BlackOutScreen.CrossFadeAlpha(1f, animationTime, false);
+        yield return new WaitForSeconds(animationTime + 0.5f);
+        GoToWaitingRoom();
+    }
+    private void TurnLightsOnFast()
+    {
+        BlackOutScreen.CrossFadeAlpha(0f, 0f, true);
     }
     private void SetOrderedExperiments()
     {
@@ -129,10 +159,14 @@ public class ExperimentManager : MonoBehaviour
     void SetUpExperiments(int experimentStartPoint)
     {
         SetOrderedExperiments();
-        // Set active experiment
+        //Deactivate them all
+        foreach( Experiment experiment in experimentList){ experiment.SetActive(false); }
+        
+        // Set current active experiment variable
         activeExperiment = experimentList[experimentStartPoint];
         activeExperiment.SetActive(true);
         activeNavigationHelper = activeExperiment.navigationHelper;
+
     }
     bool NavigationFinished()
     {
@@ -142,13 +176,13 @@ public class ExperimentManager : MonoBehaviour
     }
     void SetupNextExperiment()
     {
-        //Activate next experiment (should only get here if we actually hjave anext experiment)
+        //Activate next experiment (should only get here if we actually have a next experiment)
         ActivateNextExperiment();
 
         //set up car (Should always be after activating the new experiment!)
         SetUpCar();
 
-        //TODO do stuff with XML manager
+        //Should always be AFTER next experiment is activated.
         SetUpDataManagerNewExperiment();
     }
     void SetUpCar()
@@ -169,10 +203,14 @@ public class ExperimentManager : MonoBehaviour
     {
         Debug.Log("Rendering startscreen...");
         UIText.GetComponent<CanvasRenderer>().SetAlpha(0f);
+        //If first experiment we render your welcome
+        if ((GetIndexCurrentExperiment()) == 0) { UIText.text = $"Eye-calibration incoming when your ready!"; }
+        else { UIText.text = $"Experiment {GetIndexCurrentExperiment() } completed..."; }
         yield return new WaitForSeconds(1.0f);
+
         UIText.CrossFadeAlpha(1, 2.5f, false);
     }
-    void ReturnToCar()
+    void GoToCar()
     {
         Debug.Log("Returning to car...");
         usedCam.transform.position = headPosition.position;
@@ -182,19 +220,23 @@ public class ExperimentManager : MonoBehaviour
     }
     void GoToWaitingRoom()
     {
+        TurnLightsOnFast();
         Debug.Log("Going to waiting room...");
         if (originalParentCamera == null) { originalParentCamera = usedCam.parent; }
 
         usedCam.transform.position = waitingRoom.transform.position + new Vector3(0, 3f, -3f);
         usedCam.transform.rotation = waitingRoom.transform.rotation;
         usedCam.SetParent(waitingRoom);
-        StartCoroutine(RenderStartScreenText());
+
+        if (gameState.isFinished()) { StartCoroutine(RenderEndSimulation()); }
+        else{ StartCoroutine(RenderStartScreenText()); }
+        
     }
     IEnumerator RenderEndSimulation()
     {
         UIText.GetComponent<CanvasRenderer>().SetAlpha(0f);
-        yield return new WaitForSeconds(2.0f);
-        UIText.text = "Thanks for participating!";
+        yield return new WaitForSeconds(1.0f);
+        UIText.text = $"Thanks for participating {subjectName}!";
         UIText.CrossFadeAlpha(1, 2.5f, false);
 
     }
@@ -203,8 +245,8 @@ public class ExperimentManager : MonoBehaviour
         //If this is not the last experiment in the list return true else false
         int index = GetIndexCurrentExperiment();
 
-        if (index != (experimentList.Count - 1)) { return true; }
-        else { return false; }
+        if (index == (experimentList.Count - 1)) { return false; }
+        else { return true; }
     }
     int GetIndexCurrentExperiment()
     {
@@ -227,19 +269,21 @@ public class ExperimentManager : MonoBehaviour
     void ProcessUserInputTargetDetection()
     {
         //if there is a target visible which has not already been detected
-        List<GameObject> targetList = GetActiveTargets();
-        GameObject seenTarget = null;
+        List<Target> targetList = activeNavigationHelper.GetActiveTargets();
+        Target seenTarget = null;
         int targetCount = 0;
 
         //Check if there are any visible targets
-        foreach (GameObject target in targetList)
+        foreach (Target target in targetList)
         {
-            Debug.Log("Target: " + target.name);
-            if (VisibleTarget(target))
+            
+            if (TargetIsVisible(target, maxNumberOfRandomRayHits))
             {
                 seenTarget = target;
                 targetCount++;
+                Debug.Log($"{target.name} visible...");
             }
+            else { Debug.Log($"{target.name} NOT visible..."); }
         }
         //We do not accept multiple visible targets at the same time.
         if (targetCount == 0)
@@ -248,8 +292,8 @@ public class ExperimentManager : MonoBehaviour
         }
         else if (targetCount == 1)
         {
-            dataManager.AddTrueAlarm(seenTarget);
-            seenTarget.GetComponent<Target>().SetDetected();
+            dataManager.AddTrueAlarm(seenTarget) ;
+            seenTarget.SetDetected();
 
         }
         else
@@ -297,7 +341,24 @@ public class ExperimentManager : MonoBehaviour
         Vector3 normal = new Vector3(x / mag, y / mag, z / mag);
         return normal;
     }
-    bool VisibleTarget(GameObject target)
+    private bool PassedTarget(Target target)
+    {
+        //Passed target if 
+        //(1) passes the plane made by the waypoint and its forward direction. 
+        // plane equation is A(x-a) + B(y-b) + C(z-c) = 0 = dot(Normal, planePoint - targetPoint)
+        // Where normal vector = <A,B,Z>
+        // pos = the cars position (x,y,z,)
+        // a point on the plane Q= (a,b,c) i.e., target position
+
+        bool passedTarget;
+        float sign = Vector3.Dot(car.transform.forward, (usedCam.transform.position - target.transform.position));
+        float distance = Vector3.Distance(target.transform.position, transform.position);
+        if (sign >= 0 ) { passedTarget = true; }
+        else { passedTarget = false; }
+
+        return passedTarget;
+    }
+    bool TargetIsVisible(Target target, int maxNumberOfRayHits)
     {
         //We will cast rays to the outer edges of the sphere (the edges are determined based on how we are looking towards the sphere)
         //I.e., with the perpendicular vector to the looking direction of the sphere
@@ -308,54 +369,45 @@ public class ExperimentManager : MonoBehaviour
         RaycastHit hit;
         float targetRadius = target.GetComponent<SphereCollider>().radius;
 
-        //If renderer.isVisible we also got to check if it is not occluided by any other objects
-        if (target.GetComponent<Renderer>().isVisible)
+        //If in front of camera we do raycast
+        if (!PassedTarget(target))
         {
             //Vary the location of the raycast over the edge of the potentially visible target
-            for (int i = 0; i < maxRandomRayHits; i++)
+            for (int i = 0; i < maxNumberOfRayHits; i++)
             {
                 Vector3 randomPerpendicularDirection = GetRandomPerpendicularVector(direction);
                 currentDirection = (target.transform.position + randomPerpendicularDirection * targetRadius) - usedCam.transform.position;
 
-                if (Physics.Raycast(usedCam.transform.position, currentDirection, out hit, 10000f, Physics.AllLayers))
+                if (Physics.Raycast(usedCam.transform.position, currentDirection, out hit, 10000f, ~layerToIgnore))
                 {
                     Debug.DrawRay(usedCam.transform.position, currentDirection, Color.green);
-                    // print("HIT " + hit.collider.gameObject.name);
                     if (hit.collider.gameObject.tag == "Target")
                     {
                         Debug.DrawLine(usedCam.transform.position, usedCam.transform.position + currentDirection * 500, Color.cyan, Time.deltaTime, false);
-                        print(target.name + " is visible");
                         isVisible = true;
                         break;
                     }
-
                 }
             }
         }
-
         return isVisible;
     }
-    List<GameObject> GetActiveTargets()
+    void SetTargetVisibilityTime()
     {
-        List<GameObject> targetList = new List<GameObject>();
-        foreach (Transform child in activeExperiment.navigation.transform)
+        //Number of ray hits to be used. We user a smaller amount than when the user actually presses the detection button. Since this function is called many times in Update() 
+        int numberOfRandomRayHits = 5;
+        foreach (Target target in activeNavigationHelper.GetActiveTargets())
         {
-            Waypoint waypoint = child.GetComponent<Waypoint>();
-            //Means it is being rendered as well as its targets
-            if (waypoint != null && waypoint.renderMe)
+            //If we didnt set start v isibility timer yet 
+            if (target.startTimeVisible == target.defaultVisibilityTime)
             {
-                foreach (GameObject target in waypoint.GetTargets())
+                if (TargetIsVisible(target, numberOfRandomRayHits))
                 {
-                    //If not detected yet --> Add to potential target list
-                    if (!target.GetComponent<Target>().IsDetected())
-                    {
-                        targetList.Add(target);
-                    }
+                    Debug.Log($"Target {target.name} became visible at {activeExperiment.experimentTime}s ...");
+                    target.startTimeVisible = activeExperiment.experimentTime;
                 }
             }
         }
-
-        return targetList;
     }
     private void SetDataManager()
     {
@@ -373,7 +425,7 @@ public class ExperimentManager : MonoBehaviour
         dataManager.SetNavigation(activeExperiment.navigation.transform);
         dataManager.StartNewMeasurement();
     }
-    private void HandleData()
+    private void SaveData()
     {
         if (saveData) { dataManager.SaveData(); }
     }
@@ -384,12 +436,14 @@ public class Experiment
     public Transform navigation;
     private bool active;
     public NavigationHelper navigationHelper;
+    public float experimentTime;
     public Experiment( Transform _navigation, bool _active)
     {
         active = _active;
         navigation = _navigation;
         navigationHelper = navigation.GetComponent<NavigationHelper>();
         navigationHelper.RenderAllWaypoints(_active);
+        experimentTime = 0f;
     }
     public void SetActive(bool _active)
     {

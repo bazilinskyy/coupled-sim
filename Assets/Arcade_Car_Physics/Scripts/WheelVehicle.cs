@@ -282,17 +282,19 @@ namespace VehicleBehaviour {
         public float steeringWheelMul = -2;
         // Update everything
         void FixedUpdate () {
+            
             //If we have a gamestate variable and experiment is not in progress -> skip any movement
-            if(gameState != null)
+            if (gameState != null)
             {
+
                 if (!gameState.isExperiment())
                 {
                     speed = 0;
-                    _rb.velocity = new Vector3(0,0,0);
+                    _rb.velocity = new Vector3(0, 0, 0);
                     _rb.angularVelocity = new Vector3(0, 0, 0);
                     return;
                 }
-            }
+                            }
             // Mesure current speed
             speed = transform.InverseTransformDirection(_rb.velocity).z * 3.6f;
 
@@ -436,6 +438,15 @@ namespace VehicleBehaviour {
             _rb.AddForce(-transform.up * speed * downforce);
         }
 
+        public float GetThrottle()
+        {
+            return 0f;
+        }
+        public float GetSteering()
+        {
+            return 0f;
+        }
+        public float GetBraking() { return 0f; }
         // Reposition the car to the start position
         public void ResetPos() {
             transform.position = spawnPosition;

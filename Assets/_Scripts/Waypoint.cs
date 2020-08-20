@@ -29,18 +29,18 @@ public class Waypoint : MonoBehaviour
         }
         return count;
     }
-    public List<GameObject> GetTargets()
+    public List<Target> GetTargets()
     {
-        List<GameObject> targetList = new List<GameObject>();
+        List<Target> targetList = new List<Target>();
         foreach (Transform child in transform)
         {
             Target target = child.gameObject.GetComponent<Target>();
             if (target != null)
             {
-                targetList.Add(target.gameObject);
+                targetList.Add(target);
             }
         }
-        List<GameObject> orderedTargetList = targetList.OrderBy(d => d.name).ToList();
+        List<Target> orderedTargetList = targetList.OrderBy(d => d.gameObject.name).ToList();
         return orderedTargetList;
     }
     private void SetMeshRendererNavigationParts(bool renderMe)
@@ -54,7 +54,7 @@ public class Waypoint : MonoBehaviour
     }
     private void SetMeshRendererTargets(bool enabled)
     {
-        foreach (GameObject target in GetTargets())
+        foreach (Target target in GetTargets())
         {
             target.GetComponent<MeshRenderer>().enabled = enabled;
         }
@@ -68,9 +68,9 @@ public class Waypoint : MonoBehaviour
     public void SetTargetIDsAndNames()
     {
         int idCount = 0;
-        foreach (GameObject target in GetTargets())
+        foreach (Target target in GetTargets())
         {
-            target.GetComponent<Target>().ID = idCount;
+            target.ID = idCount;
             target.name = "Target " + idCount;
             idCount++;
         }

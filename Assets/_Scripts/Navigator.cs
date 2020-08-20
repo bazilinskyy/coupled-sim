@@ -12,7 +12,7 @@ public class Navigator : MonoBehaviour
     
     public RoadParameters roadParameters;
 
-    private Waypoint target { get; set; }
+    public Waypoint target;
     private NavigationHelper navigationHelper { get; set; }
 
     public bool navigationFinished = false;
@@ -59,15 +59,22 @@ public class Navigator : MonoBehaviour
             SetNextTarget();
             RenderNavigationArrow();
         }
+        else if(target.operation == Operation.EndPoint)
+        {
+            float distanceToFinish = Vector3.Magnitude(target.transform.position - transform.position);
+            if (distanceToFinish < 2)
+            {
+                navigationFinished = true;
+            }
+
+        }
         //Renders the instructions on HUD
         if (renderHUD) { RenderNavigationDistance(); }
     }
-    
     public Waypoint GetCurrentTarget()
     {
         return target;
     }
-
     public void SetNewNavigation(Transform _navigation)
     {
         navigation = _navigation;

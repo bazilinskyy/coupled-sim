@@ -12,9 +12,14 @@ public class GameState : ScriptableObject
         else { return false; }
     }
 
-    public bool isTransition() 
+    public bool isTransitionToWaitingRoom() 
     {
-        if (gameState == GameStates.Transition) { return true; }
+        if (gameState == GameStates.TransitionToWaitingRoom) { return true; }
+        else { return false; }
+    }
+    public bool isTransitionToCar()
+    {
+        if (gameState == GameStates.TransitionToCar) { return true; }
         else { return false; }
     }
     public bool isExperiment()
@@ -23,6 +28,11 @@ public class GameState : ScriptableObject
         else { return false; }
     }
 
+    public bool isFinished()
+    {
+        if (gameState == GameStates.Finished) { return true; }
+        else { return false; }
+    }
     public void SetGameState(GameStates _gameState)
     {
         gameState = _gameState;

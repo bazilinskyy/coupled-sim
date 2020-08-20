@@ -22,8 +22,9 @@ public enum GameStates
 {
     Experiment,
     Waiting,
-    Transition,
-    Ended
+    TransitionToWaitingRoom,
+    TransitionToCar,
+    Finished
 }
 
 public enum NavigationType

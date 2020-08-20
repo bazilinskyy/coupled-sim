@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Xml;
 using System.Xml.Serialization;
 using System.IO;
+using System;
 
 public class XMLManager : MonoBehaviour
 {
@@ -18,35 +19,49 @@ public class XMLManager : MonoBehaviour
     private string dataFolder = "Data";
     //our car
     private GameObject car;
+    private VehicleBehaviour.WheelVehicle vehicleBehaviour; 
 
     //Current Navigation
     private Transform navigation;
     private NavigationHelper navigationHelper;
 
+    //Experiment manager;
+    private ExperimentManager experimentManager;
+
+    private GameState gameState;
+
     private string subjectName;
     //list of items
-    private VehicleData vehicleData;
+    private List<VehicleDataPoint> vehicleData;
     private TargetDetectionData targetDetectionData;
 
     // Start is called before the first frame update
     private void Awake()
     {
         ins = this;
-        vehicleData = new VehicleData();
+        vehicleData = new List<VehicleDataPoint>();
         targetDetectionData = new TargetDetectionData();
+
+        experimentManager = gameObject.GetComponent<ExperimentManager>();
+        gameState = experimentManager.gameState;
+        
     }
 
     private void Update()
     {
-        AddVehicleData();
-        AddEyeTrackingData();
+        if (gameState.isExperiment())
+        {
+            AddVehicleData();
+            AddEyeTrackingData();
+        }
     }
     public void SetAllInputs(GameObject _car, Transform _navigation, string _subjectName)
     {
         car = _car;
-        navigation = _navigation;
+        vehicleBehaviour = car.GetComponent<VehicleBehaviour.WheelVehicle>();
 
-        navigationHelper = navigation.GetComponent<NavigationHelper>();
+
+        SetNavigation(_navigation);
 
         string dateTime = System.DateTime.Now.ToString("MM-dd_HH-mm");
         if (_subjectName == null || _subjectName == "") { _subjectName = "JohnDoe"; }
@@ -55,21 +70,23 @@ public class XMLManager : MonoBehaviour
 
     public void SaveData()
     {
-        SaveVehicleData();
-
         FinalizeTargetDetectionData();
-
+        SaveVehicleData();
         SaveTargetDetectionData();
     }
 
     public void StartNewMeasurement()
     {
-        vehicleData = new VehicleData();
+        Debug.Log("Starting new measurement...");
+        vehicleData.Clear(); targetDetectionData = null;
+
+        vehicleData = new List<VehicleDataPoint>();
         targetDetectionData = new TargetDetectionData();
     }
     public void SetNavigation(Transform _navigation)
     {
         navigation = _navigation;
+        navigationHelper = navigation.GetComponent<NavigationHelper>();
     }
     private string saveFolder()
     {
@@ -79,11 +96,6 @@ public class XMLManager : MonoBehaviour
 
         //emmit unityfolder/assets and keep root folder
 
-        /*     Debug.Log(assetsFolder[0]);
-             for (int i = 0; i < (assetsFolder.Length); i++)
-             {
-                 Debug.Log(assetsFolder[i]);
-             }*/
         string[] baseFolderArray = new string[assetsFolderArray.Length - 2];
         for (int i = 0; i < (assetsFolderArray.Length - 2); i++) { baseFolderArray[i] = assetsFolderArray[i]; }
 
@@ -94,9 +106,21 @@ public class XMLManager : MonoBehaviour
         return saveFolder;
     }
     private void AddVehicleData()
-    {   
-        //TODO : Make this position of the Varjo camera
-        //Add vehicle inputs
+    {
+        if(vehicleData == null)
+        {
+            Debug.Log("ERROR: Vehicle data was corrupted... Re-started measurement...");
+            StartNewMeasurement();
+        }
+        
+        VehicleDataPoint dataPoint = new VehicleDataPoint();
+        dataPoint.position = car.transform.position;
+        dataPoint.time = experimentManager.activeExperiment.experimentTime;
+        dataPoint.throttleInput = vehicleBehaviour.GetThrottle();
+        dataPoint.brakeInput = vehicleBehaviour.GetBraking();
+        dataPoint.steerInput = vehicleBehaviour.GetSteering();
+
+        vehicleData.Add(dataPoint);
 
         //TODO fix bug somehow during simualtion starts giving error
         //vehicleData.positionList.Add(car.transform.position);
@@ -108,21 +132,26 @@ public class XMLManager : MonoBehaviour
     }
     public void AddFalseAlarm()
     {
-        print("Adding false alarm");
         FalseAlarm alarm = new FalseAlarm();
+        alarm.time = experimentManager.activeExperiment.experimentTime;
         targetDetectionData.falseAlarmList.Add(alarm);
+        Debug.Log("Added false alarm...");
     }
-    public void AddTrueAlarm(GameObject target)
+    public void AddTrueAlarm(Target target)
     {
-        print("Adding true alarm for " + target.name);
+
         TrueAlarm alarm = new TrueAlarm();
-        alarm.waypointID = target.GetComponent<Target>().waypoint.orderId;
-        alarm.targetID = target.GetComponent<Target>().ID;
+        alarm.waypointID = target.waypoint.orderId;
+        alarm.targetID = target.ID;
+        alarm.time = experimentManager.activeExperiment.experimentTime;
+        alarm.reactionTime = alarm.time - target.startTimeVisible;
         targetDetectionData.trueAlarmList.Add(alarm);
+
+        Debug.Log($"Added true alarm for {target.name}, reaction time: {Math.Round(alarm.reactionTime,2)}s ...");
     }
     private void SaveVehicleData()
     {
-        XmlSerializer serializer = new XmlSerializer(typeof(VehicleData));
+        XmlSerializer serializer = new XmlSerializer(typeof(List<VehicleDataPoint>));
 
         //overwrites mydata.xml
         string filePath = string.Join("/", saveFolder(), carDataFileName);
@@ -149,8 +178,13 @@ public class XMLManager : MonoBehaviour
     }
     private void FinalizeTargetDetectionData()
     {
+        if (targetDetectionData == null)
+        {
+            Debug.Log("ERROR: Target detection datata was corrupted... Re-started measurement...");
+            StartNewMeasurement();
+        }
         //Get total targets
-        foreach(Waypoint waypoint in navigationHelper.GetOrderedWaypointList())
+        foreach (Waypoint waypoint in navigationHelper.GetOrderedWaypointList())
         {            
             targetDetectionData.totalTargets += waypoint.GetTargets().Count;
         }
@@ -178,34 +212,30 @@ public class XMLManager : MonoBehaviour
         print("Total targets: " + targetDetectionData.totalTargets + ", total misses:" + targetDetectionData.totalMisses + ", total hits: " + targetDetectionData.totalHits + ", hit rate: " + targetDetectionData.hitRate + "% ....");
     }
 
-    private void OnApplicationQuit()
-    {
-
-        SaveData();
-    }
 }
 
 
 public class VehicleDataPoint
 {
-    public Vector3 position { get; set; }
-}
-
-public class VehicleData
-{
-    public List<Vector3> positionList = new List<Vector3>();
+    public Vector3 position;
+    public float time;
+    public float throttleInput;
+    public float brakeInput;
+    public float steerInput;
 }
 
 public class FalseAlarm
 {
-    public float time = Time.time;
+    public float time;
 }
 
 public class TrueAlarm
 {
-    public float time = Time.time;
+    public float time;
+    public float reactionTime;
     public int waypointID;
     public int targetID;
+    
 }
 
 public class TargetDetectionData

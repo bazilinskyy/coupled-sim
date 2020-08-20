@@ -42,6 +42,27 @@ public class NavigationHelper : MonoBehaviour
 
         return target;
     }
+    public List<Target> GetActiveTargets()
+    {
+        List<Target> targetList = new List<Target>();
+        foreach (Waypoint waypoint in GetOrderedWaypointList())
+        {
+            //Means it is being rendered as well as its targets
+            if (waypoint.renderMe)
+            {
+                foreach (Target target in waypoint.GetTargets())
+                {
+                    
+                    //If not detected yet --> Add to potential target list
+                    if (!target.IsDetected())
+                    {
+                        targetList.Add(target);
+                    }
+                }
+            }
+        }
+        return targetList;
+    }
     public List<Waypoint> GetOrderedWaypointList()
     {
         List<Waypoint> waypointList = new List<Waypoint>();
