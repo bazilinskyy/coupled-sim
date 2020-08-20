@@ -49,7 +49,7 @@ public class XMLManager : MonoBehaviour
 
     private void Update()
     {
-        if (gameState.isExperiment())
+        if (gameState.isExperiment() && experimentManager.saveData)
         {
             AddVehicleData();
             AddEyeTrackingData();
@@ -120,6 +120,7 @@ public class XMLManager : MonoBehaviour
         dataPoint.brakeInput = vehicleBehaviour.Braking;
         dataPoint.steerInput = vehicleBehaviour.Steering;
 
+//        Debug.Log($"Gas {dataPoint.throttleInput} , brake {dataPoint.brakeInput}");
         vehicleData.Add(dataPoint);
 
         //TODO fix bug somehow during simualtion starts giving error

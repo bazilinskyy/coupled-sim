@@ -305,38 +305,25 @@ namespace VehicleBehaviour {
                 // Accelerate & brake
                 if (throttleInput != "" && throttleInput != null)
                 {
-                    //Debug.Log("Throttle input: " + GetInput(throttleInput));
-                    // inputting throttle using gas pedal Logitech 
-                    
                     throttle = GetInput(throttleInput) * (reverse ? -1f : 1);
-
-                   /* if(GetInput(throttleInput) < 0)
-                    {
-                        throttle = 0;
-                    }       */                 
                 }
                 else { throttle = 0; }
                 
                 if (brakeInput != "" && brakeInput != null)
                 {
-                    //                    Debug.Log("Brake input: " +  GetInput(brakeInput));
                     if (GetInput(brakeInput) > 0)
                     {
                         braking = Mathf.Clamp01(Mathf.Abs(GetInput(brakeInput)));
                     }
                     else { braking = 0; }
                 }
-                else { braking = 0; }//                Debug.Log("Brake input: " + GetInput(brakeInput)); }
+                else { braking = 0; }
 
-                //Debug.Log(throttle);
-                //Debug.Log(throttleInput + ": " + GetInput(throttleInput) + ", braking: " + braking);
-
-                //// Turn
-                //Debug.Log("Turn input: " + GetInput(turnInput));
                 steering = turnInputCurve.Evaluate(GetInput(turnInput)) * steerAngle;
             }
 
             steeringWheelAngle = Mathf.Lerp(steeringWheelAngle, steering * steeringWheelMul, steerSpeed);
+
             if (steeringWheel != null) {
                 steeringWheel.localRotation = Quaternion.AngleAxis(steeringWheelAngle, Vector3.forward);
             }
@@ -352,6 +339,7 @@ namespace VehicleBehaviour {
                 wheel.brakeTorque = 0;
             }
 
+            
             // Handbrake
             if (Mathf.Abs(speed) < 2 && GetInput(throttleInput) < 0.1f)
             {
@@ -373,6 +361,7 @@ namespace VehicleBehaviour {
                     {
                         if (throttle > 0) {
                             wheel.motorTorque = throttle * motorTorque.Evaluate(speed) * diffGearing / driveWheel.Length;
+                            Debug.Log($"Setting motortorque to {wheel.motorTorque}...");
                         } else
                         {
                             wheel.motorTorque = throttle * deaccelerateMotorTorque.Evaluate(speed) * diffGearing / driveWheel.Length;
@@ -384,6 +373,12 @@ namespace VehicleBehaviour {
                     wheel.brakeTorque = Mathf.Abs(braking) * brakeForce;
                 }
             }
+
+     /*       foreach(WheelCollider wheel in driveWheel) { Debug.Log(wheel.name); }
+            foreach (WheelCollider wheel in turnWheel) { Debug.Log(wheel.name); }*/
+            //Debug.Log($"Speed: {speed}, throttle {throttle}");
+            //Debug.Log($"Current motorTorque {wheels[0].motorTorque}, steering angle {wheels[0].steerAngle}...");
+
 
             // Jump
             if (jumping && isPlayer) {

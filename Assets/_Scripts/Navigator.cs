@@ -38,6 +38,7 @@ public class Navigator : MonoBehaviour
     private void Awake()
     {
         //Set some variables
+        if (navigation == null && target == null) { return; }
         navigationHelper = navigation.GetComponent<NavigationHelper>();
         navigationFinished = false;
         CheckOptionInput();
@@ -52,6 +53,7 @@ public class Navigator : MonoBehaviour
     }
     void Update()
     {
+        if (navigation == null && target == null) { return; }
         CheckOptionInput();
 
         if (GetNextTarget())
@@ -80,6 +82,7 @@ public class Navigator : MonoBehaviour
         navigation = _navigation;
         navigationHelper = navigation.GetComponent<NavigationHelper>();
         target = navigationHelper.GetFirstTarget();
+        GetComponent<RenderNavigation>().ResetRendering();
         navigationFinished = false;
     }
     public Transform GetNavigation()
@@ -166,7 +169,7 @@ public class Navigator : MonoBehaviour
     {
         //Waits for a certain distance to be travelled after passing waypoint before passing true
         bool getNextTarget = false;
-        
+       
         if (PassedTargetWaypoint())
         {
             if (lastPosition == Vector3.zero) { lastPosition = transform.position; }
