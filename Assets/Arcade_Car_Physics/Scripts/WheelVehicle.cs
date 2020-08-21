@@ -361,7 +361,7 @@ namespace VehicleBehaviour {
                     {
                         if (throttle > 0) {
                             wheel.motorTorque = throttle * motorTorque.Evaluate(speed) * diffGearing / driveWheel.Length;
-                            Debug.Log($"Setting motortorque to {wheel.motorTorque}...");
+                            
                         } else
                         {
                             wheel.motorTorque = throttle * deaccelerateMotorTorque.Evaluate(speed) * diffGearing / driveWheel.Length;
