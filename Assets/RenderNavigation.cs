@@ -14,14 +14,10 @@ public class RenderNavigation : MonoBehaviour
     private List<Waypoint> waypoints;
     // Start is called before the first frame update
 
-    private void Awake()
-    {
-        navigator = transform.GetComponent<Navigator>();
-        //Set appropriate navigation helper, navigation and target
-        ResetRendering();
-    }
+
     void Update()
     {
+        if(navigator == null) { return; }
         if(target != navigator.GetCurrentTarget())
         {
             target = navigator.GetCurrentTarget();
@@ -29,9 +25,10 @@ public class RenderNavigation : MonoBehaviour
             SetRenderMeAttributes();
         }
     }
-    public void ResetRendering()
+    public void SetNavigationObjects()
     {
         //Set navigation variables and such
+        navigator = transform.GetComponent<Navigator>();
         navigationHelper = navigator.GetNavigationHelper();
         navigation = navigator.navigation;
         target = navigator.GetCurrentTarget();

@@ -17,15 +17,15 @@ public class SplineCreator : MonoBehaviour
 	public NavigationHelper navigationHelper;
 
 	//booleans for each navigation type
-	public bool _renderVirtualCable = true; private bool renderVirtualCable = true;
-	public bool _renderHighlightedRoad = true; private bool renderHighlightedRoad = true;
-	public bool _pressMeToRerender = true; private bool pressMeToRerender = true;
+	public bool _renderVirtualCable; private bool renderVirtualCable;
+	public bool _renderHighlightedRoad; private bool renderHighlightedRoad;
+	public bool _pressMeToRerender; private bool pressMeToRerender;
 
 	//Holds the rendered navbigation parts;
 	private GameObject navigationPartsParent;
 
 	//Amount of points used per spline
-	private int pointsPerSpline = 50;
+	private int pointsPerSpline = 10;
 
 	private void Awake()
 	{
@@ -52,6 +52,8 @@ public class SplineCreator : MonoBehaviour
 		{
 			pressMeToRerender = _pressMeToRerender;
 			MakeNavigation();
+			UpdateNavigationPartsToRender();
+			navigationHelper.RenderAllWaypoints(true);
 		}
 	}
 	void OnDrawGizmos()
@@ -64,7 +66,7 @@ public class SplineCreator : MonoBehaviour
 			Vector3[] points = GetNavigationLine();
 			//Set forward direction of splinepoints based on acquired spline
 			SetForwardDirectionSplinePoints(points);
-	
+
 			DrawGizmoLines(points);
 		}
 	}
@@ -204,11 +206,21 @@ public class SplineCreator : MonoBehaviour
 			Vector3[] circle = getCircle(roadParameters.pipeSegmentCount, roadParameters.radiusPipe);
 
 			circle = transformCircle(circle, perpendicularToPipe, worldY, directionOfPipe, newPos);
+			
+			
+			
+			//if( i ==2 || i ==1) { Debug.Log($"Points {i}: {points[i].ToString()} "); }
+			
+
 
 			for (int v = 0; v < roadParameters.pipeSegmentCount; v++)
 			{
 				vertices[vertice_cnt] = circle[v] + worldY * roadParameters.heightVirtualCable;
 				vertice_cnt += 1;
+
+				//TODO bug in points, we are getting dublicates of points and some werird extra pooints in the beginning of a corner
+				/*Gizmos.DrawSphere(circle[v] + worldY * roadParameters.heightVirtualCable, 0.05f);
+				UnityEditor.Handles.Label(circle[v] + worldY * roadParameters.heightVirtualCable, $"{i}");*/
 			}
 			//Save this pos so we can draw the next line segment
 			lastPos = newPos;
@@ -434,6 +446,7 @@ public class SplineCreator : MonoBehaviour
 		{
 			circle[v] = rotationMatrix.MultiplyPoint3x4(circle[v]);
 		}
+
 		return circle;
 	}
 	private Vector3[] TransformVector2ToVector3(Vector2[] points, float z = 0)
@@ -457,8 +470,10 @@ public class SplineCreator : MonoBehaviour
 
 		int sign = 1;
 		if(operation == Operation.TurnLeftLong) { sign = -1; }
+
+		pointsCircle[0] = new Vector2(0,0);
 		//- PI to 0 gets a half circle to the right
-		for (int i = 0; i < numberOfPoints; i++)
+		for (int i = 1; i < numberOfPoints; i++)
 		{
 			float radians = -Mathf.PI / 2 + i * radStep;
 			float x = sign * (radius * Mathf.Sin(radians) + radius);
@@ -466,6 +481,7 @@ public class SplineCreator : MonoBehaviour
 
 			pointsCircle[i] = new Vector2(x,y);
 		}
+		
 		return pointsCircle;
 	}
 	private Vector3[] GetSplinePoints(List<Waypoint> splineList)

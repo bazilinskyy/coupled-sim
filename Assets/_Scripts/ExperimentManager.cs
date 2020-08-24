@@ -21,11 +21,13 @@ public class ExperimentManager : MonoBehaviour
     public LayerMask layerToIgnore;
     public Transform navigationRoot;
     public Navigator car;
- 
-    //The camera used and head position inside the car
-    public Transform usedCam;
-    public Transform headPosition;
 
+    //The camera used and head position inside the car
+    public bool usingVarjo;
+    public Transform varjoCam;
+    public Transform normalCam;
+    public Transform headPosition;
+    private Transform usedCam;
     private Transform originalParentCamera;
 
     //UI objects
@@ -53,7 +55,9 @@ public class ExperimentManager : MonoBehaviour
         BlackOutScreen.CrossFadeAlpha(0f, 0f, true);
         //Set gamestate to waiting
         gameState.SetGameState(GameStates.Waiting);
-        
+
+        if (usingVarjo) { usedCam = varjoCam; }
+        else { usedCam = normalCam; }
         //Check exerimentStartPoint input
         if(experimentStartPoint >= navigationRoot.transform.childCount) { throw new System.Exception("Start point should be lower than the number of navigations available"); }
         

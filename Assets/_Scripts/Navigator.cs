@@ -24,8 +24,8 @@ public class Navigator : MonoBehaviour
     [Range(0.01f, 1f)]
     public float _transparency = 0.3f; private float transparency = 0.3f;
 
-    public bool _renderVirtualCable = true; private bool renderVirtualCable { get; set; }
-    public bool _renderHighlightedRoad = true; private bool renderHighlightedRoad { get; set; }
+/*    public bool _renderVirtualCable = true; private bool renderVirtualCable { get; set; }
+    public bool _renderHighlightedRoad = true; private bool renderHighlightedRoad { get; set; }*/
     public bool _renderHUD = true; private bool renderHUD { get; set; }
 
 
@@ -82,7 +82,7 @@ public class Navigator : MonoBehaviour
         navigation = _navigation;
         navigationHelper = navigation.GetComponent<NavigationHelper>();
         target = navigationHelper.GetFirstTarget();
-        GetComponent<RenderNavigation>().ResetRendering();
+        GetComponent<RenderNavigation>().SetNavigationObjects();
         navigationFinished = false;
     }
     public Transform GetNavigation()
@@ -98,14 +98,14 @@ public class Navigator : MonoBehaviour
             ChangTransparancyHUDAndConformal();
         }
         //if render booleans change --> update mesh
-        if (renderVirtualCable != _renderVirtualCable || renderHighlightedRoad != _renderHighlightedRoad)
+       /* if (renderVirtualCable != _renderVirtualCable || renderHighlightedRoad != _renderHighlightedRoad)
         {
             renderVirtualCable = _renderVirtualCable;
             renderHighlightedRoad = _renderHighlightedRoad;
 
             navigation.GetComponent<SplineCreator>()._renderVirtualCable = renderVirtualCable;
             navigation.GetComponent<SplineCreator>()._renderHighlightedRoad = renderHighlightedRoad;
-        }
+        }*/
 
         if(renderHUD != _renderHUD)
         {
