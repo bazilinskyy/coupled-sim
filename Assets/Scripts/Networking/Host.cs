@@ -60,7 +60,6 @@ public class Host : NetworkSystem
             _playerRoles.Add(-1);
         }
 
-        // test
         // Sceneselector
         _SceneSelector = new SceneSelector(_lvlManager);
     }
@@ -177,15 +176,16 @@ public class Host : NetworkSystem
     }
 
     //displays role selection GUI for a single player
-    static void SelectRoleGUI(int player, Host host, ExperimentRoleDefinition[] roles, int hostRole)
+    static void SelectRoleGUI(int player, Host host, ExperimentRoleDefinition[] roles, int Role)
     {
+        Debug.LogError("Entered SelectRoleGUI");
         GUILayout.BeginHorizontal();
         string playerName = player == Host.PlayerId ? "Host" : $"Player {player}";
         //GUILayout.Label($"{playerName} role: {host._playerRoles[player]}");
 
         //test
-        GUILayout.Label($"{playerName} role: {roles[hostRole].Name}");
-        host._playerRoles[player] = hostRole;
+        GUILayout.Label($"{playerName} role: {roles[Role].Name}");
+        host._playerRoles[player] = Role;
         
         /*for (int i = 0; i < roles.Length; i++)
         {
@@ -200,9 +200,10 @@ public class Host : NetworkSystem
     //displays role selection GUI
     void PlayerRolesGUI()
     {
+        Debug.LogError("Entered playerRolesGUI");
         var roles = _lvlManager.Experiments[_selectedExperiment].Roles;
         SelectRoleGUI(Host.PlayerId, this, roles, PersistentManager.Instance.hostRole);
-        ForEachConnectedPlayer((player, host) => SelectRoleGUI(player, host, roles, PersistentManager.Instance.hostRole));
+        ForEachConnectedPlayer((player, host) => SelectRoleGUI(player, host, roles, PersistentManager.Instance.clientRole));
     }
 
     //initializes experiment - sets it up locally and broadcasts experiment configuration message
@@ -284,10 +285,12 @@ public class Host : NetworkSystem
             case NetState.Lobby:
             {
                 GUI.enabled = AllRolesSelected();
-                /*if (GUILayout.Button("Start Game"))
+                    // Remove button during build
+                if (GUILayout.Button("Start Game"))
                 {
                     StartGame();
-                }*/
+                }
+
                 GUI.enabled = true;
                     //GUILayout.Label("Experiment:");
                     // test: select experiment definition via sceneselector
@@ -306,11 +309,12 @@ public class Host : NetworkSystem
                 PlayerRolesGUI();
                 _playerSys.SelectModeGUI();
 
-                    if(gameStarted == false)
+                    // Automatically start game after selecting host (add wait for client)
+                    /*if(gameStarted == false)
                     {
                         StartGame();
                         gameStarted = true;
-                    }
+                    }*/
                 break;
             }
             case NetState.InGame:

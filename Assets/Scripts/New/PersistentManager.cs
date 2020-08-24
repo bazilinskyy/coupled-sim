@@ -19,6 +19,7 @@ public class PersistentManager : MonoBehaviour
     public int ParticipantNr;
 
     public int hostRole;
+    public int clientRole;
 
     private void Awake()
     {
