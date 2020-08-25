@@ -284,12 +284,12 @@ public class Host : NetworkSystem
         {
             case NetState.Lobby:
             {
-                GUI.enabled = AllRolesSelected();
+                //GUI.enabled = AllRolesSelected();
                     // Remove button during build
-                if (GUILayout.Button("Start Game"))
+                /*if (GUILayout.Button("Start Game"))
                 {
                     StartGame();
-                }
+                }*/
 
                 GUI.enabled = true;
                     //GUILayout.Label("Experiment:");
@@ -310,11 +310,11 @@ public class Host : NetworkSystem
                 _playerSys.SelectModeGUI();
 
                     // Automatically start game after selecting host (add wait for client)
-                    /*if(gameStarted == false)
+                    if(gameStarted == false && AllRolesSelected())
                     {
                         StartGame();
                         gameStarted = true;
-                    }*/
+                    }
                 break;
             }
             case NetState.InGame:

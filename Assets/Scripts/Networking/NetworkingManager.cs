@@ -107,7 +107,7 @@ public class NetworkingManager : MonoBehaviour
             if (GUILayout.Button("Start Client"))
             {
                 _netSystem = new Client(_levelManager, _playerSystem, _aiCarSystem, _logger, _fixedLogger);
-                PersistentManager.Instance.hostRole = 0; // Host = passenger
+                PersistentManager.Instance.clientRole = 1; // client = pedestrian
             }
             _logConverter.OnGUI();
         }
