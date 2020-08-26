@@ -20,6 +20,7 @@ public class PersistentManager : MonoBehaviour
 
     public int hostRole;
     public int clientRole;
+    public bool clientConnectedToHost;
 
     private void Awake()
     {

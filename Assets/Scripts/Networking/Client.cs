@@ -196,16 +196,17 @@ public class Client : NetworkSystem
             {
                 if (!_client.ConnectionEstablished)
                 {
-                    //_ip = GUILayout.TextField(_ip); // for manual input
-                    _ip = "127.0.0.1";
+                    //_ip = GUILayout.TextField(_ip);   // Manual input
+                    //_ip = "127.0.0.1";                //Connect to own pc 
+                    _ip = "145.94.249.244";             //Connect to main pc: TUD1002063
                     IPAddress addr;
                     if (IPAddress.TryParse(_ip, out addr))
                     {
-                        if (GUILayout.Button("Connect"))
-                        {
+                        //if (GUILayout.Button("Connect"))
+                        //{
                             _client.Connect(_ip);
                             _currentState = NetState.Client_Connecting;
-                        }
+                        //}
                     }
                 }
                 break;

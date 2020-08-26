@@ -178,15 +178,15 @@ public class Host : NetworkSystem
     //displays role selection GUI for a single player
     static void SelectRoleGUI(int player, Host host, ExperimentRoleDefinition[] roles, int Role)
     {
-        Debug.LogError("Entered SelectRoleGUI");
         GUILayout.BeginHorizontal();
         string playerName = player == Host.PlayerId ? "Host" : $"Player {player}";
         //GUILayout.Label($"{playerName} role: {host._playerRoles[player]}");
 
-        //test
+        // Automatic selection of roles
         GUILayout.Label($"{playerName} role: {roles[Role].Name}");
         host._playerRoles[player] = Role;
         
+        // For manual selection of roles per host and client
         /*for (int i = 0; i < roles.Length; i++)
         {
             if (GUILayout.Button(roles[i].Name))
@@ -200,7 +200,6 @@ public class Host : NetworkSystem
     //displays role selection GUI
     void PlayerRolesGUI()
     {
-        Debug.LogError("Entered playerRolesGUI");
         var roles = _lvlManager.Experiments[_selectedExperiment].Roles;
         SelectRoleGUI(Host.PlayerId, this, roles, PersistentManager.Instance.hostRole);
         ForEachConnectedPlayer((player, host) => SelectRoleGUI(player, host, roles, PersistentManager.Instance.clientRole));
@@ -284,12 +283,18 @@ public class Host : NetworkSystem
         {
             case NetState.Lobby:
             {
-                //GUI.enabled = AllRolesSelected();
-                    // Remove button during build
-                /*if (GUILayout.Button("Start Game"))
+                GUI.enabled = AllRolesSelected();
+                // Only needed during the first trial:
+                if(PersistentManager.Instance.clientConnectedToHost == false)
                 {
-                    StartGame();
-                }*/
+                    if (GUILayout.Button("Start Game"))
+                    {
+                        StartGame();
+                        PersistentManager.Instance.clientConnectedToHost = true;
+                        gameStarted = true;
+                    }
+                }
+
 
                 GUI.enabled = true;
                     //GUILayout.Label("Experiment:");
@@ -310,7 +315,7 @@ public class Host : NetworkSystem
                 _playerSys.SelectModeGUI();
 
                     // Automatically start game after selecting host (add wait for client)
-                    if(gameStarted == false && AllRolesSelected())
+                    if(gameStarted == false && AllRolesSelected() && PersistentManager.Instance.clientConnectedToHost == true)
                     {
                         StartGame();
                         gameStarted = true;
