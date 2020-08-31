@@ -113,15 +113,15 @@ public class SceneSelector : MonoBehaviour
         Debug.LogError($"Stop with eye gaze = {PersistentManager.Instance._StopWithEyeGaze}");
     }
 
-    public void UseEyeTracking()
+    public void VisualizeGaze()
     {
         if (PersistentManager.Instance.experimentnr < 4)
         {
-            PersistentManager.Instance.useEyeTracking = false;
+            PersistentManager.Instance._visualizeGaze = false;
         }
         if (PersistentManager.Instance.experimentnr >= 4)
         {
-            PersistentManager.Instance.useEyeTracking = true;
+            PersistentManager.Instance._visualizeGaze = true;
         }
     }
 

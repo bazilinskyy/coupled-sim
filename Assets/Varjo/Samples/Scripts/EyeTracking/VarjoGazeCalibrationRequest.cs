@@ -39,7 +39,7 @@ namespace VarjoExample
 
         void Update()
         {
-            if (VarjoManager.Instance.IsLayerVisible() && PersistentManager.Instance.useEyeTracking == true)
+            if (VarjoManager.Instance.IsLayerVisible())
             {
                 if (Input.GetKeyDown(key))
                 {
@@ -47,7 +47,7 @@ namespace VarjoExample
                 }
             }
 
-            if(VarjoManager.Instance.GetButtonDown() && useApplicationButton && PersistentManager.Instance.useEyeTracking == true)
+            if(VarjoManager.Instance.GetButtonDown() && useApplicationButton)
             {
                 RequestGazeCalibration();
             }

@@ -11,7 +11,7 @@ public class PersistentManager : MonoBehaviour
     public bool stopLogging;
     public int experimentnr;
     public bool _StopWithEyeGaze;
-    public bool useEyeTracking;
+    public bool _visualizeGaze;
 
     public List<int> ExpOrder;
     public bool createOrder = true;
