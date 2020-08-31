@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using JetBrains.Annotations;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
 using UnityEngine;
@@ -10,6 +11,15 @@ public class SceneSelector : MonoBehaviour
     public int sceneSelect;
     public int manualSelection;
     public bool useManualSelection;
+    public enum Mapping
+    {
+        Baseline,
+        Mapping1,
+        Mapping2
+    };
+
+    [SerializeField]
+    Mapping _Mapping;
 
     private void Update()
     {
@@ -25,7 +35,7 @@ public class SceneSelector : MonoBehaviour
     {
         if (PersistentManager.Instance.createOrder == true)
         {
-            PersistentManager.Instance.ExpOrder = SceneRandomizer();
+            PersistentManager.Instance.ExpOrder = SceneRandomizerBlock(); // SceneRandomizer();
             PersistentManager.Instance.createOrder = false;
             if (useManualSelection == false)
             {
@@ -88,10 +98,6 @@ public class SceneSelector : MonoBehaviour
             Debug.LogError("Selected experiment definition out of bounds.");
             Debug.LogError($"experiment nr = {sceneSelect}");
         }
-        
-
-        // manually select the role nr for the host for now
-        //hostRole = 0;
     }
 
     public void GazeEffectOnAV()
@@ -122,22 +128,20 @@ public class SceneSelector : MonoBehaviour
     private List<int> SceneRandomizer()
     {
         // Randomize exp 0-3, every exp 3 times
-        List<int> Block_one = makeList(0, 3, 4);    // (0, 3, 4)
-        Block_one = Shuffler(Block_one);
+        List<int> Block_one = shuffledList(0, 3, 4);
 
         // Randomize Mapping 1, exp 4-7
-        List<int> Block_two = makeList(4, 7, 4); 
-        Block_two = Shuffler(Block_two);
+        List<int> Block_two = shuffledList(4, 7, 4);
+
 
         // Randomize Mapping 2, exp 8-11
-        List<int> Block_three = makeList(8, 11, 4);
-        Block_three = Shuffler(Block_three);
+        List<int> Block_three = shuffledList(8, 11, 4);
 
         // Randomize choosing mapping 1 or 2
         int randomInt = Random.Range(1, 2);
 
         // Set order of the blocks
-        /*if(randomInt == 1)
+        if(randomInt == 1)
         {
             Block_one.AddRange(Block_two);
             Block_one.AddRange(Block_three);
@@ -146,15 +150,52 @@ public class SceneSelector : MonoBehaviour
         {
             Block_one.AddRange(Block_three);
             Block_one.AddRange(Block_two);
-        }*/
+        }
 
+        // Prints the list for debugging
         //Debug.LogError($"Randomint = {randomInt}");
-        /*for (int i = 0; i < Block_two.Count; i++)
+        /*for (int i = 0; i < Block_one.Count; i++)
         {
-            Debug.LogError($"List one = {Block_two[i]}");
+            Debug.LogError($"List one = {Block_one[i]}");
         }*/
 
         return Block_one;
+    }
+
+    private List<int> SceneRandomizerBlock()
+    {
+        List<int> Block = new List<int>();
+
+        if (_Mapping == Mapping.Baseline)
+        {
+            // Randomize exp 0-3, every exp 4 times
+            Block = shuffledList(0, 3, 4);
+        }
+        else if (_Mapping == Mapping.Mapping1)
+        {
+            // Randomize Mapping 1, exp 4-7
+            Block = shuffledList(4, 7, 4);
+        }
+        else if (_Mapping == Mapping.Mapping2)
+        {
+            // Randomize Mapping 2, exp 8-11
+            Block = shuffledList(8, 11, 4);
+        }
+
+        // Prints the list for debugging
+        /*for (int i = 0; i < Block.Count; i++)
+        {
+            Debug.LogError($"List = {Block[i]}");
+        }*/
+
+        return Block;
+    }
+
+    private List<int> shuffledList(int start, int end, int reps)
+    {
+        List<int> Block =  makeList(start, end, reps);
+        Block = Shuffler(Block);
+        return Block;
     }
 
     private List<int> Shuffler(List<int> _Block)
