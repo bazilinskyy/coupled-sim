@@ -12,10 +12,10 @@ using UnityEngine.XR;
 
 namespace Varjo
 {
-    public class VarjoManager : VarjoLayer
+    public class VarjoManager_CS : VarjoLayer
     {
-        private static VarjoManager _instance = null;
-        public static VarjoManager Instance
+        private static VarjoManager_CS _instance = null;
+        public static VarjoManager_CS Instance
         {
             get
             {
@@ -25,7 +25,7 @@ namespace Varjo
                     {
                         hideFlags = HideFlags.DontSave
                     };
-                    Instance = go.AddComponent<VarjoManager>();
+                    Instance = go.AddComponent<VarjoManager_CS>();
                 }
                 return _instance;
             }
@@ -126,7 +126,7 @@ namespace Varjo
             private set;
         }
 
-        public VarjoManager()
+        public VarjoManager_CS()
         {
             layerVisible = true;
         }
@@ -493,9 +493,9 @@ namespace Varjo
 
                 Profiler.BeginSample("Varjo.EndOfFrame");
 
-                if (VarjoManager.Instance.viewportCameras == null || VarjoManager.Instance.viewportCameras.Count != 4)
+                if (VarjoManager_CS.Instance.viewportCameras == null || VarjoManager_CS.Instance.viewportCameras.Count != 4)
                 {
-                    VarjoManager.LogError("VarjoViewCombiner can't access a proper viewport array.");
+                    VarjoManager_CS.LogError("VarjoViewCombiner can't access a proper viewport array.");
                     continue;
                 }
 

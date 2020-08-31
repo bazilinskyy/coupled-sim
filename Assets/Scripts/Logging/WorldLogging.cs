@@ -183,7 +183,6 @@ public class WorldLogger
         while (aiCars.Count > _lastFrameAICarCount)
         {
             _fileWriter.Write((int)LogFrameType.AICarSpawn);    //6. int32 eventType
-            Debug.LogError($"eventtype = {(int)LogFrameType.AICarSpawn}");
             _lastFrameAICarCount++;
         }
         _fileWriter.Write((int)LogFrameType.PositionsUpdate);
