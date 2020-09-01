@@ -3112,7 +3112,7 @@ GameObject:
   - component: {fileID: 352613617798921809}
   - component: {fileID: 3674258661364839874}
   - component: {fileID: 4530647973924792293}
-  - component: {fileID: 3972796767488390797}
+  - component: {fileID: 1856464075903257368}
   m_Layer: 9
   m_Name: PassengerSmart_varjo
   m_TagString: AutonomousCar
@@ -3305,7 +3305,7 @@ MonoBehaviour:
   RearLeft: {fileID: 8414590981671948444}
   RearRight: {fileID: 2590204308891740255}
   WheelDiameter: 0.54
---- !u!114 &3972796767488390797
+--- !u!114 &1856464075903257368
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -3314,11 +3314,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 1787876385652902}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 499a39d01396b8d4189b3693729c5f71, type: 3}
+  m_Script: {fileID: 11500000, guid: f077875265a83294fae2803625e748be, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   sceneSelect: 0
-  hostRole: 0
+  manualSelection: 0
+  useManualSelection: 0
+  _Mapping: 0
 --- !u!1 &1819827312411906
 GameObject:
   m_ObjectHideFlags: 0
