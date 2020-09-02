@@ -419,7 +419,8 @@ namespace Varjo
 
             foreach (var camera in Camera.allCameras)
             {
-                if (camera != varjoCamera)
+                Debug.LogError($"Cameras = {camera}");
+                if (camera != varjoCamera) // && camera != varjoCamera_pedestrian)
                 {
                         if (camera.stereoTargetEye != StereoTargetEyeMask.None)
                         {
@@ -463,7 +464,7 @@ namespace Varjo
 
             foreach (var audioListener in audioListeners)
             {
-                if (audioListener.gameObject != varjoCamera.gameObject)
+                if (audioListener.gameObject != varjoCamera.gameObject) // || audioListener.gameObject != varjoCamera_pedestrian.gameObject)
                 {
                     audioListener.enabled = false;
                 }

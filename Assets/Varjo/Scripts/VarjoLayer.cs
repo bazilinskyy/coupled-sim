@@ -13,6 +13,8 @@ namespace Varjo
 {
     public class VarjoLayer : MonoBehaviour
     {
+        private bool extraCam = false;
+
         [Tooltip("If false, the layer is disabled and won't get rendered or submitted")]
         public bool layerEnabled = true;
 
@@ -91,7 +93,8 @@ namespace Varjo
         /// The camera we use to copy the settings from for view cameras.
         /// </summary>
         public Camera varjoCamera;
-
+        private Camera varjoCamera_pedestrian;
+            
         /// <summary>
         /// Transform to get current head position and rotation
         /// </summary>
@@ -140,12 +143,41 @@ namespace Varjo
             // Make sure all cameras start out as enabled
             EnableCameras(true);
 
-            HeadTransform = varjoCamera.gameObject.transform;
-            if (varjoCamera != null)
+            if (extraCam == true)
             {
-                varjoCamera.clearFlags = CameraClearFlags.Color;
-                varjoCamera.backgroundColor = Color.black;
-                varjoCamera.cullingMask = 0;
+                if (varjoCamera != null)
+                {
+                    HeadTransform = varjoCamera.gameObject.transform;
+                }
+                if (varjoCamera_pedestrian != null)
+                {
+                    HeadTransform = varjoCamera_pedestrian.gameObject.transform;
+                }
+
+                if (varjoCamera != null)
+                {
+                    varjoCamera.clearFlags = CameraClearFlags.Color;
+                    varjoCamera.backgroundColor = Color.black;
+                    varjoCamera.cullingMask = 0;
+                }
+
+                if (varjoCamera_pedestrian != null)
+                {
+                    varjoCamera_pedestrian.clearFlags = CameraClearFlags.Color;
+                    varjoCamera_pedestrian.backgroundColor = Color.black;
+                    varjoCamera_pedestrian.cullingMask = 0;
+                }
+            }
+            else
+            {
+                HeadTransform = varjoCamera.gameObject.transform;
+
+                if (varjoCamera != null)
+                {
+                    varjoCamera.clearFlags = CameraClearFlags.Color;
+                    varjoCamera.backgroundColor = Color.black;
+                    varjoCamera.cullingMask = 0;
+                }
             }
 
             if (occlusionMaterial == null)
@@ -168,22 +200,56 @@ namespace Varjo
 
                 GameObject camGo = new GameObject("Varjo " + side + " " + depth);
                 var varjoCam = camGo.AddComponent<VarjoViewCamera>();
-                varjoCam.SetupCamera((VarjoViewCamera.CAMERA_ID)i, varjoCamera, copyCameraComponents, this);
+                if (varjoCamera != null)
+                {
+                    varjoCam.SetupCamera((VarjoViewCamera.CAMERA_ID)i, varjoCamera, copyCameraComponents, this);
+                }
 
                 if (varjoCamera != null)
                 {
                     camGo.transform.SetParent(varjoCamera.transform, false);
                 }
                 viewportCameras.Add(varjoCam);
+
+                if (extraCam == true)
+                {
+                    GameObject camGo2 = new GameObject("Varjo " + side + " " + depth);
+                    var varjoCam2 = camGo2.AddComponent<VarjoViewCamera>();
+
+                    if (varjoCamera_pedestrian != null)
+                    {
+                        varjoCam2.SetupCamera((VarjoViewCamera.CAMERA_ID)i, varjoCamera_pedestrian, copyCameraComponents, this);
+                    }
+                    if (varjoCamera_pedestrian != null)
+                    {
+                        camGo2.transform.SetParent(varjoCamera_pedestrian.transform, false);
+                    }
+                    viewportCameras.Add(varjoCam2);
+                }
             }
         }
 
         private void SetupCameras()
         {
-            for (int i = 0; i < viewportCameras.Count; ++i)
+            if (varjoCamera != null)
             {
-                viewportCameras[i].SetupCamera((VarjoViewCamera.CAMERA_ID)i, varjoCamera, copyCameraComponents, this);
+                for (int i = 0; i < viewportCameras.Count; ++i)
+                {
+                    viewportCameras[i].SetupCamera((VarjoViewCamera.CAMERA_ID)i, varjoCamera, copyCameraComponents, this);
+                }
             }
+
+            if (extraCam == true)
+            {
+                if (varjoCamera_pedestrian != null)
+                {
+                    for (int i = 0; i < viewportCameras.Count; ++i)
+                    {
+                        viewportCameras[i].SetupCamera((VarjoViewCamera.CAMERA_ID)i, varjoCamera_pedestrian, copyCameraComponents, this);
+                    }
+                }
+            }
+
         }
 
         private void OnDestroy()
@@ -192,6 +258,14 @@ namespace Varjo
             {
                 varjoCamera.RemoveCommandBuffer(CameraEvent.AfterImageEffects, cameraBlitCB);
                 blitCBInjected = false;
+            }
+            if (extraCam == true)
+            {
+                if (varjoCamera_pedestrian != null && cameraBlitCB != null && blitCBInjected)
+                {
+                    varjoCamera_pedestrian.RemoveCommandBuffer(CameraEvent.AfterImageEffects, cameraBlitCB);
+                    blitCBInjected = false;
+                }
             }
             if (camRenderTextures != null)
             {
@@ -233,6 +307,21 @@ namespace Varjo
                     cameraBlitCB.Blit(GetRenderTextureForCamera(VarjoViewCamera.CAMERA_ID.CONTEXT_LEFT), BuiltinRenderTextureType.CameraTarget, new Vector2(contextDisplayFactor, -1.0f * contextDisplayFactor), new Vector2(0.0f, contextDisplayFactor));
                 varjoCamera.AddCommandBuffer(CameraEvent.AfterImageEffects, cameraBlitCB);
                 blitCBInjected = true;
+            }
+            if (extraCam == true)
+            {
+                if (varjoCamera_pedestrian != null && !blitCBInjected)
+                {
+                    // Hook up blit to screen
+                    cameraBlitCB = new CommandBuffer();
+                    cameraBlitCB.name = "Varjo Layer blit to screen";
+                    if (flipY)
+                        cameraBlitCB.Blit(GetRenderTextureForCamera(VarjoViewCamera.CAMERA_ID.CONTEXT_LEFT), BuiltinRenderTextureType.CameraTarget, new Vector2(contextDisplayFactor, contextDisplayFactor), new Vector2(0.0f, 1.0f - contextDisplayFactor));
+                    else
+                        cameraBlitCB.Blit(GetRenderTextureForCamera(VarjoViewCamera.CAMERA_ID.CONTEXT_LEFT), BuiltinRenderTextureType.CameraTarget, new Vector2(contextDisplayFactor, -1.0f * contextDisplayFactor), new Vector2(0.0f, contextDisplayFactor));
+                    varjoCamera_pedestrian.AddCommandBuffer(CameraEvent.AfterImageEffects, cameraBlitCB);
+                    blitCBInjected = true;
+                }
             }
 
             if (!faceLocked)

@@ -36,12 +36,17 @@ namespace Varjo
 
             if(varjoLayer.submitDepth)
             {
-                if (QualitySettings.antiAliasing > 1 && varjoLayer.varjoCamera.allowMSAA)
+                /*if (QualitySettings.antiAliasing > 1 && varjoLayer.varjoCamera.allowMSAA)
                 {
                     EditorGUILayout.HelpBox("Warning: Depth submission is not supported when anti-aliasing is used.", MessageType.Warning);
                 }
 
-                if(GraphicsSettings.renderPipelineAsset != null)
+                if (QualitySettings.antiAliasing > 1 && varjoLayer.varjoCamera_pedestrian.allowMSAA)
+                {
+                    EditorGUILayout.HelpBox("Warning: Depth submission is not supported when anti-aliasing is used.", MessageType.Warning);
+                }*/
+
+                if (GraphicsSettings.renderPipelineAsset != null)
                 {
                     EditorGUILayout.HelpBox("Warning: Depth submission does not support scriptable render pipelines.", MessageType.Warning);
                 }
