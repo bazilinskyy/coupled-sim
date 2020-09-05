@@ -230,6 +230,7 @@ In this section, the additions made by Johnson Mok during his Master Thesis are 
 	- Add variable to the worldlogger.
 	- Logging varjo eye-tracking data.
 	- Logging bodysuit bool.
+	- Byte to csv converter
 	- Varjo's own logger.
 - eHMI
 	- Fixed eHMI msg.
@@ -240,6 +241,12 @@ In this section, the additions made by Johnson Mok during his Master Thesis are 
 	- AV driving initiation 
 	- Driving behaviour Update
 - Sequencing
+	- Persistent manager
+	- Scene selector
+	- Game start
+	- Role selection
+	- Stop logging inbetween experiments
+	- Network system state
 - Varjo
 	- Varjo camera on prefab.
 	- Position setter for varjo.
@@ -423,6 +430,42 @@ else
 }
 writer.Write("\n");
 ```
+
+## Byte to csv converter
+The coupled-sim has a GUI which allows one to manually select the file to convert from byte to csv. However, if one wants to 
+convert all the files in one go, the *worldlogging* script needs to be adapted. The actual code to convert from byte to csv
+is already there. So all we need to do is to implement an option to not use the GUI and convert all the files from the folder
+*ExperimentLogs*.
+
+First, I introduce a new boolean called "convertAll". This boolean should be accessible at the same moment as when you
+convert the files. To do this, a GUI button is created to toggle the value of *convertAll*. This toggle is placed inside
+the *OnGui* function from *WorldLogging*.
+```
+convertAll = GUILayout.Toggle(convertAll, "Convert all log files");
+```
+
+After toggling the *convertAll* boolean to true and pressing the "Convert log to csv" button, the script should convert all scripts.
+This is done in the "if(_open)" statement of the *OnGui* function. Here we skip the whole GUI and directly go into the conversion.
+```
+if (_open)
+{
+	if (GUILayout.Button("Close"))
+        {
+	...
+        }
+        	foreach (var name in _fileNames)
+            	{
+                	if(convertAll == true)
+                	{
+                    	var fullName = "ExperimentLogs/" + name;
+                    	var csvName = "ExperimentLogs/" + UNITY_WORLD_ROOT + "-" + name.Replace("binLog", "csv");
+                    	TranslateBinaryLogToCsv(fullName, csvName, _pedestrianSkeletonNames, UNITY_WORLD_ROOT, default, Quaternion.identity);
+                }
+                else {
+			//GUI for log file conversion
+```
+
+
 
 ## Varjo's own logger
 The varjo plugin provides it's own logger. However, it does not seem to work with the coupled-sim without some modifications. 
@@ -687,7 +730,359 @@ and nonlinear movements. Update is more suitable for linear movements such as dr
 function to the Update function solved the stuttering problem.
 
 # Sequencing
-WIP
+## Persistent Manager
+A persistent manager is needed to keep track of variables when switching experiments. During the switch of experiments, variables get deleted.
+However, for some applications you will want to be able to access certain variables at all times. 
+```
+public class PersistentManager : MonoBehaviour
+{
+    public static PersistentManager Instance { get; private set; }
+    public type variables_that_you_want_to_use;
+
+    private void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
+}
+```
+
+To access the variables created in the persistentmanager, one can simply call the instance of the persistent manager.
+```
+PersistentManager.Instance.variables_that_you_want_to_use;
+```
+
+## SceneSelector
+Next, a script is needed to handle the switch between the experiments. For this purpose, the *SceneSelector* script is created.
+This script has multiple functions. 
+[list the functions]
+- Experiment randomizer
+- Stopping with gaze
+- Trigger to switch scenes
+
+### Experiment randomizer
+The first one is the experiment randomizer. Here we simply create a 3 separate list of numbers, 
+reorganize them randomly and combine them back into one long list.
+```
+private List<int> SceneRandomizer()
+{
+	// Randomize exp 0-3, every exp 4 times
+	List<int> Block_one = makeList(0, 3, 4); 
+	Block_one = Shuffler(Block_one);
+
+	// Randomize Mapping 1, exp 4-7
+	List<int> Block_two = makeList(4, 7, 4); 
+	Block_two = Shuffler(Block_two);
+
+	// Randomize Mapping 2, exp 8-11
+	List<int> Block_three = makeList(8, 11, 4);
+	Block_three = Shuffler(Block_three);
+
+	// Randomize choosing mapping 1 or 2
+	int randomInt = Random.Range(1, 2);
+
+	// Set order of the blocks
+	if(randomInt == 1)
+	{
+		Block_one.AddRange(Block_two);
+        	Block_one.AddRange(Block_three);
+	}
+	else if (randomInt == 2)
+	{
+		Block_one.AddRange(Block_three);
+		Block_one.AddRange(Block_two);
+	}
+
+	return Block_one;
+}
+```
+
+The shuffle function takes a list and randomly reorganizes the list. The code is as follows:
+```
+private List<int> Shuffler(List<int> _Block)
+{
+	for (int i = 0; i < _Block.Count; i++)
+        {
+		int temp = _Block[i];
+            	int randomIndex = Random.Range(i, _Block.Count);
+            	_Block[i] = _Block[randomIndex];
+            	_Block[randomIndex] = temp;
+        }
+        return _Block;
+}
+```
+
+The makeList function creates a list using the number between "start" and "end" and repeats those numbers for the number of "reps".
+```
+private List<int> makeList(int start, int end, int reps)
+{
+	List<int> Block = new List<int>();
+        for (int i = start; i <= end; i++)
+        {
+            	for (int j = 0; j <= reps-1; j++)
+            	{
+                	Block.Add(i);
+            	}
+        }
+	return Block;
+}
+```
+
+This is all called in the awake function of the *SceneSelector*. The creation of the list only needs to be done 
+at the very start of the experiment, thus a persistent boolean is used for this purpose. Furthermore, we want to remember
+the list which is created at the very start during our whole experiment process. Thus the experiment order list is also 
+a member of the persistent manager.
+```
+private void Awake()
+{
+	if (PersistentManager.Instance.createOrder == true)
+        {
+		PersistentManager.Instance.ExpOrder = SceneRandomizer();
+            	PersistentManager.Instance.createOrder = false;
+            	if (useManualSelection == false)
+            	{
+                	PersistentManager.Instance.experimentnr = PersistentManager.Instance.ExpOrder[0];
+            	}
+            	else if(useManualSelection == true)
+            	{
+                	PersistentManager.Instance.experimentnr = manualSelection;
+            	}
+        }
+}
+```
+
+### Stopping with gaze
+Braking the AV using gaze is only desired during the experiments on one of the mappings. In the other mappings the AV 
+should not stop when the passenger gazes at the pedestrian. Thus a function is created to deactivate the 
+eye-gaze braking according to the experiment definition number. 
+```
+public void GazeEffectOnAV()
+{
+	if (PersistentManager.Instance.experimentnr < 4 || PersistentManager.Instance.experimentnr > 8)
+        {
+            	PersistentManager.Instance._StopWithEyeGaze = false;
+        }
+        if (PersistentManager.Instance.experimentnr >= 4 && PersistentManager.Instance.experimentnr <= 8)
+        {
+            	PersistentManager.Instance._StopWithEyeGaze = true;
+        }
+        Debug.LogError($"Stop with eye gaze = {PersistentManager.Instance._StopWithEyeGaze}");
+    }
+```
+
+### Trigger to switch scenes
+In the experiment definitions an invisible trigger is set at the end of the trial. When the AV hits this trigger
+the next scene has to be loaded. This is also done in the *SceneSelector* script.
+```
+void OnTriggerEnter(Collider other)
+{
+	if (other.transform.tag == "NEXT")
+        {
+            	if (useManualSelection == false)
+            	{
+                	Invoke("nextExperiment", 4);
+
+                	PersistentManager.Instance.stopLogging = true;
+                	PersistentManager.Instance.nextScene = true;
+
+                // Select next exp
+                if (PersistentManager.Instance.listNr < PersistentManager.Instance.ExpOrder.Count - 1)
+                {
+                    	PersistentManager.Instance.listNr++;
+                    	PersistentManager.Instance.experimentnr = PersistentManager.Instance.ExpOrder[PersistentManager.Instance.listNr];
+                    	Debug.LogError($"persistent experiment nr = {PersistentManager.Instance.experimentnr}");
+                }
+                else
+                {
+                    	//Application.Quit(); // build version
+                    	UnityEditor.EditorApplication.isPlaying = false; // editor version
+                }
+            }
+            else if (useManualSelection == true)
+            {
+                	//Application.Quit(); // build version
+                	UnityEditor.EditorApplication.isPlaying = false; // editor version
+}       
+```
+
+When the trigger is hit, it will first check on the tag. If the tag is called "NEXT" it will move one to the code to switch scenes.
+In the case of automatic sequencing the useManualSelection boolean will be false. The Invoke function is 
+used to delay the execution of the function inside, "nextExperiment". The code underneath that is used to go
+to the next number in the experiment order list. These are all part of the persistent manager,
+since the list needs to remain the same throughout the whole experiment. At last, when the last experiment is finished,
+the game closes itself.
+
+```
+public void nextExperiment()
+{
+        SceneManager.LoadSceneAsync("StartScene");
+        Debug.LogError("SWITCHING SCENES");
+}
+```
+The *nextExperiment* function simply destroys the old scene and loads the new scene. As you can you, it exists of 
+only one line of code and one log message. It is put into a function to be able to use the invoke function. The invoke
+function is only able to call other functions. 
+
+
+
+## Game start
+To make sure that the next experiment starts immediately, the *Host* scripts need to be adapted. 
+At first you need to establish the connection between the host and the client. After establishing the connection,
+you can press the start game button. For the following experiments, one does not need to press the start button anymore.
+
+To achieve this, two booleans are needed. The first one is a persistent boolean, *clientConnectedToHost*, which exists throughout all the trials.
+This boolean is needed to allow the start button to manifest before the very first trial. 
+
+Inside *Host.cs* in the *OnGUI()* function in the case of *NetState.Lobby*:
+```
+if(PersistentManager.Instance.clientConnectedToHost == false)
+{
+	if (GUILayout.Button("Start Game"))
+        {
+		StartGame();
+		PersistentManager.Instance.clientConnectedToHost = true;
+		gameStarted = true;
+	}
+}
+```
+
+Next piece of code manages the starting of the game after the first start.
+```
+if(gameStarted == false && AllRolesSelected() && PersistentManager.Instance.clientConnectedToHost == true)
+{
+	StartGame();
+	gameStarted = true;
+}
+```
+
+Inside the case of *NetState.InGame* part, the *gameStarted* is reset, so that the game can enter the previous piece of code again 
+when the netstate is in lobby.
+```
+if(PersistentManager.Instance.nextScene == true)
+{
+	_currentState = NetState.Lobby;
+	PersistentManager.Instance.nextScene = false;
+	gameStarted = false;
+}
+```
+
+## Role selection
+Another part of the lobby is the role selection. To automate this part we again need the *Host.cs* script.
+The roles are defined as integers, so two new int variables are made. One for the host and one for the client.
+Furthermore, the *SelectRoleGUI* function is modified such that it does not show a GUI anymore, and in which the roles are selected beforehand.
+
+First, add an extra input argument to the *SelectRoleGUI* function:
+```
+static void SelectRoleGUI(int player, Host host, ExperimentRoleDefinition[] roles, int Role)
+``` 
+
+Next, remove the GUI selection part. (In this case I commented it out)
+```
+// For manual selection of roles per host and client
+/*for (int i = 0; i < roles.Length; i++)
+{
+	if (GUILayout.Button(roles[i].Name))
+	{
+		host._playerRoles[player] = i;
+	}
+}*/
+```
+
+Add the piece of code which automatically selects the role.
+```
+// Automatic selection of roles
+GUILayout.Label($"{playerName} role: {roles[Role].Name}"); 	// Shows the role selected
+host._playerRoles[player] = Role;				// Actual selection of role
+```
+
+At last, in the *PlayerRolesGUI* function, insert the role variables accordingly.
+```
+void PlayerRolesGUI()
+{
+	var roles = _lvlManager.Experiments[_selectedExperiment].Roles;
+        SelectRoleGUI(Host.PlayerId, this, roles, PersistentManager.Instance.hostRole);
+        ForEachConnectedPlayer((player, host) => SelectRoleGUI(player, host, roles, PersistentManager.Instance.clientRole));
+}
+```
+
+## Stoplogging inbetween the experiments
+To stop the logger from logging in the lobby inbetween the experiments a persistent boolean is needed.
+The stoplogging boolean is activated when the AV reaches the end point in the experiment. When the stoplogging boolean
+is set to true, it destroys all the items in the player and car lists, so that the new players and cars can be added to the list.
+
+To achieve this, the following piece of code is added to the *NetworkingManager* script inside the *Update* function.
+```
+if(PersistentManager.Instance.stopLogging == true)
+{
+ 	OnDestroy();
+	_playerSystem.destroyPlayers();
+	_aiCarSystem.destroyCars();
+	PersistentManager.Instance.stopLogging = false;
+}
+```
+
+With destroyPlayers as:
+```
+public void destroyPlayers()
+{
+        destroyObjectsInList(Avatars);
+        destroyObjectsInList(Drivers);
+        destroyObjectsInList(Pedestrians);
+        destroyObjectsInList(Passengers);
+
+        Avatars.Clear();
+        Drivers.Clear();
+        Pedestrians.Clear();
+        Passengers.Clear();
+}
+
+private void destroyObjectsInList(List<PlayerAvatar> list)
+{
+        for (int i = 0; i < list.Count; i++)
+        {
+            Destroy(list[i].gameObject);
+        }
+}
+```
+
+And inside the *SceneSelector* script in the *OnTriggerEnter* function:
+```
+void OnTriggerEnter(Collider other)
+{
+	PersistentManager.Instance.stopLogging = true;
+}
+```
+
+
+## Network system state
+To make sure that the game returns back to the right NetState a new persisten variable is created called *nextScene*.
+Same as with the *stopLogging* boolean, the *nextScene* boolean is set to true when the AV hits the trigger to switch scenes.
+
+```
+void OnTriggerEnter(Collider other)
+{
+	PersistentManager.Instance.nextSene = true;
+}
+```
+
+This triggers the if statement inside the *Host* script in the case of NetState.Ingame to turn the state back to Lobby.
+```
+if(PersistentManager.Instance.nextScene == true)
+{
+	_currentState = NetState.Lobby;
+	PersistentManager.Instance.nextScene = false;
+	gameStarted = false;
+}
+```
+
+
 
 # Varjo
 The varjo headset requires varjobase and SteamVR to work. To implement the varjo into unity, one needs the varjo plugin.
@@ -777,6 +1172,9 @@ lineDrawer.DrawLineInGameView(gameObject, gazeRayOrigin, gazeRayOrigin + gazeRay
 ```
 
 ## Crosshair + visibility
+Note: this option is not turned on right now due to the added information a laser provides to the participant. If you do want to use the
+crosshair instead of the laser, you can replace the current code with the code below.
+
 Having to look at a laser which comes out of your eyes can be distracting. Thus, the laser is only made visible to the 
 pedestrian. The passenger sees a crosshair instead. 
 
