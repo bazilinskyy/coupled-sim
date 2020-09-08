@@ -124,8 +124,9 @@ namespace VarjoExample
                     // Determine when the raycast collides with object with the "Pedestrian" tag
                     if (gazeRayHit.collider.gameObject.CompareTag(target) && target == "Pedestrian")
                     {
-                        // Take action if the distance between the pedestrian and car is smaller than 20m
-                        if(gazeRayHit.distance < 25.0f )
+                        // Take action if the distance between the pedestrian and car is smaller than 25m and larger than 14.4m
+                        // capped at 14.4m to prevent decelerations larger than 3m/s^2, which is experienced as uncomfortable by drivers - Schroeder 2008
+                        if(gazeRayHit.distance < 25.0f && gazeRayHit.distance > 14.4f)
                         {
                             this.GetComponentInParent<AICar>().VarjoSaysStop();
                         }

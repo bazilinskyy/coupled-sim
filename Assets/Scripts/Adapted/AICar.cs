@@ -27,6 +27,10 @@ public class AICar : MonoBehaviour
     private float Timer1;
     private float Timer2;
 
+    private float adaptive_acceleration;
+    private float first_triggerlocation;
+    private float distance_stop;
+
     public bool braking = false;
     public bool reset = false;
 
@@ -97,6 +101,7 @@ public class AICar : MonoBehaviour
         // This statement is applied when the car stood still and is resetting its speed.
         else if ((braking == false) && (reset == true))
         {
+            Debug.LogError("Reset speed");
             Reset_Speed_After_Stopping();
         }
     }
@@ -165,6 +170,7 @@ public class AICar : MonoBehaviour
         {
             WaitTrialZ = true;
             triggerlocation = other.gameObject.transform.position.z;
+            first_triggerlocation = other.gameObject.transform.position.z;
         }
         else if (other.gameObject.CompareTag("Brake_Z"))                // Change tag, stop completely.
         {
@@ -197,10 +203,12 @@ public class AICar : MonoBehaviour
     {
         SpaceBar = true;
         triggerlocation = this.gameObject.transform.position.z;
+        first_triggerlocation = this.gameObject.transform.position.z;
         braking = true;
         set_speed = 0;
         set_acceleration = -2;
         jerk = -Mathf.Abs(-6);
+        Debug.LogError($"Triggerlocation = {first_triggerlocation-17}");
     }
 
 
@@ -278,7 +286,8 @@ public class AICar : MonoBehaviour
         }
 
         // If car is standing still, change pitch back to zero.
-        if (speed <= 0 && delta_distance > 16f)  
+        Debug.LogError($"Speed = {speed} and rigidbody velocity = {theRigidbody.velocity} and delta distance = {delta_distance} and distance stop = {distance_stop}");
+        if(theRigidbody.velocity.z == 0) //if (speed <= 0 && delta_distance > 16f)  
         {
             Timer2 += Time.deltaTime;
             pitch = 0.5f - (Timer2);
@@ -333,9 +342,16 @@ public class AICar : MonoBehaviour
             delta_distance = Mathf.Abs(this.gameObject.transform.position.z - triggerlocation);
         }
 
+        // Compute adaptive deceleration needed to stop the AV at a fixed distance from the pedestrian
+        // Hardcoded pedestrian location(z) = 17
+        // Fixed stopping distance between pedestrian and AV = 6
+        distance_stop = first_triggerlocation - 17 - 6;
+        adaptive_acceleration = (0 - 900) / (2 * Mathf.Pow(conversion, 2) * distance_stop);
+
         // Apply delta_distance for deceleration 
         // Formula: v = sqrt(u^2 + 2*a*s) with v = final velocity; u = initial velocity; a = acceleration; s = distance covered. 
         speed = Mathf.Sqrt(900 + 2 * set_acceleration * Mathf.Pow(conversion, 2) * delta_distance); // Application of conversion of km/h to m/s which needs to be squared //900
+        //speed = Mathf.Sqrt(900 + 2 * adaptive_acceleration * Mathf.Pow(conversion, 2) * delta_distance);
 
         // Slowing down            
         // Compute pitch for deceleration
