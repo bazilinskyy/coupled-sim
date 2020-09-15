@@ -6,11 +6,15 @@ public class Target : MonoBehaviour
 {
 
     public Waypoint waypoint;
-    public TargetDifficulty setDifficulty = TargetDifficulty.easy;
+    public TargetDifficulty setDifficulty = TargetDifficulty.easy_6;
 
-    public Material easy;
-    public Material medium;
-    public Material hard;
+    public Material easy_6;
+    public Material easy_5;
+    public Material medium_4;
+    public Material medium_3;
+    public Material hard_2;
+    public Material hard_1;
+
 
     public int ID;
     public bool detected = false;
@@ -29,15 +33,18 @@ public class Target : MonoBehaviour
     public void SetDifficulty( TargetDifficulty difficulty)
     {
         //Default
-        Material material = easy;
+        Material material = easy_6;
         //Adjust the setDiofficulty attribute
         setDifficulty = difficulty;
 
         //Get appropriate material
-        if (difficulty == TargetDifficulty.easy) { material = easy; }
-        else if(difficulty == TargetDifficulty.medium) { material = medium; }
-        else if(difficulty == TargetDifficulty.hard) { material = hard; }
-        
+        if (difficulty == TargetDifficulty.easy_6) { material = easy_6; }
+        else if (difficulty == TargetDifficulty.easy_5) { material = easy_5; }
+        else if(difficulty == TargetDifficulty.medium_4) { material = medium_4; }
+        else if (difficulty == TargetDifficulty.medium_3) { material = medium_3; }
+        else if(difficulty == TargetDifficulty.hard_2) { material = hard_2; }
+        else if (difficulty == TargetDifficulty.hard_1) { material = hard_1; }
+
         GetComponent<MeshRenderer>().sharedMaterial = material;
     }
 

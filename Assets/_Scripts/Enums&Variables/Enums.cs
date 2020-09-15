@@ -13,9 +13,12 @@ public enum Operation
 
 public enum TargetDifficulty
 {
-    easy,
-    medium,
-    hard
+    easy_6,
+    easy_5,
+    medium_4,
+    medium_3,
+    hard_2,
+    hard_1
 }
 
 public enum GameStates
