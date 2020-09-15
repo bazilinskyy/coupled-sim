@@ -84,6 +84,7 @@ public class Navigator : MonoBehaviour
         target = navigationHelper.GetFirstTarget();
         GetComponent<RenderNavigation>().SetNavigationObjects();
         navigationFinished = false;
+        RenderNavigationArrow();
     }
     public Transform GetNavigation()
     {
@@ -196,11 +197,12 @@ public class Navigator : MonoBehaviour
         // a point on the plane Q= (a,b,c) i.e., waypoint position
 
         bool passedWaypoint;
-        float sign = Vector3.Dot(target.transform.forward, (transform.position - target.transform.position));
+        float sign = Vector3.Dot(target.transform.forward, (target.transform.position - transform.position));
         float distance = Vector3.Distance(target.transform.position, transform.position);
-        if (sign >= 0 && distance < (4*roadParameters.widthRoad)) { passedWaypoint = true; }
+        
+        if (sign <= 0) { passedWaypoint = true; }
         else { passedWaypoint = false; }
-
+        
         return passedWaypoint;
     }
     private void SetNextTarget()

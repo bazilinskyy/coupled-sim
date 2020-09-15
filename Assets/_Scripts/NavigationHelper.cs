@@ -65,28 +65,35 @@ public class NavigationHelper : MonoBehaviour
     }
     public List<Waypoint> GetOrderedWaypointList()
     {
-        List<Waypoint> waypointList = new List<Waypoint>();
-        foreach(Transform child in transform)
-        {
-            Waypoint waypoint = child.GetComponent<Waypoint>();
-            if (waypoint != null) { waypointList.Add(waypoint); }             
-        }
-         
-        //Order by id's
-        List<Waypoint> orderedWaypointList = waypointList.OrderBy(a => a.orderId).ToList();
-        return orderedWaypointList;
+        Waypoint waypoint = null;
 
+        List<Waypoint> waypointList = new List<Waypoint>();
+        List<Waypoint> orderedWaypointList = new List<Waypoint>();
+        foreach (Transform child in transform)
+        {
+            waypoint = child.GetComponent<Waypoint>();
+            if (waypoint != null) { waypointList.Add(waypoint); }
+        }
+        waypointList = waypointList.OrderBy(a => a.gameObject.name).ToList();
+        waypoint = waypointList[0];
+        int orderId = 0;
+        while (waypoint!= null)
+        {
+            waypointList.Add(waypoint);
+            waypoint.gameObject.name = "Waypoint " + orderId.ToString();
+            waypoint.orderId = orderId;
+            orderedWaypointList.Add(waypoint);
+            
+            waypoint = waypoint.nextWaypoint;
+            orderId++;
+
+        }
+        return orderedWaypointList;
     }
     public void UpdateOrderIds()
     {
+        //Updating order ids is now done in GetOrderedWaypointList;
         List<Waypoint> waypointList = GetOrderedWaypointList();
-
-        int OrderId = 0;
-        foreach (Waypoint waypoint in waypointList)
-        {
-            waypoint.orderId = OrderId;
-            OrderId++;
-        }
     }
     public bool CheckNextAndPreviousWaypoints()
     {

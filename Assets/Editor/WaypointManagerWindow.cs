@@ -145,14 +145,18 @@ public class WaypointManagerWindow : EditorWindow
         newWaypoint.orderId = selectedWaypoint.orderId + 1;
         newWaypoint.previousWaypoint = selectedWaypoint;
         newWaypoint.operation = Operation.None;
+
+        if (selectedWaypoint.nextWaypoint) { newWaypoint.nextWaypoint = selectedWaypoint.nextWaypoint; }
         //Set to spline point if we are creating a spline
         //if (selectedWaypoint.operation == Operation.SplinePoint) { newWaypoint.operation = Operation.SplinePoint; }
         //else { newWaypoint.operation = Operation.None; }
     }
     void SetAttributesSelectedWaypoint( Waypoint newWaypoint, Waypoint selectedWaypoint, Operation operation)
     {
+        if (selectedWaypoint.nextWaypoint) { selectedWaypoint.nextWaypoint.previousWaypoint = newWaypoint; }
         selectedWaypoint.nextWaypoint = newWaypoint;
         selectedWaypoint.operation = operation;
+        
         
     }
     void CreateNewWaypoint(Operation operation)
@@ -174,6 +178,8 @@ public class WaypointManagerWindow : EditorWindow
         //select the new Waypoint
         Selection.activeGameObject = newWaypoint.gameObject;
 
+        //Update the order id's
+        waypointRoot.GetComponent<NavigationHelper>().UpdateOrderIds();
     }
     void RemoveWaypoint()
     {
