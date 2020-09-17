@@ -96,6 +96,13 @@ public class PlayerAvatar : MonoBehaviour
                 break;
             case PlayerSystem.Mode.Flat:
                 modeElements = FlatModeElements;
+
+                // Setting the Varjo API only active for the local player
+                GameObject go_VarjoManager = gameObject.transform.Find("VarjoCameraRig").gameObject;
+                GameObject go_Gaze = gameObject.transform.Find("Gaze").gameObject;
+                go_VarjoManager.SetActive(true);
+                go_Gaze.SetActive(true);
+
                 break;
             case PlayerSystem.Mode.VR:
                 modeElements = VRModeElements;

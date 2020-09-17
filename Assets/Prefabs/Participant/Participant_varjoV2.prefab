@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 6065002259583173124}
   - component: {fileID: 6517828284230680988}
   m_Layer: 10
-  m_Name: Participant_varjo
+  m_Name: Participant_varjoV2
   m_TagString: Pedestrian
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -323,8 +323,7 @@ MonoBehaviour:
   copyCameraComponents: 0
   useOcclusionMesh: 1
   occlusionMaterial: {fileID: 0}
-  varjoCamera: {fileID: 0}
-  varjoCamera_pedestrian: {fileID: 3457266540128744198}
+  varjoCamera: {fileID: 3457266540128744198}
   forceVRSupport: 1
   disableVSync: 1
 --- !u!1 &3569788540715169562
@@ -8010,7 +8009,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &5344804248368546699
 Transform:
   m_ObjectHideFlags: 0
@@ -8057,6 +8056,20 @@ MonoBehaviour:
   eye: 0
   gazeRayRadius: 0.01
   drawDebug: 1
+  gazeRayForward: {x: 0, y: 0, z: 0}
+  gazeRayDirection: {x: 0, y: 0, z: 0}
+  gazePosition: {x: 0, y: 0, z: 0}
+  gazeRayOrigin: {x: 0, y: 0, z: 0}
+  role_varjo: 
+  target: 
+  Frame: 0
+  CaptureTime: 0
+  hmdposition: {x: 0, y: 0, z: 0}
+  hmdrotation: {x: 0, y: 0, z: 0}
+  LeftPupilSize: 0
+  RightPupilSize: 0
+  FocusDistance: 0
+  FocusStability: 0
 --- !u!1 &5338325867927314009
 GameObject:
   m_ObjectHideFlags: 0
@@ -8270,6 +8283,10 @@ PrefabInstance:
     - target: {fileID: 1018523678192792, guid: 3fae7923a8aec364bb24e25c4aa6f079, type: 3}
       propertyPath: m_Name
       value: VarjoCameraRig
+      objectReference: {fileID: 0}
+    - target: {fileID: 1018523678192792, guid: 3fae7923a8aec364bb24e25c4aa6f079, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1558748012064160, guid: 3fae7923a8aec364bb24e25c4aa6f079, type: 3}
       propertyPath: m_Name

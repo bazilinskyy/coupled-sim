@@ -4902,7 +4902,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &7916772425544574836
 Transform:
   m_ObjectHideFlags: 0
@@ -4932,6 +4932,20 @@ MonoBehaviour:
   eye: 0
   gazeRayRadius: 0.01
   drawDebug: 0
+  gazeRayForward: {x: 0, y: 0, z: 0}
+  gazeRayDirection: {x: 0, y: 0, z: 0}
+  gazePosition: {x: 0, y: 0, z: 0}
+  gazeRayOrigin: {x: 0, y: 0, z: 0}
+  role_varjo: 
+  target: 
+  Frame: 0
+  CaptureTime: 0
+  hmdposition: {x: 0, y: 0, z: 0}
+  hmdrotation: {x: 0, y: 0, z: 0}
+  LeftPupilSize: 0
+  RightPupilSize: 0
+  FocusDistance: 0
+  FocusStability: 0
 --- !u!114 &6343650400298252959
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -13054,7 +13068,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1018523678192792, guid: 3fae7923a8aec364bb24e25c4aa6f079, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4502135317825226, guid: 3fae7923a8aec364bb24e25c4aa6f079, type: 3}
       propertyPath: m_LocalPosition.x
