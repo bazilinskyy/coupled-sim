@@ -84,7 +84,7 @@ public class WorldLogger
     List<PlayerAvatar> _driverBuffer = new List<PlayerAvatar>();
 
     // Set to true for logging bodySuit data.
-    public static Boolean bodySuit = false;
+    public static Boolean bodySuit = true;
 
     public static Boolean returnBodySuit()
     {

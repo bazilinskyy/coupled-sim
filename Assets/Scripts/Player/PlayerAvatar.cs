@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.Serialization;
 using UnityEngine.Assertions;
 using VehicleBehaviour;
+using VarjoExample;
 
 public enum HMISlot
 {
@@ -209,7 +210,7 @@ public class PlayerAvatar : MonoBehaviour
         }
         for (int i = 0; i < i_end; i++) //for (int i = 0; i < SyncTransforms.Length; i++)
         {
-            var trans = SyncTransforms[i];
+            var trans = SyncTransforms[i]; // Synctransforms are set in the editor
             _pos.Add(trans.localPosition);
             _rot.Add(trans.localRotation);
         }
