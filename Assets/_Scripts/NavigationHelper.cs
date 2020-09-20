@@ -23,7 +23,7 @@ public class NavigationHelper : MonoBehaviour
     public float _transparency = 0.3f; private float transparency = 0.3f;
 
     private SplineCreator splineCreator;
-
+    private float startTime;
     private void Awake()
     {
         renderVirtualCable = _renderVirtualCable;

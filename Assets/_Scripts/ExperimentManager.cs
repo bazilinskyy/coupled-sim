@@ -140,8 +140,13 @@ public class ExperimentManager : MonoBehaviour
         BlackOutScreen.CrossFadeAlpha(0f, animationTime * 4, false);
 
         yield return new WaitForSeconds(1f);
-        gameState.SetGameState(GameStates.Experiment);
+        StartExperiment();
+        
 
+    }
+    void StartExperiment()
+    {
+        gameState.SetGameState(GameStates.Experiment);
     }
     IEnumerator EndSimulation()
     {

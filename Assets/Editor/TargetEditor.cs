@@ -7,7 +7,7 @@ public class TargetEditor : Editor
     {
 
     SerializedProperty waypoint;
-    SerializedProperty setDifficulty;
+    SerializedProperty difficulty;
     SerializedProperty ID;
     SerializedProperty detected;
 
@@ -24,7 +24,7 @@ public class TargetEditor : Editor
     void OnEnable()
     {
         waypoint = serializedObject.FindProperty("waypoint");
-        setDifficulty = serializedObject.FindProperty("setDifficulty");
+        difficulty = serializedObject.FindProperty("difficulty");
         ID = serializedObject.FindProperty("ID");
         detected = serializedObject.FindProperty("detected");
 
@@ -41,10 +41,12 @@ public class TargetEditor : Editor
     {
         serializedObject.Update();
         EditorGUILayout.PropertyField(waypoint);
-        EditorGUILayout.PropertyField(setDifficulty);
+        EditorGUILayout.PropertyField(difficulty);
         EditorGUILayout.PropertyField(ID);
         EditorGUILayout.PropertyField(detected);
- /*       EditorGUILayout.PropertyField(easy_6);
+
+        //Uncomment if you want to set these to different materials
+      /*  EditorGUILayout.PropertyField(easy_6);
         EditorGUILayout.PropertyField(easy_5);
         EditorGUILayout.PropertyField(medium_4);
         EditorGUILayout.PropertyField(medium_3);
@@ -53,11 +55,11 @@ public class TargetEditor : Editor
 
         _target = (Target)target;
 
-        if(_target.setDifficulty.ToString() != setDifficulty.ToString())
+        if(_target.difficulty.ToString() != difficulty.ToString())
         {
             //Use the setDifficulty method of Target to set to current selected difficulty in the inspector.
 
-            _target.SetDifficulty((TargetDifficulty)setDifficulty.enumValueIndex);
+            _target.SetDifficulty((TargetDifficulty)difficulty.enumValueIndex);
         }
         serializedObject.ApplyModifiedProperties();
     }

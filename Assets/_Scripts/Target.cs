@@ -6,7 +6,7 @@ public class Target : MonoBehaviour
 {
 
     public Waypoint waypoint;
-    public TargetDifficulty setDifficulty = TargetDifficulty.easy_6;
+    public TargetDifficulty difficulty = TargetDifficulty.easy_6;
 
     public Material easy_6;
     public Material easy_5;
@@ -30,12 +30,12 @@ public class Target : MonoBehaviour
         SetUnDetected();
         startTimeVisible = -1f;
     }
-    public void SetDifficulty( TargetDifficulty difficulty)
+    public void SetDifficulty( TargetDifficulty _difficulty)
     {
         //Default
         Material material = easy_6;
         //Adjust the setDiofficulty attribute
-        setDifficulty = difficulty;
+        difficulty = _difficulty;
 
         //Get appropriate material
         if (difficulty == TargetDifficulty.easy_6) { material = easy_6; }
@@ -46,6 +46,10 @@ public class Target : MonoBehaviour
         else if (difficulty == TargetDifficulty.hard_1) { material = hard_1; }
 
         GetComponent<MeshRenderer>().sharedMaterial = material;
+    }
+    public TargetDifficulty GetTargetDifficulty()
+    {
+        return difficulty;
     }
 
     public void SetDetected()

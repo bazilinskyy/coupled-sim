@@ -12,7 +12,9 @@ public class XMLManager : MonoBehaviour
 
     private string carDataFileName = "carData.xml";
     private string targetDetectionDataFileName = "targetData.xml";
-    private string navigationDataFileName = "navigationtData.xml";
+    private string targetDetectionDataSummaryFileName = "targetDataSummary.xml";
+    private string navigationSettingsFileName = "navigationSettings.xml";
+    private string navigationLineFileName = "navigationLine.xml";
     private string dataFolder = "Data";
     //our car
     private GameObject car;
@@ -30,9 +32,11 @@ public class XMLManager : MonoBehaviour
     private GameState gameState;
 
     private string subjectName;
+   
     //list of items
-    private List<VehicleDataPoint> vehicleData;
+    private VehicleData vehicleData;
     private TargetDetectionData targetDetectionData;
+    private TargetDetectionSummary targetDetectionSummary;
 
     private void OnApplicationQuit()
     {
@@ -42,7 +46,7 @@ public class XMLManager : MonoBehaviour
     private void Awake()
     {
         ins = this;
-        vehicleData = new List<VehicleDataPoint>();
+        vehicleData = new VehicleData();
         targetDetectionData = new TargetDetectionData();
 
         experimentManager = gameObject.GetComponent<ExperimentManager>();
@@ -74,38 +78,56 @@ public class XMLManager : MonoBehaviour
     }
     public void SaveData()
     {
-        FinalizeTargetDetectionData();
-        SaveVehicleData();
-        SaveTargetDetectionData();
-        SaveNavigationData();
+               
+        SaveThis<VehicleData>(carDataFileName, vehicleData);
         
+        SaveThis<TargetDetectionData>(targetDetectionDataFileName, targetDetectionData);
+
+        SummariseTargetDetectionData();
+        SaveThis<TargetDetectionSummary>(targetDetectionDataSummaryFileName, targetDetectionSummary);
+
+        SaveNavigationData();
     }
     private void SaveNavigationData()
     {
 
-        NavigationData navigationData = new NavigationData();
-        (navigationData.navigationLine, navigationData.renderVirtualCable, navigationData.renderHighlightedRoad, navigationData.renderHUD, navigationData.transparency) =  navigationHelper.GetNavigationInformation();
+        NavigationSettings navigationSettings = new NavigationSettings();
+        NavigationLine navigationLine = new NavigationLine();
+        
+        (navigationLine.navigationLine, navigationSettings.renderVirtualCable, navigationSettings.renderHighlightedRoad, navigationSettings.renderHUD, navigationSettings.transparency) =  navigationHelper.GetNavigationInformation();
+        navigationSettings.NavigationTime = experimentManager.activeExperiment.experimentTime;
 
-        XmlSerializer serializer = new XmlSerializer(typeof(NavigationData));
+        SaveThis<NavigationSettings>(navigationSettingsFileName, navigationSettings);
 
+        SaveThis<NavigationLine>(navigationLineFileName, navigationLine);
+
+    }
+    void SaveThis<T>(string fileName, object data)
+    {
+        //check if data makes sense
+        Type dataType = data.GetType();
+        if (!dataType.Equals(typeof(T))) { throw new Exception($"ERROR: data type and given type done match {dataType.FullName} != {typeof(T).FullName}..."); }
+
+        XmlSerializer serializer = new XmlSerializer(typeof(T));
         //overwrites mydata.xml
-        string filePath = string.Join("/", saveFolder(), navigationDataFileName);
-
-        Debug.Log($"Saving to navigation data to {filePath}...");
+        string filePath = string.Join("/", saveFolder(), fileName);
+        string name = typeof(T).FullName;
+        Debug.Log($"Saving {name} data to {filePath}...");
 
         FileStream stream = new FileStream(filePath, FileMode.Create);
-        serializer.Serialize(stream, navigationData);
+        serializer.Serialize(stream, data);
         stream.Close();
-
     }
     public void StartNewMeasurement()
     {
         Debug.Log("Starting new measurement...");
-        vehicleData.Clear(); targetDetectionData = null;
+        targetDetectionData = null;
 
-        vehicleData = new List<VehicleDataPoint>();
+        vehicleData = new VehicleData();
         targetDetectionData = new TargetDetectionData();
-    }
+        targetDetectionSummary = new TargetDetectionSummary();
+
+}
     public void SetNavigation(Transform _navigation)
     {
         navigation = _navigation;
@@ -138,19 +160,13 @@ public class XMLManager : MonoBehaviour
             StartNewMeasurement();
         }
 
-        VehicleDataPoint dataPoint = new VehicleDataPoint();
-        dataPoint.distanceToOptimalPath = GetDistanceToOptimalPath(car.transform.position);
-        dataPoint.position = car.transform.position;
-        dataPoint.time = experimentManager.activeExperiment.experimentTime;
-        dataPoint.throttleInput = vehicleBehaviour.Throttle;
-        dataPoint.brakeInput = vehicleBehaviour.Braking;
-        dataPoint.steerInput = vehicleBehaviour.Steering;
+        vehicleData.distanceToOptimalPath.Add(GetDistanceToOptimalPath(car.transform.position));
+        vehicleData.position.Add(car.transform.position);
+        vehicleData.time.Add(experimentManager.activeExperiment.experimentTime);
+        vehicleData.throttleInput.Add(vehicleBehaviour.Throttle);
+        vehicleData.brakeInput.Add(vehicleBehaviour.Braking);
+        vehicleData.steerInput.Add(vehicleBehaviour.Steering);
 
-        //        Debug.Log($"Gas {dataPoint.throttleInput} , brake {dataPoint.brakeInput}");
-        vehicleData.Add(dataPoint);
-
-        //TODO fix bug somehow during simualtion starts giving error
-        //vehicleData.positionList.Add(car.transform.position);
     }
     private float GetDistanceToOptimalPath(Vector3 car_position)
     {
@@ -227,38 +243,14 @@ public class XMLManager : MonoBehaviour
         alarm.targetID = target.ID;
         alarm.time = experimentManager.activeExperiment.experimentTime;
         alarm.reactionTime = alarm.time - target.startTimeVisible;
+        alarm.targetDifficulty = target.GetTargetDifficulty().ToString();
         targetDetectionData.trueAlarmList.Add(alarm);
 
         Debug.Log($"Added true alarm for {target.name}, reaction time: {Math.Round(alarm.reactionTime, 2)}s ...");
     }
-    private void SaveVehicleData()
+    private void SummariseTargetDetectionData()
     {
-        XmlSerializer serializer = new XmlSerializer(typeof(List<VehicleDataPoint>));
-
-        //overwrites mydata.xml
-        string filePath = string.Join("/", saveFolder(), carDataFileName);
-
-        Debug.Log($"Saving to vehicle data to {filePath}...");
-
-        FileStream stream = new FileStream(filePath, FileMode.Create);
-        serializer.Serialize(stream, vehicleData);
-        stream.Close();
-
-    }
-    private void SaveTargetDetectionData()
-    {
-        XmlSerializer serializer = new XmlSerializer(typeof(TargetDetectionData));
-
-        string filePath = string.Join("/", saveFolder(), targetDetectionDataFileName);
-
-        Debug.Log($"Saving to target detection data to {filePath}...");
-
-        FileStream stream = new FileStream(filePath, FileMode.Create);
-        serializer.Serialize(stream, targetDetectionData);
-        stream.Close();
-    }
-    private void FinalizeTargetDetectionData()
-    {
+        targetDetectionSummary = new TargetDetectionSummary();
         if (targetDetectionData == null)
         {
             Debug.Log("ERROR: Target detection datata was corrupted... Re-started measurement...");
@@ -267,41 +259,38 @@ public class XMLManager : MonoBehaviour
         //Get total targets
         foreach (Waypoint waypoint in navigationHelper.GetOrderedWaypointList())
         {
-            targetDetectionData.totalTargets += waypoint.GetTargets().Count;
+            targetDetectionSummary.totalTargets += waypoint.GetTargets().Count;
         }
 
         //TotalMisses
-        targetDetectionData.totalMisses = targetDetectionData.falseAlarmList.Count;
+        targetDetectionSummary.totalMisses = targetDetectionData.falseAlarmList.Count;
 
         //TotalHits
-        targetDetectionData.totalHits = targetDetectionData.trueAlarmList.Count;
+        targetDetectionSummary.totalHits = targetDetectionData.trueAlarmList.Count;
 
         //missrate & hitRate
-        if ((targetDetectionData.totalHits + targetDetectionData.totalMisses) > 0)
+        if ((targetDetectionSummary.totalHits + targetDetectionSummary.totalMisses) > 0)
         {
-            targetDetectionData.missRate = 100 * (float)targetDetectionData.totalMisses / (float)(targetDetectionData.totalHits + targetDetectionData.totalMisses);
-            targetDetectionData.hitRate = 100 * (float)targetDetectionData.totalHits / (float)(targetDetectionData.totalHits + targetDetectionData.totalMisses);
+            targetDetectionSummary.missRate = 100 * (float)targetDetectionSummary.totalMisses / (float)(targetDetectionSummary.totalHits + targetDetectionSummary.totalMisses);
+            targetDetectionSummary.hitRate = 100 * (float)targetDetectionSummary.totalHits / (float)(targetDetectionSummary.totalHits + targetDetectionSummary.totalMisses);
         }
-        else
-        {
-            targetDetectionData.missRate = targetDetectionData.hitRate = 0f;
-        }
+        else { targetDetectionSummary.missRate = targetDetectionSummary.hitRate = 0f; }
 
         //detectionRate
-        targetDetectionData.detectionRate = 100 * (float)targetDetectionData.totalHits / (float)targetDetectionData.totalTargets;
+        targetDetectionSummary.detectionRate = 100 * (float)targetDetectionSummary.totalHits / (float)targetDetectionSummary.totalTargets;
 
-        print("Total targets: " + targetDetectionData.totalTargets + ", total misses:" + targetDetectionData.totalMisses + ", total hits: " + targetDetectionData.totalHits + ", hit rate: " + targetDetectionData.hitRate + "% ....");
+        print("Total targets: " + targetDetectionSummary.totalTargets + ", total misses:" + targetDetectionSummary.totalMisses + ", total hits: " + targetDetectionSummary.totalHits + ", hit rate: " + targetDetectionSummary.hitRate + "% ....");
     }
 }
 
-public class VehicleDataPoint
+public class VehicleData
 {
-    public float distanceToOptimalPath;
-    public Vector3 position;
-    public float time;
-    public float throttleInput;
-    public float brakeInput;
-    public float steerInput;
+    public List<float> distanceToOptimalPath = new List<float>();
+    public List<Vector3> position = new List<Vector3>();
+    public List<float> time = new List<float>();
+    public List<float> throttleInput = new List<float>();
+    public List<float> brakeInput = new List<float>();
+    public List<float> steerInput = new List<float>();
 }
 
 public class FalseAlarm
@@ -315,12 +304,17 @@ public class TrueAlarm
     public float reactionTime;
     public int waypointID;
     public int targetID;
+    public string targetDifficulty;
 }
 
 public class TargetDetectionData
 {
     public List<FalseAlarm> falseAlarmList = new List<FalseAlarm>();
     public List<TrueAlarm> trueAlarmList = new List<TrueAlarm>();
+    
+}
+public class TargetDetectionSummary
+{
     public int totalTargets;
     public int totalMisses;
     public int totalHits;
@@ -328,12 +322,16 @@ public class TargetDetectionData
     public float hitRate;
     public float detectionRate;
 }
-
-public class NavigationData
+public class NavigationLine
 {
     public Vector3[] navigationLine;
+   
+}
+public class NavigationSettings
+{
     public bool renderVirtualCable;
     public bool renderHighlightedRoad;
     public bool renderHUD;
     public float transparency;
+    public float NavigationTime;
 }
