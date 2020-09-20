@@ -3,20 +3,157 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 
+[RequireComponent(typeof(SplineCreator),typeof(RenderNavigation))]
 public class NavigationHelper : MonoBehaviour
 {
+    [Header("Required Objects")]
+    public HUDMaterials HUDMaterials;
+    public Navigator car;
+
+    [Header("Navigation settings")]
+    
+    //booleans for each navigation type
+    public bool _renderVirtualCable; private bool renderVirtualCable;
+    public bool _renderHighlightedRoad; private bool renderHighlightedRoad;
+    public bool _renderHUD = true; private bool renderHUD { get; set; }
+    
+    public bool _pressMeToRerender = false; private bool pressMeToRerender = false;
+
+    [Range(0.01f, 1f)]
+    public float _transparency = 0.3f; private float transparency = 0.3f;
+
+    private SplineCreator splineCreator;
 
     private void Awake()
     {
+        renderVirtualCable = _renderVirtualCable;
+        renderHighlightedRoad = _renderHighlightedRoad;
+
+        splineCreator = gameObject.GetComponent<SplineCreator>();
+
+        RenderNavigation();
+       
         UpdateOrderIds(); //Make sure order ids are correct at startup
         SetNextAndPreviousWaypoints();
     }
     private void Update()
     {
+        CheckChanges();
+
         if (CheckNextAndPreviousWaypoints())
         {
             SetNextAndPreviousWaypoints();
         }
+        //Render the HUDs if needed
+        if (renderHUD)
+        {
+            RenderNavigationArrow();
+            RenderNavigationDistance();
+        }
+    }
+    private void OnDrawGizmos()
+    {
+        //So that it also works in scene mode
+        CheckChanges();
+    }
+    public (Vector3[], bool, bool, bool, float) GetNavigationInformation()
+    {
+        return (GetNavigationLine(), renderVirtualCable, renderHighlightedRoad, renderHUD, transparency);
+    }
+    public void PrepareNavigationForExperiment()
+    {
+        if (renderHUD) { RenderNavigationArrow(); }
+
+        RenderNavigation();
+        gameObject.GetComponent<RenderNavigation>().SetNavigationObjects();
+        //Make take transparancy from the the experiment manager?
+    }
+    void CheckChanges()
+    {
+        if (splineCreator == null){ splineCreator = gameObject.GetComponent<SplineCreator>(); }
+        if (renderVirtualCable != _renderVirtualCable || renderHighlightedRoad != _renderHighlightedRoad)
+        {
+            renderVirtualCable = _renderVirtualCable;
+            renderHighlightedRoad = _renderHighlightedRoad;
+
+            RenderNavigation();
+        }
+        //if render booleans change --> update mesh
+        if (pressMeToRerender != _pressMeToRerender)
+        {
+            pressMeToRerender = _pressMeToRerender;
+            
+            splineCreator.MakeNavigation();
+        }
+
+        if (renderHUD != _renderHUD)
+        {
+            renderHUD = _renderHUD;
+            car.HUD.SetActive(renderHUD);
+        }
+        if (transparency != _transparency)
+        {
+            transparency = _transparency;
+            ChangTransparancyHUDAndConformal();
+        }
+    }
+    void RenderNavigationArrow()
+    {
+        Transform arrows = car.HUD.transform.Find("Arrows");
+
+        if (car.target.operation == Operation.TurnRightShort || car.target.operation == Operation.TurnRightLong) { arrows.GetComponent<MeshRenderer>().material = HUDMaterials.right; }
+        else if (car.target.operation == Operation.TurnLeftLong) { arrows.GetComponent<MeshRenderer>().material = HUDMaterials.left; }
+        else if (car.target.operation == Operation.Straight) { arrows.GetComponent<MeshRenderer>().material = HUDMaterials.straight; }
+        else if (car.target.operation == Operation.EndPoint) { arrows.GetComponent<MeshRenderer>().material = HUDMaterials.destination; }
+
+    }
+    void RenderNavigationDistance()
+    {
+
+        Transform text = car.HUD.transform.Find("Text");
+        TextMesh textMesh = text.gameObject.GetComponent<TextMesh>();
+
+        float distanceToTarget = Vector3.Magnitude(car.target.transform.position - car.transform.position);
+        int renderedDistance = ((int)distanceToTarget - ((int)distanceToTarget % 5));
+        if (renderedDistance < 0) { renderedDistance = 0; }
+        
+        textMesh.text = $"{renderedDistance}m";
+    }
+    void ChangTransparancyHUDAndConformal()
+    {
+        Color color;
+        //ChangeHMI all HUD arrows transparancy
+        color = HUDMaterials.right.color; color.a = transparency;
+        HUDMaterials.right.color = color;
+
+        color = HUDMaterials.left.color; color.a = transparency;
+        HUDMaterials.left.color = color;
+
+        color = HUDMaterials.straight.color; color.a = transparency;
+        HUDMaterials.straight.color = color;
+
+        //Change transparancy of HUD text
+        Transform text = car.HUD.transform.Find("Text");
+        color = text.GetComponent<TextMesh>().color; color.a = transparency;
+        text.GetComponent<TextMesh>().color = color;
+
+        //change Conformal transparancy
+        color = splineCreator.navigationPartMaterial.color; color.a = transparency;
+        splineCreator.navigationPartMaterial.color = color;
+    }
+    private void RenderNavigation()
+    {
+        //Remove reference of navigatoinparts frm waypoints
+        //RemoveNavigationPartsFromWaypoints();
+        
+        RenderNavigationType(NavigationType.VirtualCable, renderVirtualCable);
+        RenderNavigationType(NavigationType.HighlightedRoad, renderHighlightedRoad);
+        
+        
+    }
+    public Vector3 [] GetNavigationLine()
+    {
+        return gameObject.GetComponent<SplineCreator>().GetNavigationLine();
     }
     public Transform GetStartPointNavigation()
     {
@@ -159,8 +296,8 @@ public class NavigationHelper : MonoBehaviour
     }
     public void RenderNavigationType(NavigationType navigationType, bool active)
     {
-        //Fins all children of this gameobject
-        foreach (Transform child in GameObject.Find(transform.name).GetComponentsInChildren<Transform>(true))
+        //Finds all children of this gameobject
+        foreach (Transform child in GetComponentsInChildren<Transform>(true))
         {
             //If we found the one matching the navigationType we set it to {active}
             if (child.name == $"{navigationType.ToString()}")

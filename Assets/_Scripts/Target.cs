@@ -51,6 +51,7 @@ public class Target : MonoBehaviour
     public void SetDetected()
     {
         detected = true;
+        transform.GetComponent<MeshRenderer>().enabled = false;
     }
 
     public void SetUnDetected()

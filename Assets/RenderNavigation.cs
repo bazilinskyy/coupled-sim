@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(NavigationHelper))]
 public class RenderNavigation : MonoBehaviour
 {
     //Makes sure only the near navigatoin is rendered and not the whole path.
     public int numberOfWaypoints = 2;
     private Navigator navigator;
-    private Transform navigation;
     private NavigationHelper navigationHelper;
     private Waypoint target;
 
@@ -17,26 +17,31 @@ public class RenderNavigation : MonoBehaviour
 
     void Update()
     {
-        if(navigator == null) { return; }
+        if(navigationHelper == null) { navigationHelper = gameObject.GetComponent<NavigationHelper>(); }
+        if(navigator == null) { navigator = navigationHelper.car; }
+        if(waypoints == null) { waypoints = navigationHelper.GetOrderedWaypointList(); }
         if(target != navigator.GetCurrentTarget())
         {
             target = navigator.GetCurrentTarget();
-            SetAllRenderMeToFalse();
-            SetRenderMeAttributes();
+            RenderNavigationSymbology();
         }
+        
+    }
+    public void RenderNavigationSymbology()
+    {
+        SetAllRenderMeToFalse();
+        SetRenderMeAttributes();
     }
     public void SetNavigationObjects()
     {
         //Set navigation variables and such
-        navigator = transform.GetComponent<Navigator>();
-        navigationHelper = navigator.GetNavigationHelper();
-        navigation = navigator.navigation;
+        navigationHelper = gameObject.GetComponent<NavigationHelper>();
+        navigator = navigationHelper.car;
+        
         target = navigator.GetCurrentTarget();
         waypoints = navigationHelper.GetOrderedWaypointList();
 
-        //Set rendering attributes
-        SetAllRenderMeToFalse();
-        SetRenderMeAttributes();
+        RenderNavigationSymbology();
 
     }
     void SetRenderMeAttributes()

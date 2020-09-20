@@ -16,6 +16,7 @@ public class ExperimentManager : MonoBehaviour
     [Header("Inputs")]
     public KeyCode keyUserReady = KeyCode.F1;
     public KeyCode keyTargetDetected = KeyCode.Space;
+    public KeyCode setToLastWaytpoint = KeyCode.Escape;
 
     [Header("GameObjects")]
     public LayerMask layerToIgnore;
@@ -94,6 +95,10 @@ public class ExperimentManager : MonoBehaviour
             {
                 ProcessUserInputTargetDetection();
             }
+            if (Input.GetKeyDown(setToLastWaytpoint))
+            {
+                SetToLastWaypoint();
+            }
         }
 
         //if we finished a navigation we go to the waiting room
@@ -144,6 +149,13 @@ public class ExperimentManager : MonoBehaviour
         yield return new WaitForSeconds(animationTime + 0.5f);
         GoToWaitingRoom();
     }
+    private void SetToLastWaypoint()
+    {
+
+        car.transform.position = car.target.previousWaypoint.transform.position;
+        car.transform.rotation = car.target.previousWaypoint.transform.rotation;
+        car.GetComponent<Rigidbody>().velocity = new Vector3();
+    }
     private void TurnLightsOnFast()
     {
         BlackOutScreen.CrossFadeAlpha(0f, 0f, true);
@@ -185,6 +197,9 @@ public class ExperimentManager : MonoBehaviour
 
         //set up car (Should always be after activating the new experiment!)
         SetUpCar();
+
+        //Prep navigation (depends on car being set properly as well !!) 
+        activeNavigationHelper.PrepareNavigationForExperiment();
 
         //Should always be AFTER next experiment is activated.
         SetUpDataManagerNewExperiment();
@@ -268,7 +283,7 @@ public class ExperimentManager : MonoBehaviour
         activeExperiment.SetActive(true);
         activeNavigationHelper = activeExperiment.navigation.GetComponent<NavigationHelper>();
 
-        Debug.Log("Experiment " + activeExperiment.navigation.name + " loaded");
+        Debug.Log("Experiment " + activeExperiment.navigation.name + " loaded...");
     }
     void ProcessUserInputTargetDetection()
     {
@@ -302,7 +317,7 @@ public class ExperimentManager : MonoBehaviour
         }
         else
         {
-            throw new System.Exception("Counting two visible targets.... This is not implemented yet");
+            throw new System.Exception("ERROR: Counting two visible targets, this is not implemented yet...");
         }
     }
     Vector3 GetRandomPerpendicularVector(Vector3 vec)

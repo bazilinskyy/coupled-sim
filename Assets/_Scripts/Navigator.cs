@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using System.Linq;
-
-[RequireComponent(typeof(RenderNavigation))]
 public class Navigator : MonoBehaviour
 {
     //Current target waypoint and waypoint tree
@@ -20,58 +18,30 @@ public class Navigator : MonoBehaviour
 
     private float distanceTravelled=0f;
     private Vector3 lastPosition = Vector3.zero;
-
-    [Range(0.01f, 1f)]
-    public float _transparency = 0.3f; private float transparency = 0.3f;
-
-/*    public bool _renderVirtualCable = true; private bool renderVirtualCable { get; set; }
-    public bool _renderHighlightedRoad = true; private bool renderHighlightedRoad { get; set; }*/
-    public bool _renderHUD = true; private bool renderHUD { get; set; }
-
-
+   
     public GameObject HUD;
-    public Material right;
-    public Material left;
-    public Material straight;
-    public Material destination;
-
-    private void Awake()
+     private void Awake()
     {
         //Set some variables
         if (navigation == null && target == null) { return; }
         navigationHelper = navigation.GetComponent<NavigationHelper>();
         navigationFinished = false;
-        CheckOptionInput();
 
         if (target == null) {target = navigationHelper.GetFirstTarget();}
-
-        //Render the HUDs if needed
-        if (renderHUD) { 
-            RenderNavigationArrow();
-            RenderNavigationDistance();
-        }
     }
     void Update()
     {
         if (navigation == null && target == null) { return; }
-        CheckOptionInput();
 
         if (GetNextTarget())
         {
             SetNextTarget();
-            RenderNavigationArrow();
         }
         else if(target.operation == Operation.EndPoint)
         {
             float distanceToFinish = Vector3.Magnitude(target.transform.position - transform.position);
-            if (distanceToFinish < 2)
-            {
-                navigationFinished = true;
-            }
-
+            if (distanceToFinish < 2){ navigationFinished = true;}
         }
-        //Renders the instructions on HUD
-        if (renderHUD) { RenderNavigationDistance(); }
     }
     public Waypoint GetCurrentTarget()
     {
@@ -82,89 +52,12 @@ public class Navigator : MonoBehaviour
         navigation = _navigation;
         navigationHelper = navigation.GetComponent<NavigationHelper>();
         target = navigationHelper.GetFirstTarget();
-        GetComponent<RenderNavigation>().SetNavigationObjects();
+        
         navigationFinished = false;
-        RenderNavigationArrow();
     }
     public Transform GetNavigation()
     {
         return navigation;
-    }
-    void CheckOptionInput()
-    {
-        //if resolution change --> update transparancy
-        if (transparency != _transparency)
-        {
-            transparency = _transparency;
-            ChangTransparancyHUDAndConformal();
-        }
-        //if render booleans change --> update mesh
-       /* if (renderVirtualCable != _renderVirtualCable || renderHighlightedRoad != _renderHighlightedRoad)
-        {
-            renderVirtualCable = _renderVirtualCable;
-            renderHighlightedRoad = _renderHighlightedRoad;
-
-            navigation.GetComponent<SplineCreator>()._renderVirtualCable = renderVirtualCable;
-            navigation.GetComponent<SplineCreator>()._renderHighlightedRoad = renderHighlightedRoad;
-        }*/
-
-        if(renderHUD != _renderHUD)
-        {
-            renderHUD = _renderHUD;
-            HUD.SetActive(renderHUD);
-        }
-    }
-    private void OnDrawGizmos()
-    {
-        CheckOptionInput();
-    }
-    void ChangTransparancyHUDAndConformal()
-    {
-        Color color;
-        //ChangeHMI all HUD arrows transparancy
-        color = right.color;    color.a = transparency;
-        right.color = color;
-
-        color = left.color; color.a = transparency;
-        left.color = color;
-
-        color = straight.color; color.a = transparency;
-        straight.color = color;
-
-        //Change transparancy of HUD text
-        Transform text = HUD.transform.Find("Text");
-        color = text.GetComponent<TextMesh>().color; color.a = transparency;
-        text.GetComponent<TextMesh>().color = color;
-
-        //change Conformal transparancy
-        color = GetNavigation().GetComponent<SplineCreator>().navigationPartMaterial.color; color.a = transparency;
-        GetNavigation().GetComponent<SplineCreator>().navigationPartMaterial.color = color;
-    }
-    void RenderNavigationArrow()
-    {
-        Transform arrows = HUD.transform.Find("Arrows");
-
-        if (target.operation == Operation.TurnRightShort || target.operation == Operation.TurnRightLong) { arrows.gameObject.GetComponent<MeshRenderer>().material = right; }
-        else if (target.operation == Operation.TurnLeftLong) { arrows.gameObject.GetComponent<MeshRenderer>().material = left; }
-        else if (target.operation == Operation.Straight) { arrows.gameObject.GetComponent<MeshRenderer>().material = straight; }
-        else if (target.operation == Operation.EndPoint) { arrows.gameObject.GetComponent<MeshRenderer>().material = destination; }
-        
-    }
-    void RenderNavigationDistance()
-    {
-        
-        Transform text = HUD.transform.Find("Text");
-        TextMesh textMesh = text.gameObject.GetComponent<TextMesh>();
-
-        float distanceToTarget = Vector3.Magnitude(target.transform.position - transform.position);
-        int renderedDistance = ((int)distanceToTarget - ((int)distanceToTarget % 5));
-        if (renderedDistance < 0) { renderedDistance = 0; }
-
-        if (target.operation == Operation.TurnRightShort || target.operation == Operation.TurnRightLong) { textMesh.text = $"{renderedDistance}m"; }
-        else if (target.operation == Operation.TurnLeftLong){ textMesh.text = $"{renderedDistance}m"; }
-        else if (target.operation == Operation.Straight){ textMesh.text = $"{renderedDistance}m"; }
-        else if (target.operation == Operation.EndPoint) { textMesh.text = $"{renderedDistance}m"; }
-        
     }
     private bool GetNextTarget()
     {
@@ -218,6 +111,5 @@ public class Navigator : MonoBehaviour
             navigationFinished = true;
         }
     }
-
     public NavigationHelper GetNavigationHelper() { return navigationHelper;}
 }

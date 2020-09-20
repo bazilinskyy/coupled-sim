@@ -14,8 +14,7 @@ public class Waypoint : MonoBehaviour
 
     public int orderId;
 
-    private List<NavigationPart> navigationPartList;
-
+    public List<NavigationPart> navigationPartList;
     public int TargetCount()
     {
         int count = 0;
@@ -49,7 +48,7 @@ public class Waypoint : MonoBehaviour
 
         foreach (NavigationPart navigationPart in navigationPartList)
         {
-            navigationPart.RenderMe(true);
+            navigationPart.RenderMe(renderMe);
         }
     }
     private void SetMeshRendererTargets(bool enabled)
@@ -77,7 +76,7 @@ public class Waypoint : MonoBehaviour
     }
     public void RemoveNavigationParts()
     {
-        if (navigationPartList != null) { navigationPartList.Clear(); }
+        navigationPartList = new List<NavigationPart>();
     }
     public void AddNavigationPart(NavigationPart navigationPart)
     {

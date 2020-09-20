@@ -5,7 +5,7 @@ using UnityEngine;
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 public class NavigationPart : MonoBehaviour
 {
-    
+    public bool renderMe;
     public Waypoint waypoint { get; set; }
     public NavigationType navigationType { get; set; }
     private Vector3 startPosition { get; set; } 
@@ -29,8 +29,9 @@ public class NavigationPart : MonoBehaviour
         return correct;
     }
     
-    public void RenderMe(bool renderMe)
-    {
-        gameObject.GetComponent<MeshRenderer>().enabled = renderMe;
+    public void RenderMe(bool _renderMe)
+    {        
+        renderMe = _renderMe;
+        GetComponent<MeshRenderer>().enabled = _renderMe;
     }
 }

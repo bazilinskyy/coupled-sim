@@ -13,13 +13,8 @@ public class SplineCreator : MonoBehaviour
 	public bool showGizmos = true;
 
 	public Material navigationPartMaterial;
-
-	public NavigationHelper navigationHelper;
-
-	//booleans for each navigation type
-	public bool _renderVirtualCable; private bool renderVirtualCable;
-	public bool _renderHighlightedRoad; private bool renderHighlightedRoad;
-	public bool _pressMeToRerender; private bool pressMeToRerender;
+	
+	private NavigationHelper navigationHelper;
 
 	//Holds the rendered navbigation parts;
 	private GameObject navigationPartsParent;
@@ -27,55 +22,33 @@ public class SplineCreator : MonoBehaviour
 	//Amount of points used per spline
 	private int pointsPerSpline = 10;
 
+	private Vector3[] pointsNavigationLine;
 	private void Awake()
 	{
-		renderVirtualCable = _renderVirtualCable;
-		renderHighlightedRoad = _renderHighlightedRoad;
-		pressMeToRerender = _pressMeToRerender;
+		
+		navigationHelper = gameObject.GetComponent<NavigationHelper>();
 	}
-	private void Update()
-	{
-		CheckForChanges();
-	}
-	void CheckForChanges()
-	{
-		//if render booleans change --> update mesh
-		if (renderVirtualCable != _renderVirtualCable || renderHighlightedRoad != _renderHighlightedRoad)
-		{
-			renderVirtualCable = _renderVirtualCable;
-			renderHighlightedRoad = _renderHighlightedRoad;
-			UpdateNavigationPartsToRender();
-			navigationHelper.RenderAllWaypoints(true);
-		}
 
-		if(pressMeToRerender != _pressMeToRerender)
-		{
-			pressMeToRerender = _pressMeToRerender;
-			MakeNavigation();
-			UpdateNavigationPartsToRender();
-			navigationHelper.RenderAllWaypoints(true);
-		}
-	}
 	void OnDrawGizmos()
 	{
-		CheckForChanges();
-
+		if (navigationHelper == null) { navigationHelper = gameObject.GetComponent<NavigationHelper>(); }
 		Gizmos.color = Color.cyan;
 		if (showGizmos)
 		{
-			Vector3[] points = GetNavigationLine();
+			pointsNavigationLine = MakeNavigationLine();
 			//Set forward direction of splinepoints based on acquired spline
-			SetForwardDirectionSplinePoints(points);
+			SetForwardDirectionSplinePoints(pointsNavigationLine);
 
-			DrawGizmoLines(points);
+			DrawGizmoLines(pointsNavigationLine);
 		}
 	}
-	void UpdateNavigationPartsToRender()
+
+	public Vector3 [] GetNavigationLine()
 	{
-		navigationHelper.RenderNavigationType(NavigationType.VirtualCable, renderVirtualCable);
-		navigationHelper.RenderNavigationType(NavigationType.HighlightedRoad, renderHighlightedRoad);
+		return MakeNavigationLine();
 	}
-	private void MakeNavigation()
+
+	public void MakeNavigation()
 	{
 		//Destoy current navigation if existent
 		foreach(Transform child in transform)
@@ -86,8 +59,8 @@ public class SplineCreator : MonoBehaviour
 				break;
 			}
 		}
-		//Delete navigationParts from all waypoints
-		gameObject.GetComponent<NavigationHelper>().RemoveNavigationPartsFromWaypoints();
+		navigationHelper.RemoveNavigationPartsFromWaypoints();
+	
 		//Make it again
 		SetNavigationPartParents();
 		CreateNavigationParts();
@@ -108,6 +81,7 @@ public class SplineCreator : MonoBehaviour
 	private void CreateNavigationParts()
 	{
 		//Get waypoint list
+		
 		List<Waypoint> waypointList = navigationHelper.GetOrderedWaypointList();
 
 		//List of potetnial spline points
@@ -299,7 +273,7 @@ public class SplineCreator : MonoBehaviour
 	{
 		if(waypoint.nextWaypoint == null)
 		{
-			throw new Exception($"Error in SplineCreator -> Add next waypoint. Next waypoint is missing...... waypoint opertaion is {waypoint.operation.ToString()}");
+			throw new Exception($"Error in SplineCreator -> Add next waypoint. Next waypoint is missing......Trying again");	
 		}
 
 		//Make new array with icreased length
@@ -372,7 +346,7 @@ public class SplineCreator : MonoBehaviour
 			Gizmos.DrawLine(points[i], points[i + 1]);
 		}
 	}
-	private Vector3[] GetNavigationLine()
+	private Vector3[] MakeNavigationLine()
 	{
 		//Get waypoint list
 		List<Waypoint> waypointList = navigationHelper.GetOrderedWaypointList();
@@ -387,7 +361,6 @@ public class SplineCreator : MonoBehaviour
 		//loop trough points and draw gizmos based on operation of waypoints and roadParameters
 		foreach (Waypoint waypoint in waypointList)
 		{
-			if (!waypoint.renderMe) { continue; }
 			//If we encounter spline points we will add these to splineList untill we reach a non-spline point
 			if (waypoint.operation == Operation.SplinePoint) {
 				splineList.Add(waypoint);
