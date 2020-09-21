@@ -50,6 +50,7 @@ public class ExperimentManager : MonoBehaviour
     private bool turningOffLightsFinished =false;
     private bool turningOnLightsFinished = false;
     private float animationTime = 2f; //time for lighting aniimation in seconds
+    private float previousSteeringButtonInput;
     void Awake()
     {
         BlackOutScreen.color = new Color(0, 0, 0, 1f);
@@ -96,7 +97,9 @@ public class ExperimentManager : MonoBehaviour
         else if (gameState.isExperiment()) {
             activeExperiment.experimentTime += Time.deltaTime;
             SetTargetVisibilityTime();
-            if (Input.GetKeyDown(keyTargetDetected))
+
+            //stupid solution for the continues output of the button (this function should obviously only trigger once) so we check if the previous value was already 1 'pushed down'
+            if (Input.GetKeyDown(keyTargetDetected) || (Input.GetAxis("SteerButtonRight") != 0 && previousSteeringButtonInput != 1)) 
             {
                 ProcessUserInputTargetDetection();
             }
@@ -104,7 +107,10 @@ public class ExperimentManager : MonoBehaviour
             {
                 SetToLastWaypoint();
             }
+            
         }
+        previousSteeringButtonInput = Input.GetAxis("SteerButtonRight");
+        
 
         //if we finished a navigation we go to the waiting room
         if (NavigationFinished() && gameState.isExperiment())
@@ -126,7 +132,6 @@ public class ExperimentManager : MonoBehaviour
             }
         }
     }
-
     IEnumerator GoToWaitingRoomCoroutine()
     {
         gameState.SetGameState(GameStates.Waiting);
