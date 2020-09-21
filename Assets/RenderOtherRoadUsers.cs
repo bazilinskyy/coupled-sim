@@ -25,8 +25,6 @@ public class RenderOtherRoadUsers : MonoBehaviour
     {
         RenderOthers();
     }
-
-
     private void OnDrawGizmos()
     {
         if (showGizmo)
@@ -36,8 +34,6 @@ public class RenderOtherRoadUsers : MonoBehaviour
             Gizmos.DrawSphere(transform.position, renderDistanceOthers);
         }
     }
-
-    
     void GetGameObjectsOther()
     {
         pedestrianList = GameObject.FindGameObjectsWithTag("Pedestrians");
@@ -80,7 +76,6 @@ public class RenderOtherRoadUsers : MonoBehaviour
             RenderObjects(vehicleList);
         }
     }
-
     private bool InFrontOfCar(Vector3 pos)
     {
         bool inFront;
@@ -99,7 +94,6 @@ public class RenderOtherRoadUsers : MonoBehaviour
 
         return inFront;
     }
-
     void RenderObjects(GameObject[] objectList)
     {
         foreach (GameObject obj in objectList)
