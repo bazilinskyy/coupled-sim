@@ -20,7 +20,7 @@ public class SplineCreator : MonoBehaviour
 	private GameObject navigationPartsParent;
 
 	//Amount of points used per spline
-	private int pointsPerSpline = 10;
+	private int pointsPerSpline = 40;
 
 	private Vector3[] pointsNavigationLine;
 	private void Awake()
@@ -107,7 +107,9 @@ public class SplineCreator : MonoBehaviour
 
 			if (addedSplineWaypoints) {
 				currentWaypointList.Add(waypoint);
-				points = GetSplinePoints(currentWaypointList);
+				Vector3[] points_spline = GetSplinePoints(currentWaypointList);
+				Vector3[] points_current_waypoint = GetPointsWaypoint(waypoint);
+				points = points_spline.Concat(points_current_waypoint).ToArray();
 				currentWaypointList.Clear();
 				addedSplineWaypoints = false; 
 			}
@@ -260,7 +262,7 @@ public class SplineCreator : MonoBehaviour
 
 		//Get half circle in x,y frame
 		Vector2[] quarterCircle = GetQuarterCircle(radius, pointsPerSpline, waypoint.operation);
-
+		
 		//Transpose circle to the current waypoint position and rotation
 		Vector3[] points = TransformVector2ToVector3(quarterCircle);
 		points = TransposePoints(waypoint, points);
@@ -444,9 +446,9 @@ public class SplineCreator : MonoBehaviour
 		int sign = 1;
 		if(operation == Operation.TurnLeftLong) { sign = -1; }
 
-		pointsCircle[0] = new Vector2(0,0);
+		
 		//- PI to 0 gets a half circle to the right
-		for (int i = 1; i < numberOfPoints; i++)
+		for (int i = 0; i < numberOfPoints; i++)
 		{
 			float radians = -Mathf.PI / 2 + i * radStep;
 			float x = sign * (radius * Mathf.Sin(radians) + radius);

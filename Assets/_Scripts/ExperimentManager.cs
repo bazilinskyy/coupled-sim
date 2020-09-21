@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using System.Linq;
+using Leap;
 
 [RequireComponent(typeof(XMLManager))]
 public class ExperimentManager : MonoBehaviour
@@ -17,11 +18,16 @@ public class ExperimentManager : MonoBehaviour
     public KeyCode keyUserReady = KeyCode.F1;
     public KeyCode keyTargetDetected = KeyCode.Space;
     public KeyCode setToLastWaytpoint = KeyCode.Escape;
+    public KeyCode resetHeadPosition = KeyCode.F2;
 
     [Header("GameObjects")]
     public LayerMask layerToIgnore;
     public Transform navigationRoot;
     public Navigator car;
+
+    public Camera rearViewMirror;
+    public Camera leftMirror;
+    public Camera rightMirror;
 
     //The camera used and head position inside the car
     public bool usingVarjo;
@@ -33,7 +39,7 @@ public class ExperimentManager : MonoBehaviour
 
     //UI objects
     public Text UIText;
-    public Image BlackOutScreen;
+    public UnityEngine.UI.Image BlackOutScreen;
     //Scriptable gameState object
     public GameState gameState;
     //Waiting room transform
@@ -47,10 +53,9 @@ public class ExperimentManager : MonoBehaviour
     private XMLManager dataManager;
     //Maximum raycasts used in determining visbility:  We use Physics.RayCast to check if we can see the target. We cast this to a random positin on the targets edge to see if it is partly visible.
     private int maxNumberOfRandomRayHits = 40;
-    private bool turningOffLightsFinished =false;
-    private bool turningOnLightsFinished = false;
     private float animationTime = 2f; //time for lighting aniimation in seconds
     private float previousSteeringButtonInput;
+    private Controller controller;
     void Awake()
     {
         BlackOutScreen.color = new Color(0, 0, 0, 1f);
@@ -58,8 +63,8 @@ public class ExperimentManager : MonoBehaviour
         //Set gamestate to waiting
         gameState.SetGameState(GameStates.Waiting);
 
-        //Set camera 
-        if (usingVarjo) { usedCam = varjoCam; }
+        //Set camera and leap motion controller if varjoCam used
+        if (usingVarjo) { usedCam = varjoCam; controller = new Controller(); }
         else { usedCam = normalCam; }
 
         usedCam.position = headPosition.position;
@@ -79,6 +84,7 @@ public class ExperimentManager : MonoBehaviour
 
         //Get main camera to waiting room
         GoToWaitingRoom();
+        
     }
     private void FixedUpdate()
     {
@@ -98,19 +104,15 @@ public class ExperimentManager : MonoBehaviour
             activeExperiment.experimentTime += Time.deltaTime;
             SetTargetVisibilityTime();
 
+
             //stupid solution for the continues output of the button (this function should obviously only trigger once) so we check if the previous value was already 1 'pushed down'
-            if (Input.GetKeyDown(keyTargetDetected) || (Input.GetAxis("SteerButtonRight") != 0 && previousSteeringButtonInput != 1)) 
-            {
-                ProcessUserInputTargetDetection();
-            }
-            if (Input.GetKeyDown(setToLastWaytpoint))
-            {
-                SetToLastWaypoint();
-            }
+            if (Input.GetKeyDown(keyTargetDetected) || (Input.GetAxis("SteerButtonRight") != 0 && previousSteeringButtonInput != 1)) { ProcessUserInputTargetDetection(); }
+            if (Input.GetKeyDown(setToLastWaytpoint)) { SetToLastWaypoint(); }
+            if (Input.GetKeyDown(resetHeadPosition)) {SetHeadPosition(headPosition); }
             
         }
         previousSteeringButtonInput = Input.GetAxis("SteerButtonRight");
-        
+
 
         //if we finished a navigation we go to the waiting room
         if (NavigationFinished() && gameState.isExperiment())
@@ -232,6 +234,12 @@ public class ExperimentManager : MonoBehaviour
 
         car.transform.position = startLocation.position;
         car.transform.rotation = startLocation.rotation;
+        
+    }
+
+    void SetCarSound(bool input)
+    {
+        car.GetComponent<AudioSource>().enabled = input;
     }
     IEnumerator RenderStartScreenText()
     {
@@ -249,35 +257,49 @@ public class ExperimentManager : MonoBehaviour
         Debug.Log("Returning to car...");
 
         //If using varjo we need to do something different with the head position as it is contained in a varjo Rig gameObject which is not the camera position of varjo
-        if (usingVarjo) 
+        SetHeadPosition(headPosition);       
+        usedCam.SetParent(originalParentCamera);
+
+        //Activate mirror cameras (When working with the varjo it deactivates all other cameras....)
+        //Does not work when in Start() or in Awake()...
+        ActivateMirrorCameras();
+        
+        //Turns on sound of the car (somehow you still hear this in the waiting room....)
+        SetCarSound(true);
+    }
+    void SetHeadPosition(Transform goalPos)
+    {
+        if (usingVarjo)
         {
             Transform varjoCam = usedCam.GetChild(0);
-            Vector3 correction = headPosition.position - varjoCam.position;
+            Vector3 correction = goalPos.position - varjoCam.position;
             usedCam.position += correction;
-            usedCam.rotation = headPosition.rotation;
+            usedCam.rotation = goalPos.rotation;
         }
         else
         {
-            usedCam.transform.position = headPosition.position;
-            usedCam.transform.rotation = headPosition.rotation;
+            usedCam.transform.position = goalPos.position;
+            usedCam.transform.rotation = goalPos.rotation;
         }
-       
-        usedCam.SetParent(originalParentCamera);
-        //usedCam.transform.Rotate(new Vector3(0, 1f, 0), -90);
     }
     void GoToWaitingRoom()
     {
         TurnLightsOnFast();
+
+        //Turns on sound of the car (somehow you still hear this in the waiting room....)
+        SetCarSound(false);
+
         Debug.Log("Going to waiting room...");
         if (originalParentCamera == null) { originalParentCamera = usedCam.parent; }
 
-        usedCam.transform.position = waitingRoom.transform.position + new Vector3(0, 3f, -3f);
-        usedCam.transform.rotation = waitingRoom.transform.rotation;
+        Transform goalPos = waitingRoom.transform;
+        goalPos.position += new Vector3(0, 3f, -3f);
+        SetHeadPosition(goalPos);
+       
         usedCam.SetParent(waitingRoom);
 
         if (gameState.isFinished()) { StartCoroutine(RenderEndSimulation()); }
         else{ StartCoroutine(RenderStartScreenText()); }
-        
     }
     IEnumerator RenderEndSimulation()
     {
@@ -475,6 +497,27 @@ public class ExperimentManager : MonoBehaviour
     private void SaveData()
     {
         if (saveData) { dataManager.SaveData(); }
+    }
+    private void SetHeadPositionUsingHands()
+    {
+        Frame frame = controller.Frame(); // controller is a Controller object
+        if (frame.Hands.Count > 0)
+        {
+            List<Hand> hands = frame.Hands;
+
+            foreach (Hand hand in hands)
+            {
+                Debug.Log(hand.PalmPosition.ToString()); // is in milimeters from the leap Rig
+            }
+        }
+    }
+    private void ActivateMirrorCameras()
+    {
+        rearViewMirror.enabled = true; rearViewMirror.cullingMask = -1; // -1 == everything
+
+        rightMirror.enabled = true; rightMirror.cullingMask = -1;
+
+        leftMirror.enabled = true; leftMirror.cullingMask = -1;
     }
 }
 [System.Serializable]

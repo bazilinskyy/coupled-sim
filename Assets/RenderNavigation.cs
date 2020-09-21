@@ -6,7 +6,7 @@ using UnityEngine;
 public class RenderNavigation : MonoBehaviour
 {
     //Makes sure only the near navigatoin is rendered and not the whole path.
-    public int numberOfWaypoints = 2;
+    public int numberOfWaypoints = 1;
     private Navigator navigator;
     private NavigationHelper navigationHelper;
     private Waypoint target;
@@ -56,7 +56,7 @@ public class RenderNavigation : MonoBehaviour
         while (currentWaypoint != null && renderedWaypoints <= numberOfWaypoints)
         {
             currentWaypoint.RenderMe(true);
-
+            //Skip spline points in the count
             if (currentWaypoint.operation != Operation.SplinePoint) { renderedWaypoints++; }
 
             currentWaypoint = currentWaypoint.nextWaypoint;

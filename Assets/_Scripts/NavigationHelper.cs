@@ -211,6 +211,9 @@ public class NavigationHelper : MonoBehaviour
             waypoint = child.GetComponent<Waypoint>();
             if (waypoint != null) { waypointList.Add(waypoint); }
         }
+        
+        if(waypointList.Count() == 0) { return waypointList; }
+
         waypointList = waypointList.OrderBy(a => a.gameObject.name).ToList();
         waypoint = waypointList[0];
         int orderId = 0;
