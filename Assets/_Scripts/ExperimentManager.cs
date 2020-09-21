@@ -13,6 +13,8 @@ public class ExperimentManager : MonoBehaviour
     public string subjectName="You";
     public int experimentStartPoint;
     public bool saveData=true;
+    public bool usingVarjo;
+    public bool usingLeapMotion;
 
     [Header("Inputs")]
     public KeyCode keyUserReady = KeyCode.F1;
@@ -20,6 +22,7 @@ public class ExperimentManager : MonoBehaviour
     public KeyCode setToLastWaytpoint = KeyCode.Escape;
     public KeyCode resetHeadPosition = KeyCode.F2;
 
+ 
     [Header("GameObjects")]
     public LayerMask layerToIgnore;
     public Transform navigationRoot;
@@ -30,7 +33,7 @@ public class ExperimentManager : MonoBehaviour
     public Camera rightMirror;
 
     //The camera used and head position inside the car
-    public bool usingVarjo;
+    
     public Transform varjoCam;
     public Transform normalCam;
     public Transform headPosition;
@@ -63,12 +66,14 @@ public class ExperimentManager : MonoBehaviour
         //Set gamestate to waiting
         gameState.SetGameState(GameStates.Waiting);
 
-        //Set camera and leap motion controller if varjoCam used
-        if (usingVarjo) { usedCam = varjoCam; controller = new Controller(); }
+        //Set camera 
+        if (usingVarjo) { usedCam = varjoCam;  }
         else { usedCam = normalCam; }
 
         usedCam.position = headPosition.position;
         usedCam.rotation = headPosition.rotation;
+
+        if (usingLeapMotion) { controller = new Controller(); }
 
         //Check exerimentStartPoint input
         if(experimentStartPoint >= navigationRoot.transform.childCount) { throw new System.Exception("Start point should be lower than the number of navigations available"); }
@@ -500,6 +505,7 @@ public class ExperimentManager : MonoBehaviour
     }
     private void SetHeadPositionUsingHands()
     {
+        
         Frame frame = controller.Frame(); // controller is a Controller object
         if (frame.Hands.Count > 0)
         {

@@ -37,10 +37,10 @@ public class XMLManager : MonoBehaviour
     private string subjectName;
    
     //list of items
-    private List<VehicleDataPoint> vehicleData;
-    private List<TargetAlarm> targetDetectionData;
+    private VehicleDataContainer vehicleData;
+    private AlarmContainer targetDetectionData;
     private TargetDetectionSummary targetDetectionSummary;
-    private List<MyGazeData> gazeData;
+    private GazeContainer gazeData;
 
     private void OnApplicationQuit()
     {
@@ -49,9 +49,8 @@ public class XMLManager : MonoBehaviour
     private void Awake()
     {
         ins = this;
-        vehicleData = new List<VehicleDataPoint>();
-        targetDetectionData = new List<TargetAlarm>();
-        gazeData = new List<MyGazeData>();
+
+        StartNewMeasurement();
 
         experimentManager = gameObject.GetComponent<ExperimentManager>();
         gameState = experimentManager.gameState;
@@ -84,16 +83,16 @@ public class XMLManager : MonoBehaviour
     public void SaveData()
     {
                
-        SaveThis<List<VehicleDataPoint>> (carDataFileName, vehicleData);
+        SaveThis<VehicleDataContainer>(carDataFileName, vehicleData);
         
-        SaveThis<List<TargetAlarm>>(targetDetectionDataFileName, targetDetectionData);
+        SaveThis<AlarmContainer>(targetDetectionDataFileName, targetDetectionData);
 
         SummariseTargetDetectionData();
         SaveThis<TargetDetectionSummary>(targetDetectionDataSummaryFileName, targetDetectionSummary);
 
         SaveNavigationData();
 
-        SaveThis<List<MyGazeData>>(gazeDataFileName, gazeData);
+        SaveThis<GazeContainer>(gazeDataFileName, gazeData);
     }
     public void SetNavigation(Transform _navigation)
     {
@@ -125,8 +124,8 @@ public class XMLManager : MonoBehaviour
         XmlSerializer serializer = new XmlSerializer(typeof(T));
         //overwrites mydata.xml
         string filePath = string.Join("/", saveFolder(), fileName);
-        string name = typeof(T).FullName;
-        Debug.Log($"Saving {name} data to {filePath}...");
+//        string name = typeof(T).FullName;
+        Debug.Log($"Saving {fileName} data to {filePath}...");
 
         FileStream stream = new FileStream(filePath, FileMode.Create);
         serializer.Serialize(stream, data);
@@ -135,12 +134,11 @@ public class XMLManager : MonoBehaviour
     public void StartNewMeasurement()
     {
         Debug.Log("Starting new measurement...");
-        targetDetectionData = null;
-
-        vehicleData = new List<VehicleDataPoint>();
-        targetDetectionData = new List<TargetAlarm>();
+        
+        vehicleData = new VehicleDataContainer();
+        targetDetectionData = new AlarmContainer();
         targetDetectionSummary = new TargetDetectionSummary();
-        gazeData = new List<MyGazeData>();
+        gazeData = new GazeContainer();
 
 }
     private string saveFolder()
@@ -175,7 +173,7 @@ public class XMLManager : MonoBehaviour
         dataPoint.brakeInput = vehicleBehaviour.Braking;
         dataPoint.steerInput = vehicleBehaviour.Steering;
 
-        vehicleData.Add(dataPoint);
+        vehicleData.dataList.Add(dataPoint);
 
     }
     private float GetDistanceToOptimalPath(Vector3 car_position)
@@ -265,7 +263,7 @@ public class XMLManager : MonoBehaviour
             data.rightCalibrationQuality = VarjoPlugin.GetGazeCalibrationQuality().right;
             data.rightStatus = varjo_data.rightStatus;
 
-            gazeData.Add(data);
+            gazeData.dataList.Add(data);
         }
         else
         {
@@ -280,7 +278,7 @@ public class XMLManager : MonoBehaviour
             data.rightCalibrationQuality = VarjoPlugin.GetGazeCalibrationQuality().right;
             data.rightStatus = varjo_data.rightStatus;
 
-            gazeData.Add(data);
+            gazeData.dataList.Add(data);
 
         }
     }
@@ -293,7 +291,7 @@ public class XMLManager : MonoBehaviour
         TargetAlarm alarm = new TargetAlarm();
         alarm.time = experimentManager.activeExperiment.experimentTime;
         alarm.AlarmType = false;
-        targetDetectionData.Add(alarm);
+        targetDetectionData.dataList.Add(alarm);
         Debug.Log("Added false alarm...");
     }
     public void AddTrueAlarm(Target target)
@@ -311,7 +309,7 @@ public class XMLManager : MonoBehaviour
         int difficulty = int.Parse(target.GetTargetDifficulty().ToString().Last().ToString());
 
         alarm.targetDifficulty = difficulty;
-        targetDetectionData.Add(alarm);
+        targetDetectionData.dataList.Add(alarm);
 
         Debug.Log($"Added true alarm for {target.name}, reaction time: {Math.Round(alarm.reactionTime, 2)}s ...");
     }
@@ -330,10 +328,10 @@ public class XMLManager : MonoBehaviour
         }
 
         //TotalMisses
-        targetDetectionSummary.totalMisses = targetDetectionData.Count(x => x.AlarmType == false);
+        targetDetectionSummary.totalMisses = targetDetectionData.dataList.Count(x => x.AlarmType == false);
 
         //TotalHits
-        targetDetectionSummary.totalHits = targetDetectionData.Count(x => x.AlarmType == true);
+        targetDetectionSummary.totalHits = targetDetectionData.dataList.Count(x => x.AlarmType == true);
 
         //missrate & hitRate
         if ((targetDetectionSummary.totalHits + targetDetectionSummary.totalMisses) > 0)
@@ -349,7 +347,12 @@ public class XMLManager : MonoBehaviour
         print("Total targets: " + targetDetectionSummary.totalTargets + ", total misses:" + targetDetectionSummary.totalMisses + ", total hits: " + targetDetectionSummary.totalHits + ", hit rate: " + targetDetectionSummary.hitRate + "% ....");
     }
 }
-
+[XmlRoot("VehicleDataCollection")]
+public class VehicleDataContainer
+{
+    [XmlArray("VehicleData"), XmlArrayItem("DataPoints")]
+    public List<VehicleDataPoint> dataList = new List<VehicleDataPoint>();
+}
 public class VehicleDataPoint
 {
     public float time;
@@ -359,7 +362,14 @@ public class VehicleDataPoint
     public float brakeInput;
     public float steerInput;
 }
+[XmlRoot("GazeDataCollection")]
+public class GazeContainer
+{
 
+    [XmlArray("GazeData"), XmlArrayItem("GazePoints")]
+    public List<MyGazeData> dataList = new List<MyGazeData>();
+    
+}
 public class MyGazeData
 {
     public float time;
@@ -382,6 +392,13 @@ public class MyGazeData
     public VarjoPlugin.GazeEyeStatus leftStatus;
     public VarjoPlugin.GazeEyeCalibrationQuality rightCalibrationQuality;
     public VarjoPlugin.GazeEyeStatus rightStatus;
+}
+
+[XmlRoot("AlarmCollection")]
+public class AlarmContainer
+{
+    [XmlArray("AlarmData"), XmlArrayItem("Alarms")]
+    public List<TargetAlarm> dataList = new List<TargetAlarm>();
 }
 public class TargetAlarm
 {
