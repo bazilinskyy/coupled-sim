@@ -14,7 +14,7 @@ public class Navigator : MonoBehaviour
     private NavigationHelper navigationHelper { get; set; }
 
     public bool navigationFinished = false;
-    public float distanceAfterWaypoint = 5f;
+    public float metersAfterPassingWaypoint = 5f;
 
     private float distanceTravelled=0f;
     private Vector3 lastPosition = Vector3.zero;
@@ -71,7 +71,7 @@ public class Navigator : MonoBehaviour
             lastPosition = transform.position;
         }
         //Reset variables and pass a true 
-        if(distanceTravelled >= distanceAfterWaypoint)
+        if(distanceTravelled >= metersAfterPassingWaypoint)
         {
             getNextTarget = true;
             distanceTravelled = 0f;

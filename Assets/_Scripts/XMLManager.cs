@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Xml.Serialization;
 using UnityEngine;
+using Varjo;
+using System.Linq;
 
 public class XMLManager : MonoBehaviour
 {
@@ -15,6 +17,7 @@ public class XMLManager : MonoBehaviour
     private string targetDetectionDataSummaryFileName = "targetDataSummary.xml";
     private string navigationSettingsFileName = "navigationSettings.xml";
     private string navigationLineFileName = "navigationLine.xml";
+    private string gazeDataFileName = "gazeData.xml";
     private string dataFolder = "Data";
     //our car
     private GameObject car;
@@ -34,25 +37,26 @@ public class XMLManager : MonoBehaviour
     private string subjectName;
    
     //list of items
-    private VehicleData vehicleData;
-    private TargetDetectionData targetDetectionData;
+    private List<VehicleDataPoint> vehicleData;
+    private List<TargetAlarm> targetDetectionData;
     private TargetDetectionSummary targetDetectionSummary;
+    private List<MyGazeData> gazeData;
 
     private void OnApplicationQuit()
     {
         SaveData();
     }
-    // Start is called before the first frame update
     private void Awake()
     {
         ins = this;
-        vehicleData = new VehicleData();
-        targetDetectionData = new TargetDetectionData();
+        vehicleData = new List<VehicleDataPoint>();
+        targetDetectionData = new List<TargetAlarm>();
+        gazeData = new List<MyGazeData>();
 
         experimentManager = gameObject.GetComponent<ExperimentManager>();
         gameState = experimentManager.gameState;
 
-        SetAllInputs(car, navigation, "John Doe");
+        SetAllInputs(experimentManager.car.gameObject, navigation, "John Doe");
 
 
     }
@@ -61,7 +65,8 @@ public class XMLManager : MonoBehaviour
         if (gameState.isExperiment() && experimentManager.saveData)
         {
             AddVehicleData();
-            AddEyeTrackingData();
+
+            if (experimentManager.usingVarjo) { AddEyeTrackingData(); }
         }
     }
     public void SetAllInputs(GameObject _car, Transform _navigation, string _subjectName)
@@ -74,19 +79,28 @@ public class XMLManager : MonoBehaviour
 
         string dateTime = System.DateTime.Now.ToString("MM-dd_HH-mm");
         if (_subjectName == null || _subjectName == "") { _subjectName = "JohnDoe"; }
-        subjectName = _subjectName + "-" + dateTime;
+        subjectName = dateTime + "-" + _subjectName;
     }
     public void SaveData()
     {
                
-        SaveThis<VehicleData>(carDataFileName, vehicleData);
+        SaveThis<List<VehicleDataPoint>> (carDataFileName, vehicleData);
         
-        SaveThis<TargetDetectionData>(targetDetectionDataFileName, targetDetectionData);
+        SaveThis<List<TargetAlarm>>(targetDetectionDataFileName, targetDetectionData);
 
         SummariseTargetDetectionData();
         SaveThis<TargetDetectionSummary>(targetDetectionDataSummaryFileName, targetDetectionSummary);
 
         SaveNavigationData();
+
+        SaveThis<List<MyGazeData>>(gazeDataFileName, gazeData);
+    }
+    public void SetNavigation(Transform _navigation)
+    {
+        navigation = _navigation;
+        navigationHelper = navigation.GetComponent<NavigationHelper>();
+        navigationLine = navigationHelper.GetNavigationLine();
+        indexClosestPoint = 0;
     }
     private void SaveNavigationData()
     {
@@ -123,18 +137,12 @@ public class XMLManager : MonoBehaviour
         Debug.Log("Starting new measurement...");
         targetDetectionData = null;
 
-        vehicleData = new VehicleData();
-        targetDetectionData = new TargetDetectionData();
+        vehicleData = new List<VehicleDataPoint>();
+        targetDetectionData = new List<TargetAlarm>();
         targetDetectionSummary = new TargetDetectionSummary();
+        gazeData = new List<MyGazeData>();
 
 }
-    public void SetNavigation(Transform _navigation)
-    {
-        navigation = _navigation;
-        navigationHelper = navigation.GetComponent<NavigationHelper>();
-        navigationLine = navigationHelper.GetNavigationLine();
-        indexClosestPoint = 0;
-    }
     private string saveFolder()
     {
         //Save folder will be .../unityproject/Data/subjectName-date/subjectName/navigationName
@@ -159,13 +167,15 @@ public class XMLManager : MonoBehaviour
             Debug.Log("ERROR: Vehicle data was corrupted... Re-started measurement...");
             StartNewMeasurement();
         }
+        VehicleDataPoint dataPoint = new VehicleDataPoint();
+        dataPoint.time = experimentManager.activeExperiment.experimentTime;
+        dataPoint.distanceToOptimalPath = GetDistanceToOptimalPath(car.transform.position);
+        dataPoint.position = car.transform.position;
+        dataPoint.throttleInput = vehicleBehaviour.Throttle;
+        dataPoint.brakeInput = vehicleBehaviour.Braking;
+        dataPoint.steerInput = vehicleBehaviour.Steering;
 
-        vehicleData.distanceToOptimalPath.Add(GetDistanceToOptimalPath(car.transform.position));
-        vehicleData.position.Add(car.transform.position);
-        vehicleData.time.Add(experimentManager.activeExperiment.experimentTime);
-        vehicleData.throttleInput.Add(vehicleBehaviour.Throttle);
-        vehicleData.brakeInput.Add(vehicleBehaviour.Braking);
-        vehicleData.steerInput.Add(vehicleBehaviour.Steering);
+        vehicleData.Add(dataPoint);
 
     }
     private float GetDistanceToOptimalPath(Vector3 car_position)
@@ -226,25 +236,82 @@ public class XMLManager : MonoBehaviour
     }
     private void AddEyeTrackingData()
     {
-        //TODO: Add the eye tracking data
+
+        VarjoPlugin.GazeData varjo_data = VarjoPlugin.GetGaze();
+
+        if (varjo_data.status == Varjo.VarjoPlugin.GazeStatus.VALID)
+        {
+            //Valid gaze data
+            MyGazeData data = new MyGazeData();
+            data.time = experimentManager.activeExperiment.experimentTime;
+            
+            data.focusDistance = varjo_data.focusDistance;
+            data.focusStability = varjo_data.focusStability;
+
+            data.rightPupilSize = varjo_data.rightPupilSize;
+            data.forward_right = ConvertToVector3(varjo_data.right.forward);
+            data.position_right = ConvertToVector3(varjo_data.right.position);
+
+            data.leftPupilSize = varjo_data.leftPupilSize;
+            data.forward_left = ConvertToVector3(varjo_data.left.forward);
+            data.position_left = ConvertToVector3(varjo_data.left.position);
+            data.forward_combined = ConvertToVector3(varjo_data.gaze.forward);
+            data.position_combined = ConvertToVector3(varjo_data.gaze.position);
+
+            data.status = varjo_data.status;
+            data.leftCalibrationQuality = VarjoPlugin.GetGazeCalibrationQuality().left;
+            data.leftStatus = varjo_data.leftStatus;
+
+            data.rightCalibrationQuality = VarjoPlugin.GetGazeCalibrationQuality().right;
+            data.rightStatus = varjo_data.rightStatus;
+
+            gazeData.Add(data);
+        }
+        else
+        {
+            //Invalid gaze data
+            MyGazeData data = new MyGazeData();
+            
+            data.time = experimentManager.activeExperiment.experimentTime;
+            data.status = varjo_data.status;
+            data.leftCalibrationQuality = VarjoPlugin.GetGazeCalibrationQuality().left;
+            data.leftStatus = varjo_data.leftStatus;
+
+            data.rightCalibrationQuality = VarjoPlugin.GetGazeCalibrationQuality().right;
+            data.rightStatus = varjo_data.rightStatus;
+
+            gazeData.Add(data);
+
+        }
     }
+    private Vector3 ConvertToVector3(double[] varjo_data)
+        {
+            return new Vector3((float)varjo_data[0], (float)varjo_data[1], (float)varjo_data[2]);
+        }
     public void AddFalseAlarm()
     {
-        FalseAlarm alarm = new FalseAlarm();
+        TargetAlarm alarm = new TargetAlarm();
         alarm.time = experimentManager.activeExperiment.experimentTime;
-        targetDetectionData.falseAlarmList.Add(alarm);
+        alarm.AlarmType = false;
+        targetDetectionData.Add(alarm);
         Debug.Log("Added false alarm...");
     }
     public void AddTrueAlarm(Target target)
     {
 
-        TrueAlarm alarm = new TrueAlarm();
-        alarm.waypointID = target.waypoint.orderId;
-        alarm.targetID = target.ID;
+        TargetAlarm alarm = new TargetAlarm();
+
         alarm.time = experimentManager.activeExperiment.experimentTime;
+        alarm.waypointID = target.waypoint.orderId;
+        alarm.AlarmType = true;
+        alarm.targetID = target.ID;
         alarm.reactionTime = alarm.time - target.startTimeVisible;
-        alarm.targetDifficulty = target.GetTargetDifficulty().ToString();
-        targetDetectionData.trueAlarmList.Add(alarm);
+
+        //The difficulty names always end with a number ranging from 1-6
+        int difficulty = int.Parse(target.GetTargetDifficulty().ToString().Last().ToString());
+
+        alarm.targetDifficulty = difficulty;
+        targetDetectionData.Add(alarm);
 
         Debug.Log($"Added true alarm for {target.name}, reaction time: {Math.Round(alarm.reactionTime, 2)}s ...");
     }
@@ -263,10 +330,10 @@ public class XMLManager : MonoBehaviour
         }
 
         //TotalMisses
-        targetDetectionSummary.totalMisses = targetDetectionData.falseAlarmList.Count;
+        targetDetectionSummary.totalMisses = targetDetectionData.Count(x => x.AlarmType == false);
 
         //TotalHits
-        targetDetectionSummary.totalHits = targetDetectionData.trueAlarmList.Count;
+        targetDetectionSummary.totalHits = targetDetectionData.Count(x => x.AlarmType == true);
 
         //missrate & hitRate
         if ((targetDetectionSummary.totalHits + targetDetectionSummary.totalMisses) > 0)
@@ -283,35 +350,47 @@ public class XMLManager : MonoBehaviour
     }
 }
 
-public class VehicleData
-{
-    public List<float> distanceToOptimalPath = new List<float>();
-    public List<Vector3> position = new List<Vector3>();
-    public List<float> time = new List<float>();
-    public List<float> throttleInput = new List<float>();
-    public List<float> brakeInput = new List<float>();
-    public List<float> steerInput = new List<float>();
-}
-
-public class FalseAlarm
+public class VehicleDataPoint
 {
     public float time;
+    public float distanceToOptimalPath;
+    public Vector3 position = new Vector3();
+    public float throttleInput;
+    public float brakeInput;
+    public float steerInput;
 }
 
-public class TrueAlarm
+public class MyGazeData
 {
     public float time;
+
+    public double focusDistance;
+    public double focusStability;
+
+    public double rightPupilSize;
+    public Vector3 forward_right;
+    public Vector3 position_right;
+
+    public double leftPupilSize;
+    public Vector3 forward_left;
+    public Vector3 position_left;
+    public Vector3 forward_combined;
+    public Vector3 position_combined;
+
+    public VarjoPlugin.GazeStatus status;
+    public VarjoPlugin.GazeEyeCalibrationQuality leftCalibrationQuality;
+    public VarjoPlugin.GazeEyeStatus leftStatus;
+    public VarjoPlugin.GazeEyeCalibrationQuality rightCalibrationQuality;
+    public VarjoPlugin.GazeEyeStatus rightStatus;
+}
+public class TargetAlarm
+{
+    public float time;
+    public bool AlarmType;
     public float reactionTime;
     public int waypointID;
     public int targetID;
-    public string targetDifficulty;
-}
-
-public class TargetDetectionData
-{
-    public List<FalseAlarm> falseAlarmList = new List<FalseAlarm>();
-    public List<TrueAlarm> trueAlarmList = new List<TrueAlarm>();
-    
+    public int targetDifficulty;
 }
 public class TargetDetectionSummary
 {

@@ -4342,7 +4342,7 @@ MonoBehaviour:
     m_Bits: 4
   navigationRoot: {fileID: 564686399}
   car: {fileID: 3694919920272602934}
-  usingVarjo: 0
+  usingVarjo: 1
   varjoCam: {fileID: 1414570442}
   normalCam: {fileID: 5728539571973055317}
   headPosition: {fileID: 5769824396311071305}
@@ -4363,7 +4363,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 88419665}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7a7ce9857e3ce434e9f8beb3cbb1f936, type: 3}
+  m_Script: {fileID: 11500000, guid: d3152d721d0a26c44b1f0c599e32e4a5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1001 &90293939
@@ -42732,13 +42732,14 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 841244688}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4ac943e20247c634193904016f96b211, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   cam: {fileID: 1189762572}
   gazeHighlights: {fileID: 1118985685}
+  switchGazeHighlight: 0
   highlightGaze: 1
 --- !u!114 &841244691
 MonoBehaviour:
@@ -42747,7 +42748,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 841244688}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7b54683ca8278fd4a83309a19ac60283, type: 3}
   m_Name: 
@@ -42763,12 +42764,12 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 841244688}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8e9f4bafa72496f4789889ea9effde81, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  key: 282
+  key: 9
   useApplicationButton: 1
   useCalibrationParameters: 0
   calibrationType: 0
@@ -100787,6 +100788,10 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 2
       objectReference: {fileID: 0}
+    - target: {fileID: 1018524078056067, guid: 3921114db89b8442da245039d12a0b5f, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 1020933277391288, guid: 3921114db89b8442da245039d12a0b5f, type: 3}
       propertyPath: m_Layer
       value: 2
@@ -101057,7 +101062,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1999842122803070, guid: 3921114db89b8442da245039d12a0b5f, type: 3}
       propertyPath: m_Name
-      value: U_MC04
+      value: Car
       objectReference: {fileID: 0}
     - target: {fileID: 1999842122803070, guid: 3921114db89b8442da245039d12a0b5f, type: 3}
       propertyPath: m_Layer
@@ -101105,6 +101110,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4885401784742068, guid: 3921114db89b8442da245039d12a0b5f, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 114241173641597987, guid: 3921114db89b8442da245039d12a0b5f,
+        type: 3}
+      propertyPath: faceLocked
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 831066576611880618, guid: 3921114db89b8442da245039d12a0b5f,

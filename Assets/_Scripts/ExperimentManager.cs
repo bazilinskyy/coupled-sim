@@ -57,18 +57,23 @@ public class ExperimentManager : MonoBehaviour
         //Set gamestate to waiting
         gameState.SetGameState(GameStates.Waiting);
 
+        //Set camera 
         if (usingVarjo) { usedCam = varjoCam; }
         else { usedCam = normalCam; }
+
+        usedCam.position = headPosition.position;
+        usedCam.rotation = headPosition.rotation;
+
         //Check exerimentStartPoint input
         if(experimentStartPoint >= navigationRoot.transform.childCount) { throw new System.Exception("Start point should be lower than the number of navigations available"); }
         
-        //Set experiment
         //Set up all experiments
         SetUpExperiments(experimentStartPoint);
 
         //Set DataManager
         SetDataManager();
 
+        //Set up car
         SetUpCar();
 
         //Get main camera to waiting room
@@ -237,8 +242,21 @@ public class ExperimentManager : MonoBehaviour
     void GoToCar()
     {
         Debug.Log("Returning to car...");
-        usedCam.transform.position = headPosition.position;
-        usedCam.transform.rotation = headPosition.rotation;
+
+        //If using varjo we need to do something different with the head position as it is contained in a varjo Rig gameObject which is not the camera position of varjo
+        if (usingVarjo) 
+        {
+            Transform varjoCam = usedCam.GetChild(0);
+            Vector3 correction = headPosition.position - varjoCam.position;
+            usedCam.position += correction;
+            usedCam.rotation = headPosition.rotation;
+        }
+        else
+        {
+            usedCam.transform.position = headPosition.position;
+            usedCam.transform.rotation = headPosition.rotation;
+        }
+       
         usedCam.SetParent(originalParentCamera);
         //usedCam.transform.Rotate(new Vector3(0, 1f, 0), -90);
     }
