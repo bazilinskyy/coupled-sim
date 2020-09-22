@@ -111,9 +111,9 @@ public class ExperimentManager : MonoBehaviour
 
 
             //stupid solution for the continues output of the button (this function should obviously only trigger once) so we check if the previous value was already 1 'pushed down'
-            if (Input.GetKeyDown(keyTargetDetected) || (Input.GetAxis("SteerButtonRight") != 0 && previousSteeringButtonInput != 1)) { ProcessUserInputTargetDetection(); }
+            if (Input.GetKeyDown(keyTargetDetected) || (Input.GetAxis("SteerButtonRight") != 0 && previousSteeringButtonInput != 1)) { ProcessUserInputTargetDetection(); Debug.Log("Pressed down!"); }
             if (Input.GetKeyDown(setToLastWaytpoint)) { SetToLastWaypoint(); }
-            if (Input.GetKeyDown(resetHeadPosition)) {SetHeadPosition(headPosition); }
+            if (Input.GetKeyDown(resetHeadPosition)) {SetHeadPosition(headPosition.position, headPosition.rotation); }
             
         }
         previousSteeringButtonInput = Input.GetAxis("SteerButtonRight");
@@ -262,7 +262,7 @@ public class ExperimentManager : MonoBehaviour
         Debug.Log("Returning to car...");
 
         //If using varjo we need to do something different with the head position as it is contained in a varjo Rig gameObject which is not the camera position of varjo
-        SetHeadPosition(headPosition);       
+        SetHeadPosition(headPosition.position, headPosition.rotation);       
         usedCam.SetParent(originalParentCamera);
 
         //Activate mirror cameras (When working with the varjo it deactivates all other cameras....)
@@ -272,19 +272,19 @@ public class ExperimentManager : MonoBehaviour
         //Turns on sound of the car (somehow you still hear this in the waiting room....)
         SetCarSound(true);
     }
-    void SetHeadPosition(Transform goalPos)
+    void SetHeadPosition(Vector3 goalPos, Quaternion goalRot)
     {
         if (usingVarjo)
         {
             Transform varjoCam = usedCam.GetChild(0);
-            Vector3 correction = goalPos.position - varjoCam.position;
-            usedCam.position += correction;
-            usedCam.rotation = goalPos.rotation;
+            Vector3 correctedGoalPos = goalPos - varjoCam.position;
+            usedCam.position = correctedGoalPos;
+            usedCam.rotation = goalRot;
         }
         else
         {
-            usedCam.transform.position = goalPos.position;
-            usedCam.transform.rotation = goalPos.rotation;
+            usedCam.transform.position = goalPos;
+            usedCam.transform.rotation = goalRot;
         }
     }
     void GoToWaitingRoom()
@@ -297,9 +297,9 @@ public class ExperimentManager : MonoBehaviour
         Debug.Log("Going to waiting room...");
         if (originalParentCamera == null) { originalParentCamera = usedCam.parent; }
 
-        Transform goalPos = waitingRoom.transform;
-        goalPos.position += new Vector3(0, 3f, -3f);
-        SetHeadPosition(goalPos);
+        Vector3 goalPos = waitingRoom.transform.position + new Vector3(0, 3f, -3f);
+        Quaternion goalRot = waitingRoom.transform.rotation;
+        SetHeadPosition(goalPos, goalRot);
        
         usedCam.SetParent(waitingRoom);
 
@@ -344,7 +344,7 @@ public class ExperimentManager : MonoBehaviour
     {
         //if there is a target visible which has not already been detected
         List<Target> targetList = activeNavigationHelper.GetActiveTargets();
-        Target seenTarget = null;
+        List<Target> visibleTargets = new List<Target>();
         int targetCount = 0;
 
         //Check if there are any visible targets
@@ -353,7 +353,7 @@ public class ExperimentManager : MonoBehaviour
             
             if (TargetIsVisible(target, maxNumberOfRandomRayHits))
             {
-                seenTarget = target;
+                visibleTargets.Add(target);
                 targetCount++;
                 Debug.Log($"{target.name} visible...");
             }
@@ -366,13 +366,26 @@ public class ExperimentManager : MonoBehaviour
         }
         else if (targetCount == 1)
         {
-            dataManager.AddTrueAlarm(seenTarget) ;
-            seenTarget.SetDetected();
+            dataManager.AddTrueAlarm(visibleTargets[0]) ;
+            visibleTargets[0].SetDetected();
 
         }
         else
         {
-            throw new System.Exception("ERROR: Counting two visible targets, this is not implemented yet...");
+            Target closestTarget = null;
+            float distance = 100000f;
+            foreach(Target target in visibleTargets)
+            {
+                float current_distance = Vector3.Distance(car.transform.position, target.transform.position);
+                if (current_distance < distance)
+                {
+                    closestTarget = target;
+                    distance = current_distance;
+                }
+            }
+            dataManager.AddTrueAlarm(closestTarget);
+            closestTarget.SetDetected();
+            //throw new System.Exception("ERROR: Counting two visible targets, this is not implemented yet...");
         }
     }
     Vector3 GetRandomPerpendicularVector(Vector3 vec)
