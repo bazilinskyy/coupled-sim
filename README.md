@@ -240,6 +240,7 @@ In this section, the additions made by Johnson Mok during his Master Thesis are 
 	- Brake on input.
 	- AV driving initiation 
 	- Driving behaviour Update
+	- Adaptive deceleration
 - Sequencing
 	- Persistent manager
 	- Scene selector
@@ -255,6 +256,7 @@ In this section, the additions made by Johnson Mok during his Master Thesis are 
 	- Adding eye-tracking to the prefab.
 	- Gaze Ray hit pedestrian.
 	- Brake AV based on eye-gaze
+	- Networking
 - Vive controller
 	- Trigger input.
 
@@ -728,6 +730,54 @@ Whenever the vehicle started driving again after having stopped for a while, the
 due to the driving and resetting behaviour being put into the FixedUpdate. Generally, the FixedUpdate is used for physics calculations
 and nonlinear movements. Update is more suitable for linear movements such as driving. Moving the *Car_Driving_Behaviour* and the *Reset_Speed_After_Stopping* 
 function to the Update function solved the stuttering problem.
+
+## Adaptive deceleration
+To make sure that the vehicle always stops at the same position, adaptive deceleration is added. The adaptive deceleration is a function of the 
+initial velocity *u*, acceleration/deceleration *a*, and distance covered *s*.
+
+The original formula used  to calculate the speed of the vehicle is as follows:
+![velocity equation](https://latex.codecogs.com/gif.latex?v%20%3D%20%5Csqrt%7Bu%5E%7B2%7D&plus;2%5Ccdot%20a%20%5Ccdot%20conversion%5E%7B2%7D%5Ccdot%20s%7D)
+
+This formula is rewritten such that the acceleration/deceleration is the output:
+![acceleration equation](https://latex.codecogs.com/gif.latex?a%20%3D%20%5Cfrac%7Bv%5E%7B2%7D-u%5E%7B2%7D%7D%7B2%20%5Ccdot%20conversion%5E%7B2%7D%20%5Ccdot%20s%7D)
+
+The wanted velocity at the end is zero, thus v = 0. The initial velocity of the vehicle is 30 [m/s] and the conversion is 3.6. Leaving the travelled distance 
+as the only variable left. Meaning that the acceleration is a function of the distance travelled.
+Filling in these values into the formula above results in the following equation:
+![acceleration equation simple](https://latex.codecogs.com/gif.latex?a%20%3D%20%5Cfrac%7B-625%7D%7B18%20%5Ccdot%20s%7D)
+
+The available distance to break is calculated by taking the first trigger point, the point where the passenger looks at the pedestrian 
+when the distance between the two is less than 25 [m], substract the position of the pedestrian, and substract the desired
+stand still distance between the two. The deceleration can then be calculated with the resulting braking distance. 
+Inside the *AICar* script in the *Decelerate_Car* function:
+```
+// Compute adaptive deceleration needed to stop the AV at a fixed distance from the pedestrian
+// Hardcoded pedestrian location(z) = 17
+// Fixed stopping distance between pedestrian and AV = 6
+distance_stop = first_triggerlocation - 17 - 6;
+adaptive_acceleration = (0 - 900) / (2 * Mathf.Pow(conversion, 2) * distance_stop);
+```
+
+Next step is to replace the *set_acceleration* with the newly calculated *adaptive_acceleration*:
+```
+speed = Mathf.Sqrt(900 + 2 * adaptive_acceleration * Mathf.Pow(conversion, 2) * delta_distance);
+```
+
+The critical comfortable deceleration is equal to -3 [m/s^2]. So a minimum braking distance of 11,6 [m] is needed.
+This is achieved by only allowing the vehicle to brake when there is at least a distance of 11.6 [m] between 
+the pedestrian and the vehicle. This is done in the *VarjoGazeRay* script:
+```
+if (gazeRayHit.collider.gameObject.CompareTag(target) && target == "Pedestrian")
+{
+// Take action if the distance between the pedestrian and car is smaller than 25m and larger than 11.6m
+// capped at 11.6m to prevent decelerations larger than 3m/s^2, which is experienced as uncomfortable by drivers - Schroeder 2008
+	if(gazeRayHit.distance < 25.0f && gazeRayHit.distance > 11.6f)
+	{
+		this.GetComponentInParent<AICar>().VarjoSaysStop();
+	}
+}
+```
+ 
 
 # Sequencing
 ## Persistent Manager
@@ -1369,6 +1419,24 @@ Modify the braking conditions inside the Brake_AV(Collider other) function.
 ```
 if (other.gameObject.CompareTag("StartTrial_Z") && StopWithEyeGaze == false)  
 ```
+
+## Networking
+To be able to use two Varjo HMD's in one networked game. One need to only activate one HMD and keep the other HMD deactivated.
+This is done by setting the VarjoManager on inactive by default. The VarjoManager of the LOCAL player is then set on active at the start 
+of the game.
+
+Inside the *PlayerAvatar* script, at the mode element case of Flat (which is for the LOCAL player):
+```
+// Setting the Varjo API only active for the local player
+GameObject go_VarjoManager = gameObject.transform.Find("VarjoCameraRig").gameObject;
+GameObject go_Gaze = gameObject.transform.Find("Gaze").gameObject;
+go_VarjoManager.SetActive(true);
+go_Gaze.SetActive(true);
+```
+
+Furthermore, the position of the HMD needs to be shared over the network. This is also done in the *PlayerAvatar* scipt.
+To network the position of the HMD, one can simply drag the transform of the VarjoCameraRig into the SyncTransform list of the 
+PlayerAvatar.
 
 # Vive controller
 ## Trigger input
