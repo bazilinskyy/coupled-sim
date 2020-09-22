@@ -286,7 +286,6 @@ public class AICar : MonoBehaviour
         }
 
         // If car is standing still, change pitch back to zero.
-        Debug.LogError($"Speed = {speed} and rigidbody velocity = {theRigidbody.velocity} and delta distance = {delta_distance} and distance stop = {distance_stop}");
         if(theRigidbody.velocity.z == 0) //if (speed <= 0 && delta_distance > 16f)  
         {
             Timer2 += Time.deltaTime;
@@ -299,8 +298,11 @@ public class AICar : MonoBehaviour
             Debug.Log(Timer2);
 
             // After standing still for x seconds, start driving again
-            Resume_Driving_After_Stop(4f);
+            //Resume_Driving_After_Stop(4f);
         }
+
+        // After standing still for x seconds, start driving again
+        Resume_Driving_After_Stop(6f);
     }
 
     // Function to resume driving after stopping for 'breaktime' seconds.
@@ -350,8 +352,8 @@ public class AICar : MonoBehaviour
 
         // Apply delta_distance for deceleration 
         // Formula: v = sqrt(u^2 + 2*a*s) with v = final velocity; u = initial velocity; a = acceleration; s = distance covered. 
-        speed = Mathf.Sqrt(900 + 2 * set_acceleration * Mathf.Pow(conversion, 2) * delta_distance); // Application of conversion of km/h to m/s which needs to be squared //900
-        //speed = Mathf.Sqrt(900 + 2 * adaptive_acceleration * Mathf.Pow(conversion, 2) * delta_distance);
+        //speed = Mathf.Sqrt(900 + 2 * set_acceleration * Mathf.Pow(conversion, 2) * delta_distance); // Application of conversion of km/h to m/s which needs to be squared //900
+        speed = Mathf.Sqrt(900 + 2 * adaptive_acceleration * Mathf.Pow(conversion, 2) * delta_distance);
 
         // Slowing down            
         // Compute pitch for deceleration
