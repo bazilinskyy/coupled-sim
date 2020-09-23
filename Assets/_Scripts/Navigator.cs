@@ -31,7 +31,7 @@ public class Navigator : MonoBehaviour
     }
     void Update()
     {
-        if (navigation == null && target == null) { return; }
+        if (navigation == null && target == null) { print("No navigation availabnle for the car...");  return; }
 
         if (GetNextTarget())
         {

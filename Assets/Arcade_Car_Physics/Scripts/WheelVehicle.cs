@@ -248,17 +248,16 @@ namespace VehicleBehaviour
             // Get all the inputs!
             if (isPlayer)
             {
-                reverse = false;
+                
                 //TODO find out what is going on here?
-                /*if (Input.GetButtonDown("forward"))
+                if (Input.GetButtonDown("changeDirection"))
                 {
-                    reverse = false;
+                    //Changes from tru to false whenever changeGear is pushed
+                    reverse = reverse ? false: true;
                 }
-                else if (Input.GetButtonDown("reverse"))
-                {
-                    reverse = true;
-                }
-                if (Input.GetButtonDown("blinker_left"))
+               
+
+               /* if (Input.GetButtonDown("blinker_left"))
                 {
                     if (blinkers.State != BlinkerState.Left)
                     {

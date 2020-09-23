@@ -100,7 +100,7 @@ public class NavigationHelper : MonoBehaviour
     void RenderNavigationArrow()
     {
         Transform arrows = car.HUD.transform.Find("Arrows");
-
+        if (arrows == null) { Debug.Log("Arrows= null...."); return; }
         if (car.target.operation == Operation.TurnRightShort || car.target.operation == Operation.TurnRightLong) { arrows.GetComponent<MeshRenderer>().material = HUDMaterials.right; }
         else if (car.target.operation == Operation.TurnLeftLong) { arrows.GetComponent<MeshRenderer>().material = HUDMaterials.left; }
         else if (car.target.operation == Operation.Straight) { arrows.GetComponent<MeshRenderer>().material = HUDMaterials.straight; }
