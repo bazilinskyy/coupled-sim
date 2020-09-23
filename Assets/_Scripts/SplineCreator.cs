@@ -20,7 +20,7 @@ public class SplineCreator : MonoBehaviour
 	private GameObject navigationPartsParent;
 
 	//Amount of points used per spline
-	private int pointsPerSpline = 40;
+	private int pointsPerSpline = 10;
 
 	private Vector3[] pointsNavigationLine;
 	private void Awake()
