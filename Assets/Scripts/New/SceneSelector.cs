@@ -75,7 +75,11 @@ public class SceneSelector : MonoBehaviour
             else if (useManualSelection == true)
             {
                 //Application.Quit(); // build version
-                UnityEditor.EditorApplication.isPlaying = false; // editor version
+                //UnityEditor.EditorApplication.isPlaying = false; // editor version
+
+                PersistentManager.Instance.stopLogging = true;
+                PersistentManager.Instance.nextScene = true;
+                PersistentManager.Instance.experimentnr = manualSelection;
             }
         }
     }
