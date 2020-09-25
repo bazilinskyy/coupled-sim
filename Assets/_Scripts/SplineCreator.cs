@@ -20,7 +20,7 @@ public class SplineCreator : MonoBehaviour
 	private GameObject navigationPartsParent;
 
 	//Amount of points used per spline
-	private int pointsPerSpline = 40;
+	private int pointsPerSpline = 10;
 
 	private Vector3[] pointsNavigationLine;
 	private void Awake()
@@ -127,6 +127,7 @@ public class SplineCreator : MonoBehaviour
 		
 		foreach (NavigationType navigationType in navigationTypeOptions)
 		{
+			if(navigationType == NavigationType.HUD_high || navigationType == NavigationType.HUD_low) { continue; }
 			//Make gameobejct with mesh and navigationpart component
 			GameObject navigationPartGameObject = new GameObject(waypoint.operation.ToString());
 			navigationPartGameObject.AddComponent(typeof(MeshRenderer));

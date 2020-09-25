@@ -11,11 +11,11 @@ public class PedestrianNode : MonoBehaviour
 
 	void Awake () 
 	{
-		#if !UNITY_EDITOR
+		/*#if !UNITY_EDITOR
 			if(Application.isPlaying)
 				if(renderer)
 					renderer.enabled = false;
-		#endif
+		#endif*/
 
 		CleanupNodes();
 	}

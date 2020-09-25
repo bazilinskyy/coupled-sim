@@ -37,6 +37,7 @@ namespace VehicleBehaviour
         [SerializeField] string blinkersLeftInput = "blinker_left";
         [SerializeField] string blinkersRightInput = "blinker_right";
         [SerializeField] string blinkersClearInput = "blinker_clear";
+        float maxSpeed = 45f;
 
         /* 
          *  Turn input curve: x real input, y value used
@@ -248,17 +249,16 @@ namespace VehicleBehaviour
             // Get all the inputs!
             if (isPlayer)
             {
-                reverse = false;
+                
                 //TODO find out what is going on here?
-                /*if (Input.GetButtonDown("forward"))
+                if (Input.GetButtonDown("changeDirection"))
                 {
-                    reverse = false;
+                    //Changes from tru to false whenever changeGear is pushed
+                    reverse = reverse ? false: true;
                 }
-                else if (Input.GetButtonDown("reverse"))
-                {
-                    reverse = true;
-                }
-                if (Input.GetButtonDown("blinker_left"))
+               
+
+               /* if (Input.GetButtonDown("blinker_left"))
                 {
                     if (blinkers.State != BlinkerState.Left)
                     {
@@ -315,7 +315,7 @@ namespace VehicleBehaviour
                 // Accelerate & brake
                 if (throttleInput != "" && throttleInput != null)
                 {
-                    throttle = GetInput(throttleInput) * (reverse ? -1f : 1);
+                    throttle = Mathf.Clamp01(GetInput(throttleInput)) * (reverse ? -1f : 1);
                 }
                 else { throttle = 0; }
 
@@ -372,7 +372,9 @@ namespace VehicleBehaviour
                     }
                     else
                     {
-                        if (throttle > 0)
+                        if ( speed >= maxSpeed) { wheel.motorTorque = 0; }
+                        
+                        else if (throttle > 0)
                         {
                             wheel.motorTorque = throttle * motorTorque.Evaluate(speed) * diffGearing / driveWheel.Length;
 

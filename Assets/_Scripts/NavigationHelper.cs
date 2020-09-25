@@ -23,7 +23,8 @@ public class NavigationHelper : MonoBehaviour
     public float _transparency = 0.3f; private float transparency = 0.3f;
 
     private SplineCreator splineCreator;
-    private float startTime;
+    private float time;
+    private float f_time;
     private void Awake()
     {
         renderVirtualCable = _renderVirtualCable;
@@ -38,11 +39,26 @@ public class NavigationHelper : MonoBehaviour
     }
     private void Update()
     {
+        time = Time.realtimeSinceStartup;
         CheckChanges();
+        f_time = Time.realtimeSinceStartup - time ;
 
-        if (CheckNextAndPreviousWaypoints())
+        //Debug.Log($"CheckChanges(): {f_time}s");
+
+        time = Time.realtimeSinceStartup;
+        bool checkWaypoints = CheckNextAndPreviousWaypoints();
+        f_time = Time.realtimeSinceStartup - time;
+        
+        //Debug.Log($"CheckNextAndPreviousWaypoints(): {f_time}s");
+
+        if (checkWaypoints)
         {
+            time = Time.realtimeSinceStartup;
             SetNextAndPreviousWaypoints();
+            f_time = Time.realtimeSinceStartup - time;
+
+            //Debug.Log($"SetNextAndPreviousWaypoints(): {f_time}s");
+            
         }
         //Render the HUDs if needed
         if (renderHUD)
@@ -70,7 +86,7 @@ public class NavigationHelper : MonoBehaviour
     }
     void CheckChanges()
     {
-        if (splineCreator == null){ splineCreator = gameObject.GetComponent<SplineCreator>(); }
+       /* if (splineCreator == null){ splineCreator = gameObject.GetComponent<SplineCreator>(); }
         if (renderVirtualCable != _renderVirtualCable || renderHighlightedRoad != _renderHighlightedRoad)
         {
             renderVirtualCable = _renderVirtualCable;
@@ -95,12 +111,12 @@ public class NavigationHelper : MonoBehaviour
         {
             transparency = _transparency;
             ChangTransparancyHUDAndConformal();
-        }
+        }*/
     }
     void RenderNavigationArrow()
     {
         Transform arrows = car.HUD.transform.Find("Arrows");
-
+        if (arrows == null) { Debug.Log("Arrows= null...."); return; }
         if (car.target.operation == Operation.TurnRightShort || car.target.operation == Operation.TurnRightLong) { arrows.GetComponent<MeshRenderer>().material = HUDMaterials.right; }
         else if (car.target.operation == Operation.TurnLeftLong) { arrows.GetComponent<MeshRenderer>().material = HUDMaterials.left; }
         else if (car.target.operation == Operation.Straight) { arrows.GetComponent<MeshRenderer>().material = HUDMaterials.straight; }
@@ -121,6 +137,7 @@ public class NavigationHelper : MonoBehaviour
     }
     void ChangTransparancyHUDAndConformal()
     {
+        Debug.Log($"Setting transpaarancy to {transparency}");
         Color color;
         //ChangeHMI all HUD arrows transparancy
         color = HUDMaterials.right.color; color.a = transparency;
@@ -314,6 +331,49 @@ public class NavigationHelper : MonoBehaviour
         foreach(Waypoint waypoint in GetOrderedWaypointList())
         {
             waypoint.RenderMe(render);
+        }
+    }
+    public void SetUp(NavigationType navigationType, float _transparency, Navigator _car)
+    {
+        splineCreator.MakeNavigation();
+
+        UpdateOrderIds(); //Make sure order ids are correct at startup
+        SetNextAndPreviousWaypoints();
+
+        transparency = _transparency;
+        car = _car;
+        ChangTransparancyHUDAndConformal();
+        
+        Vector3 HUD_low = car.transform.position + new Vector3(-0.3f,1.026f,1.56f);
+        Vector3 HUD_high = car.transform.position + new Vector3(-0.3f, 1.474f, 1.56f);
+
+        if (navigationType == NavigationType.VirtualCable) {
+            renderHUD = false;
+            car.HUD.SetActive(false); 
+            RenderNavigationType(NavigationType.VirtualCable, true);
+            RenderNavigationType(NavigationType.HighlightedRoad, false);
+        }
+        if (navigationType == NavigationType.HighlightedRoad) { 
+            car.HUD.SetActive(false);
+            renderHUD = false;
+            RenderNavigationType(NavigationType.VirtualCable, false);
+            RenderNavigationType(NavigationType.HighlightedRoad, true);
+        }
+        if(navigationType == NavigationType.HUD_low)
+        {
+            car.HUD.transform.position = HUD_low;
+            car.HUD.SetActive(true);
+            renderHUD = true;
+            RenderNavigationType(NavigationType.VirtualCable, false);
+            RenderNavigationType(NavigationType.HighlightedRoad, false);
+        }
+        if (navigationType == NavigationType.HUD_high)
+        {
+            car.HUD.SetActive(true);
+            renderHUD = true;
+            car.HUD.transform.position = HUD_high;
+            RenderNavigationType(NavigationType.VirtualCable, false);
+            RenderNavigationType(NavigationType.HighlightedRoad, false);
         }
     }
 }

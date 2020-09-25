@@ -41,37 +41,33 @@ public class XMLManager : MonoBehaviour
     private AlarmContainer targetDetectionData;
     private TargetDetectionSummary targetDetectionSummary;
     private GazeContainer gazeData;
-
-    private void OnApplicationQuit()
-    {
-        SaveData();
-    }
+    /*
+        private void OnApplicationQuit()
+        {
+            SaveData();
+        }*/
     private void Awake()
     {
         ins = this;
 
-        StartNewMeasurement();
-
         experimentManager = gameObject.GetComponent<ExperimentManager>();
         gameState = experimentManager.gameState;
 
-        SetAllInputs(experimentManager.car.gameObject, navigation, "John Doe");
-
-
     }
+
     private void Update()
     {
         if (gameState.isExperiment() && experimentManager.saveData)
         {
             AddVehicleData();
 
-            if (experimentManager.usingVarjo) { AddEyeTrackingData(); }
+            if (experimentManager.camType == MyCameraType.Varjo) { AddEyeTrackingData(); }
         }
     }
     public void SetAllInputs(GameObject _car, Transform _navigation, string _subjectName)
     {
         car = _car;
-        vehicleBehaviour = car.GetComponent<VehicleBehaviour.WheelVehicle>();
+        //vehicleBehaviour = car.GetComponent<VehicleBehaviour.WheelVehicle>();
 
 
         SetNavigation(_navigation);
@@ -169,9 +165,9 @@ public class XMLManager : MonoBehaviour
         dataPoint.time = experimentManager.activeExperiment.experimentTime;
         dataPoint.distanceToOptimalPath = GetDistanceToOptimalPath(car.transform.position);
         dataPoint.position = car.transform.position;
-        dataPoint.throttleInput = vehicleBehaviour.Throttle;
+        /*dataPoint.throttleInput = vehicleBehaviour.Throttle;
         dataPoint.brakeInput = vehicleBehaviour.Braking;
-        dataPoint.steerInput = vehicleBehaviour.Steering;
+        dataPoint.steerInput = vehicleBehaviour.Steering;*/
 
         vehicleData.dataList.Add(dataPoint);
 

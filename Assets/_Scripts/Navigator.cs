@@ -14,7 +14,7 @@ public class Navigator : MonoBehaviour
     private NavigationHelper navigationHelper { get; set; }
 
     public bool navigationFinished = false;
-    public float metersAfterPassingWaypoint = 5f;
+    public float metersAfterPassingWaypoint = 3f;
 
     private float distanceTravelled=0f;
     private Vector3 lastPosition = Vector3.zero;
@@ -31,7 +31,7 @@ public class Navigator : MonoBehaviour
     }
     void Update()
     {
-        if (navigation == null && target == null) { return; }
+        if (navigation == null && target == null) { print("No navigation availabnle for the car...");  return; }
 
         if (GetNextTarget())
         {
@@ -40,7 +40,7 @@ public class Navigator : MonoBehaviour
         else if(target.operation == Operation.EndPoint)
         {
             float distanceToFinish = Vector3.Magnitude(target.transform.position - transform.position);
-            if (distanceToFinish < 2){ navigationFinished = true;}
+            if (distanceToFinish < 5){ navigationFinished = true;}
         }
     }
     public Waypoint GetCurrentTarget()

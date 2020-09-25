@@ -13,8 +13,10 @@ public class ExperimentManager : MonoBehaviour
     public string subjectName="You";
     public int experimentStartPoint;
     public bool saveData=true;
-    public bool usingVarjo;
+    public MyCameraType camType;
     public bool usingLeapMotion;
+
+    public List<ExperimentSetting> experiments;
 
     [Header("Inputs")]
     public KeyCode keyUserReady = KeyCode.F1;
@@ -49,8 +51,9 @@ public class ExperimentManager : MonoBehaviour
     public Transform waitingRoom;
 
     // expriment objects and lists
+    [HideInInspector]
     public Experiment activeExperiment;
-    private List<Experiment> experimentList;
+    public List<Experiment> experimentList;
     private NavigationHelper activeNavigationHelper;
     //The data manger handling the saving of vehicle and target detection data Should be added to the experiment manager object 
     private XMLManager dataManager;
@@ -59,6 +62,8 @@ public class ExperimentManager : MonoBehaviour
     private float animationTime = 2f; //time for lighting aniimation in seconds
     private float previousSteeringButtonInput;
     private Controller controller;
+    private CameraPositioner camPositioner;
+    
     void Awake()
     {
         BlackOutScreen.color = new Color(0, 0, 0, 1f);
@@ -67,19 +72,25 @@ public class ExperimentManager : MonoBehaviour
         gameState.SetGameState(GameStates.Waiting);
 
         //Set camera 
-        if (usingVarjo) { usedCam = varjoCam;  }
+        if (camType == MyCameraType.Varjo) { usedCam = varjoCam;}
         else { usedCam = normalCam; }
 
-        usedCam.position = headPosition.position;
-        usedCam.rotation = headPosition.rotation;
+        camPositioner = usedCam.GetComponent<CameraPositioner>();
+
+        
+        //SetCameraPosition(headPosition.position, headPosition.rotation);
 
         if (usingLeapMotion) { controller = new Controller(); }
 
         //Check exerimentStartPoint input
         if(experimentStartPoint >= navigationRoot.transform.childCount) { throw new System.Exception("Start point should be lower than the number of navigations available"); }
-        
+
+    }
+    private void Start()
+    {
         //Set up all experiments
         SetUpExperiments(experimentStartPoint);
+
 
         //Set DataManager
         SetDataManager();
@@ -89,8 +100,8 @@ public class ExperimentManager : MonoBehaviour
 
         //Get main camera to waiting room
         GoToWaitingRoom();
-        
     }
+
     private void FixedUpdate()
     {
         //Start coroutines to dimlights and change the position of the camera to desired locations
@@ -111,9 +122,13 @@ public class ExperimentManager : MonoBehaviour
 
 
             //stupid solution for the continues output of the button (this function should obviously only trigger once) so we check if the previous value was already 1 'pushed down'
-            if (Input.GetKeyDown(keyTargetDetected) || (Input.GetAxis("SteerButtonRight") != 0 && previousSteeringButtonInput != 1)) { ProcessUserInputTargetDetection(); }
+            if (Input.GetKeyDown(keyTargetDetected) || (Input.GetAxis("SteerButtonRight") != 0 && previousSteeringButtonInput != 1)) { ProcessUserInputTargetDetection(); Debug.Log("Pressed down!"); }
             if (Input.GetKeyDown(setToLastWaytpoint)) { SetToLastWaypoint(); }
-            if (Input.GetKeyDown(resetHeadPosition)) {SetHeadPosition(headPosition); }
+            if (Input.GetKeyDown(resetHeadPosition)) {
+                Debug.Log("Resetting hcamera position...");
+//                camPositioner.SetCameraPosition(CameraPosition.Car, camType);
+                SetCameraPosition(headPosition.position, headPosition.rotation); 
+            }
             
         }
         previousSteeringButtonInput = Input.GetAxis("SteerButtonRight");
@@ -182,34 +197,32 @@ public class ExperimentManager : MonoBehaviour
     {
         BlackOutScreen.CrossFadeAlpha(0f, 0f, true);
     }
-    private void SetOrderedExperiments()
-    {
-        experimentList = new List<Experiment>();
-        List<Experiment> unOrderedList = new List<Experiment>();
-
-        foreach (Transform child in navigationRoot)
-        {
-            Experiment experiment = new Experiment(child, false); ;
-            unOrderedList.Add(experiment);
-        }
-        experimentList = unOrderedList.OrderBy(a => a.navigation.name).ToList();
-    }
     void SetUpExperiments(int experimentStartPoint)
     {
-        SetOrderedExperiments();
+        experimentList = new List<Experiment>();
         //Deactivate them all
-        foreach( Experiment experiment in experimentList){ experiment.SetActive(false); }
+        foreach (ExperimentSetting experimentSetting in experiments)
+        {
+            if (experimentSetting == null) { continue; }
+            Experiment experiment = new Experiment(experimentSetting.navigation, experimentSetting.navigationType, experimentSetting.transparency, false);
+            experimentList.Add(experiment);
+            experiment.navigation.gameObject.SetActive(false);
+        }
         
         // Set current active experiment variable
         activeExperiment = experimentList[experimentStartPoint];
         activeExperiment.SetActive(true);
         activeNavigationHelper = activeExperiment.navigationHelper;
+        activeNavigationHelper.SetUp(activeExperiment.navigationType, activeExperiment.transparency, car);
 
     }
     bool NavigationFinished()
     {
         //Checks wheter current navigation path is finished.
-        if(car.GetCurrentTarget().operation == Operation.EndPoint && car.navigationFinished && car.navigation == activeExperiment.navigation) { return true; }
+        if (car.navigationFinished) { return true; }
+
+        //if(car.GetCurrentTarget().operation == Operation.EndPoint && car.navigationFinished && car.navigation == activeExperiment.navigation) { return true; }
+        
         else { return false; }
     }
     void SetupNextExperiment()
@@ -230,21 +243,17 @@ public class ExperimentManager : MonoBehaviour
     {
         Debug.Log("Setting up car...");
         //Set new navigation for car
-
         car.SetNewNavigation(activeExperiment.navigation);
-
 
         //Put car in right position
         Transform startLocation = activeNavigationHelper.GetStartPointNavigation();
 
         car.transform.position = startLocation.position;
         car.transform.rotation = startLocation.rotation;
-        
     }
-
     void SetCarSound(bool input)
     {
-        car.GetComponent<AudioSource>().enabled = input;
+        //car.GetComponent<AudioSource>().enabled = input;
     }
     IEnumerator RenderStartScreenText()
     {
@@ -252,9 +261,19 @@ public class ExperimentManager : MonoBehaviour
         UIText.GetComponent<CanvasRenderer>().SetAlpha(0f);
         //If first experiment we render your welcome
         if ((GetIndexCurrentExperiment()) == 0) { UIText.text = $"Eye-calibration incoming when your ready!"; }
-        else { UIText.text = $"Experiment {GetIndexCurrentExperiment() } completed..."; }
-        yield return new WaitForSeconds(1.0f);
+        else { 
+            UIText.text = $"Experiment {GetIndexCurrentExperiment() } completed..."; 
+        }
+        UIText.CrossFadeAlpha(1, 2.5f, false);
 
+        yield return new WaitForSeconds(3f);
+        
+        UIText.CrossFadeAlpha(0, 2.5f, false);
+        
+        yield return new WaitForSeconds(3f);
+        
+        if ((GetIndexCurrentExperiment()) != 0 ) {  UIText.text = $"Experiment {GetIndexCurrentExperiment() + 1 } starting when your ready...";}
+        
         UIText.CrossFadeAlpha(1, 2.5f, false);
     }
     void GoToCar()
@@ -262,7 +281,8 @@ public class ExperimentManager : MonoBehaviour
         Debug.Log("Returning to car...");
 
         //If using varjo we need to do something different with the head position as it is contained in a varjo Rig gameObject which is not the camera position of varjo
-        SetHeadPosition(headPosition);       
+        //camPositioner.SetCameraPosition(CameraPosition.Car, camType);
+        SetCameraPosition(headPosition.position, headPosition.rotation);       
         usedCam.SetParent(originalParentCamera);
 
         //Activate mirror cameras (When working with the varjo it deactivates all other cameras....)
@@ -272,19 +292,19 @@ public class ExperimentManager : MonoBehaviour
         //Turns on sound of the car (somehow you still hear this in the waiting room....)
         SetCarSound(true);
     }
-    void SetHeadPosition(Transform goalPos)
+    void SetCameraPosition(Vector3 goalPos, Quaternion goalRot)
     {
-        if (usingVarjo)
+        if (camType == MyCameraType.Varjo)
         {
             Transform varjoCam = usedCam.GetChild(0);
-            Vector3 correction = goalPos.position - varjoCam.position;
-            usedCam.position += correction;
-            usedCam.rotation = goalPos.rotation;
+            Vector3 correctedGoalPos = usedCam.position - varjoCam.position;
+            usedCam.position = goalPos + correctedGoalPos;
+            usedCam.rotation = goalRot;
         }
         else
         {
-            usedCam.transform.position = goalPos.position;
-            usedCam.transform.rotation = goalPos.rotation;
+            usedCam.transform.position = goalPos;
+            usedCam.transform.rotation = goalRot;
         }
     }
     void GoToWaitingRoom()
@@ -295,12 +315,13 @@ public class ExperimentManager : MonoBehaviour
         SetCarSound(false);
 
         Debug.Log("Going to waiting room...");
+        //camPositioner.SetCameraPosition(CameraPosition.WaitingRoom, camType);
         if (originalParentCamera == null) { originalParentCamera = usedCam.parent; }
 
-        Transform goalPos = waitingRoom.transform;
-        goalPos.position += new Vector3(0, 3f, -3f);
-        SetHeadPosition(goalPos);
-       
+        Vector3 goalPos = waitingRoom.transform.position + new Vector3(0,1f,0);
+        Quaternion goalRot = waitingRoom.transform.rotation;
+        SetCameraPosition(goalPos, goalRot);
+
         usedCam.SetParent(waitingRoom);
 
         if (gameState.isFinished()) { StartCoroutine(RenderEndSimulation()); }
@@ -318,13 +339,13 @@ public class ExperimentManager : MonoBehaviour
     {
         //If this is not the last experiment in the list return true else false
         int index = GetIndexCurrentExperiment();
-
-        if (index == (experimentList.Count - 1)) { return false; }
+        if (index+1 == experimentList.Count) { return false; }
+        if (experimentList[index+1] == null ) { return false; }
         else { return true; }
     }
     int GetIndexCurrentExperiment()
     {
-        return experimentList.FindIndex(a => a.navigation == activeExperiment.navigation);
+        return experimentList.FindIndex(a => a == activeExperiment);
     }
     void ActivateNextExperiment()
     {
@@ -337,6 +358,7 @@ public class ExperimentManager : MonoBehaviour
 
         activeExperiment.SetActive(true);
         activeNavigationHelper = activeExperiment.navigation.GetComponent<NavigationHelper>();
+        activeNavigationHelper.SetUp(activeExperiment.navigationType, activeExperiment.transparency, car);
 
         Debug.Log("Experiment " + activeExperiment.navigation.name + " loaded...");
     }
@@ -344,7 +366,7 @@ public class ExperimentManager : MonoBehaviour
     {
         //if there is a target visible which has not already been detected
         List<Target> targetList = activeNavigationHelper.GetActiveTargets();
-        Target seenTarget = null;
+        List<Target> visibleTargets = new List<Target>();
         int targetCount = 0;
 
         //Check if there are any visible targets
@@ -353,7 +375,7 @@ public class ExperimentManager : MonoBehaviour
             
             if (TargetIsVisible(target, maxNumberOfRandomRayHits))
             {
-                seenTarget = target;
+                visibleTargets.Add(target);
                 targetCount++;
                 Debug.Log($"{target.name} visible...");
             }
@@ -366,13 +388,26 @@ public class ExperimentManager : MonoBehaviour
         }
         else if (targetCount == 1)
         {
-            dataManager.AddTrueAlarm(seenTarget) ;
-            seenTarget.SetDetected();
+            dataManager.AddTrueAlarm(visibleTargets[0]) ;
+            visibleTargets[0].SetDetected();
 
         }
         else
         {
-            throw new System.Exception("ERROR: Counting two visible targets, this is not implemented yet...");
+            Target closestTarget = null;
+            float distance = 100000f;
+            foreach(Target target in visibleTargets)
+            {
+                float current_distance = Vector3.Distance(car.transform.position, target.transform.position);
+                if (current_distance < distance)
+                {
+                    closestTarget = target;
+                    distance = current_distance;
+                }
+            }
+            dataManager.AddTrueAlarm(closestTarget);
+            closestTarget.SetDetected();
+            //throw new System.Exception("ERROR: Counting two visible targets, this is not implemented yet...");
         }
     }
     Vector3 GetRandomPerpendicularVector(Vector3 vec)
@@ -491,6 +526,8 @@ public class ExperimentManager : MonoBehaviour
         if(dataManager == null) { throw new System.Exception("Error in Experiment Manager -> A XMLManager should be attatched if you want to save data..."); }
 
         dataManager.SetAllInputs(car.gameObject, activeExperiment.navigation.transform, subjectName);
+
+        if (saveData) { dataManager.StartNewMeasurement(); }
     }
     private void SetUpDataManagerNewExperiment()
     {
@@ -526,19 +563,24 @@ public class ExperimentManager : MonoBehaviour
         leftMirror.enabled = true; leftMirror.cullingMask = -1;
     }
 }
+
 [System.Serializable]
 public class Experiment
 {
     public Transform navigation;
-    private bool active;
     public NavigationHelper navigationHelper;
     public float experimentTime;
-    public Experiment( Transform _navigation, bool _active)
+    public NavigationType navigationType;
+    public float transparency = 0.3f;
+
+    private bool active;
+    public Experiment(Transform _navigation, NavigationType _navigationType, float _transparency, bool _active)
     {
         active = _active;
         navigation = _navigation;
+        navigationType = _navigationType;
+        transparency = _transparency;
         navigationHelper = navigation.GetComponent<NavigationHelper>();
-        navigationHelper.RenderAllWaypoints(_active);
         experimentTime = 0f;
     }
     public void SetActive(bool _active)
@@ -546,6 +588,13 @@ public class Experiment
         active = _active;
         navigation.gameObject.SetActive(_active);
     }
-
+}
+[System.Serializable]
+public class ExperimentSetting
+{
+    public Transform navigation;
+    public NavigationType navigationType;
+    [Range(0.01f, 1f)]
+    public float transparency = 0.3f;   
 }
  

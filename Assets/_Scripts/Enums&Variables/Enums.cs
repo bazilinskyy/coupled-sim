@@ -33,5 +33,7 @@ public enum GameStates
 public enum NavigationType
 {
     VirtualCable,
-    HighlightedRoad
+    HighlightedRoad,
+    HUD_low,
+    HUD_high,
 }

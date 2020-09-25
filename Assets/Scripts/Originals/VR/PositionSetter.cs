@@ -5,6 +5,6 @@ public class PositionSetter : MonoBehaviour {
     public Transform target;
 
 	void LateUpdate () {
-        transform.position = target.position; //  + new Vector3(-0.03f,+0.16f,-0.7f);
+        transform.position = target.position; // 
 	}
 }
