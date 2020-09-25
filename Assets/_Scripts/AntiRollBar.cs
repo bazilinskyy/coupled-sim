@@ -8,11 +8,13 @@ public class AntiRollBar : MonoBehaviour
     //Add two anti-roll scripts to your vehicle, one per axle (front - rear). 
     //Set the left-right wheels on each one and adjust the AntiRoll value.
     //emember to reset center of mass to the real position, or don't touch it at all!
+
     public WheelCollider WheelL;
     public WheelCollider WheelR;
     public float AntiRoll = 5000.0f;
 
     void FixedUpdate()
+
     {
         WheelHit hit;
         float travelL = 1.0f;
@@ -34,6 +36,6 @@ public class AntiRollBar : MonoBehaviour
         if (groundedR)
             GetComponent<Rigidbody>().AddForceAtPosition(WheelR.transform.up * antiRollForce,
                    WheelR.transform.position);
+
     }
 }
-

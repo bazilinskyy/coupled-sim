@@ -124,11 +124,7 @@ public class ExperimentManager : MonoBehaviour
             //stupid solution for the continues output of the button (this function should obviously only trigger once) so we check if the previous value was already 1 'pushed down'
             if (Input.GetKeyDown(keyTargetDetected) || (Input.GetAxis("SteerButtonRight") != 0 && previousSteeringButtonInput != 1)) { ProcessUserInputTargetDetection(); Debug.Log("Pressed down!"); }
             if (Input.GetKeyDown(setToLastWaytpoint)) { SetToLastWaypoint(); }
-            if (Input.GetKeyDown(resetHeadPosition)) {
-                Debug.Log("Resetting hcamera position...");
-//                camPositioner.SetCameraPosition(CameraPosition.Car, camType);
-                SetCameraPosition(headPosition.position, headPosition.rotation); 
-            }
+            if (Input.GetKeyDown(resetHeadPosition)) { SetCameraPosition(headPosition.position, headPosition.rotation); }
             
         }
         previousSteeringButtonInput = Input.GetAxis("SteerButtonRight");
@@ -281,8 +277,10 @@ public class ExperimentManager : MonoBehaviour
         Debug.Log("Returning to car...");
 
         //If using varjo we need to do something different with the head position as it is contained in a varjo Rig gameObject which is not the camera position of varjo
+
         //camPositioner.SetCameraPosition(CameraPosition.Car, camType);
         SetCameraPosition(headPosition.position, headPosition.rotation);       
+
         usedCam.SetParent(originalParentCamera);
 
         //Activate mirror cameras (When working with the varjo it deactivates all other cameras....)
@@ -292,6 +290,7 @@ public class ExperimentManager : MonoBehaviour
         //Turns on sound of the car (somehow you still hear this in the waiting room....)
         SetCarSound(true);
     }
+
     void SetCameraPosition(Vector3 goalPos, Quaternion goalRot)
     {
         if (camType == MyCameraType.Varjo)
@@ -299,6 +298,7 @@ public class ExperimentManager : MonoBehaviour
             Transform varjoCam = usedCam.GetChild(0);
             Vector3 correctedGoalPos = usedCam.position - varjoCam.position;
             usedCam.position = goalPos + correctedGoalPos;
+
             usedCam.rotation = goalRot;
         }
         else
