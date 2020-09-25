@@ -37,3 +37,15 @@ public enum NavigationType
     HUD_low,
     HUD_high,
 }
+
+public enum CameraPosition
+{
+    Car,
+    WaitingRoom,
+}
+public enum MyCameraType
+{
+    Normal,
+    Varjo,
+    Leap,
+}

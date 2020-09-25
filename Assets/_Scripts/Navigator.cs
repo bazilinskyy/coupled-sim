@@ -10,6 +10,8 @@ public class Navigator : MonoBehaviour
     
     public RoadParameters roadParameters;
 
+    public ExperimentManager experimentManager;
+
     public Waypoint target;
     private NavigationHelper navigationHelper { get; set; }
 
@@ -31,7 +33,7 @@ public class Navigator : MonoBehaviour
     }
     void Update()
     {
-        if (navigation == null && target == null) { print("No navigation availabnle for the car...");  return; }
+        if (navigation == null && target == null) { return; }
 
         if (GetNextTarget())
         {

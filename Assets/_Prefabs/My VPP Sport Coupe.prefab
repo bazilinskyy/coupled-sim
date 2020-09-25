@@ -90,7 +90,7 @@ GameObject:
   - component: {fileID: 2341875549555543082}
   - component: {fileID: 1272633959018811726}
   - component: {fileID: 8129537320977425971}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: U_MC03_carDetails
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -169,7 +169,7 @@ GameObject:
   - component: {fileID: 2492358315207753475}
   - component: {fileID: 5456836053137692768}
   - component: {fileID: 559953810792298010}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: Text
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -262,7 +262,7 @@ GameObject:
   - component: {fileID: 6398238381809289793}
   - component: {fileID: 4674188654971518709}
   - component: {fileID: 1740837317793526359}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: U_MC03_black
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -427,6 +427,7 @@ GameObject:
   - component: {fileID: 506256222009269700}
   - component: {fileID: 3106692883738546039}
   - component: {fileID: 655116426}
+  - component: {fileID: 60387537}
   m_Layer: 8
   m_Name: My VPP Sport Coupe
   m_TagString: Untagged
@@ -445,16 +446,14 @@ Transform:
   m_LocalPosition: {x: 91.82572, y: 2.009081, z: 21.851318}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
-  - {fileID: 506256222081971375}
   - {fileID: 507050436100855975}
   - {fileID: 506256223296946205}
   - {fileID: 506256223605620319}
   - {fileID: 506256223543899231}
   - {fileID: 506256224009196253}
   - {fileID: 4715186088951844413}
-  - {fileID: 8551801253732006066}
-  - {fileID: 4581455658947831171}
   - {fileID: 1418935217866986864}
+  - {fileID: 8583006156565611123}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -580,7 +579,7 @@ MonoBehaviour:
   brakes:
     maxBrakeTorque: 0
     brakeBias: 0.68
-    handbrakeTorque: 1500
+    handbrakeTorque: 0.1
     handbrakeAxle: 0
   tireFriction:
     model: 3
@@ -664,10 +663,10 @@ MonoBehaviour:
     automaticInitialGearReverse: -1
   steeringAids:
     priority: 1
-    helpMode: 1
+    helpMode: 0
     helpRatio: 1
     helpGravity: 0.4
-    limitMode: 2
+    limitMode: 0
     limitRatio: 1
     limitProportionality: 1
     limitCustomSlip: 2
@@ -675,10 +674,10 @@ MonoBehaviour:
     cruiseControl: 0
     cruiseSpeed: 27.777779
     minSpeedForCC: 4.166667
-    speedLimiter: 0
-    speedLimit: 13.888889
+    speedLimiter: 1
+    speedLimit: 12.5
     throttleSlope: 1
-    minSpeed: 4.166667
+    minSpeed: 0
   antiLock:
     enabled: 1
     mode: 0
@@ -693,7 +692,7 @@ MonoBehaviour:
     enabled: 1
     mode: 2
     ratio: 1
-    customSlip: 2.1
+    customSlip: 0.5
   stabilityControl:
     enabled: 1
     minSpeed: 6
@@ -851,12 +850,12 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 506256222009269710}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 1334591726, guid: b8873f7cd5fec6f49a4b37228b9b23ac, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  resetVehicleKey: 13
+  resetVehicleKey: 0
   heightIncrement: 1.6
 --- !u!65 &3106692883738546039
 BoxCollider:
@@ -889,6 +888,20 @@ MonoBehaviour:
   navigationFinished: 0
   metersAfterPassingWaypoint: 3
   HUD: {fileID: 7042115427516026085}
+--- !u!114 &60387537
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 506256222009269710}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9f92f27ea77b82438da77dec28b25d4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  brakeForce: 2500
+  brakeInput: Brake
 --- !u!1 &506256222081971376
 GameObject:
   m_ObjectHideFlags: 0
@@ -912,7 +925,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 506256222081971376}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
@@ -920,7 +933,7 @@ Transform:
   - {fileID: 506256222330532246}
   - {fileID: 506256222084638953}
   - {fileID: 506256222760925630}
-  m_Father: {fileID: 506256222009269708}
+  m_Father: {fileID: 8583006156565611123}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &506256222084638954
@@ -1184,8 +1197,9 @@ Transform:
   m_Children:
   - {fileID: 6804377563825033125}
   - {fileID: 6980139269517359028}
+  - {fileID: 4050235018687263}
   m_Father: {fileID: 506256222009269708}
-  m_RootOrder: 2
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &506256223543899232
 GameObject:
@@ -1215,7 +1229,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 506256222009269708}
-  m_RootOrder: 4
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &506256223605620320
 GameObject:
@@ -1245,7 +1259,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 506256222009269708}
-  m_RootOrder: 3
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &506256223747331324
 GameObject:
@@ -1325,7 +1339,7 @@ Transform:
   m_Children:
   - {fileID: 506256223747331323}
   m_Father: {fileID: 506256222009269708}
-  m_RootOrder: 5
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &506256224009196252
 MonoBehaviour:
@@ -1389,7 +1403,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6646786503226672330}
   - component: {fileID: 7022684343236954619}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: GroundFlareRedProjector_L
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1441,7 +1455,7 @@ GameObject:
   - component: {fileID: 4579734694761440455}
   - component: {fileID: 448068580004308153}
   - component: {fileID: 990149581}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: SteeringWheel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1539,7 +1553,7 @@ GameObject:
   - component: {fileID: 5174606915206726642}
   - component: {fileID: 4314415618992715966}
   - component: {fileID: 4012355112416528483}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: U_MC04_pedals
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1618,7 +1632,7 @@ GameObject:
   - component: {fileID: 635434802896484662}
   - component: {fileID: 3340214828793489173}
   - component: {fileID: 273512591303632390}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: U_MC04_transpIcons_SW
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1697,7 +1711,7 @@ GameObject:
   - component: {fileID: 1277744085737771135}
   - component: {fileID: 6473997461196616535}
   - component: {fileID: 3259764450996764111}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: U_MC04_Start
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1776,7 +1790,7 @@ GameObject:
   - component: {fileID: 2538022868644778563}
   - component: {fileID: 2530462601679724511}
   - component: {fileID: 3397986651410672823}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: Interior_Plastic
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1853,7 +1867,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4581455658947831171}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: Interior
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1867,7 +1881,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 954201892312772810}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0.53300095}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
@@ -1894,8 +1908,8 @@ Transform:
   - {fileID: 6129633980356806275}
   - {fileID: 8143487298424566643}
   - {fileID: 8394348486415814307}
-  m_Father: {fileID: 506256222009269708}
-  m_RootOrder: 8
+  m_Father: {fileID: 8583006156565611123}
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1153496302251688100
 GameObject:
@@ -1907,7 +1921,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1106185913452866702}
   - component: {fileID: 4193490270014425004}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: RightCamera
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1921,8 +1935,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1153496302251688100}
-  m_LocalRotation: {x: 0.025060726, y: 0.90243465, z: -0.044864822, w: 0.42775097}
-  m_LocalPosition: {x: -0.00000007977271, y: 7.5278217e-10, z: 0.000000043510777}
+  m_LocalRotation: {x: 0.02506071, y: 0.9024348, z: -0.044864845, w: 0.42775047}
+  m_LocalPosition: {x: 0.000000095705396, y: -6.4971095e-10, z: -0.00000037534488}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 3451303508135386567}
@@ -2222,7 +2236,7 @@ GameObject:
   - component: {fileID: 8593260531754301191}
   - component: {fileID: 910758723473009737}
   - component: {fileID: 3506077838303522666}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: Gap2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2302,7 +2316,7 @@ GameObject:
   - component: {fileID: 1619441214022471356}
   - component: {fileID: 5341957494399867793}
   - component: {fileID: 1701651692413607251}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: SpeedNeedle
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2399,7 +2413,7 @@ GameObject:
   - component: {fileID: 1876611185302195285}
   - component: {fileID: 7995718055221026342}
   - component: {fileID: 546726674857307456}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: SteeringWheel_leather
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2476,7 +2490,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1188943102191233628}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: Centre of Mass
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2506,7 +2520,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8551801253732006066}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: CarBody
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2520,8 +2534,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1985910998191249062}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0.533}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0.53300095}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 233765913867256353}
@@ -2538,8 +2552,8 @@ Transform:
   - {fileID: 389425636674872628}
   - {fileID: 4532945918280781717}
   - {fileID: 5887244319488457506}
-  m_Father: {fileID: 506256222009269708}
-  m_RootOrder: 7
+  m_Father: {fileID: 8583006156565611123}
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2049237214079398349
 GameObject:
@@ -2552,7 +2566,7 @@ GameObject:
   - component: {fileID: 5638711412657476053}
   - component: {fileID: 638985824014094903}
   - component: {fileID: 8864446951918230597}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: U_MC04_interiorDetails
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2632,7 +2646,7 @@ GameObject:
   - component: {fileID: 8804759416628170317}
   - component: {fileID: 8480101423292963181}
   - component: {fileID: 6788533946599378309}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: U_MC04_transpIcons
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2710,7 +2724,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7770363832046980232}
   - component: {fileID: 83421191394538653}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: GroundFlareProjector_L
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2762,7 +2776,7 @@ GameObject:
   - component: {fileID: 2614161779723131782}
   - component: {fileID: 7459684266883020003}
   - component: {fileID: 5659438930378206980}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Camera
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2853,7 +2867,7 @@ GameObject:
   - component: {fileID: 4918608166780943530}
   - component: {fileID: 5809391240699986961}
   - component: {fileID: 1758021263173580236}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: U_MC04_plasticPanel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2932,7 +2946,7 @@ GameObject:
   - component: {fileID: 3895573301308056483}
   - component: {fileID: 6326254962419695153}
   - component: {fileID: 1805612115565891934}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: Arrows
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3011,7 +3025,7 @@ GameObject:
   - component: {fileID: 1339286470379453562}
   - component: {fileID: 4544200666629297497}
   - component: {fileID: 4067742721063447275}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: U_MC03_lightGlass
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3079,6 +3093,39 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+--- !u!1 &2657092478011466674
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8583006156565611123}
+  m_Layer: 8
+  m_Name: PhysicalCar
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8583006156565611123
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2657092478011466674}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children:
+  - {fileID: 506256222081971375}
+  - {fileID: 8551801253732006066}
+  - {fileID: 4581455658947831171}
+  m_Father: {fileID: 506256222009269708}
+  m_RootOrder: 7
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2721356685555194298
 GameObject:
   m_ObjectHideFlags: 0
@@ -3090,7 +3137,7 @@ GameObject:
   - component: {fileID: 1100583901274332907}
   - component: {fileID: 2640189495706366076}
   - component: {fileID: 1750568130048319124}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: LeftMirror
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3170,7 +3217,7 @@ GameObject:
   - component: {fileID: 7333706912702652921}
   - component: {fileID: 2722868454268821666}
   - component: {fileID: 1955947902072893172}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: SteeringWheel_black
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3247,7 +3294,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 233765913867256353}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: Ilum
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3362,7 +3409,7 @@ GameObject:
   - component: {fileID: 5423923921081531127}
   - component: {fileID: 3790286285305552862}
   - component: {fileID: 1639111204666151830}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: U_MC04_chrome
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3442,7 +3489,7 @@ GameObject:
   - component: {fileID: 2389419579025626395}
   - component: {fileID: 6642911241926816609}
   - component: {fileID: 6292094105977799420}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: txtRPM
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3535,7 +3582,7 @@ GameObject:
   - component: {fileID: 4992534371989133213}
   - component: {fileID: 1387507517760575766}
   - component: {fileID: 7085835685873969707}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: U_MC04_multimediaScreen
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3614,7 +3661,7 @@ GameObject:
   - component: {fileID: 5454652723116284547}
   - component: {fileID: 8858950995668850447}
   - component: {fileID: 3931281231118238115}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: U_MC04_DoorLeather3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3693,7 +3740,7 @@ GameObject:
   - component: {fileID: 3381071633154074010}
   - component: {fileID: 1982130735843206012}
   - component: {fileID: 8763519784278789324}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: U_MC03_windows
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3931,7 +3978,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8652933632665568803}
   - component: {fileID: 1935667480438638652}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: LeftCamera
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3945,7 +3992,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4651460395133820584}
-  m_LocalRotation: {x: 0.0032538623, y: 0.95175797, z: -0.08351204, w: -0.2952488}
+  m_LocalRotation: {x: 0.003254034, y: 0.9517583, z: -0.08351195, w: -0.29524788}
   m_LocalPosition: {x: 0.000000005154663, y: 0.0000000027055223, z: -0.0000001396496}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
@@ -4006,7 +4053,7 @@ GameObject:
   - component: {fileID: 489133428038135235}
   - component: {fileID: 6114092976723645103}
   - component: {fileID: 7625101144183677083}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: U_MC04_BV
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4085,7 +4132,7 @@ GameObject:
   - component: {fileID: 3681247177917899330}
   - component: {fileID: 8706630481567790032}
   - component: {fileID: 1454649014452381159}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: U_MC04_seam_SW
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4164,7 +4211,7 @@ GameObject:
   - component: {fileID: 615357199186752680}
   - component: {fileID: 5979345145410861402}
   - component: {fileID: 934630115052386336}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: U_MC04_black1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4243,7 +4290,7 @@ GameObject:
   - component: {fileID: 1384471243618649926}
   - component: {fileID: 4072610768359013732}
   - component: {fileID: 3054180623895698213}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: Gap2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4323,7 +4370,7 @@ GameObject:
   - component: {fileID: 7682253458328728861}
   - component: {fileID: 4133556958019580241}
   - component: {fileID: 1247488727537134730}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: Canvas_RPM
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4419,7 +4466,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2234749152852868531}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: rearGroundFlares
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4471,7 +4518,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 506256222009269708}
-  m_RootOrder: 6
+  m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!215 &4060896934602969793
 ReflectionProbe:
@@ -4517,7 +4564,7 @@ GameObject:
   - component: {fileID: 3812776164912921212}
   - component: {fileID: 7455848258866531993}
   - component: {fileID: 7059755582695488021}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: U_MC03_lights
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4597,7 +4644,7 @@ GameObject:
   - component: {fileID: 4210003092197364056}
   - component: {fileID: 8680906968793350417}
   - component: {fileID: 6226779621483109911}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: RPM_Needle
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4694,7 +4741,7 @@ GameObject:
   - component: {fileID: 1974963202906192799}
   - component: {fileID: 4964039623032941396}
   - component: {fileID: 6139519607412720055}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: U_MC04_carbonFiber
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4771,7 +4818,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5055321817323938629}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: frontGroundFlares
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4805,7 +4852,7 @@ GameObject:
   - component: {fileID: 6246482832217796700}
   - component: {fileID: 7927030651630843804}
   - component: {fileID: 5415679105577400922}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: U_MC03_Reverse_light
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5045,7 +5092,7 @@ GameObject:
   - component: {fileID: 1117497831075498923}
   - component: {fileID: 2849903019154780359}
   - component: {fileID: 5991748774031336735}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: Canvas_Speed
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5143,7 +5190,7 @@ GameObject:
   - component: {fileID: 5550436164967998946}
   - component: {fileID: 5947239248695670734}
   - component: {fileID: 5283999182090534079}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: U_MC04_leather
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5299,7 +5346,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6661368745160551882}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: SteeringWheelPosition(10-2)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5331,7 +5378,7 @@ GameObject:
   - component: {fileID: 3110754354998273970}
   - component: {fileID: 1265968201401943574}
   - component: {fileID: 6532561910093064418}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: U_MC03_carPaint
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5410,7 +5457,7 @@ GameObject:
   - component: {fileID: 4105332076558690925}
   - component: {fileID: 853929095134480611}
   - component: {fileID: 3052276458881385760}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: U_MC04_backGrill
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5566,7 +5613,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8394348486415814307}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: RightGapFiller
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5599,7 +5646,7 @@ GameObject:
   m_Component:
   - component: {fileID: 103435448693623906}
   - component: {fileID: 4976454150064570872}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: MiddleCamera
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5645,7 +5692,7 @@ Camera:
     height: 1
   near clip plane: 0.3
   far clip plane: 1000
-  field of view: 40
+  field of view: 35
   orthographic: 0
   orthographic size: 5
   m_Depth: 0
@@ -5755,7 +5802,7 @@ GameObject:
   - component: {fileID: 3451303508135386567}
   - component: {fileID: 4912867833546404697}
   - component: {fileID: 6551200001878532366}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: RightMirror
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5833,7 +5880,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1418935217866986864}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: HUD
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5854,7 +5901,7 @@ Transform:
   - {fileID: 3895573301308056483}
   - {fileID: 2492358315207753475}
   m_Father: {fileID: 506256222009269708}
-  m_RootOrder: 9
+  m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 90, z: -90}
 --- !u!1 &7099178449638383056
 GameObject:
@@ -5867,7 +5914,7 @@ GameObject:
   - component: {fileID: 7063980490233987568}
   - component: {fileID: 336544479323478899}
   - component: {fileID: 2161533126771059939}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: U_MC04_seam
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -6025,7 +6072,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8703612457810151858}
   - component: {fileID: 1915499431242349560}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: GroundFlareProjector_R
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -6076,7 +6123,7 @@ GameObject:
   - component: {fileID: 1377401842440347927}
   - component: {fileID: 2505038117003830746}
   - component: {fileID: 6317507419908763901}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: U_MC04_plasticPanel1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -6156,7 +6203,7 @@ GameObject:
   - component: {fileID: 5227871396736444381}
   - component: {fileID: 5705166785266962427}
   - component: {fileID: 7284503928744925834}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: txtSpeed
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -6249,7 +6296,7 @@ GameObject:
   - component: {fileID: 5488867091170916903}
   - component: {fileID: 1635688415975545381}
   - component: {fileID: 1949859718451153297}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: U_MC03_Brake_light
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -6328,7 +6375,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7118524605186802406}
   - component: {fileID: 5858197303492897424}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: RearMirrors
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -6464,7 +6511,7 @@ GameObject:
   - component: {fileID: 2450755450061881103}
   - component: {fileID: 3497721903518454886}
   - component: {fileID: 3047996457690663136}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: U_MC04_seatBelt
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -6544,7 +6591,7 @@ GameObject:
   - component: {fileID: 1752080465736465951}
   - component: {fileID: 972200344016309517}
   - component: {fileID: 5064308824141097819}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: U_MC03_Front_light
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -6624,7 +6671,7 @@ GameObject:
   - component: {fileID: 303112320156633919}
   - component: {fileID: 2712552788272869430}
   - component: {fileID: 113038500167865876}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: Gap1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -6703,7 +6750,7 @@ GameObject:
   - component: {fileID: 6545541294900656881}
   - component: {fileID: 6679370486255130263}
   - component: {fileID: 7868288096892263091}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: MiddleMirror
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -6783,7 +6830,7 @@ GameObject:
   - component: {fileID: 4260941776054575732}
   - component: {fileID: 8371921645014943993}
   - component: {fileID: 1058124320363723925}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: U_MC04_seatLeather
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -6861,7 +6908,7 @@ GameObject:
   m_Component:
   - component: {fileID: 645453416483312962}
   - component: {fileID: 8913381244735740904}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: GroundFlareRedProjector_R
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -6912,7 +6959,7 @@ GameObject:
   - component: {fileID: 232829040147618872}
   - component: {fileID: 1377621584808102055}
   - component: {fileID: 1721088473030853376}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: Gap1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -6989,7 +7036,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8143487298424566643}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: LeftGapFiller
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -7021,7 +7068,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7230990664188265498}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: Needles
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -7055,7 +7102,7 @@ GameObject:
   - component: {fileID: 7976082423982540517}
   - component: {fileID: 3672623399318376362}
   - component: {fileID: 2096030660202358254}
-  m_Layer: 2
+  m_Layer: 8
   m_Name: U_MC03_TKH
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -7203,6 +7250,114 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+--- !u!1001 &712070105
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 506256223296946205}
+    m_Modifications:
+    - target: {fileID: 1193063156239688, guid: dae2e2be31c98324eac460f702db97e9, type: 3}
+      propertyPath: m_Name
+      value: Leap Rig
+      objectReference: {fileID: 0}
+    - target: {fileID: 1193063156239688, guid: dae2e2be31c98324eac460f702db97e9, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1193063156239688, guid: dae2e2be31c98324eac460f702db97e9, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1394407071443026, guid: dae2e2be31c98324eac460f702db97e9, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1671192356237494, guid: dae2e2be31c98324eac460f702db97e9, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1997533534152106, guid: dae2e2be31c98324eac460f702db97e9, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 4050235663507654, guid: dae2e2be31c98324eac460f702db97e9, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4050235663507654, guid: dae2e2be31c98324eac460f702db97e9, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4050235663507654, guid: dae2e2be31c98324eac460f702db97e9, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4050235663507654, guid: dae2e2be31c98324eac460f702db97e9, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4050235663507654, guid: dae2e2be31c98324eac460f702db97e9, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4050235663507654, guid: dae2e2be31c98324eac460f702db97e9, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4050235663507654, guid: dae2e2be31c98324eac460f702db97e9, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4050235663507654, guid: dae2e2be31c98324eac460f702db97e9, type: 3}
+      propertyPath: m_RootOrder
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 4050235663507654, guid: dae2e2be31c98324eac460f702db97e9, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4050235663507654, guid: dae2e2be31c98324eac460f702db97e9, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4050235663507654, guid: dae2e2be31c98324eac460f702db97e9, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 69952460229447210, guid: dae2e2be31c98324eac460f702db97e9,
+        type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 69956425685084804, guid: dae2e2be31c98324eac460f702db97e9,
+        type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 71655858309764882, guid: dae2e2be31c98324eac460f702db97e9,
+        type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 114473456793702560, guid: dae2e2be31c98324eac460f702db97e9,
+        type: 3}
+      propertyPath: ModelPool.Array.data[0].IsLeftToBeSpawned
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 114473456793702560, guid: dae2e2be31c98324eac460f702db97e9,
+        type: 3}
+      propertyPath: ModelPool.Array.data[0].IsRightToBeSpawned
+      value: 1
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: dae2e2be31c98324eac460f702db97e9, type: 3}
+--- !u!4 &4050235018687263 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4050235663507654, guid: dae2e2be31c98324eac460f702db97e9,
+    type: 3}
+  m_PrefabInstance: {fileID: 712070105}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &506256223731528081
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -7210,9 +7365,49 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 506256222009269708}
     m_Modifications:
+    - target: {fileID: 1009542586435632, guid: 0ba239054da355345bc3be88be60af08, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1226639559708272, guid: 0ba239054da355345bc3be88be60af08, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1321166357341848, guid: 0ba239054da355345bc3be88be60af08, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1507861801974544, guid: 0ba239054da355345bc3be88be60af08, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1581256870249396, guid: 0ba239054da355345bc3be88be60af08, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
     - target: {fileID: 1606757270840104, guid: 0ba239054da355345bc3be88be60af08, type: 3}
       propertyPath: m_Name
       value: Car Audio
+      objectReference: {fileID: 0}
+    - target: {fileID: 1606757270840104, guid: 0ba239054da355345bc3be88be60af08, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1620073806927670, guid: 0ba239054da355345bc3be88be60af08, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1769184950222646, guid: 0ba239054da355345bc3be88be60af08, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1886082816163972, guid: 0ba239054da355345bc3be88be60af08, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1909048387279864, guid: 0ba239054da355345bc3be88be60af08, type: 3}
+      propertyPath: m_Layer
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 4275731641937160, guid: 0ba239054da355345bc3be88be60af08, type: 3}
       propertyPath: m_LocalPosition.z
@@ -7252,7 +7447,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4489258901874998, guid: 0ba239054da355345bc3be88be60af08, type: 3}
       propertyPath: m_RootOrder
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4489258901874998, guid: 0ba239054da355345bc3be88be60af08, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -7336,9 +7531,25 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 506256223296946205}
     m_Modifications:
+    - target: {fileID: 1006930648338486, guid: 3fae7923a8aec364bb24e25c4aa6f079, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
     - target: {fileID: 1018523678192792, guid: 3fae7923a8aec364bb24e25c4aa6f079, type: 3}
       propertyPath: m_Name
       value: VarjoCameraRig
+      objectReference: {fileID: 0}
+    - target: {fileID: 1018523678192792, guid: 3fae7923a8aec364bb24e25c4aa6f079, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1018523678192792, guid: 3fae7923a8aec364bb24e25c4aa6f079, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1558748012064160, guid: 3fae7923a8aec364bb24e25c4aa6f079, type: 3}
+      propertyPath: m_Layer
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 4502135317825226, guid: 3fae7923a8aec364bb24e25c4aa6f079, type: 3}
       propertyPath: m_LocalPosition.x

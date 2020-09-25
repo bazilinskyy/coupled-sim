@@ -12,10 +12,9 @@ public class ExperimentManager : MonoBehaviour
     [Header("Experiment Input")]
     public string subjectName="You";
     public int experimentStartPoint;
+    public bool automateSpeed = true;
     public bool saveData=true;
     public MyCameraType camType;
-    public bool usingLeapMotion;
-
     public List<ExperimentSetting> experiments;
 
     [Header("Inputs")]
@@ -24,9 +23,17 @@ public class ExperimentManager : MonoBehaviour
     public KeyCode setToLastWaytpoint = KeyCode.Escape;
     public KeyCode resetHeadPosition = KeyCode.F2;
 
- 
+    [Header("Car Controls")]
+    public string GasWithKeyboard = "GasKeyBoard";
+    public string SteerWithKeyboard = "SteerKeyBoard";
+    public string BrakeWithKeyboard = "BrakeKeyBoard";
+
+    public string Gas = "Gas";
+    public string Steer = "Steer";
+    public string Brake = "Brake";
+
     [Header("GameObjects")]
-    public LayerMask layerToIgnore;
+    public LayerMask layerToIgnoreForTargetDetection;
     public Transform navigationRoot;
     public Navigator car;
 
@@ -36,7 +43,8 @@ public class ExperimentManager : MonoBehaviour
 
     //The camera used and head position inside the car
     
-    public Transform varjoCam;
+    public Transform varjoCamRig;
+    public Transform LeapVarjoRig;
     public Transform normalCam;
     public Transform headPosition;
     private Transform usedCam;
@@ -62,7 +70,6 @@ public class ExperimentManager : MonoBehaviour
     private float animationTime = 2f; //time for lighting aniimation in seconds
     private float previousSteeringButtonInput;
     private Controller controller;
-    private CameraPositioner camPositioner;
     
     void Awake()
     {
@@ -71,16 +78,8 @@ public class ExperimentManager : MonoBehaviour
         //Set gamestate to waiting
         gameState.SetGameState(GameStates.Waiting);
 
-        //Set camera 
-        if (camType == MyCameraType.Varjo) { usedCam = varjoCam;}
-        else { usedCam = normalCam; }
-
-        camPositioner = usedCam.GetComponent<CameraPositioner>();
-
-        
-        //SetCameraPosition(headPosition.position, headPosition.rotation);
-
-        if (usingLeapMotion) { controller = new Controller(); }
+        //If using leap motion controller make a controller object
+        if (camType == MyCameraType.Leap) { controller = new Controller(); }
 
         //Check exerimentStartPoint input
         if(experimentStartPoint >= navigationRoot.transform.childCount) { throw new System.Exception("Start point should be lower than the number of navigations available"); }
@@ -88,9 +87,13 @@ public class ExperimentManager : MonoBehaviour
     }
     private void Start()
     {
+
+        //Set camera 
+        SetCamera();
+        SetCarControlInput();
+
         //Set up all experiments
         SetUpExperiments(experimentStartPoint);
-
 
         //Set DataManager
         SetDataManager();
@@ -101,7 +104,6 @@ public class ExperimentManager : MonoBehaviour
         //Get main camera to waiting room
         GoToWaitingRoom();
     }
-
     private void FixedUpdate()
     {
         //Start coroutines to dimlights and change the position of the camera to desired locations
@@ -123,7 +125,7 @@ public class ExperimentManager : MonoBehaviour
 
             //stupid solution for the continues output of the button (this function should obviously only trigger once) so we check if the previous value was already 1 'pushed down'
             if (Input.GetKeyDown(keyTargetDetected) || (Input.GetAxis("SteerButtonRight") != 0 && previousSteeringButtonInput != 1)) { ProcessUserInputTargetDetection(); Debug.Log("Pressed down!"); }
-            if (Input.GetKeyDown(setToLastWaytpoint)) { SetToLastWaypoint(); }
+            if (Input.GetKeyDown(setToLastWaytpoint)) { StartCoroutine(SetCarToLastWaypoint()); }
             if (Input.GetKeyDown(resetHeadPosition)) { SetCameraPosition(headPosition.position, headPosition.rotation); }
             
         }
@@ -149,6 +151,57 @@ public class ExperimentManager : MonoBehaviour
                 Debug.Log("Simulation finished");
             }
         }
+    }
+    void SetCarControlInput()
+    {
+        VehiclePhysics.VPStandardInput carController = car.GetComponent<VehiclePhysics.VPStandardInput>();
+        if (camType == MyCameraType.Normal)
+        {
+            carController.steerAxis = SteerWithKeyboard;
+            carController.throttleAndBrakeAxis = GasWithKeyboard;
+            car.gameObject.GetComponent<ControlBrakeForce>().brakeInput = BrakeWithKeyboard;
+        }
+        else
+        {
+            carController.steerAxis = Steer;
+            carController.throttleAndBrakeAxis = Gas;
+            car.gameObject.GetComponent<ControlBrakeForce>().brakeInput = Brake;
+        }
+    }
+    void SetCamera()
+    {
+        if (camType == MyCameraType.Varjo) { usedCam = varjoCamRig; }
+        else if (camType == MyCameraType.Leap) { usedCam = LeapVarjoRig; }
+        else if (camType == MyCameraType.Normal) { usedCam = normalCam; }
+
+        varjoCamRig.gameObject.SetActive(camType == MyCameraType.Varjo);
+        LeapVarjoRig.parent.gameObject.SetActive(camType == MyCameraType.Leap);
+        normalCam.gameObject.SetActive(camType == MyCameraType.Normal);
+
+        //Destroy unneeded cameras
+        if (camType != MyCameraType.Varjo) { Destroy(varjoCamRig.gameObject); };
+        if (camType != MyCameraType.Leap) { Destroy(LeapVarjoRig.parent.gameObject); };
+        if (camType != MyCameraType.Normal) { Destroy(normalCam.gameObject); }
+    }
+
+    public List<string> GetCarControlInput()
+    {
+        //Used in the XMLManager to save user input
+        List<string> output = new List<string>();
+
+        if (camType == MyCameraType.Normal)
+        {
+            output.Add(SteerWithKeyboard);
+            output.Add(GasWithKeyboard);
+            output.Add(BrakeWithKeyboard);
+        }
+        else
+        {
+            output.Add(Steer);
+            output.Add(Gas);
+            output.Add(Brake);
+        }
+        return output;
     }
     IEnumerator GoToWaitingRoomCoroutine()
     {
@@ -182,12 +235,19 @@ public class ExperimentManager : MonoBehaviour
         yield return new WaitForSeconds(animationTime + 0.5f);
         GoToWaitingRoom();
     }
-    private void SetToLastWaypoint()
+    IEnumerator SetCarToLastWaypoint()
     {
+        car.GetComponent<Rigidbody>().velocity = Vector3.zero;
+        car.GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
+
+        yield return new WaitForSeconds(0.2f);
+        
+        car.GetComponent<Rigidbody>().velocity = Vector3.zero;
+        car.GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
 
         car.transform.position = car.target.previousWaypoint.transform.position;
         car.transform.rotation = car.target.previousWaypoint.transform.rotation;
-        car.GetComponent<Rigidbody>().velocity = new Vector3();
+        
     }
     private void TurnLightsOnFast()
     {
@@ -196,6 +256,7 @@ public class ExperimentManager : MonoBehaviour
     void SetUpExperiments(int experimentStartPoint)
     {
         experimentList = new List<Experiment>();
+        if(experiments.Count == 0) { return; }
         //Deactivate them all
         foreach (ExperimentSetting experimentSetting in experiments)
         {
@@ -290,7 +351,6 @@ public class ExperimentManager : MonoBehaviour
         //Turns on sound of the car (somehow you still hear this in the waiting room....)
         SetCarSound(true);
     }
-
     void SetCameraPosition(Vector3 goalPos, Quaternion goalRot)
     {
         if (camType == MyCameraType.Varjo)
@@ -379,7 +439,6 @@ public class ExperimentManager : MonoBehaviour
                 targetCount++;
                 Debug.Log($"{target.name} visible...");
             }
-            else { Debug.Log($"{target.name} NOT visible..."); }
         }
         //We do not accept multiple visible targets at the same time.
         if (targetCount == 0)
@@ -487,7 +546,7 @@ public class ExperimentManager : MonoBehaviour
                 Vector3 randomPerpendicularDirection = GetRandomPerpendicularVector(direction);
                 currentDirection = (target.transform.position + randomPerpendicularDirection * targetRadius) - usedCam.transform.position;
 
-                if (Physics.Raycast(usedCam.transform.position, currentDirection, out hit, 10000f, ~layerToIgnore))
+                if (Physics.Raycast(usedCam.transform.position, currentDirection, out hit, 10000f, ~layerToIgnoreForTargetDetection))
                 {
                     Debug.DrawRay(usedCam.transform.position, currentDirection, Color.green);
                     if (hit.collider.gameObject.tag == "Target")

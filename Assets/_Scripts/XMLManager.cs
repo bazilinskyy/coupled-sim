@@ -21,8 +21,7 @@ public class XMLManager : MonoBehaviour
     private string dataFolder = "Data";
     //our car
     private GameObject car;
-    private VehicleBehaviour.WheelVehicle vehicleBehaviour;
-
+    
     //Current Navigation
     private Transform navigation;
     private NavigationHelper navigationHelper;
@@ -41,11 +40,15 @@ public class XMLManager : MonoBehaviour
     private AlarmContainer targetDetectionData;
     private TargetDetectionSummary targetDetectionSummary;
     private GazeContainer gazeData;
-    /*
-        private void OnApplicationQuit()
-        {
-            SaveData();
-        }*/
+
+    private string steerInput;
+    private string gasInput;
+    private string brakeInput;
+
+    private void OnApplicationQuit()
+    {
+        SaveData();
+    }
     private void Awake()
     {
         ins = this;
@@ -67,8 +70,10 @@ public class XMLManager : MonoBehaviour
     public void SetAllInputs(GameObject _car, Transform _navigation, string _subjectName)
     {
         car = _car;
-        //vehicleBehaviour = car.GetComponent<VehicleBehaviour.WheelVehicle>();
-
+        
+        //set car inputs
+        List<string> inputs = experimentManager.GetCarControlInput();
+        steerInput = inputs[0]; gasInput = inputs[1]; brakeInput = inputs[2];
 
         SetNavigation(_navigation);
 
@@ -164,13 +169,13 @@ public class XMLManager : MonoBehaviour
         VehicleDataPoint dataPoint = new VehicleDataPoint();
         dataPoint.time = experimentManager.activeExperiment.experimentTime;
         dataPoint.distanceToOptimalPath = GetDistanceToOptimalPath(car.transform.position);
-        dataPoint.position = car.transform.position;
-        /*dataPoint.throttleInput = vehicleBehaviour.Throttle;
-        dataPoint.brakeInput = vehicleBehaviour.Braking;
-        dataPoint.steerInput = vehicleBehaviour.Steering;*/
+        dataPoint.position = car.gameObject.transform.position;
+        dataPoint.throttleInput = Input.GetAxis(gasInput);
+        dataPoint.brakeInput = Input.GetAxis(brakeInput);
+        dataPoint.steerInput = Input.GetAxis(steerInput);
+        dataPoint.speed = car.GetComponent<Rigidbody>().velocity.magnitude;
 
         vehicleData.dataList.Add(dataPoint);
-
     }
     private float GetDistanceToOptimalPath(Vector3 car_position)
     {
@@ -352,11 +357,13 @@ public class VehicleDataContainer
 public class VehicleDataPoint
 {
     public float time;
+    public float speed;
     public float distanceToOptimalPath;
     public Vector3 position = new Vector3();
     public float throttleInput;
     public float brakeInput;
     public float steerInput;
+    
 }
 [XmlRoot("GazeDataCollection")]
 public class GazeContainer

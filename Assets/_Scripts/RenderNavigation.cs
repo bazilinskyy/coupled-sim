@@ -19,7 +19,9 @@ public class RenderNavigation : MonoBehaviour
     {
         if(navigationHelper == null) { navigationHelper = gameObject.GetComponent<NavigationHelper>(); }
         if(navigator == null) { navigator = navigationHelper.car; }
+        if(navigator == null) { return; } //No navigation set -> free driving
         if(waypoints == null) { waypoints = navigationHelper.GetOrderedWaypointList(); }
+        
         if(target != navigator.GetCurrentTarget())
         {
             target = navigator.GetCurrentTarget();

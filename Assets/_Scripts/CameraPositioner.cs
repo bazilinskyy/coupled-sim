@@ -39,13 +39,3 @@ public class CameraPositioner : MonoBehaviour
     }
 }
 
-public enum CameraPosition
-{
-    Car,
-    WaitingRoom,
-}
-public enum MyCameraType
-{
-    Normal,
-    Varjo,
-}
