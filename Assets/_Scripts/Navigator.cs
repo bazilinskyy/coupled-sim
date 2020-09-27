@@ -93,7 +93,7 @@ public class Navigator : MonoBehaviour
 
         bool passedWaypoint;
         float sign = Vector3.Dot(target.transform.forward, (target.transform.position - transform.position));
-        float distance = Vector3.Distance(target.transform.position, transform.position);
+        //float distance = Vector3.Distance(target.transform.position, transform.position);
         
         if (sign <= 0) { passedWaypoint = true; }
         else { passedWaypoint = false; }
@@ -112,6 +112,7 @@ public class Navigator : MonoBehaviour
         {
             navigationFinished = true;
         }
+        print($"New target = {target.name} ({target.operation.ToString()})...");
     }
     public NavigationHelper GetNavigationHelper() { return navigationHelper;}
 }
