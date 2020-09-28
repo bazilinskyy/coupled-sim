@@ -33,22 +33,10 @@ public class ExperimentManager : MonoBehaviour
     public string Brake = "Brake";
 
     [Header("GameObjects")]
+
     public LayerMask layerToIgnoreForTargetDetection;
     public Transform navigationRoot;
     public Navigator car;
-
-    public Camera rearViewMirror;
-    public Camera leftMirror;
-    public Camera rightMirror;
-
-    //The camera used and head position inside the car
-    
-    public Transform varjoCamRig;
-    public Transform LeapVarjoRig;
-    public Transform normalCam;
-    public Transform headPosition;
-    private Transform usedCam;
-    private Transform originalParentCamera;
 
     //UI objects
     public Text UIText;
@@ -58,10 +46,26 @@ public class ExperimentManager : MonoBehaviour
     //Waiting room transform
     public Transform waitingRoom;
 
+    //Mirror cameras from car
+    private Camera rearViewMirror;
+    private Camera leftMirror;
+    private Camera rightMirror;
+
+    //The camera used and head position inside the car
+
+    private Transform varjoRig;
+    private Transform LeapVarjoRig;
+    private Transform normalCam;
+    private Transform headPosition;
+    private Transform usedCam;
+    private Transform originalParentCamera;
+
     // expriment objects and lists
     [HideInInspector]
     public Experiment activeExperiment;
+    [HideInInspector]
     public List<Experiment> experimentList;
+
     private NavigationHelper activeNavigationHelper;
     //The data manger handling the saving of vehicle and target detection data Should be added to the experiment manager object 
     private XMLManager dataManager;
@@ -70,7 +74,8 @@ public class ExperimentManager : MonoBehaviour
     private float animationTime = 2f; //time for lighting aniimation in seconds
     private float previousSteeringButtonInput;
     private Controller controller;
-    
+    private bool endSimulation = false;
+
     void Awake()
     {
         BlackOutScreen.color = new Color(0, 0, 0, 1f);
@@ -84,8 +89,39 @@ public class ExperimentManager : MonoBehaviour
         //Check exerimentStartPoint input
         if(experimentStartPoint >= navigationRoot.transform.childCount) { throw new System.Exception("Start point should be lower than the number of navigations available"); }
 
+        SetGameObjectsFromCar();
     }
-    private void Start()
+    private void SetGameObjectsFromCar()
+    {
+        //FindObjectOfType head position
+        headPosition = car.transform.Find("Driver View");
+
+        if(headPosition == null) { throw new System.Exception("Could not find head position in the given car..."); }
+        //WE have multiple cameras set-up (varjoRig, LeapRig, Normal camera, and three cameras for the mirrors)
+        Camera[] cameras = car.GetComponentsInChildren<Camera>(true);
+
+        foreach(Camera camera in cameras)
+        {
+            if (camera.name == "LeftCamera") { leftMirror = camera; }
+            if (camera.name == "RightCamera") { rightMirror = camera; }
+            if (camera.name == "MiddleCamera") { rearViewMirror = camera; }
+
+            if (camera.name == "NormalCamera") { normalCam = camera.transform; }
+        }
+
+        Varjo.VarjoManager[] varjoRigs = car.GetComponentsInChildren<Varjo.VarjoManager>(true);
+        foreach (Varjo.VarjoManager rig in varjoRigs)
+        {
+            if (rig.transform.parent.name == "Leap Rig") { LeapVarjoRig = rig.transform; }
+            else { varjoRig = rig.transform; }
+        }
+        
+        if(leftMirror == null || rightMirror == null || rearViewMirror == null || normalCam == null || LeapVarjoRig == null || varjoRig == null)
+        {
+            Debug.Log("Couldnt set all cameras....");
+        }
+}
+private void Start()
     {
 
         //Set camera 
@@ -107,7 +143,7 @@ public class ExperimentManager : MonoBehaviour
     private void FixedUpdate()
     {
         //Start coroutines to dimlights and change the position of the camera to desired locations
-        if (gameState.isTransitionToWaitingRoom()) { StartCoroutine(GoToWaitingRoomCoroutine()); }
+        if (gameState.isTransitionToWaitingRoom()) { StartCoroutine(GoToWaitingRoomCoroutine(endSimulation)); }
         else if (gameState.isTransitionToCar()) { StartCoroutine(GoToCarCoroutine()); }
 
         
@@ -136,21 +172,16 @@ public class ExperimentManager : MonoBehaviour
         //if we finished a navigation we go to the waiting room
         if (NavigationFinished() && gameState.isExperiment())
          {
-            //Save the data
-            SaveData();
             
+            gameState.SetGameState(GameStates.TransitionToWaitingRoom);
             Debug.Log("Navigation finished...");
-            if (IsNextNavigation())
-            {
-                //Set gamestate to transition
-                gameState.SetGameState(GameStates.TransitionToWaitingRoom);
-            }
-            else
+            if (!IsNextNavigation()){ endSimulation = true; }
+           /* else
             {
                 gameState.SetGameState(GameStates.Finished);
                 StartCoroutine(EndSimulation());
                 Debug.Log("Simulation finished");
-            }
+            }*/
         }
     }
     void SetCarControlInput()
@@ -171,16 +202,16 @@ public class ExperimentManager : MonoBehaviour
     }
     void SetCamera()
     {
-        if (camType == MyCameraType.Varjo) { usedCam = varjoCamRig; }
+        if (camType == MyCameraType.Varjo) { usedCam = varjoRig; }
         else if (camType == MyCameraType.Leap) { usedCam = LeapVarjoRig; }
         else if (camType == MyCameraType.Normal) { usedCam = normalCam; }
 
-        varjoCamRig.gameObject.SetActive(camType == MyCameraType.Varjo);
+        varjoRig.gameObject.SetActive(camType == MyCameraType.Varjo);
         LeapVarjoRig.parent.gameObject.SetActive(camType == MyCameraType.Leap);
         normalCam.gameObject.SetActive(camType == MyCameraType.Normal);
 
         //Destroy unneeded cameras
-        if (camType != MyCameraType.Varjo) { Destroy(varjoCamRig.gameObject); };
+        if (camType != MyCameraType.Varjo) { Destroy(varjoRig.gameObject); };
         if (camType != MyCameraType.Leap) { Destroy(LeapVarjoRig.parent.gameObject); };
         if (camType != MyCameraType.Normal) { Destroy(normalCam.gameObject); }
     }
@@ -203,12 +234,17 @@ public class ExperimentManager : MonoBehaviour
         }
         return output;
     }
-    IEnumerator GoToWaitingRoomCoroutine()
+    IEnumerator GoToWaitingRoomCoroutine(bool endSimulation)
     {
         gameState.SetGameState(GameStates.Waiting);
         BlackOutScreen.CrossFadeAlpha(1f, animationTime, false);
-        yield return new WaitForSeconds(animationTime + 0.5f);
-        SetupNextExperiment();
+        yield return new WaitForSeconds(animationTime + 0.75f);
+        
+        //Save the data (doing this will screen is dark as this causes some lag)
+        SaveData();
+
+        if (!endSimulation) { SetupNextExperiment(); }
+        else { gameState.SetGameState(GameStates.Finished); }
         GoToWaitingRoom();
     }
     IEnumerator GoToCarCoroutine()
@@ -309,7 +345,7 @@ public class ExperimentManager : MonoBehaviour
         SetUpCar();
 
         //Prep navigation (depends on car being set properly as well !!) 
-        activeNavigationHelper.PrepareNavigationForExperiment();
+        //activeNavigationHelper.PrepareNavigationForExperiment();
 
         //Should always be AFTER next experiment is activated.
         SetUpDataManagerNewExperiment();
@@ -319,7 +355,7 @@ public class ExperimentManager : MonoBehaviour
         Debug.Log("Setting up car...");
         //Set new navigation for car
         car.SetNewNavigation(activeExperiment.navigation);
-
+        activeNavigationHelper.GetComponent<RenderNavigation>().SetNavigationObjects();
         //Put car in right position
         Transform startLocation = activeNavigationHelper.GetStartPointNavigation();
 

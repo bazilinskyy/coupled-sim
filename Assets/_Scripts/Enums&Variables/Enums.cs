@@ -1,4 +1,4 @@
-﻿
+﻿using System.Linq;
 public enum Operation
 {
     TurnRightShort,
@@ -8,9 +8,18 @@ public enum Operation
     EndPoint,
     StartPoint,
     SplinePoint,
-    None
-}
+    None,
 
+}
+static class OperationMethods
+{
+    public static bool IsTurn(this Operation operation)
+    {
+        Operation[] turns = { Operation.TurnRightShort, Operation.TurnRightLong, Operation.TurnLeftLong };
+        if (turns.Contains(operation)) { return true; }
+        else { return false; }
+    }
+}
 public enum TargetDifficulty
 {
     easy_6,

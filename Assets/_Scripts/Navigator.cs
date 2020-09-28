@@ -81,7 +81,7 @@ public class Navigator : MonoBehaviour
         }
         return getNextTarget;
     }
-    private bool PassedTargetWaypoint()
+    public bool PassedTargetWaypoint()
     {
         //Passed waypoint if 
         //(1) passes the plane made by the waypoint and its forward direction. 

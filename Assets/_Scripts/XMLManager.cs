@@ -47,7 +47,7 @@ public class XMLManager : MonoBehaviour
 
     private void OnApplicationQuit()
     {
-        SaveData();
+        if (experimentManager.saveData) { SaveData(); }
     }
     private void Awake()
     {

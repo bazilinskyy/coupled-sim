@@ -15,7 +15,7 @@ public class NavigationHelper : MonoBehaviour
     //booleans for each navigation type
     public bool _renderVirtualCable; private bool renderVirtualCable;
     public bool _renderHighlightedRoad; private bool renderHighlightedRoad;
-    public bool _renderHUD = true; private bool renderHUD { get; set; }
+    public bool _renderHUD = true; private bool renderHUD;
     
     public bool _pressMeToRerender = false; private bool pressMeToRerender = false;
 
@@ -33,7 +33,7 @@ public class NavigationHelper : MonoBehaviour
 
         generalWaypointList = GetOrderedWaypointList();
 
-        RenderNavigation();
+        //RenderNavigation();
        
         UpdateOrderIds(); //Make sure order ids are correct at startup
         
@@ -56,16 +56,11 @@ public class NavigationHelper : MonoBehaviour
     {
         return (GetNavigationLine(), renderVirtualCable, renderHighlightedRoad, renderHUD, transparency);
     }
-    public void PrepareNavigationForExperiment()
-    {
-        if (renderHUD) { RenderNavigationArrow(); }
-
-        RenderNavigation();
-        gameObject.GetComponent<RenderNavigation>().SetNavigationObjects();
-        //Make take transparancy from the the experiment manager?
-    }
     void CheckChanges()
     {
+        //Dont do this while application is running
+        if (Application.isPlaying) { return; }
+
         if (splineCreator == null) { splineCreator = gameObject.GetComponent<SplineCreator>(); }
         if (renderVirtualCable != _renderVirtualCable || renderHighlightedRoad != _renderHighlightedRoad)
         {
@@ -82,11 +77,11 @@ public class NavigationHelper : MonoBehaviour
             splineCreator.MakeNavigation();
         }
 
-        /*if (renderHUD != _renderHUD)
+        if (renderHUD != _renderHUD)
         {
             renderHUD = _renderHUD;
-            car.HUD.SetActive(renderHUD);
-        }*/
+            if (car != null) { car.HUD.SetActive(renderHUD); } 
+        }
         if (transparency != _transparency)
         {
             transparency = _transparency;

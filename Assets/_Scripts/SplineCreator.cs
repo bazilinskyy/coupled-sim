@@ -498,7 +498,7 @@ public class SplineCreator : MonoBehaviour
 			if (waypoint.operation == Operation.SplinePoint)
 			{
 				//Set forward direction of waypoint
-				int index = System.Array.FindIndex(splinePoints, element => (element == waypoint.transform.position));
+				int index = Array.FindIndex(splinePoints, element => (element == waypoint.transform.position));
 				//If non valid index found we skip
 				if (!(index >= 0)) { continue;}
 				//First spline point we dont change forward direction
