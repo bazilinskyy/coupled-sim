@@ -23,8 +23,7 @@ public class NavigationHelper : MonoBehaviour
     public float _transparency = 0.3f; private float transparency = 0.3f;
 
     private SplineCreator splineCreator;
-    private float time;
-    private float f_time;
+    private List<Waypoint> generalWaypointList;
     private void Awake()
     {
         renderVirtualCable = _renderVirtualCable;
@@ -32,34 +31,15 @@ public class NavigationHelper : MonoBehaviour
 
         splineCreator = gameObject.GetComponent<SplineCreator>();
 
+        generalWaypointList = GetOrderedWaypointList();
+
         RenderNavigation();
        
         UpdateOrderIds(); //Make sure order ids are correct at startup
-        SetNextAndPreviousWaypoints();
+        
     }
     private void Update()
     {
-        time = Time.realtimeSinceStartup;
-        CheckChanges();
-        f_time = Time.realtimeSinceStartup - time ;
-
-        //Debug.Log($"CheckChanges(): {f_time}s");
-
-        time = Time.realtimeSinceStartup;
-        bool checkWaypoints = CheckNextAndPreviousWaypoints();
-        f_time = Time.realtimeSinceStartup - time;
-        
-        //Debug.Log($"CheckNextAndPreviousWaypoints(): {f_time}s");
-
-        if (checkWaypoints)
-        {
-            time = Time.realtimeSinceStartup;
-            SetNextAndPreviousWaypoints();
-            f_time = Time.realtimeSinceStartup - time;
-
-            //Debug.Log($"SetNextAndPreviousWaypoints(): {f_time}s");
-            
-        }
         //Render the HUDs if needed
         if (renderHUD)
         {
@@ -86,7 +66,7 @@ public class NavigationHelper : MonoBehaviour
     }
     void CheckChanges()
     {
-       /* if (splineCreator == null){ splineCreator = gameObject.GetComponent<SplineCreator>(); }
+        if (splineCreator == null) { splineCreator = gameObject.GetComponent<SplineCreator>(); }
         if (renderVirtualCable != _renderVirtualCable || renderHighlightedRoad != _renderHighlightedRoad)
         {
             renderVirtualCable = _renderVirtualCable;
@@ -98,20 +78,20 @@ public class NavigationHelper : MonoBehaviour
         if (pressMeToRerender != _pressMeToRerender)
         {
             pressMeToRerender = _pressMeToRerender;
-            
+
             splineCreator.MakeNavigation();
         }
 
-        if (renderHUD != _renderHUD)
+        /*if (renderHUD != _renderHUD)
         {
             renderHUD = _renderHUD;
             car.HUD.SetActive(renderHUD);
-        }
+        }*/
         if (transparency != _transparency)
         {
             transparency = _transparency;
             ChangTransparancyHUDAndConformal();
-        }*/
+        }
     }
     void RenderNavigationArrow()
     {
@@ -160,13 +140,10 @@ public class NavigationHelper : MonoBehaviour
     }
     private void RenderNavigation()
     {
-        //Remove reference of navigatoinparts frm waypoints
-        //RemoveNavigationPartsFromWaypoints();
-        
+
         RenderNavigationType(NavigationType.VirtualCable, renderVirtualCable);
         RenderNavigationType(NavigationType.HighlightedRoad, renderHighlightedRoad);
-        
-        
+
     }
     public Vector3 [] GetNavigationLine()
     {
@@ -219,31 +196,36 @@ public class NavigationHelper : MonoBehaviour
     }
     public List<Waypoint> GetOrderedWaypointList()
     {
+        //If application is playing and we already defined waypointList once, simply return the already calculated list
+        if (Application.isPlaying && generalWaypointList != null) { return generalWaypointList; }
+        
         Waypoint waypoint = null;
-
-        List<Waypoint> waypointList = new List<Waypoint>();
+        List<Waypoint> _waypointList = new List<Waypoint>();
         List<Waypoint> orderedWaypointList = new List<Waypoint>();
+
+        //Get all waypoints
         foreach (Transform child in transform)
         {
             waypoint = child.GetComponent<Waypoint>();
-            if (waypoint != null) { waypointList.Add(waypoint); }
+            if (waypoint != null) { _waypointList.Add(waypoint); }
         }
-        
-        if(waypointList.Count() == 0) { return waypointList; }
 
-        waypointList = waypointList.OrderBy(a => a.gameObject.name).ToList();
-        waypoint = waypointList[0];
+        if (_waypointList.Count() == 0) { return _waypointList; }
+
+        //OPrder them based on name
+        _waypointList = _waypointList.OrderBy(a => a.gameObject.name).ToList();
+        //Get the lowest one (e.g., waypoint 0)
+        waypoint = _waypointList[0];
+        
+        //Order from e.g., waypoint 0, using next waypoint attribte. Also sets order Id's. Also sets names to be from Waypoint 0 up to Waypoint N.
         int orderId = 0;
-        while (waypoint!= null)
+        while (waypoint != null)
         {
-            waypointList.Add(waypoint);
             waypoint.gameObject.name = "Waypoint " + orderId.ToString();
             waypoint.orderId = orderId;
             orderedWaypointList.Add(waypoint);
-            
             waypoint = waypoint.nextWaypoint;
             orderId++;
-
         }
         return orderedWaypointList;
     }
@@ -251,36 +233,6 @@ public class NavigationHelper : MonoBehaviour
     {
         //Updating order ids is now done in GetOrderedWaypointList;
         List<Waypoint> waypointList = GetOrderedWaypointList();
-    }
-    public bool CheckNextAndPreviousWaypoints()
-    {
-        //Checks previous and next waypoints. IF a error is there we reSet them
-        bool reSetWaypointNeihgbours = false;
-        List<Waypoint> waypointList = GetOrderedWaypointList();
-
-        foreach(Waypoint waypoint in waypointList)
-        {
-            if(waypoint.operation == Operation.EndPoint && waypoint.previousWaypoint !=null) { continue; }
-            if (waypoint.nextWaypoint != null || waypoint.previousWaypoint != null) {  reSetWaypointNeihgbours = true;  }
-        }
-
-        return reSetWaypointNeihgbours;
-
-    }
-    public void SetNextAndPreviousWaypoints()
-    {
-        List<Waypoint> waypointList = GetOrderedWaypointList();
-        for (int i =0; i<waypointList.Count; i++)
-        {
-            Waypoint waypoint = waypointList[i];
-            if (i == 0) {waypoint.nextWaypoint = waypointList[i + 1];}
-            else if(i == (waypointList.Count - 1)) { waypoint.previousWaypoint = waypointList[i - 1]; }
-            else
-            {
-                waypoint.nextWaypoint = waypointList[i + 1];
-                waypoint.previousWaypoint = waypointList[i - 1];
-            }   
-        }
     }
     public List<NavigationPart> GetListNavigationPart(NavigationType navigationType)
     {
@@ -338,7 +290,6 @@ public class NavigationHelper : MonoBehaviour
         splineCreator.MakeNavigation();
 
         UpdateOrderIds(); //Make sure order ids are correct at startup
-        SetNextAndPreviousWaypoints();
 
         transparency = _transparency;
         car = _car;

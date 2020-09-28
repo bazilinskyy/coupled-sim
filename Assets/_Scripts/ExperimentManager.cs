@@ -109,6 +109,8 @@ public class ExperimentManager : MonoBehaviour
         //Start coroutines to dimlights and change the position of the camera to desired locations
         if (gameState.isTransitionToWaitingRoom()) { StartCoroutine(GoToWaitingRoomCoroutine()); }
         else if (gameState.isTransitionToCar()) { StartCoroutine(GoToCarCoroutine()); }
+
+        
     }
     void Update()
     {
@@ -122,10 +124,9 @@ public class ExperimentManager : MonoBehaviour
             activeExperiment.experimentTime += Time.deltaTime;
             SetTargetVisibilityTime();
 
-
             //stupid solution for the continues output of the button (this function should obviously only trigger once) so we check if the previous value was already 1 'pushed down'
             if (Input.GetKeyDown(keyTargetDetected) || (Input.GetAxis("SteerButtonRight") != 0 && previousSteeringButtonInput != 1)) { ProcessUserInputTargetDetection(); Debug.Log("Pressed down!"); }
-            if (Input.GetKeyDown(setToLastWaytpoint)) { StartCoroutine(SetCarToLastWaypoint()); }
+            if (Input.GetKeyDown(setToLastWaytpoint)) { SetCarToLastWaypoint();  }
             if (Input.GetKeyDown(resetHeadPosition)) { SetCameraPosition(headPosition.position, headPosition.rotation); }
             
         }
@@ -183,7 +184,6 @@ public class ExperimentManager : MonoBehaviour
         if (camType != MyCameraType.Leap) { Destroy(LeapVarjoRig.parent.gameObject); };
         if (camType != MyCameraType.Normal) { Destroy(normalCam.gameObject); }
     }
-
     public List<string> GetCarControlInput()
     {
         //Used in the XMLManager to save user input
@@ -235,19 +235,37 @@ public class ExperimentManager : MonoBehaviour
         yield return new WaitForSeconds(animationTime + 0.5f);
         GoToWaitingRoom();
     }
-    IEnumerator SetCarToLastWaypoint()
+    void SetCarToLastWaypoint()
     {
+        //Get previouswwaypoint which is not a splinepoint
+        Waypoint previousWaypoint = car.target.previousWaypoint;
+        while(previousWaypoint.operation == Operation.SplinePoint) { previousWaypoint = previousWaypoint.previousWaypoint; }
+
+        Vector3 targetPos = previousWaypoint.transform.position;
+        Quaternion targetRot = previousWaypoint.transform.rotation;
+
+        car.transform.position = targetPos;
+        car.transform.rotation = targetRot;
+
         car.GetComponent<Rigidbody>().velocity = Vector3.zero;
         car.GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
+        StartCoroutine(KeepCarSteady());
+    }
+    IEnumerator KeepCarSteady()
+    {
+        //Somehow car did some back flips when not keeping it steady for some time after repositioning.....
+        float step = 0.025f;
+        float totalSeconds = 0.1f;
+        float count = 0;
 
-        yield return new WaitForSeconds(0.2f);
-        
-        car.GetComponent<Rigidbody>().velocity = Vector3.zero;
-        car.GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
-
-        car.transform.position = car.target.previousWaypoint.transform.position;
-        car.transform.rotation = car.target.previousWaypoint.transform.rotation;
-        
+        while (count < totalSeconds)
+        {
+            Debug.Log("Going stead!");
+            car.GetComponent<Rigidbody>().velocity = Vector3.zero;
+            car.GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
+            count += step;
+            yield return new WaitForSeconds(step);
+        }
     }
     private void TurnLightsOnFast()
     {
@@ -437,7 +455,7 @@ public class ExperimentManager : MonoBehaviour
             {
                 visibleTargets.Add(target);
                 targetCount++;
-                Debug.Log($"{target.name} visible...");
+                Debug.Log($"{target.waypoint.name}: {target.name} visible...");
             }
         }
         //We do not accept multiple visible targets at the same time.

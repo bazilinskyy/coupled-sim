@@ -55,7 +55,7 @@ public class Waypoint : MonoBehaviour
     {
         foreach (Target target in GetTargets())
         {
-            target.GetComponent<MeshRenderer>().enabled = enabled;
+            if (!target.detected) { target.GetComponent<MeshRenderer>().enabled = enabled; }
         }
     }
     public void RenderMe(bool _renderMe)

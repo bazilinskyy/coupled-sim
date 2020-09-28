@@ -51,7 +51,7 @@ public class RenderNavigation : MonoBehaviour
         //Sets renderMe to true for previous waypoint up to next numberOfWaypoints (spline points are not counted)
         Waypoint currentWaypoint = target;
         
-        SetPreviousWaypointToTrue();
+        SetTwoPreviousWaypointToTrue();
         
         int renderedWaypoints = 0;
 
@@ -65,20 +65,23 @@ public class RenderNavigation : MonoBehaviour
             
         }
     }
-    void SetPreviousWaypointToTrue()
+    void SetTwoPreviousWaypointToTrue()
     {
         //Set previous waypoint to true, spline points dont count
         if (target.previousWaypoint == null) { return; } //skip if no pevious waypoint
 
-        //Set first previouswaypoint to rendering
-        Waypoint previousWaypoint = target.previousWaypoint;
-        previousWaypoint.RenderMe(true);
-        
-        //Check if spline point --> also do the one before the previous one
-        while (previousWaypoint.operation == Operation.SplinePoint)
+        Waypoint previousWaypoint = target;
+        int renderCount = 0;
+
+        //Set two previous waypoints to still render (not counting splinepoints)
+        while (renderCount <2)
         {
             previousWaypoint = previousWaypoint.previousWaypoint;
+            
+            if (previousWaypoint == null) { break; }
+
             previousWaypoint.RenderMe(true);
+            if (previousWaypoint.operation != Operation.SplinePoint) { renderCount++; }
         }
     }
     void SetAllRenderMeToFalse()

@@ -28,7 +28,6 @@ public class SplineCreator : MonoBehaviour
 		
 		navigationHelper = gameObject.GetComponent<NavigationHelper>();
 	}
-
 	void OnDrawGizmos()
 	{
 		if (navigationHelper == null) { navigationHelper = gameObject.GetComponent<NavigationHelper>(); }
@@ -42,12 +41,10 @@ public class SplineCreator : MonoBehaviour
 			DrawGizmoLines(pointsNavigationLine);
 		}
 	}
-
 	public Vector3 [] GetNavigationLine()
 	{
 		return MakeNavigationLine();
 	}
-
 	public void MakeNavigation()
 	{
 		//Destoy current navigation if existent
