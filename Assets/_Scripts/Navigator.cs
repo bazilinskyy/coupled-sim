@@ -66,7 +66,8 @@ public class Navigator : MonoBehaviour
         //Waits for a certain distance to be travelled after passing waypoint before passing true
         bool getNextTarget = false;
        
-        if (PassedTargetWaypoint())
+        //Passed waypoint (when within vicinity of the waypoint)
+        if (PassedTargetWaypoint() && Vector3.Distance(transform.position,target.transform.position) < metersAfterPassingWaypoint*3 )
         {
             if (lastPosition == Vector3.zero) { lastPosition = transform.position; }
             distanceTravelled += Vector3.Distance(transform.position, lastPosition);

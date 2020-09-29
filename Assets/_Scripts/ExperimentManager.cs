@@ -11,7 +11,6 @@ public class ExperimentManager : MonoBehaviour
     //Attachted to the object with the experiment manager should be a XMLManager for handling the saving of the data.
     [Header("Experiment Input")]
     public string subjectName="You";
-    public int experimentStartPoint;
     public bool automateSpeed = true;
     public bool saveData=true;
     public MyCameraType camType;
@@ -22,6 +21,8 @@ public class ExperimentManager : MonoBehaviour
     public KeyCode keyTargetDetected = KeyCode.Space;
     public KeyCode setToLastWaytpoint = KeyCode.Escape;
     public KeyCode resetHeadPosition = KeyCode.F2;
+    public KeyCode resetExperiment = KeyCode.F3;
+    public KeyCode startDriving = KeyCode.Alpha1;
 
     [Header("Car Controls")]
     public string GasWithKeyboard = "GasKeyBoard";
@@ -86,9 +87,6 @@ public class ExperimentManager : MonoBehaviour
         //If using leap motion controller make a controller object
         if (camType == MyCameraType.Leap) { controller = new Controller(); }
 
-        //Check exerimentStartPoint input
-        if(experimentStartPoint >= navigationRoot.transform.childCount) { throw new System.Exception("Start point should be lower than the number of navigations available"); }
-
         SetGameObjectsFromCar();
     }
     private void SetGameObjectsFromCar()
@@ -121,7 +119,7 @@ public class ExperimentManager : MonoBehaviour
             Debug.Log("Couldnt set all cameras....");
         }
 }
-private void Start()
+    private void Start()
     {
 
         //Set camera 
@@ -129,7 +127,7 @@ private void Start()
         SetCarControlInput();
 
         //Set up all experiments
-        SetUpExperiments(experimentStartPoint);
+        SetUpExperiments();
 
         //Set DataManager
         SetDataManager();
@@ -164,7 +162,8 @@ private void Start()
             if (Input.GetKeyDown(keyTargetDetected) || (Input.GetAxis("SteerButtonRight") != 0 && previousSteeringButtonInput != 1)) { ProcessUserInputTargetDetection(); Debug.Log("Pressed down!"); }
             if (Input.GetKeyDown(setToLastWaytpoint)) { SetCarToLastWaypoint();  }
             if (Input.GetKeyDown(resetHeadPosition)) { SetCameraPosition(headPosition.position, headPosition.rotation); }
-            
+            if (Input.GetKeyDown(resetExperiment)) { ResetExperiment(); }
+            if (Input.GetKeyDown(startDriving) && automateSpeed) { car.GetComponent<SpeedController>().StartDriving(); }
         }
         previousSteeringButtonInput = Input.GetAxis("SteerButtonRight");
 
@@ -183,6 +182,12 @@ private void Start()
                 Debug.Log("Simulation finished");
             }*/
         }
+    }
+    void ResetExperiment()
+    {
+        //Does not reset targets....
+        activeNavigationHelper.SetUp(activeExperiment.navigationType, activeExperiment.transparency, car);
+        SetUpCar();
     }
     void SetCarControlInput()
     {
@@ -251,25 +256,14 @@ private void Start()
     {
         gameState.SetGameState(GameStates.Waiting);
         GoToCar();
-        
+
         BlackOutScreen.CrossFadeAlpha(1f, 0f, true);
         //For some reason crossfading to zero goes way faster so we increase the animationTime by 4.....
         BlackOutScreen.CrossFadeAlpha(0f, animationTime * 4, false);
 
         yield return new WaitForSeconds(1f);
-        StartExperiment();
-        
 
-    }
-    void StartExperiment()
-    {
         gameState.SetGameState(GameStates.Experiment);
-    }
-    IEnumerator EndSimulation()
-    {
-        BlackOutScreen.CrossFadeAlpha(1f, animationTime, false);
-        yield return new WaitForSeconds(animationTime + 0.5f);
-        GoToWaitingRoom();
     }
     void SetCarToLastWaypoint()
     {
@@ -291,12 +285,11 @@ private void Start()
     {
         //Somehow car did some back flips when not keeping it steady for some time after repositioning.....
         float step = 0.025f;
-        float totalSeconds = 0.1f;
+        float totalSeconds = 0.15f;
         float count = 0;
 
         while (count < totalSeconds)
         {
-            Debug.Log("Going stead!");
             car.GetComponent<Rigidbody>().velocity = Vector3.zero;
             car.GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
             count += step;
@@ -307,21 +300,25 @@ private void Start()
     {
         BlackOutScreen.CrossFadeAlpha(0f, 0f, true);
     }
-    void SetUpExperiments(int experimentStartPoint)
+    void SetUpExperiments()
     {
+        //Set all navigation in navigatoin root to inactive
+        foreach(Transform child in navigationRoot) { child.gameObject.SetActive(false); }
+
+        //If noe xperiments given return...
+        if (experiments.Count == 0) { return; }
+
+        //Get experiment settings from the experiment manager and fill our experimentList
         experimentList = new List<Experiment>();
-        if(experiments.Count == 0) { return; }
-        //Deactivate them all
         foreach (ExperimentSetting experimentSetting in experiments)
         {
             if (experimentSetting == null) { continue; }
             Experiment experiment = new Experiment(experimentSetting.navigation, experimentSetting.navigationType, experimentSetting.transparency, false);
             experimentList.Add(experiment);
-            experiment.navigation.gameObject.SetActive(false);
         }
         
-        // Set current active experiment variable
-        activeExperiment = experimentList[experimentStartPoint];
+        // Set first experiment to active
+        activeExperiment = experimentList[0];
         activeExperiment.SetActive(true);
         activeNavigationHelper = activeExperiment.navigationHelper;
         activeNavigationHelper.SetUp(activeExperiment.navigationType, activeExperiment.transparency, car);
@@ -361,6 +358,7 @@ private void Start()
 
         car.transform.position = startLocation.position;
         car.transform.rotation = startLocation.rotation;
+        StartCoroutine(KeepCarSteady());
     }
     void SetCarSound(bool input)
     {

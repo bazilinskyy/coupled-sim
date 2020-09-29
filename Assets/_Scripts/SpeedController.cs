@@ -8,43 +8,48 @@ public class SpeedController : MonoBehaviour
 
     //Lets the vehicle drive and brake according to the set waypoint target using the VPStandardInput speed limit
     [Header("Speed Limits")]
-    public float speedLimitCorner = 6f;
-    public float speedLimit = 12f;
-    public float speedLimitSpline = 10f;
+    public float speedLimitCorner = 5f;
+    public float speedLimit = 10f;
+    public float speedLimitSpline = 8f;
 
     [Header("Tweaking Variables")]
-    public float straightDistance = 30f;
+    public float cornerBrakingDistance = 20f;
+    public float metersLetGoGasEndPoint = 30f;
+    public float brakeIncrement = 0.005f;
+    public float throttleIncrement = 0.005f;
+    public float maxThrottle = 0.8f;
+    public float maxBrake = 0.3f;
 
-    public float maxBrakeForce = 1000f;
-    public float brakeIncrement = 30f;
+    public float brakeSpeedMargin = 2f;
+    public float letGoBrakeSpeed = 2f;
 
-    
-    private Waypoint target;
-
-    public float maxThrottle = 0.2f;
     private float externalThrottle = 0f;
-    
+    private float externalBrake = 0f;
+
+    private bool startDriving = false;
+
     private Waypoint targetWaypoint;
     private Navigator navigator;
     private Rigidbody carRB;
     private VehiclePhysics.VPVehicleController carController;
     private VehiclePhysics.VPStandardInput carInput;
     private VehiclePhysics.SpeedControl.Settings speedSettings;
-    private ControlBrakeForce carBrake;
-
-
-
+    
     private void Start()
     {
         navigator = GetComponent<Navigator>();
         carRB = GetComponent<Rigidbody>();
         carController = GetComponent<VehiclePhysics.VPVehicleController>();
         carInput = GetComponent<VehiclePhysics.VPStandardInput>();
-        carBrake = GetComponent<ControlBrakeForce>();
+        
         speedSettings = new VehiclePhysics.SpeedControl.Settings();
         speedSettings.speedLimiter = true;
     }
 
+    public void StartDriving()
+    {
+        startDriving = true;
+    }
     void FixedUpdate()
     {
 
@@ -52,44 +57,62 @@ public class SpeedController : MonoBehaviour
         if (navigator.experimentManager == null) { return; }
         if (!navigator.experimentManager.automateSpeed) { return; }
         //If at finish of experiment set handbrake.
-        if (!navigator.experimentManager.gameState.isExperiment()) 
-        { 
-            carInput.externalBrake = 1f; 
-            carController.brakes.maxBrakeTorque = 1000f; 
-            return; 
+        if (!navigator.experimentManager.gameState.isExperiment())
+        {
+            carInput.externalBrake = 1f;
+            carInput.externalThrottle = 0f;
+            startDriving = false;
+            return;
         }
-        else { carInput.externalBrake = 0f; carController.brakes.maxBrakeTorque = 0f; }
+        //This bool is adjusted by the expriment manager using StartDriving()
+        if (!startDriving) { return; }
         
-        if(targetWaypoint == null) { targetWaypoint = navigator.target; }
+
+        if (targetWaypoint == null) { targetWaypoint = navigator.target; }
 
         float setSpeed = speedLimit;
         if (OnStraight())
         {
-            Debug.Log("On straight...");
+            Debug.Log($"On straight {carRB.velocity.magnitude}...");
             setSpeed = speedLimit;
-            ToggleGas(true);
+            ToggleGas(true, throttleIncrement);
         }
         else if (OnCornerApproach())
         {
-            Debug.Log("Aproaching corner...");
-            ToggleGas(false);
+            
             setSpeed = speedLimitCorner;
-            /*float distanceToCorner = Vector3.Distance(transform.position, navigator.target.transform.position) - maxDistanceToCorner;
-            //Close to corner is angle = 0, far is angle =pi/2
-            float equivalentAngle = Mathf.Clamp01((1 - (distanceToCorner / distanceToStartSlowing))) * Mathf.PI / 2;
-            setSpeed = cornerSpeed + Mathf.Cos(equivalentAngle) * (maxSpeed - cornerSpeed);*/
+
+            //Let go gas fast
+            ToggleGas(false, 0.05f);
+
+            //Brake to get down to desired speed
+            if (carInput.externalThrottle == 0) { BrakeForCorner(brakeIncrement, speedLimitCorner, carRB, carInput); }
+
+            Debug.Log($"Aproaching corner {carRB.velocity.magnitude}, braking with {carInput.externalBrake} * {carController.brakes.maxBrakeTorque}...");
+
         }
         else if (OnCorner())
         {
-            ToggleGas(false);
+            ToggleGas(false, throttleIncrement);
             setSpeed = speedLimitCorner;
-            Debug.Log("On corner...");
+            Debug.Log($"On corner {carRB.velocity.magnitude}...");
         }
         else if (OnSpline())
         {
-            Debug.Log("On spline...");
+            Debug.Log($"On spline {carRB.velocity.magnitude}...");
             setSpeed = speedLimitSpline;
-            ToggleGas(true);
+            ToggleGas(true, throttleIncrement);
+        }
+        else if (OnEndPointApproach())
+        {
+            Debug.Log($"On end point {carRB.velocity.magnitude}...");
+            setSpeed = speedLimitSpline;
+            //Let go gas when close
+            if (Vector3.Distance(transform.position,targetWaypoint.transform.position) < metersLetGoGasEndPoint) { ToggleGas(false, throttleIncrement); }
+            else { ToggleGas(true, throttleIncrement); }
+            
+            //Starts brakign when at end point.
+            BrakeForEndPoint();
         }
         else { Debug.Log("Loop hole should never get here! (SpeedController.cs)..."); }
 
@@ -105,26 +128,48 @@ public class SpeedController : MonoBehaviour
         targetWaypoint = navigator.target;
     }
  
-    void ToggleGas(bool toggle)
+    void BrakeForCorner(float increment, float desiredSpeed, Rigidbody car, VehiclePhysics.VPStandardInput carInput)
     {
-        float throttleIncrement;
-        if (toggle) { throttleIncrement = 0.005f; }
-        else { throttleIncrement = -0.01f; }
+        float sign;
+        if(car.velocity.magnitude > (desiredSpeed + brakeSpeedMargin)){sign = 1; }
+        else { sign = -1 * letGoBrakeSpeed; }
+        
+        externalBrake = Mathf.Clamp(externalBrake + sign * increment, 0, maxBrake);
 
-        //Increase/decrease throttle with boundaries
-        if (externalThrottle < maxThrottle && externalThrottle >= 0) { externalThrottle += throttleIncrement; }
-        else if (externalThrottle >= maxThrottle) { externalThrottle = maxThrottle; }
-        else { externalThrottle = 0; }
+        carInput.externalBrake = externalBrake;
+
+        Debug.Log($"Braking with {externalBrake}.....");
+    }
+    void BrakeForEndPoint()
+    {
+        if(Vector3.Distance(transform.position,targetWaypoint.transform.position) < 7.5f) { externalBrake = Mathf.Clamp(externalBrake + brakeIncrement, 0, maxBrake); }
+        carInput.externalBrake = externalBrake;
+
+    }
+    void ToggleGas(bool toggle, float increment)
+    {
+        //If already at max por at zero we can return
+        if (toggle && carInput.externalThrottle == maxThrottle) { return; }
+        if (!toggle && carInput.externalThrottle == 0) { return; }
+
+        //else we adjust the toggleing appropriately
+        int sign;
+        if (toggle) { sign = 1; }
+        else { sign = -1; }
+
+        //Increase/decrease throttle with boundaries [0, maxThrottle]
+        externalThrottle = Mathf.Clamp(externalThrottle + sign * increment, 0, maxThrottle);
 
         //Set throttle
         carInput.externalThrottle = externalThrottle;
+        carInput.externalBrake = 0f;
     }
 
     bool OnStraight() 
     {
         //On straight when distance to corner is less than straightDistance
         if(targetWaypoint.operation == Operation.Straight) { return true; }
-        if(Vector3.Distance(targetWaypoint.transform.position, transform.position) > straightDistance) { return true; }
+        if(Vector3.Distance(targetWaypoint.transform.position, transform.position) > cornerBrakingDistance) { return true; }
         else { return false; }
     }
     bool OnCornerApproach()
@@ -132,7 +177,7 @@ public class SpeedController : MonoBehaviour
         //On corner approach when closer than straightDistance and did not pass waypoint target
         if (!targetWaypoint.operation.IsTurn()) { return false; }
         if (navigator.PassedTargetWaypoint()) { return false; }
-        if (Vector3.Distance(targetWaypoint.transform.position, transform.position) > straightDistance) { return false; }
+        if (Vector3.Distance(targetWaypoint.transform.position, transform.position) > cornerBrakingDistance) { return false; }
         else { return true; }
     }
     bool OnCorner()
@@ -147,6 +192,12 @@ public class SpeedController : MonoBehaviour
     bool OnSpline()
     {
         if (targetWaypoint.previousWaypoint.operation == Operation.SplinePoint) { return true; }
+        else { return false; }
+    }
+
+    bool OnEndPointApproach()
+    {
+        if(targetWaypoint.operation == Operation.EndPoint) { return true; }
         else { return false; }
     }
 }

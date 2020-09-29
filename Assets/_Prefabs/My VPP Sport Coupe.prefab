@@ -1453,7 +1453,7 @@ GameObject:
   - component: {fileID: 5220046956005869076}
   - component: {fileID: 5220046956005869075}
   m_Layer: 8
-  m_Name: Camera
+  m_Name: NormalCamera
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4136,7 +4136,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2dbe28ab039e39d4ab94c41fcc515f4e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  carBody: {fileID: 0}
+  carBody: {fileID: 6109170175517165884}
   isRPMNeedle: 0
   pivotMinSpeedAngle: 0
   pivotMaxSpeedAngle: -240
@@ -6030,7 +6030,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2dbe28ab039e39d4ab94c41fcc515f4e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  carBody: {fileID: 0}
+  carBody: {fileID: 6109170175517165884}
   isRPMNeedle: 1
   pivotMinSpeedAngle: 0
   pivotMaxSpeedAngle: -150
@@ -6529,10 +6529,9 @@ GameObject:
   - component: {fileID: 6109170175517165877}
   - component: {fileID: -7100635537082106005}
   - component: {fileID: -4683065379333869721}
-  - component: {fileID: 5954042156480851044}
-  - component: {fileID: 6512893699170545696}
+  - component: {fileID: 8386783356879501740}
   m_Layer: 8
-  m_Name: VPP Sport Coupe
+  m_Name: My VPP Sport Coupe
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -6989,14 +6988,14 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6109170175517165887}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f9f92f27ea77b82438da77dec28b25d4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   brakeForce: 1250
   brakeInput: Brake
---- !u!114 &5954042156480851044
+--- !u!114 &8386783356879501740
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -7008,30 +7007,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c319b7db8c6d0454c834136ddc6c84fe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  brakingDistance: 20
-  cornerDistance: 10
-  setSpeedCorner: 6
-  setSpeedLimit: 12
-  setSpeedSpline: 10
-  maxBrakeForce: 1000
-  brakeIncrement: 30
---- !u!114 &6512893699170545696
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6109170175517165887}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  WaypointNumber: 1
-  speed: 50
-  acceleration: 0
-  jerk: 5
-  resetSpeedAfterStop: 0
+  speedLimitCorner: 5
+  speedLimit: 10
+  speedLimitSpline: 8
+  cornerBrakingDistance: 20
+  metersLetGoGasEndPoint: 30
+  brakeIncrement: 0.005
+  throttleIncrement: 0.005
+  maxThrottle: 0.8
+  maxBrake: 0.5
+  brakeSpeedMargin: 2
+  letGoBrakeSpeed: 4
 --- !u!1 &6109170175774991718
 GameObject:
   m_ObjectHideFlags: 0
@@ -7557,15 +7543,15 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 6109170175408593595}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &6109170175408717887 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 400004, guid: bf6fcf9cc4c0c1f40968e78cb1e81829,
-    type: 3}
-  m_PrefabInstance: {fileID: 6109170175408593595}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &6109170175408495643 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 100000, guid: bf6fcf9cc4c0c1f40968e78cb1e81829,
+    type: 3}
+  m_PrefabInstance: {fileID: 6109170175408593595}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &6109170175408717887 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 400004, guid: bf6fcf9cc4c0c1f40968e78cb1e81829,
     type: 3}
   m_PrefabInstance: {fileID: 6109170175408593595}
   m_PrefabAsset: {fileID: 0}
@@ -8149,15 +8135,9 @@ PrefabInstance:
         type: 3}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 0d5ccdc922f67f64eaa311fe8cade903, type: 3}
---- !u!1 &6109170175670545527 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 100176, guid: 0d5ccdc922f67f64eaa311fe8cade903,
-    type: 3}
-  m_PrefabInstance: {fileID: 6109170175670577959}
-  m_PrefabAsset: {fileID: 0}
---- !u!4 &6109170175670972901 stripped
+--- !u!4 &6109170175670972827 stripped
 Transform:
-  m_CorrespondingSourceObject: {fileID: 400066, guid: 0d5ccdc922f67f64eaa311fe8cade903,
+  m_CorrespondingSourceObject: {fileID: 400060, guid: 0d5ccdc922f67f64eaa311fe8cade903,
     type: 3}
   m_PrefabInstance: {fileID: 6109170175670577959}
   m_PrefabAsset: {fileID: 0}
@@ -8167,33 +8147,21 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 6109170175670577959}
   m_PrefabAsset: {fileID: 0}
+--- !u!4 &6109170175670972901 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 400066, guid: 0d5ccdc922f67f64eaa311fe8cade903,
+    type: 3}
+  m_PrefabInstance: {fileID: 6109170175670577959}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &6109170175670972913 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 400086, guid: 0d5ccdc922f67f64eaa311fe8cade903,
+    type: 3}
+  m_PrefabInstance: {fileID: 6109170175670577959}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &6109170175670545517 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 100170, guid: 0d5ccdc922f67f64eaa311fe8cade903,
-    type: 3}
-  m_PrefabInstance: {fileID: 6109170175670577959}
-  m_PrefabAsset: {fileID: 0}
---- !u!4 &6109170175670972827 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 400060, guid: 0d5ccdc922f67f64eaa311fe8cade903,
-    type: 3}
-  m_PrefabInstance: {fileID: 6109170175670577959}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &6109170175670545515 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 100172, guid: 0d5ccdc922f67f64eaa311fe8cade903,
-    type: 3}
-  m_PrefabInstance: {fileID: 6109170175670577959}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &6109170175670545519 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 100168, guid: 0d5ccdc922f67f64eaa311fe8cade903,
-    type: 3}
-  m_PrefabInstance: {fileID: 6109170175670577959}
-  m_PrefabAsset: {fileID: 0}
---- !u!4 &6109170175670972925 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 400090, guid: 0d5ccdc922f67f64eaa311fe8cade903,
     type: 3}
   m_PrefabInstance: {fileID: 6109170175670577959}
   m_PrefabAsset: {fileID: 0}
@@ -8221,9 +8189,9 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 6109170175670577959}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &6109170175670972913 stripped
+--- !u!4 &6109170175670972899 stripped
 Transform:
-  m_CorrespondingSourceObject: {fileID: 400086, guid: 0d5ccdc922f67f64eaa311fe8cade903,
+  m_CorrespondingSourceObject: {fileID: 400068, guid: 0d5ccdc922f67f64eaa311fe8cade903,
     type: 3}
   m_PrefabInstance: {fileID: 6109170175670577959}
   m_PrefabAsset: {fileID: 0}
@@ -8233,9 +8201,27 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 6109170175670577959}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &6109170175670972899 stripped
+--- !u!1 &6109170175670545527 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 100176, guid: 0d5ccdc922f67f64eaa311fe8cade903,
+    type: 3}
+  m_PrefabInstance: {fileID: 6109170175670577959}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &6109170175670545515 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 100172, guid: 0d5ccdc922f67f64eaa311fe8cade903,
+    type: 3}
+  m_PrefabInstance: {fileID: 6109170175670577959}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &6109170175670545519 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 100168, guid: 0d5ccdc922f67f64eaa311fe8cade903,
+    type: 3}
+  m_PrefabInstance: {fileID: 6109170175670577959}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &6109170175670972925 stripped
 Transform:
-  m_CorrespondingSourceObject: {fileID: 400068, guid: 0d5ccdc922f67f64eaa311fe8cade903,
+  m_CorrespondingSourceObject: {fileID: 400090, guid: 0d5ccdc922f67f64eaa311fe8cade903,
     type: 3}
   m_PrefabInstance: {fileID: 6109170175670577959}
   m_PrefabAsset: {fileID: 0}
@@ -8249,6 +8235,10 @@ PrefabInstance:
     - target: {fileID: 1606757270840104, guid: 0ba239054da355345bc3be88be60af08, type: 3}
       propertyPath: m_Name
       value: Car Audio
+      objectReference: {fileID: 0}
+    - target: {fileID: 1606757270840104, guid: 0ba239054da355345bc3be88be60af08, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4275731641937160, guid: 0ba239054da355345bc3be88be60af08, type: 3}
       propertyPath: m_LocalPosition.z
