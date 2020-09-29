@@ -13,11 +13,12 @@ public class XMLManager : MonoBehaviour
     public static XMLManager ins;
 
     private string carDataFileName = "carData.xml";
-    private string targetDetectionDataFileName = "targetData.xml";
+    private string targetDetectionDataFileName = "targetDetectionData.xml";
     private string targetDetectionDataSummaryFileName = "targetDataSummary.xml";
     private string navigationSettingsFileName = "navigationSettings.xml";
     private string navigationLineFileName = "navigationLine.xml";
     private string gazeDataFileName = "gazeData.xml";
+    private string targetDataFileName = "targetData.xml";
     private string dataFolder = "Data";
     //our car
     private GameObject car;
@@ -39,6 +40,7 @@ public class XMLManager : MonoBehaviour
     private VehicleDataContainer vehicleData;
     private AlarmContainer targetDetectionData;
     private TargetDetectionSummary targetDetectionSummary;
+    private TargetContainer targetData;
     private GazeContainer gazeData;
 
     private string steerInput;
@@ -57,7 +59,6 @@ public class XMLManager : MonoBehaviour
         gameState = experimentManager.gameState;
 
     }
-
     private void Update()
     {
         if (gameState.isExperiment() && experimentManager.saveData)
@@ -92,8 +93,10 @@ public class XMLManager : MonoBehaviour
         SaveThis<TargetDetectionSummary>(targetDetectionDataSummaryFileName, targetDetectionSummary);
 
         SaveNavigationData();
-
         SaveThis<GazeContainer>(gazeDataFileName, gazeData);
+
+        SaveTargetInfoData();
+        SaveThis<TargetContainer>(targetDataFileName, targetData);
     }
     public void SetNavigation(Transform _navigation)
     {
@@ -116,6 +119,22 @@ public class XMLManager : MonoBehaviour
         SaveThis<NavigationLine>(navigationLineFileName, navigationLine);
 
     }
+
+    private void SaveTargetInfoData()
+    {
+        List<Target> targets = navigationHelper.GetAllTargets();
+        foreach (Target target in targets)
+        {
+            TargetInfo datapoint = new TargetInfo();
+            datapoint.detected = target.detected;
+            datapoint.reactionTime = target.reactionTime;
+            datapoint.side = target.GetRoadSide();
+            datapoint.targetName = target.waypoint.name + " - " + target.name.Last();
+            datapoint.position = target.transform.position;
+
+            targetData.dataList.Add(datapoint);
+        }
+}
     void SaveThis<T>(string fileName, object data)
     {
         //check if data makes sense
@@ -140,7 +159,7 @@ public class XMLManager : MonoBehaviour
         targetDetectionData = new AlarmContainer();
         targetDetectionSummary = new TargetDetectionSummary();
         gazeData = new GazeContainer();
-
+        targetData = new TargetContainer();
 }
     private string saveFolder()
     {
@@ -168,6 +187,8 @@ public class XMLManager : MonoBehaviour
         }
         VehicleDataPoint dataPoint = new VehicleDataPoint();
         dataPoint.time = experimentManager.activeExperiment.experimentTime;
+        dataPoint.frame = Time.frameCount;
+
         dataPoint.distanceToOptimalPath = GetDistanceToOptimalPath(car.transform.position);
         dataPoint.position = car.gameObject.transform.position;
         dataPoint.throttleInput = Input.GetAxis(gasInput);
@@ -243,7 +264,8 @@ public class XMLManager : MonoBehaviour
             //Valid gaze data
             MyGazeData data = new MyGazeData();
             data.time = experimentManager.activeExperiment.experimentTime;
-            
+            data.frame = Time.frameCount;
+
             data.focusDistance = varjo_data.focusDistance;
             data.focusStability = varjo_data.focusStability;
 
@@ -272,6 +294,8 @@ public class XMLManager : MonoBehaviour
             MyGazeData data = new MyGazeData();
             
             data.time = experimentManager.activeExperiment.experimentTime;
+            data.frame = Time.frameCount;
+
             data.status = varjo_data.status;
             data.leftCalibrationQuality = VarjoPlugin.GetGazeCalibrationQuality().left;
             data.leftStatus = varjo_data.leftStatus;
@@ -291,6 +315,7 @@ public class XMLManager : MonoBehaviour
     {
         TargetAlarm alarm = new TargetAlarm();
         alarm.time = experimentManager.activeExperiment.experimentTime;
+        alarm.frame = Time.frameCount;
         alarm.AlarmType = false;
         targetDetectionData.dataList.Add(alarm);
         Debug.Log("Added false alarm...");
@@ -301,6 +326,7 @@ public class XMLManager : MonoBehaviour
         TargetAlarm alarm = new TargetAlarm();
 
         alarm.time = experimentManager.activeExperiment.experimentTime;
+        alarm.frame = Time.frameCount;
         alarm.waypointID = target.waypoint.orderId;
         alarm.AlarmType = true;
         alarm.targetID = target.ID;
@@ -357,12 +383,17 @@ public class VehicleDataContainer
 public class VehicleDataPoint
 {
     public float time;
+    public int frame;
+
     public float speed;
     public float distanceToOptimalPath;
     public Vector3 position = new Vector3();
+    public float steerInput;
+
+    //Not using this anymore....
     public float throttleInput;
     public float brakeInput;
-    public float steerInput;
+    
     
 }
 [XmlRoot("GazeDataCollection")]
@@ -376,6 +407,7 @@ public class GazeContainer
 public class MyGazeData
 {
     public float time;
+    public int frame;
 
     public double focusDistance;
     public double focusStability;
@@ -406,11 +438,30 @@ public class AlarmContainer
 public class TargetAlarm
 {
     public float time;
+    public int frame;
+
     public bool AlarmType;
     public float reactionTime;
     public int waypointID;
     public int targetID;
     public int targetDifficulty;
+}
+
+[XmlRoot("TargetCollection")]
+public class TargetContainer
+{
+    [XmlArray("TargetData"), XmlArrayItem("Targets")]
+    public List<TargetInfo> dataList = new List<TargetInfo>();
+}
+
+public class TargetInfo
+{
+    public bool detected;
+    public float reactionTime;
+    
+    public Side side;
+    public string targetName;
+    public Vector3 position;
 }
 public class TargetDetectionSummary
 {
@@ -424,7 +475,6 @@ public class TargetDetectionSummary
 public class NavigationLine
 {
     public Vector3[] navigationLine;
-   
 }
 public class NavigationSettings
 {

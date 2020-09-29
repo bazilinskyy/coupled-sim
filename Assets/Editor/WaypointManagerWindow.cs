@@ -24,19 +24,21 @@ public class WaypointManagerWindow : EditorWindow
         else
         {
             //ALlow creating of waypoints but warn for not working target functionaility
-            if (targetPrefab == null)
-            {
-                EditorGUILayout.HelpBox("A target prefab needs to be assigned if you want to use the attached target system.", MessageType.Warning);
-            }
+            if (targetPrefab == null){ EditorGUILayout.HelpBox("A target prefab needs to be assigned if you want to use the attached target system.", MessageType.Warning); }
+            else { EditorGUILayout.HelpBox("Always place taret between current and next waypoint!", MessageType.Info); }
+
             EditorGUILayout.BeginVertical("box");
             DrawButtons();
             EditorGUILayout.EndVertical();
         }
         obj.ApplyModifiedProperties();
+
+        //Adjust waypoint root automatically based on which waypoint is selected
+        if (Selection.activeGameObject.GetComponent<Waypoint>() != null && Selection.activeGameObject.transform.parent != waypointRoot) { waypointRoot = Selection.activeGameObject.transform.parent; }
     }
     void DrawButtons()
     {
-        if (Selection.activeGameObject != null && Selection.activeGameObject.GetComponent<Waypoint>())
+        if (Selection.activeGameObject != null && (Selection.activeGameObject.GetComponent<Waypoint>()))
         {
             if (GUILayout.Button("Create straight")) { CreateNewWaypoint(Operation.Straight); }
 
@@ -53,6 +55,10 @@ public class WaypointManagerWindow : EditorWindow
             if (GUILayout.Button("Add target")) { AddTarget(); }
 
             if (GUILayout.Button("Remove Waypoint")) { RemoveWaypoint(); }
+        }
+        else if (Selection.activeGameObject != null && Selection.activeGameObject.GetComponent<Target>())
+        {
+            if (GUILayout.Button("Add target")) { AddTarget(); }
         }
         else
         {
@@ -74,17 +80,21 @@ public class WaypointManagerWindow : EditorWindow
         //Let user know if target prefab is missing for some reason
         if(targetPrefab == null){ EditorUtility.DisplayDialog("No target Prefab", "No target prefab available!", "ok", "cancel"); }
 
-        //Make target associated with the selected waypoint
-        Waypoint selectedWaypoint = Selection.activeGameObject.GetComponent<Waypoint>();
-        GameObject target = Instantiate(targetPrefab, selectedWaypoint.transform.position, Quaternion.identity);
+        //Make target associated with the selected waypoint or target
+        Waypoint parentWaypoint;
+        if(Selection.activeGameObject.GetComponent<Waypoint>() != null) { parentWaypoint = Selection.activeGameObject.GetComponent<Waypoint>(); }
+        else if(Selection.activeGameObject.transform.parent.GetComponent<Waypoint>() != null) { parentWaypoint = Selection.activeGameObject.transform.parent.GetComponent<Waypoint>(); }
+        else { throw new System.Exception("No target or waypoint is selected... Cant add target..."); }
+
+        GameObject target = Instantiate(targetPrefab, parentWaypoint.transform.position, Quaternion.identity);
 
         //set name, waypoint and parent
-        SetTargetAttributes(target, selectedWaypoint);
-       
+        SetTargetAttributes(target, parentWaypoint);
+
 
         //Set all IDs and names for the targets associated to this wayu point.
         //This way we make sure they are unique even if we deleted some targets 
-        selectedWaypoint.SetTargetIDsAndNames();
+        parentWaypoint.SetTargetIDsAndNames();
 
         //Select it
         Selection.activeGameObject = target;

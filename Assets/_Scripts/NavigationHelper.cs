@@ -112,6 +112,7 @@ public class NavigationHelper : MonoBehaviour
     }
     void ChangTransparancyHUDAndConformal()
     {
+        if(car == null) { return; }
         Debug.Log($"Setting transpaarancy to {transparency}");
         Color color;
         //ChangeHMI all HUD arrows transparancy
@@ -186,6 +187,17 @@ public class NavigationHelper : MonoBehaviour
                     }
                 }
             }
+        }
+        return targetList;
+    }
+
+    public List<Target> GetAllTargets()
+    {
+        List<Target> targetList = new List<Target>();
+        foreach (Waypoint waypoint in GetOrderedWaypointList())
+        {
+            //Means it is being rendered as well as its targets
+            foreach (Target target in waypoint.GetTargets()){ targetList.Add(target); }
         }
         return targetList;
     }

@@ -19,6 +19,18 @@ static class OperationMethods
         if (turns.Contains(operation)) { return true; }
         else { return false; }
     }
+    public static bool IsLeftTurn(this Operation operation)
+    {
+        Operation[] turns = { Operation.TurnLeftLong };
+        if (turns.Contains(operation)) { return true; }
+        else { return false; }
+    }
+    public static bool IsRightTurn(this Operation operation)
+    {
+        Operation[] turns = { Operation.TurnRightShort, Operation.TurnRightLong };
+        if (turns.Contains(operation)) { return true; }
+        else { return false; }
+    }
 }
 public enum TargetDifficulty
 {

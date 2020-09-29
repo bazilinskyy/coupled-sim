@@ -148,6 +148,9 @@ public class ExperimentManager : MonoBehaviour
     }
     void Update()
     {
+
+        activeExperiment.experimentTime += Time.deltaTime;
+
         if (gameState.isWaiting())
         {
             if (Input.GetKeyDown(keyUserReady)) { gameState.SetGameState(GameStates.TransitionToCar); }
@@ -155,7 +158,7 @@ public class ExperimentManager : MonoBehaviour
 
         //During experiment check for target deteciton key to be pressed
         else if (gameState.isExperiment()) {
-            activeExperiment.experimentTime += Time.deltaTime;
+            
             SetTargetVisibilityTime();
 
             //stupid solution for the continues output of the button (this function should obviously only trigger once) so we check if the previous value was already 1 'pushed down'
@@ -246,6 +249,7 @@ public class ExperimentManager : MonoBehaviour
         yield return new WaitForSeconds(animationTime + 0.75f);
         
         //Save the data (doing this will screen is dark as this causes some lag)
+        //KEEP BEFORE SETTING UP NEXT EXPERIMENT
         SaveData();
 
         if (!endSimulation) { SetupNextExperiment(); }
@@ -274,22 +278,20 @@ public class ExperimentManager : MonoBehaviour
         Vector3 targetPos = previousWaypoint.transform.position;
         Quaternion targetRot = previousWaypoint.transform.rotation;
 
-        car.transform.position = targetPos;
-        car.transform.rotation = targetRot;
-
-        car.GetComponent<Rigidbody>().velocity = Vector3.zero;
-        car.GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
-        StartCoroutine(KeepCarSteady());
+        StartCoroutine(SetCarSteadyAt(targetPos, targetRot));
     }
-    IEnumerator KeepCarSteady()
+    IEnumerator SetCarSteadyAt(Vector3 targetPos, Quaternion targetRot)
     {
         //Somehow car did some back flips when not keeping it steady for some time after repositioning.....
-        float step = 0.025f;
-        float totalSeconds = 0.15f;
+        float step = 0.01f;
+        float totalSeconds = 0.2f;
         float count = 0;
 
         while (count < totalSeconds)
         {
+            car.transform.position = targetPos;
+            car.transform.rotation = targetRot;
+
             car.GetComponent<Rigidbody>().velocity = Vector3.zero;
             car.GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
             count += step;
@@ -356,9 +358,7 @@ public class ExperimentManager : MonoBehaviour
         //Put car in right position
         Transform startLocation = activeNavigationHelper.GetStartPointNavigation();
 
-        car.transform.position = startLocation.position;
-        car.transform.rotation = startLocation.rotation;
-        StartCoroutine(KeepCarSteady());
+        StartCoroutine(SetCarSteadyAt(startLocation.position, startLocation.rotation));
     }
     void SetCarSound(bool input)
     {
@@ -500,7 +500,7 @@ public class ExperimentManager : MonoBehaviour
         else if (targetCount == 1)
         {
             dataManager.AddTrueAlarm(visibleTargets[0]) ;
-            visibleTargets[0].SetDetected();
+            visibleTargets[0].SetDetected(activeExperiment.experimentTime);
 
         }
         else
@@ -517,7 +517,7 @@ public class ExperimentManager : MonoBehaviour
                 }
             }
             dataManager.AddTrueAlarm(closestTarget);
-            closestTarget.SetDetected();
+            closestTarget.SetDetected(activeExperiment.experimentTime);
             //throw new System.Exception("ERROR: Counting two visible targets, this is not implemented yet...");
         }
     }
