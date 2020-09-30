@@ -101,6 +101,7 @@ public class PlayerAvatar : MonoBehaviour
                 // Setting the Varjo API only active for the local player
                 GameObject go_VarjoManager = gameObject.transform.Find("VarjoCameraRig").gameObject;
                 //GameObject go_Gaze = gameObject.transform.Find("Gaze").gameObject;
+
                 go_VarjoManager.SetActive(true);
                 //go_Gaze.SetActive(true);
 
@@ -140,6 +141,8 @@ public class PlayerAvatar : MonoBehaviour
             {
                 su.enabled = false;
             }
+                GameObject go_syncGazeLaser = gameObject.transform.Find("SyncGazeLaser").gameObject; // error
+                go_syncGazeLaser.SetActive(true);
         }
         if (mode == PlayerSystem.Mode.HostAI)
         {

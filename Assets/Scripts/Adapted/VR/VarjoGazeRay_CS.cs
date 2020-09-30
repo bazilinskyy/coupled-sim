@@ -114,7 +114,7 @@ namespace VarjoExample
                 // Visualize gaze for all
                 if (PersistentManager.Instance._visualizeGaze == true)
                 {
-                    crossHair.DrawLineInGameView(gameObject, gazeRayOrigin, gazeRayOrigin + gazeRayDirection * 10.0f, Color.green, 0.04f, false);
+                    crossHair.DrawLineInGameView(gameObject, gazeRayOrigin, gazeRayOrigin + gazeRayDirection * 30.0f, Color.green, 0.07f, true);
                 }
 
                 // Raycast into world, only see objects in the "Pedestrian layer"
@@ -198,7 +198,7 @@ namespace VarjoExample
                     // Create empty game object for the linerenderer to add layer. Laser
                     var LaserObject = new GameObject();
                     LaserObject.transform.parent = gameObject.transform.parent;
-                    LaserObject.layer = LayerMask.NameToLayer("IgnoreForPassenger");
+                    LaserObject.layer = LayerMask.NameToLayer("IgnoreForPedestrian");
                     lineRenderer = LaserObject.AddComponent<LineRenderer>();
                 }
                 //Particles/Additive

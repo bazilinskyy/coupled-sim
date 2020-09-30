@@ -118,7 +118,7 @@ namespace VarjoExample
             gazeRayDirection = this.GetComponent<VarjoGazeRay_CS>().getGazeRayDirection();  // world space
             gazePosition = this.GetComponent<VarjoGazeRay_CS>().getGazePosition();          // hmd space
             gazeRayOrigin = this.GetComponent<VarjoGazeRay_CS>().getGazeRayOrigin();        // world space
-            role_varjo = this.GetComponent<VarjoGazeRay_CS>().getRoleVarjo();
+            //role_varjo = this.GetComponent<VarjoGazeRay_CS>().getRoleVarjo();
 
             // Get HMD position and rotation
             hmdPosition = VarjoManager.Instance.HeadTransform.position;
@@ -127,7 +127,7 @@ namespace VarjoExample
             string[] logData = new string[9]; //new string[19];
 
             // Role varjo user
-            logData[0] = role_varjo;
+            logData[0] = "Person";// role_varjo;
 
             // Time
             logData[1] = time.ToString();
