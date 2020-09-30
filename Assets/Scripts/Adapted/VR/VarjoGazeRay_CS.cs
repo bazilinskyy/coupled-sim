@@ -30,12 +30,25 @@ namespace VarjoExample
 
         VarjoPlugin.GazeData data;
         RaycastHit gazeRayHit;
-        Vector3 gazeRayForward;
-        Vector3 gazeRayDirection;
-        Vector3 gazePosition;
-        Vector3 gazeRayOrigin;
-        string role_varjo;
-        string target;
+        public Vector3 gazeRayForward;
+        public Vector3 gazeRayDirection;
+        public Vector3 gazePosition;
+        public Vector3 gazeRayOrigin;
+        public List<string> list_role_varjo;
+        public string role_varjo;
+        public string target;
+
+        public long Frame;
+        public long CaptureTime;
+        public Vector3 hmdposition;
+        public Vector3 hmdrotation;
+        public Quaternion hmdrotation_quaternion;
+        public double LeftPupilSize;
+        public double RightPupilSize;
+        public double FocusDistance;
+        public double FocusStability;
+
+        private int i = 0;
 
         LineDrawer lineDrawer;
         LineDrawer crossHair;
@@ -61,19 +74,39 @@ namespace VarjoExample
         void Update()
         {
             // Determine whether this script is attached to a passenger or pedestrian:
-            if (transform.parent.CompareTag("Pedestrian"))
+            if (transform.parent.CompareTag("Pedestrian") && i<3)
             {
                 role_varjo = "Pedestrian";
                 target = "Passenger";
+                list_role_varjo.Add(role_varjo);
+                i++;
             }
-            else if (transform.parent.CompareTag("AutonomousCar"))
+            else if (transform.parent.CompareTag("AutonomousCar") && i<3)
             {
                 role_varjo = "Passenger";
                 target = "Pedestrian";
+                list_role_varjo.Add(role_varjo);
+                i++;
             }
+            for (int i = 0; i<list_role_varjo.Count; i++)
+            {
+                Debug.LogError($"List role varjo {i} = {list_role_varjo[i]}");
+            }
+
 
             // Returns current state of the gaze
             data = VarjoPlugin.GetGaze();
+
+            // Data for logging
+            Frame = data.frameNumber;
+            CaptureTime = data.captureTime;
+            hmdposition = VarjoManager.Instance.HeadTransform.position;
+            hmdrotation_quaternion = VarjoManager.Instance.HeadTransform.rotation;
+            hmdrotation = VarjoManager.Instance.HeadTransform.rotation.eulerAngles;
+            LeftPupilSize = data.leftPupilSize;
+            RightPupilSize = data.rightPupilSize;
+            FocusDistance = data.focusDistance;
+            FocusStability = data.focusStability;
 
             // Check if gaze data is valid and calibrated
             if (data.status != VarjoPlugin.GazeStatus.INVALID)
@@ -112,6 +145,7 @@ namespace VarjoExample
                 //crossHair.DrawLineInGameView(gameObject, gazeRayOrigin + gazeRayDirection * 5.0f, gazeRayOrigin + gazeRayDirection * 10.0f, Color.green, 0.07f, false);
 
                 // Visualize gaze for all
+                Debug.LogError($"Parent name = {transform.parent.name}");
                 if (PersistentManager.Instance._visualizeGaze == true)
                 {
                     crossHair.DrawLineInGameView(gameObject, gazeRayOrigin, gazeRayOrigin + gazeRayDirection * 30.0f, Color.green, 0.07f, true);
@@ -177,6 +211,11 @@ namespace VarjoExample
         {
             return role_varjo;
         }
+
+        public VarjoPlugin.GazeStatus getGazeStatus()
+        {
+            return data.status;
+        }
     }
 
     // Helper function gaze vector visualization
@@ -202,7 +241,7 @@ namespace VarjoExample
                     lineRenderer = LaserObject.AddComponent<LineRenderer>();
                 }
                 //Particles/Additive
-                lineRenderer.material = new Material(Shader.Find("Hidden/Internal-Colored"));
+                lineRenderer.material = new Material(Shader.Find("Hidden/Internal-Colored")); // !!!!Error in coupled sim. Reason: ???
             }
         }
 
