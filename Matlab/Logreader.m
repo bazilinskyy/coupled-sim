@@ -7,8 +7,8 @@ close all
 % filename = "LOG_N.csv";
 filename = getlatestfile("Logdata");
 filename = "Logdata/" + filename;
-% Data = loadData(filename);
-Data = loadData("Logdata/a1.csv");
+Data = loadData(filename);
+% Data = loadData("Logdata/a1.csv");
 
 % Variables to use
 distance = Data.distance;
@@ -27,11 +27,11 @@ grid on;
 title("Distances");
 yyaxis left
 plot(distance);
-ylim([-10 50]);
+ylim([-10 100]);
 ylabel("eye gaze distance");
 yyaxis right
 plot(pos_z);
-ylim([-80 100]);
+ylim([-10 100]);
 ylabel("AV pos_z");
 
 % figure;

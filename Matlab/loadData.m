@@ -1,5 +1,6 @@
 function Data = loadData(filename)
 %% Load data
+% Needs an update everytime the Worldlogging scripts is modified.
 tic;
 opts = delimitedTextImportOptions('Delimiter',';',...
                                   'DataLines', 10);
