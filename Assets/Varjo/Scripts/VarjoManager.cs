@@ -419,7 +419,6 @@ namespace Varjo
 
             foreach (var camera in Camera.allCameras)
             {
-                Debug.LogError($"Cameras = {camera}");
                 if (camera != varjoCamera)// && camera != varjoCamera_pedestrian)
                 {
                         if (camera.stereoTargetEye != StereoTargetEyeMask.None)
