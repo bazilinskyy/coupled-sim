@@ -46,9 +46,10 @@ public class SpeedController : MonoBehaviour
         speedSettings.speedLimiter = true;
     }
 
-    public void StartDriving()
+    public void StartDriving(bool input)
     {
-        startDriving = true;
+        startDriving = input;
+        Debug.Log($"Driving ? {input}...");
     }
     void FixedUpdate()
     {

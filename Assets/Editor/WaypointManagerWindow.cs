@@ -13,7 +13,7 @@ public class WaypointManagerWindow : EditorWindow
 
     public Transform waypointRoot;
     public GameObject targetPrefab;
-    
+
     private void OnGUI()
     {
         SerializedObject obj = new SerializedObject(this);
@@ -24,7 +24,7 @@ public class WaypointManagerWindow : EditorWindow
         else
         {
             //ALlow creating of waypoints but warn for not working target functionaility
-            if (targetPrefab == null){ EditorGUILayout.HelpBox("A target prefab needs to be assigned if you want to use the attached target system.", MessageType.Warning); }
+            if (targetPrefab == null) { EditorGUILayout.HelpBox("A target prefab needs to be assigned if you want to use the attached target system.", MessageType.Warning); }
             else { EditorGUILayout.HelpBox("Always place taret between current and next waypoint!", MessageType.Info); }
 
             EditorGUILayout.BeginVertical("box");
@@ -34,7 +34,7 @@ public class WaypointManagerWindow : EditorWindow
         obj.ApplyModifiedProperties();
 
         //Adjust waypoint root automatically based on which waypoint is selected
-        if (Selection.activeGameObject.GetComponent<Waypoint>() != null && Selection.activeGameObject.transform.parent != waypointRoot) { waypointRoot = Selection.activeGameObject.transform.parent; }
+        if (Selection.activeGameObject != null && Selection.activeGameObject.GetComponent<Waypoint>() != null && Selection.activeGameObject.transform.parent != waypointRoot) { waypointRoot = Selection.activeGameObject.transform.parent; }
     }
     void DrawButtons()
     {

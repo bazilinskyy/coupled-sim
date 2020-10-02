@@ -47,8 +47,10 @@ public class SplineCreator : MonoBehaviour
 	}
 	public void MakeNavigation()
 	{
+		if (navigationHelper == null) { navigationHelper = gameObject.GetComponent<NavigationHelper>(); }
+
 		//Destoy current navigation if existent
-		foreach(Transform child in transform)
+		foreach (Transform child in transform)
 		{
 			if(child.name == "NavigationParts")
 			{
@@ -56,6 +58,7 @@ public class SplineCreator : MonoBehaviour
 				break;
 			}
 		}
+
 		navigationHelper.RemoveNavigationPartsFromWaypoints();
 	
 		//Make it again

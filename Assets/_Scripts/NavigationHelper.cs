@@ -19,6 +19,9 @@ public class NavigationHelper : MonoBehaviour
     
     public bool _pressMeToRerender = false; private bool pressMeToRerender = false;
 
+    public int NumberOfTargets;
+    public List<DifficultyCount> targetDifficultyList;
+
     [Range(0.01f, 1f)]
     public float _transparency = 0.3f; private float transparency = 0.3f;
 
@@ -58,6 +61,7 @@ public class NavigationHelper : MonoBehaviour
     }
     void CheckChanges()
     {
+        if (NumberOfTargets != GetTargetCount()) { NumberOfTargets = GetTargetCount(); targetDifficultyList = GetTargetDifficultyList(); }
         //Dont do this while application is running
         if (Application.isPlaying) { return; }
 
@@ -190,7 +194,26 @@ public class NavigationHelper : MonoBehaviour
         }
         return targetList;
     }
+    public List<DifficultyCount> GetTargetDifficultyList()
+    {
+        List<Target> targets = GetAllTargets();
+        List<DifficultyCount> countList = new List<DifficultyCount>();
+        //Fill list with the avialable difficulties
+        var difficulties = EnumUtil.GetValues<TargetDifficulty>();
+        foreach(TargetDifficulty difficulty in difficulties) { countList.Add(new DifficultyCount(difficulty)); }
 
+        //Count the difficulties set for this navigation
+        foreach (Target target in targets)
+        {
+            foreach(DifficultyCount difficultyCount in countList) { if(difficultyCount.difficulty == target.difficulty) { difficultyCount.AddOne(); break; } }
+        }
+        
+        return countList;
+    }
+    public int GetTargetCount()
+    {
+        return GetAllTargets().Count();
+    }
     public List<Target> GetAllTargets()
     {
         List<Target> targetList = new List<Target>();
@@ -303,7 +326,7 @@ public class NavigationHelper : MonoBehaviour
         ChangTransparancyHUDAndConformal();
         
         Vector3 HUD_low = car.transform.position + new Vector3(-0.3f,1.026f,1.56f);
-        Vector3 HUD_high = car.transform.position + new Vector3(-0.3f, 1.474f, 1.56f);
+        Vector3 HUD_high = car.transform.position + new Vector3(-0.3f, 1.3f, 1.56f);
 
         if (navigationType == NavigationType.VirtualCable) {
             renderHUD = false;
@@ -333,5 +356,22 @@ public class NavigationHelper : MonoBehaviour
             RenderNavigationType(NavigationType.VirtualCable, false);
             RenderNavigationType(NavigationType.HighlightedRoad, false);
         }
+    }
+}
+[System.Serializable]
+public class DifficultyCount
+{
+    public TargetDifficulty difficulty;
+    public int count;
+
+    public DifficultyCount(TargetDifficulty _difficulty)
+    {
+        difficulty = _difficulty;
+        count = 0;
+    }
+    
+    public void AddOne()
+    {
+        count++;
     }
 }

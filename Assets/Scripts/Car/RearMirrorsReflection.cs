@@ -23,13 +23,13 @@ public class RearMirrorsReflection : MonoBehaviour
 
     public Transform head;
 
-    public void Awake()
+    /*public void Awake()
     {
-        if (Application.isPlaying)
+        if (Application.isPlaying && head != null)
         {
             head = Camera.main.transform;
         }
-    }
+    }*/
 
     private void OnDrawGizmos()
     {
@@ -57,7 +57,7 @@ public class RearMirrorsReflection : MonoBehaviour
     {
         SetMirror(leftMirror);
         SetMirror(rightMirror);
-        //SetMirror(middleMirror);
+        SetMirror(middleMirror);
 
     }
 
