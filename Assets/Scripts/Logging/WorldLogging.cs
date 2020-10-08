@@ -287,7 +287,6 @@ public class WorldLogger
             pedestrian.GetPose(returnBodySuit()).SerializeTo(_fileWriter); // to do: remove non root pose
 
             var pedestrianGaze = pedestrian.transform.GetComponentInChildren<VarjoGazeRay_CS_1>();
-            Debug.LogError($"pedestrianGaze = {pedestrianGaze}");
             if (VarjoPlugin.GetGaze().status == VarjoPlugin.GazeStatus.VALID && pedestrian.transform.Find("Gaze"))
             {
                 //if (pedestrianGaze.list_role_varjo[1] == "Pedestrian")//(pedestrian.transform.GetComponentInChildren<VarjoGazeRay_CS>().getRoleVarjo() == "Pedestrian")

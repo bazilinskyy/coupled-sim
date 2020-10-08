@@ -108,6 +108,8 @@ public class PlayerAvatar : MonoBehaviour
                 if(transform.name == "PassengerSmart_varjo(Clone)")
                 {
                     PersistentManager.Instance.hasAuthority = true;
+                    GameObject go_SyncGazeLaser = gameObject.transform.Find("SyncGazeLaser").gameObject;
+                    go_SyncGazeLaser.SetActive(true);
                 }
 
                 break;

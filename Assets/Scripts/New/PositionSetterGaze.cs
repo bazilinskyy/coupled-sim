@@ -10,6 +10,11 @@ public class PositionSetterGaze : MonoBehaviour
     Vector3 _gazeRayOrigin;
     Vector3 _gazeRayDirection;
 
+    private void Start()
+    {
+        Debug.LogError($"Gaze object parent = {SyncGaze.transform.parent.name}");
+    }
+
     void FixedUpdate()
     {
         // Check whether eye-tracking is established first
@@ -23,12 +28,12 @@ public class PositionSetterGaze : MonoBehaviour
             if (gameObject.name == "GazeOrigin")
             {
                 transform.position = _gazeRayOrigin;
-                //Debug.LogError($"Gaze Origin found {_gazeRayOrigin}, transform = {transform.position}");
+                //Debug.LogError($"Gaze Origin found {_gazeRayOrigin}, transform from {transform.name} = {transform.position}");
             }
             if (gameObject.name == "GazeDirection")
             {
-                //Debug.LogError($"Gaze direction found {_gazeRayDirection}, transform = {transform.position}");
                 transform.position = _gazeRayOrigin + _gazeRayDirection * 50.0f;
+                //Debug.LogError($"Gaze direction found {_gazeRayDirection}, transform from {transform.name} = {transform.position}");
             }
         }
     }
