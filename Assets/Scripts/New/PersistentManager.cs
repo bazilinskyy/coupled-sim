@@ -22,6 +22,8 @@ public class PersistentManager : MonoBehaviour
     public int clientRole;
     public bool clientConnectedToHost;
 
+    public bool hasAuthority = false; 
+
     private void Awake()
     {
         if (Instance == null)

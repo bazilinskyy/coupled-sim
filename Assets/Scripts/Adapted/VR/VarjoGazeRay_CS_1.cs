@@ -15,7 +15,7 @@ namespace VarjoExample
     /// Shoots rays to where user is looking at and send hit events to VarjoGazeTargets.
     /// Requires gaze calibration first.
     /// </summary>
-    public class VarjoGazeRay_CS : MonoBehaviour
+    public class VarjoGazeRay_CS_1 : MonoBehaviour
     {
         [Header("Eye to use for raycasting into the world")]
         public Eye eye = Eye.both;
@@ -135,18 +135,6 @@ namespace VarjoExample
                 gazeRayDirection = transform.TransformVector(gazeRayForward);
                 gazeRayOrigin = transform.TransformPoint(gazePosition);
 
-                // Visualize the gaze vector for the pedestrian (hide for passenger)
-                //lineDrawer.DrawLineInGameView(gameObject, gazeRayOrigin, gazeRayOrigin + gazeRayDirection * 10.0f, Color.green, 0.01f, true);
-
-                // Crosshair for passenger
-                //crossHair.DrawLineInGameView(gameObject, gazeRayOrigin + gazeRayDirection * 5.0f, gazeRayOrigin + gazeRayDirection * 10.0f, Color.green, 0.07f, false);
-
-                // Visualize gaze for all
-                if (PersistentManager.Instance._visualizeGaze == true && PersistentManager.Instance.hasAuthority == true)
-                {
-                    crossHair.DrawLineInGameView(gameObject, gazeRayOrigin, gazeRayOrigin + gazeRayDirection * 30.0f, Color.green, 0.07f, true);
-                }
-
                 // Raycast into world, only see objects in the "Pedestrian layer"
                 if (Physics.SphereCast(gazeRayOrigin, gazeRayRadius, gazeRayDirection, out gazeRayHit, Mathf.Infinity, 1 << LayerMask.NameToLayer(target)))
                 {
@@ -211,70 +199,6 @@ namespace VarjoExample
         public VarjoPlugin.GazeStatus getGazeStatus()
         {
             return data.status;
-        }
-    }
-
-    // Helper function gaze vector visualization
-    public struct LineDrawer
-    {
-        private LineRenderer lineRenderer;
-
-        private void init(GameObject gameObject, bool laser)
-        {
-            if (lineRenderer == null)
-            {
-                if (laser == false)
-                {
-                    // Crosshair
-                    lineRenderer = gameObject.AddComponent<LineRenderer>();
-                }
-                else if (laser == true)
-                {
-                    // Create empty game object for the linerenderer to add layer. Laser
-                    var LaserObject = new GameObject();
-                    LaserObject.transform.parent = gameObject.transform.parent;
-                    LaserObject.layer = LayerMask.NameToLayer("IgnoreForPedestrian");
-                    lineRenderer = LaserObject.AddComponent<LineRenderer>();
-                }
-                //Particles/Additive
-                lineRenderer.material = new Material(Shader.Find("Hidden/Internal-Colored")); // !!!!Error in coupled sim. Reason: ???
-            }
-        }
-
-        //Draws lines through the provided vertices
-        public void DrawLineInGameView(GameObject gameObject, Vector3 start, Vector3 end, Color color, float width, bool laser)
-        {
-            if (lineRenderer == null)
-            {
-                init(gameObject, laser);
-            }
-
-            //Set material transparancy
-            //lineRenderer.material = new Material(Shader.Find("Particles/Additive(Soft)"));
-            color.a = 0.2f;
-
-            //Set color
-            lineRenderer.startColor = color;
-            lineRenderer.endColor = color;
-
-            //Set width
-            lineRenderer.startWidth = width;
-            lineRenderer.endWidth = width;
-
-            //Set line count which is 2
-            lineRenderer.positionCount = 2;
-
-            //Set the postion of both two lines
-            lineRenderer.SetPosition(0, start);
-            lineRenderer.SetPosition(1, end);
-        }
-
-        public void Destroy()
-        {
-            if (lineRenderer != null)
-            {
-                UnityEngine.Object.Destroy(lineRenderer.gameObject);
-            }
         }
     }
 }

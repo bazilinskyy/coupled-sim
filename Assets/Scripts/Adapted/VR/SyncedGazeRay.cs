@@ -24,7 +24,7 @@ public class SyncedGazeRay : MonoBehaviour
         if (PersistentManager.Instance._visualizeGaze == true)
         {
             //SyncLineDrawer_.DrawLineInGameView(go_Gaze, gazeRayOrigin, gazeRayOrigin + gazeRayDirection * 10.0f, Color.red, 0.04f, false);
-            SyncLineDrawer_.DrawLineInGameView(go_Gaze, gazeRayOrigin, gazeRayDirection, Color.green, 0.07f, false);
+            SyncLineDrawer_.DrawLineInGameView(go_Gaze, gazeRayOrigin, gazeRayDirection, Color.cyan, 0.07f, false);
         }
     }
     // Helper function gaze vector visualization

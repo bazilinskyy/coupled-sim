@@ -105,6 +105,11 @@ public class PlayerAvatar : MonoBehaviour
                 go_VarjoManager.SetActive(true);
                 //go_Gaze.SetActive(true);
 
+                if(transform.name == "PassengerSmart_varjo(Clone)")
+                {
+                    PersistentManager.Instance.hasAuthority = true;
+                }
+
                 break;
             case PlayerSystem.Mode.VR:
                 modeElements = VRModeElements;
@@ -141,8 +146,8 @@ public class PlayerAvatar : MonoBehaviour
             {
                 su.enabled = false;
             }
-                GameObject go_syncGazeLaser = gameObject.transform.Find("SyncGazeLaser").gameObject; // error
-                go_syncGazeLaser.SetActive(true);
+                //GameObject go_syncGazeLaser = gameObject.transform.Find("SyncGazeLaser").gameObject; // error
+                //go_syncGazeLaser.SetActive(true);
         }
         if (mode == PlayerSystem.Mode.HostAI)
         {

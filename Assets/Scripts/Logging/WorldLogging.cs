@@ -199,8 +199,8 @@ public class WorldLogger
             // Code enters the invalid statement and afterwards the valid statement (eye-calibration)
             if (VarjoPlugin.GetGaze().status == VarjoPlugin.GazeStatus.VALID && driver.transform.Find("Gaze"))
             {
-                if (passengerGaze.list_role_varjo[0] == "Passenger") //(driver.transform.GetComponentInChildren<VarjoGazeRay_CS>().getRoleVarjo() == "Passenger")
-                {
+                //if (passengerGaze.list_role_varjo[0] == "Passenger") //(driver.transform.GetComponentInChildren<VarjoGazeRay_CS>().getRoleVarjo() == "Passenger")
+                //{
                     distance_pa = passengerGaze.getGazeRayHit().distance;
                     //distance_pa = driver.transform.GetComponentInChildren<VarjoGazeRay_CS>().getGazeRayHit().distance;
 
@@ -229,11 +229,11 @@ public class WorldLogger
 
                     gazeRayOrigin_pa = passengerGaze.gazeRayOrigin; //driver.transform.GetComponentInChildren<VarjoGazeRay_CS>().getGazeRayOrigin();          // world space
                     gazeRayOrigin_pa_x = gazeRayOrigin_pa.x; gazeRayOrigin_pa_y = gazeRayOrigin_pa.y; gazeRayOrigin_pa_z = gazeRayOrigin_pa.z;
-                }
-                else
-                {
-                    distance_pa = -1.0f;
-                }
+                //}
+                //else
+                //{
+                 //   distance_pa = -1.0f;
+                //}
             }
             else if(VarjoPlugin.GetGaze().status != VarjoPlugin.GazeStatus.VALID)
             {
@@ -286,11 +286,12 @@ public class WorldLogger
         {
             pedestrian.GetPose(returnBodySuit()).SerializeTo(_fileWriter); // to do: remove non root pose
 
-            var pedestrianGaze = pedestrian.transform.GetComponentInChildren<VarjoGazeRay_CS>();
+            var pedestrianGaze = pedestrian.transform.GetComponentInChildren<VarjoGazeRay_CS_1>();
+            Debug.LogError($"pedestrianGaze = {pedestrianGaze}");
             if (VarjoPlugin.GetGaze().status == VarjoPlugin.GazeStatus.VALID && pedestrian.transform.Find("Gaze"))
             {
-                if (pedestrianGaze.list_role_varjo[1] == "Pedestrian")//(pedestrian.transform.GetComponentInChildren<VarjoGazeRay_CS>().getRoleVarjo() == "Pedestrian")
-                {
+                //if (pedestrianGaze.list_role_varjo[1] == "Pedestrian")//(pedestrian.transform.GetComponentInChildren<VarjoGazeRay_CS>().getRoleVarjo() == "Pedestrian")
+                //{
                     distance_pe = pedestrianGaze.getGazeRayHit().distance; //pedestrian.transform.GetComponentInChildren<VarjoGazeRay_CS>().getGazeRayHit().distance;
                     Frame_pe = pedestrianGaze.Frame;
                     CaptureTime_pe = pedestrianGaze.CaptureTime;
@@ -317,11 +318,11 @@ public class WorldLogger
 
                     gazeRayOrigin_pe = pedestrianGaze.gazeRayOrigin;//pedestrian.transform.GetComponentInChildren<VarjoGazeRay_CS>().getGazeRayOrigin();          // world space
                     gazeRayOrigin_pe_x = gazeRayOrigin_pe.x; gazeRayOrigin_pe_y = gazeRayOrigin_pe.y; gazeRayOrigin_pe_z = gazeRayOrigin_pe.z;
-                }
-                else
-                {
-                    distance_pe = -1.0f;
-                }
+                //}
+                //else
+                //{
+                //    distance_pe = -1.0f;
+                //}
             }
             else if (VarjoPlugin.GetGaze().status != VarjoPlugin.GazeStatus.VALID)
             {

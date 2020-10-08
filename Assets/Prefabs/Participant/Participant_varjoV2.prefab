@@ -39,7 +39,6 @@ Transform:
   - {fileID: 4390430792460009334}
   - {fileID: 6810389265092519216}
   - {fileID: 1890056105122912753}
-  - {fileID: 4529771718043999093}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -258,36 +257,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 3945693134207891172}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1150442184542157210
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 4529771718043999093}
-  m_Layer: 0
-  m_Name: SyncGazeLaser
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!4 &4529771718043999093
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1150442184542157210}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 4935557633822840}
-  m_RootOrder: 8
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &7059275133755152007
 MonoBehaviour:
@@ -8012,14 +7981,14 @@ GameObject:
   m_Component:
   - component: {fileID: 5344804248368546699}
   - component: {fileID: 5502618789888018826}
-  - component: {fileID: 5496693032710509801}
+  - component: {fileID: 3230129442464626247}
   m_Layer: 0
   m_Name: Gaze
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &5344804248368546699
 Transform:
   m_ObjectHideFlags: 0
@@ -8051,7 +8020,7 @@ MonoBehaviour:
   useCalibrationParameters: 0
   calibrationType: 0
   outputFilterType: 0
---- !u!114 &5496693032710509801
+--- !u!114 &3230129442464626247
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8060,7 +8029,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 4127890842416630236}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4ea46f484aa870a4ca974c11688274f8, type: 3}
+  m_Script: {fileID: 11500000, guid: 35b5a07e293c56a40ab03d7cbf129dce, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   eye: 0
@@ -8364,9 +8333,9 @@ PrefabInstance:
     m_RemovedComponents:
     - {fileID: 114241173252932152, guid: 3fae7923a8aec364bb24e25c4aa6f079, type: 3}
   m_SourcePrefab: {fileID: 100100000, guid: 3fae7923a8aec364bb24e25c4aa6f079, type: 3}
---- !u!4 &3436981136017020138 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 4502135317825226, guid: 3fae7923a8aec364bb24e25c4aa6f079,
+--- !u!20 &3457266540128744198 stripped
+Camera:
+  m_CorrespondingSourceObject: {fileID: 20212394771702054, guid: 3fae7923a8aec364bb24e25c4aa6f079,
     type: 3}
   m_PrefabInstance: {fileID: 3440014031742226976}
   m_PrefabAsset: {fileID: 0}
@@ -8376,9 +8345,9 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 3440014031742226976}
   m_PrefabAsset: {fileID: 0}
---- !u!20 &3457266540128744198 stripped
-Camera:
-  m_CorrespondingSourceObject: {fileID: 20212394771702054, guid: 3fae7923a8aec364bb24e25c4aa6f079,
+--- !u!4 &3436981136017020138 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4502135317825226, guid: 3fae7923a8aec364bb24e25c4aa6f079,
     type: 3}
   m_PrefabInstance: {fileID: 3440014031742226976}
   m_PrefabAsset: {fileID: 0}
