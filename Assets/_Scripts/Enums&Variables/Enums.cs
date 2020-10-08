@@ -9,25 +9,27 @@ public enum Operation
     StartPoint,
     SplinePoint,
     None,
+    TurnLeft,
+    TurnRight
 
 }
 static class OperationMethods
 {
     public static bool IsTurn(this Operation operation)
     {
-        Operation[] turns = { Operation.TurnRightShort, Operation.TurnRightLong, Operation.TurnLeftLong };
+        Operation[] turns = { Operation.TurnRightShort, Operation.TurnRightLong, Operation.TurnLeftLong, Operation.TurnRight, Operation.TurnLeft };
         if (turns.Contains(operation)) { return true; }
         else { return false; }
     }
     public static bool IsLeftTurn(this Operation operation)
     {
-        Operation[] turns = { Operation.TurnLeftLong };
+        Operation[] turns = { Operation.TurnLeftLong, Operation.TurnLeft };
         if (turns.Contains(operation)) { return true; }
         else { return false; }
     }
     public static bool IsRightTurn(this Operation operation)
     {
-        Operation[] turns = { Operation.TurnRightShort, Operation.TurnRightLong };
+        Operation[] turns = { Operation.TurnRightShort, Operation.TurnRightLong, Operation.TurnRight };
         if (turns.Contains(operation)) { return true; }
         else { return false; }
     }

@@ -44,9 +44,9 @@ public class WaypointManagerWindow : EditorWindow
 
             //if (GUILayout.Button("Create short right turn")) { CreateNewWaypoint(Operation.TurnRightShort); }
 
-            if (GUILayout.Button("Create right")) { CreateNewWaypoint(Operation.TurnRightShort); }
+            if (GUILayout.Button("Create right")) { CreateNewWaypoint(Operation.TurnRight); }
             
-            if (GUILayout.Button("Create left")) { CreateNewWaypoint(Operation.TurnLeftLong); }
+            if (GUILayout.Button("Create left")) { CreateNewWaypoint(Operation.TurnLeft); }
 
             if (GUILayout.Button("Create spline point")) { CreateNewWaypoint(Operation.SplinePoint); }
 
@@ -126,6 +126,18 @@ public class WaypointManagerWindow : EditorWindow
         Waypoint selectedWaypoint = Selection.activeGameObject.GetComponent<Waypoint>();
         selectedWaypoint.operation = operation;
     }
+    bool IsRightTurn(Operation operation)
+    {
+        Operation[] turns = { Operation.TurnRightShort, Operation.TurnRightLong, Operation.TurnRight };
+        if (turns.Contains(operation)) { return true; }
+        else { return false; }
+    }
+    bool IsLeftTurn(Operation operation)
+    {
+        Operation[] turns = { Operation.TurnLeftLong, Operation.TurnLeft };
+        if (turns.Contains(operation)) { return true; }
+        else { return false; }
+    }
     void SetAttributesNewWaypoint(Waypoint newWaypoint, Waypoint selectedWaypoint, Operation operation)
     {
         //set attributes of new waypoint
@@ -138,17 +150,12 @@ public class WaypointManagerWindow : EditorWindow
         //Turn waypoint and set position based on operation and road radius
         //If last point was a spline point we change rotaiton based on this;
         RoadParameters roadParameters = waypointRoot.GetComponent<SplineCreator>().roadParameters;
-        if (operation == Operation.TurnRightLong)
-        {
+        if (IsRightTurn(operation))
+        { 
             newWaypoint.transform.Rotate(Vector3.up * 90, Space.World);
             newWaypoint.transform.position = selectedWaypoint.transform.position + roadParameters.radiusLong * (newWaypoint.transform.forward + selectedWaypoint.transform.forward);
         }
-        else if (operation == Operation.TurnRightShort)
-        {
-            newWaypoint.transform.Rotate(Vector3.up * 90, Space.World);
-            newWaypoint.transform.position = selectedWaypoint.transform.position + roadParameters.radiusShort * (newWaypoint.transform.forward + selectedWaypoint.transform.forward);
-        }
-        else if (operation == Operation.TurnLeftLong)
+        else if (IsLeftTurn(operation))
         {
             newWaypoint.transform.Rotate(Vector3.up * -90, Space.World);
             newWaypoint.transform.position = selectedWaypoint.transform.position + roadParameters.radiusLong * (newWaypoint.transform.forward + selectedWaypoint.transform.forward);

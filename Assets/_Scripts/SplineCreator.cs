@@ -190,9 +190,9 @@ public class SplineCreator : MonoBehaviour
 				vertices[vertice_cnt] = circle[v] + worldY * roadParameters.heightVirtualCable;
 				vertice_cnt += 1;
 
-				//TODO bug in points, we are getting dublicates of points and some werird extra pooints in the beginning of a corner
-				Gizmos.DrawSphere(circle[v] + worldY * roadParameters.heightVirtualCable, 0.05f);
-				UnityEditor.Handles.Label(circle[v] + worldY * roadParameters.heightVirtualCable, $"{i}");
+				//GIZMOS VIRTUAL CABLE
+				/*Gizmos.DrawSphere(circle[v] + worldY * roadParameters.heightVirtualCable, 0.05f);
+				UnityEditor.Handles.Label(circle[v] + worldY * roadParameters.heightVirtualCable, $"{i}");*/
 			}
 			//Save this pos so we can draw the next line segment
 			lastPos = newPos;
@@ -244,9 +244,10 @@ public class SplineCreator : MonoBehaviour
 	{
 		//get radius based on waypoint oepration and raodParameter scriptable variable
 		float radius;
-		if (waypoint.operation == Operation.TurnRightShort) { radius = roadParameters.radiusShort; }
+		/*if (waypoint.operation == Operation.TurnRightShort) { radius = roadParameters.radiusShort; }
 		else { radius = roadParameters.radiusLong; }
-
+*/
+		radius = roadParameters.radiusLong;
 		//Get half circle in x,y frame
 		Vector2[] quarterCircle = GetQuarterCircle(radius, pointsPerSpline, waypoint.operation);
 		
@@ -429,10 +430,10 @@ public class SplineCreator : MonoBehaviour
 		//operation -> left --> (0,0) to (-radius, radius)
 		Vector2[] pointsCircle = new Vector2[numberOfPoints];
 
-		float radStep = Mathf.PI / 2 / numberOfPoints;
+		float radStep = Mathf.PI / 2 / (numberOfPoints-1);
 
 		int sign = 1;
-		if(operation == Operation.TurnLeftLong) { sign = -1; }
+		if(operation.IsLeftTurn()) { sign = -1; }
 
 		
 		//- PI to 0 gets a half circle to the right
@@ -444,7 +445,6 @@ public class SplineCreator : MonoBehaviour
 
 			pointsCircle[i] = new Vector2(x,y);
 		}
-		
 		return pointsCircle;
 	}
 	private Vector3[] GetSplinePoints(List<Waypoint> splineList)

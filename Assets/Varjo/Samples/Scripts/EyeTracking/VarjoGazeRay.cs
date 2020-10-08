@@ -21,7 +21,6 @@ namespace VarjoExample
 
         [Header("Should we draw debug lines to scene view")]
         public bool drawDebug = true;
-        public Transform gazeHighlights;
 
         VarjoPlugin.GazeData data;
         RaycastHit gazeRayHit;

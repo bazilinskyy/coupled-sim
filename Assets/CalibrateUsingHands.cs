@@ -41,29 +41,26 @@ public class CalibrateUsingHands : MonoBehaviour
             leftWristPos = leftHand.palm.position;
             rightWristPos = rightHand.palm.position;
 
-            //Debug.Log($"VarjoCamara {VarjoCamara.transform.position}, rightHandPos: {rightHandPos}, leftHandPos: {leftHandPos}... ");
-            Vector3 centerHands = (leftWristPos + rightWristPos) / 2;
-            handsToCam = VarjoCamara.position - centerHands;
+            Vector3 posLeft = leftWristPos + (steeringWheel.position - leftWristSteeringWheel.position);
+            Vector3 posRight = rightWristPos + (steeringWheel.position - rightWristSteeringWheel.position);
+            steeringWheelToCam = VarjoCamara.position - (posLeft + posRight) / 2;
 
             //Set some other handy vectors
+            handsToCam = VarjoCamara.position - (leftWristPos + rightWristPos) / 2;          
             handToHand = rightWristPos - leftWristPos;
-            Vector3 COMSteeringWheelToHandLocations = (leftWristSteeringWheel.position + rightWristSteeringWheel.position) / 2 - leftWristSteeringWheel.parent.position;
-            steeringWheelToCam = COMSteeringWheelToHandLocations + handsToCam;
 
             //Set head position accordingly
-            transform.position = (leftWristSteeringWheel.position + rightWristSteeringWheel.position) / 2 + handsToCam;
+            transform.position = steeringWheel.transform.position + steeringWheelToCam;
             Debug.Log($"Succesfully calibrated headposition with hands on steering wheel handsToCam: {handsToCam}...");
             return true;
         }
         else { Debug.Log("Could not set hand position..."); return false; }
     }
 
-    public void SetLeftHand(){if (leftHand.gameObject.activeSelf) { leftWristPos = leftHand.palm.position; } }
+    public void SetLeftHand(){ if (leftHand.gameObject.activeSelf) { leftWristPos = leftHand.palm.position; } }
     public void SetRightHand() { if (rightHand.gameObject.activeSelf) { rightWristPos = rightHand.palm.position; } }
-
     public Vector3 GetHandsToCam() { return handsToCam; }
     public Vector3 GetSteeringWheelToCam(){return steeringWheelToCam; } 
-
     public Vector3 GetLeftHandPos() { return leftWristPos; }
     public Vector3 GetRightHandPos() { return rightWristPos; }
     public Vector3 GetRightToLeftHand() { return handToHand; }

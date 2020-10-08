@@ -29,7 +29,7 @@ public class MyGazeLogger : MonoBehaviour
 
     bool logging = false;
 
-    static readonly string[] ColumnNames = { "Frame", "LogTime", "ExperimentTime", "HMDPosition", "HMDRotation", "GazeStatus", "CombinedGazeForward", "CombinedGazePosition", "LeftEyeStatus", "LeftEyeForward", "LeftEyePosition", "LeftEyePupilSize", "RightEyeStatus", "RightEyeForward", "RightEyePosition", "RightEyePupilSize", "FocusDistance", "FocusStability" };
+    static readonly string[] ColumnNames = { "Frame", "LogTime", "ExperimentTime", "HMDPosition", "HMDRotation", "HMDLocalRotation","GazeStatus", "CombinedGazeForward", "CombinedGazePosition", "LeftEyeStatus", "LeftEyeForward", "LeftEyePosition", "LeftEyePupilSize", "RightEyeStatus", "RightEyeForward", "RightEyePosition", "RightEyePupilSize", "FocusDistance", "FocusStability" };
 
     const string ValidString = "VALID";
     const string InvalidString = "INVALID";
@@ -101,7 +101,7 @@ public class MyGazeLogger : MonoBehaviour
         hmdPosition = VarjoManager.Instance.HeadTransform.position;
         hmdRotation = VarjoManager.Instance.HeadTransform.rotation.eulerAngles;
 
-        string[] logData = new string[18];
+        string[] logData = new string[19];
 
         // Unity frame count
         logData[0] = Time.frameCount.ToString();
@@ -115,30 +115,31 @@ public class MyGazeLogger : MonoBehaviour
         // HMD
         logData[3] = hmdPosition.ToString("F3");
         logData[4] = hmdRotation.ToString("F3");
+        logData[5] = cam.localRotation.eulerAngles.ToString("F3");
 
         // Combined gaze
         bool invalid = data.status == VarjoPlugin.GazeStatus.INVALID;
-        logData[5] = invalid ? InvalidString : ValidString;
-        logData[6] = invalid ? "" : Double3ToString(data.gaze.forward);
-        logData[7] = invalid ? "" : Double3ToString(data.gaze.position);
+        logData[6] = invalid ? InvalidString : ValidString;
+        logData[7] = invalid ? "" : Double3ToString(data.gaze.forward);
+        logData[8] = invalid ? "" : Double3ToString(data.gaze.position);
 
         // Left eye
         bool leftInvalid = data.leftStatus == VarjoPlugin.GazeEyeStatus.EYE_INVALID;
-        logData[8] = leftInvalid ? InvalidString : ValidString;
-        logData[9] = leftInvalid ? "" : Double3ToString(data.left.forward);
-        logData[10] = leftInvalid ? "" : Double3ToString(data.left.position);
-        logData[11] = leftInvalid ? "" : data.leftPupilSize.ToString();
+        logData[9] = leftInvalid ? InvalidString : ValidString;
+        logData[10] = leftInvalid ? "" : Double3ToString(data.left.forward);
+        logData[11] = leftInvalid ? "" : Double3ToString(data.left.position);
+        logData[12] = leftInvalid ? "" : data.leftPupilSize.ToString();
 
         // Right eye
         bool rightInvalid = data.rightStatus == VarjoPlugin.GazeEyeStatus.EYE_INVALID;
-        logData[12] = rightInvalid ? InvalidString : ValidString;
-        logData[13] = rightInvalid ? "" : Double3ToString(data.right.forward);
-        logData[14] = rightInvalid ? "" : Double3ToString(data.right.position);
-        logData[15] = rightInvalid ? "" : data.rightPupilSize.ToString();
+        logData[13] = rightInvalid ? InvalidString : ValidString;
+        logData[14] = rightInvalid ? "" : Double3ToString(data.right.forward);
+        logData[15] = rightInvalid ? "" : Double3ToString(data.right.position);
+        logData[16] = rightInvalid ? "" : data.rightPupilSize.ToString();
 
         // Focus
-        logData[16] = invalid ? "" : data.focusDistance.ToString();
-        logData[17] = invalid ? "" : data.focusStability.ToString();
+        logData[17] = invalid ? "" : data.focusDistance.ToString();
+        logData[18] = invalid ? "" : data.focusStability.ToString();
 
         Log(logData);
     }

@@ -87,10 +87,12 @@ public class XMLManager : MonoBehaviour
         if (_subjectName == null || _subjectName == "") { _subjectName = "JohnDoe"; }
         subjectName = dateTime + "-" + _subjectName;
 
+        //Set inputs of GazeLogger
         myGazeLogger.cam = experimentManager.CameraTransform();
     }
     public void SaveData()
     {
+        Debug.Log($"Saving all data to {saveFolder}...");
         myGazeLogger.StopLogging();
 
         SaveThis<VehicleDataContainer>(carDataFileName, vehicleData);
@@ -140,6 +142,7 @@ public class XMLManager : MonoBehaviour
             TargetInfo datapoint = new TargetInfo();
             datapoint.detected = target.detected;
             datapoint.reactionTime = target.reactionTime;
+            datapoint.fixationTime = target.fixationTime;
             datapoint.difficulty = target.difficulty;
             datapoint.side = target.GetRoadSide();
             datapoint.targetName = target.waypoint.name + " - " + target.name.Last();
@@ -175,8 +178,6 @@ public class XMLManager : MonoBehaviour
         XmlSerializer serializer = new XmlSerializer(typeof(T));
         //overwrites mydata.xml
         string filePath = string.Join("/", saveFolder, fileName);
-//        string name = typeof(T).FullName;
-        Debug.Log($"Saving {fileName} data to {filePath}...");
 
         FileStream stream = new FileStream(filePath, FileMode.Create);
         serializer.Serialize(stream, data);
@@ -184,7 +185,8 @@ public class XMLManager : MonoBehaviour
     }
     public void StartNewMeasurement()
     {
-        Debug.Log("Starting new measurement...");
+        
+        Debug.Log($"Starting new measurement...");
         savedData = false;
         saveFolder = SaveFolder();
 
@@ -211,6 +213,7 @@ public class XMLManager : MonoBehaviour
         string baseFolder = string.Join("/", baseFolderArray);
         string saveFolder = string.Join("/", baseFolder, dataFolder, subjectName, navigation.name + DateTime.Now.ToString("_HH-mm-ss"));
         Directory.CreateDirectory(saveFolder);
+        
 
         return saveFolder;
     }
@@ -455,6 +458,7 @@ public class TargetInfo
 {
     public bool detected;
     public float reactionTime;
+    public float fixationTime;
 
     public TargetDifficulty difficulty;
     public Side side;
@@ -482,37 +486,3 @@ public class NavigationSettings
     public float transparency;
     public float NavigationTime;
 }
-
-
-/*[XmlRoot("GazeDataCollection")]
-public class GazeContainer
-{
-
-    [XmlArray("GazeData"), XmlArrayItem("GazePoints")]
-    public List<MyGazeData> dataList = new List<MyGazeData>();
-    
-}
-public class MyGazeData
-{
-    public float time;
-    public int frame;
-
-    public double focusDistance;
-    public double focusStability;
-
-    public double rightPupilSize;
-    public Vector3 forward_right;
-    public Vector3 position_right;
-
-    public double leftPupilSize;
-    public Vector3 forward_left;
-    public Vector3 position_left;
-    public Vector3 forward_combined;
-    public Vector3 position_combined;
-
-    public VarjoPlugin.GazeStatus status;
-    public VarjoPlugin.GazeEyeCalibrationQuality leftCalibrationQuality;
-    public VarjoPlugin.GazeEyeStatus leftStatus;
-    public VarjoPlugin.GazeEyeCalibrationQuality rightCalibrationQuality;
-    public VarjoPlugin.GazeEyeStatus rightStatus;
-}*/

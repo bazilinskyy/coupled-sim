@@ -21,7 +21,8 @@ public class Target : MonoBehaviour
     public bool detected = false;
     [HideInInspector]
     public float reactionTime = 0;
-
+    [HideInInspector]
+    public float fixationTime = 0f;
     //Time at which this target was visible
     public float defaultVisibilityTime = -1f;
     public float startTimeVisible = -1f;
@@ -32,6 +33,12 @@ public class Target : MonoBehaviour
     {
         SetUnDetected();
         startTimeVisible = -1f;
+        fixationTime = 0f;
+}
+
+    public void OnHit()
+    {
+        if (!detected) { fixationTime += Time.deltaTime; }
     }
     public void SetDifficulty( TargetDifficulty _difficulty)
     {
@@ -72,7 +79,7 @@ public class Target : MonoBehaviour
         detected = false;
         startTimeVisible = defaultVisibilityTime;
         reactionTime = 0f;
-
+        fixationTime = 0f;
     }
     public bool IsDetected()
     {
@@ -91,8 +98,8 @@ public class Target : MonoBehaviour
         //Adjust waypoint position
         //Waypoints are positioned just before the crossing (Left turn: ~8 meters, right turn: ~5meters). 
         //If this is a turn we are need to be in the middle of the road which we turn on i.e., a little bit more forward
-        if (waypoint.operation.IsLeftTurn()) { firstWaypointPos += waypoint.transform.forward * 8; }
-        if (waypoint.operation.IsRightTurn()) { firstWaypointPos += waypoint.transform.forward * 5; }
+        if (waypoint.operation.IsLeftTurn()) { firstWaypointPos += waypoint.transform.forward * 7.5f; }
+        if (waypoint.operation.IsRightTurn()) { firstWaypointPos += waypoint.transform.forward * 7.5f; }
         Vector3 secondWaypointPos = waypoint.nextWaypoint.transform.position; 
 
         Vector3 splittingLine = firstWaypointPos - secondWaypointPos;

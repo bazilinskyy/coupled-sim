@@ -120,7 +120,6 @@ public class ExperimentManager : MonoBehaviour
         if (gameState.isTransitionToWaitingRoom()) { StartCoroutine(GoToWaitingRoomCoroutine(endSimulation)); }
         else if (gameState.isTransitionToCar()) { StartCoroutine(GoToCarCoroutine()); }
 
-        
     }
     void Update()
     {
@@ -130,7 +129,7 @@ public class ExperimentManager : MonoBehaviour
         {
             if (Input.GetAxis(ParticpantInputAxis) == 1 && camType == MyCameraType.Leap) {
                 bool success = driverView.GetComponent<CalibrateUsingHands>().SetPositionUsingHands();
-                if (success){ SpawnSteeringWheel(); }
+                if (success){ SpawnSteeringWheel();}
             }
             if (Input.GetKeyDown(MyPermission)) { gameState.SetGameState(GameStates.TransitionToCar); }
         }
@@ -147,6 +146,11 @@ public class ExperimentManager : MonoBehaviour
             //User input
             if (Input.GetKeyDown(keyTargetDetected) || Input.GetAxis(targetDetectionAxis) ==1 ) { ProcessUserInputTargetDetection(); }
             if (Input.GetAxis(ParticpantInputAxis) == 1 && automateSpeed) { car.GetComponent<SpeedController>().StartDriving(true); }
+            if (Input.GetAxis(ParticpantInputAxis) == 1 && camType == MyCameraType.Leap)
+            {
+                driverView.GetComponent<CalibrateUsingHands>().SetPositionUsingHands(); 
+                SetCameraPosition(driverView.position, driverView.rotation);
+            }
 
 
             //Researcher inputs
@@ -218,8 +222,11 @@ public class ExperimentManager : MonoBehaviour
         Vector3 rightHand = driverView.GetComponent<CalibrateUsingHands>().GetRightHandPos();
         Vector3 posLeft = leftHand + (steeringWheelObject.transform.position - steeringWheelObject.transform.Find("LeftWristPosition").position);
         Vector3 posRight = rightHand + (steeringWheelObject.transform.position - steeringWheelObject.transform.Find("RightWristPosition").position);
+        Vector3 steeringWheelToCam = CameraTransform().position - (posLeft + posRight) / 2;
 
-        steeringWheelObject.transform.position = (posLeft + posRight) / 2;
+        Debug.Log(steeringWheelToCam);
+        Debug.Log(driverView.GetComponent<CalibrateUsingHands>().GetSteeringWheelToCam());
+        steeringWheelObject.transform.position = CameraTransform().position - driverView.GetComponent<CalibrateUsingHands>().GetSteeringWheelToCam();
 
     }
     public Transform CameraTransform()
@@ -302,7 +309,6 @@ public class ExperimentManager : MonoBehaviour
         SaveData();
 
         if (!endSimulation) { SetupNextExperiment(); }
-        else { gameState.SetGameState(GameStates.Finished); }
         GoToWaitingRoom();
     }
     IEnumerator GoToCarCoroutine()
@@ -487,7 +493,7 @@ public class ExperimentManager : MonoBehaviour
 
         usedCam.SetParent(waitingRoom);
 
-        if (gameState.isFinished()) { StartCoroutine(RenderEndSimulation()); }
+        if (endSimulation) { StartCoroutine(RenderEndSimulation()); }
         else{ StartCoroutine(RenderStartScreenText()); }
     }
     IEnumerator RenderEndSimulation()
@@ -691,8 +697,6 @@ public class ExperimentManager : MonoBehaviour
         if(dataManager == null) { throw new System.Exception("Error in Experiment Manager -> A XMLManager should be attatched if you want to save data..."); }
 
         dataManager.SetAllInputs(car.gameObject, activeExperiment.navigation.transform, subjectName);
-
-        if (saveData) { dataManager.StartNewMeasurement(); }
     }
     private void SetUpDataManagerNewExperiment()
     {
