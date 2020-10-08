@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Xml.Serialization;
+using System.Xml;
 using UnityEngine;
 using Varjo;
 using System.Linq;
@@ -16,8 +17,8 @@ public class XMLManager : MonoBehaviour
     private string targetDetectionDataFileName = "targetDetectionData.xml";
     private string targetDetectionDataSummaryFileName = "targetDataSummary.xml";
     private string navigationSettingsFileName = "navigationSettings.xml";
+    private string generalTargetInfo = "generalTargetInfo.txt";
     private string navigationLineFileName = "navigationLine.xml";
-    private string gazeDataFileName = "gazeData.xml";
     private string targetDataFileName = "targetData.xml";
     private string dataFolder = "Data";
     //our car
@@ -34,6 +35,7 @@ public class XMLManager : MonoBehaviour
 
     private GameState gameState;
 
+    private MyGazeLogger myGazeLogger;
     private string subjectName;
    
     //list of items
@@ -41,31 +43,34 @@ public class XMLManager : MonoBehaviour
     private AlarmContainer targetDetectionData;
     private TargetDetectionSummary targetDetectionSummary;
     private TargetContainer targetData;
-    private GazeContainer gazeData;
-
+    /*private GazeContainer gazeData;*/
+    private string saveFolder;
     private string steerInput;
-    private string gasInput;
-    private string brakeInput;
+    [HideInInspector]
+    public bool savedData;
 
     private void OnApplicationQuit()
     {
-        if (experimentManager.saveData) { SaveData(); }
+
+      if (experimentManager.saveData && !savedData) { SaveData(); }
+
     }
     private void Awake()
     {
         ins = this;
 
-        experimentManager = gameObject.GetComponent<ExperimentManager>();
+        experimentManager = GetComponent<ExperimentManager>();
         gameState = experimentManager.gameState;
-
+        myGazeLogger = GetComponent<MyGazeLogger>();
+        myGazeLogger.experimentManager = experimentManager;
+        myGazeLogger.startAutomatically = false;
+        myGazeLogger.useCustomLogPath = true;
     }
     private void Update()
     {
         if (gameState.isExperiment() && experimentManager.saveData)
         {
             AddVehicleData();
-
-            if (experimentManager.camType == MyCameraType.Varjo) { AddEyeTrackingData(); }
         }
     }
     public void SetAllInputs(GameObject _car, Transform _navigation, string _subjectName)
@@ -74,29 +79,37 @@ public class XMLManager : MonoBehaviour
         
         //set car inputs
         List<string> inputs = experimentManager.GetCarControlInput();
-        steerInput = inputs[0]; gasInput = inputs[1]; brakeInput = inputs[2];
+        steerInput = inputs[0];
 
         SetNavigation(_navigation);
 
         string dateTime = System.DateTime.Now.ToString("MM-dd_HH-mm");
         if (_subjectName == null || _subjectName == "") { _subjectName = "JohnDoe"; }
         subjectName = dateTime + "-" + _subjectName;
+
+        myGazeLogger.cam = experimentManager.CameraTransform();
     }
     public void SaveData()
     {
-               
+        myGazeLogger.StopLogging();
+
         SaveThis<VehicleDataContainer>(carDataFileName, vehicleData);
         
         SaveThis<AlarmContainer>(targetDetectionDataFileName, targetDetectionData);
 
         SummariseTargetDetectionData();
         SaveThis<TargetDetectionSummary>(targetDetectionDataSummaryFileName, targetDetectionSummary);
+        /*
+        SaveThis<GazeContainer>(gazeDataFileName, gazeData);*/
+
+        SetTargetInfoData();
+        SaveThis<TargetContainer>(targetDataFileName, targetData);
 
         SaveNavigationData();
-        SaveThis<GazeContainer>(gazeDataFileName, gazeData);
+        SaveGeneralExperimentInfo();
 
-        SaveTargetInfoData();
-        SaveThis<TargetContainer>(targetDataFileName, targetData);
+        savedData = true;
+
     }
     public void SetNavigation(Transform _navigation)
     {
@@ -119,8 +132,7 @@ public class XMLManager : MonoBehaviour
         SaveThis<NavigationLine>(navigationLineFileName, navigationLine);
 
     }
-
-    private void SaveTargetInfoData()
+    private void SetTargetInfoData()
     {
         List<Target> targets = navigationHelper.GetAllTargets();
         foreach (Target target in targets)
@@ -128,13 +140,32 @@ public class XMLManager : MonoBehaviour
             TargetInfo datapoint = new TargetInfo();
             datapoint.detected = target.detected;
             datapoint.reactionTime = target.reactionTime;
+            datapoint.difficulty = target.difficulty;
             datapoint.side = target.GetRoadSide();
             datapoint.targetName = target.waypoint.name + " - " + target.name.Last();
-            datapoint.position = target.transform.position;
+            datapoint.position = target.transform.position.ToString("F3");
 
             targetData.dataList.Add(datapoint);
         }
-}
+    }
+    void SaveGeneralExperimentInfo()
+    {
+        string filePath = string.Join("/", saveFolder, generalTargetInfo);
+        TargetCountInfo targetCountInfo = navigationHelper.targetCountInfo;
+        List<DifficultyCount> targetDifficulty = navigationHelper.targetDifficultyList;
+ 
+        using (StreamWriter file = new StreamWriter(filePath))
+        {
+            file.WriteLine($"Total Targets: {targetCountInfo.totalTargets}, Left: {targetCountInfo.LeftPosition}, Right: {targetCountInfo.rightPosition}");
+
+            string line ="";
+            foreach (DifficultyCount difficltyCount in targetDifficulty)
+            { 
+                line+= $"{difficltyCount.difficulty}: {difficltyCount.count}, ";
+            }
+            file.WriteLine(line);
+        }
+    }
     void SaveThis<T>(string fileName, object data)
     {
         //check if data makes sense
@@ -143,7 +174,7 @@ public class XMLManager : MonoBehaviour
 
         XmlSerializer serializer = new XmlSerializer(typeof(T));
         //overwrites mydata.xml
-        string filePath = string.Join("/", saveFolder(), fileName);
+        string filePath = string.Join("/", saveFolder, fileName);
 //        string name = typeof(T).FullName;
         Debug.Log($"Saving {fileName} data to {filePath}...");
 
@@ -154,14 +185,19 @@ public class XMLManager : MonoBehaviour
     public void StartNewMeasurement()
     {
         Debug.Log("Starting new measurement...");
-        
+        savedData = false;
+        saveFolder = SaveFolder();
+
         vehicleData = new VehicleDataContainer();
         targetDetectionData = new AlarmContainer();
         targetDetectionSummary = new TargetDetectionSummary();
-        gazeData = new GazeContainer();
+        /*gazeData = new GazeContainer();*/
         targetData = new TargetContainer();
-}
-    private string saveFolder()
+
+        myGazeLogger.customLogPath = saveFolder + "/";
+        myGazeLogger.StartLogging();
+    }
+    private string SaveFolder()
     {
         //Save folder will be .../unityproject/Data/subjectName-date/subjectName/navigationName
 
@@ -173,7 +209,7 @@ public class XMLManager : MonoBehaviour
         for (int i = 0; i < (assetsFolderArray.Length - 2); i++) { baseFolderArray[i] = assetsFolderArray[i]; }
 
         string baseFolder = string.Join("/", baseFolderArray);
-        string saveFolder = string.Join("/", baseFolder, dataFolder, subjectName, navigation.name);
+        string saveFolder = string.Join("/", baseFolder, dataFolder, subjectName, navigation.name + DateTime.Now.ToString("_HH-mm-ss"));
         Directory.CreateDirectory(saveFolder);
 
         return saveFolder;
@@ -190,9 +226,7 @@ public class XMLManager : MonoBehaviour
         dataPoint.frame = Time.frameCount;
 
         dataPoint.distanceToOptimalPath = GetDistanceToOptimalPath(car.transform.position);
-        dataPoint.position = car.gameObject.transform.position;
-        dataPoint.throttleInput = Input.GetAxis(gasInput);
-        dataPoint.brakeInput = Input.GetAxis(brakeInput);
+        dataPoint.position = car.gameObject.transform.position.ToString("F3");
         dataPoint.steerInput = Input.GetAxis(steerInput);
         dataPoint.speed = car.GetComponent<Rigidbody>().velocity.magnitude;
 
@@ -254,12 +288,11 @@ public class XMLManager : MonoBehaviour
         // Return this point.
         return Vector3.Distance(segmentStart + t * span, point);
     }
-    private void AddEyeTrackingData()
+/*    private void AddEyeTrackingData()
     {
-
         VarjoPlugin.GazeData varjo_data = VarjoPlugin.GetGaze();
 
-        if (varjo_data.status == Varjo.VarjoPlugin.GazeStatus.VALID)
+        if (varjo_data.status == VarjoPlugin.GazeStatus.VALID)
         {
             //Valid gaze data
             MyGazeData data = new MyGazeData();
@@ -306,11 +339,11 @@ public class XMLManager : MonoBehaviour
             gazeData.dataList.Add(data);
 
         }
-    }
-    private Vector3 ConvertToVector3(double[] varjo_data)
+    }*/
+/*private Vector3 ConvertToVector3(double[] varjo_data)
         {
             return new Vector3((float)varjo_data[0], (float)varjo_data[1], (float)varjo_data[2]);
-        }
+        }*/
     public void AddFalseAlarm()
     {
         TargetAlarm alarm = new TargetAlarm();
@@ -373,6 +406,7 @@ public class XMLManager : MonoBehaviour
 
         print("Total targets: " + targetDetectionSummary.totalTargets + ", total misses:" + targetDetectionSummary.totalMisses + ", total hits: " + targetDetectionSummary.totalHits + ", hit rate: " + targetDetectionSummary.hitRate + "% ....");
     }
+    
 }
 [XmlRoot("VehicleDataCollection")]
 public class VehicleDataContainer
@@ -387,47 +421,10 @@ public class VehicleDataPoint
 
     public float speed;
     public float distanceToOptimalPath;
-    public Vector3 position = new Vector3();
-    public float steerInput;
-
-    //Not using this anymore....
-    public float throttleInput;
-    public float brakeInput;
-    
-    
+    public string position;
+    public float steerInput;   
 }
-[XmlRoot("GazeDataCollection")]
-public class GazeContainer
-{
 
-    [XmlArray("GazeData"), XmlArrayItem("GazePoints")]
-    public List<MyGazeData> dataList = new List<MyGazeData>();
-    
-}
-public class MyGazeData
-{
-    public float time;
-    public int frame;
-
-    public double focusDistance;
-    public double focusStability;
-
-    public double rightPupilSize;
-    public Vector3 forward_right;
-    public Vector3 position_right;
-
-    public double leftPupilSize;
-    public Vector3 forward_left;
-    public Vector3 position_left;
-    public Vector3 forward_combined;
-    public Vector3 position_combined;
-
-    public VarjoPlugin.GazeStatus status;
-    public VarjoPlugin.GazeEyeCalibrationQuality leftCalibrationQuality;
-    public VarjoPlugin.GazeEyeStatus leftStatus;
-    public VarjoPlugin.GazeEyeCalibrationQuality rightCalibrationQuality;
-    public VarjoPlugin.GazeEyeStatus rightStatus;
-}
 
 [XmlRoot("AlarmCollection")]
 public class AlarmContainer
@@ -458,10 +455,11 @@ public class TargetInfo
 {
     public bool detected;
     public float reactionTime;
-    
+
+    public TargetDifficulty difficulty;
     public Side side;
     public string targetName;
-    public Vector3 position;
+    public string position;
 }
 public class TargetDetectionSummary
 {
@@ -484,3 +482,37 @@ public class NavigationSettings
     public float transparency;
     public float NavigationTime;
 }
+
+
+/*[XmlRoot("GazeDataCollection")]
+public class GazeContainer
+{
+
+    [XmlArray("GazeData"), XmlArrayItem("GazePoints")]
+    public List<MyGazeData> dataList = new List<MyGazeData>();
+    
+}
+public class MyGazeData
+{
+    public float time;
+    public int frame;
+
+    public double focusDistance;
+    public double focusStability;
+
+    public double rightPupilSize;
+    public Vector3 forward_right;
+    public Vector3 position_right;
+
+    public double leftPupilSize;
+    public Vector3 forward_left;
+    public Vector3 position_left;
+    public Vector3 forward_combined;
+    public Vector3 position_combined;
+
+    public VarjoPlugin.GazeStatus status;
+    public VarjoPlugin.GazeEyeCalibrationQuality leftCalibrationQuality;
+    public VarjoPlugin.GazeEyeStatus leftStatus;
+    public VarjoPlugin.GazeEyeCalibrationQuality rightCalibrationQuality;
+    public VarjoPlugin.GazeEyeStatus rightStatus;
+}*/

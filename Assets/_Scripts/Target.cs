@@ -67,6 +67,13 @@ public class Target : MonoBehaviour
         detected = false;
     }
 
+    public void ResetTarget()
+    {
+        detected = false;
+        startTimeVisible = defaultVisibilityTime;
+        reactionTime = 0f;
+
+    }
     public bool IsDetected()
     {
         return detected;

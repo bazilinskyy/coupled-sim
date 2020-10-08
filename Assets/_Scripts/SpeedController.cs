@@ -49,7 +49,6 @@ public class SpeedController : MonoBehaviour
     public void StartDriving(bool input)
     {
         startDriving = input;
-        Debug.Log($"Driving ? {input}...");
     }
     void FixedUpdate()
     {

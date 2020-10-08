@@ -39,6 +39,7 @@ public class SplineCreator : MonoBehaviour
 			SetForwardDirectionSplinePoints(pointsNavigationLine);
 
 			DrawGizmoLines(pointsNavigationLine);
+			//GetVerticesVirtualCable(pointsNavigationLine);
 		}
 	}
 	public Vector3 [] GetNavigationLine()
@@ -183,12 +184,6 @@ public class SplineCreator : MonoBehaviour
 			Vector3[] circle = getCircle(roadParameters.pipeSegmentCount, roadParameters.radiusPipe);
 
 			circle = transformCircle(circle, perpendicularToPipe, worldY, directionOfPipe, newPos);
-			
-			
-			
-			//if( i ==2 || i ==1) { Debug.Log($"Points {i}: {points[i].ToString()} "); }
-			
-
 
 			for (int v = 0; v < roadParameters.pipeSegmentCount; v++)
 			{
@@ -196,8 +191,8 @@ public class SplineCreator : MonoBehaviour
 				vertice_cnt += 1;
 
 				//TODO bug in points, we are getting dublicates of points and some werird extra pooints in the beginning of a corner
-				/*Gizmos.DrawSphere(circle[v] + worldY * roadParameters.heightVirtualCable, 0.05f);
-				UnityEditor.Handles.Label(circle[v] + worldY * roadParameters.heightVirtualCable, $"{i}");*/
+				Gizmos.DrawSphere(circle[v] + worldY * roadParameters.heightVirtualCable, 0.05f);
+				UnityEditor.Handles.Label(circle[v] + worldY * roadParameters.heightVirtualCable, $"{i}");
 			}
 			//Save this pos so we can draw the next line segment
 			lastPos = newPos;
@@ -239,18 +234,9 @@ public class SplineCreator : MonoBehaviour
 		//Never adds the next waypoints to the point list
 		//So we add up to the current waypoint
 		Vector3[] points = new Vector3[0];
-		if (waypoint.operation == Operation.StartPoint || waypoint.operation == Operation.Straight || waypoint.operation == Operation.None)
-		{
-			if (waypoint.nextWaypoint != null)
-			{
-				points = new Vector3[] { waypoint.transform.position, waypoint.nextWaypoint.transform.position };
-			}
-			
-		}
-		else if (waypoint.operation == Operation.TurnRightLong || waypoint.operation == Operation.TurnRightShort || waypoint.operation == Operation.TurnLeftLong)
-		{
-			points = GetPointsCorner(waypoint);
-		}
+		
+		if (waypoint.operation.IsTurn()){points = GetPointsCorner(waypoint);}
+        else {if (waypoint.nextWaypoint != null){	points = new Vector3[] { waypoint.transform.position, waypoint.nextWaypoint.transform.position };}	}
 
 		return points;
 	}
@@ -267,6 +253,7 @@ public class SplineCreator : MonoBehaviour
 		//Transpose circle to the current waypoint position and rotation
 		Vector3[] points = TransformVector2ToVector3(quarterCircle);
 		points = TransposePoints(waypoint, points);
+
 		points = AddNextWaypoint(waypoint, points);
 
 		return points;
@@ -311,8 +298,8 @@ public class SplineCreator : MonoBehaviour
 				if (v == (pipeSegmentCount - 1))
 				{
 					triangles[t] = triangles[t + 3] = index;
-					triangles[t + 1] = triangles[t + 5] = i + 1 + pipeSegmentCount;
-					triangles[t + 2] = i + 1;
+					triangles[t + 1] = triangles[t + 5] = i + pipeSegmentCount;
+					triangles[t + 2] = i;
 					triangles[t + 4] = index + pipeSegmentCount;
 				}
 				else
@@ -391,7 +378,7 @@ public class SplineCreator : MonoBehaviour
 	private Vector3[] RemoveLastElementVector3(Vector3[] array)
 	{
 		Vector3[] arrayOut = new Vector3[array.Length - 1];
-		System.Array.Copy(array, 0, arrayOut, 0, arrayOut.Length);
+		Array.Copy(array, 0, arrayOut, 0, arrayOut.Length);
 		return arrayOut;
 	}
 	private Vector3[] TransposePoints(Waypoint waypoint, Vector3[] circle)

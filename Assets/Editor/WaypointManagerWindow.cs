@@ -87,7 +87,10 @@ public class WaypointManagerWindow : EditorWindow
         else { throw new System.Exception("No target or waypoint is selected... Cant add target..."); }
 
         GameObject target = Instantiate(targetPrefab, parentWaypoint.transform.position, Quaternion.identity);
-
+        
+        //Set height to 1;
+        Vector3 targetPosition = target.transform.position; targetPosition.y = 1f;
+        target.transform.position = targetPosition;
         //set name, waypoint and parent
         SetTargetAttributes(target, parentWaypoint);
 

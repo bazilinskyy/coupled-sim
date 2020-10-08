@@ -19,7 +19,7 @@ public class NavigationHelper : MonoBehaviour
     
     public bool _pressMeToRerender = false; private bool pressMeToRerender = false;
 
-    public int NumberOfTargets;
+    public TargetCountInfo targetCountInfo;
     public List<DifficultyCount> targetDifficultyList;
 
     [Range(0.01f, 1f)]
@@ -61,7 +61,7 @@ public class NavigationHelper : MonoBehaviour
     }
     void CheckChanges()
     {
-        if (NumberOfTargets != GetTargetCount()) { NumberOfTargets = GetTargetCount(); targetDifficultyList = GetTargetDifficultyList(); }
+        if (targetCountInfo.totalTargets != GetAllTargets().Count()) { targetCountInfo = GetTargetCountInfo(); targetDifficultyList = GetTargetDifficultyList(); }
         //Dont do this while application is running
         if (Application.isPlaying) { return; }
 
@@ -210,9 +210,18 @@ public class NavigationHelper : MonoBehaviour
         
         return countList;
     }
-    public int GetTargetCount()
+    public TargetCountInfo GetTargetCountInfo()
     {
-        return GetAllTargets().Count();
+        TargetCountInfo info = new TargetCountInfo();
+        List<Target> targets = GetAllTargets();
+        info.totalTargets = targets.Count();
+
+        foreach (Target target in targets)
+        {
+            if(target.GetRoadSide() == Side.Left) { info.AddLeft(); }
+            if(target.GetRoadSide() == Side.Right) { info.AddRight(); }
+        }
+        return info;
     }
     public List<Target> GetAllTargets()
     {
@@ -318,15 +327,15 @@ public class NavigationHelper : MonoBehaviour
     public void SetUp(NavigationType navigationType, float _transparency, Navigator _car)
     {
         splineCreator.MakeNavigation();
+        
+        //Reset all targets
+        foreach (Target target in GetAllTargets()) { target.ResetTarget(); }
 
         UpdateOrderIds(); //Make sure order ids are correct at startup
 
         transparency = _transparency;
         car = _car;
         ChangTransparancyHUDAndConformal();
-        
-        Vector3 HUD_low = car.transform.position + new Vector3(-0.3f,1.026f,1.56f);
-        Vector3 HUD_high = car.transform.position + new Vector3(-0.3f, 1.3f, 1.56f);
 
         if (navigationType == NavigationType.VirtualCable) {
             renderHUD = false;
@@ -342,17 +351,19 @@ public class NavigationHelper : MonoBehaviour
         }
         if(navigationType == NavigationType.HUD_low)
         {
-            car.HUD.transform.position = HUD_low;
-            car.HUD.SetActive(true);
             renderHUD = true;
+            car.HUD.SetActive(true);
+            HUDPlacer HUDPlacer = car.HUD.GetComponent<HUDPlacer>();
+            HUDPlacer.SetAngles(-3f, 0, 2f); HUDPlacer.PlaceHUD();
             RenderNavigationType(NavigationType.VirtualCable, false);
             RenderNavigationType(NavigationType.HighlightedRoad, false);
         }
         if (navigationType == NavigationType.HUD_high)
         {
-            car.HUD.SetActive(true);
             renderHUD = true;
-            car.HUD.transform.position = HUD_high;
+            car.HUD.SetActive(true);
+            HUDPlacer HUDPlacer = car.HUD.GetComponent<HUDPlacer>();
+            HUDPlacer.SetAngles(12f, 0, 2f); HUDPlacer.PlaceHUD();
             RenderNavigationType(NavigationType.VirtualCable, false);
             RenderNavigationType(NavigationType.HighlightedRoad, false);
         }
@@ -374,4 +385,15 @@ public class DifficultyCount
     {
         count++;
     }
+}
+[System.Serializable]
+public class TargetCountInfo
+{
+    public int totalTargets;
+    public int LeftPosition;
+    public int rightPosition;
+
+    public TargetCountInfo() { totalTargets = LeftPosition = rightPosition = 0; }
+    public void AddLeft(){ LeftPosition++; }
+    public void AddRight() { rightPosition++; }
 }

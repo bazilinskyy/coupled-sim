@@ -9,7 +9,7 @@ public class HUDPlacer : MonoBehaviour
     public float distance;
     public Transform headPosition;
 
-    public bool _pressMeToPlace; private bool pressMeToPlace;
+    private bool pressMeToPlace; public bool _pressMeToPlace; 
 
     private Vector3 forwardVector;
     private Vector3 sideVector;
@@ -24,13 +24,16 @@ public class HUDPlacer : MonoBehaviour
             PlaceHUD();
         }
     }
-
+    private void Update()
+    {
+        CheckForChanges();
+    }
     void OnDrawGizmos()
     {
         CheckForChanges();
         DrawLines();
     }
-    void PlaceHUD()
+    public void PlaceHUD()
     {
         float visualAngleVerticalRadians = visualAngleVertical * Mathf.PI / 180;
         float visualAngleHorizontalRadians = visualAngleHorizontal * Mathf.PI / 180;
@@ -39,6 +42,12 @@ public class HUDPlacer : MonoBehaviour
         transform.position = headPosition.position + forwardVector + sideVector;
     }
 
+    public void SetAngles(float vertical, float horizontal, float _distance)
+    {
+        visualAngleVertical = vertical;
+        visualAngleHorizontal = horizontal;
+        distance = _distance;
+    }
     void DrawLines() 
     { 
         if(!(forwardVector == Vector3.zero) && !(sideVector == Vector3.zero))

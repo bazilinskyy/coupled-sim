@@ -23,7 +23,7 @@ public class ExperimentManager : MonoBehaviour
     public KeyCode resetExperiment = KeyCode.F4;
     public KeyCode keyTargetDetected = KeyCode.Space;
     public KeyCode setToLastWaytpoint = KeyCode.Escape;
-    
+        
     public string ParticpantInputAxis = "SteerButtonLeft";
     public string targetDetectionAxis = "SteerButtonRight";
 
@@ -128,7 +128,7 @@ public class ExperimentManager : MonoBehaviour
 
         if (gameState.isWaiting()) 
         {
-            if (Input.GetAxis(ParticpantInputAxis) == 1) {
+            if (Input.GetAxis(ParticpantInputAxis) == 1 && camType == MyCameraType.Leap) {
                 bool success = driverView.GetComponent<CalibrateUsingHands>().SetPositionUsingHands();
                 if (success){ SpawnSteeringWheel(); }
             }
@@ -150,6 +150,7 @@ public class ExperimentManager : MonoBehaviour
 
 
             //Researcher inputs
+            if (Input.GetKeyDown(MyPermission)) { car.navigationFinished = true; } //Finish navigation early
             if (Input.GetKeyDown(setToLastWaytpoint)) { SetCarToLastWaypoint();  }
             if (Input.GetKeyDown(resetHeadPosition))
             {
@@ -158,9 +159,7 @@ public class ExperimentManager : MonoBehaviour
             }
 
             if (Input.GetKeyDown(resetExperiment)) { ResetExperiment(); }
-            
         }
-
 
         //if we finished a navigation we go to the waiting room
         if (NavigationFinished() && gameState.isExperiment())
@@ -223,7 +222,7 @@ public class ExperimentManager : MonoBehaviour
         steeringWheelObject.transform.position = (posLeft + posRight) / 2;
 
     }
-    Transform CameraTransform()
+    public Transform CameraTransform()
     {
         if(camType == MyCameraType.Leap) { return usedCam.Find("VarjoCameraRig").Find("VarjoCamera"); }
         else if(camType == MyCameraType.Varjo) { return usedCam.Find("VarjoCamera"); }
@@ -298,7 +297,7 @@ public class ExperimentManager : MonoBehaviour
         BlackOutScreen.CrossFadeAlpha(1f, animationTime, false);
         yield return new WaitForSeconds(animationTime + 0.75f);
         
-        //Save the data (doing this will screen is dark as this causes some lag)
+        //Save the data (doing this while screen is dark as this causes some lag)
         //KEEP BEFORE SETTING UP NEXT EXPERIMENT
         SaveData();
 
@@ -316,6 +315,9 @@ public class ExperimentManager : MonoBehaviour
         BlackOutScreen.CrossFadeAlpha(0f, animationTime * 4, false);
 
         yield return new WaitForSeconds(1f);
+        
+        //Start new measurement
+        dataManager.StartNewMeasurement();
 
         gameState.SetGameState(GameStates.Experiment);
     }
@@ -697,7 +699,6 @@ public class ExperimentManager : MonoBehaviour
         //Skip if we dont save data
         if (!saveData) { return; }
         dataManager.SetNavigation(activeExperiment.navigation.transform);
-        dataManager.StartNewMeasurement();
     }
     private void SaveData()
     {

@@ -48,7 +48,12 @@ namespace VarjoExample
 
         private void Start()
         {
-            
+            // InitGaze must be called before using or calibrating gaze tracking.
+            if (!VarjoPlugin.InitGaze())
+            {
+                Debug.LogError("Failed to initialize gaze");
+                gameObject.SetActive(false);
+            }
         }
         void Update()
         {

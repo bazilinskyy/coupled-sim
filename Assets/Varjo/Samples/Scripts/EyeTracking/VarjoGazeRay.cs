@@ -84,7 +84,7 @@ namespace VarjoExample
                 // Raycast into world
                 if (Physics.SphereCast(gazeRayOrigin, gazeRayRadius, gazeRayDirection, out gazeRayHit))
                 {
-                    RenderGazeHighlights(gazeRayHit);
+                    
                     // Use layers or tags preferably to identify looked objects in your application.
                     // This is done here via GetComponent for clarity's sake as example.
                     VarjoGazeTarget target = gazeRayHit.collider.gameObject.GetComponent<VarjoGazeTarget>();
@@ -110,13 +110,6 @@ namespace VarjoExample
             }
 
         }
-
-        void RenderGazeHighlights(RaycastHit gazeRayHit)
-        {
-            Vector3 hitPosition = new Vector3(gazeRayHit.point.x, gazeRayHit.point.y, gazeRayHit.point.z);
-            gazeHighlights.transform.position = hitPosition;
-        }
-
     }
 
 
