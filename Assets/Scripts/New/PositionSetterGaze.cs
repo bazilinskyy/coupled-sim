@@ -27,8 +27,8 @@ public class PositionSetterGaze : MonoBehaviour
             }
             if (gameObject.name == "GazeDirection")
             {
-                transform.position = _gazeRayOrigin + _gazeRayDirection * 12.0f;
                 //Debug.LogError($"Gaze direction found {_gazeRayDirection}, transform = {transform.position}");
+                transform.position = _gazeRayOrigin + _gazeRayDirection * 50.0f;
             }
         }
     }
