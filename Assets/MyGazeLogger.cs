@@ -41,7 +41,7 @@ public class MyGazeLogger : MonoBehaviour
         if (!VarjoPlugin.InitGaze())
         {
             Debug.LogError("Failed to initialize gaze");
-            gameObject.SetActive(false);
+            GetComponent<MyGazeLogger>().enabled = false;
         }
     }
 
@@ -115,7 +115,9 @@ public class MyGazeLogger : MonoBehaviour
         // HMD
         logData[3] = hmdPosition.ToString("F3");
         logData[4] = hmdRotation.ToString("F3");
-        logData[5] = cam.localRotation.eulerAngles.ToString("F3");
+
+        Quaternion relative = Quaternion.Inverse(experimentManager.driverView.rotation) * experimentManager.CameraTransform().rotation;
+        logData[5] = relative.eulerAngles.ToString("F3");
 
         // Combined gaze
         bool invalid = data.status == VarjoPlugin.GazeStatus.INVALID;

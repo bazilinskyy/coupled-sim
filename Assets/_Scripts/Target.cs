@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+using System.Linq;
 public class Target : MonoBehaviour
 {
     //Targets for visual search task
@@ -28,6 +28,7 @@ public class Target : MonoBehaviour
     public float startTimeVisible = -1f;
 
 
+    public string GetID(){ return waypoint.name.Last() + "-" + gameObject.name.Last(); }
     // Start is called before the first frame update
     void Start()
     {
@@ -65,8 +66,11 @@ public class Target : MonoBehaviour
     public void SetDetected(float detectionTime)
     {
         detected = true;
+        
         reactionTime = detectionTime - startTimeVisible;
         transform.GetComponent<MeshRenderer>().enabled = false;
+
+        Debug.Log($"startTimeVisible {startTimeVisible}, detectionTime { detectionTime}, reactiontime: {reactionTime}");
     }
 
     public void SetUnDetected()

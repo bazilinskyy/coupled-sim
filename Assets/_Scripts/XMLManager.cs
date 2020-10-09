@@ -9,17 +9,14 @@ using System.Linq;
 
 public class XMLManager : MonoBehaviour
 {
-
     //singleton pattern
     public static XMLManager ins;
 
-    private string carDataFileName = "carData.xml";
-    private string targetDetectionDataFileName = "targetDetectionData.xml";
-    private string targetDetectionDataSummaryFileName = "targetDataSummary.xml";
-    private string navigationSettingsFileName = "navigationSettings.xml";
-    private string generalTargetInfo = "generalTargetInfo.txt";
-    private string navigationLineFileName = "navigationLine.xml";
-    private string targetDataFileName = "targetData.xml";
+    private string vehicleDataFileName = "vehicleData.csv";
+    private string navigationLineFileName = "navigationLine.csv";
+    private string targetDetectionDataFileName = "targetDetectionData.csv";
+    private string generalTargetInfo = "generalTargetInfo.csv";
+    private string generalExperimentInfo = "GeneralExperimentInfo.csv";
     private string dataFolder = "Data";
     //our car
     private GameObject car;
@@ -39,13 +36,11 @@ public class XMLManager : MonoBehaviour
     private string subjectName;
    
     //list of items
-    private VehicleDataContainer vehicleData;
-    private AlarmContainer targetDetectionData;
-    private TargetDetectionSummary targetDetectionSummary;
-    private TargetContainer targetData;
-    /*private GazeContainer gazeData;*/
+    private List<VehicleDataPoint> vehicleData;
+    private List<TargetAlarm> targetDetectionData;
+    
     private string saveFolder;
-    private string steerInput;
+    private string steerInputAxis;
     [HideInInspector]
     public bool savedData;
 
@@ -79,7 +74,7 @@ public class XMLManager : MonoBehaviour
         
         //set car inputs
         List<string> inputs = experimentManager.GetCarControlInput();
-        steerInput = inputs[0];
+        steerInputAxis = inputs[0];
 
         SetNavigation(_navigation);
 
@@ -93,25 +88,15 @@ public class XMLManager : MonoBehaviour
     public void SaveData()
     {
         Debug.Log($"Saving all data to {saveFolder}...");
-        myGazeLogger.StopLogging();
+        if (experimentManager.camType != MyCameraType.Normal) { myGazeLogger.StopLogging(); }
 
-        SaveThis<VehicleDataContainer>(carDataFileName, vehicleData);
-        
-        SaveThis<AlarmContainer>(targetDetectionDataFileName, targetDetectionData);
-
-        SummariseTargetDetectionData();
-        SaveThis<TargetDetectionSummary>(targetDetectionDataSummaryFileName, targetDetectionSummary);
-        /*
-        SaveThis<GazeContainer>(gazeDataFileName, gazeData);*/
-
-        SetTargetInfoData();
-        SaveThis<TargetContainer>(targetDataFileName, targetData);
-
+        SaveVehicleData();
+        SaveTargetDetectionData();
+        SaveTargetInfoData();
         SaveNavigationData();
         SaveGeneralExperimentInfo();
 
         savedData = true;
-
     }
     public void SetNavigation(Transform _navigation)
     {
@@ -120,68 +105,157 @@ public class XMLManager : MonoBehaviour
         navigationLine = navigationHelper.GetNavigationLine();
         indexClosestPoint = 0;
     }
+    private void SaveVehicleData()
+    {
+        Debug.Log("Saving vehicle data...");
+        string[] columns = { "Time", "Frame", "Speed", "DistanceToOptimalPath", "Position", "Rotation", "SteeringInput" };
+        string[] logData = new string[7];
+        string filePath = string.Join("/", saveFolder, vehicleDataFileName);
+
+        using (StreamWriter file = new StreamWriter(filePath))
+        {
+            Log(columns, file);
+
+            foreach (VehicleDataPoint dataPoint in vehicleData)
+            {
+                logData[0] = dataPoint.time.ToString();
+                logData[1] = dataPoint.frame.ToString();
+                logData[2] = dataPoint.speed.ToString();
+                logData[3] = dataPoint.distanceToOptimalPath.ToString();
+                logData[4] = dataPoint.position;
+                logData[5] = dataPoint.rotation;
+                logData[6] = dataPoint.steerInput.ToString();
+
+                Log(logData, file);
+            }
+            file.Close();
+        }
+    }
+    private void SaveTargetDetectionData()
+    {
+        Debug.Log("Saving alarms...");
+        string[] columns = { "Time", "Frame", "AlarmType", "ReactionTime", "TargetID", "TargetDifficulty"};
+        string[] logData = new string[6];
+        string filePath = string.Join("/", saveFolder, targetDetectionDataFileName);
+        
+        using (StreamWriter file = new StreamWriter(filePath))
+        {
+            Log(columns, file);
+            
+            foreach (TargetAlarm alarm in targetDetectionData)
+            {
+                logData[0] = alarm.time.ToString();
+                logData[1] = alarm.frame.ToString();
+                logData[2] = alarm.AlarmType.ToString();
+                logData[3] = alarm.reactionTime.ToString();
+                logData[4] = alarm.targetID;
+                logData[5] = alarm.targetDifficulty.ToString();
+
+                Log(logData, file);
+            }
+            file.Close();
+        }
+    }
     private void SaveNavigationData()
     {
+        Debug.Log("Saving navigation info...");
+        string[] columns = { "NavigationLine" };
+        string[] logData = new string[1];
+        Vector3[] navigationLine = navigationHelper.GetNavigationLine();
+        string filePath = string.Join("/", saveFolder, navigationLineFileName);
 
-        NavigationSettings navigationSettings = new NavigationSettings();
-        NavigationLine navigationLine = new NavigationLine();
-        
-        (navigationLine.navigationLine, navigationSettings.renderVirtualCable, navigationSettings.renderHighlightedRoad, navigationSettings.renderHUD, navigationSettings.transparency) =  navigationHelper.GetNavigationInformation();
-        navigationSettings.NavigationTime = experimentManager.activeExperiment.experimentTime;
-
-        SaveThis<NavigationSettings>(navigationSettingsFileName, navigationSettings);
-
-        SaveThis<NavigationLine>(navigationLineFileName, navigationLine);
-
-    }
-    private void SetTargetInfoData()
-    {
-        List<Target> targets = navigationHelper.GetAllTargets();
-        foreach (Target target in targets)
+        using (StreamWriter file = new StreamWriter(filePath))
         {
-            TargetInfo datapoint = new TargetInfo();
-            datapoint.detected = target.detected;
-            datapoint.reactionTime = target.reactionTime;
-            datapoint.fixationTime = target.fixationTime;
-            datapoint.difficulty = target.difficulty;
-            datapoint.side = target.GetRoadSide();
-            datapoint.targetName = target.waypoint.name + " - " + target.name.Last();
-            datapoint.position = target.transform.position.ToString("F3");
+            Log(columns, file);
+            
+            foreach (Vector3 point in navigationLine)
+            {
+                logData[0] = point.ToString("F3");
+                Log(logData, file);
+            }
+            file.Close();
+        }
+    }
+    private void SaveTargetInfoData()
+    {
+        Debug.Log("Saving target info...");
+        string[] columns = { "ID", "Detected", "ReactionTime", "FixationTime", "Difficulty","Side","Position" };
+        string filePath = string.Join("/", saveFolder, generalTargetInfo);
+        
+        List<Target> targets = navigationHelper.GetAllTargets();
 
-            targetData.dataList.Add(datapoint);
+        using (StreamWriter file = new StreamWriter(filePath))
+        {
+            Log(columns, file);
+            
+            foreach(Target target in targets)
+            {
+                string[] logData = new string[7];
+                logData[0] = target.GetID();
+                logData[1] = target.detected.ToString();
+                logData[2] = target.reactionTime.ToString();
+                logData[3] = target.fixationTime.ToString();
+                logData[4] = target.difficulty.ToString().Last().ToString();
+                logData[5] = target.GetRoadSide().ToString();
+                logData[6] = target.transform.position.ToString("F3");
+                Log(logData, file);
+            }
+            file.Close();
         }
     }
     void SaveGeneralExperimentInfo()
     {
-        string filePath = string.Join("/", saveFolder, generalTargetInfo);
+        Debug.Log("Saving general experiment info...");
+        string[] columns = { "Total Targets", "LeftTarget", "RightTargets", TargetDifficulty.easy_6.ToString(), TargetDifficulty.easy_5.ToString(), TargetDifficulty.medium_4.ToString(),
+                            TargetDifficulty.medium_3.ToString(), TargetDifficulty.hard_2.ToString(), TargetDifficulty.hard_1.ToString(), "RelativePositionDriverView", "RelativeRotationDriverView",
+                              "Navigation", "Condition", "Transparency", "TotalExperimentTime"};
+        string[] logData = new string[15];
+        string filePath = string.Join("/", saveFolder, generalExperimentInfo);
         TargetCountInfo targetCountInfo = navigationHelper.targetCountInfo;
         List<DifficultyCount> targetDifficulty = navigationHelper.targetDifficultyList;
- 
+        
         using (StreamWriter file = new StreamWriter(filePath))
         {
-            file.WriteLine($"Total Targets: {targetCountInfo.totalTargets}, Left: {targetCountInfo.LeftPosition}, Right: {targetCountInfo.rightPosition}");
+            Log(columns, file);
 
-            string line ="";
+            //General target info
+            logData[0] = targetCountInfo.totalTargets.ToString();
+            logData[1] = targetCountInfo.LeftPosition.ToString();
+            logData[2] = targetCountInfo.rightPosition.ToString();
+
+            int index = 3;
             foreach (DifficultyCount difficltyCount in targetDifficulty)
             { 
-                line+= $"{difficltyCount.difficulty}: {difficltyCount.count}, ";
+                logData[index] = difficltyCount.count.ToString();
+                index++;
             }
-            file.WriteLine(line);
+
+            //Info on the driver view
+            Vector3 relativePosition = experimentManager.driverView.position - car.transform.position;
+            Quaternion relativeRotation = Quaternion.Inverse(car.transform.rotation) * experimentManager.driverView.rotation;
+            logData[9] = relativePosition.ToString("F3");
+            logData[10] = relativeRotation.eulerAngles.ToString("F3");
+
+            //Experiment inputs
+            logData[11] = experimentManager.activeExperiment.navigation.name;
+            logData[12] = experimentManager.activeExperiment.navigationType.ToString();
+            logData[13] = experimentManager.activeExperiment.transparency.ToString();
+            logData[14] = experimentManager.activeExperiment.experimentTime.ToString();
+
+            //Log data and close file
+            Log(logData, file);
+            file.Close();
         }
     }
-    void SaveThis<T>(string fileName, object data)
+    void Log(string[] values, StreamWriter file)
     {
-        //check if data makes sense
-        Type dataType = data.GetType();
-        if (!dataType.Equals(typeof(T))) { throw new Exception($"ERROR: data type and given type done match {dataType.FullName} != {typeof(T).FullName}..."); }
-
-        XmlSerializer serializer = new XmlSerializer(typeof(T));
-        //overwrites mydata.xml
-        string filePath = string.Join("/", saveFolder, fileName);
-
-        FileStream stream = new FileStream(filePath, FileMode.Create);
-        serializer.Serialize(stream, data);
-        stream.Close();
+        string line = "";
+        for (int i = 0; i < values.Length; ++i)
+        {
+            values[i] = values[i].Replace("\r", "").Replace("\n", ""); // Remove new lines so they don't break csv
+            line += values[i] + (i == (values.Length - 1) ? "" : ";"); // Do not add semicolon to last data string
+        }
+        file.WriteLine(line);
     }
     public void StartNewMeasurement()
     {
@@ -190,14 +264,14 @@ public class XMLManager : MonoBehaviour
         savedData = false;
         saveFolder = SaveFolder();
 
-        vehicleData = new VehicleDataContainer();
-        targetDetectionData = new AlarmContainer();
-        targetDetectionSummary = new TargetDetectionSummary();
-        /*gazeData = new GazeContainer();*/
-        targetData = new TargetContainer();
+        vehicleData = new List<VehicleDataPoint>();
+        targetDetectionData = new List<TargetAlarm>();
 
-        myGazeLogger.customLogPath = saveFolder + "/";
-        myGazeLogger.StartLogging();
+        if (experimentManager.camType != MyCameraType.Normal)
+        {
+            myGazeLogger.customLogPath = saveFolder + "/";
+            myGazeLogger.StartLogging();
+        }
     }
     private string SaveFolder()
     {
@@ -230,10 +304,11 @@ public class XMLManager : MonoBehaviour
 
         dataPoint.distanceToOptimalPath = GetDistanceToOptimalPath(car.transform.position);
         dataPoint.position = car.gameObject.transform.position.ToString("F3");
-        dataPoint.steerInput = Input.GetAxis(steerInput);
+        dataPoint.rotation = car.gameObject.transform.rotation.eulerAngles.ToString("F3");
+        dataPoint.steerInput = Input.GetAxis(steerInputAxis);
         dataPoint.speed = car.GetComponent<Rigidbody>().velocity.magnitude;
 
-        vehicleData.dataList.Add(dataPoint);
+        vehicleData.Add(dataPoint);
     }
     private float GetDistanceToOptimalPath(Vector3 car_position)
     {
@@ -291,69 +366,13 @@ public class XMLManager : MonoBehaviour
         // Return this point.
         return Vector3.Distance(segmentStart + t * span, point);
     }
-/*    private void AddEyeTrackingData()
-    {
-        VarjoPlugin.GazeData varjo_data = VarjoPlugin.GetGaze();
-
-        if (varjo_data.status == VarjoPlugin.GazeStatus.VALID)
-        {
-            //Valid gaze data
-            MyGazeData data = new MyGazeData();
-            data.time = experimentManager.activeExperiment.experimentTime;
-            data.frame = Time.frameCount;
-
-            data.focusDistance = varjo_data.focusDistance;
-            data.focusStability = varjo_data.focusStability;
-
-            data.rightPupilSize = varjo_data.rightPupilSize;
-            data.forward_right = ConvertToVector3(varjo_data.right.forward);
-            data.position_right = ConvertToVector3(varjo_data.right.position);
-
-            data.leftPupilSize = varjo_data.leftPupilSize;
-            data.forward_left = ConvertToVector3(varjo_data.left.forward);
-            data.position_left = ConvertToVector3(varjo_data.left.position);
-            data.forward_combined = ConvertToVector3(varjo_data.gaze.forward);
-            data.position_combined = ConvertToVector3(varjo_data.gaze.position);
-
-            data.status = varjo_data.status;
-            data.leftCalibrationQuality = VarjoPlugin.GetGazeCalibrationQuality().left;
-            data.leftStatus = varjo_data.leftStatus;
-
-            data.rightCalibrationQuality = VarjoPlugin.GetGazeCalibrationQuality().right;
-            data.rightStatus = varjo_data.rightStatus;
-
-            gazeData.dataList.Add(data);
-        }
-        else
-        {
-            //Invalid gaze data
-            MyGazeData data = new MyGazeData();
-            
-            data.time = experimentManager.activeExperiment.experimentTime;
-            data.frame = Time.frameCount;
-
-            data.status = varjo_data.status;
-            data.leftCalibrationQuality = VarjoPlugin.GetGazeCalibrationQuality().left;
-            data.leftStatus = varjo_data.leftStatus;
-
-            data.rightCalibrationQuality = VarjoPlugin.GetGazeCalibrationQuality().right;
-            data.rightStatus = varjo_data.rightStatus;
-
-            gazeData.dataList.Add(data);
-
-        }
-    }*/
-/*private Vector3 ConvertToVector3(double[] varjo_data)
-        {
-            return new Vector3((float)varjo_data[0], (float)varjo_data[1], (float)varjo_data[2]);
-        }*/
     public void AddFalseAlarm()
     {
         TargetAlarm alarm = new TargetAlarm();
         alarm.time = experimentManager.activeExperiment.experimentTime;
         alarm.frame = Time.frameCount;
         alarm.AlarmType = false;
-        targetDetectionData.dataList.Add(alarm);
+        targetDetectionData.Add(alarm);
         Debug.Log("Added false alarm...");
     }
     public void AddTrueAlarm(Target target)
@@ -363,59 +382,31 @@ public class XMLManager : MonoBehaviour
 
         alarm.time = experimentManager.activeExperiment.experimentTime;
         alarm.frame = Time.frameCount;
-        alarm.waypointID = target.waypoint.orderId;
         alarm.AlarmType = true;
-        alarm.targetID = target.ID;
+        alarm.targetID = target.GetID();
         alarm.reactionTime = alarm.time - target.startTimeVisible;
 
         //The difficulty names always end with a number ranging from 1-6
-        int difficulty = int.Parse(target.GetTargetDifficulty().ToString().Last().ToString());
-
-        alarm.targetDifficulty = difficulty;
-        targetDetectionData.dataList.Add(alarm);
+        alarm.targetDifficulty = int.Parse(target.GetTargetDifficulty().ToString().Last().ToString());
+        targetDetectionData.Add(alarm);
 
         Debug.Log($"Added true alarm for {target.name}, reaction time: {Math.Round(alarm.reactionTime, 2)}s ...");
     }
-    private void SummariseTargetDetectionData()
+/*
+    void SaveThis<T>(string fileName, object data)
     {
-        targetDetectionSummary = new TargetDetectionSummary();
-        if (targetDetectionData == null)
-        {
-            Debug.Log("ERROR: Target detection datata was corrupted... Re-started measurement...");
-            StartNewMeasurement();
-        }
-        //Get total targets
-        foreach (Waypoint waypoint in navigationHelper.GetOrderedWaypointList())
-        {
-            targetDetectionSummary.totalTargets += waypoint.GetTargets().Count;
-        }
+        //check if data makes sense
+        Type dataType = data.GetType();
+        if (!dataType.Equals(typeof(T))) { throw new Exception($"ERROR: data type and given type done match {dataType.FullName} != {typeof(T).FullName}..."); }
 
-        //TotalMisses
-        targetDetectionSummary.totalMisses = targetDetectionData.dataList.Count(x => x.AlarmType == false);
+        XmlSerializer serializer = new XmlSerializer(typeof(T));
+        //overwrites mydata.xml
+        string filePath = string.Join("/", saveFolder, fileName);
 
-        //TotalHits
-        targetDetectionSummary.totalHits = targetDetectionData.dataList.Count(x => x.AlarmType == true);
-
-        //missrate & hitRate
-        if ((targetDetectionSummary.totalHits + targetDetectionSummary.totalMisses) > 0)
-        {
-            targetDetectionSummary.missRate = 100 * (float)targetDetectionSummary.totalMisses / (float)(targetDetectionSummary.totalHits + targetDetectionSummary.totalMisses);
-            targetDetectionSummary.hitRate = 100 * (float)targetDetectionSummary.totalHits / (float)(targetDetectionSummary.totalHits + targetDetectionSummary.totalMisses);
-        }
-        else { targetDetectionSummary.missRate = targetDetectionSummary.hitRate = 0f; }
-
-        //detectionRate
-        targetDetectionSummary.detectionRate = 100 * (float)targetDetectionSummary.totalHits / (float)targetDetectionSummary.totalTargets;
-
-        print("Total targets: " + targetDetectionSummary.totalTargets + ", total misses:" + targetDetectionSummary.totalMisses + ", total hits: " + targetDetectionSummary.totalHits + ", hit rate: " + targetDetectionSummary.hitRate + "% ....");
-    }
-    
-}
-[XmlRoot("VehicleDataCollection")]
-public class VehicleDataContainer
-{
-    [XmlArray("VehicleData"), XmlArrayItem("DataPoints")]
-    public List<VehicleDataPoint> dataList = new List<VehicleDataPoint>();
+        FileStream stream = new FileStream(filePath, FileMode.Create);
+        serializer.Serialize(stream, data);
+        stream.Close();
+    }*/
 }
 public class VehicleDataPoint
 {
@@ -425,16 +416,10 @@ public class VehicleDataPoint
     public float speed;
     public float distanceToOptimalPath;
     public string position;
+    public string rotation;
     public float steerInput;   
 }
 
-
-[XmlRoot("AlarmCollection")]
-public class AlarmContainer
-{
-    [XmlArray("AlarmData"), XmlArrayItem("Alarms")]
-    public List<TargetAlarm> dataList = new List<TargetAlarm>();
-}
 public class TargetAlarm
 {
     public float time;
@@ -442,18 +427,10 @@ public class TargetAlarm
 
     public bool AlarmType;
     public float reactionTime;
-    public int waypointID;
-    public int targetID;
+    public string targetID;
     public int targetDifficulty;
 }
-
-[XmlRoot("TargetCollection")]
-public class TargetContainer
-{
-    [XmlArray("TargetData"), XmlArrayItem("Targets")]
-    public List<TargetInfo> dataList = new List<TargetInfo>();
-}
-
+/*
 public class TargetInfo
 {
     public bool detected;
@@ -473,16 +450,8 @@ public class TargetDetectionSummary
     public float missRate;
     public float hitRate;
     public float detectionRate;
-}
+}*/
 public class NavigationLine
 {
     public Vector3[] navigationLine;
-}
-public class NavigationSettings
-{
-    public bool renderVirtualCable;
-    public bool renderHighlightedRoad;
-    public bool renderHUD;
-    public float transparency;
-    public float NavigationTime;
 }

@@ -33,7 +33,7 @@ public class myVarjoGazeRay : MonoBehaviour
         if (!VarjoPlugin.InitGaze())
         {
             Debug.LogError("Failed to initialize gaze");
-            gameObject.SetActive(false);
+            GetComponent<myVarjoGazeRay>().enabled = false;
         }
     }
 

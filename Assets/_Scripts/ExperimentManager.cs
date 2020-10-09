@@ -21,9 +21,13 @@ public class ExperimentManager : MonoBehaviour
     public KeyCode resetHeadPosition = KeyCode.F2;
     public KeyCode calibrateGaze = KeyCode.F3;
     public KeyCode resetExperiment = KeyCode.F4;
+    public KeyCode resetVarjoRotations = KeyCode.F5;
     public KeyCode keyTargetDetected = KeyCode.Space;
     public KeyCode setToLastWaytpoint = KeyCode.Escape;
-        
+    public KeyCode inputNameKey = KeyCode.F6;
+
+    public KeyCode saveTheData = KeyCode.F7;
+    
     public string ParticpantInputAxis = "SteerButtonLeft";
     public string targetDetectionAxis = "SteerButtonRight";
 
@@ -45,6 +49,7 @@ public class ExperimentManager : MonoBehaviour
     private GameObject steeringWheelObject;
     //UI objects
     public Text UIText;
+    public Text guiName;
     public UnityEngine.UI.Image BlackOutScreen;
     //Scriptable gameState object
     public GameState gameState;
@@ -61,7 +66,8 @@ public class ExperimentManager : MonoBehaviour
     private Transform varjoRig;
     private Transform leapRig;
     private Transform normalCam;
-    private Transform driverView;
+    [HideInInspector]
+    public Transform driverView;
     private Transform usedCam;
     private Transform originalParentCamera;
 
@@ -80,6 +86,10 @@ public class ExperimentManager : MonoBehaviour
     private float lastUserInputTime = 0f ; 
     public float thresholdUserInput = 0.15f; //The minimum time between user inputs (when within this time only the first one is used)
     private bool endSimulation = false;
+
+    //booleans used by UserInputName()
+    private bool inputName = false;
+    private bool firstFrameProcessingInput = true;
 
     void Awake()
     {
@@ -123,7 +133,12 @@ public class ExperimentManager : MonoBehaviour
     }
     void Update()
     {
-        activeExperiment.experimentTime += Time.deltaTime;
+        //Add to the timer of the exprimerent
+        if (gameState.isExperiment()) { activeExperiment.experimentTime += Time.deltaTime; }
+
+
+        //testing gaze data
+        if (Input.GetKeyDown(saveTheData)) { SaveData(); dataManager.StartNewMeasurement(); }
 
         if (gameState.isWaiting()) 
         {
@@ -132,6 +147,10 @@ public class ExperimentManager : MonoBehaviour
                 if (success){ SpawnSteeringWheel();}
             }
             if (Input.GetKeyDown(MyPermission)) { gameState.SetGameState(GameStates.TransitionToCar); }
+
+            //Input of subject Name
+            if (Input.GetKeyDown(inputNameKey)) { inputName = true; }
+            InputPlayerName();
         }
 
         //During experiment check for target deteciton key to be pressed
@@ -161,9 +180,10 @@ public class ExperimentManager : MonoBehaviour
                 if (camType == MyCameraType.Leap) { driverView.GetComponent<CalibrateUsingHands>().SetPositionUsingHands(); }
                 SetCameraPosition(driverView.position, driverView.rotation);
             }
-
             if (Input.GetKeyDown(resetExperiment)) { ResetExperiment(); }
         }
+
+        if (Input.GetKeyDown(resetVarjoRotations)) { Varjo.VarjoPlugin.ResetPose(true, Varjo.VarjoPlugin.ResetRotation.ALL); }
 
         //if we finished a navigation we go to the waiting room
         if (NavigationFinished() && gameState.isExperiment())
@@ -461,19 +481,13 @@ public class ExperimentManager : MonoBehaviour
     }
     void SetCameraPosition(Vector3 goalPos, Quaternion goalRot)
     {
+        usedCam.position = goalPos;
+        usedCam.rotation = goalRot;
         //Set camera position with correction from Rig to actual varjo cam.
         if (camType == MyCameraType.Varjo || camType == MyCameraType.Leap)
         {
-                       
-            Vector3 correctedGoalPos = usedCam.position - CameraTransform().position;
-            usedCam.position = goalPos + correctedGoalPos;
-
-            usedCam.rotation = goalRot;
-        }
-        else
-        {
-            CameraTransform().position = goalPos;
-            CameraTransform().rotation = goalRot;
+            //Reset Varjo angles
+            Varjo.VarjoPlugin.ResetPose(true, Varjo.VarjoPlugin.ResetRotation.ALL);
         }
     }
     void GoToWaitingRoom()
@@ -715,6 +729,43 @@ public class ExperimentManager : MonoBehaviour
         rightMirror.enabled = true; rightMirror.cullingMask = -1;
 
         leftMirror.enabled = true; leftMirror.cullingMask = -1;
+    }
+    void InputPlayerName()
+    {
+        if (inputName == true)
+        {
+            guiName.enabled = true;
+            //ignores the first frame during which playerNameEditable is true
+            if (firstFrameProcessingInput)
+            {
+                firstFrameProcessingInput = false;
+                return;
+            }
+            foreach (char c in Input.inputString)
+            {
+                if (c == "\b"[0])
+                {
+                    if (guiName.text.Length != 0)
+                    {
+                        guiName.text = guiName.text.Substring(0, guiName.text.Length - 1);
+                    }
+                }
+                else
+                {
+                    if (c == "\n"[0] || c == "\r"[0])
+                    {
+                        Debug.Log("User entered his name: " + guiName.text);
+                        subjectName = guiName.text;
+                        inputName = false;
+                        guiName.enabled = false;
+                    }
+                    else
+                    {
+                        guiName.text += c;
+                    }
+                }
+            }
+        }
     }
 }
 
