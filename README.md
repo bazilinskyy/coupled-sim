@@ -1438,6 +1438,50 @@ Furthermore, the position of the HMD needs to be shared over the network. This i
 To network the position of the HMD, one can simply drag the transform of the VarjoCameraRig into the SyncTransform list of the 
 PlayerAvatar.
 
+Besides the HMD position, the eye-gaze visualization needs to be networked too. Since the existing networking method only networks 
+transforms, new objects need to be created. This is done by creating two invisible objects which take the position of the 
+"GazeOrigin" and the "GazeDirection". Next a new script is created to draw a line between the two positions. 
+
+The position setting of the two invisible objects is done as follows: 
+```
+        // Check whether eye-tracking is established first
+        if (SyncGaze.GetComponent<VarjoGazeRay_CS>().getGazeStatus() != VarjoPlugin.GazeStatus.INVALID)
+        {
+            // Get gazeRayOrigin and Direction
+            _gazeRayOrigin = SyncGaze.GetComponent<VarjoGazeRay_CS>().gazeRayOrigin;
+            _gazeRayDirection = SyncGaze.GetComponent<VarjoGazeRay_CS>().gazeRayDirection;
+
+            // Apply the right poses according to the gameobject name
+            if (gameObject.name == "GazeOrigin")
+            {
+                transform.position = _gazeRayOrigin;
+                //Debug.LogError($"Gaze Origin found {_gazeRayOrigin}, transform from {transform.name} = {transform.position}");
+            }
+            if (gameObject.name == "GazeDirection")
+            {
+                transform.position = _gazeRayOrigin + _gazeRayDirection * 50.0f;
+                //Debug.LogError($"Gaze direction found {_gazeRayDirection}, transform from {transform.name} = {transform.position}");
+            }
+        }
+```
+This script takes the HMD data from the gaze object (to which the "varjoGazeRay_CS" script is attached) and uses it to find the
+position of the "GazeOrigin" and "GazeDirection".
+
+Next, the script "SyncedGazeLaser" is made to draw a line between the two previously mentioned objects, which is done 
+in the same way as in the "varjoGazeRay_CS" script.
+```
+        gazeRayOrigin = gazeRayOrigin_t.position;
+        gazeRayDirection = gazeRayDirection_t.position;
+
+        //GameObject go_Gaze = gameObject.transform.Find("Gaze").gameObject;
+
+
+        if (PersistentManager.Instance._visualizeGaze == true)
+        {
+            SyncLineDrawer_.DrawLineInGameView(go_Gaze, gazeRayOrigin, gazeRayDirection, Color.cyan, 0.07f, false);
+        }
+```
+
 # Vive controller
 ## Trigger input
 Rather than copy pasting the guide I followed to set up the vive controller, I put some links down referring to the guides I follwed. 
