@@ -17,23 +17,20 @@ public class CalibrateUsingHands : MonoBehaviour
 
     //Wrist positions of the steering wheel:
     public Transform steeringWheel;
-    private Transform leftWristSteeringWheel;
-    private Transform rightWristSteeringWheel;
+    private Transform centreWrists;
 
     private Transform VarjoCamara; //The varjo camera within the Leap rig
-    private Vector3 handsToCam = new Vector3();
-    private Vector3 handToHand = new Vector3();
+    private Vector3 handsToCam;
+    private Vector3 handToHand;
     private Vector3 leftWristPos;
     private Vector3 rightWristPos;
     private Vector3 steeringWheelToCam;
     public bool SetPositionUsingHands()
     {
         if(VarjoCamara == null) { VarjoCamara = LeapRig.Find("VarjoCameraRig").Find("VarjoCamera"); }
-        if(leftWristSteeringWheel == null) { leftWristSteeringWheel = steeringWheel.transform.Find("LeftWristPosition"); }
-        if (rightWristSteeringWheel == null) { rightWristSteeringWheel = steeringWheel.transform.Find("RightWristPosition"); }
-
+        if(centreWrists == null) { centreWrists = steeringWheel.transform.Find("CentreWrists"); }
         //Some checks
-        if (leftWristSteeringWheel == null || rightWristSteeringWheel == null) { Debug.Log("could not find predefined wrist position on steering wheel..."); return false; }
+        if (centreWrists == null) { Debug.Log("could not find predefined wrist position on steering wheel..."); return false; }
         if(VarjoCamara == null) { Debug.Log("could not find varjo camera..."); return false; }
 
         if (leftHand.gameObject.activeSelf && rightHand.gameObject.activeSelf)
@@ -41,9 +38,8 @@ public class CalibrateUsingHands : MonoBehaviour
             leftWristPos = leftHand.palm.position;
             rightWristPos = rightHand.palm.position;
 
-            Vector3 posLeft = leftWristPos + (steeringWheel.position - leftWristSteeringWheel.position);
-            Vector3 posRight = rightWristPos + (steeringWheel.position - rightWristSteeringWheel.position);
-            steeringWheelToCam = VarjoCamara.position - (posLeft + posRight) / 2;
+            Vector3 posCentre = (rightWristPos + leftWristPos) / 2 + (steeringWheel.position - centreWrists.position);
+            steeringWheelToCam = VarjoCamara.position - posCentre;
 
             //Set some other handy vectors
             handsToCam = VarjoCamara.position - (leftWristPos + rightWristPos) / 2;          
@@ -51,7 +47,7 @@ public class CalibrateUsingHands : MonoBehaviour
 
             //Set head position accordingly
             transform.position = steeringWheel.transform.position + steeringWheelToCam;
-            Debug.Log($"Succesfully calibrated headposition with hands on steering wheel handsToCam: {handsToCam}...");
+            Debug.Log($"Succesfully calibrated headposition with hands on steering wheel, steeringWheelToCam: {steeringWheelToCam}...");
             return true;
         }
         else { Debug.Log("Could not set hand position..."); return false; }
@@ -61,8 +57,8 @@ public class CalibrateUsingHands : MonoBehaviour
     public void SetRightHand() { if (rightHand.gameObject.activeSelf) { rightWristPos = rightHand.palm.position; } }
     public Vector3 GetHandsToCam() { return handsToCam; }
     public Vector3 GetSteeringWheelToCam(){return steeringWheelToCam; } 
-    public Vector3 GetLeftHandPos() { return leftWristPos; }
-    public Vector3 GetRightHandPos() { return rightWristPos; }
+    public Vector3 GetLeftHandPos() { return leftHand.palm.position; }
+    public Vector3 GetRightHandPos() { return rightHand.palm.position; }
     public Vector3 GetRightToLeftHand() { return handToHand; }
 
 }

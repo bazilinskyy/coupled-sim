@@ -181,7 +181,7 @@ public class MyGazeLogger : MonoBehaviour
         writer = new StreamWriter(path);
 
         Log(ColumnNames);
-        Debug.Log("Log file started at: " + path);
+        //Debug.Log("Log file started at: " + path);
     }
 
     public void StopLogging()
@@ -196,7 +196,7 @@ public class MyGazeLogger : MonoBehaviour
             writer = null;
         }
         logging = false;
-        Debug.Log("Logging ended");
+        //Debug.Log("Logging ended");
     }
 
     void OnApplicationQuit()

@@ -19,17 +19,19 @@ public class ExperimentManager : MonoBehaviour
     [Header("Inputs")]
     public KeyCode MyPermission = KeyCode.F1;
     public KeyCode resetHeadPosition = KeyCode.F2;
-    public KeyCode calibrateGaze = KeyCode.F3;
-    public KeyCode resetExperiment = KeyCode.F4;
-    public KeyCode resetVarjoRotations = KeyCode.F5;
+    public KeyCode spawnSteeringWheel = KeyCode.F3; 
+    public KeyCode calibrateGaze = KeyCode.F4;
+    public KeyCode resetExperiment = KeyCode.Escape;
+    
     public KeyCode keyTargetDetected = KeyCode.Space;
-    public KeyCode setToLastWaytpoint = KeyCode.Escape;
-    public KeyCode inputNameKey = KeyCode.F6;
+    
+    public KeyCode setToLastWaytpoint = KeyCode.R;
+    public KeyCode inputNameKey = KeyCode.Y;
 
     public KeyCode saveTheData = KeyCode.F7;
     
-    public string ParticpantInputAxis = "SteerButtonLeft";
-    public string targetDetectionAxis = "SteerButtonRight";
+    public string ParticpantInputAxisLeft = "SteerButtonLeft";
+    public string ParticpantInputAxisRight = "SteerButtonRight";
 
     [Header("Car Controls")]
     public string GasWithKeyboard = "GasKeyBoard";
@@ -50,7 +52,7 @@ public class ExperimentManager : MonoBehaviour
     //UI objects
     public Text UIText;
     public Text guiName;
-    public UnityEngine.UI.Image BlackOutScreen;
+    public UnityEngine.UI.Image blackOutScreen;
     //Scriptable gameState object
     public GameState gameState;
     //Waiting room transform
@@ -82,7 +84,7 @@ public class ExperimentManager : MonoBehaviour
     private XMLManager dataManager;
     //Maximum raycasts used in determining visbility:  We use Physics.RayCast to check if we can see the target. We cast this to a random positin on the targets edge to see if it is partly visible.
     private int maxNumberOfRandomRayHits = 40;
-    private float animationTime = 2f; //time for lighting aniimation in seconds
+    private float animationTime = 3f; //time for lighting aniimation in seconds
     private float lastUserInputTime = 0f ; 
     public float thresholdUserInput = 0.15f; //The minimum time between user inputs (when within this time only the first one is used)
     private bool endSimulation = false;
@@ -93,8 +95,8 @@ public class ExperimentManager : MonoBehaviour
 
     void Awake()
     {
-        BlackOutScreen.color = new Color(0, 0, 0, 1f);
-        BlackOutScreen.CrossFadeAlpha(0f, 0f, true);
+        blackOutScreen.color = new Color(0, 0, 0, 1f);
+        blackOutScreen.CrossFadeAlpha(0f, 0f, true);
         //Set gamestate to waiting
         gameState.SetGameState(GameStates.Waiting);
         
@@ -142,14 +144,28 @@ public class ExperimentManager : MonoBehaviour
 
         if (gameState.isWaiting()) 
         {
-            if (Input.GetAxis(ParticpantInputAxis) == 1 && camType == MyCameraType.Leap) {
+            //During actual experiment:
+            if (Input.GetKeyDown(resetHeadPosition) && camType == MyCameraType.Leap) { Varjo.VarjoPlugin.ResetPose(true, Varjo.VarjoPlugin.ResetRotation.ALL); }
+            if (Input.GetKeyDown(spawnSteeringWheel)&& camType == MyCameraType.Leap)
+            {
+                bool success = driverView.GetComponent<CalibrateUsingHands>().SetPositionUsingHands();
+                if (success) { SpawnSteeringWheel(); }
+            }
+
+            //When I am doing some testing
+            if (Input.GetAxis(ParticpantInputAxisRight) == 1 && camType == MyCameraType.Leap) { Varjo.VarjoPlugin.ResetPose(true, Varjo.VarjoPlugin.ResetRotation.ALL); }
+            if (Input.GetAxis(ParticpantInputAxisLeft) == 1 && camType == MyCameraType.Leap)
+            {
                 bool success = driverView.GetComponent<CalibrateUsingHands>().SetPositionUsingHands();
                 if (success){ SpawnSteeringWheel();}
             }
+
+            //////// always /////////////
+            
             if (Input.GetKeyDown(MyPermission)) { gameState.SetGameState(GameStates.TransitionToCar); }
 
             //Input of subject Name
-            if (Input.GetKeyDown(inputNameKey)) { inputName = true; }
+            if (Input.GetKeyDown(inputNameKey)) { inputName = true; Debug.Log("Pressed inputKeyName..."); }
             InputPlayerName();
         }
 
@@ -162,15 +178,12 @@ public class ExperimentManager : MonoBehaviour
             //Destory the steeringwheel we may generate while calibrating hands on steeringwheel while in the waiting room
             if(steeringWheelObject != null) { Destroy(steeringWheelObject); }
 
-            //User input
-            if (Input.GetKeyDown(keyTargetDetected) || Input.GetAxis(targetDetectionAxis) ==1 ) { ProcessUserInputTargetDetection(); }
-            if (Input.GetAxis(ParticpantInputAxis) == 1 && automateSpeed) { car.GetComponent<SpeedController>().StartDriving(true); }
-            if (Input.GetAxis(ParticpantInputAxis) == 1 && camType == MyCameraType.Leap)
-            {
-                driverView.GetComponent<CalibrateUsingHands>().SetPositionUsingHands(); 
-                SetCameraPosition(driverView.position, driverView.rotation);
-            }
+            //User inputs
+            //Target detection when we already started driving
+            if (car.GetComponent<SpeedController>().IsDriving() && (Input.GetKeyDown(keyTargetDetected) || Input.GetAxis(ParticpantInputAxisLeft) == 1 || Input.GetAxis(ParticpantInputAxisRight) == 1)) { ProcessUserInputTargetDetection(); }
 
+            //First input will be the start driving command (so if not already driving we will start driving)
+            else if (!car.GetComponent<SpeedController>().IsDriving() && (Input.GetAxis(ParticpantInputAxisLeft) == 1 || Input.GetAxis(ParticpantInputAxisRight) == 1) && automateSpeed) { car.GetComponent<SpeedController>().StartDriving(true); }
 
             //Researcher inputs
             if (Input.GetKeyDown(MyPermission)) { car.navigationFinished = true; } //Finish navigation early
@@ -182,8 +195,6 @@ public class ExperimentManager : MonoBehaviour
             }
             if (Input.GetKeyDown(resetExperiment)) { ResetExperiment(); }
         }
-
-        if (Input.GetKeyDown(resetVarjoRotations)) { Varjo.VarjoPlugin.ResetPose(true, Varjo.VarjoPlugin.ResetRotation.ALL); }
 
         //if we finished a navigation we go to the waiting room
         if (NavigationFinished() && gameState.isExperiment())
@@ -235,18 +246,11 @@ public class ExperimentManager : MonoBehaviour
         Vector3 handVector = driverView.GetComponent<CalibrateUsingHands>().GetRightToLeftHand();//steeringWheelObject.transform.Find("LeftHandPosition").transform.position - steeringWheelObject.transform.Find("RightHandPosition").transform.position;
         Quaternion desiredRot = Quaternion.LookRotation(Vector3.Cross(handVector, Vector3.up), Vector3.up);
 
-        steeringWheelObject.transform.rotation = desiredRot;
-
-        //Set position of steeringWheel based on average of left and right hand posistion w.r.t. the given location in steeringwheel prefab
-        Vector3 leftHand = driverView.GetComponent<CalibrateUsingHands>().GetLeftHandPos();
-        Vector3 rightHand = driverView.GetComponent<CalibrateUsingHands>().GetRightHandPos();
-        Vector3 posLeft = leftHand + (steeringWheelObject.transform.position - steeringWheelObject.transform.Find("LeftWristPosition").position);
-        Vector3 posRight = rightHand + (steeringWheelObject.transform.position - steeringWheelObject.transform.Find("RightWristPosition").position);
-        Vector3 steeringWheelToCam = CameraTransform().position - (posLeft + posRight) / 2;
-
-        Debug.Log(steeringWheelToCam);
-        Debug.Log(driverView.GetComponent<CalibrateUsingHands>().GetSteeringWheelToCam());
+        //steeringWheelObject.transform.rotation = desiredRot;
+        
         steeringWheelObject.transform.position = CameraTransform().position - driverView.GetComponent<CalibrateUsingHands>().GetSteeringWheelToCam();
+
+        Debug.Log($"Spawned steering wheel with steeringWheelToCam {driverView.GetComponent<CalibrateUsingHands>().GetSteeringWheelToCam()}...");
 
     }
     public Transform CameraTransform()
@@ -270,13 +274,11 @@ public class ExperimentManager : MonoBehaviour
         {
             carController.steerAxis = SteerWithKeyboard;
             carController.throttleAndBrakeAxis = GasWithKeyboard;
-            car.gameObject.GetComponent<ControlBrakeForce>().brakeInput = BrakeWithKeyboard;
         }
         else
         {
             carController.steerAxis = Steer;
             carController.throttleAndBrakeAxis = Gas;
-            car.gameObject.GetComponent<ControlBrakeForce>().brakeInput = Brake;
         }
     }
     void SetCamera()
@@ -293,7 +295,13 @@ public class ExperimentManager : MonoBehaviour
         //Destroy unneeded cameras
         if (camType != MyCameraType.Varjo) { Destroy(varjoRig.gameObject); };
         if (camType != MyCameraType.Leap) { Destroy(leapRig.gameObject); };
-        if (camType != MyCameraType.Normal) { Destroy(normalCam.gameObject); }
+        if (camType != MyCameraType.Normal) { 
+            Destroy(normalCam.gameObject);
+            blackOutScreen = CameraTransform().Find("Canvas").Find("BlackOutScreen").GetComponent<UnityEngine.UI.Image>();
+            blackOutScreen.color = new Color(0, 0, 0, 1f);
+            blackOutScreen.CrossFadeAlpha(0f, 0f, true);
+        }
+
 
         RearMirrorsReflection[] reflectionScript = car.GetComponentsInChildren<RearMirrorsReflection>(true);
         if (reflectionScript != null && usedCam != null) { reflectionScript[0].head = CameraTransform(); }
@@ -321,8 +329,8 @@ public class ExperimentManager : MonoBehaviour
     IEnumerator GoToWaitingRoomCoroutine(bool endSimulation)
     {
         gameState.SetGameState(GameStates.Waiting);
-        BlackOutScreen.CrossFadeAlpha(1f, animationTime, false);
-        yield return new WaitForSeconds(animationTime + 0.75f);
+        blackOutScreen.CrossFadeAlpha(1f, animationTime, false);
+        yield return new WaitForSeconds(animationTime + 1f);
         
         //Save the data (doing this while screen is dark as this causes some lag)
         //KEEP BEFORE SETTING UP NEXT EXPERIMENT
@@ -336,16 +344,18 @@ public class ExperimentManager : MonoBehaviour
         gameState.SetGameState(GameStates.Waiting);
         GoToCar();
 
-        BlackOutScreen.CrossFadeAlpha(1f, 0f, true);
+        blackOutScreen.CrossFadeAlpha(1f, 0f, true);
         //For some reason crossfading to zero goes way faster so we increase the animationTime by 4.....
-        BlackOutScreen.CrossFadeAlpha(0f, animationTime * 4, false);
+        blackOutScreen.CrossFadeAlpha(0f, animationTime, false);
 
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSeconds(animationTime + 1f);
         
         //Start new measurement
         dataManager.StartNewMeasurement();
 
         gameState.SetGameState(GameStates.Experiment);
+
+        Debug.Log($"Verification cam position: {CameraTransform().position}, {driverView.position}...");
     }
     void SetCarToLastWaypoint()
     {
@@ -378,7 +388,7 @@ public class ExperimentManager : MonoBehaviour
     }
     private void TurnLightsOnFast()
     {
-        BlackOutScreen.CrossFadeAlpha(0f, 0f, true);
+        blackOutScreen.CrossFadeAlpha(0f, 0f, true);
     }
     void SetUpExperiments()
     {
@@ -487,7 +497,11 @@ public class ExperimentManager : MonoBehaviour
         if (camType == MyCameraType.Varjo || camType == MyCameraType.Leap)
         {
             //Reset Varjo angles
-            Varjo.VarjoPlugin.ResetPose(true, Varjo.VarjoPlugin.ResetRotation.ALL);
+            //Varjo.VarjoPlugin.ResetPose(false, Varjo.VarjoPlugin.ResetRotation.ALL);
+
+           /* Vector3 correctedGoalPos = goalPos - CameraTransform().position;
+            usedCam.position = goalPos + correctedGoalPos;*/
+
         }
     }
     void GoToWaitingRoom()

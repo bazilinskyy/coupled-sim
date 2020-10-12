@@ -16,8 +16,8 @@ public class SpeedController : MonoBehaviour
     public float cornerBrakingDistance = 20f;
     public float metersLetGoGasEndPoint = 30f;
     public float brakeIncrement = 0.005f;
-    public float throttleIncrement = 0.005f;
-    public float maxThrottle = 0.8f;
+    public float throttleIncrement = 0.002f;
+    public float maxThrottle = 0.6f;
     public float maxBrake = 0.3f;
 
     public float brakeSpeedMargin = 2f;
@@ -45,6 +45,7 @@ public class SpeedController : MonoBehaviour
         speedSettings = new VehiclePhysics.SpeedControl.Settings();
         speedSettings.speedLimiter = true;
     }
+    public bool IsDriving() { return startDriving; }
     public void StartDriving(bool input)
     {
         if (input != startDriving) { Debug.Log("Starting speed controller..."); }
@@ -185,8 +186,8 @@ public class SpeedController : MonoBehaviour
     {
         //Navigator only changes target waypoint after a certain distance. So when we passed target but no new target is set we are in on the corner
 
-        //On corner when navigator.target == target and navigator.PAssedTarget()
-        if (targetWaypoint == navigator.target && navigator.PassedTargetWaypoint()) { return true; }
+        //On corner when navigator.PassedTarget()
+        if (navigator.PassedTargetWaypoint()) { return true; }
         else { return false; }
     }
     bool OnSpline()

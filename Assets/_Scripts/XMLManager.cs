@@ -20,7 +20,7 @@ public class XMLManager : MonoBehaviour
     private string dataFolder = "Data";
     //our car
     private GameObject car;
-    
+    private Navigator carNavigator;
     //Current Navigation
     private Transform navigation;
     private NavigationHelper navigationHelper;
@@ -44,12 +44,7 @@ public class XMLManager : MonoBehaviour
     [HideInInspector]
     public bool savedData;
 
-    private void OnApplicationQuit()
-    {
-
-      if (experimentManager.saveData && !savedData) { SaveData(); }
-
-    }
+    private void OnApplicationQuit() { if (experimentManager.saveData && gameState.isExperiment() && !savedData) { SaveData(); } }
     private void Awake()
     {
         ins = this;
@@ -71,7 +66,7 @@ public class XMLManager : MonoBehaviour
     public void SetAllInputs(GameObject _car, Transform _navigation, string _subjectName)
     {
         car = _car;
-        
+        carNavigator = car.GetComponent<Navigator>();
         //set car inputs
         List<string> inputs = experimentManager.GetCarControlInput();
         steerInputAxis = inputs[0];
@@ -83,7 +78,7 @@ public class XMLManager : MonoBehaviour
         subjectName = dateTime + "-" + _subjectName;
 
         //Set inputs of GazeLogger
-        myGazeLogger.cam = experimentManager.CameraTransform();
+        if (experimentManager.camType != MyCameraType.Normal) { myGazeLogger.cam = experimentManager.CameraTransform(); }
     }
     public void SaveData()
     {
@@ -108,8 +103,8 @@ public class XMLManager : MonoBehaviour
     private void SaveVehicleData()
     {
         Debug.Log("Saving vehicle data...");
-        string[] columns = { "Time", "Frame", "Speed", "DistanceToOptimalPath", "Position", "Rotation", "SteeringInput" };
-        string[] logData = new string[7];
+        string[] columns = { "Time", "Frame", "Speed", "DistanceToOptimalPath", "Position", "Rotation", "SteeringInput", "UpcomingOperation" };
+        string[] logData = new string[columns.Length];
         string filePath = string.Join("/", saveFolder, vehicleDataFileName);
 
         using (StreamWriter file = new StreamWriter(filePath))
@@ -125,7 +120,7 @@ public class XMLManager : MonoBehaviour
                 logData[4] = dataPoint.position;
                 logData[5] = dataPoint.rotation;
                 logData[6] = dataPoint.steerInput.ToString();
-
+                logData[7] = dataPoint.upcomingOperation;
                 Log(logData, file);
             }
             file.Close();
@@ -135,7 +130,7 @@ public class XMLManager : MonoBehaviour
     {
         Debug.Log("Saving alarms...");
         string[] columns = { "Time", "Frame", "AlarmType", "ReactionTime", "TargetID", "TargetDifficulty"};
-        string[] logData = new string[6];
+        string[] logData = new string[columns.Length];
         string filePath = string.Join("/", saveFolder, targetDetectionDataFileName);
         
         using (StreamWriter file = new StreamWriter(filePath))
@@ -160,9 +155,10 @@ public class XMLManager : MonoBehaviour
     {
         Debug.Log("Saving navigation info...");
         string[] columns = { "NavigationLine" };
-        string[] logData = new string[1];
-        Vector3[] navigationLine = navigationHelper.GetNavigationLine();
+        string[] logData = new string[columns.Length];
         string filePath = string.Join("/", saveFolder, navigationLineFileName);
+
+        Vector3[] navigationLine = navigationHelper.GetNavigationLine();
 
         using (StreamWriter file = new StreamWriter(filePath))
         {
@@ -180,6 +176,7 @@ public class XMLManager : MonoBehaviour
     {
         Debug.Log("Saving target info...");
         string[] columns = { "ID", "Detected", "ReactionTime", "FixationTime", "Difficulty","Side","Position" };
+        string[] logData = new string[columns.Length];
         string filePath = string.Join("/", saveFolder, generalTargetInfo);
         
         List<Target> targets = navigationHelper.GetAllTargets();
@@ -190,7 +187,6 @@ public class XMLManager : MonoBehaviour
             
             foreach(Target target in targets)
             {
-                string[] logData = new string[7];
                 logData[0] = target.GetID();
                 logData[1] = target.detected.ToString();
                 logData[2] = target.reactionTime.ToString();
@@ -307,7 +303,7 @@ public class XMLManager : MonoBehaviour
         dataPoint.rotation = car.gameObject.transform.rotation.eulerAngles.ToString("F3");
         dataPoint.steerInput = Input.GetAxis(steerInputAxis);
         dataPoint.speed = car.GetComponent<Rigidbody>().velocity.magnitude;
-
+        dataPoint.upcomingOperation = carNavigator.target.operation.ToString();
         vehicleData.Add(dataPoint);
     }
     private float GetDistanceToOptimalPath(Vector3 car_position)
@@ -417,7 +413,9 @@ public class VehicleDataPoint
     public float distanceToOptimalPath;
     public string position;
     public string rotation;
-    public float steerInput;   
+    public float steerInput;
+
+    public string upcomingOperation;
 }
 
 public class TargetAlarm
