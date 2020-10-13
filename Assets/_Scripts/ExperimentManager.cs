@@ -13,6 +13,7 @@ public class ExperimentManager : MonoBehaviour
     public string subjectName="You";
     public bool automateSpeed = true;
     public bool saveData=true;
+    public Color navigationColor;
     public MyCameraType camType;
     public List<ExperimentSetting> experiments;
 
@@ -43,7 +44,8 @@ public class ExperimentManager : MonoBehaviour
     public string Brake = "Brake";
 
     [Header("GameObjects")]
-
+    public Material conformal;
+    public HUDMaterials HUDMaterials;
     public LayerMask layerToIgnoreForTargetDetection;
     public Transform navigationRoot;
     public Navigator car;
@@ -92,7 +94,6 @@ public class ExperimentManager : MonoBehaviour
     //booleans used by UserInputName()
     private bool inputName = false;
     private bool firstFrameProcessingInput = true;
-
     void Awake()
     {
         blackOutScreen.color = new Color(0, 0, 0, 1f);
@@ -125,6 +126,7 @@ public class ExperimentManager : MonoBehaviour
 
         //Get main camera to waiting room
         GoToWaitingRoom();
+        
     }
     private void FixedUpdate()
     {
@@ -152,7 +154,7 @@ public class ExperimentManager : MonoBehaviour
                 if (success) { SpawnSteeringWheel(); }
             }
 
-            //When I am doing some testing
+            //When I am doing some TESTING
             if (Input.GetAxis(ParticpantInputAxisRight) == 1 && camType == MyCameraType.Leap) { Varjo.VarjoPlugin.ResetPose(true, Varjo.VarjoPlugin.ResetRotation.ALL); }
             if (Input.GetAxis(ParticpantInputAxisLeft) == 1 && camType == MyCameraType.Leap)
             {
@@ -179,6 +181,10 @@ public class ExperimentManager : MonoBehaviour
             if(steeringWheelObject != null) { Destroy(steeringWheelObject); }
 
             //User inputs
+
+            //When I am doing some TESTING
+            if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W)) { car.GetComponent<SpeedController>().StartDriving(true); }
+            
             //Target detection when we already started driving
             if (car.GetComponent<SpeedController>().IsDriving() && (Input.GetKeyDown(keyTargetDetected) || Input.GetAxis(ParticpantInputAxisLeft) == 1 || Input.GetAxis(ParticpantInputAxisRight) == 1)) { ProcessUserInputTargetDetection(); }
 
@@ -202,6 +208,16 @@ public class ExperimentManager : MonoBehaviour
             gameState.SetGameState(GameStates.TransitionToWaitingRoom);
             Debug.Log("Navigation finished...");
             if (!IsNextNavigation()){ endSimulation = true; }
+        }
+    }
+    private void SetColors()
+    {
+        navigationColor.a = activeExperiment.transparency;
+        conformal.color = navigationColor;
+
+        foreach (Material material in HUDMaterials.GetMaterials())
+        {
+            material.color = navigationColor;
         }
     }
     private void SetGameObjectsFromCar()
@@ -263,7 +279,7 @@ public class ExperimentManager : MonoBehaviour
     void ResetExperiment()
     {
         //Does not reset targets....
-        activeNavigationHelper.SetUp(activeExperiment.navigationType, activeExperiment.transparency, car);
+        activeNavigationHelper.SetUp(activeExperiment.navigationType, activeExperiment.transparency, car, HUDMaterials);
         car.GetComponent<SpeedController>().StartDriving(false);
         SetUpCar();
     }
@@ -393,7 +409,7 @@ public class ExperimentManager : MonoBehaviour
     void SetUpExperiments()
     {
         //Set all navigation in navigatoin root to inactive
-        foreach(Transform child in navigationRoot) { child.gameObject.SetActive(false); }
+        foreach (Transform child in navigationRoot) { child.gameObject.SetActive(false); }
 
         //If noe xperiments given return...
         if (experiments.Count == 0) { return; }
@@ -410,8 +426,12 @@ public class ExperimentManager : MonoBehaviour
         // Set first experiment to active
         activeExperiment = experimentList[0];
         activeExperiment.SetActive(true);
+        
+        //SetColors of navigation symbology
+        SetColors();
+
         activeNavigationHelper = activeExperiment.navigationHelper;
-        activeNavigationHelper.SetUp(activeExperiment.navigationType, activeExperiment.transparency, car);
+        activeNavigationHelper.SetUp(activeExperiment.navigationType, activeExperiment.transparency, car, HUDMaterials);
 
     }
     bool NavigationFinished()
@@ -425,9 +445,11 @@ public class ExperimentManager : MonoBehaviour
     }
     void SetupNextExperiment()
     {
+        
+
         //Activate next experiment (should only get here if we actually have a next experiment)
         ActivateNextExperiment();
-
+        
         //set up car (Should always be after activating the new experiment!)
         SetUpCar();
 
@@ -440,9 +462,6 @@ public class ExperimentManager : MonoBehaviour
     void SetUpCar()
     {
         Debug.Log("Setting up car...");
-        //Set new navigation for car
-        car.SetNewNavigation(activeExperiment.navigation);
-        activeNavigationHelper.GetComponent<RenderNavigation>().SetNavigationObjects();
         //Put car in right position
         Transform startLocation = activeNavigationHelper.GetStartPointNavigation();
 
@@ -554,8 +573,12 @@ public class ExperimentManager : MonoBehaviour
         if (activeExperiment == null) { throw new System.Exception("Something went wrong in ExperimentManager --> ActivateNextExperiment "); }
 
         activeExperiment.SetActive(true);
+        
+        //SetColors of navigation symbology
+        SetColors();
+
         activeNavigationHelper = activeExperiment.navigation.GetComponent<NavigationHelper>();
-        activeNavigationHelper.SetUp(activeExperiment.navigationType, activeExperiment.transparency, car);
+        activeNavigationHelper.SetUp(activeExperiment.navigationType, activeExperiment.transparency, car, HUDMaterials);
 
         Debug.Log("Experiment " + activeExperiment.navigation.name + " loaded...");
     }

@@ -6,8 +6,9 @@ using System.Linq;
 [RequireComponent(typeof(SplineCreator),typeof(RenderNavigation))]
 public class NavigationHelper : MonoBehaviour
 {
-    [Header("Required Objects")]
+    //[HideInInspector]
     public HUDMaterials HUDMaterials;
+    //[HideInInspector]
     public Navigator car;
 
     [Header("Navigation settings")]
@@ -27,13 +28,16 @@ public class NavigationHelper : MonoBehaviour
 
     private SplineCreator splineCreator;
     private List<Waypoint> generalWaypointList;
+    private Operation currentOperation = Operation.None;
+    private RenderNavigation navigationRenderer;
+
     private void Awake()
     {
         renderVirtualCable = _renderVirtualCable;
         renderHighlightedRoad = _renderHighlightedRoad;
 
-        splineCreator = gameObject.GetComponent<SplineCreator>();
-
+        splineCreator = GetComponent<SplineCreator>();
+        navigationRenderer = GetComponent<RenderNavigation>();
         generalWaypointList = GetOrderedWaypointList();
 
         //RenderNavigation();
@@ -46,8 +50,10 @@ public class NavigationHelper : MonoBehaviour
         //Render the HUDs if needed
         if (renderHUD)
         {
+            if (car == null || HUDMaterials == null || car.target ==null) { return; }
             RenderNavigationArrow();
             RenderNavigationDistance();
+            currentOperation = car.target.operation;
         }
     }
     private void OnDrawGizmos()
@@ -94,10 +100,13 @@ public class NavigationHelper : MonoBehaviour
     }
     void RenderNavigationArrow()
     {
+        
         Transform arrows = car.HUD.transform.Find("Arrows");
+
+        if(currentOperation == car.target.operation ) { return; }
         if (arrows == null) { Debug.Log("Arrows= null...."); return; }
-        if (car.target.operation == Operation.TurnRightShort || car.target.operation == Operation.TurnRightLong) { arrows.GetComponent<MeshRenderer>().material = HUDMaterials.right; }
-        else if (car.target.operation == Operation.TurnLeftLong) { arrows.GetComponent<MeshRenderer>().material = HUDMaterials.left; }
+        if (car.target.operation.IsRightTurn()) { arrows.GetComponent<MeshRenderer>().material = HUDMaterials.right; }
+        else if (car.target.operation.IsLeftTurn()) { arrows.GetComponent<MeshRenderer>().material = HUDMaterials.left; }
         else if (car.target.operation == Operation.Straight) { arrows.GetComponent<MeshRenderer>().material = HUDMaterials.straight; }
         else if (car.target.operation == Operation.EndPoint) { arrows.GetComponent<MeshRenderer>().material = HUDMaterials.destination; }
 
@@ -324,7 +333,7 @@ public class NavigationHelper : MonoBehaviour
             waypoint.RenderMe(render);
         }
     }
-    public void SetUp(NavigationType navigationType, float _transparency, Navigator _car)
+    public void SetUp(NavigationType navigationType, float _transparency, Navigator _car, HUDMaterials _HUDMAterials)
     {
         splineCreator.MakeNavigation();
         
@@ -334,8 +343,12 @@ public class NavigationHelper : MonoBehaviour
         UpdateOrderIds(); //Make sure order ids are correct at startup
 
         transparency = _transparency;
-        car = _car;
-        ChangTransparancyHUDAndConformal();
+        car = _car;  car.navigation = transform; car.target = GetFirstTarget();
+
+        navigationRenderer.SetUpNavigationRenderer(car, GetOrderedWaypointList(), car.GetCurrentTarget());
+
+        HUDMaterials = _HUDMAterials;
+        //ChangTransparancyHUDAndConformal();
 
         if (navigationType == NavigationType.VirtualCable) {
             renderHUD = false;
@@ -355,6 +368,7 @@ public class NavigationHelper : MonoBehaviour
             car.HUD.SetActive(true);
             HUDPlacer HUDPlacer = car.HUD.GetComponent<HUDPlacer>();
             HUDPlacer.SetAngles(-3f, 0, 2f); HUDPlacer.PlaceHUD();
+            RenderNavigationArrow();
             RenderNavigationType(NavigationType.VirtualCable, false);
             RenderNavigationType(NavigationType.HighlightedRoad, false);
         }
@@ -364,6 +378,7 @@ public class NavigationHelper : MonoBehaviour
             car.HUD.SetActive(true);
             HUDPlacer HUDPlacer = car.HUD.GetComponent<HUDPlacer>();
             HUDPlacer.SetAngles(12f, 0, 2f); HUDPlacer.PlaceHUD();
+            RenderNavigationArrow();
             RenderNavigationType(NavigationType.VirtualCable, false);
             RenderNavigationType(NavigationType.HighlightedRoad, false);
         }

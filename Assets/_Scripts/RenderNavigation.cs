@@ -14,7 +14,10 @@ public class RenderNavigation : MonoBehaviour
     private List<Waypoint> waypoints;
     // Start is called before the first frame update
 
-
+    private void Awake()
+    {
+        navigationHelper = gameObject.GetComponent<NavigationHelper>();
+    }
     void Update()
     {
         if(navigationHelper == null) { navigationHelper = gameObject.GetComponent<NavigationHelper>(); }
@@ -34,14 +37,14 @@ public class RenderNavigation : MonoBehaviour
         SetAllRenderMeToFalse();
         SetRenderMeAttributes();
     }
-    public void SetNavigationObjects()
+    public void SetUpNavigationRenderer(Navigator _navigator, List<Waypoint> _waypoints, Waypoint _target)
     {
         //Set navigation variables and such
-        navigationHelper = gameObject.GetComponent<NavigationHelper>();
-        navigator = navigationHelper.car;
+
+        navigator = _navigator;
+        waypoints = _waypoints;
+        target = _target; 
         
-        target = navigator.GetCurrentTarget();
-        waypoints = navigationHelper.GetOrderedWaypointList();
 
         RenderNavigationSymbology();
 

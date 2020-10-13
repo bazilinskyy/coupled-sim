@@ -10,4 +10,10 @@ public class HUDMaterials : ScriptableObject
     public Material left;
     public Material straight;
     public Material destination;
+
+    public Material[] GetMaterials()
+    {
+        Material[] materials = { right, left, straight, destination };
+        return materials;
+    }
 }

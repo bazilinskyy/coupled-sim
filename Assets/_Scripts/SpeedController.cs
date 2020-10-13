@@ -27,6 +27,7 @@ public class SpeedController : MonoBehaviour
     private float externalBrake = 0f;
 
     private bool startDriving = false;
+    private float setSpeed;
 
     private Waypoint targetWaypoint;
     private Navigator navigator;
@@ -72,7 +73,7 @@ public class SpeedController : MonoBehaviour
 
         if (targetWaypoint == null) { targetWaypoint = navigator.target; }
 
-        float setSpeed = speedLimit;
+        setSpeed = speedLimit;
         if (OnStraight())
         {
             //Debug.Log($"On straight {carRB.velocity.magnitude}...");
@@ -96,8 +97,8 @@ public class SpeedController : MonoBehaviour
         }
         else if (OnCorner())
         {
-            ToggleGas(false, throttleIncrement);
             setSpeed = speedLimitCorner;
+            ToggleGas(setSpeed < carRB.velocity.magnitude, throttleIncrement);            
             //Debug.Log($"On corner {carRB.velocity.magnitude}...");
         }
         else if (OnSpline())
