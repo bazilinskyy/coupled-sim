@@ -192,7 +192,6 @@ public class NavigationHelper : MonoBehaviour
             {
                 foreach (Target target in waypoint.GetTargets())
                 {
-                    
                     //If not detected yet --> Add to potential target list
                     if (!target.IsDetected())
                     {

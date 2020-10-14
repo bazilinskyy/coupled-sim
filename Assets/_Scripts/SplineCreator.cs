@@ -16,6 +16,7 @@ public class SplineCreator : MonoBehaviour
 	
 	private NavigationHelper navigationHelper;
 
+	public string symbologyTag = "ConformalSymbology";
 	//Holds the rendered navbigation parts;
 	private GameObject navigationPartsParent;
 
@@ -150,6 +151,8 @@ public class SplineCreator : MonoBehaviour
 			navigationPartGameObject.GetComponent<MeshFilter>().mesh = mesh = new Mesh();
 			navigationPartGameObject.GetComponent<MeshRenderer>().material = navigationPartMaterial;
 			navigationPartGameObject.GetComponent<MeshRenderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+
+			navigationPartGameObject.gameObject.tag = symbologyTag;
 
 			mesh.name = waypoint.operation.ToString();
 			mesh.vertices = GetVertices( points, navigationType);

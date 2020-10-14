@@ -22,6 +22,8 @@ public class Target : MonoBehaviour
     [HideInInspector]
     public float reactionTime = 0;
     [HideInInspector]
+    public float totalFixationTime = 0f;
+    [HideInInspector]
     public float fixationTime = 0f;
     //Time at which this target was visible
     public float defaultVisibilityTime = -1f;
@@ -32,14 +34,17 @@ public class Target : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        SetUnDetected();
-        startTimeVisible = -1f;
-        fixationTime = 0f;
-}
-
+        ResetTarget();
+    }
+    
+    public bool HasBeenLookedAt()
+    {
+        if(totalFixationTime > 0f) { return true; }
+        else { return false; }
+    }
     public void OnHit()
     {
-        if (!detected) { fixationTime += Time.deltaTime; }
+        if (!detected) { totalFixationTime += Time.deltaTime; fixationTime = Time.time; }
     }
     public void SetDifficulty( TargetDifficulty _difficulty)
     {
@@ -68,21 +73,20 @@ public class Target : MonoBehaviour
         detected = true;
         
         reactionTime = detectionTime - startTimeVisible;
-        transform.GetComponent<MeshRenderer>().enabled = false;
+        GetComponent<MeshRenderer>().enabled = false;
+        GetComponent<SphereCollider>().enabled = false;
 
         Debug.Log($"startTimeVisible {startTimeVisible}, detectionTime { detectionTime}, reactiontime: {reactionTime}");
     }
 
-    public void SetUnDetected()
-    {
-        detected = false;
-    }
-
     public void ResetTarget()
     {
+        GetComponent<MeshRenderer>().enabled = true;
+        GetComponent<SphereCollider>().enabled = true;
         detected = false;
         startTimeVisible = defaultVisibilityTime;
         reactionTime = 0f;
+        totalFixationTime = 0f;
         fixationTime = 0f;
     }
     public bool IsDetected()
@@ -95,7 +99,7 @@ public class Target : MonoBehaviour
         //Targets should always be placed between the parent waypoint and the next waypoint!
 
         if(waypoint.nextWaypoint == null) { 
-            Debug.Log("Can not determine side of the target as there is no next waypoint. (Targes should always be placed IN FRONT of the parent waypoint i.e., in between the parent and next waypoint");
+            Debug.LogError("Can not determine side of the target as there is no next waypoint. (Targes should always be placed IN FRONT of the parent waypoint i.e., in between the parent and next waypoint");
             return Side.Undetermined; }
 
         Vector3 firstWaypointPos = waypoint.transform.position;

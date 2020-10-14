@@ -109,11 +109,7 @@ public class Navigator : MonoBehaviour
             //Skip splinepoints
             while (target.operation == Operation.SplinePoint && target.nextWaypoint !=null){ target = target.nextWaypoint; }
         }
-        else
-        {
-            navigationFinished = true;
-        }
-        print($"New target = {target.name} ({target.operation.ToString()})...");
+        else { navigationFinished = true; }
     }
     public NavigationHelper GetNavigationHelper() { return navigationHelper;}
 }

@@ -121,6 +121,7 @@ public class XMLManager : MonoBehaviour
                 logData[5] = dataPoint.rotation;
                 logData[6] = dataPoint.steerInput.ToString();
                 logData[7] = dataPoint.upcomingOperation;
+
                 Log(logData, file);
             }
             file.Close();
@@ -190,7 +191,7 @@ public class XMLManager : MonoBehaviour
                 logData[0] = target.GetID();
                 logData[1] = target.detected.ToString();
                 logData[2] = target.reactionTime.ToString();
-                logData[3] = target.fixationTime.ToString();
+                logData[3] = target.totalFixationTime.ToString();
                 logData[4] = target.difficulty.ToString().Last().ToString();
                 logData[5] = target.GetRoadSide().ToString();
                 logData[6] = target.transform.position.ToString("F3");
@@ -246,6 +247,7 @@ public class XMLManager : MonoBehaviour
     void Log(string[] values, StreamWriter file)
     {
         string line = "";
+        if(values == null) { Debug.LogError("Got null values in Log()..."); return; }
         for (int i = 0; i < values.Length; ++i)
         {
             values[i] = values[i].Replace("\r", "").Replace("\n", ""); // Remove new lines so they don't break csv
@@ -266,7 +268,8 @@ public class XMLManager : MonoBehaviour
         if (experimentManager.camType != MyCameraType.Normal)
         {
             myGazeLogger.customLogPath = saveFolder + "/";
-            myGazeLogger.StartLogging();
+            if (myGazeLogger.IsLogging()) { myGazeLogger.RestartLogging(); }
+            else { myGazeLogger.StartLogging(); }
         }
     }
     private string SaveFolder()
@@ -368,6 +371,9 @@ public class XMLManager : MonoBehaviour
         alarm.time = experimentManager.activeExperiment.experimentTime;
         alarm.frame = Time.frameCount;
         alarm.AlarmType = false;
+        alarm.targetID = "-";
+        alarm.reactionTime = 0f;
+        alarm.targetDifficulty = 0;
         targetDetectionData.Add(alarm);
         Debug.Log("Added false alarm...");
     }
@@ -386,7 +392,7 @@ public class XMLManager : MonoBehaviour
         alarm.targetDifficulty = int.Parse(target.GetTargetDifficulty().ToString().Last().ToString());
         targetDetectionData.Add(alarm);
 
-        Debug.Log($"Added true alarm for {target.name}, reaction time: {Math.Round(alarm.reactionTime, 2)}s ...");
+        Debug.Log($"Added true alarm for {target.GetID()}, reaction time: {Math.Round(alarm.reactionTime, 2)}s ...");
     }
 /*
     void SaveThis<T>(string fileName, object data)
