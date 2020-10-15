@@ -199,10 +199,7 @@ public class WorldLogger
             // Code enters the invalid statement and afterwards the valid statement (eye-calibration)
             if (VarjoPlugin.GetGaze().status == VarjoPlugin.GazeStatus.VALID && driver.transform.Find("Gaze"))
             {
-                //if (passengerGaze.list_role_varjo[0] == "Passenger") //(driver.transform.GetComponentInChildren<VarjoGazeRay_CS>().getRoleVarjo() == "Passenger")
-                //{
                     distance_pa = passengerGaze.getGazeRayHit().distance;
-                    //distance_pa = driver.transform.GetComponentInChildren<VarjoGazeRay_CS>().getGazeRayHit().distance;
 
                     Frame_pa = passengerGaze.Frame;
                     CaptureTime_pa = passengerGaze.CaptureTime;
@@ -218,22 +215,17 @@ public class WorldLogger
                     FocusDistance_pa = passengerGaze.FocusDistance;
                     FocusStability_pa = passengerGaze.FocusStability;
 
-                    gazeRayForward_pa = passengerGaze.gazeRayForward; //driver.transform.GetComponentInChildren<VarjoGazeRay_CS>().getGazeRayForward();        // hmd space
+                    gazeRayForward_pa = passengerGaze.gazeRayForward;       // hmd space
                     gazeRayForward_pa_x = gazeRayForward_pa.x; gazeRayForward_pa_y = gazeRayForward_pa.y; gazeRayForward_pa_z = gazeRayForward_pa.z;
 
-                    gazeRayDirection_pa = passengerGaze.gazeRayDirection; //driver.transform.GetComponentInChildren<VarjoGazeRay_CS>().getGazeRayDirection();    // world space
+                    gazeRayDirection_pa = passengerGaze.gazeRayDirection;   // world space
                     gazeRayDirection_pa_x = gazeRayDirection_pa.x; gazeRayDirection_pa_y = gazeRayDirection_pa.y; gazeRayDirection_pa_z = gazeRayDirection_pa.z;
 
-                    gazePosition_pa = passengerGaze.gazePosition; //driver.transform.GetComponentInChildren<VarjoGazeRay_CS>().getGazePosition();            // hmd space
+                    gazePosition_pa = passengerGaze.gazePosition;           // hmd space
                     gazePosition_pa_x = gazePosition_pa.x; gazePosition_pa_y = gazePosition_pa.y; gazePosition_pa_z = gazePosition_pa.z;
 
-                    gazeRayOrigin_pa = passengerGaze.gazeRayOrigin; //driver.transform.GetComponentInChildren<VarjoGazeRay_CS>().getGazeRayOrigin();          // world space
+                    gazeRayOrigin_pa = passengerGaze.gazeRayOrigin;         // world space
                     gazeRayOrigin_pa_x = gazeRayOrigin_pa.x; gazeRayOrigin_pa_y = gazeRayOrigin_pa.y; gazeRayOrigin_pa_z = gazeRayOrigin_pa.z;
-                //}
-                //else
-                //{
-                 //   distance_pa = -1.0f;
-                //}
             }
             else if(VarjoPlugin.GetGaze().status != VarjoPlugin.GazeStatus.VALID)
             {
@@ -289,8 +281,6 @@ public class WorldLogger
             var pedestrianGaze = pedestrian.transform.GetComponentInChildren<VarjoGazeRay_CS_1>();
             if (VarjoPlugin.GetGaze().status == VarjoPlugin.GazeStatus.VALID && pedestrian.transform.Find("Gaze"))
             {
-                //if (pedestrianGaze.list_role_varjo[1] == "Pedestrian")//(pedestrian.transform.GetComponentInChildren<VarjoGazeRay_CS>().getRoleVarjo() == "Pedestrian")
-                //{
                     distance_pe = pedestrianGaze.getGazeRayHit().distance; //pedestrian.transform.GetComponentInChildren<VarjoGazeRay_CS>().getGazeRayHit().distance;
                     Frame_pe = pedestrianGaze.Frame;
                     CaptureTime_pe = pedestrianGaze.CaptureTime;
@@ -306,26 +296,21 @@ public class WorldLogger
                     FocusDistance_pe = pedestrianGaze.FocusDistance;
                     FocusStability_pe = pedestrianGaze.FocusStability;
 
-                    gazeRayForward_pe = pedestrianGaze.gazeRayForward; //pedestrian.transform.GetComponentInChildren<VarjoGazeRay_CS>().getGazeRayForward();        // hmd space
+                    gazeRayForward_pe = pedestrianGaze.gazeRayForward;              // hmd space
                     gazeRayForward_pe_x = gazeRayForward_pe.x; gazeRayForward_pe_y = gazeRayForward_pe.y; gazeRayForward_pe_z = gazeRayForward_pe.z;
 
-                    gazeRayDirection_pe = pedestrianGaze.gazeRayDirection;//pedestrian.transform.GetComponentInChildren<VarjoGazeRay_CS>().getGazeRayDirection();    // world space
+                    gazeRayDirection_pe = pedestrianGaze.gazeRayDirection;          // world space
                     gazeRayDirection_pe_x = gazeRayDirection_pe.x; gazeRayDirection_pe_y = gazeRayDirection_pe.y; gazeRayDirection_pe_z = gazeRayDirection_pe.z;
 
-                    gazePosition_pe = pedestrianGaze.gazePosition; //pedestrian.transform.GetComponentInChildren<VarjoGazeRay_CS>().getGazePosition();            // hmd space
+                    gazePosition_pe = pedestrianGaze.gazePosition;                  // hmd space
                     gazePosition_pe_x = gazePosition_pe.x; gazePosition_pe_y = gazePosition_pe.y; gazePosition_pe_z = gazePosition_pe.z;
 
-                    gazeRayOrigin_pe = pedestrianGaze.gazeRayOrigin;//pedestrian.transform.GetComponentInChildren<VarjoGazeRay_CS>().getGazeRayOrigin();          // world space
+                    gazeRayOrigin_pe = pedestrianGaze.gazeRayOrigin;                // world space
                     gazeRayOrigin_pe_x = gazeRayOrigin_pe.x; gazeRayOrigin_pe_y = gazeRayOrigin_pe.y; gazeRayOrigin_pe_z = gazeRayOrigin_pe.z;
-                //}
-                //else
-                //{
-                //    distance_pe = -1.0f;
-                //}
             }
             else if (VarjoPlugin.GetGaze().status != VarjoPlugin.GazeStatus.VALID)
             {
-                distance_pe = -1.0f;
+                distance_pe = -8.0f;
                 Frame_pe = (long)-1.0f;
                 CaptureTime_pe = (long)-1.0f;
 
@@ -366,7 +351,7 @@ public class WorldLogger
             }
             else if (pedestrian.transform.GetComponentInChildren<ViveInput>() != null)
             {
-                Debug.LogError("Vive controller action script called ViveInput is missing");
+                Debug.LogError("Vive controller action script called [ViveInput] is missing");
                 gapAcceptance = -1.0f;
             }
             _fileWriter.Write(gapAcceptance);
@@ -534,9 +519,9 @@ public class LogConverter
         // Column headers for bodysuit tracking
         const int columnsPerBone = 6;
         int columnsPerPedestrian = 3 /*pos x,y,z*/+ 3/*rot x,y,z */ + 1 /*distance_pe*/ + 1 /*Frame*/ + 1 /*CaptureTime*/ + 3 /*hmdposition_xyz*/ + 3 /*hmdrotation_xyz*/ + 2 /*eyePupilSize*/ + 1 /*focusDistance*/ + 1 /*focusStability*/+ 3 /*gazeForward_xyz*/  + 3 /* gazeDirection_xyz */+ 3 /*gazePosition_xyz*/ + 3 /*gazeOrigin_xyz*/ + 1 /*gapAcceptance*/;
-        if (WorldLogger.returnBodySuit()) { 
+        /*if (WorldLogger.returnBodySuit()) { 
             columnsPerPedestrian = pedestrianSkeletonNames.Length * columnsPerBone + columnsPerBone + 14; // + columnsPerBone is for the root transform;
-        }
+        }*/
         var toRefRot = Quaternion.Inverse(referenceRot);
         
         // Load binary file
@@ -554,11 +539,11 @@ public class LogConverter
 
             log.StartTime = DateTime.FromBinary(reader.ReadInt64());
             log.ExperimentDefinitionNr = reader.ReadInt32();
-            log.TrialNr = reader.ReadInt32();               Debug.LogError($"1 trial nr = {log.TrialNr}");
-            log.ParticipantNr = reader.ReadInt32();         Debug.LogError($"2 participant nr = {log.ParticipantNr}");
-            log.LocalDriver = reader.ReadInt32();           Debug.LogError($"3 Local driver = {log.LocalDriver}");
-            int numPersistentDrivers = reader.ReadInt32();  Debug.LogError($"4 numPersistentDrivers = {numPersistentDrivers}");
-            int numPedestrians = reader.ReadInt32();        Debug.LogError($"5 numPedestrians = {numPedestrians}");
+            log.TrialNr = reader.ReadInt32();               //Debug.LogError($"1 trial nr = {log.TrialNr}");
+            log.ParticipantNr = reader.ReadInt32();         //Debug.LogError($"2 participant nr = {log.ParticipantNr}");
+            log.LocalDriver = reader.ReadInt32();           //Debug.LogError($"3 Local driver = {log.LocalDriver}");
+            int numPersistentDrivers = reader.ReadInt32();  //Debug.LogError($"4 numPersistentDrivers = {numPersistentDrivers}");
+            int numPedestrians = reader.ReadInt32();        //Debug.LogError($"5 numPedestrians = {numPedestrians}");
             log.POIs.AddRange(ParsePOI(reader));
             log.POIs.AddRange(customPois);
             log.POIs.Add(new SerializedPOI()
@@ -568,12 +553,12 @@ public class LogConverter
                 Rotation = Quaternion.identity
             });
 
-            int numCarLights = reader.ReadInt32();          Debug.LogError($"6 numCarLights = {numCarLights}");
+            int numCarLights = reader.ReadInt32();          //Debug.LogError($"6 numCarLights = {numCarLights}");
             for (int i = 0; i < numCarLights; i++)
             {
                 log.CarLightNames.Add(reader.ReadString());
             }
-            int numPedestrianLights = reader.ReadInt32();   Debug.LogError($"7 numPedestrianLights = {numPedestrianLights}");
+            int numPedestrianLights = reader.ReadInt32();   //Debug.LogError($"7 numPedestrianLights = {numPedestrianLights}");
             for (int i = 0; i < numPedestrianLights; i++)
             {
                 log.PedestrianLightsNames.Add(reader.ReadString());
@@ -581,7 +566,7 @@ public class LogConverter
             int numAICars = 0;
              while (srcFile.Position < srcFile.Length)
             {
-                var eventType = (LogFrameType)reader.ReadInt32(); Debug.LogError($"8 eventType = {eventType}");
+                var eventType = (LogFrameType)reader.ReadInt32(); //Debug.LogError($"8 eventType = {eventType}");
                 if (eventType == LogFrameType.AICarSpawn)
                 {
                     Debug.LogError("eventtype aicarspawn");
@@ -596,7 +581,7 @@ public class LogConverter
                     return;
                 }*/
                 //Debug.LogError($"Eventtype = {eventType}");
-                Assert.AreEqual(LogFrameType.PositionsUpdate, eventType); // Error
+                Assert.AreEqual(LogFrameType.PositionsUpdate, eventType); 
                 var frame = new SerializedFrame();
                 log.Frames.Add(frame);
                 frame.Timestamp = reader.ReadSingle();
@@ -607,7 +592,7 @@ public class LogConverter
                 {
                     frame.DriverPositions.Add(reader.ReadVector3());
                     frame.DriverRotations.Add(reader.ReadQuaternion());
-                    var blinkerstate = (BlinkerState)reader.ReadInt32(); Debug.LogError($"8 blinkerstate = {blinkerstate}");
+                    var blinkerstate = (BlinkerState)reader.ReadInt32(); //Debug.LogError($"9 blinkerstate = {blinkerstate}");
                     frame.BlinkerStates.Add(blinkerstate); //frame.BlinkerStates.Add((BlinkerState)reader.ReadInt32());
                     frame.distance_pa = reader.ReadSingle();
                     frame.Frame_pa = reader.ReadInt64();
@@ -720,6 +705,7 @@ public class LogConverter
                     writer.Write(separator);
                 }
             }
+            // Pedestrian headers
             if (numPedestrians > 0)
             {
                 writer.Write(separator);
@@ -757,8 +743,9 @@ public class LogConverter
             sb.Append(";");
             if (WorldLogger.returnBodySuit())
             {
-                for (int i = 0; i < pedestrianSkeletonNames.Length; i++)
+                for (int i = 0; i < pedestrianSkeletonNames.Length; i++) 
                 {
+                    Debug.LogError($"PedestrianSkeletonNames are {i} = {pedestrianSkeletonNames[i]}");// test
                     sb.Append(string.Join(separator, Enumerable.Repeat(pedestrianSkeletonNames[i], columnsPerBone)));
                     if (i < pedestrianSkeletonNames.Length - 1)
                     {
@@ -795,15 +782,17 @@ public class LogConverter
             {
                 writer.Write(separator);
             }
+            // test
+            Debug.LogError($"numPedstrians = {numPedestrians}");
             const string boneTransformHeader = "pos_x;pos_y;pos_z;rot_x;rot_y;rot_z;distance_pe;frame;captureTime;hmdpos_x;hmdpos_y;hmdpos_z;hmdrot_x;hmdpos_y;hmdpos_z;leftEyePupilSize;rightEyePupilSize;focusDistance;focusStability;gazeRayForward_x;gazeRayForward_y;gazeRayForward_z;gazeRayDirection_x;gazeRayDirection_y;gazeRayDirection_z;gazePosition_x;gazePosition_y;gazePosition_z;gazeOrigin_x;gazeOrigin_y;gazeOrigin_z;gapAcceptance;";
-            if (WorldLogger.returnBodySuit())
+            /*if (WorldLogger.returnBodySuit())
             {
-                writer.Write(string.Join(separator, Enumerable.Repeat(boneTransformHeader, numPedestrians * (pedestrianSkeletonNames.Length + 1))));
+                writer.Write(string.Join(separator, Enumerable.Repeat(boneTransformHeader, numPedestrians * (pedestrianSkeletonNames.Length + 1)))); //writes the bonetransformheader for every "part" of the pedestrian
             }
             else
-            {
+            {*/
                 writer.Write(string.Join(separator, Enumerable.Repeat(boneTransformHeader, numPedestrians)));
-            }
+            //}
             writer.Write("\n");
 
             //****************
