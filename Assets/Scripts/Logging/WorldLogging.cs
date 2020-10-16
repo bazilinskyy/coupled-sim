@@ -352,7 +352,7 @@ public class WorldLogger
             else if (pedestrian.transform.GetComponentInChildren<ViveInput>() != null)
             {
                 Debug.LogError("Vive controller action script called [ViveInput] is missing");
-                gapAcceptance = -1.0f;
+                gapAcceptance = -9.0f;
             }
             _fileWriter.Write(gapAcceptance);
 
@@ -715,12 +715,12 @@ public class LogConverter
                 var pedestrianName = $"Pedestrian{i}";
                 writer.Write(string.Join(separator, Enumerable.Repeat(pedestrianName, columnsPerPedestrian)));
             }
-            if (log.CarLightNames.Count > 0)
+            if (log.CarLightNames.Count > 0) Debug.LogError($"num carlightnames = {log.CarLightNames.Count}");
             {
                 writer.Write(separator);
                 writer.Write(string.Join(separator, log.CarLightNames));
             }
-            if (log.PedestrianLightsNames.Count > 0)
+            if (log.PedestrianLightsNames.Count > 0) Debug.LogError($"num pedestrianlight names = {log.PedestrianLightsNames.Count}");
             {
                 writer.Write(separator);
                 writer.Write(string.Join(separator, log.PedestrianLightsNames));
@@ -876,8 +876,10 @@ public class LogConverter
                 {
                     line.Add(";;;;;;;;;;;;;;;;;;");
                 }
-                for (int i = 0; i < frame.PedestrianPositions.Count; i++)
+                Debug.LogError($"actual data fram pedestrian positions count = {frame.PedestrianPositions.Count}");
+                for (int i = 0; i < frame.PedestrianPositions.Count; i++) 
                 {
+                    Debug.LogError($"i = {i}, with frame pedestrian position = {frame.PedestrianPositions[i]}");
                     var pos = frame.PedestrianPositions[i];
                     var rot = frame.PedestrianRotations[i];
                     var distance_pe = frame.distance_pe;
@@ -898,6 +900,7 @@ public class LogConverter
 
                     var gapAcceptance = frame.gapAcceptance;
 
+                    Debug.LogError($"pos count inside pedestrian actual data = {pos.Count}");
                     for (int j = 0; j < pos.Count; j++)
                     {
                         var p = PosToRefPoint(pos[j]);
