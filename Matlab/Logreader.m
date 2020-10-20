@@ -10,13 +10,19 @@ filename = "Logdata/" + filename;
 Data = loadData(filename);
 % Data = loadData("Logdata/a1.csv");
 
-% Variables to use
-distance = Data.distance;
+%% Variables to use
+% General
 dt = Data.dt;
-pos_z = Data.pos.z;
-world_origin = Data.world.gaze_origin;
-hmd_origin = Data.HMD.gaze_origin;
-world_dir = Data.world.gaze_dir;
+
+% Passenger
+distance        = Data.pa.distance;
+pos_z           = Data.pa.pos.z;
+world_origin    = Data.pa.world.gaze_origin;
+hmd_origin      = Data.pa.HMD.gaze_origin;
+world_dir       = Data.pa.world.gaze_dir;
+
+% Pedestrian
+dis_pe = Data.pe.distance;
 
 %% Time
 T = getTime(distance, dt, 1); % Set last argument to 1 to display table.
@@ -28,7 +34,19 @@ title("Distances");
 yyaxis left
 plot(distance);
 ylim([-10 100]);
-ylabel("eye gaze distance");
+ylabel("eye gaze distance passenger");
+yyaxis right
+plot(pos_z);
+ylim([-10 100]);
+ylabel("AV pos_z");
+
+figure;
+grid on;
+title("Distances");
+yyaxis left
+plot(dis_pe);
+ylim([-10 100]);
+ylabel("eye gaze distance pedestrian");
 yyaxis right
 plot(pos_z);
 ylim([-10 100]);

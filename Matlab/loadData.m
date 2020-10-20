@@ -41,19 +41,57 @@ M = Data_char;
 %% Data passenger and AV
 Data.dt = M(1,1); % in [s]
 Data.Time = M(:,1);
-Data.distance = M(:,10);
-Data.pos = struct3Coordinate(M(:,3:5));
-Data.rot = struct3Coordinate(M(:,6:8));
-Data.HMD.gaze_dir = struct3Coordinate(M(:,11:13));
-Data.world.gaze_dir = struct3Coordinate(M(:,14:16));
-Data.HMD.gaze_origin = struct3Coordinate(M(:,17:19));
-Data.world.gaze_origin = struct3Coordinate(M(:,20:22));
-Data.local.v = struct3Coordinate(M(:,23:25));
-Data.local.v_smooth = struct3Coordinate(M(:,26:28));
-Data.world.v = struct3Coordinate(M(:,29:31));
-Data.world.v_smooth = struct3Coordinate(M(:,32:34));
-Data.world.rb_v = struct3Coordinate(M(:,35:37));
-Data.local.rb_v = struct3Coordinate(M(:,38:40));
+Data.pa.pos = struct3Coordinate(M(:,3:5));
+Data.pa.rot = struct3Coordinate(M(:,6:8));
+
+Data.pa.distance = M(:,10);
+Data.pa.other.frame = M(:,11);
+Data.pa.other.captureTime = M(:,12);
+Data.pa.other.hmdpos = struct3Coordinate(M(:,13:15));
+Data.pa.other.hmdrot = struct3Coordinate(M(:,16:18));
+Data.pa.other.leftEyePupilSize = M(:,19);
+Data.pa.other.rightEyePupilSize = M(:,20);
+Data.pa.other.focusDistance = M(:,21);
+Data.pa.other.focusStability = M(:,22);
+
+Data.pa.HMD.gaze_dir = struct3Coordinate(M(:,23:25));
+Data.pa.world.gaze_dir = struct3Coordinate(M(:,26:28));
+Data.pa.HMD.gaze_origin = struct3Coordinate(M(:,29:31));
+Data.pa.world.gaze_origin = struct3Coordinate(M(:,32:34));
+
+Data.pa.local.v = struct3Coordinate(M(:,35:37));
+Data.pa.local.v_smooth = struct3Coordinate(M(:,38:40));
+Data.pa.world.v = struct3Coordinate(M(:,41:43));
+Data.pa.world.v_smooth = struct3Coordinate(M(:,44:46));
+Data.pa.world.rb_v = struct3Coordinate(M(:,47:49));
+Data.pa.local.rb_v = struct3Coordinate(M(:,50:52));
+
+%% Data distraction AV if present
+%Need to write logic to determine whether AV is present
+Data.diAV = M(:,53:96);
+
+%% Data pedestrian (when AV is present)
+Data.pe.pos = struct3Coordinate(M(:,97:99));
+Data.pe.rot = struct3Coordinate(M(:,100:102));
+
+Data.pe.distance = M(:,103);
+Data.pe.other.frame = M(:,104);
+Data.pe.other.captureTime = M(:,105);
+Data.pe.other.hmdpos = struct3Coordinate(M(:,106:108));
+Data.pe.other.hmdrot = struct3Coordinate(M(:,109:111));
+Data.pe.other.leftEyePupilSize = M(:,112);
+Data.pe.other.rightEyePupilSize = M(:,113);
+Data.pe.other.focusDistance = M(:,114);
+Data.pe.other.focusStability = M(:,115);
+
+Data.pe.HMD.gaze_dir = struct3Coordinate(M(:,116:118));
+Data.pe.world.gaze_dir = struct3Coordinate(M(:,119:121));
+Data.pe.HMD.gaze_origin = struct3Coordinate(M(:,122:124));
+Data.pe.world.gaze_origin = struct3Coordinate(M(:,125:127));
+
+Data.pe.gapAcceptance = M(:,128);
+
+%%
 t = toc;
 
 disp(['Loading data took ', num2str(t) ,' seconds.']);
