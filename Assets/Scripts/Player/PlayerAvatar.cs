@@ -7,6 +7,7 @@ using UnityEngine.Serialization;
 using UnityEngine.Assertions;
 using VehicleBehaviour;
 using VarjoExample;
+using Valve.VR;
 
 public enum HMISlot
 {
@@ -107,9 +108,9 @@ public class PlayerAvatar : MonoBehaviour
 
                 if(transform.name == "PassengerSmart_varjo(Clone)")
                 {
-                    PersistentManager.Instance.hasAuthority = true;
-                    GameObject go_SyncGazeLaser = gameObject.transform.Find("SyncGazeLaser").gameObject;
-                    go_SyncGazeLaser.SetActive(true);
+                    //GameObject go_SyncGazeLaser = gameObject.transform.Find("SyncGazeLaser").gameObject;
+                    //go_SyncGazeLaser.SetActive(true);
+                    //Debug.LogError("synclaser set to true in Local player");
                 }
 
                 break;
@@ -148,8 +149,13 @@ public class PlayerAvatar : MonoBehaviour
             {
                 su.enabled = false;
             }
-                //GameObject go_syncGazeLaser = gameObject.transform.Find("SyncGazeLaser").gameObject; // error
-                //go_syncGazeLaser.SetActive(true);
+            Debug.LogError($"Transform name = {transform.name}");
+            if (transform.name == "PassengerSmart_varjo(Clone)")
+            {
+                GameObject go_SyncGazeLaser = gameObject.transform.Find("SyncGazeLaser").gameObject;
+                go_SyncGazeLaser.SetActive(true);
+                Debug.LogError("synclaser set to true in remote player");
+            }
         }
         if (mode == PlayerSystem.Mode.HostAI)
         {

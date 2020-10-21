@@ -11,6 +11,9 @@ public class SceneSelector : MonoBehaviour
     public int sceneSelect;
     public int manualSelection;
     public bool useManualSelection;
+    public int manualHostRole;
+    public int manualClientRole;
+
     public enum Mapping
     {
         Baseline,

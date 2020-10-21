@@ -97,7 +97,14 @@ public class NetworkingManager : MonoBehaviour
                 {
                     _netSystem = new Host(_levelManager, _playerSystem, _aiCarSystem, _logger, _fixedLogger);
                     PersistentManager.Instance.nextScene = false;
-                    PersistentManager.Instance.hostRole = 0; // Host = passenger
+                    if(_SceneSelector.useManualSelection == false) 
+                    {
+                        PersistentManager.Instance.hostRole = 0; // Host = passenger
+                    }
+                    else if(_SceneSelector.useManualSelection == true)
+                    {
+                        PersistentManager.Instance.hostRole = _SceneSelector.manualHostRole;
+                    }
                 }
                 else if (_netSystem != null)
                 {

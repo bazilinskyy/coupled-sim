@@ -67,10 +67,8 @@ namespace VarjoExample
                 Debug.LogError("Failed to initialize gaze");
                 gameObject.SetActive(false);
             }
-            if(PersistentManager.Instance.hasAuthority == true)
-            {
                 crossHair = new LineDrawer();
-            }
+       
         }
 
         void Update()
@@ -142,12 +140,12 @@ namespace VarjoExample
                 //crossHair.DrawLineInGameView(gameObject, gazeRayOrigin + gazeRayDirection * 5.0f, gazeRayOrigin + gazeRayDirection * 10.0f, Color.green, 0.07f, false);
 
                 // Visualize gaze for all
-                if (PersistentManager.Instance._visualizeGaze == true && PersistentManager.Instance.hasAuthority == true)
+                if (PersistentManager.Instance._visualizeGaze == true)
                 {
                     crossHair.DrawLineInGameView(gameObject, gazeRayOrigin, gazeRayOrigin + gazeRayDirection * 30.0f, Color.green, 0.07f, true);
                 }
 
-                // Raycast into world, only see objects in the "Pedestrian layer"
+                // Raycast into world, only see objects in the "Target layer"
                 if (Physics.SphereCast(gazeRayOrigin, gazeRayRadius, gazeRayDirection, out gazeRayHit, Mathf.Infinity, 1 << LayerMask.NameToLayer(target)))
                 {
                     // Use layers or tags preferably to identify looked objects in your application.

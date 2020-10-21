@@ -34,7 +34,6 @@ namespace VarjoExample
         public Vector3 gazeRayDirection;
         public Vector3 gazePosition;
         public Vector3 gazeRayOrigin;
-        public List<string> list_role_varjo;
         public string role_varjo;
         public string target;
 
@@ -67,10 +66,7 @@ namespace VarjoExample
                 Debug.LogError("Failed to initialize gaze");
                 gameObject.SetActive(false);
             }
-            if(PersistentManager.Instance.hasAuthority == true)
-            {
                 crossHair = new LineDrawer();
-            }
         }
 
         void Update()
@@ -80,14 +76,12 @@ namespace VarjoExample
             {
                 role_varjo = "Pedestrian";
                 target = "Passenger";
-                list_role_varjo.Add(role_varjo);
                 nr_pe++;
             }
             else if (transform.parent.CompareTag("AutonomousCar") && nr_pa<1)
             {
                 role_varjo = "Passenger";
                 target = "Pedestrian";
-                list_role_varjo.Add(role_varjo);
                 nr_pa++;
             }
 
@@ -135,19 +129,18 @@ namespace VarjoExample
                 gazeRayDirection = transform.TransformVector(gazeRayForward);
                 gazeRayOrigin = transform.TransformPoint(gazePosition);
 
-                // Raycast into world, only see objects in the "Pedestrian layer"
+                // Raycast into world, only see objects in the "target layer"
                 if (Physics.SphereCast(gazeRayOrigin, gazeRayRadius, gazeRayDirection, out gazeRayHit, Mathf.Infinity, 1 << LayerMask.NameToLayer(target)))
                 {
                     // Use layers or tags preferably to identify looked objects in your application.
                     // Determine when the raycast collides with object with the "Pedestrian" tag
                     if (gazeRayHit.collider.gameObject.CompareTag(target) && target == "Pedestrian")
                     {
-                        // Take action if the distance between the pedestrian and car is smaller than 25m and larger than 14.4m
-                        // capped at 14.4m to prevent decelerations larger than 3m/s^2, which is experienced as uncomfortable by drivers - Schroeder 2008
-                        if(gazeRayHit.distance < 25.0f && gazeRayHit.distance > 14.4f)
+                        // No need to take action when the pedestrian looks at the AV
+                        /*if(gazeRayHit.distance < 25.0f && gazeRayHit.distance > 14.4f)
                         {
                             this.GetComponentInParent<AICar>().VarjoSaysStop();
-                        }
+                        }*/
                     }
 
                     if (drawDebug)
