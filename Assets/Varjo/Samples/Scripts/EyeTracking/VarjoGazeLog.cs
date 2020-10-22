@@ -23,7 +23,6 @@ namespace VarjoExample
         Vector3 hmdPosition;
         Vector3 hmdRotation;
         public Transform cam;
-        private LineDrawer lineDrawer;
 
         [Header("Should only the latest data be logged on each update")]
         public bool oneGazeDataPerFrame = false;

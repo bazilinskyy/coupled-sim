@@ -1,4 +1,13 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+public static class EnumUtil
+{
+    public static IEnumerable<T> GetValues<T>()
+    {
+        return Enum.GetValues(typeof(T)).Cast<T>();
+    }
+}
 public enum Operation
 {
     TurnRightShort,
@@ -10,7 +19,7 @@ public enum Operation
     SplinePoint,
     None,
     TurnLeft,
-    TurnRight
+    TurnRight,
 
 }
 static class OperationMethods
@@ -33,6 +42,21 @@ static class OperationMethods
         if (turns.Contains(operation)) { return true; }
         else { return false; }
     }
+}
+
+//These tags are used for the gazelogger to track what we are looking at exactly, (world is not a real tag but will be used as keyword when nothin else is being looked at)
+public enum LoggedTags
+{
+    World,
+    Target,
+    HUDSymbology,
+    HUDText,
+    ConformalSymbology,
+    InsideCar,
+    LeftMirror,
+    RightMirror,
+    RearMirror,
+    Unknown,
 }
 public enum TargetDifficulty
 {
