@@ -1440,29 +1440,33 @@ PlayerAvatar.
 
 Besides the HMD position, the eye-gaze visualization needs to be networked too. Since the existing networking method only networks 
 transforms, new objects need to be created. This is done by creating two invisible objects which take the position of the 
-"GazeOrigin" and the "GazeDirection". Next a new script is created to draw a line between the two positions. 
+"GazeOrigin" and the "GazeDirection". Furthermore, since we are using two Varjo HMDs which both use the Varjo API, an
+additional constraint has to be added too the position tracking. Otherwise the synced laser can take the HMD data from the 
+pedestrian too, which is undesired. To prevent this from happening the serial number of the HMDs are used to distinguish the HMDs.
+This can be done using the Valve.VR API. 
 
 The position setting of the two invisible objects is done as follows: 
 ```
-        // Check whether eye-tracking is established first
-        if (SyncGaze.GetComponent<VarjoGazeRay_CS>().getGazeStatus() != VarjoPlugin.GazeStatus.INVALID)
-        {
-            // Get gazeRayOrigin and Direction
-            _gazeRayOrigin = SyncGaze.GetComponent<VarjoGazeRay_CS>().gazeRayOrigin;
-            _gazeRayDirection = SyncGaze.GetComponent<VarjoGazeRay_CS>().gazeRayDirection;
+using Valve.VR;
+...
+        
+// Check whether eye-tracking is established first
+if (SyncGaze.GetComponent<VarjoGazeRay_CS>().getGazeStatus() != VarjoPlugin.GazeStatus.INVALID)
+{
+	// Get gazeRayOrigin and Direction
+	_gazeRayOrigin = SyncGaze.GetComponent<VarjoGazeRay_CS>().gazeRayOrigin;
+	_gazeRayDirection = SyncGaze.GetComponent<VarjoGazeRay_CS>().gazeRayDirection;
 
-            // Apply the right poses according to the gameobject name
-            if (gameObject.name == "GazeOrigin")
-            {
-                transform.position = _gazeRayOrigin;
-                //Debug.LogError($"Gaze Origin found {_gazeRayOrigin}, transform from {transform.name} = {transform.position}");
-            }
-            if (gameObject.name == "GazeDirection")
-            {
-                transform.position = _gazeRayOrigin + _gazeRayDirection * 50.0f;
-                //Debug.LogError($"Gaze direction found {_gazeRayDirection}, transform from {transform.name} = {transform.position}");
-            }
-        }
+	// Apply the right poses according to the gameobject name
+	if (gameObject.name == "GazeOrigin" && SteamVR.instance.hmd_SerialNumber == [fill in HMD serial number])
+	{
+		transform.position = _gazeRayOrigin;
+	}
+	if (gameObject.name == "GazeDirection" && SteamVR.instance.hmd_SerialNumber == [fill in HMD serial number])
+	{
+		transform.position = _gazeRayOrigin + _gazeRayDirection * 50.0f;
+	}
+}
 ```
 This script takes the HMD data from the gaze object (to which the "varjoGazeRay_CS" script is attached) and uses it to find the
 position of the "GazeOrigin" and "GazeDirection".
@@ -1470,16 +1474,16 @@ position of the "GazeOrigin" and "GazeDirection".
 Next, the script "SyncedGazeLaser" is made to draw a line between the two previously mentioned objects, which is done 
 in the same way as in the "varjoGazeRay_CS" script.
 ```
-        gazeRayOrigin = gazeRayOrigin_t.position;
-        gazeRayDirection = gazeRayDirection_t.position;
+gazeRayOrigin = gazeRayOrigin_t.position;
+gazeRayDirection = gazeRayDirection_t.position;
 
-        //GameObject go_Gaze = gameObject.transform.Find("Gaze").gameObject;
+//GameObject go_Gaze = gameObject.transform.Find("Gaze").gameObject;
 
 
-        if (PersistentManager.Instance._visualizeGaze == true)
-        {
-            SyncLineDrawer_.DrawLineInGameView(go_Gaze, gazeRayOrigin, gazeRayDirection, Color.cyan, 0.07f, false);
-        }
+if (PersistentManager.Instance._visualizeGaze == true)
+{
+	SyncLineDrawer_.DrawLineInGameView(go_Gaze, gazeRayOrigin, gazeRayDirection, Color.cyan, 0.07f, false);
+}
 ```
 
 # Vive controller
