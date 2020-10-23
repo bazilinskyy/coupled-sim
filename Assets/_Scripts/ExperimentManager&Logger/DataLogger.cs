@@ -111,9 +111,8 @@ public class DataLogger : MonoBehaviour
         RearMirror,*/
 
         IEnumerable<LoggedTags> loggedTags = EnumUtil.GetValues<LoggedTags>();
-        Debug.Log(loggedTags.Count());
         string[] columns = new string[loggedTags.Count()]; int index = 0;
-        foreach (LoggedTags tag in loggedTags) { columns[index] = tag.ToString(); Debug.Log(columns[index]); index++; }
+        foreach (LoggedTags tag in loggedTags) { columns[index] = tag.ToString(); index++; }
 
         string[] logData = new string[columns.Length];
         string filePath = string.Join("/", saveFolder, fixationFileName);

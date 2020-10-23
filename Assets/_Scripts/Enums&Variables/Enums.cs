@@ -74,7 +74,8 @@ public enum GameStates
     Waiting,
     TransitionToWaitingRoom,
     TransitionToCar,
-    Finished
+    Finished,
+
 }
 
 public enum NavigationType

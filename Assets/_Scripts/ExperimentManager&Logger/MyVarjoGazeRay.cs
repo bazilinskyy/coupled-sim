@@ -94,6 +94,7 @@ public class MyVarjoGazeRay : MonoBehaviour
                         lookingAtWorld = false;
                     }
                 }
+                //If hit colliders not tagged we assume it is the world:
                 if (lookingAtWorld) { gazeLogger.FixatingOn(LoggedTags.World); }
 
                 if (drawDebug)
@@ -113,7 +114,7 @@ public class MyVarjoGazeRay : MonoBehaviour
             }
 
         }
-        //Inavlaible eye data....
+        //Invailable eye data....
         else { gazeLogger.FixatingOn(LoggedTags.Unknown); }
     }
 }

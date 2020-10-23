@@ -32,7 +32,7 @@ public class WaypointEditor
         DrawGameObjectName(waypoint, gizmoType);
 
         Gizmos.color = Color.red;
-        Gizmos.DrawLine(waypoint.transform.position, waypoint.transform.position + waypoint.transform.forward * 3f);
+        Gizmos.DrawLine(waypoint.transform.position + new Vector3(0,0.1f,0), waypoint.transform.position + new Vector3(0, 0.1f, 0) + waypoint.transform.forward * 3f);
     }
 
 }

@@ -31,7 +31,7 @@ public class SplineCreator : MonoBehaviour
 	}
 	void OnDrawGizmos()
 	{
-		if (navigationHelper == null) { navigationHelper = gameObject.GetComponent<NavigationHelper>(); }
+		if (navigationHelper == null) {navigationHelper = gameObject.GetComponent<NavigationHelper>(); }
 		Gizmos.color = Color.cyan;
 		if (showGizmos)
 		{

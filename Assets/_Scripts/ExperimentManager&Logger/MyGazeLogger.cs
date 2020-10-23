@@ -143,7 +143,7 @@ public class MyGazeLogger : MonoBehaviour
         for (int i = 0; i < values.Length; ++i)
         {
             values[i] = values[i].Replace("\r", "").Replace("\n", ""); // Remove new lines so they don't break csv
-            line += values[i] + (i == (values.Length - 1) ? "" : ";"); // Do not add semicolon to last data string
+            line += values[i] + (i == (values.Length - 1) ? "" : ","); // Do not add semicolon to last data string
         }
         writer.WriteLine(line);
     }
@@ -204,6 +204,7 @@ public class MyGazeLogger : MonoBehaviour
     }
     public void FixatingOn(LoggedTags tag)
     {
+        if(tag != fixatingOn) { Debug.Log($"Fixating on {tag}..."); }
         fixationData.FixatingOn(tag);
         fixatingOn = tag;
     }

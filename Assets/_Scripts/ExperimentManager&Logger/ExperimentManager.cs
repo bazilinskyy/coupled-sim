@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using System.Linq;
-using Leap;
 
 [RequireComponent(typeof(DataLogger))]
 public class ExperimentManager : MonoBehaviour
@@ -26,6 +24,8 @@ public class ExperimentManager : MonoBehaviour
     
     public KeyCode keyToggleDriving = KeyCode.Space;
     
+    public KeyCode keyToggleSymbology = KeyCode.Tab;
+
     public KeyCode setToLastWaypoint = KeyCode.R;
     public KeyCode inputNameKey = KeyCode.Y;
 
@@ -66,7 +66,6 @@ public class ExperimentManager : MonoBehaviour
     private Camera rightMirror;
 
     //The camera used and head position inside the car
-
     private Transform varjoRig;
     private Transform leapRig;
     private Transform normalCam;
@@ -85,15 +84,15 @@ public class ExperimentManager : MonoBehaviour
     //The data manger handling the saving of vehicle and target detection data Should be added to the experiment manager object 
     private DataLogger dataManager;
     //Maximum raycasts used in determining visbility:  We use Physics.RayCast to check if we can see the target. We cast this to a random positin on the targets edge to see if it is partly visible.
-    private int maxNumberOfRandomRayHits = 40;
-    private float animationTime = 3f; //time for lighting aniimation in seconds
+    private readonly int maxNumberOfRandomRayHits = 40;
+    private readonly float animationTime = 3f; //time for lighting aniimation in seconds
     private float lastUserInputTime = 0f ; 
     public float thresholdUserInput = 0.15f; //The minimum time between user inputs (when within this time only the first one is used)
     private bool endSimulation = false;
 
     //booleans used by UserInputName() and for processing user input from steer
     private bool inputName = false;  private bool firstFrameProcessingInput = true;
-    private float userInputTime = 0f; private float userInputThresholdTime = 0.2f;
+    private float userInputTime = 0f; private readonly float userInputThresholdTime = 0.2f;
     void Awake()
     {
         blackOutScreen.color = new Color(0, 0, 0, 1f);
@@ -192,6 +191,7 @@ public class ExperimentManager : MonoBehaviour
 
             //Researcher inputs
             if (Input.GetKeyDown(keyToggleDriving)){ car.GetComponent<SpeedController>().ToggleDriving(); }
+            if (Input.GetKeyDown(keyToggleSymbology)) { ToggleSymbology(); }
             if (Input.GetKeyDown(myPermission)) { car.navigationFinished = true; } //Finish navigation early
             if (Input.GetKeyDown(setToLastWaypoint)) { SetCarToLastWaypoint();  }
             if (Input.GetKeyDown(resetHeadPosition))
@@ -213,6 +213,24 @@ public class ExperimentManager : MonoBehaviour
             Debug.Log("Navigation finished...");
             if (!IsNextNavigation()){ Debug.Log("Simulation finished..."); endSimulation = true; }
         }
+    }
+    private void ToggleSymbology()
+    {
+        //Get a list f navigation types
+        IEnumerable<NavigationType> navigationTypes = EnumUtil.GetValues<NavigationType>();
+        List<NavigationType> navigationList = new List<NavigationType>(); 
+        foreach (NavigationType type in navigationTypes) { navigationList.Add(type); }
+
+        int index = navigationList.IndexOf(activeExperiment.navigationType);
+
+        int indexNextType = ((index + 1) == navigationList.Count ? 0 : index + 1);
+
+        NavigationType nextNavType = navigationList[indexNextType];
+
+        activeExperiment.navigationType = nextNavType;
+        activeNavigationHelper.SetUp(nextNavType, activeExperiment.transparency, car, HUDMaterials, false);
+
+        Debug.Log($"Switched to {nextNavType}...");
     }
     private void SetGameObjectsFromCar()
     {
@@ -347,8 +365,6 @@ public class ExperimentManager : MonoBehaviour
     }
     void SetupNextExperiment()
     {
-        
-
         //Activate next experiment (should only get here if we actually have a next experiment)
         ActivateNextExperiment();
         
@@ -757,10 +773,6 @@ public class ExperimentManager : MonoBehaviour
 
         yield return new WaitForSeconds(animationTime );
 
-        
-
-        
-
         Debug.Log($"Verification cam position: {CameraTransform().position}, {driverView.position}...");
     }
     IEnumerator SetCarSteadyAt(Vector3 targetPos, Quaternion targetRot)
@@ -787,11 +799,11 @@ public class ExperimentManager : MonoBehaviour
         Debug.Log("Rendering startscreen...");
         UIText.GetComponent<CanvasRenderer>().SetAlpha(0f);
         //If first experiment we render your welcome
-        if ((GetIndexCurrentExperiment()) == 0) { UIText.text = $"Eye-calibration incoming when your ready!"; }
-        else
-        {
-            UIText.text = $"Experiment {GetIndexCurrentExperiment() } completed...";
-        }
+        if (GetIndexCurrentExperiment() == 0 && !Varjo.VarjoPlugin.IsGazeCalibrated()) { UIText.text = $"Eye-calibration stage..."; }
+        else if (Varjo.VarjoPlugin.IsGazeCalibrated()) { UIText.text = $"Practise drive starting when you are ready..."; }
+        else if (GetIndexCurrentExperiment() == 0) { UIText.text = $"Practise drive completed..."; }
+        else { UIText.text = $"Experiment {GetIndexCurrentExperiment() } completed..."; }
+        
         UIText.CrossFadeAlpha(1, 2.5f, false);
 
         yield return new WaitForSeconds(3f);
@@ -800,7 +812,7 @@ public class ExperimentManager : MonoBehaviour
 
         yield return new WaitForSeconds(3f);
 
-        if ((GetIndexCurrentExperiment()) != 0) { UIText.text = $"Experiment {GetIndexCurrentExperiment() + 1 } starting when your ready..."; }
+        if ((GetIndexCurrentExperiment()) != 0) { UIText.text = $"Experiment {GetIndexCurrentExperiment() } starting when your ready..."; }
 
         UIText.CrossFadeAlpha(1, 2.5f, false);
     }

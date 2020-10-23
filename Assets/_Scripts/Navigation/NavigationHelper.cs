@@ -332,9 +332,9 @@ public class NavigationHelper : MonoBehaviour
             waypoint.RenderMe(render);
         }
     }
-    public void SetUp(NavigationType navigationType, float _transparency, Navigator _car, HUDMaterials _HUDMAterials)
+    public void SetUp(NavigationType navigationType, float _transparency, Navigator _car, HUDMaterials _HUDMAterials, bool makeNavigation = true)
     {
-        splineCreator.MakeNavigation();
+        if (makeNavigation) { splineCreator.MakeNavigation(); }
         
         //Reset all targets
         foreach (Target target in GetAllTargets()) { target.ResetTarget(); }
