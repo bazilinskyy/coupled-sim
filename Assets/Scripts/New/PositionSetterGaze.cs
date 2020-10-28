@@ -36,8 +36,6 @@ public class PositionSetterGaze : MonoBehaviour
                     //Debug.LogError($"Gaze direction found {_gazeRayDirection}, transform from {transform.name} = {transform.position}");
                 }
             }
-
-
         }
     }
 }
