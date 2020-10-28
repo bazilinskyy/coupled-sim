@@ -48,8 +48,8 @@ public class WorldLogger
     Vector3 gazeRayOrigin_pa;       float gazeRayOrigin_pa_x;       float gazeRayOrigin_pa_y;       float gazeRayOrigin_pa_z;
 
     float distance_pe;
-    long Frame_pe;
-    long CaptureTime_pe;
+    float Frame_pe;
+    float CaptureTime_pe;
     
     Vector3 Hmdposition_pe; float Hmdposition_pe_x; float Hmdposition_pe_y; float Hmdposition_pe_z;
     Vector3 Hmdrotation_pe; float Hmdrotation_pe_x; float Hmdrotation_pe_y; float Hmdrotation_pe_z;
@@ -278,41 +278,42 @@ public class WorldLogger
         {
             pedestrian.GetPose(returnBodySuit()).SerializeTo(_fileWriter); // to do: remove non root pose
 
-            var pedestrianGaze = pedestrian.transform.GetComponentInChildren<VarjoGazeRay_CS_1>();
-            if (VarjoPlugin.GetGaze().status == VarjoPlugin.GazeStatus.VALID && pedestrian.transform.Find("Gaze"))
+            var pedestrianGaze = pedestrian.transform.GetComponentInChildren<VarjoGazeRay_CS_1>(); // to be deleted
+
+            // Get NetworkObject data
+            var N1 = pedestrian.transform.Find("NetworkObject_1");
+            var N2 = pedestrian.transform.Find("NetworkObject_2");
+            var N3 = pedestrian.transform.Find("NetworkObject_3");
+            var N4 = pedestrian.transform.Find("NetworkObject_4");
+            var N5 = pedestrian.transform.Find("NetworkObject_5");
+
+            float gaze_status_pe = Mathf.Round(N1.position.x);
+            if (gaze_status_pe == (float)VarjoPlugin.GazeStatus.VALID && pedestrian.transform.Find("Gaze"))
             {
-                    distance_pe = pedestrianGaze.getGazeRayHit().distance; //pedestrian.transform.GetComponentInChildren<VarjoGazeRay_CS>().getGazeRayHit().distance;
-                    Frame_pe = pedestrianGaze.Frame;
-                    CaptureTime_pe = pedestrianGaze.CaptureTime;
+                    distance_pe     = N1.localScale.x; 
+                    Frame_pe        = N1.localScale.y;   // change to float
+                    CaptureTime_pe  = N1.localScale.z;   // change to float
 
-                    Hmdposition_pe = pedestrianGaze.hmdposition;
-                    Hmdposition_pe_x = Hmdposition_pe.x; Hmdposition_pe_y = Hmdposition_pe.y; Hmdposition_pe_z = Hmdposition_pe.z;
+                    Hmdposition_pe_x = N2.position.x;   Hmdposition_pe_y = N2.position.y;   Hmdposition_pe_z = N2.position.z;
+                    Hmdrotation_pe_x = N2.localScale.x; Hmdrotation_pe_y = N2.localScale.y; Hmdrotation_pe_z = N2.localScale.z;
 
-                    Hmdrotation_pe = pedestrianGaze.hmdrotation;
-                    Hmdrotation_pe_x = Hmdrotation_pe.x; Hmdrotation_pe_y = Hmdrotation_pe.y; Hmdrotation_pe_z = Hmdrotation_pe.z;
+                    LeftEyePupilSize_pe     = N3.position.x;
+                    RightEyePupilSize_pe    = N3.position.y;
+                    FocusDistance_pe        = N3.localScale.x;
+                    FocusStability_pe       = N3.localScale.y;
 
-                    LeftEyePupilSize_pe = pedestrianGaze.LeftPupilSize;
-                    RightEyePupilSize_pe = pedestrianGaze.RightPupilSize;
-                    FocusDistance_pe = pedestrianGaze.FocusDistance;
-                    FocusStability_pe = pedestrianGaze.FocusStability;
+                    gazeRayForward_pe_x = N4.position.x;        gazeRayForward_pe_y = N4.position.y;        gazeRayForward_pe_z = N4.position.z;// hmd space
+                    gazeRayDirection_pe_x = N4.localScale.x;    gazeRayDirection_pe_y = N4.localScale.y;    gazeRayDirection_pe_z = N4.localScale.z;// world space
 
-                    gazeRayForward_pe = pedestrianGaze.gazeRayForward;              // hmd space
-                    gazeRayForward_pe_x = gazeRayForward_pe.x; gazeRayForward_pe_y = gazeRayForward_pe.y; gazeRayForward_pe_z = gazeRayForward_pe.z;
-
-                    gazeRayDirection_pe = pedestrianGaze.gazeRayDirection;          // world space
-                    gazeRayDirection_pe_x = gazeRayDirection_pe.x; gazeRayDirection_pe_y = gazeRayDirection_pe.y; gazeRayDirection_pe_z = gazeRayDirection_pe.z;
-
-                    gazePosition_pe = pedestrianGaze.gazePosition;                  // hmd space
-                    gazePosition_pe_x = gazePosition_pe.x; gazePosition_pe_y = gazePosition_pe.y; gazePosition_pe_z = gazePosition_pe.z;
-
-                    gazeRayOrigin_pe = pedestrianGaze.gazeRayOrigin;                // world space
-                    gazeRayOrigin_pe_x = gazeRayOrigin_pe.x; gazeRayOrigin_pe_y = gazeRayOrigin_pe.y; gazeRayOrigin_pe_z = gazeRayOrigin_pe.z;
+                    gazePosition_pe_x = N5.position.x;      gazePosition_pe_y = N5.position.y;      gazePosition_pe_z = N5.position.z;// hmd space
+                    gazeRayOrigin_pe_x = N5.localScale.x;   gazeRayOrigin_pe_y = N5.localScale.y;   gazeRayOrigin_pe_z = N5.localScale.z;// world space
             }
-            else if (VarjoPlugin.GetGaze().status != VarjoPlugin.GazeStatus.VALID)
+            else if (gaze_status_pe != (float)VarjoPlugin.GazeStatus.VALID)
             {
                 distance_pe = -8.0f;
-                Frame_pe = (long)-1.0f;
-                CaptureTime_pe = (long)-1.0f;
+                Debug.LogError($"Varjo NOT tracking - pedestrian gaze distance in logging = {distance_pe}");
+                Frame_pe = -1.0f;
+                CaptureTime_pe = -1.0f;
 
                 Hmdposition_pe_x = -1.0f; Hmdposition_pe_y = -1.0f; Hmdposition_pe_z = -1.0f;
                 Hmdrotation_pe_x = -1.0f; Hmdrotation_pe_y = -1.0f; Hmdrotation_pe_z = -1.0f;
@@ -480,8 +481,8 @@ public class LogConverter
 
         // Varjo data of the pedestrian
         public float distance_pe;
-        public long Frame_pe;
-        public long CaptureTime_pe;
+        public float Frame_pe;
+        public float CaptureTime_pe;
 
         public float Hmdposition_pe_x; public float Hmdposition_pe_y; public float Hmdposition_pe_z;
         public float Hmdrotation_pe_x; public float Hmdrotation_pe_y; public float Hmdrotation_pe_z;
@@ -624,8 +625,8 @@ public class LogConverter
                     _ = reader.ReadInt32(); // Blinkers, unused 
 
                     frame.distance_pe = reader.ReadSingle();
-                    frame.Frame_pe = reader.ReadInt64();
-                    frame.CaptureTime_pe = reader.ReadInt64();
+                    frame.Frame_pe = reader.ReadSingle();
+                    frame.CaptureTime_pe = reader.ReadSingle();
 
                     frame.Hmdposition_pe_x = reader.ReadSingle(); frame.Hmdposition_pe_y = reader.ReadSingle(); frame.Hmdposition_pe_z = reader.ReadSingle();
                     frame.Hmdrotation_pe_x = reader.ReadSingle(); frame.Hmdrotation_pe_y = reader.ReadSingle(); frame.Hmdrotation_pe_z = reader.ReadSingle();
@@ -763,7 +764,7 @@ public class LogConverter
             writer.Write(separator); // for the Timestamp column
             writer.Write(separator); // for the Ping column
 
-            const string driverTransformHeader = "pos_x;pos_y;pos_z;rot_x;rot_y;rot_z;blinkers;distance_pa;frame;captureTime;hmdpos_x;hmdpos_y;hmdpos_z;hmdrot_x;hmdpos_y;hmdpos_z;leftEyePupilSize;rightEyePupilSize;focusDistance;focusStability;gazeRayForward_x;gazeRayForward_y;gazeRayForward_z;gazeRayDirection_x;gazeRayDirection_y;gazeRayDirection_z;gazePosition_x;gazePosition_y;gazePosition_z;gazeOrigin_x;gazeOrigin_y;gazeOrigin_z;vel_local_x;vel_local_y;vel_local_z;vel_local_smooth_x;vel_local_smooth_y;vel_local_smooth_z;vel_x;vel_y;vel_z;vel_smooth_x;vel_smooth_y;vel_smooth_z"; // added distance after blinkers
+            const string driverTransformHeader = "pos_x;pos_y;pos_z;rot_x;rot_y;rot_z;blinkers;distance_pa;frame;captureTime;hmdpos_x;hmdpos_y;hmdpos_z;hmdrot_x;hmdrot_y;hmdrot_z;leftEyePupilSize;rightEyePupilSize;focusDistance;focusStability;gazeRayForward_x;gazeRayForward_y;gazeRayForward_z;gazeRayDirection_x;gazeRayDirection_y;gazeRayDirection_z;gazePosition_x;gazePosition_y;gazePosition_z;gazeOrigin_x;gazeOrigin_y;gazeOrigin_z;vel_local_x;vel_local_y;vel_local_z;vel_local_smooth_x;vel_local_smooth_y;vel_local_smooth_z;vel_x;vel_y;vel_z;vel_smooth_x;vel_smooth_y;vel_smooth_z"; // added distance after blinkers
             const string localDriverTransformHeader = driverTransformHeader + ";rb_vel_x;rb_vel_y;rb_vel_z;rb_vel_local_x;rb_vel_local_y;rb_vel_local_z";
             List<string> headers = new List<string>();
             for (int i = 0; i < numDrivers; i++)
@@ -784,7 +785,7 @@ public class LogConverter
             }
             // test
             Debug.LogError($"numPedstrians = {numPedestrians}");
-            const string boneTransformHeader = "pos_x;pos_y;pos_z;rot_x;rot_y;rot_z;distance_pe;frame;captureTime;hmdpos_x;hmdpos_y;hmdpos_z;hmdrot_x;hmdpos_y;hmdpos_z;leftEyePupilSize;rightEyePupilSize;focusDistance;focusStability;gazeRayForward_x;gazeRayForward_y;gazeRayForward_z;gazeRayDirection_x;gazeRayDirection_y;gazeRayDirection_z;gazePosition_x;gazePosition_y;gazePosition_z;gazeOrigin_x;gazeOrigin_y;gazeOrigin_z;gapAcceptance;";
+            const string boneTransformHeader = "pos_x;pos_y;pos_z;rot_x;rot_y;rot_z;distance_pe;frame;captureTime;hmdpos_x;hmdpos_y;hmdpos_z;hmdrot_x;hmdrot_y;hmdrot_z;leftEyePupilSize;rightEyePupilSize;focusDistance;focusStability;gazeRayForward_x;gazeRayForward_y;gazeRayForward_z;gazeRayDirection_x;gazeRayDirection_y;gazeRayDirection_z;gazePosition_x;gazePosition_y;gazePosition_z;gazeOrigin_x;gazeOrigin_y;gazeOrigin_z;gapAcceptance;";
             /*if (WorldLogger.returnBodySuit())
             {
                 writer.Write(string.Join(separator, Enumerable.Repeat(boneTransformHeader, numPedestrians * (pedestrianSkeletonNames.Length + 1)))); //writes the bonetransformheader for every "part" of the pedestrian
@@ -1078,6 +1079,7 @@ public class LogConverter
                             TranslateBinaryLogToCsv(fullName, csvName, _pedestrianSkeletonNames, UNITY_WORLD_ROOT, default, Quaternion.identity);
                         }
 
+                        Debug.Log($"poy = {_pois[0]}");
                         foreach (var poi in _pois)
                         {
                             if (GUILayout.Button("Transform with " + poi.Name))

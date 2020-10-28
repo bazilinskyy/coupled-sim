@@ -8,6 +8,7 @@ using System.Runtime;
 using UnityEngine;
 using UnityEngine.UIElements;
 using Varjo;
+using Valve.VR;
 
 namespace VarjoExample
 {
@@ -91,7 +92,7 @@ namespace VarjoExample
             // Data for logging
             Frame = data.frameNumber;
             CaptureTime = data.captureTime;
-            hmdposition = VarjoManager.Instance.HeadTransform.position;
+            hmdposition = VarjoManager.Instance.HeadTransform.position;                 
             hmdrotation_quaternion = VarjoManager.Instance.HeadTransform.rotation;
             hmdrotation = VarjoManager.Instance.HeadTransform.rotation.eulerAngles;
             LeftPupilSize = data.leftPupilSize;
@@ -127,32 +128,31 @@ namespace VarjoExample
 
                 // Transform gaze direction and origin from HMD space to world space
                 gazeRayDirection = transform.TransformVector(gazeRayForward);
-                gazeRayOrigin = transform.TransformPoint(gazePosition);
+                gazeRayOrigin = transform.TransformPoint(gazePosition);         
 
-                // Raycast into world, only see objects in the "target layer"
-                if (Physics.SphereCast(gazeRayOrigin, gazeRayRadius, gazeRayDirection, out gazeRayHit, Mathf.Infinity, 1 << LayerMask.NameToLayer(target)))
+                if (SteamVR.instance.hmd_SerialNumber == "LHR-7863A1E8") // LHR-85C3EF8C
                 {
-                    // Use layers or tags preferably to identify looked objects in your application.
-                    // Determine when the raycast collides with object with the "Pedestrian" tag
-                    if (gazeRayHit.collider.gameObject.CompareTag(target) && target == "Pedestrian")
+                    // Raycast into world, only see objects in the "target layer"
+                    if (Physics.SphereCast(gazeRayOrigin, gazeRayRadius, gazeRayDirection, out gazeRayHit, Mathf.Infinity, 1 << LayerMask.NameToLayer(target)))
                     {
-                        // No need to take action when the pedestrian looks at the AV
-                        /*if(gazeRayHit.distance < 25.0f && gazeRayHit.distance > 14.4f)
+                        // Use layers or tags preferably to identify looked objects in your application.
+                        // Determine when the raycast collides with object with the "Pedestrian" tag
+                        if (gazeRayHit.collider.gameObject.CompareTag(target) && target == "Passenger")
                         {
-                            this.GetComponentInParent<AICar>().VarjoSaysStop();
-                        }*/
-                    }
+                            //Debug.LogError($"Target {target} hit, called: {gazeRayHit.collider.gameObject.transform.parent.parent.parent.name} with distance {gazeRayHit.distance}");
+                        }
 
-                    if (drawDebug)
-                    {
-                        Debug.DrawLine(gazeRayOrigin, gazeRayOrigin + gazeRayDirection * 10.0f, Color.green);
+                        if (drawDebug)
+                        {
+                            Debug.DrawLine(gazeRayOrigin, gazeRayOrigin + gazeRayDirection * 10.0f, Color.green);
+                        }
                     }
-                }
-                else
-                {
-                    if (drawDebug)
+                    else
                     {
-                        Debug.DrawLine(gazeRayOrigin, gazeRayOrigin + gazeRayDirection * 10.0f, Color.white);
+                        if (drawDebug)
+                        {
+                            Debug.DrawLine(gazeRayOrigin, gazeRayOrigin + gazeRayDirection * 10.0f, Color.white);
+                        }
                     }
                 }
 

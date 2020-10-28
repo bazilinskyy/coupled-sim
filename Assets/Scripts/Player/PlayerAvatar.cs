@@ -101,17 +101,7 @@ public class PlayerAvatar : MonoBehaviour
 
                 // Setting the Varjo API only active for the local player
                 GameObject go_VarjoManager = gameObject.transform.Find("VarjoCameraRig").gameObject;
-                //GameObject go_Gaze = gameObject.transform.Find("Gaze").gameObject;
-
                 go_VarjoManager.SetActive(true);
-                //go_Gaze.SetActive(true);
-
-                if(transform.name == "PassengerSmart_varjo(Clone)")
-                {
-                    //GameObject go_SyncGazeLaser = gameObject.transform.Find("SyncGazeLaser").gameObject;
-                    //go_SyncGazeLaser.SetActive(true);
-                    //Debug.LogError("synclaser set to true in Local player");
-                }
 
                 break;
             case PlayerSystem.Mode.VR:
@@ -149,12 +139,10 @@ public class PlayerAvatar : MonoBehaviour
             {
                 su.enabled = false;
             }
-            Debug.LogError($"Transform name = {transform.name}");
             if (transform.name == "PassengerSmart_varjo(Clone)")
             {
                 GameObject go_SyncGazeLaser = gameObject.transform.Find("SyncGazeLaser").gameObject;
                 go_SyncGazeLaser.SetActive(true);
-                Debug.LogError("synclaser set to true in remote player");
             }
         }
         if (mode == PlayerSystem.Mode.HostAI)

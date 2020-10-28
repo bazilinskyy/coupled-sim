@@ -72,7 +72,6 @@ public class Client : NetworkSystem
         _playerSys.ActivatePlayerAICar();
         _currentState = NetState.InGame;
         var roleName = _lvlManager.ActiveExperiment.Roles[_roles[_client.MyPlayerId]].Name;
-        Debug.LogError($"rolename = {roleName}");
         //_logger.BeginLog($"ClientLog-{roleName}-", _lvlManager.ActiveExperiment, lights, Time.realtimeSinceStartup);
         //_fixedTimeLogger.BeginLog($"ClientFixedTimeLog-{roleName}-", _lvlManager.ActiveExperiment, lights, Time.fixedTime);
 
@@ -198,7 +197,7 @@ public class Client : NetworkSystem
                 {
                         //_ip = GUILayout.TextField(_ip);   // Manual input
                         //_ip = "127.0.0.1";                //Connect to own pc 
-                        _ip = "192.168.0.12"; //"192.168.0.10"; //"145.94.249.244";             //Connect to main pc: TUD1002063
+                        _ip = "169.254.7.83";//Connect to main pc: TUD1002063
                     IPAddress addr;
                     if (IPAddress.TryParse(_ip, out addr))
                     {
