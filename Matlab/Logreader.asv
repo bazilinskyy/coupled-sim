@@ -29,11 +29,11 @@ figure;
 grid on;
 title("Distances");
 yyaxis left
-plot(pe.distance);
+plot(dis_pe);
 ylim([-10 100]);
 ylabel("eye gaze distance pedestrian");
 yyaxis right
-plot(pa.pos.z);
+plot(pos_z);
 ylim([-10 100]);
 ylabel("AV pos_z");
 
@@ -41,11 +41,11 @@ figure;
 grid on;
 title("Distances");
 yyaxis left
-plot(pe.distance2);
+plot(dis_pe2);
 ylim([-10 100]);
 ylabel("eye gaze distance pedestrian 2");
 yyaxis right
-plot(pa.pos.z);
+plot(pos_z);
 ylim([-10 100]);
 ylabel("AV pos_z");
 
@@ -53,11 +53,11 @@ figure;
 grid on;
 title("Distances");
 yyaxis left
-plot(pe.distance3);
+plot(dis_pe3);
 ylim([-10 100]);
 ylabel("eye gaze distance pedestrian 3");
 yyaxis right
-plot(pa.pos.z);
+plot(pos_z);
 ylim([-10 100]);
 ylabel("AV pos_z");
 
@@ -65,11 +65,11 @@ figure;
 grid on;
 title("Distances");
 yyaxis left
-plot(diAV.distance);
+plot(dis_diAV);
 ylim([-10 100]);
 ylabel("eye gaze distance diAV");
 yyaxis right
-plot(pa.pos.z);
+plot(pos_z);
 ylim([-10 100]);
 ylabel("AV pos_z");
 
@@ -77,11 +77,11 @@ figure;
 grid on;
 title("Distances");
 yyaxis left
-plot(diAV.world.gaze_dir);
+plot(gaze_dir_diAV);
 ylim([-10 100]);
 ylabel("gaze_dir_diAV");
 yyaxis right
-plot(pa.pos.z);
+plot(pos_z);
 ylim([-10 100]);
 ylabel("AV pos_z");
 
