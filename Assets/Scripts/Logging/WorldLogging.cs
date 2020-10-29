@@ -317,7 +317,6 @@ public class WorldLogger
             else if (gaze_status_pe != (float)VarjoPlugin.GazeStatus.VALID)
             {
                 distance_pe = -8.0f;
-                Debug.LogError($"Varjo NOT tracking - pedestrian gaze distance in logging = {distance_pe}");
                 Frame_pe = -1.0f;
                 CaptureTime_pe = -1.0f;
 
@@ -1085,7 +1084,6 @@ public class LogConverter
                             TranslateBinaryLogToCsv(fullName, csvName, _pedestrianSkeletonNames, UNITY_WORLD_ROOT, default, Quaternion.identity);
                         }
 
-                        Debug.Log($"poy = {_pois[0]}");
                         foreach (var poi in _pois)
                         {
                             if (GUILayout.Button("Transform with " + poi.Name))
