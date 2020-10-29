@@ -1,6 +1,7 @@
 function latestfile = getlatestfile(directory)
 %This function returns the latest file from the directory passsed as input
 %argument
+disp('Retrieving latest logfile...');
 
 %Get the directory contents
 dirc = dir(directory);
@@ -15,4 +16,5 @@ if ~isempty(I)
     latestfile = dirc(I).name;
 end
 
+disp('Finished retrieving latest logfile');
 end

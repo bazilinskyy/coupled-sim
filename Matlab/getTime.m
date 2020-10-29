@@ -1,4 +1,6 @@
 function output = getTime(distance, dt, display)
+disp('Start calculating durations...');
+
 % Time stamps
 t.timeStamps.start_tracking = find(distance==0, 1, 'first');
 t.timeStamps.end_tracking = find(distance==0, 1, 'last');
@@ -39,17 +41,18 @@ t.time3.total = length(t.time3.distance)*dt;
 t.time3.watch = t.time3.total - t.time3.nowatch - t.time3.invalid;
 
 % Table
-Phase = {'Total'; 'Eye-calibration'; 'Tracking till pedestrian'; 'Tracking after pedestrian'};
-Duration_total = [t.time_total; t.time1.total; t.time2.total; t.time3.total];
-Duration_invalid = [nan; nan; t.time2.invalid; t.time3.invalid];
-Duration_nowatch = [nan; nan; t.time2.nowatch; t.time3.nowatch];
-Duration_watch = [nan; nan; t.time2.watch; t.time3.watch];
-T = table(Phase, Duration_total, Duration_invalid, Duration_nowatch, Duration_watch);
-
-% Display table
 if(display==1)
+    Phase = {'Total'; 'Eye-calibration'; 'Tracking till pedestrian'; 'Tracking after pedestrian'};
+    Duration_total = [t.time_total; t.time1.total; t.time2.total; t.time3.total];
+    Duration_invalid = [nan; nan; t.time2.invalid; t.time3.invalid];
+    Duration_nowatch = [nan; nan; t.time2.nowatch; t.time3.nowatch];
+    Duration_watch = [nan; nan; t.time2.watch; t.time3.watch];
+    T = table(Phase, Duration_total, Duration_invalid, Duration_nowatch, Duration_watch);
+
+    % Display table
     disp(T);
 end
 
+disp('Finished calculating durations');
 output = t;
 return

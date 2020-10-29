@@ -1,7 +1,9 @@
 function [Data, pa, pe, diAV] = loadData(filename)
 %% Load data
 % Needs an update everytime the Worldlogging scripts is modified.
+disp('Start loading data...');
 tic;
+
 opts = delimitedTextImportOptions('Delimiter',';',...
                                   'DataLines', 10);
 Loaded_Data = readmatrix(filename,opts);
@@ -69,6 +71,7 @@ pa.local.rb_v = struct3Coordinate(M(:,50:52));
 %% Data distraction AV if present
 %Need to write logic to determine whether AV is present
 %Data.diAV = M(:,53:96);
+diAV.pos = struct3Coordinate(M(:,53:55));
 diAV.distance = M(:,60);
 diAV.world.gaze_dir = M(:,78);
 
