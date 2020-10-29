@@ -139,7 +139,7 @@ namespace VarjoExample
                         // Determine when the raycast collides with object with the "Pedestrian" tag
                         if (gazeRayHit.collider.gameObject.CompareTag(target) && target == "Passenger")
                         {
-                            //Debug.LogError($"Target {target} hit, called: {gazeRayHit.collider.gameObject.transform.parent.parent.parent.name} with distance {gazeRayHit.distance}");
+                            Debug.LogError($"Target {target} hit, called: {gazeRayHit.collider.gameObject.transform.parent.parent.parent.name} with distance {gazeRayHit.distance}");
                         }
 
                         if (drawDebug)

@@ -286,27 +286,33 @@ public class WorldLogger
             var N3 = pedestrian.transform.Find("NetworkObject_3");
             var N4 = pedestrian.transform.Find("NetworkObject_4");
             var N5 = pedestrian.transform.Find("NetworkObject_5");
+            var N6 = pedestrian.transform.Find("NetworkObject_6");
+            var N7 = pedestrian.transform.Find("NetworkObject_7");
+            var N8 = pedestrian.transform.Find("NetworkObject_8");
+            var N9 = pedestrian.transform.Find("NetworkObject_9");
 
             float gaze_status_pe = Mathf.Round(N1.position.x);
             if (gaze_status_pe == (float)VarjoPlugin.GazeStatus.VALID && pedestrian.transform.Find("Gaze"))
             {
-                    distance_pe     = N1.localScale.x; 
-                    Frame_pe        = N1.localScale.y;   // change to float
-                    CaptureTime_pe  = N1.localScale.z;   // change to float
+                    distance_pe     = N1.position.y; 
+                    Frame_pe        = N1.position.z;
+                
+                    CaptureTime_pe  = N2.position.x;  
 
-                    Hmdposition_pe_x = N2.position.x;   Hmdposition_pe_y = N2.position.y;   Hmdposition_pe_z = N2.position.z;
-                    Hmdrotation_pe_x = N2.localScale.x; Hmdrotation_pe_y = N2.localScale.y; Hmdrotation_pe_z = N2.localScale.z;
+                    Hmdposition_pe_x = N4.position.x;   Hmdposition_pe_y = N4.position.y;   Hmdposition_pe_z = N4.position.z;
+                    Hmdrotation_pe_x = N5.position.x;   Hmdrotation_pe_y = N5.position.y;   Hmdrotation_pe_z = N5.position.z;
 
-                    LeftEyePupilSize_pe     = N3.position.x;
-                    RightEyePupilSize_pe    = N3.position.y;
-                    FocusDistance_pe        = N3.localScale.x;
-                    FocusStability_pe       = N3.localScale.y;
+                    LeftEyePupilSize_pe     = N2.position.y;
+                    RightEyePupilSize_pe    = N2.position.z;
 
-                    gazeRayForward_pe_x = N4.position.x;        gazeRayForward_pe_y = N4.position.y;        gazeRayForward_pe_z = N4.position.z;// hmd space
-                    gazeRayDirection_pe_x = N4.localScale.x;    gazeRayDirection_pe_y = N4.localScale.y;    gazeRayDirection_pe_z = N4.localScale.z;// world space
+                    FocusDistance_pe        = N3.position.x;
+                    FocusStability_pe       = N3.position.y;
 
-                    gazePosition_pe_x = N5.position.x;      gazePosition_pe_y = N5.position.y;      gazePosition_pe_z = N5.position.z;// hmd space
-                    gazeRayOrigin_pe_x = N5.localScale.x;   gazeRayOrigin_pe_y = N5.localScale.y;   gazeRayOrigin_pe_z = N5.localScale.z;// world space
+                    gazeRayForward_pe_x = N6.position.x;    gazeRayForward_pe_y = N6.position.y;    gazeRayForward_pe_z = N6.position.z;// hmd space
+                    gazeRayDirection_pe_x = N7.position.x;  gazeRayDirection_pe_y = N7.position.y;  gazeRayDirection_pe_z = N7.position.z;// world space
+
+                    gazePosition_pe_x = N8.position.x;  gazePosition_pe_y = N8.position.y;  gazePosition_pe_z = N8.position.z;// hmd space
+                    gazeRayOrigin_pe_x = N9.position.x; gazeRayOrigin_pe_y = N9.position.y; gazeRayOrigin_pe_z = N9.position.z;// world space
             }
             else if (gaze_status_pe != (float)VarjoPlugin.GazeStatus.VALID)
             {

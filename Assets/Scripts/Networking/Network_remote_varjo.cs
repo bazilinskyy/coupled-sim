@@ -8,6 +8,7 @@ using Valve.VR;
 public class Network_remote_varjo : MonoBehaviour
 {
     public GameObject SyncGazePedestrian;
+    public string hmdserial = "LHR-7863A1E8"; //LHR-7863A1E8 //LHR-85C3EF8C
 
     // Gaze status
     public float status_pe;
@@ -61,41 +62,61 @@ public class Network_remote_varjo : MonoBehaviour
             gazeRayOrigin_pe = script.gazeRayOrigin;
 
             // Apply the right poses according to the gameobject name
-            if (gameObject.name == "NetworkObject_1" && SteamVR.instance.hmd_SerialNumber == "LHR-7863A1E8") //LHR-7863A1E8 //LHR-85C3EF8C
+            if (gameObject.name == "NetworkObject_1" && SteamVR.instance.hmd_SerialNumber == hmdserial) 
             {
-                transform.position = new Vector3(status_pe, 0, 0);
-                transform.localScale = new Vector3(distance_pe, Frame_pe, CaptureTime_pe);
-                Debug.LogError($"1 - status = {status_pe} and dis,fra,cap = {distance_pe}, {Frame_pe}, {CaptureTime_pe}");
-                Debug.LogError($"1 - trans pos = {transform.position} and transform localscale = {transform.localScale}");
+                transform.position = new Vector3(status_pe, distance_pe, Frame_pe);
+                Debug.LogError($"1 - status = {status_pe}, dis = {distance_pe}, and frame = {Frame_pe}");
+                Debug.LogError($"1 - trans pos = {transform.position}");
             }
-            if (gameObject.name == "NetworkObject_2" && SteamVR.instance.hmd_SerialNumber == "LHR-7863A1E8") //LHR-7863A1E8 //LHR-85C3EF8C 
+            if (gameObject.name == "NetworkObject_2" && SteamVR.instance.hmd_SerialNumber == hmdserial) 
+            {
+                transform.position = new Vector3(CaptureTime_pe, (float)LeftEyePupilSize_pe, (float)RightEyePupilSize_pe);
+                Debug.LogError($"2 - capturetime = {CaptureTime_pe}, lefteyesize = {(float)LeftEyePupilSize_pe}, and right = {(float)RightEyePupilSize_pe}");
+                Debug.LogError($"2 - trans pos = {transform.position}");
+            }
+            if (gameObject.name == "NetworkObject_3" && SteamVR.instance.hmd_SerialNumber == hmdserial)  
+            {
+                transform.position = new Vector3((float)FocusDistance_pe, (float)FocusStability_pe, 0);
+                Debug.LogError($"3 - foc dist = {(float)FocusDistance_pe} and foc stab = {(float)FocusStability_pe}");
+                Debug.LogError($"3 - trans pos = {transform.position}");
+            }
+            if (gameObject.name == "NetworkObject_4" && SteamVR.instance.hmd_SerialNumber == hmdserial)  
             {
                 transform.position = HmdPos_pe;
-                transform.localScale = HmdRot_pe;
-                Debug.LogError($"2 - hmdpos = {HmdPos_pe} and hmdrot = {HmdRot_pe}");
-                Debug.LogError($"2 - trans pos = {transform.position} and trans scale = {transform.localScale}");
+                Debug.LogError($"4 - hmdpos = {HmdPos_pe}");
+                Debug.LogError($"4 - trans pos = {transform.position}");
             }
-            if (gameObject.name == "NetworkObject_3" && SteamVR.instance.hmd_SerialNumber == "LHR-7863A1E8") //LHR-7863A1E8 //LHR-85C3EF8C 
+            if (gameObject.name == "NetworkObject_5" && SteamVR.instance.hmd_SerialNumber == hmdserial) 
             {
-                transform.position = new Vector3((float)LeftEyePupilSize_pe, (float)RightEyePupilSize_pe, 0);
-                transform.localScale = new Vector3((float)FocusDistance_pe, (float)FocusStability_pe, 0);
-                Debug.LogError($"3 - eyesize = {(float)LeftEyePupilSize_pe}, {(float)RightEyePupilSize_pe} and foc dist = {(float)FocusDistance_pe} and foc stab = {(float)FocusStability_pe}");
-                Debug.LogError($"3 - trans pos = {transform.position} and trans scale = {transform.localScale}");
+                transform.position = HmdRot_pe;
+                Debug.LogError($"5 - hmdrot = {HmdRot_pe}");
+                Debug.LogError($"5 - trans pos = {transform.position}");
             }
-            if (gameObject.name == "NetworkObject_4" && SteamVR.instance.hmd_SerialNumber == "LHR-7863A1E8") //LHR-7863A1E8 //LHR-85C3EF8C 
+            if (gameObject.name == "NetworkObject_6" && SteamVR.instance.hmd_SerialNumber == hmdserial)
             {
                 transform.position = gazeRayForward_pe;
-                transform.localScale = gazeRayDirection_pe;
-                Debug.LogError($"4 - gazerayfor = {gazeRayForward_pe} and gazeraydir = {gazeRayDirection_pe}");
-                Debug.LogError($"4 - trans pos = {transform.position} and trans scale = {transform.localScale}");
+                Debug.LogError($"6 - gazerayforward = {gazeRayForward_pe}");
+                Debug.LogError($"6 - trans pos = {transform.position}");
             }
-            if (gameObject.name == "NetworkObject_5" && SteamVR.instance.hmd_SerialNumber == "LHR-7863A1E8") //LHR-7863A1E8 //LHR-85C3EF8C 
+            if (gameObject.name == "NetworkObject_7" && SteamVR.instance.hmd_SerialNumber == hmdserial)
+            {
+                transform.position = gazeRayDirection_pe;
+                Debug.LogError($"7 - gazeraydirection = {gazeRayDirection_pe}");
+                Debug.LogError($"7 - trans pos = {transform.position}");
+            }
+            if (gameObject.name == "NetworkObject_8" && SteamVR.instance.hmd_SerialNumber == hmdserial)
             {
                 transform.position = gazePosition_pe;
-                transform.localScale = gazeRayOrigin_pe;
-                Debug.LogError($"5 - gazepos = {gazePosition_pe} and gazeori = {gazeRayOrigin_pe}");
-                Debug.LogError($"5 - trans pos = {transform.position} and trans scale = {transform.localScale}");
+                Debug.LogError($"8 - gazeposition = {gazePosition_pe}");
+                Debug.LogError($"8 - trans pos = {transform.position}");
             }
+            if (gameObject.name == "NetworkObject_9" && SteamVR.instance.hmd_SerialNumber == hmdserial)
+            {
+                transform.position = gazeRayOrigin_pe;
+                Debug.LogError($"9 - gazerayorigin = {gazeRayOrigin_pe}");
+                Debug.LogError($"9 - trans pos = {transform.position}");
+            }
+
         }
         else if(script.getGazeStatus() == VarjoPlugin.GazeStatus.INVALID)
         {
