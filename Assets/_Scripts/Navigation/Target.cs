@@ -7,14 +7,11 @@ public class Target : MonoBehaviour
     //Targets for visual search task
     //Targets should always be placed between the parent waypoint and the next waypoint!
     public Waypoint waypoint;
-    public TargetDifficulty difficulty = TargetDifficulty.easy_6;
+    public TargetDifficulty difficulty = TargetDifficulty.easy;
 
-    public Material easy_6;
-    public Material easy_5;
-    public Material medium_4;
-    public Material medium_3;
-    public Material hard_2;
-    public Material hard_1;
+    public Material easy;
+    public Material medium;
+    public Material hard;
 
 
     public int ID;
@@ -28,13 +25,32 @@ public class Target : MonoBehaviour
     //Time at which this target was visible
     public float defaultVisibilityTime = -1f;
     public float startTimeVisible = -1f;
+    public bool afterTurn = false;
+    public Side side;
+    public bool difficultPosition;
 
-
-    public string GetID(){ return waypoint.name.Last() + "-" + gameObject.name.Last(); }
+    public string GetID()
+    {
+        if (waypoint != null) { return waypoint.name.Last() + "-" + gameObject.name.Last(); }
+        else { return gameObject.name.Last().ToString(); }
+    }
     // Start is called before the first frame update
-    void Start()
+    void Awake()
     {
         ResetTarget();
+    }
+
+    private void OnDrawGizmos()
+    {
+        if (transform.hasChanged)
+        {
+            if (PositionedJustAfterTurn()) { afterTurn = true; }
+            else { afterTurn = false; }
+            side = GetRoadSide();
+
+            if(afterTurn && ((side == Side.Right && waypoint.operation.IsRightTurn()) || (side == Side.Left && waypoint.operation.IsLeftTurn()))){ difficultPosition = true; }
+            else { difficultPosition = false; }
+        }
     }
     
     public bool HasBeenLookedAt()
@@ -49,17 +65,15 @@ public class Target : MonoBehaviour
     public void SetDifficulty( TargetDifficulty _difficulty)
     {
         //Default
-        Material material = easy_6;
+        Material material = easy;
         //Adjust the setDiofficulty attribute
         difficulty = _difficulty;
 
         //Get appropriate material
-        if (difficulty == TargetDifficulty.easy_6) { material = easy_6; }
-        else if (difficulty == TargetDifficulty.easy_5) { material = easy_5; }
-        else if(difficulty == TargetDifficulty.medium_4) { material = medium_4; }
-        else if (difficulty == TargetDifficulty.medium_3) { material = medium_3; }
-        else if(difficulty == TargetDifficulty.hard_2) { material = hard_2; }
-        else if (difficulty == TargetDifficulty.hard_1) { material = hard_1; }
+        if (difficulty == TargetDifficulty.easy) { material = easy; }
+        else if (difficulty == TargetDifficulty.medium) { material = medium; }
+        else if(difficulty == TargetDifficulty.hard) { material = hard; }
+
 
         GetComponent<MeshRenderer>().sharedMaterial = material;
     }
@@ -97,17 +111,17 @@ public class Target : MonoBehaviour
     public Side GetRoadSide()
     {
         //Targets should always be placed between the parent waypoint and the next waypoint!
-
-        if(waypoint.nextWaypoint == null) { 
+        if (waypoint == null) { return Side.Undetermined; }
+        if (waypoint.nextWaypoint == null) { 
             Debug.LogError("Can not determine side of the target as there is no next waypoint. (Targes should always be placed IN FRONT of the parent waypoint i.e., in between the parent and next waypoint");
             return Side.Undetermined; }
 
         Vector3 firstWaypointPos = waypoint.transform.position;
+        
         //Adjust waypoint position
-        //Waypoints are positioned just before the crossing (Left turn: ~8 meters, right turn: ~5meters). 
+        //Waypoints are positioned just before the crossing (~8 meters)
         //If this is a turn we are need to be in the middle of the road which we turn on i.e., a little bit more forward
-        if (waypoint.operation.IsLeftTurn()) { firstWaypointPos += waypoint.transform.forward * 7.5f; }
-        if (waypoint.operation.IsRightTurn()) { firstWaypointPos += waypoint.transform.forward * 7.5f; }
+        if (waypoint.operation.IsTurn()) { firstWaypointPos += waypoint.transform.forward * 7.5f; }
         Vector3 secondWaypointPos = waypoint.nextWaypoint.transform.position; 
 
         Vector3 splittingLine = firstWaypointPos - secondWaypointPos;
@@ -122,7 +136,36 @@ public class Target : MonoBehaviour
         float sign = Vector3.Dot(normal, (firstWaypointPos - transform.position));
         if (sign >= 0) {  return Side.Left; }
         else { return Side.Right; }
+    }
 
+    public bool PositionedJustAfterTurn()
+    {
+        if (waypoint == null) { return false; }
+        if (!waypoint.operation.IsTurn()) { return false; }
+        //We define the target being just after the waypoint if within 20 meters
+        float boxSize = 20f; float streetWidth = 10f;
+      
+        Vector3 center = waypoint.transform.position + waypoint.transform.forward * 7.5f + Vector3.up;
+        Vector3 direction;
+        if (waypoint.operation == Operation.TurnRight) { direction = waypoint.transform.right; }
+        else { direction = -waypoint.transform.right; }
+
+        Vector3 point1 = center - waypoint.transform.forward * streetWidth;
+        Vector3 point2 = center + waypoint.transform.forward * streetWidth;
+
+        Vector3 point3 = point2 + direction * boxSize;
+        Vector3 point4 = point1 + direction * boxSize;
+
+        //If target is within the box enclosed by these points it is defined as being just after the corner
+        //Since the grid of roads is always in line with the x and y axis we can simply use minimum and maximum values 
+        //We only care about x,z coordinates 
+        float minX = Mathf.Min(point1.x, point2.x, point3.x, point4.x);
+        float maxX = Mathf.Max(point1.x, point2.x, point3.x, point4.x);
+        float minZ = Mathf.Min(point1.z, point2.z, point3.z, point4.z);
+        float maxZ = Mathf.Max(point1.z, point2.z, point3.z, point4.z);
+
+        if(transform.position.x > minX && transform.position.x < maxX && transform.position.z > minZ && transform.position.z < maxZ) { return true; }
+        else { return false; }
     }
 }
 

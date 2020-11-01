@@ -28,6 +28,7 @@ public class SplineCreator : MonoBehaviour
 	{
 		
 		navigationHelper = gameObject.GetComponent<NavigationHelper>();
+		MakeNavigation();
 	}
 	void OnDrawGizmos()
 	{
@@ -345,7 +346,7 @@ public class SplineCreator : MonoBehaviour
 	private Vector3[] MakeNavigationLine()
 	{
 		//Get waypoint list
-		List<Waypoint> waypointList = navigationHelper.GetOrderedWaypointList();
+		List<Waypoint> waypointList = GetComponent<NavigationHelper>().GetOrderedWaypointList();
 
 		//List of potetnial spline points
 		List<Waypoint> splineList = new List<Waypoint>();
@@ -488,30 +489,30 @@ public class SplineCreator : MonoBehaviour
 		List<Waypoint> waypoints = navigationHelper.GetOrderedWaypointList();
 		
 		bool lastPointWasSpline = false;
+		Waypoint lastWaypoint = null;
 		foreach ( Waypoint waypoint in waypoints)
 		{
 			if (waypoint.operation == Operation.SplinePoint)
 			{
+				lastWaypoint = waypoint;
 				//Set forward direction of waypoint
 				int index = Array.FindIndex(splinePoints, element => (element == waypoint.transform.position));
 				//If non valid index found we skip
 				if (!(index >= 0)) { continue;}
+				
+
+				Vector3 forward = splinePoints[index + 2] - splinePoints[index];
+				waypoint.transform.forward = forward.normalized;
+
 				//First spline point we dont change forward direction
 				if (!lastPointWasSpline) { lastPointWasSpline = true; continue; }
 
-				Vector3 forward = splinePoints[index + 1] - splinePoints[index];
-				waypoint.transform.forward = forward.normalized;
 			}
-			else if (lastPointWasSpline)
+			else if (lastPointWasSpline && waypoint.operation == Operation.None)
 			{
 				//This is the waypoint which the last spline point is connected to
 				//Set forward direction of waypoint
-				int index = System.Array.FindIndex(splinePoints, element => (element == waypoint.transform.position));
-				//If non valid index found we skip
-				if (!(index >= 0)) { continue; }
-
-				Vector3 forward = splinePoints[index] - splinePoints[index - 1];
-				waypoint.transform.forward = forward.normalized;
+				waypoint.transform.forward = lastWaypoint.transform.forward;
 				lastPointWasSpline = false;
 			}
 		}

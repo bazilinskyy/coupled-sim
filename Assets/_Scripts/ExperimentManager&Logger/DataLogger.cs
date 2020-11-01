@@ -6,12 +6,10 @@ using System.Xml;
 using UnityEngine;
 using Varjo;
 using System.Linq;
+using UnityEngine.SceneManagement;
 
 public class DataLogger : MonoBehaviour
 {
-    //singleton pattern
-    public static DataLogger ins;
-
     private const string vehicleDataFileName = "vehicleData.csv";
     private const string navigationLineFileName = "navigationLine.csv";
     private const string targetDetectionDataFileName = "targetDetectionData.csv";
@@ -20,80 +18,79 @@ public class DataLogger : MonoBehaviour
     private const string fixationFileName = "fixationData.csv";
     private const string dataFolder = "Data";
     //our car
-    private GameObject car;
+    public GameObject car;
     private Navigator carNavigator;
     //Current Navigation
-    private Transform navigation;
+    public Transform navigation;
     private NavigationHelper navigationHelper;
     private Vector3[] navigationLine;
-    private int indexClosestPoint;//Used for calculating the distance to optimal navigation path (i.e., centre of raod)
+    private int indexClosestPoint = 0;//Used for calculating the distance to optimal navigation path (i.e., centre of raod)
 
     //Experiment manager;
     private ExperimentManager experimentManager;
 
-    private GameState gameState;
-
     private MyGazeLogger myGazeLogger;
-    private string subjectName;
+    private string subjectDataFolder;
    
     //list of items
     private List<VehicleDataPoint> vehicleData;
     private List<TargetAlarm> targetDetectionData;
-    private Fixation symbologyFixations;
+
 
     private string saveFolder;
     private string steerInputAxis;
     [HideInInspector]
     public bool savedData;
+    public bool logging;
 
-    private void OnApplicationQuit() { if (experimentManager.saveData && gameState.isExperiment() && !savedData) { SaveData(); } }
+    private void OnApplicationQuit() { if (StaticSceneManager.saveData && !savedData) { SaveData(); } }
     private void Awake()
     {
-        ins = this;
-
+        StartUpFunction();
+    }
+    void StartUpFunction()
+    {
+        if (!StaticSceneManager.saveData) { 
+            GetComponent<DataLogger>().enabled = false; 
+            logging = false;
+            return;
+            }
+        Debug.Log("Started data logger...");
         experimentManager = GetComponent<ExperimentManager>();
-        gameState = experimentManager.gameState;
+        //gameState = experimentManager.gameState;
         myGazeLogger = GetComponent<MyGazeLogger>();
         myGazeLogger.experimentManager = experimentManager;
         myGazeLogger.startAutomatically = false;
         myGazeLogger.useCustomLogPath = true;
-    }
-    private void Update()
-    {
-        if (gameState.isExperiment() && experimentManager.saveData)
-        {
-            AddVehicleData();
-        }
-    }
-    public void SetAllInputs(GameObject _car, Transform _navigation, string _subjectName)
-    {
-        car = _car;
-        carNavigator = car.GetComponent<Navigator>();
-        //set car inputs
+        if (experimentManager.camType != MyCameraType.Normal) { myGazeLogger.cam = experimentManager.CameraTransform(); }
+
+        navigationHelper = navigation.GetComponent<NavigationHelper>();
+        navigationLine = navigationHelper.GetNavigationLine();
+
         List<string> inputs = experimentManager.GetCarControlInput();
         steerInputAxis = inputs[0];
 
-        SetNavigation(_navigation);
+        carNavigator = car.GetComponent<Navigator>();
 
-        string dateTime = System.DateTime.Now.ToString("MM-dd_HH-mm");
-        if (_subjectName == null || _subjectName == "") { _subjectName = "JohnDoe"; }
-        subjectName = dateTime + "-" + _subjectName;
-
-        //Set inputs of GazeLogger
-        if (experimentManager.camType != MyCameraType.Normal) { myGazeLogger.cam = experimentManager.CameraTransform(); }
+        subjectDataFolder = StaticSceneManager.subjectDataFolder;
+    }
+    private void Update()
+    {
+        if (logging) { AddVehicleData(); }
     }
     public void SaveData()
     {
+        if (!logging) { return; }
         Debug.Log($"Saving all data to {saveFolder}...");
-        if (experimentManager.camType != MyCameraType.Normal) { myGazeLogger.StopLogging(); SaveFixationData(); }
+        if (experimentManager.camType != MyCameraType.Normal) { SaveFixationData(); myGazeLogger.StopLogging();  }
 
         SaveVehicleData();
         SaveTargetDetectionData();
         SaveTargetInfoData();
         SaveNavigationData();
         SaveGeneralExperimentInfo();
-        
 
+        logging = false;
         savedData = true;
     }
     private void SaveFixationData()
@@ -133,15 +130,9 @@ public class DataLogger : MonoBehaviour
             logData[9] = myGazeLogger.fixationData.unknown.ToString();
 
             Log(logData, file);
+            file.Flush();
             file.Close();
         }
-    }
-    public void SetNavigation(Transform _navigation)
-    {
-        navigation = _navigation;
-        navigationHelper = navigation.GetComponent<NavigationHelper>();
-        navigationLine = navigationHelper.GetNavigationLine();
-        indexClosestPoint = 0;
     }
     private void SaveVehicleData()
     {
@@ -167,6 +158,7 @@ public class DataLogger : MonoBehaviour
 
                 Log(logData, file);
             }
+            file.Flush();
             file.Close();
         }
     }
@@ -191,7 +183,9 @@ public class DataLogger : MonoBehaviour
                 logData[5] = alarm.targetDifficulty.ToString();
 
                 Log(logData, file);
+
             }
+            file.Flush();
             file.Close();
         }
     }
@@ -213,13 +207,14 @@ public class DataLogger : MonoBehaviour
                 logData[0] = point.ToString("F3");
                 Log(logData, file);
             }
+            file.Flush();
             file.Close();
         }
     }
     private void SaveTargetInfoData()
     {
         Debug.Log("Saving target info...");
-        string[] columns = { "ID", "Detected", "ReactionTime", "FixationTime", "Difficulty","Side","Position" };
+        string[] columns = { "ID", "Detected", "ReactionTime", "FixationTime", "Difficulty","Side","AfterTurn", "DifficultPosition","waypointOperation","Position" };
         string[] logData = new string[columns.Length];
         string filePath = string.Join("/", saveFolder, generalTargetInfo);
         
@@ -235,21 +230,24 @@ public class DataLogger : MonoBehaviour
                 logData[1] = target.detected.ToString();
                 logData[2] = target.reactionTime.ToString();
                 logData[3] = target.totalFixationTime.ToString();
-                logData[4] = target.difficulty.ToString().Last().ToString();
-                logData[5] = target.GetRoadSide().ToString();
-                logData[6] = target.transform.position.ToString("F3");
+                logData[4] = target.difficulty.ToString();
+                logData[5] = target.side.ToString();
+                logData[6] = target.afterTurn.ToString();
+                logData[7] = target.difficultPosition.ToString();
+                logData[8] = target.waypoint.operation.ToString();
+                logData[9] = target.transform.position.ToString("F3");
                 Log(logData, file);
             }
+            file.Flush();
             file.Close();
         }
     }
     void SaveGeneralExperimentInfo()
     {
         Debug.Log("Saving general experiment info...");
-        string[] columns = { "Total Targets", "LeftTarget", "RightTargets", TargetDifficulty.easy_6.ToString(), TargetDifficulty.easy_5.ToString(), TargetDifficulty.medium_4.ToString(),
-                            TargetDifficulty.medium_3.ToString(), TargetDifficulty.hard_2.ToString(), TargetDifficulty.hard_1.ToString(), "RelativePositionDriverView", "RelativeRotationDriverView",
-                              "Navigation", "Condition", "Transparency", "TotalExperimentTime"};
-        string[] logData = new string[15];
+        string[] columns = { "Total Targets", "LeftTarget", "RightTargets", TargetDifficulty.easy.ToString(), TargetDifficulty.medium.ToString(), TargetDifficulty.hard.ToString(), "RelativePositionDriverView", "RelativeRotationDriverView",
+                              "Navigation", "Condition", "Transparency", "TotalExperimentTime", "LeftTurns","RightTurns"};
+        string[] logData = new string[columns.Length];
         string filePath = string.Join("/", saveFolder, generalExperimentInfo);
         TargetCountInfo targetCountInfo = navigationHelper.targetCountInfo;
         List<DifficultyCount> targetDifficulty = navigationHelper.targetDifficultyList;
@@ -273,17 +271,20 @@ public class DataLogger : MonoBehaviour
             //Info on the driver view
             Vector3 relativePosition = experimentManager.driverView.position - car.transform.position;
             Quaternion relativeRotation = Quaternion.Inverse(car.transform.rotation) * experimentManager.driverView.rotation;
-            logData[9] = relativePosition.ToString("F3");
-            logData[10] = relativeRotation.eulerAngles.ToString("F3");
+            logData[6] = relativePosition.ToString("F3");
+            logData[7] = relativeRotation.eulerAngles.ToString("F3");
 
             //Experiment inputs
-            logData[11] = experimentManager.activeExperiment.navigation.name;
-            logData[12] = experimentManager.activeExperiment.navigationType.ToString();
-            logData[13] = experimentManager.activeExperiment.transparency.ToString();
-            logData[14] = experimentManager.activeExperiment.experimentTime.ToString();
+            logData[8] = experimentManager.activeExperiment.navigation.name;
+            logData[9] = experimentManager.activeExperiment.navigationType.ToString();
+            logData[10] = experimentManager.activeExperiment.transparency.ToString();
+            logData[11] = experimentManager.activeExperiment.experimentTime.ToString();
 
+            logData[12] = experimentManager.activeNavigationHelper.leftTurns.ToString();
+            logData[13] = experimentManager.activeNavigationHelper.rightTurns.ToString();
             //Log data and close file
             Log(logData, file);
+            file.Flush();
             file.Close();
         }
     }
@@ -300,14 +301,14 @@ public class DataLogger : MonoBehaviour
     }
     public void StartNewMeasurement()
     {
-        
+
         Debug.Log($"Starting new measurement...");
+        logging = true;
         savedData = false;
         saveFolder = SaveFolder();
 
         vehicleData = new List<VehicleDataPoint>();
         targetDetectionData = new List<TargetAlarm>();
-        symbologyFixations = new Fixation();
 
         if (experimentManager.camType != MyCameraType.Normal)
         {
@@ -329,7 +330,7 @@ public class DataLogger : MonoBehaviour
         for (int i = 0; i < (assetsFolderArray.Length - 2); i++) { baseFolderArray[i] = assetsFolderArray[i]; }
 
         string baseFolder = string.Join("/", baseFolderArray);
-        string saveFolder = string.Join("/", baseFolder, dataFolder, subjectName, navigation.name + DateTime.Now.ToString("_HH-mm-ss"));
+        string saveFolder = string.Join("/", baseFolder, dataFolder, subjectDataFolder, SceneManager.GetActiveScene().name + DateTime.Now.ToString("_HH-mm-ss"));
         Directory.CreateDirectory(saveFolder);
         
 
@@ -412,6 +413,7 @@ public class DataLogger : MonoBehaviour
     }
     public void AddFalseAlarm()
     {
+        if (!logging) { return; }
         TargetAlarm alarm = new TargetAlarm();
         alarm.time = experimentManager.activeExperiment.experimentTime;
         alarm.frame = Time.frameCount;
@@ -424,7 +426,7 @@ public class DataLogger : MonoBehaviour
     }
     public void AddTrueAlarm(Target target)
     {
-
+        if (!logging) { return; }
         TargetAlarm alarm = new TargetAlarm();
 
         alarm.time = experimentManager.activeExperiment.experimentTime;
@@ -439,21 +441,7 @@ public class DataLogger : MonoBehaviour
 
         Debug.Log($"Added true alarm for {target.GetID()}, reaction time: {Math.Round(alarm.reactionTime, 2)}s ...");
     }
-    /*
-        void SaveThis<T>(string fileName, object data)
-        {
-            //check if data makes sense
-            Type dataType = data.GetType();
-            if (!dataType.Equals(typeof(T))) { throw new Exception($"ERROR: data type and given type done match {dataType.FullName} != {typeof(T).FullName}..."); }
-
-            XmlSerializer serializer = new XmlSerializer(typeof(T));
-            //overwrites mydata.xml
-            string filePath = string.Join("/", saveFolder, fileName);
-
-            FileStream stream = new FileStream(filePath, FileMode.Create);
-            serializer.Serialize(stream, data);
-            stream.Close();
-        }*/
+   
 }
 public class VehicleDataPoint
 {

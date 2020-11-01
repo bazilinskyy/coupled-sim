@@ -31,8 +31,14 @@ public class MyVarjoGazeRay : MonoBehaviour
         right
     }
 
-    private void Start()
+    private void Awake()
     {
+        StartUpFunction();
+    }
+   
+    void StartUpFunction()
+    {
+        if(StaticSceneManager.camType == MyCameraType.Normal) { GetComponent<MyVarjoGazeRay>().enabled = false; return; }
         // InitGaze must be called before using or calibrating gaze tracking.
         if (!VarjoPlugin.InitGaze())
         {
@@ -41,7 +47,6 @@ public class MyVarjoGazeRay : MonoBehaviour
         }
         gazeLogger = GetComponent<MyGazeLogger>();
     }
-
     void Update()
     {
         // Returns current state of the gaze
@@ -77,7 +82,7 @@ public class MyVarjoGazeRay : MonoBehaviour
             gazeRayDirection = transform.TransformVector(gazeRayForward);
             gazeRayOrigin = transform.TransformPoint(gazePosition);
 
-            
+
             // Raycast into world
             if (Physics.SphereCast(gazeRayOrigin, gazeRayRadius, gazeRayDirection, out gazeRayHit, 1000f, layerMask))
             {
@@ -86,7 +91,7 @@ public class MyVarjoGazeRay : MonoBehaviour
                 // This is done here via GetComponent for clarity's sake as example.
 
                 bool lookingAtWorld = true;
-                foreach(LoggedTags tag in EnumUtil.GetValues<LoggedTags>())
+                foreach (LoggedTags tag in EnumUtil.GetValues<LoggedTags>())
                 {
                     if (gazeRayHit.collider.tag.Equals(tag.ToString()))
                     {

@@ -45,8 +45,8 @@ public class CalibrateUsingHands : MonoBehaviour
             handsToCam = VarjoCamara.position - (leftWristPos + rightWristPos) / 2;          
             handToHand = rightWristPos - leftWristPos;
 
-            //Set head position accordingly
-            transform.position = steeringWheel.transform.position + steeringWheelToCam;
+            //Set steeringwheel position accordingly
+            steeringWheel.position = transform.position - steeringWheelToCam;
             Debug.Log($"Succesfully calibrated headposition with hands on steering wheel, steeringWheelToCam: {steeringWheelToCam}...");
             return true;
         }

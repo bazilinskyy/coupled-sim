@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 [RequireComponent(typeof(DataLogger))]
@@ -8,29 +9,30 @@ public class ExperimentManager : MonoBehaviour
 {
     //Attachted to the object with the experiment manager should be a XMLManager for handling the saving of the data.
     [Header("Experiment Input")]
-    public string subjectName="You";
-    public bool automateSpeed = true;
-    public bool saveData=true;
+    public string subjectName;
+    public bool automateSpeed;
+    public bool saveData;
     public Color navigationColor;
     public MyCameraType camType;
     public List<ExperimentSetting> experiments;
+    private MySceneLoader mySceneLoader;
 
     [Header("Inputs")]
-    public KeyCode myPermission = KeyCode.F1;
-    public KeyCode resetHeadPosition = KeyCode.F2;
-    public KeyCode spawnSteeringWheel = KeyCode.F3; 
-    public KeyCode calibrateGaze = KeyCode.F4;
-    public KeyCode resetExperiment = KeyCode.Escape;
-    
-    public KeyCode keyToggleDriving = KeyCode.Space;
-    
-    public KeyCode keyToggleSymbology = KeyCode.Tab;
+    public KeyCode myPermission;
+    public KeyCode resetHeadPosition;
+    public KeyCode spawnSteeringWheel;
+    public KeyCode calibrateGaze;
+    public KeyCode resetExperiment;
 
-    public KeyCode setToLastWaypoint = KeyCode.R;
-    public KeyCode inputNameKey = KeyCode.Y;
+    public KeyCode keyToggleDriving;
 
-    public KeyCode saveTheData = KeyCode.F7;
-    
+    public KeyCode keyToggleSymbology;
+
+    public KeyCode setToLastWaypoint;
+    public KeyCode inputNameKey;
+
+    public KeyCode saveTheData;
+
     public string ParticpantInputAxisLeft = "SteerButtonLeft";
     public string ParticpantInputAxisRight = "SteerButtonRight";
 
@@ -44,21 +46,15 @@ public class ExperimentManager : MonoBehaviour
     public string Brake = "Brake";
 
     [Header("GameObjects")]
+    // expriment objects and lists
+    public Experiment activeExperiment;
+    public NavigationHelper activeNavigationHelper;
+
     public Material conformal;
     public HUDMaterials HUDMaterials;
     public LayerMask layerToIgnoreForTargetDetection;
-    public Transform navigationRoot;
+    
     public Navigator car;
-    public GameObject steeringWheelPrefab;
-    private GameObject steeringWheelObject;
-    //UI objects
-    public Text UIText;
-    public Text guiName;
-    public UnityEngine.UI.Image blackOutScreen;
-    //Scriptable gameState object
-    public GameState gameState;
-    //Waiting room transform
-    public Transform waitingRoom;
 
     //Mirror cameras from car
     private Camera rearViewMirror;
@@ -66,40 +62,31 @@ public class ExperimentManager : MonoBehaviour
     private Camera rightMirror;
 
     //The camera used and head position inside the car
-    private Transform varjoRig;
-    private Transform leapRig;
-    private Transform normalCam;
     [HideInInspector]
     public Transform driverView;
-    private Transform usedCam;
-    private Transform originalParentCamera;
+    private Transform player;
+    private Transform steeringWheel;
 
-    // expriment objects and lists
-    [HideInInspector]
-    public Experiment activeExperiment;
-    [HideInInspector]
-    public List<Experiment> experimentList;
-
-    private NavigationHelper activeNavigationHelper;
+   
     //The data manger handling the saving of vehicle and target detection data Should be added to the experiment manager object 
     private DataLogger dataManager;
     //Maximum raycasts used in determining visbility:  We use Physics.RayCast to check if we can see the target. We cast this to a random positin on the targets edge to see if it is partly visible.
     private readonly int maxNumberOfRandomRayHits = 40;
-    private readonly float animationTime = 3f; //time for lighting aniimation in seconds
-    private float lastUserInputTime = 0f ; 
+    private float lastUserInputTime = 0f;
     public float thresholdUserInput = 0.15f; //The minimum time between user inputs (when within this time only the first one is used)
-    private bool endSimulation = false;
 
-    //booleans used by UserInputName() and for processing user input from steer
-    private bool inputName = false;  private bool firstFrameProcessingInput = true;
     private float userInputTime = 0f; private readonly float userInputThresholdTime = 0.2f;
-    void Awake()
+
+    private void Start()
     {
-        blackOutScreen.color = new Color(0, 0, 0, 1f);
-        blackOutScreen.CrossFadeAlpha(0f, 0f, true);
-        //Set gamestate to waiting
-        gameState.SetGameState(GameStates.Waiting);
-        
+        StartUpFunctions();
+    }
+    void StartUpFunctions()
+    {
+        player = GameObject.FindGameObjectWithTag("Player").transform;
+        //Set rotation of varjo cam to be zero w.r.t. rig
+        GetVariablesFromSceneManager();
+
         //Get all gameobjects we intend to use from the car (and do some setting up)
         SetGameObjectsFromCar();
 
@@ -108,134 +95,121 @@ public class ExperimentManager : MonoBehaviour
 
         //Set car to be ignored by raycast of gaze logger
         MyVarjoGazeRay gazeLogger = GetComponent<MyVarjoGazeRay>();
+
         if (gazeLogger) { gazeLogger.layerMask = ~layerToIgnoreForTargetDetection; }
-    }
-    private void Start()
-    {
-        //Set rotation of varjo cam to be zero w.r.t. rig
-        if (camType == MyCameraType.Varjo || camType == MyCameraType.Leap) { Varjo.VarjoPlugin.ResetPose(true, Varjo.VarjoPlugin.ResetRotation.ALL); }
-        
+//        if (camType == MyCameraType.Varjo || camType == MyCameraType.Leap) { Varjo.VarjoPlugin.ResetPose(true, Varjo.VarjoPlugin.ResetRotation.ALL); }
+
         SetCarControlInput();
 
-        //Set up all experiments
-        SetUpExperiments();
+        activeNavigationHelper.SetUp(activeExperiment.navigationType, activeExperiment.transparency, car, HUDMaterials);
 
         //Set DataManager
         SetDataManager();
 
+        SetColors();
         //Set up car
         SetUpCar();
 
-        //Get main camera to waiting room
-        GoToWaitingRoom();
+        GoToCar();
 
         //Activate mirror cameras (When working with the varjo it deactivates all other cameras....)
         //Does not work when in Start() or in Awake()...
         ActivateMirrorCameras();
     }
+    void GetVariablesFromSceneManager()
+    {
+        mySceneLoader = GetComponent<MySceneLoader>();
+        camType = StaticSceneManager.camType;
+
+        myPermission = StaticSceneManager.myPermission;
+        resetHeadPosition = StaticSceneManager.resetHeadPosition;
+        spawnSteeringWheel = StaticSceneManager.spawnSteeringWheel;
+        calibrateGaze = StaticSceneManager.calibrateGaze;
+
+        resetExperiment = StaticSceneManager.resetExperiment;
+
+        keyToggleDriving = StaticSceneManager.keyToggleDriving;
+        keyToggleSymbology = StaticSceneManager.keyToggleSymbology;
+
+        setToLastWaypoint = StaticSceneManager.setToLastWaypoint;
+
+        inputNameKey = StaticSceneManager.inputNameKey;
+        saveTheData = StaticSceneManager.saveTheData;
+}
     void Update()
     {
-        //Add to the timer of the exprimerent
-        if (gameState.isExperiment()) { activeExperiment.experimentTime += Time.deltaTime; }
+        activeExperiment.experimentTime += Time.deltaTime;
+        
+        //Looks for targets to appear in field of view and sets their visibility timer accordingly
+        SetTargetVisibilityTime();
 
-        //testing gaze data
-        if (Input.GetKeyDown(saveTheData)) { SaveData(); dataManager.StartNewMeasurement(); }
+        //When I am doing some TESTING
+        if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W)) { car.GetComponent<SpeedController>().StartDriving(true); }
 
-        if (gameState.isWaiting()) 
-        {
-            //Inputs during actual experiment:
-            if (Input.GetKeyDown(resetHeadPosition) && camType == MyCameraType.Leap) { Varjo.VarjoPlugin.ResetPose(true, Varjo.VarjoPlugin.ResetRotation.ALL); }
-            if (Input.GetKeyDown(spawnSteeringWheel)&& camType == MyCameraType.Leap)
-            {
-                bool success = driverView.GetComponent<CalibrateUsingHands>().SetPositionUsingHands();
-                if (success) { SpawnSteeringWheel(); }
-            }
+        //Target detection when we already started driving
+        if (car.GetComponent<SpeedController>().IsDriving() && UserInput()) { ProcessUserInputTargetDetection(); }
 
-            //Inputs when I am doing some TESTING
-            if (Input.GetAxis(ParticpantInputAxisRight) == 1 && camType == MyCameraType.Leap) { Varjo.VarjoPlugin.ResetPose(true, Varjo.VarjoPlugin.ResetRotation.ALL); }
-            if (Input.GetAxis(ParticpantInputAxisLeft) == 1 && camType == MyCameraType.Leap)
-            {
-                bool success = driverView.GetComponent<CalibrateUsingHands>().SetPositionUsingHands();
-                if (success){ SpawnSteeringWheel();}
-            }
+        //First input will be the start driving command (so if not already driving we will start driving)
+        else if (!car.GetComponent<SpeedController>().IsDriving() && UserInput() && automateSpeed) { car.GetComponent<SpeedController>().StartDriving(true); }
 
-            //////// always /////////////
-            //Start experiment
-            if (Input.GetKeyDown(myPermission)) { StartCoroutine(GoToCarCoroutine()); }// gameState.SetGameState(GameStates.TransitionToCar); }
-
-            //Input of subject Name
-            if (Input.GetKeyDown(inputNameKey)) { inputName = true; Debug.Log("Pressed inputKeyName..."); }
-            InputPlayerName();
-        }
-
-        //During experiment check for target deteciton key to be pressed
-        else if (gameState.isExperiment()) {
-            
-            //Looks for targets to appear in field of view and sets their visibility timer accordingly
-            SetTargetVisibilityTime();
-            
-            //Destory the steeringwheel we may generate while calibrating hands on steeringwheel while in the waiting room
-            if(steeringWheelObject != null) { Destroy(steeringWheelObject); }
-
-            //User inputs
-
-            //When I am doing some TESTING
-            if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W)) { car.GetComponent<SpeedController>().StartDriving(true); }
-            
-
-            //Target detection when we already started driving
-            if (car.GetComponent<SpeedController>().IsDriving() && UserInput()) { ProcessUserInputTargetDetection(); }
-
-            //First input will be the start driving command (so if not already driving we will start driving)
-            else if (!car.GetComponent<SpeedController>().IsDriving() && UserInput() && automateSpeed) { car.GetComponent<SpeedController>().StartDriving(true); }
-
-            //Researcher inputs
-            if (Input.GetKeyDown(keyToggleDriving)){ car.GetComponent<SpeedController>().ToggleDriving(); }
-            if (Input.GetKeyDown(keyToggleSymbology)) { ToggleSymbology(); }
-            if (Input.GetKeyDown(myPermission)) { car.navigationFinished = true; } //Finish navigation early
-            if (Input.GetKeyDown(setToLastWaypoint)) { SetCarToLastWaypoint();  }
-            if (Input.GetKeyDown(resetHeadPosition))
-            {
-                if (camType == MyCameraType.Leap) { driverView.GetComponent<CalibrateUsingHands>().SetPositionUsingHands(); }
-                SetCameraPosition(driverView.position, driverView.rotation);
-            }
-            if (Input.GetKeyDown(resetExperiment)) { ResetExperiment(); }
-        }
-
+        //Researcher inputs
+        if (Input.GetKeyDown(keyToggleDriving)) { car.GetComponent<SpeedController>().ToggleDriving(); }
+        if (Input.GetKeyDown(keyToggleSymbology)) { ToggleSymbology(); }
+        if (Input.GetKeyDown(myPermission)) { car.navigationFinished = true; } //Finish navigation early
+        if (Input.GetKeyDown(setToLastWaypoint)) { SetCarToLastWaypoint(); }
+        if (Input.GetKeyDown(resetHeadPosition)){ SetCameraPosition(driverView.position, driverView.rotation); }
+        if (Input.GetKeyDown(resetExperiment)) { ResetExperiment(); }
+        if (Input.GetKeyDown(KeyCode.LeftShift)) { TeleportToNextWaypoint(); }
         //Request gaze calibration
-        if (Input.GetKeyDown(calibrateGaze)) { GetComponent<VarjoExample.VarjoGazeCalibrationRequest>().RequestGazeCalibration(); }
+        //if (Input.GetKeyDown(calibrateGaze)) { GetComponent<VarjoExample.VarjoGazeCalibrationRequest>().RequestGazeCalibration(); }
 
-        //if we finished a navigation we go to the waiting room
-        if (NavigationFinished() && gameState.isExperiment())
-         {
-            StartCoroutine(GoToWaitingRoomCoroutine());
-            //gameState.SetGameState(GameStates.TransitionToWaitingRoom);
-            Debug.Log("Navigation finished...");
-            if (!IsNextNavigation()){ Debug.Log("Simulation finished..."); endSimulation = true; }
+        if (car.navigationFinished)
+        {
+            if (StaticSceneManager.saveData) { dataManager.SaveData(); }
+
+            if (car.GetComponent<Rigidbody>().velocity.magnitude < 0.01f) { mySceneLoader.LoadWaitingScene(); }
+        }
+    }
+    private void TeleportToNextWaypoint()
+    {
+        if (car.target.nextWaypoint != null)
+        {
+            StartCoroutine(SetCarSteadyAt(car.target.nextWaypoint.transform.position, car.target.nextWaypoint.transform.rotation));
+            car.SetNextTarget();
+            
         }
     }
     private void ToggleSymbology()
     {
         //Get a list f navigation types
+        NavigationType nextNavType = GetNextNavigationType();
+        activeExperiment.navigationType = nextNavType;
+
+        if (nextNavType == NavigationType.HighlightedRoad) { nextNavType = GetNextNavigationType(); activeExperiment.navigationType = nextNavType; }
+
+        
+        activeNavigationHelper.SetUp(nextNavType, activeExperiment.transparency, car, HUDMaterials);
+        activeNavigationHelper.RenderNavigationArrow();
+        Debug.Log($"Switched to {nextNavType}...");
+    }
+    NavigationType GetNextNavigationType()
+    {
         IEnumerable<NavigationType> navigationTypes = EnumUtil.GetValues<NavigationType>();
-        List<NavigationType> navigationList = new List<NavigationType>(); 
+        List<NavigationType> navigationList = new List<NavigationType>();
         foreach (NavigationType type in navigationTypes) { navigationList.Add(type); }
 
         int index = navigationList.IndexOf(activeExperiment.navigationType);
 
         int indexNextType = ((index + 1) == navigationList.Count ? 0 : index + 1);
 
-        NavigationType nextNavType = navigationList[indexNextType];
-
-        activeExperiment.navigationType = nextNavType;
-        activeNavigationHelper.SetUp(nextNavType, activeExperiment.transparency, car, HUDMaterials, false);
-
-        Debug.Log($"Switched to {nextNavType}...");
+        return navigationList[indexNextType];
     }
     private void SetGameObjectsFromCar()
     {
         //FindObjectOfType head position
         driverView = car.transform.Find("Driver View");
+        steeringWheel = car.transform.Find("PhysicalCar").Find("Interior").Find("SteeringWheel");
+
         if (driverView == null) { throw new System.Exception("Could not find head position in the given car..."); }
 
         //WE have multiple cameras set-up (varjoRig, LeapRig, Normal camera, and three cameras for the mirrors)
@@ -247,51 +221,24 @@ public class ExperimentManager : MonoBehaviour
             if (camera.name == "RightCamera") { rightMirror = camera; }
             if (camera.name == "MiddleCamera") { rearViewMirror = camera; }
 
-            if (camera.name == "NormalCamera") { normalCam = camera.transform; }
         }
 
-        Varjo.VarjoManager[] varjoRigs = car.GetComponentsInChildren<Varjo.VarjoManager>(true);
-        foreach (Varjo.VarjoManager rig in varjoRigs)
-        {
-            if (rig.transform.parent.name == "Leap Rig") { leapRig = rig.transform.parent; }
-            else { varjoRig = rig.transform; }
-        }
-
-        if (leftMirror == null || rightMirror == null || rearViewMirror == null || normalCam == null || leapRig == null || varjoRig == null)
+        if (leftMirror == null || rightMirror == null || rearViewMirror == null )
         {
             Debug.Log("Couldnt set all cameras....");
         }
     }
-    void SpawnSteeringWheel()
-    {
-        if(camType != MyCameraType.Leap) { return; } //This function is made for when we are using leap motion controller with hand tracking
-        if (steeringWheelPrefab == null) { return; }
-        if (steeringWheelObject != null) { Destroy(steeringWheelObject); }
-
-        steeringWheelObject = Instantiate(steeringWheelPrefab);
-
-        //Make desired rotation for the steeringwheel
-        Vector3 handVector = driverView.GetComponent<CalibrateUsingHands>().GetRightToLeftHand();//steeringWheelObject.transform.Find("LeftHandPosition").transform.position - steeringWheelObject.transform.Find("RightHandPosition").transform.position;
-        Quaternion desiredRot = Quaternion.LookRotation(Vector3.Cross(handVector, Vector3.up), Vector3.up);
-
-        //steeringWheelObject.transform.rotation = desiredRot;
-        
-        steeringWheelObject.transform.position = CameraTransform().position - driverView.GetComponent<CalibrateUsingHands>().GetSteeringWheelToCam();
-
-        Debug.Log($"Spawned steering wheel with steeringWheelToCam {driverView.GetComponent<CalibrateUsingHands>().GetSteeringWheelToCam()}...");
-
-    }
     public Transform CameraTransform()
     {
-        if(camType == MyCameraType.Leap) { return usedCam.Find("VarjoCameraRig").Find("VarjoCamera"); }
-        else if(camType == MyCameraType.Varjo) { return usedCam.Find("VarjoCamera"); }
-        else if(camType == MyCameraType.Normal) { return usedCam; }
+        if (camType == MyCameraType.Leap) { return player.Find("VarjoCameraRig").Find("VarjoCamera"); }
+        else if (camType == MyCameraType.Varjo) { return player.Find("VarjoCamera"); }
+        else if (camType == MyCameraType.Normal) { return player; }
         else { throw new System.Exception("Error in retrieving used camera transform in Experiment Manager.cs..."); }
     }
     void ResetExperiment()
     {
-        dataManager.SaveData();
-        dataManager.StartNewMeasurement();
+        if (StaticSceneManager.saveData) { dataManager.SaveData(); dataManager.StartNewMeasurement(); }
+
         activeNavigationHelper.SetUp(activeExperiment.navigationType, activeExperiment.transparency, car, HUDMaterials);
         car.GetComponent<SpeedController>().StartDriving(false);
         SetUpCar();
@@ -326,118 +273,30 @@ public class ExperimentManager : MonoBehaviour
 
         StartCoroutine(SetCarSteadyAt(targetPos, targetRot));
     }
-    void SetUpExperiments()
-    {
-        //Set all navigation in navigatoin root to inactive
-        foreach (Transform child in navigationRoot) { child.gameObject.SetActive(false); }
-
-        //If noe xperiments given return...
-        if (experiments.Count == 0) { return; }
-
-        //Get experiment settings from the experiment manager and fill our experimentList
-        experimentList = new List<Experiment>();
-        foreach (ExperimentSetting experimentSetting in experiments)
-        {
-            if (experimentSetting == null) { continue; }
-            Experiment experiment = new Experiment(experimentSetting.navigation, experimentSetting.navigationType, experimentSetting.transparency, false);
-            experimentList.Add(experiment);
-        }
-        
-        // Set first experiment to active
-        activeExperiment = experimentList[0];
-        activeExperiment.SetActive(true);
-        
-        //SetColors of navigation symbology
-        SetColors();
-
-        activeNavigationHelper = activeExperiment.navigationHelper;
-        activeNavigationHelper.SetUp(activeExperiment.navigationType, activeExperiment.transparency, car, HUDMaterials);
-
-    }
-    bool NavigationFinished()
-    {
-        //Checks wheter current navigation path is finished.
-        if (car.navigationFinished) { return true; }
-
-        //if(car.GetCurrentTarget().operation == Operation.EndPoint && car.navigationFinished && car.navigation == activeExperiment.navigation) { return true; }
-        
-        else { return false; }
-    }
-    void SetupNextExperiment()
-    {
-        //Activate next experiment (should only get here if we actually have a next experiment)
-        ActivateNextExperiment();
-        
-        //set up car (Should always be after activating the new experiment!)
-        SetUpCar();
-
-        //Prep navigation (depends on car being set properly as well !!) 
-        //activeNavigationHelper.PrepareNavigationForExperiment();
-
-        //Should always be AFTER next experiment is activated.
-        SetUpDataManagerNewExperiment();
-    }
     void SetUpCar()
     {
         Debug.Log("Setting up car...");
+
+        //Put head position at the right place
+        
+        if (StaticSceneManager.calibratedUsingHands)
+        {
+            driverView.position = steeringWheel.transform.position;
+            driverView.position -= steeringWheel.transform.forward * StaticSceneManager.driverViewHorizontalDistance;
+            driverView.position += Vector3.up * StaticSceneManager.driverViewVerticalDistance;
+        }
+
         //Put car in right position
         Transform startLocation = activeNavigationHelper.GetStartPointNavigation();
+        
+        car.SetNewNavigation(activeExperiment.navigation);
 
         StartCoroutine(SetCarSteadyAt(startLocation.position, startLocation.rotation));
     }
     void GoToCar()
     {
         Debug.Log("Returning to car...");
-
-        //If using varjo we need to do something different with the head position as it is contained in a varjo Rig gameObject which is not the position of the varjo camera
-        usedCam.SetParent(originalParentCamera);
-
-        SetCameraPosition(driverView.position, driverView.rotation);       
-    }
-    void GoToWaitingRoom()
-    {
-        Debug.Log("Going to waiting room...");
-        //camPositioner.SetCameraPosition(CameraPosition.WaitingRoom, camType);
-        if (originalParentCamera == null) { originalParentCamera = usedCam.parent; }
-
-        Vector3 goalPos = waitingRoom.transform.position + new Vector3(0,1f,0);
-        Quaternion goalRot = waitingRoom.transform.rotation;
-        SetCameraPosition(goalPos, goalRot);
-
-        usedCam.SetParent(waitingRoom);
-
-        if (endSimulation) { StartCoroutine(RenderEndSimulation()); }
-        else{ StartCoroutine(RenderStartScreenText()); }
-    }
-    bool IsNextNavigation()
-    {
-        //If this is not the last experiment in the list return true else false
-        int index = GetIndexCurrentExperiment();
-        if (index+1 >= experimentList.Count) { return false; }
-        else { return true; }
-    }
-    int GetIndexCurrentExperiment()
-    {
-        return experimentList.FindIndex(a => a == activeExperiment);
-    }
-    void ActivateNextExperiment()
-    {
-        //Deactivate current experiment
-        activeExperiment.SetActive(false);
-
-        int currentIndex = GetIndexCurrentExperiment();
-        activeExperiment = experimentList[currentIndex + 1];
-        if (activeExperiment == null) { throw new System.Exception("Something went wrong in ExperimentManager --> ActivateNextExperiment "); }
-
-        activeExperiment.SetActive(true);
-        
-        //SetColors of navigation symbology
-        SetColors();
-
-        activeNavigationHelper = activeExperiment.navigation.GetComponent<NavigationHelper>();
-        activeNavigationHelper.SetUp(activeExperiment.navigationType, activeExperiment.transparency, car, HUDMaterials);
-
-        Debug.Log("Experiment " + activeExperiment.navigation.name + " loaded...");
+        SetCameraPosition(driverView.position, driverView.rotation);
     }
     void ProcessUserInputTargetDetection()
     {
@@ -460,7 +319,7 @@ public class ExperimentManager : MonoBehaviour
                 Debug.Log($"{target.GetID()} visible...");
             }
         }
-        
+
         if (targetCount == 0) { dataManager.AddFalseAlarm(); }
         else if (targetCount == 1) { dataManager.AddTrueAlarm(visibleTargets[0]); visibleTargets[0].SetDetected(activeExperiment.experimentTime); }
         else
@@ -468,11 +327,11 @@ public class ExperimentManager : MonoBehaviour
             //When multiple targets are visible we base our decision on:
             //(1) On which target has been looked at most recently
             //(2) Or closest target
-            Target targetChosen = null; 
+            Target targetChosen = null;
             float mostRecentTime = 0f;
             float smallestDistance = 100000f;
             float currentDistance;
-            
+
             foreach (Target target in visibleTargets)
             {
                 //(1)
@@ -489,7 +348,7 @@ public class ExperimentManager : MonoBehaviour
                     smallestDistance = currentDistance;
                 }
             }
-            if(mostRecentTime == 0f) { Debug.Log("Chose target based on distance..."); }
+            if (mostRecentTime == 0f) { Debug.Log("Chose target based on distance..."); }
             else { Debug.Log($"Chose target based on fixation time: {Time.time - mostRecentTime}..."); }
 
             dataManager.AddTrueAlarm(targetChosen);
@@ -546,7 +405,7 @@ public class ExperimentManager : MonoBehaviour
         // a point on the plane Q= (a,b,c) i.e., target position
 
         float sign = Vector3.Dot(CameraTransform().forward, (CameraTransform().position - target.transform.position));
-        if (sign >= 0 ) { return true; }
+        if (sign >= 0) { return true; }
         else { return false; }
     }
     bool TargetIsVisible(Target target, int maxNumberOfRayHits)
@@ -602,55 +461,8 @@ public class ExperimentManager : MonoBehaviour
     }
     void SetCameraPosition(Vector3 goalPos, Quaternion goalRot)
     {
-        usedCam.position = goalPos;
-        usedCam.rotation = goalRot;
-    }
-    private void SetUpDataManagerNewExperiment()
-    {
-        //Skip if we dont save data
-        if (!saveData) { return; }
-        dataManager.SetNavigation(activeExperiment.navigation.transform);
-    }
-    private void SaveData()
-    {
-        if (saveData) { dataManager.SaveData(); }
-    }
-    void InputPlayerName()
-    {
-        if (inputName == true)
-        {
-            guiName.enabled = true;
-            //ignores the first frame during which playerNameEditable is true
-            if (firstFrameProcessingInput)
-            {
-                firstFrameProcessingInput = false;
-                return;
-            }
-            foreach (char c in Input.inputString)
-            {
-                if (c == "\b"[0])
-                {
-                    if (guiName.text.Length != 0)
-                    {
-                        guiName.text = guiName.text.Substring(0, guiName.text.Length - 1);
-                    }
-                }
-                else
-                {
-                    if (c == "\n"[0] || c == "\r"[0])
-                    {
-                        Debug.Log("User entered his name: " + guiName.text);
-                        subjectName = guiName.text;
-                        inputName = false;
-                        guiName.enabled = false;
-                    }
-                    else
-                    {
-                        guiName.text += c;
-                    }
-                }
-            }
-        }
+        player.position = goalPos;
+        player.rotation = goalRot;
     }
     private bool UserInput()
     {
@@ -684,7 +496,7 @@ public class ExperimentManager : MonoBehaviour
         //Throw error if we dont have an xmlManager
         if (dataManager == null) { throw new System.Exception("Error in Experiment Manager -> A XMLManager should be attatched if you want to save data..."); }
 
-        dataManager.SetAllInputs(car.gameObject, activeExperiment.navigation.transform, subjectName);
+        if (StaticSceneManager.saveData) { dataManager.StartNewMeasurement(); }
     }
     void SetCarControlInput()
     {
@@ -702,84 +514,24 @@ public class ExperimentManager : MonoBehaviour
     }
     void SetCamera()
     {
+       /* blackOutScreen.color = new Color(0, 0, 0, 1f); blackOutScreen.CrossFadeAlpha(0f, 0f, true);
         //Get the to be used camera, destroy the others, and set this camera to be used for the reflection script of the mirrors
-        if (camType == MyCameraType.Varjo) { usedCam = varjoRig; }
-        else if (camType == MyCameraType.Leap) { usedCam = leapRig; }
-        else if (camType == MyCameraType.Normal) { usedCam = normalCam; }
-
-        varjoRig.gameObject.SetActive(camType == MyCameraType.Varjo);
-        leapRig.gameObject.SetActive(camType == MyCameraType.Leap);
-        normalCam.gameObject.SetActive(camType == MyCameraType.Normal);
-
-        //Destroy unneeded cameras
-        if (camType != MyCameraType.Varjo) { Destroy(varjoRig.gameObject); };
-        if (camType != MyCameraType.Leap) { Destroy(leapRig.gameObject); };
-        if (camType != MyCameraType.Normal)
-        {
-            Destroy(normalCam.gameObject);
+        if (camType == MyCameraType.Leap || camType == MyCameraType.Varjo) {
+            player = leapRig;
             blackOutScreen = CameraTransform().Find("Canvas").Find("BlackOutScreen").GetComponent<UnityEngine.UI.Image>();
-            blackOutScreen.color = new Color(0, 0, 0, 1f);
-            blackOutScreen.CrossFadeAlpha(0f, 0f, true);
+            blackOutScreen.color = new Color(0, 0, 0, 1f); blackOutScreen.CrossFadeAlpha(0f, 0f, true);
         }
-
+        else if (camType == MyCameraType.Normal) { player = normalCam; }*/
 
         RearMirrorsReflection[] reflectionScript = car.GetComponentsInChildren<RearMirrorsReflection>(true);
-        if (reflectionScript != null && usedCam != null) { reflectionScript[0].head = CameraTransform(); }
+        if (reflectionScript != null && player != null) { reflectionScript[0].head = CameraTransform(); }
         else { Debug.Log("Could not set head position for mirro reflection script..."); }
-    }
-    IEnumerator RenderEndSimulation()
-    {
-        UIText.GetComponent<CanvasRenderer>().SetAlpha(0f);
-        yield return new WaitForSeconds(1.0f);
-        UIText.text = $"Thanks for participating {subjectName}!";
-        UIText.CrossFadeAlpha(1, 2.5f, false);
-
-    }
-    IEnumerator GoToWaitingRoomCoroutine()
-    {
-        gameState.SetGameState(GameStates.TransitionToWaitingRoom);
-
-        blackOutScreen.CrossFadeAlpha(1f, animationTime, false);
-        yield return new WaitForSeconds(animationTime + 1f);
-
-        //Save the data (doing this while screen is dark as this causes some lag)
-        //KEEP BEFORE SETTING UP NEXT EXPERIMENT
-        SaveData();
-
-        if (!endSimulation) { SetupNextExperiment(); }
-
-        GoToWaitingRoom();
-        
-        gameState.SetGameState(GameStates.Waiting);
-
-        blackOutScreen.CrossFadeAlpha(0f, animationTime, false);
-    }
-    IEnumerator GoToCarCoroutine()
-    {
-        gameState.SetGameState(GameStates.TransitionToCar);
-       
-
-        blackOutScreen.CrossFadeAlpha(1f, animationTime, false);
-        
-        yield return new WaitForSeconds(animationTime);
-        
-        GoToCar();
-        
-        blackOutScreen.CrossFadeAlpha(0f, animationTime, false);
-        
-        gameState.SetGameState(GameStates.Experiment);
-        //Start new measurement
-        dataManager.StartNewMeasurement();
-
-        yield return new WaitForSeconds(animationTime );
-
-        Debug.Log($"Verification cam position: {CameraTransform().position}, {driverView.position}...");
     }
     IEnumerator SetCarSteadyAt(Vector3 targetPos, Quaternion targetRot)
     {
         //Somehow car did some back flips when not keeping it steady for some time after repositioning.....
         float step = 0.01f;
-        float totalSeconds = 0.5f;
+        float totalSeconds = 0.25f;
         float count = 0;
 
         while (count < totalSeconds)
@@ -793,28 +545,6 @@ public class ExperimentManager : MonoBehaviour
             count += step;
             yield return new WaitForSeconds(step);
         }
-    }
-    IEnumerator RenderStartScreenText()
-    {
-        Debug.Log("Rendering startscreen...");
-        UIText.GetComponent<CanvasRenderer>().SetAlpha(0f);
-        //If first experiment we render your welcome
-        if (GetIndexCurrentExperiment() == 0 && !Varjo.VarjoPlugin.IsGazeCalibrated()) { UIText.text = $"Eye-calibration stage..."; }
-        else if (Varjo.VarjoPlugin.IsGazeCalibrated()) { UIText.text = $"Practise drive starting when you are ready..."; }
-        else if (GetIndexCurrentExperiment() == 0) { UIText.text = $"Practise drive completed..."; }
-        else { UIText.text = $"Experiment {GetIndexCurrentExperiment() } completed..."; }
-        
-        UIText.CrossFadeAlpha(1, 2.5f, false);
-
-        yield return new WaitForSeconds(3f);
-
-        UIText.CrossFadeAlpha(0, 2.5f, false);
-
-        yield return new WaitForSeconds(3f);
-
-        if ((GetIndexCurrentExperiment()) != 0) { UIText.text = $"Experiment {GetIndexCurrentExperiment() } starting when your ready..."; }
-
-        UIText.CrossFadeAlpha(1, 2.5f, false);
     }
 }
 
@@ -850,6 +580,5 @@ public class ExperimentSetting
     public Transform navigation;
     public NavigationType navigationType;
     [Range(0.01f, 1f)]
-    public float transparency = 0.3f;   
+    public float transparency = 0.3f;
 }
- 

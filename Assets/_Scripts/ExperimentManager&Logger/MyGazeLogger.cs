@@ -40,9 +40,13 @@ public class MyGazeLogger : MonoBehaviour
     //Looking at what exactly?
     public Fixation fixationData;
     private LoggedTags fixatingOn = LoggedTags.World;
-
-    private void Start()
+    private void Awake()
     {
+        StartUpFunction();
+    }
+    void StartUpFunction()
+    {
+        if (!StaticSceneManager.saveData || StaticSceneManager.camType == MyCameraType.Normal) { GetComponent<MyGazeLogger>().enabled = false; return; }
         // InitGaze must be called before using or calibrating gaze tracking.
         if (!VarjoPlugin.InitGaze())
         {
@@ -51,7 +55,6 @@ public class MyGazeLogger : MonoBehaviour
         }
         fixationData = new Fixation();
     }
-
     void Update()
     {
         // Do not run update if the application is not visible
@@ -147,7 +150,6 @@ public class MyGazeLogger : MonoBehaviour
         }
         writer.WriteLine(line);
     }
-
     public void StartLogging()
     {
         if (logging)
@@ -156,6 +158,7 @@ public class MyGazeLogger : MonoBehaviour
             return;
         }
 
+        fixationData = new Fixation();
         logging = true;
 
         string logPath = useCustomLogPath ? customLogPath : Application.dataPath + "/Logs/";
@@ -171,7 +174,6 @@ public class MyGazeLogger : MonoBehaviour
         Log(ColumnNames);
         //Debug.Log("Log file started at: " + path);
     }
-
     public void StopLogging()
     {
         if (!logging) { return; }
@@ -191,13 +193,7 @@ public class MyGazeLogger : MonoBehaviour
         fixationData = new Fixation();
         StartLogging();
     }
-
     public bool IsLogging() { return logging; }
-    void OnApplicationQuit()
-    {
-        if (experimentManager.saveData && !GetComponent<DataLogger>().savedData) { StopLogging(); }
-    }
-
     public static string Double3ToString(double[] doubles)
     {
         return "(" + doubles[0].ToString() + ", " + doubles[1].ToString() + ", " + doubles[2].ToString() + ")";

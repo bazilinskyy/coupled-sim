@@ -60,12 +60,9 @@ public enum LoggedTags
 }
 public enum TargetDifficulty
 {
-    easy_6,
-    easy_5,
-    medium_4,
-    medium_3,
-    hard_2,
-    hard_1
+    easy,
+    medium,
+    hard,
 }
 
 public enum GameStates
@@ -75,7 +72,7 @@ public enum GameStates
     TransitionToWaitingRoom,
     TransitionToCar,
     Finished,
-
+    PractiseDrive,
 }
 
 public enum NavigationType

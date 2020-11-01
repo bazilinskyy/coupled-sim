@@ -11,12 +11,13 @@ public class TargetEditor : Editor
     SerializedProperty ID;
     SerializedProperty detected;
 
-    SerializedProperty easy_6;
-    SerializedProperty easy_5;
-    SerializedProperty medium_4;
-    SerializedProperty medium_3;
-    SerializedProperty hard_2;
-    SerializedProperty hard_1;
+    SerializedProperty easy;
+    SerializedProperty medium;
+    SerializedProperty hard;
+    
+    SerializedProperty afterTurn;
+    SerializedProperty side;
+    SerializedProperty difficultPosition;
 
     private Target _target;
 
@@ -28,12 +29,13 @@ public class TargetEditor : Editor
         ID = serializedObject.FindProperty("ID");
         detected = serializedObject.FindProperty("detected");
 
-        easy_6 = serializedObject.FindProperty("easy_6");
-        easy_5 = serializedObject.FindProperty("easy_5");
-        medium_4 = serializedObject.FindProperty("medium_4");
-        medium_3 = serializedObject.FindProperty("medium_3");
-        hard_2 = serializedObject.FindProperty("hard_2");
-        hard_1 = serializedObject.FindProperty("hard_1");
+        easy = serializedObject.FindProperty("easy");
+        medium = serializedObject.FindProperty("medium");
+        hard = serializedObject.FindProperty("hard");
+
+        afterTurn = serializedObject.FindProperty("afterTurn");
+        side = serializedObject.FindProperty("side");
+        difficultPosition = serializedObject.FindProperty("difficultPosition");
     }
 
 
@@ -45,13 +47,15 @@ public class TargetEditor : Editor
         EditorGUILayout.PropertyField(ID);
         EditorGUILayout.PropertyField(detected);
 
+        EditorGUILayout.PropertyField(afterTurn);
+        EditorGUILayout.PropertyField(side);
+        EditorGUILayout.PropertyField(difficultPosition);
+
         //Uncomment if you want to set these to different materials
-      /*  EditorGUILayout.PropertyField(easy_6);
-        EditorGUILayout.PropertyField(easy_5);
-        EditorGUILayout.PropertyField(medium_4);
-        EditorGUILayout.PropertyField(medium_3);
-        EditorGUILayout.PropertyField(hard_2);
-        EditorGUILayout.PropertyField(hard_1);*/
+        /* EditorGUILayout.PropertyField(easy);
+         EditorGUILayout.PropertyField(medium);
+         EditorGUILayout.PropertyField(hard);*/
+
 
         _target = (Target)target;
 

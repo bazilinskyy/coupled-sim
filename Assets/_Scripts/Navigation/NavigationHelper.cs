@@ -20,6 +20,9 @@ public class NavigationHelper : MonoBehaviour
     
     public bool _pressMeToRerender = false; private bool pressMeToRerender = false;
 
+    public float lengthTrack;
+    public int leftTurns;
+    public int rightTurns;
     public TargetCountInfo targetCountInfo;
     public List<DifficultyCount> targetDifficultyList;
 
@@ -29,21 +32,17 @@ public class NavigationHelper : MonoBehaviour
     private SplineCreator splineCreator;
     private List<Waypoint> generalWaypointList;
     private Operation currentOperation = Operation.None;
-    private RenderNavigation navigationRenderer;
-
-    private void Awake()
+    private int numberOfPoints;
+    private void Start()
     {
         renderVirtualCable = _renderVirtualCable;
         renderHighlightedRoad = _renderHighlightedRoad;
 
         splineCreator = GetComponent<SplineCreator>();
-        navigationRenderer = GetComponent<RenderNavigation>();
         generalWaypointList = GetOrderedWaypointList();
 
-        //RenderNavigation();
-       
-        UpdateOrderIds(); //Make sure order ids are correct at startup
-        
+        //Reset all targets
+        foreach (Target target in GetAllTargets()) { target.ResetTarget(); }       
     }
     private void Update()
     {
@@ -51,7 +50,8 @@ public class NavigationHelper : MonoBehaviour
         if (renderHUD)
         {
             if (car == null || HUDMaterials == null || car.target ==null) { return; }
-            RenderNavigationArrow();
+
+            if (currentOperation != car.target.operation) { RenderNavigationArrow(); }
             RenderNavigationDistance();
             currentOperation = car.target.operation;
         }
@@ -67,9 +67,10 @@ public class NavigationHelper : MonoBehaviour
     }
     void CheckChanges()
     {
-        if (targetCountInfo.totalTargets != GetAllTargets().Count()) { targetCountInfo = GetTargetCountInfo(); targetDifficultyList = GetTargetDifficultyList(); }
         //Dont do this while application is running
         if (Application.isPlaying) { return; }
+        if(generalWaypointList == null || generalWaypointList.Count() != GetOrderedWaypointList().Count()) { CountTurns(); generalWaypointList = GetOrderedWaypointList(); }
+        if (targetCountInfo.totalTargets != GetAllTargets().Count()) { targetCountInfo = GetTargetCountInfo(); targetDifficultyList = GetTargetDifficultyList(); }
 
         if (splineCreator == null) { splineCreator = gameObject.GetComponent<SplineCreator>(); }
         if (renderVirtualCable != _renderVirtualCable || renderHighlightedRoad != _renderHighlightedRoad)
@@ -97,13 +98,30 @@ public class NavigationHelper : MonoBehaviour
             transparency = _transparency;
             ChangTransparancyHUDAndConformal();
         }
-    }
-    void RenderNavigationArrow()
-    {
-        
-        Transform arrows = car.HUD.transform.Find("Arrows");
+        Vector3[] points = GetNavigationLine();
+        if(numberOfPoints != points.Length)
+        {
+            numberOfPoints = points.Length; lengthTrack = 0;
 
-        if(currentOperation == car.target.operation ) { return; }
+            for (int i=0; (i+1) < points.Length; i++)
+            {
+                lengthTrack += Vector3.Magnitude(points[i] - points[i + 1]);
+            }
+        }
+    }
+    void CountTurns()
+    {
+        leftTurns = rightTurns = 0;
+        foreach(Waypoint waypoint in GetOrderedWaypointList())
+        {
+            if (waypoint.operation.IsLeftTurn()) { leftTurns++; }
+            if (waypoint.operation.IsRightTurn()) { rightTurns++; }
+        }
+    }
+    public void RenderNavigationArrow()
+    {
+        if (!renderHUD) { return; }
+        Transform arrows = car.HUD.transform.Find("Arrows");
         if (arrows == null) { Debug.Log("Arrows= null...."); return; }
         if (car.target.operation.IsRightTurn()) { arrows.GetComponent<MeshRenderer>().material = HUDMaterials.right; arrows.GetComponent<MoveCollider>().RightArrow(); }
         else if (car.target.operation.IsLeftTurn()) { arrows.GetComponent<MeshRenderer>().material = HUDMaterials.left; arrows.GetComponent<MoveCollider>().LeftArrow(); }
@@ -226,8 +244,16 @@ public class NavigationHelper : MonoBehaviour
 
         foreach (Target target in targets)
         {
-            if(target.GetRoadSide() == Side.Left) { info.AddLeft(); }
-            if(target.GetRoadSide() == Side.Right) { info.AddRight(); }
+            if(target.side == Side.Left) { 
+                info.AddLeft();
+                if (target.afterTurn && target.waypoint.operation.IsLeftTurn()) { info.difficultPosAfterTurn++; info.leftAfterLeftTurn++; }
+                if (target.afterTurn && target.waypoint.operation.IsRightTurn()) { info.easyPoisAfterTurn++; }
+            }
+            if(target.side == Side.Right) { 
+                info.AddRight();
+                if (target.afterTurn && target.waypoint.operation.IsRightTurn()) { info.difficultPosAfterTurn++; info.rightAfterRightTurn++; }
+                if (target.afterTurn && target.waypoint.operation.IsLeftTurn()) { info.easyPoisAfterTurn++; }
+            }
         }
         return info;
     }
@@ -332,22 +358,14 @@ public class NavigationHelper : MonoBehaviour
             waypoint.RenderMe(render);
         }
     }
-    public void SetUp(NavigationType navigationType, float _transparency, Navigator _car, HUDMaterials _HUDMAterials, bool makeNavigation = true)
+    public void SetUp(NavigationType navigationType, float _transparency, Navigator _car, HUDMaterials _HUDMAterials)
     {
-        if (makeNavigation) { splineCreator.MakeNavigation(); }
-        
-        //Reset all targets
-        foreach (Target target in GetAllTargets()) { target.ResetTarget(); }
+        //if (makeNavigation) { splineCreator.MakeNavigation(); }
 
-        UpdateOrderIds(); //Make sure order ids are correct at startup
-
-        transparency = _transparency;
+        HUDMaterials = _HUDMAterials;  transparency = _transparency;
         car = _car;  car.navigation = transform; car.target = GetFirstTarget();
-
-        navigationRenderer.SetUpNavigationRenderer(car, GetOrderedWaypointList(), car.GetCurrentTarget());
-
-        HUDMaterials = _HUDMAterials;
-        //ChangTransparancyHUDAndConformal();
+        
+        GetComponent<RenderNavigation>().SetUpNavigationRenderer(car, GetOrderedWaypointList(), car.GetCurrentTarget());
 
         if (navigationType == NavigationType.VirtualCable) {
             renderHUD = false;
@@ -406,8 +424,13 @@ public class TargetCountInfo
     public int totalTargets;
     public int LeftPosition;
     public int rightPosition;
+    //Right side after right turn is difficult, left after left turn is difficult
+    public int difficultPosAfterTurn;
+    public int easyPoisAfterTurn;
 
-    public TargetCountInfo() { totalTargets = LeftPosition = rightPosition = 0; }
+    public int rightAfterRightTurn;
+    public int leftAfterLeftTurn;
+    public TargetCountInfo() { totalTargets = LeftPosition = rightPosition = difficultPosAfterTurn = easyPoisAfterTurn = rightAfterRightTurn = leftAfterLeftTurn = 0; }
     public void AddLeft(){ LeftPosition++; }
     public void AddRight() { rightPosition++; }
 }
