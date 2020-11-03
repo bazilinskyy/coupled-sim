@@ -103,7 +103,18 @@ public class PlayerAvatar : MonoBehaviour
                 GameObject go_VarjoManager = gameObject.transform.Find("VarjoCameraRig").gameObject;
                 go_VarjoManager.SetActive(true);
 
-                break;
+                // If local is pedestrian and client_nextScene == true, then load next scene
+                if(transform.name == "Participant_VarjoV2(Clone)" && SteamVR.instance.hmd_SerialNumber == "LHR-85C3EF8C")
+                {
+                    var go_N3 = gameObject.transform.Find("NetworkObject_3");
+                    Debug.LogError($"go_N3 = {go_N3.name} with pos z = {go_N3.position.z}");
+                    if(go_N3.position.z == 1)
+                    {
+                        PersistentManager.Instance.client_nextScene = 1;
+                    }
+                }
+
+                    break;
             case PlayerSystem.Mode.VR:
                 modeElements = VRModeElements;
                 break;

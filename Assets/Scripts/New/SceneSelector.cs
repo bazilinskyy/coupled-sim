@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel.Design;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Valve.VR;
 
 public class SceneSelector : MonoBehaviour
 {
@@ -26,23 +27,26 @@ public class SceneSelector : MonoBehaviour
 
     private void Update()
     {
-        if(Input.GetKeyDown("1") == true)
+        // If the Host(AV) hits the NextLvl trigger, the client (pedestrian) should switch scenes too
+        if (useManualSelection == false && PersistentManager.Instance.client_nextScene == 1 && SteamVR.instance.hmd_SerialNumber == "LHR-85C3EF8C")
         {
-            PersistentManager.Instance.stopLogging = true;
-            PersistentManager.Instance.nextScene = true;
-            nextExperiment();
+            PersistentManager.Instance.client_nextScene = 0;
+            Invoke("nextExperiment", 4);
         }
     }
 
+
     private void Awake()
     {
-        if (PersistentManager.Instance.createOrder == true)
+        Debug.LogError($"variable is {SteamVR.instance.hmd_SerialNumber == "LHR-7863A1E8"}");
+        if (PersistentManager.Instance.createOrder == true && SteamVR.instance.hmd_SerialNumber == "LHR-7863A1E8")
         {
             PersistentManager.Instance.ExpOrder = SceneRandomizerBlock(); // SceneRandomizer();
             PersistentManager.Instance.createOrder = false;
             if (useManualSelection == false)
             {
                 PersistentManager.Instance.experimentnr = PersistentManager.Instance.ExpOrder[0];
+                Debug.LogError($"Experiment nr = {PersistentManager.Instance.experimentnr}");
             }
             else if(useManualSelection == true)
             {
@@ -57,6 +61,8 @@ public class SceneSelector : MonoBehaviour
         {
             if (useManualSelection == false)
             {
+                PersistentManager.Instance.client_nextScene = 1;
+
                 Invoke("nextExperiment", 4);
 
                 PersistentManager.Instance.stopLogging = true;
@@ -134,7 +140,7 @@ public class SceneSelector : MonoBehaviour
 
     private List<int> SceneRandomizer()
     {
-        // Randomize exp 0-3, every exp 3 times
+        // Randomize exp 0-3, every exp 3 time
         List<int> Block_one = shuffledList(0, 3, 4);
 
         // Randomize Mapping 1, exp 4-7
@@ -190,10 +196,10 @@ public class SceneSelector : MonoBehaviour
         }
 
         // Prints the list for debugging
-        /*for (int i = 0; i < Block.Count; i++)
+        for (int i = 0; i < Block.Count; i++)
         {
             Debug.LogError($"List = {Block[i]}");
-        }*/
+        }
 
         return Block;
     }

@@ -288,7 +288,7 @@ public class Host : NetworkSystem
                     if (GUILayout.Button("Start Game"))
                     {
                         StartGame();
-                        PersistentManager.Instance.clientConnectedToHost = true;
+                        //PersistentManager.Instance.clientConnectedToHost = true;
                         gameStarted = true;
                     }
                 }
