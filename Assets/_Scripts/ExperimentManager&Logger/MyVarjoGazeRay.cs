@@ -89,7 +89,11 @@ public class MyVarjoGazeRay : MonoBehaviour
 
                 // Use layers or tags preferably to identify looked objects in your application.
                 // This is done here via GetComponent for clarity's sake as example.
-
+                Target target = gazeRayHit.collider.gameObject.GetComponent<Target>();
+                if (target != null)
+                {
+                    target.OnHit();
+                }
                 bool lookingAtWorld = true;
                 foreach (LoggedTags tag in EnumUtil.GetValues<LoggedTags>())
                 {

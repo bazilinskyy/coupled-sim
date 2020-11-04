@@ -32,6 +32,8 @@ public class MySceneLoader : MonoBehaviour
         player.transform.position = startingPosition.position;
         player.transform.rotation = startingPosition.rotation;
 
+        if (StaticSceneManager.camType == MyCameraType.Leap) { Varjo.VarjoPlugin.ResetPose(true, Varjo.VarjoPlugin.ResetRotation.ALL); }
+
         blackOutScreen.CrossFadeAlpha(0, StaticSceneManager.animationTime*2, true);
         Debug.Log("Moved player!");
     }

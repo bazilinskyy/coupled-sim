@@ -3,7 +3,7 @@
 public static class StaticSceneManager
 {
     
-    public static MyCameraType camType = MyCameraType.Normal;
+    public static MyCameraType camType = MyCameraType.Leap;
 
     public static string subjectDataFolder;
     public static bool automateSpeed = true;

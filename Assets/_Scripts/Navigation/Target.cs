@@ -84,13 +84,14 @@ public class Target : MonoBehaviour
 
     public void SetDetected(float detectionTime)
     {
+
         detected = true;
         
         reactionTime = detectionTime - startTimeVisible;
         GetComponent<MeshRenderer>().enabled = false;
         GetComponent<SphereCollider>().enabled = false;
 
-        Debug.Log($"startTimeVisible {startTimeVisible}, detectionTime { detectionTime}, reactiontime: {reactionTime}");
+        Debug.Log($"Target {GetID()} is detected: startTimeVisible {startTimeVisible}, detectionTime { detectionTime}, reactiontime: {reactionTime}");
     }
 
     public void ResetTarget()
