@@ -368,7 +368,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1071952610673402}
-  m_LocalRotation: {x: 0.012356783, y: 0.9922791, z: 0.0076960195, w: 0.12316799}
+  m_LocalRotation: {x: 0.012356777, y: 0.99227905, z: 0.0076959813, w: 0.12316774}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
@@ -1772,7 +1772,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1423133326294436}
-  m_LocalRotation: {x: 0.00092697935, y: 0.97924376, z: -0.08135302, w: -0.18564059}
+  m_LocalRotation: {x: 0.00092698867, y: 0.9792439, z: -0.08135295, w: -0.18564048}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
@@ -3060,6 +3060,10 @@ GameObject:
   - component: {fileID: 772200647187876941}
   - component: {fileID: 65347742212538414}
   - component: {fileID: 8938021727904404209}
+  - component: {fileID: 7713759469045616529}
+  - component: {fileID: 650018555379239884}
+  - component: {fileID: 3454787565982020884}
+  - component: {fileID: 1103068305145384009}
   m_Layer: 9
   m_Name: DrivableSmartCommon
   m_TagString: ManualCar
@@ -3299,6 +3303,7 @@ MonoBehaviour:
     gameObjects: []
     monoBehaviours:
     - {fileID: 630320291128974142}
+    - {fileID: 3454787565982020884}
     collider: {fileID: 0}
   HMISlots:
     Hood: {fileID: 1650355202115934463}
@@ -3312,6 +3317,81 @@ MonoBehaviour:
   - {fileID: 2590204308891740255}
   - {fileID: 8414590981671948444}
   _carBlinkers: {fileID: 114087306401717236}
+--- !u!114 &7713759469045616529
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1787876385652902}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b100b64279042ff46b83465c27e51ad0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  set_speed: 30
+  set_acceleration: 2
+  jerk: 2
+  turn_rate_degree: 360
+  speed: 0
+  acceleration: 0
+  t: 0
+  HasPitch: 1
+  braking: 0
+  reset: 0
+  WaitInputX: 0
+  WaitTrialX: 0
+  WaitTrialZ: 0
+  target: {fileID: 0}
+--- !u!114 &650018555379239884
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1787876385652902}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c5cb22d331ef7d64796f917c6a455a32, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  circuit: {fileID: 0}
+  lookAheadForTargetOffset: 5
+  lookAheadForTargetFactor: 0.1
+  lookAheadForSpeedOffset: 10
+  lookAheadForSpeedFactor: 0.2
+  progressStyle: 0
+  pointToPointThreshold: 4
+  target: {fileID: 0}
+--- !u!114 &3454787565982020884
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1787876385652902}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 78cd1d8cdb72c434980186d69c44945b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  FrontLeft: {fileID: 2465501146693673060}
+  FrontRight: {fileID: 2233151292397996042}
+  RearLeft: {fileID: 8414590981671948444}
+  RearRight: {fileID: 2590204308891740255}
+  WheelDiameter: 0.54
+--- !u!114 &1103068305145384009
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1787876385652902}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7f21b587b2a8e7c4e9f55f86ff600bdc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1819827312411906
 GameObject:
   m_ObjectHideFlags: 0
@@ -3483,7 +3563,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1837026904274828}
-  m_LocalRotation: {x: 0.0048962114, y: 0.95938677, z: -0.06442281, w: 0.2745957}
+  m_LocalRotation: {x: 0.004896205, y: 0.9593868, z: -0.06442278, w: 0.2745956}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
