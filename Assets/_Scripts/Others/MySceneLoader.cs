@@ -5,13 +5,18 @@ using UnityEngine;
 public class MySceneLoader : MonoBehaviour
 {
     public GameObject player;
+    private ExperimentInput experimentInput;
+    
+
     public Transform startingPosition;
     private bool loading=false;
     UnityEngine.UI.Image blackOutScreen;
-    
+    private float timeWaited = 0f;
     private void Start()
     {
         player = GameObject.FindGameObjectWithTag("Player");
+
+        experimentInput = player.GetComponent<ExperimentInput>();
         blackOutScreen = GameObject.FindGameObjectWithTag("BlackOutScreen").GetComponent<UnityEngine.UI.Image>();
         blackOutScreen.color = new Color(0, 0, 0, 1f); blackOutScreen.CrossFadeAlpha(1f, 0f, true);
 
@@ -26,31 +31,37 @@ public class MySceneLoader : MonoBehaviour
     IEnumerator MovePlayerToDestination()
     {
         int NScenes = SceneManager.GetAllScenes().Length;
-        while (NScenes > 1) { Debug.Log($"Currently on {NScenes} scenes"); yield return null; }
+        while (NScenes > 1 && timeWaited < 1f) 
+        {
+            if (timeWaited == 0f) { Debug.Log($"Waiting, currently on {NScenes} scenes..."); } 
+            timeWaited += 0.01f; 
+            yield return new WaitForSeconds(0.01f); 
+        }
+        timeWaited = 0f;
 
         player.transform.parent = startingPosition;
         player.transform.position = startingPosition.position;
         player.transform.rotation = startingPosition.rotation;
 
-        if (StaticSceneManager.camType == MyCameraType.Leap) { Varjo.VarjoPlugin.ResetPose(true, Varjo.VarjoPlugin.ResetRotation.ALL); }
+        //if (experimentInput.camType == MyCameraType.Leap) { Varjo.VarjoPlugin.ResetPose(true, Varjo.VarjoPlugin.ResetRotation.ALL); }
 
-        blackOutScreen.CrossFadeAlpha(0, StaticSceneManager.animationTime*2, true);
+        blackOutScreen.CrossFadeAlpha(0, experimentInput.animationTime*2, true);
         Debug.Log("Moved player!");
     }
 
     public void LoadNextScene()
     {
-        if (!loading && StaticSceneManager.IsNextScene()) { StartCoroutine(LoadYourAsyncScene(StaticSceneManager.GetNextScene()));  }
+        if (!loading && experimentInput.IsNextScene()) { StartCoroutine(LoadYourAsyncScene(experimentInput.GetNextScene()));  }
     } 
 
     public void LoadWaitingScene()
     {
-        if (!loading) { StartCoroutine(LoadYourAsyncScene(StaticSceneManager.waitingRoomScene)); }
+        if (!loading) { StartCoroutine(LoadYourAsyncScene(experimentInput.waitingRoomScene)); }
     }
 
     public void AddTargetScene()
     {
-        SceneManager.LoadSceneAsync(StaticSceneManager.targetScene, LoadSceneMode.Additive);
+        SceneManager.LoadSceneAsync(experimentInput.targetScene, LoadSceneMode.Additive);
     }
 
     IEnumerator LoadYourAsyncScene(string sceneName)
@@ -59,8 +70,8 @@ public class MySceneLoader : MonoBehaviour
         player.transform.parent = null;
         DontDestroyOnLoad(player);
 
-        blackOutScreen.CrossFadeAlpha(1f, StaticSceneManager.animationTime, false);
-        yield return new WaitForSeconds(StaticSceneManager.animationTime);
+        blackOutScreen.CrossFadeAlpha(1f, experimentInput.animationTime, false);
+        yield return new WaitForSeconds(experimentInput.animationTime);
 
         // The Application loads the Scene in the background at the same time as the current Scene.
         AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Single);

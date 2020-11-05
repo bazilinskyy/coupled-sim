@@ -43,7 +43,6 @@ public class CalibrateUsingHands : MonoBehaviour
 
             //Set steeringwheel position accordingly
             steeringWheel.position = transform.position - steeringWheelToCam;
-            Debug.Log($"Succesfully calibrated headposition with hands on steering wheel, steeringWheelToCam: {steeringWheelToCam}...");
             return true;
         }
         else { Debug.Log("Could not set hand position..."); return false; }

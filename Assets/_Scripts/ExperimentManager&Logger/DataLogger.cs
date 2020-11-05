@@ -30,12 +30,13 @@ public class DataLogger : MonoBehaviour
     private ExperimentManager experimentManager;
 
     private MyGazeLogger myGazeLogger;
-    private string subjectDataFolder;
    
     //list of items
     private List<VehicleDataPoint> vehicleData;
     private List<TargetAlarm> targetDetectionData;
 
+    private ExperimentInput experimentInput;
+    private Transform player;
 
     private string saveFolder;
     private string steerInputAxis;
@@ -43,20 +44,26 @@ public class DataLogger : MonoBehaviour
     public bool savedData;
     public bool logging;
 
-    private void OnApplicationQuit() { if (StaticSceneManager.saveData && !savedData) { SaveData(); } }
+    private void OnApplicationQuit() { if (experimentInput.saveData && !savedData) { SaveData(); } }
     private void Awake()
     {
         StartUpFunction();
     }
     void StartUpFunction()
     {
-        if (!StaticSceneManager.saveData) { 
-            GetComponent<DataLogger>().enabled = false; 
+        
+        Debug.Log("Started data logger...");
+        player = GameObject.FindGameObjectWithTag("Player").transform;
+        experimentInput = player.GetComponent<ExperimentInput>();
+
+        experimentManager = GetComponent<ExperimentManager>();
+        if (!experimentInput.saveData)
+        {
+            GetComponent<DataLogger>().enabled = false;
             logging = false;
             return;
-            }
-        Debug.Log("Started data logger...");
-        experimentManager = GetComponent<ExperimentManager>();
+        }
+
         //gameState = experimentManager.gameState;
         myGazeLogger = GetComponent<MyGazeLogger>();
         myGazeLogger.experimentManager = experimentManager;
@@ -72,7 +79,6 @@ public class DataLogger : MonoBehaviour
 
         carNavigator = car.GetComponent<Navigator>();
 
-        subjectDataFolder = StaticSceneManager.subjectDataFolder;
     }
     private void Update()
     {
@@ -295,7 +301,7 @@ public class DataLogger : MonoBehaviour
         for (int i = 0; i < values.Length; ++i)
         {
             values[i] = values[i].Replace("\r", "").Replace("\n", ""); // Remove new lines so they don't break csv
-            line += values[i] + (i == (values.Length - 1) ? "" : ","); // Do not add semicolon to last data string
+            line += values[i] + (i == (values.Length - 1) ? "" : ";"); // Do not add semicolon to last data string
         }
         file.WriteLine(line);
     }
@@ -322,15 +328,16 @@ public class DataLogger : MonoBehaviour
     {
         //Save folder will be .../unityproject/Data/subjectName-date/subjectName/navigationName
 
-        string[] assetsFolderArray = Application.dataPath.Split('/'); //Gives .../unityproject/assest
+        /*string[] assetsFolderArray = Application.dataPath.Split('/'); //Gives .../unityproject/assest
 
         //emmit unityfolder/assets and keep root folder
 
         string[] baseFolderArray = new string[assetsFolderArray.Length - 2];
         for (int i = 0; i < (assetsFolderArray.Length - 2); i++) { baseFolderArray[i] = assetsFolderArray[i]; }
 
-        string baseFolder = string.Join("/", baseFolderArray);
-        string saveFolder = string.Join("/", baseFolder, dataFolder, subjectDataFolder, SceneManager.GetActiveScene().name + DateTime.Now.ToString("_HH-mm-ss"));
+        string baseFolder = string.Join("/", baseFolderArray);*/
+        string saveFolder = string.Join("/", experimentInput.subjectDataFolder, SceneManager.GetActiveScene().name + DateTime.Now.ToString("_HH-mm-ss"));
+        Debug.Log($"Creaiting savefolder: {saveFolder}...");
         Directory.CreateDirectory(saveFolder);
         
 
@@ -418,9 +425,7 @@ public class DataLogger : MonoBehaviour
         alarm.time = experimentManager.activeExperiment.experimentTime;
         alarm.frame = Time.frameCount;
         alarm.alarmType = false;
-        alarm.targetID = "-";
-        alarm.reactionTime = 0f;
-        alarm.targetDifficulty = 0;
+       
         targetDetectionData.Add(alarm);
         Debug.Log("Added false alarm...");
     }
@@ -436,7 +441,7 @@ public class DataLogger : MonoBehaviour
         alarm.reactionTime = alarm.time - target.startTimeVisible;
 
         //The difficulty names always end with a number ranging from 1-6
-        alarm.targetDifficulty = int.Parse(target.GetTargetDifficulty().ToString().Last().ToString());
+        alarm.targetDifficulty = target.GetTargetDifficulty().ToString();
         targetDetectionData.Add(alarm);
 
         Debug.Log($"Added true alarm for {target.GetID()}, reaction time: {Math.Round(alarm.reactionTime, 2)}s ...");
@@ -465,30 +470,16 @@ public class TargetAlarm
     public bool alarmType;
     public float reactionTime;
     public string targetID;
-    public int targetDifficulty;
+    public string targetDifficulty;
+
+    public TargetAlarm()
+    {
+        targetID = "-";
+        reactionTime = 0f;
+        targetDifficulty = "-";
+    }
 }
 
-/*
-public class TargetInfo
-{
-    public bool detected;
-    public float reactionTime;
-    public float fixationTime;
-
-    public TargetDifficulty difficulty;
-    public Side side;
-    public string targetName;
-    public string position;
-}
-public class TargetDetectionSummary
-{
-    public int totalTargets;
-    public int totalMisses;
-    public int totalHits;
-    public float missRate;
-    public float hitRate;
-    public float detectionRate;
-}*/
 public class NavigationLine
 {
     public Vector3[] navigationLine;

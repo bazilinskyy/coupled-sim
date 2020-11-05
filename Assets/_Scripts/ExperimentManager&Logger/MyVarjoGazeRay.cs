@@ -15,6 +15,7 @@ public class MyVarjoGazeRay : MonoBehaviour
     [Header("Should we draw debug lines to scene view")]
     public bool drawDebug = true;
 
+    public bool logData = true;
     VarjoPlugin.GazeData data;
     RaycastHit gazeRayHit;
     Vector3 gazeRayForward;
@@ -38,14 +39,14 @@ public class MyVarjoGazeRay : MonoBehaviour
    
     void StartUpFunction()
     {
-        if(StaticSceneManager.camType == MyCameraType.Normal) { GetComponent<MyVarjoGazeRay>().enabled = false; return; }
+        //if(gazeLogger.experimentManager.experimentInput.camType == MyCameraType.Normal) { GetComponent<MyVarjoGazeRay>().enabled = false; return; }
         // InitGaze must be called before using or calibrating gaze tracking.
         if (!VarjoPlugin.InitGaze())
         {
             Debug.LogError("Failed to initialize gaze");
             GetComponent<MyVarjoGazeRay>().enabled = false;
         }
-        gazeLogger = GetComponent<MyGazeLogger>();
+        if (logData) { gazeLogger = GetComponent<MyGazeLogger>(); }
     }
     void Update()
     {
@@ -86,26 +87,30 @@ public class MyVarjoGazeRay : MonoBehaviour
             // Raycast into world
             if (Physics.SphereCast(gazeRayOrigin, gazeRayRadius, gazeRayDirection, out gazeRayHit, 1000f, layerMask))
             {
-
-                // Use layers or tags preferably to identify looked objects in your application.
-                // This is done here via GetComponent for clarity's sake as example.
-                Target target = gazeRayHit.collider.gameObject.GetComponent<Target>();
-                if (target != null)
+                //By default we are looking at the world
+                bool lookingAtWorld = true;
+                //If hti is a target execute OnHit function
+                if (gazeRayHit.collider.tag.Equals(LoggedTags.Target.ToString()))
                 {
+                    Target target = gazeRayHit.collider.gameObject.GetComponent<Target>();
                     target.OnHit();
                 }
-                bool lookingAtWorld = true;
-                foreach (LoggedTags tag in EnumUtil.GetValues<LoggedTags>())
-                {
-                    if (gazeRayHit.collider.tag.Equals(tag.ToString()))
-                    {
-                        gazeLogger.FixatingOn(tag);
-                        lookingAtWorld = false;
-                    }
-                }
-                //If hit colliders not tagged we assume it is the world:
-                if (lookingAtWorld) { gazeLogger.FixatingOn(LoggedTags.World); }
 
+                if (logData)
+                {
+                    //Go through all tags that we log
+                    foreach (LoggedTags tag in EnumUtil.GetValues<LoggedTags>())
+                    {
+                        if (gazeRayHit.collider.tag.Equals(tag.ToString()))
+                        {
+                            gazeLogger.FixatingOn(tag);
+                            lookingAtWorld = false;
+                        }
+                    }
+
+                    //If hit colliders not tagged we assume it is the world:
+                    if (lookingAtWorld) { gazeLogger.FixatingOn(LoggedTags.World); }
+                }
                 if (drawDebug)
                 {
                     Debug.DrawLine(gazeRayOrigin, gazeRayOrigin + gazeRayDirection * 10.0f, Color.green);
@@ -114,7 +119,7 @@ public class MyVarjoGazeRay : MonoBehaviour
             else
             {
                 //Not hitting any colliders so looking at the sky or something...
-                gazeLogger.FixatingOn(LoggedTags.World);
+                if (logData) { gazeLogger.FixatingOn(LoggedTags.World); }
 
                 if (drawDebug)
                 {
@@ -124,7 +129,7 @@ public class MyVarjoGazeRay : MonoBehaviour
 
         }
         //Invailable eye data....
-        else { gazeLogger.FixatingOn(LoggedTags.Unknown); }
+        else { if (logData) { gazeLogger.FixatingOn(LoggedTags.Unknown); } }
     }
 }
 

@@ -40,10 +40,6 @@ public class SpeedController : MonoBehaviour
     {
         StartUpFunction();
     }
-    private void OnLevelWasLoaded(int level)
-    {
-        StartUpFunction();
-    }
     void StartUpFunction()
     {
         navigator = GetComponent<Navigator>();
@@ -126,7 +122,7 @@ public class SpeedController : MonoBehaviour
             //Starts brakign when at end point.
             if (Vector3.Distance(transform.position, targetWaypoint.transform.position) < 7.5f) { Brake(); }
         }
-        else { Debug.Log("Loop hole should never get here! (SpeedController.cs)..."); }
+        else { Debug.LogError("Loop hole should never get here! (SpeedController.cs)..."); }
 
         if (setSpeed != speedSettings.speedLimit)
         {
