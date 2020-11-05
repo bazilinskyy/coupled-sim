@@ -76,6 +76,10 @@ public class PlayerAvatar : MonoBehaviour
         public GameObject[] gameObjects;
         public MonoBehaviour[] monoBehaviours;
         public Collider collider;
+
+        [Header("Disabled elements")]
+        public GameObject[] disabledGameObjects;
+        public MonoBehaviour[] disabledMonoBehaviours;
     }
 
     public ModeElements VRModeElements;
@@ -118,6 +122,16 @@ public class PlayerAvatar : MonoBehaviour
         {
             modeElements.collider.enabled = true;
         }
+
+        foreach (var go in modeElements.disabledGameObjects)
+        {
+            go.SetActive(false);
+        }
+        foreach (var mb in modeElements.disabledMonoBehaviours)
+        {
+            mb.enabled = false;
+        }
+
         if (mode == PlayerSystem.Mode.Remote)
         {
             GetComponentInChildren<Rigidbody>().isKinematic = true;
@@ -132,6 +146,11 @@ public class PlayerAvatar : MonoBehaviour
                 su.enabled = false;
             }
         }
+        if (mode == PlayerSystem.Mode.HostAI)
+        {
+            GetComponentInChildren<Camera>().gameObject.SetActive(false);
+        }
+
     }
 
     // defines HMI to be spawned on the car
