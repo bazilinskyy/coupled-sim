@@ -347,13 +347,19 @@ public class AICar : MonoBehaviour
         // Compute adaptive deceleration needed to stop the AV at a fixed distance from the pedestrian
         // Hardcoded pedestrian location(z) = 17
         // Fixed stopping distance between pedestrian and AV = 6
-        distance_stop = first_triggerlocation - 17 - 6;
-        adaptive_acceleration = (0 - 900) / (2 * Mathf.Pow(conversion, 2) * distance_stop);
-
-        // Apply delta_distance for deceleration 
-        // Formula: v = sqrt(u^2 + 2*a*s) with v = final velocity; u = initial velocity; a = acceleration; s = distance covered. 
-        //speed = Mathf.Sqrt(900 + 2 * set_acceleration * Mathf.Pow(conversion, 2) * delta_distance); // Application of conversion of km/h to m/s which needs to be squared //900
-        speed = Mathf.Sqrt(900 + 2 * adaptive_acceleration * Mathf.Pow(conversion, 2) * delta_distance);
+        if(BrakeZ == false)
+        {
+            distance_stop = first_triggerlocation - 17 - 6;
+            adaptive_acceleration = (0 - 900) / (2 * Mathf.Pow(conversion, 2) * distance_stop);
+            // Apply delta_distance for deceleration 
+            // Formula: v = sqrt(u^2 + 2*a*s) with v = final velocity; u = initial velocity; a = acceleration; s = distance covered. 
+            speed = Mathf.Sqrt(900 + 2 * adaptive_acceleration * Mathf.Pow(conversion, 2) * delta_distance);
+        }
+        if(BrakeZ == true)
+        {
+            // Non adaptive deceleration
+            speed = Mathf.Sqrt(900 + 2 * set_acceleration * Mathf.Pow(conversion, 2) * delta_distance); // Application of conversion of km/h to m/s which needs to be squared //900
+        }
 
         // Slowing down            
         // Compute pitch for deceleration
