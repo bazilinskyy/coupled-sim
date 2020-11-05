@@ -106,7 +106,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   SpawnPoint: {fileID: 2762136655126269447}
   Track: {fileID: 1564282228627260321}
-  TestCar: {fileID: 352613617798921809, guid: 568fe77cfc898694fad6a63eff98d905, type: 3}
+  TestCar: {fileID: 7713759469045616529, guid: 1baf460ab026f1247ab4696be569ffae, type: 3}
 --- !u!1 &6692014269374732414
 GameObject:
   m_ObjectHideFlags: 0
@@ -118,7 +118,7 @@ GameObject:
   - component: {fileID: 7609667120526454229}
   - component: {fileID: 8692043556341430772}
   m_Layer: 0
-  m_Name: SoloPedestrianWithAI-Nighttime
+  m_Name: SoloPedestrianWithNPCs-Nighttime
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -177,11 +177,6 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 7609667120526454229}
     m_Modifications:
-    - target: {fileID: 7827330837466819366, guid: 14577e4ea88504c418d314035e8ef748,
-        type: 3}
-      propertyPath: m_Name
-      value: Traffic Circuit
-      objectReference: {fileID: 0}
     - target: {fileID: 4479431538822812642, guid: 14577e4ea88504c418d314035e8ef748,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -236,6 +231,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7827330837466819366, guid: 14577e4ea88504c418d314035e8ef748,
+        type: 3}
+      propertyPath: m_Name
+      value: Traffic Circuit
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 14577e4ea88504c418d314035e8ef748, type: 3}
