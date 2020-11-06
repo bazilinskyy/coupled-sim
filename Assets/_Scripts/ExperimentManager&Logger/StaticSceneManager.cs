@@ -22,7 +22,7 @@ public static class StaticSceneManager
     public static KeyCode resetExperiment = KeyCode.Escape;
 
     public static KeyCode keyToggleDriving = KeyCode.Space;
-
+    public static KeyCode keyboardTargetDetection = KeyCode.Mouse0;
     public static KeyCode keyToggleSymbology = KeyCode.Tab;
 
     public static KeyCode setToLastWaypoint = KeyCode.R;

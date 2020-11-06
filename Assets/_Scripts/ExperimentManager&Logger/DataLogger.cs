@@ -418,9 +418,7 @@ public class DataLogger : MonoBehaviour
         alarm.time = experimentManager.activeExperiment.experimentTime;
         alarm.frame = Time.frameCount;
         alarm.alarmType = false;
-        alarm.targetID = "-";
-        alarm.reactionTime = 0f;
-        alarm.targetDifficulty = 0;
+        
         targetDetectionData.Add(alarm);
         Debug.Log("Added false alarm...");
     }
@@ -436,7 +434,7 @@ public class DataLogger : MonoBehaviour
         alarm.reactionTime = alarm.time - target.startTimeVisible;
 
         //The difficulty names always end with a number ranging from 1-6
-        alarm.targetDifficulty = int.Parse(target.GetTargetDifficulty().ToString().Last().ToString());
+        alarm.targetDifficulty = target.GetTargetDifficulty().ToString();
         targetDetectionData.Add(alarm);
 
         Debug.Log($"Added true alarm for {target.GetID()}, reaction time: {Math.Round(alarm.reactionTime, 2)}s ...");
@@ -465,7 +463,14 @@ public class TargetAlarm
     public bool alarmType;
     public float reactionTime;
     public string targetID;
-    public int targetDifficulty;
+    public string targetDifficulty;
+
+    public TargetAlarm()
+    {
+        targetID = "-";
+        reactionTime = 0f;
+        targetDifficulty = "-";
+    }
 }
 
 /*

@@ -23,6 +23,7 @@ public class ExperimentManager : MonoBehaviour
     public KeyCode spawnSteeringWheel;
     public KeyCode calibrateGaze;
     public KeyCode resetExperiment;
+    public KeyCode keyboardTargetDetection;
 
     public KeyCode keyToggleDriving;
 
@@ -121,6 +122,7 @@ public class ExperimentManager : MonoBehaviour
         mySceneLoader = GetComponent<MySceneLoader>();
         camType = StaticSceneManager.camType;
 
+        keyboardTargetDetection = StaticSceneManager.keyboardTargetDetection;
         myPermission = StaticSceneManager.myPermission;
         resetHeadPosition = StaticSceneManager.resetHeadPosition;
         spawnSteeringWheel = StaticSceneManager.spawnSteeringWheel;
@@ -147,8 +149,8 @@ public class ExperimentManager : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W)) { car.GetComponent<SpeedController>().StartDriving(true); }
 
         //Target detection when we already started driving
-        if (car.GetComponent<SpeedController>().IsDriving() && UserInput()) { ProcessUserInputTargetDetection(); }
-
+        if ((UserInput() || Input.GetKeyDown(keyboardTargetDetection))) { ProcessUserInputTargetDetection(); }
+        //car.GetComponent<SpeedController>().IsDriving() && 
         //First input will be the start driving command (so if not already driving we will start driving)
         else if (!car.GetComponent<SpeedController>().IsDriving() && UserInput() && automateSpeed) { car.GetComponent<SpeedController>().StartDriving(true); }
 
