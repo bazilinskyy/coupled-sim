@@ -68,9 +68,12 @@ public class Client : NetworkSystem
         Debug.Log("AllReady");
         var lights = GameObject.FindObjectOfType<TrafficLightsSystem>();
         lights?.RegisterHandlers(_msgDispatcher);
-        _playerSys.ActivatePlayerAICar();
+        ExperimentRoleDefinition experimentRoleDefinition = _lvlManager.ActiveExperiment.Roles[_roles[_client.MyPlayerId]];
+        if (experimentRoleDefinition.AutonomousPath != null) {
+            _playerSys.ActivatePlayerAICar();
+        }
         _currentState = NetState.InGame;
-        var roleName = _lvlManager.ActiveExperiment.Roles[_roles[_client.MyPlayerId]].Name;
+        var roleName = experimentRoleDefinition.Name;
         _logger.BeginLog($"ClientLog-{roleName}-", _lvlManager.ActiveExperiment, lights, Time.realtimeSinceStartup);
         _fixedTimeLogger.BeginLog($"ClientFixedTimeLog-{roleName}-", _lvlManager.ActiveExperiment, lights, Time.fixedTime);
     }
