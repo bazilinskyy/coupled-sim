@@ -53,13 +53,10 @@ public class PlayerSystem : MonoBehaviour
     public void ActivatePlayerAICar()
     {
         var aiCar = LocalPlayer.GetComponent<AICar>();
-        if (aiCar != null)
-        {
-            var tracker = LocalPlayer.GetComponent<WaypointProgressTracker>();
-            Assert.IsNotNull(tracker);
-            aiCar.enabled = true;
-            tracker.enabled = true;
-        }
+        var tracker = LocalPlayer.GetComponent<WaypointProgressTracker>();
+        Assert.IsNotNull(tracker);
+        aiCar.enabled = true;
+        tracker.enabled = true;
     }
 
     PlayerAvatar GetAvatarPrefab(SpawnPointType type, int carIdx)
