@@ -51,14 +51,14 @@ title("Focus vs AV position");
 
 %% Plots for the distraction AV
 % Pos diAV and pa vs Time
-figure;
-grid on;
-hold on;
-plot(Data.Time, pa.pos.z, 'b');
-plot(Data.Time, diAV.pos.z, 'r');
-ylabel('Position on z in [m]');
-legend('Passenger','diAV');
-title('Position z vs Time');
+% figure;
+% grid on;
+% hold on;
+% plot(Data.Time, pa.pos.z, 'b');
+% plot(Data.Time, diAV.pos.z, 'r');
+% ylabel('Position on z in [m]');
+% legend('Passenger','diAV');
+% title('Position z vs Time');
 
 %% Plots for the pedestrian 
 figure;
@@ -73,24 +73,36 @@ ylim([-10 100]);
 ylabel("AV pos_z in [m]");
 title("Pedestrian distance vs AV position");
 
-% Only for debugging
-figure;
-grid on;
-title("Distances");
-yyaxis left
-plot(Data.Time, pe.distance2);
-ylabel("eye gaze distance pedestrian 2");
-yyaxis right
-plot(Data.Time, pa.pos.z);
-ylim([-10 100]);
-ylabel("AV pos_z");
+% % Only for debugging
+% figure;
+% grid on;
+% title("Distances");
+% yyaxis left
+% plot(Data.Time, pe.distance2);
+% ylabel("eye gaze distance pedestrian 2");
+% yyaxis right
+% plot(Data.Time, pa.pos.z);
+% ylim([-10 100]);
+% ylabel("AV pos_z");
+% 
+% % Only for debugging
+% figure;
+% grid on;
+% title("Distances");
+% yyaxis left
+% plot(Data.Time, pe.distance3);
+% ylabel("eye gaze distance pedestrian 3");
+% yyaxis right
+% plot(Data.Time, pa.pos.z);
+% ylim([-10 100]);
+% ylabel("AV pos_z");
 
-% Only for debugging
+% Pedestrian gap acceptance vs AV position
 figure;
 grid on;
-title("Distances");
+title("Gap Acceptance vs Distances");
 yyaxis left
-plot(Data.Time, pe.distance3);
+plot(Data.Time, pe.gapAcceptance);
 ylabel("eye gaze distance pedestrian 3");
 yyaxis right
 plot(Data.Time, pa.pos.z);
