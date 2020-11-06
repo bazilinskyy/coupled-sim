@@ -104,7 +104,8 @@ public class PlayerAvatar : MonoBehaviour
                 go_VarjoManager.SetActive(true);
 
                 // If local is pedestrian and client_nextScene == true, then load next scene
-                if(transform.name == "Participant_VarjoV2(Clone)" && SteamVR.instance.hmd_SerialNumber == "LHR-85C3EF8C")
+                // COmmented out due to the use of networkmessages instead
+                /*if(transform.name == "Participant_VarjoV2(Clone)" && SteamVR.instance.hmd_SerialNumber == "LHR-85C3EF8C")
                 {
                     var go_N3 = gameObject.transform.Find("NetworkObject_3");
                     Debug.LogError($"go_N3 = {go_N3.name} with pos z = {go_N3.position.z}");
@@ -112,7 +113,7 @@ public class PlayerAvatar : MonoBehaviour
                     {
                         PersistentManager.Instance.client_nextScene = 1;
                     }
-                }
+                }*/
 
                     break;
             case PlayerSystem.Mode.VR:

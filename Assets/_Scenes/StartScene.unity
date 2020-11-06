@@ -240,6 +240,7 @@ GameObject:
   - component: {fileID: 301934534}
   - component: {fileID: 301934535}
   - component: {fileID: 301934536}
+  - component: {fileID: 301934537}
   m_Layer: 0
   m_Name: Managers
   m_TagString: Untagged
@@ -356,6 +357,19 @@ MonoBehaviour:
   hostRole: 0
   clientRole: 1
   clientConnectedToHost: 0
+  client_nextScene: 0
+--- !u!114 &301934537
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 301934531}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0039f702c0301bb4da36d120d0afd021, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1256699364
 GameObject:
   m_ObjectHideFlags: 0
@@ -497,6 +511,7 @@ MonoBehaviour:
   useManualSelection: 0
   manualHostRole: 0
   manualClientRole: 1
+  SendLoadMsgToClient: 0
   _Mapping: 1
 --- !u!1 &1531541351
 GameObject:

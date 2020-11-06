@@ -20,6 +20,7 @@ public class Client : NetworkSystem
     WorldLogger _fixedTimeLogger;
     HMIManager _hmiManager;
     VisualSyncManager _visualSyncManager;
+    SceneNetworkManager _sceneNetworkManager;
     float _lastPoseUpdateSent;
     float _lastPingSent;
     const float PoseUpdateInterval = 0.01f;
@@ -38,6 +39,8 @@ public class Client : NetworkSystem
         Assert.IsNotNull(_hmiManager, "Missing HMI manager");
         _visualSyncManager = GameObject.FindObjectOfType<VisualSyncManager>();
         Assert.IsNotNull(_visualSyncManager, "Missing VS manager");
+        _sceneNetworkManager = GameObject.FindObjectOfType<SceneNetworkManager>();
+        Assert.IsNotNull(_sceneNetworkManager, "Missing SceneNetwork manager");
 
         _currentState = NetState.Disconnected;
         _msgDispatcher = new MessageDispatcher();
@@ -47,6 +50,7 @@ public class Client : NetworkSystem
         _msgDispatcher.AddStaticHandler((int)MsgId.S_UpdateClientPoses, OnUpdatePoses);
         _msgDispatcher.AddStaticHandler((int)MsgId.S_AllReady, OnAllReady);
         _msgDispatcher.AddStaticHandler((int)MsgId.S_VisualSync, OnCustomMessage);
+        _msgDispatcher.AddStaticHandler((int)MsgId.S_LoadScene, OnLoadMessage);
         _msgDispatcher.AddStaticHandler((int)MsgId.B_Ping, HandlePing);
         _hmiManager.InitClient(_client, _msgDispatcher);
         aiCarSystem.InitClient(_msgDispatcher);
@@ -61,6 +65,13 @@ public class Client : NetworkSystem
     private void OnCustomMessage(ISynchronizer sync, int srcPlayerId)
     {
         _visualSyncManager.DisplayMarker();
+    }
+
+    // Callback for scene loading message
+    private void OnLoadMessage(ISynchronizer sync, int srcPlayerId)
+    {
+        Debug.LogError("received message from Host");
+        _sceneNetworkManager.ClientLoadScene();
     }
 
     //handles "all players ready" message - starts the simulation, logging etc.

@@ -17,6 +17,7 @@ public class Host : NetworkSystem
     WorldLogger _fixedTimeLogger;
     HMIManager _hmiManager;
     VisualSyncManager _visualSyncManager;
+    SceneNetworkManager _sceneNetworkManager;
     SceneSelector _SceneSelector;
 
     List<int> _playerRoles = new List<int>();
@@ -43,6 +44,8 @@ public class Host : NetworkSystem
         Assert.IsNotNull(_hmiManager, "Missing HMI manager");
         _visualSyncManager = GameObject.FindObjectOfType<VisualSyncManager>();
         Assert.IsNotNull(_visualSyncManager, "Missing VS manager");
+        _sceneNetworkManager = GameObject.FindObjectOfType<SceneNetworkManager>();
+        Assert.IsNotNull(_sceneNetworkManager, "Missing SceneNetwork manager");
 
         _currentState = NetState.Lobby;
         _msgDispatcher = new MessageDispatcher();
@@ -288,7 +291,7 @@ public class Host : NetworkSystem
                     if (GUILayout.Button("Start Game"))
                     {
                         StartGame();
-                        //PersistentManager.Instance.clientConnectedToHost = true;
+                        PersistentManager.Instance.clientConnectedToHost = true;
                         gameStarted = true;
                     }
                 }
@@ -328,12 +331,20 @@ public class Host : NetworkSystem
                         PersistentManager.Instance.nextScene = false;
                         gameStarted = false;
                     }
-                // commented out eHMI GUI since it's not needed
-                /*if (_playerSys.eHMIFixed == false)
-                {
-                    _hmiManager.DoHostGUI(this);
-                    _visualSyncManager.DoHostGUI(this);
-                }*/
+                    // commented out eHMI GUI since it's not needed
+                    /*if (_playerSys.eHMIFixed == false)
+                    {
+                        _hmiManager.DoHostGUI(this);
+                        _visualSyncManager.DoHostGUI(this);
+                    }*/
+
+                    // Broadcast message when the host switches scene
+                    if (_SceneSelector.SendLoadMsgToClient == true)
+                    {
+                        _sceneNetworkManager.SendLoadMessage(this);
+                        _SceneSelector.setSendLoadMsgToCLient();
+                    }
+
             }
             break;
         }

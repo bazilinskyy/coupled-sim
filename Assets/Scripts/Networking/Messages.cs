@@ -17,6 +17,7 @@ enum MsgId
     S_UpdateAICarPoses = 7,
 
     S_VisualSync = 123,
+    S_LoadScene = 456,
 
     B_Ping = 500,
 
@@ -53,6 +54,12 @@ public static class NetMsg
 public struct VisualSyncMessage : INetMessage
 {
     public int MessageId => (int)MsgId.S_VisualSync;
+    public void Sync<T>(T synchronizer) where T : ISynchronizer { }
+}
+
+public struct LoadSceneMessage : INetMessage
+{
+    public int MessageId => (int)MsgId.S_LoadScene;
     public void Sync<T>(T synchronizer) where T : ISynchronizer { }
 }
 

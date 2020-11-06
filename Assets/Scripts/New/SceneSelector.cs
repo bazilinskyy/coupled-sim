@@ -14,6 +14,7 @@ public class SceneSelector : MonoBehaviour
     public bool useManualSelection;
     public int manualHostRole;
     public int manualClientRole;
+    public bool SendLoadMsgToClient;
 
     public enum Mapping
     {
@@ -28,11 +29,11 @@ public class SceneSelector : MonoBehaviour
     private void Update()
     {
         // If the Host(AV) hits the NextLvl trigger, the client (pedestrian) should switch scenes too
-        if (useManualSelection == false && PersistentManager.Instance.client_nextScene == 1 && SteamVR.instance.hmd_SerialNumber == "LHR-85C3EF8C")
+        /*if (useManualSelection == false && PersistentManager.Instance.client_nextScene == 1 && SteamVR.instance.hmd_SerialNumber == "LHR-85C3EF8C")
         {
             PersistentManager.Instance.client_nextScene = 0;
             Invoke("nextExperiment", 4);
-        }
+        }*/
     }
 
 
@@ -78,7 +79,8 @@ public class SceneSelector : MonoBehaviour
                 else
                 {
                     //Application.Quit(); // build version
-                    UnityEditor.EditorApplication.isPlaying = false; // editor version
+                    //UnityEditor.EditorApplication.isPlaying = false; // editor version
+                    Debug.LogError("entered STOP UNITY");
                 }
             }
             else if (useManualSelection == true)
@@ -95,8 +97,23 @@ public class SceneSelector : MonoBehaviour
 
     public void nextExperiment()
     {
-        SceneManager.LoadSceneAsync("StartScene");
+        //SceneManager.LoadSceneAsync("StartScene");
         Debug.LogError("SWITCHING SCENES");
+
+        AsyncOperation asyncOperation = SceneManager.LoadSceneAsync("StartScene");
+        // Don't let the Scene activate until you allow it to
+        asyncOperation.allowSceneActivation = false;
+        // Send a message to the client to load new scene and allow host to activate scene
+        if(asyncOperation.progress >= 0.9f)
+        {
+            asyncOperation.allowSceneActivation = true;
+            SendLoadMsgToClient = true;
+        }
+    }
+
+    public void setSendLoadMsgToCLient()
+    {
+        SendLoadMsgToClient = false;
     }
 
     public SceneSelector(LevelManager levelManager) // actually selects the experiment definition

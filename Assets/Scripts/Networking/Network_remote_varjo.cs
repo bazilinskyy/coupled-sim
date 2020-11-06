@@ -56,7 +56,7 @@ public class Network_remote_varjo : MonoBehaviour
             CaptureTime_pe = script.CaptureTime; LeftEyePupilSize_pe = script.LeftPupilSize; RightEyePupilSize_pe = script.RightPupilSize;
 
             // Get data for NetworkObject_3
-            FocusDistance_pe = script.FocusDistance; FocusStability_pe = script.FocusStability; client_nextScene = PersistentManager.Instance.client_nextScene;
+            FocusDistance_pe = script.FocusDistance; FocusStability_pe = script.FocusStability; //client_nextScene = PersistentManager.Instance.client_nextScene; // Last point was used to network the switch, now using messages instead
 
             // Get data for NetworkObject_4
             HmdPos_pe = script.hmdposition;
@@ -91,7 +91,7 @@ public class Network_remote_varjo : MonoBehaviour
             }
             if (gameObject.name == "NetworkObject_3" && SteamVR.instance.hmd_SerialNumber == hmdserial)  
             {
-                transform.position = new Vector3((float)FocusDistance_pe, (float)FocusStability_pe, client_nextScene);
+                transform.position = new Vector3((float)FocusDistance_pe, (float)FocusStability_pe, 0); //client_nextScene);
                 //Debug.LogError($"3 - foc dist = {(float)FocusDistance_pe} and foc stab = {(float)FocusStability_pe}");
                 //Debug.LogError($"3 - trans pos = {transform.position}");
             }

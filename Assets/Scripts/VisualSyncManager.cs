@@ -6,7 +6,7 @@ using UnityEngine;
 //broadcast visual syncing network message and displays red bar as a visual synchronization marker (used to syncing gameplay videos captured on different devices)
 public class VisualSyncManager : MonoBehaviour
 {
-
+    // Used by the Host
     public void DoHostGUI(Host host)
     {
         if (GUILayout.Button($"Visual syncing"))
@@ -16,6 +16,7 @@ public class VisualSyncManager : MonoBehaviour
         }
     }
 
+    // Used by the Client
     public void DisplayMarker()
     {
         if (coroutine != null)
