@@ -3,14 +3,16 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using System.Linq;
 
 public class CalibrationManager : MonoBehaviour
 {
-
-    public GameObject steeringWheel;
     
+    public GameObject steeringWheel;
+    public GameObject cross;
     public Transform startPosition;
-
+    private ExperimentInput experimentInput;
+    
     private MyCameraType camType;
     public TextMesh instructions;
     private Transform player;
@@ -32,15 +34,12 @@ public class CalibrationManager : MonoBehaviour
 
     public KeyCode saveTheData = KeyCode.F7;
 
-    public string ParticpantInputAxisLeft = "SteerButtonLeft";
-    public string ParticpantInputAxisRight = "SteerButtonRight";
-
-    private List<Target> targetList = new List<Target>();
+    private bool lastUserInput = false;
 
     private readonly int maxNumberOfRandomRayHits = 40;
-    private float lastUserInputTime = 0f;
     public float thresholdUserInput = 0.15f; //The minimum time between user inputs (when within this time only the first one is used)
-    private float userInputTime = 0f; private readonly float userInputThresholdTime = 0.2f;
+    private bool addedTargets;
+    
     // Start is called before the first frame update
     private void Start()
     {
@@ -49,106 +48,123 @@ public class CalibrationManager : MonoBehaviour
     void StartScene()
     {
         player = GameObject.FindGameObjectWithTag("Player").transform;
+        experimentInput = player.GetComponent<ExperimentInput>();
 
         //Spawn steeringwheel beneath plane.
         steeringWheel.transform.rotation = startPosition.rotation;
         steeringWheel.transform.position = -Vector3.up * 1;
 
+        Varjo.VarjoPlugin.ResetPose(true, Varjo.VarjoPlugin.ResetRotation.ALL);
         GetVariablesFromSceneManager();
-        
-        FillTargetList();
+
+        if (!experimentInput.ReadCSVSettingsFile()) 
+        {
+            instructions.text = "Error in reading the experimentSettings file....\nPlease tell Marc :)";
+        }
+
     }
     
     void Update()
     {
+        bool userInput = UserInput();
         //Looks for targets to appear in field of view and sets their visibility timer accordingly
-        if ( UserInput()) { ProcessUserInputTargetDetection(); }
-        if (Input.GetKeyDown(resetExperiment)) { mySceneLoader.LoadNextScene(); }
-
-        if (Input.GetKeyDown(KeyCode.X)) 
+        if ( userInput && addedTargets) { ProcessUserInputTargetDetection(); }
+        if (Input.GetKeyDown(resetExperiment)) { mySceneLoader.LoadNextScene();  }
+        if (Input.GetKeyDown(resetHeadPosition)) { Varjo.VarjoPlugin.ResetPose(true, Varjo.VarjoPlugin.ResetRotation.ALL); }
+        if (Input.GetKeyDown(calibrateGaze)) { Varjo.VarjoPlugin.RequestGazeCalibration(); }
+        if (Input.GetKeyDown(myPermission)) 
         {
-            GetComponent<MySceneLoader>().AddTargetScene();
-            instructions.text = "Did the eye calibration work?\nLook at the targets above";
+            if (!addedTargets)
+            {
+                Varjo.VarjoPlugin.RequestGazeCalibration();
+
+                cross.SetActive(false);
+
+                GetComponent<MySceneLoader>().AddTargetScene();
+                addedTargets = true;
+                instructions.text = "Look at the targets above!";
+            }
+            else{  mySceneLoader.LoadNextScene(); }
         }
-        if (Input.GetKeyDown(KeyCode.Z)) { CalibrateHands(); }
+        if ((userInput || Input.GetKeyDown(spawnSteeringWheel)) && !addedTargets ) { CalibrateHands(); }
     }
     void CalibrateHands()
     {
-        steeringWheel.transform.position = startPosition.position + startPosition.forward;
-
-        if (player.name == "Leap Rig") {
+        if (experimentInput.camType == MyCameraType.Leap) {
+            Debug.Log("Trying to calibrate...");            
             CalibrateUsingHands steeringWheelCalibration = startPosition.GetComponent<CalibrateUsingHands>();
 
-            steeringWheelCalibration.LeapRig = player;
+            steeringWheelCalibration.driverView = startPosition;
             steeringWheelCalibration.leftHand = player.Find("Hand Models").Find("Hand_Left").GetComponent<RiggedHand>();
             steeringWheelCalibration.rightHand = player.Find("Hand Models").Find("Hand_Right").GetComponent<RiggedHand>();
             steeringWheelCalibration.steeringWheel = steeringWheel.transform;
 
             
-            Varjo.VarjoPlugin.ResetPose(true, Varjo.VarjoPlugin.ResetRotation.ALL);
+            
             bool success = steeringWheelCalibration.SetPositionUsingHands();
             if (success) 
             {
-                StaticSceneManager.calibratedUsingHands = true;
-                /*float heightDifference = startPosition.position.y - steeringWheel.transform.position.y;
-                float horizontalDifference = startPosition.position.z - steeringWheel.transform.position.z;*/
-                StaticSceneManager.driverViewHorizontalDistance = startPosition.position.z - steeringWheel.transform.position.z;
-                StaticSceneManager.driverViewVerticalDistance = startPosition.position.y - steeringWheel.transform.position.y;
+                float horizontalDistance = Mathf.Abs(startPosition.position.z - steeringWheel.transform.position.z);
+                float verticalDistance = Mathf.Abs(startPosition.position.y - steeringWheel.transform.position.y);
+                float sideDistance = startPosition.position.x - steeringWheel.transform.position.x;
+                experimentInput.SetCalibrationDistances(horizontalDistance, verticalDistance, sideDistance);
+                Debug.Log($"Calibrated steeringhweel with horizontal and vertical distances of, {horizontalDistance} and {verticalDistance}, respectively...");
             }
         }
     }
     private bool UserInput()
     {
-        //only sends true once every 0.1 seconds (axis returns 1 for multiple frames when a button is clicked)
-        if ((userInputTime + userInputThresholdTime) > Time.time) { return false; }
-        if (Input.GetAxis(ParticpantInputAxisLeft) == 1 || Input.GetAxis(ParticpantInputAxisRight) == 1 || Input.GetKeyDown(myPermission)) { userInputTime = Time.time; return true; }
-        else { return false; }
+        if (Input.GetAxis(experimentInput.ParticpantInputAxisLeft) != 1 && Input.GetAxis(experimentInput.ParticpantInputAxisRight) != 1) { lastUserInput = false; return false; }
+        else if ((Input.GetAxis(experimentInput.ParticpantInputAxisLeft) == 1 || Input.GetAxis(experimentInput.ParticpantInputAxisRight) == 1) && lastUserInput) { lastUserInput = true; return false; }
+        else { return true; }
     }
-    void FillTargetList()
-    {
-        GameObject[] targets = GameObject.FindGameObjectsWithTag("Target");
-        foreach(GameObject target in targets) { targetList.Add(target.GetComponent<Target>()); }
-    }
+
     void GetVariablesFromSceneManager()
     {
         mySceneLoader = GetComponent<MySceneLoader>(); 
-        camType = StaticSceneManager.camType;
+        camType = experimentInput.camType;
         
-        myPermission = StaticSceneManager.myPermission;
-        resetHeadPosition = StaticSceneManager.resetHeadPosition;
-        spawnSteeringWheel = StaticSceneManager.spawnSteeringWheel;
-        calibrateGaze = StaticSceneManager.calibrateGaze;
+        myPermission = experimentInput.myPermission;
+        resetHeadPosition = experimentInput.resetHeadPosition;
+        spawnSteeringWheel = experimentInput.spawnSteeringWheel;
+        calibrateGaze = experimentInput.calibrateGaze;
         
-        resetExperiment = StaticSceneManager.resetExperiment;
+        resetExperiment = experimentInput.resetExperiment;
         
-        keyToggleDriving = StaticSceneManager.keyToggleDriving;
-        keyToggleSymbology = StaticSceneManager.keyToggleSymbology;
+        keyToggleDriving = experimentInput.keyToggleDriving;
+        keyToggleSymbology = experimentInput.keyToggleSymbology;
 
-        setToLastWaypoint = StaticSceneManager.setToLastWaypoint;
+        setToLastWaypoint = experimentInput.setToLastWaypoint;
 
-        inputNameKey = StaticSceneManager.inputNameKey;
-        saveTheData = StaticSceneManager.saveTheData;
+        inputNameKey = experimentInput.inputNameKey;
+        saveTheData = experimentInput.saveTheData;
 
+    }
+    List<Target> ActiveTargets()
+    {
+        List<Target> targetList = new List<Target>();
+        GameObject[] objects = GameObject.FindGameObjectsWithTag("Target");
+        foreach (GameObject obj in objects) {
+            Target target = obj.GetComponent<Target>();
+            if (!target.IsDetected()) { targetList.Add(target); } 
+        }
+        return targetList;
     }
     void ProcessUserInputTargetDetection()
     {
-        //Double inputs within thresholdUserInput time are discarded
-        if (Time.time < (lastUserInputTime + thresholdUserInput)) { return; }
-        lastUserInputTime = Time.time;
-        //if there is a target visible which has not already been detected
-        
+        //if there is a target visible which has not already been detected   
         List<Target> visibleTargets = new List<Target>();
         int targetCount = 0;
 
         //Check if there are any visible targets
-        foreach (Target target in targetList)
+        foreach (Target target in ActiveTargets())
         {
             if (target.HasBeenLookedAt()) { visibleTargets.Add(target); }
             else if (TargetIsVisible(target, maxNumberOfRandomRayHits))
             {
                 visibleTargets.Add(target);
                 targetCount++;
-                Debug.Log($"{target.GetID()} visible...");
+                //Debug.Log($"{target.GetID()} visible...")d;
             }
         }
 

@@ -6,16 +6,20 @@ using UnityEngine.SceneManagement;
 public class MainManager : MonoBehaviour
 {
     private GameObject player;
+    private ExperimentInput experimentInput;
     UnityEngine.UI.Image blackOutScreen;
     
     // Start is called before the first frame update
     private void Start()
     {
-        string dateTime = System.DateTime.Now.ToString("MM-dd_HH-mm");
-        
-        StaticSceneManager.subjectDataFolder = dateTime + "-" + StaticSceneManager.subjectDataFolder;
-        
+      
+
         player = GameObject.FindGameObjectWithTag("Player");
+
+        experimentInput = player.GetComponent<ExperimentInput>();
+        string dateTime = System.DateTime.Now.ToString("MM-dd_HH-mm");
+        experimentInput.subjectDataFolder = dateTime + "-" + experimentInput.subjectDataFolder;
+
         blackOutScreen = GameObject.FindGameObjectWithTag("BlackOutScreen").GetComponent<UnityEngine.UI.Image>();
         blackOutScreen.color = new Color(0, 0, 0, 1f); blackOutScreen.CrossFadeAlpha(0f, 0f, true);
 
@@ -27,7 +31,7 @@ public class MainManager : MonoBehaviour
         DontDestroyOnLoad(player);
         blackOutScreen.CrossFadeAlpha(1f, 0f, true);
 
-        string firstScene = StaticSceneManager.GetNextScene();
+        string firstScene = experimentInput.GetNextScene();
         // The Application loads the Scene in the background at the same time as the current Scene.
         AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(firstScene, LoadSceneMode.Single);
 

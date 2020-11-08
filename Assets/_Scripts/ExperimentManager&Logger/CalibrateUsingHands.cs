@@ -8,9 +8,7 @@ public class CalibrateUsingHands : MonoBehaviour
     //(2) Calculates the vector from average of two hands to the camera
     //(3) Sets the position of this object (i.e., the head position) to match this vector w.r.t. the steeringwheel inside the car
 
-    public Transform LeapRig; // the leap rig.
-    
-
+    public Transform driverView;
     //LeapMotion rigged hand prefabs
     public Leap.Unity.HandModel leftHand;
     public Leap.Unity.HandModel rightHand;
@@ -19,7 +17,6 @@ public class CalibrateUsingHands : MonoBehaviour
     public Transform steeringWheel;
     private Transform centreWrists;
 
-    private Transform VarjoCamara; //The varjo camera within the Leap rig
     private Vector3 handsToCam;
     private Vector3 handToHand;
     private Vector3 leftWristPos;
@@ -27,11 +24,10 @@ public class CalibrateUsingHands : MonoBehaviour
     private Vector3 steeringWheelToCam;
     public bool SetPositionUsingHands()
     {
-        if(VarjoCamara == null) { VarjoCamara = LeapRig.Find("VarjoCameraRig").Find("VarjoCamera"); }
+        if(driverView == null) { Debug.Log("Driver view is not set!"); }
         if(centreWrists == null) { centreWrists = steeringWheel.transform.Find("CentreWrists"); }
         //Some checks
         if (centreWrists == null) { Debug.Log("could not find predefined wrist position on steering wheel..."); return false; }
-        if(VarjoCamara == null) { Debug.Log("could not find varjo camera..."); return false; }
 
         if (leftHand.gameObject.activeSelf && rightHand.gameObject.activeSelf)
         {
@@ -39,15 +35,14 @@ public class CalibrateUsingHands : MonoBehaviour
             rightWristPos = rightHand.palm.position;
 
             Vector3 posCentre = (rightWristPos + leftWristPos) / 2 + (steeringWheel.position - centreWrists.position);
-            steeringWheelToCam = VarjoCamara.position - posCentre;
+            steeringWheelToCam = driverView.position - posCentre;
 
             //Set some other handy vectors
-            handsToCam = VarjoCamara.position - (leftWristPos + rightWristPos) / 2;          
+            handsToCam = driverView.position - (leftWristPos + rightWristPos) / 2;          
             handToHand = rightWristPos - leftWristPos;
 
             //Set steeringwheel position accordingly
             steeringWheel.position = transform.position - steeringWheelToCam;
-            Debug.Log($"Succesfully calibrated headposition with hands on steering wheel, steeringWheelToCam: {steeringWheelToCam}...");
             return true;
         }
         else { Debug.Log("Could not set hand position..."); return false; }

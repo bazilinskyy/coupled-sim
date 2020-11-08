@@ -46,7 +46,7 @@ public class MyGazeLogger : MonoBehaviour
     }
     void StartUpFunction()
     {
-        if (!StaticSceneManager.saveData || StaticSceneManager.camType == MyCameraType.Normal) { GetComponent<MyGazeLogger>().enabled = false; return; }
+        //if (!experimentManager.experimentInput.saveData || experimentManager.experimentInput.camType == MyCameraType.Normal) { GetComponent<MyGazeLogger>().enabled = false; return; }
         // InitGaze must be called before using or calibrating gaze tracking.
         if (!VarjoPlugin.InitGaze())
         {
@@ -146,7 +146,7 @@ public class MyGazeLogger : MonoBehaviour
         for (int i = 0; i < values.Length; ++i)
         {
             values[i] = values[i].Replace("\r", "").Replace("\n", ""); // Remove new lines so they don't break csv
-            line += values[i] + (i == (values.Length - 1) ? "" : ","); // Do not add semicolon to last data string
+            line += values[i] + (i == (values.Length - 1) ? "" : ";"); // Do not add semicolon to last data string
         }
         writer.WriteLine(line);
     }

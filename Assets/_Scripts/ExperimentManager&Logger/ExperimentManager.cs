@@ -16,6 +16,7 @@ public class ExperimentManager : MonoBehaviour
     public MyCameraType camType;
     public List<ExperimentSetting> experiments;
     private MySceneLoader mySceneLoader;
+    public ExperimentInput experimentInput;
 
     [Header("Inputs")]
     public KeyCode myPermission;
@@ -42,9 +43,9 @@ public class ExperimentManager : MonoBehaviour
     public string SteerWithKeyboard = "SteerKeyBoard";
     public string BrakeWithKeyboard = "BrakeKeyBoard";
 
-    public string Gas = "Gas";
+    public string Gas = "GasKeyBoard";
     public string Steer = "Steer";
-    public string Brake = "Brake";
+    public string Brake = "BrakeKeyBoard";
 
     [Header("GameObjects")]
     // expriment objects and lists
@@ -68,15 +69,14 @@ public class ExperimentManager : MonoBehaviour
     private Transform player;
     private Transform steeringWheel;
 
-   
+    private bool lastUserInput = false;
+
     //The data manger handling the saving of vehicle and target detection data Should be added to the experiment manager object 
     private DataLogger dataManager;
     //Maximum raycasts used in determining visbility:  We use Physics.RayCast to check if we can see the target. We cast this to a random positin on the targets edge to see if it is partly visible.
     private readonly int maxNumberOfRandomRayHits = 40;
     private float lastUserInputTime = 0f;
     public float thresholdUserInput = 0.15f; //The minimum time between user inputs (when within this time only the first one is used)
-
-    private float userInputTime = 0f; private readonly float userInputThresholdTime = 0.2f;
 
     private void Start()
     {
@@ -85,6 +85,8 @@ public class ExperimentManager : MonoBehaviour
     void StartUpFunctions()
     {
         player = GameObject.FindGameObjectWithTag("Player").transform;
+
+        experimentInput = player.GetComponent<ExperimentInput>();
         //Set rotation of varjo cam to be zero w.r.t. rig
         GetVariablesFromSceneManager();
 
@@ -120,28 +122,27 @@ public class ExperimentManager : MonoBehaviour
     void GetVariablesFromSceneManager()
     {
         mySceneLoader = GetComponent<MySceneLoader>();
-        camType = StaticSceneManager.camType;
+        camType = experimentInput.camType;
 
-        keyboardTargetDetection = StaticSceneManager.keyboardTargetDetection;
-        myPermission = StaticSceneManager.myPermission;
-        resetHeadPosition = StaticSceneManager.resetHeadPosition;
-        spawnSteeringWheel = StaticSceneManager.spawnSteeringWheel;
-        calibrateGaze = StaticSceneManager.calibrateGaze;
+        myPermission = experimentInput.myPermission;
+        resetHeadPosition = experimentInput.resetHeadPosition;
+        spawnSteeringWheel = experimentInput.spawnSteeringWheel;
+        calibrateGaze = experimentInput.calibrateGaze;
 
-        resetExperiment = StaticSceneManager.resetExperiment;
+        resetExperiment = experimentInput.resetExperiment;
 
-        keyToggleDriving = StaticSceneManager.keyToggleDriving;
-        keyToggleSymbology = StaticSceneManager.keyToggleSymbology;
+        keyToggleDriving = experimentInput.keyToggleDriving;
+        keyToggleSymbology = experimentInput.keyToggleSymbology;
 
-        setToLastWaypoint = StaticSceneManager.setToLastWaypoint;
+        setToLastWaypoint = experimentInput.setToLastWaypoint;
 
-        inputNameKey = StaticSceneManager.inputNameKey;
-        saveTheData = StaticSceneManager.saveTheData;
+        inputNameKey = experimentInput.inputNameKey;
+        saveTheData = experimentInput.saveTheData;
 }
     void Update()
     {
         activeExperiment.experimentTime += Time.deltaTime;
-        
+        bool userInput = UserInput();
         //Looks for targets to appear in field of view and sets their visibility timer accordingly
         SetTargetVisibilityTime();
 
@@ -149,25 +150,23 @@ public class ExperimentManager : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W)) { car.GetComponent<SpeedController>().StartDriving(true); }
 
         //Target detection when we already started driving
-        if ((UserInput() || Input.GetKeyDown(keyboardTargetDetection))) { ProcessUserInputTargetDetection(); }
-        //car.GetComponent<SpeedController>().IsDriving() && 
+        if (car.GetComponent<SpeedController>().IsDriving() && userInput) { ProcessUserInputTargetDetection(); }
+
         //First input will be the start driving command (so if not already driving we will start driving)
-        else if (!car.GetComponent<SpeedController>().IsDriving() && UserInput() && automateSpeed) { car.GetComponent<SpeedController>().StartDriving(true); }
+        else if (!car.GetComponent<SpeedController>().IsDriving() && userInput && automateSpeed) { car.GetComponent<SpeedController>().StartDriving(true); }
 
         //Researcher inputs
-        if (Input.GetKeyDown(keyToggleDriving)) { car.GetComponent<SpeedController>().ToggleDriving(); }
         if (Input.GetKeyDown(keyToggleSymbology)) { ToggleSymbology(); }
         if (Input.GetKeyDown(myPermission)) { car.navigationFinished = true; } //Finish navigation early
         if (Input.GetKeyDown(setToLastWaypoint)) { SetCarToLastWaypoint(); }
         if (Input.GetKeyDown(resetHeadPosition)){ SetCameraPosition(driverView.position, driverView.rotation); }
         if (Input.GetKeyDown(resetExperiment)) { ResetExperiment(); }
         if (Input.GetKeyDown(KeyCode.LeftShift)) { TeleportToNextWaypoint(); }
-        //Request gaze calibration
-        //if (Input.GetKeyDown(calibrateGaze)) { GetComponent<VarjoExample.VarjoGazeCalibrationRequest>().RequestGazeCalibration(); }
+        
 
         if (car.navigationFinished)
         {
-            if (StaticSceneManager.saveData) { dataManager.SaveData(); }
+            if (experimentInput.saveData) { dataManager.SaveData(); }
 
             if (car.GetComponent<Rigidbody>().velocity.magnitude < 0.01f) { mySceneLoader.LoadWaitingScene(); }
         }
@@ -239,7 +238,7 @@ public class ExperimentManager : MonoBehaviour
     }
     void ResetExperiment()
     {
-        if (StaticSceneManager.saveData) { dataManager.SaveData(); dataManager.StartNewMeasurement(); }
+        if (experimentInput.saveData) { dataManager.SaveData(); dataManager.StartNewMeasurement(); }
 
         activeNavigationHelper.SetUp(activeExperiment.navigationType, activeExperiment.transparency, car, HUDMaterials);
         car.GetComponent<SpeedController>().StartDriving(false);
@@ -281,11 +280,16 @@ public class ExperimentManager : MonoBehaviour
 
         //Put head position at the right place
         
-        if (StaticSceneManager.calibratedUsingHands)
+        if (experimentInput.calibratedUsingHands)
         {
             driverView.position = steeringWheel.transform.position;
-            driverView.position -= steeringWheel.transform.forward * StaticSceneManager.driverViewHorizontalDistance;
-            driverView.position += Vector3.up * StaticSceneManager.driverViewVerticalDistance;
+            driverView.position -= car.transform.forward * experimentInput.driverViewHorizontalDistance;
+            driverView.position += Vector3.up * experimentInput.driverViewVerticalDistance;
+            driverView.position += car.transform.right * experimentInput.driverViewSideDistance;
+
+            Debug.Log($"Substraced { car.transform.forward * experimentInput.driverViewHorizontalDistance} from driverview pos...");
+            Debug.Log($"Added { Vector3.up * experimentInput.driverViewVerticalDistance} to driverview pos...");
+            Debug.Log($"Added { car.transform.right * experimentInput.driverViewSideDistance} to driverview pos...");
         }
 
         //Put car in right position
@@ -468,10 +472,10 @@ public class ExperimentManager : MonoBehaviour
     }
     private bool UserInput()
     {
-        //only sends true once every 0.1 seconds (axis returns 1 for multiple frames when a button is clicked)
-        if ((userInputTime + userInputThresholdTime) > Time.time) { return false; }
-        if (Input.GetAxis(ParticpantInputAxisLeft) == 1 || Input.GetAxis(ParticpantInputAxisRight) == 1) { userInputTime = Time.time; return true; }
-        else { return false; }
+        //only sends true if last input wasnt already true. (if you hold the steerig button it will continuesly output a value for input.getaxis()....
+        if (Input.GetAxis(experimentInput.ParticpantInputAxisLeft) != 1 && Input.GetAxis(experimentInput.ParticpantInputAxisRight) != 1) { lastUserInput = false; return false; }
+        else if ((Input.GetAxis(experimentInput.ParticpantInputAxisLeft) == 1 || Input.GetAxis(experimentInput.ParticpantInputAxisRight) == 1) && lastUserInput) { lastUserInput = true;  return false; }
+        else { return true; }
     }
     private void ActivateMirrorCameras()
     {
@@ -494,11 +498,17 @@ public class ExperimentManager : MonoBehaviour
     private void SetDataManager()
     {
         //Get attatched XMLManager
-        dataManager = gameObject.GetComponent<DataLogger>();
+        dataManager = GetComponent<DataLogger>();
         //Throw error if we dont have an xmlManager
         if (dataManager == null) { throw new System.Exception("Error in Experiment Manager -> A XMLManager should be attatched if you want to save data..."); }
 
-        if (StaticSceneManager.saveData) { dataManager.StartNewMeasurement(); }
+        if (experimentInput.saveData) { dataManager.StartNewMeasurement(); }
+        else 
+        {
+            dataManager.enabled = false;
+            try { GetComponent<MyGazeLogger>().enabled = false; } catch{ Debug.Log("Could not disable GazeLogger..."); }
+            try { GetComponent<MyVarjoGazeRay>().enabled = false; } catch { Debug.Log("Could not ddisable VarjoGazeRay..."); }
+        }
     }
     void SetCarControlInput()
     {
@@ -516,15 +526,6 @@ public class ExperimentManager : MonoBehaviour
     }
     void SetCamera()
     {
-       /* blackOutScreen.color = new Color(0, 0, 0, 1f); blackOutScreen.CrossFadeAlpha(0f, 0f, true);
-        //Get the to be used camera, destroy the others, and set this camera to be used for the reflection script of the mirrors
-        if (camType == MyCameraType.Leap || camType == MyCameraType.Varjo) {
-            player = leapRig;
-            blackOutScreen = CameraTransform().Find("Canvas").Find("BlackOutScreen").GetComponent<UnityEngine.UI.Image>();
-            blackOutScreen.color = new Color(0, 0, 0, 1f); blackOutScreen.CrossFadeAlpha(0f, 0f, true);
-        }
-        else if (camType == MyCameraType.Normal) { player = normalCam; }*/
-
         RearMirrorsReflection[] reflectionScript = car.GetComponentsInChildren<RearMirrorsReflection>(true);
         if (reflectionScript != null && player != null) { reflectionScript[0].head = CameraTransform(); }
         else { Debug.Log("Could not set head position for mirro reflection script..."); }

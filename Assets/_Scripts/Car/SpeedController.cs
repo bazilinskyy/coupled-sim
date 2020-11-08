@@ -40,10 +40,6 @@ public class SpeedController : MonoBehaviour
     {
         StartUpFunction();
     }
-    private void OnLevelWasLoaded(int level)
-    {
-        StartUpFunction();
-    }
     void StartUpFunction()
     {
         navigator = GetComponent<Navigator>();
@@ -106,7 +102,7 @@ public class SpeedController : MonoBehaviour
         else if (OnCorner())
         {
             setSpeed = speedLimitCorner;
-            ToggleGas(setSpeed < carRB.velocity.magnitude, throttleIncrement);
+            ToggleGas(setSpeed > carRB.velocity.magnitude, throttleIncrement);
             //Debug.Log($"On corner {carRB.velocity.magnitude}...");
         }
         else if (OnSpline())
@@ -126,7 +122,7 @@ public class SpeedController : MonoBehaviour
             //Starts brakign when at end point.
             if (Vector3.Distance(transform.position, targetWaypoint.transform.position) < 7.5f) { Brake(); }
         }
-        else { Debug.Log("Loop hole should never get here! (SpeedController.cs)..."); }
+        else { Debug.LogError("Loop hole should never get here! (SpeedController.cs)..."); }
 
         if (setSpeed != speedSettings.speedLimit)
         {
@@ -158,9 +154,8 @@ public class SpeedController : MonoBehaviour
         if (!toggle && carInput.externalThrottle == 0) { return; }
 
         //else we adjust the toggleing appropriately
-        int sign;
-        if (toggle) { sign = 1; }
-        else { sign = -1; }
+        int sign  = 1;
+        if (!toggle) { sign = -1; }
 
         //Increase/decrease throttle with boundaries [0, maxThrottle]
         externalThrottle = Mathf.Clamp(externalThrottle + sign * increment, 0, maxThrottle);
@@ -169,7 +164,6 @@ public class SpeedController : MonoBehaviour
         carInput.externalThrottle = externalThrottle;
         carInput.externalBrake = 0f;
     }
-
     void Brake()
     {
         externalBrake = Mathf.Clamp(externalBrake + brakeIncrement, 0, maxBrake);
