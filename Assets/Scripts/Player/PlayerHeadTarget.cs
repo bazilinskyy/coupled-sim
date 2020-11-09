@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Animations.Rigging;
 
 public class PlayerHeadTarget : MonoBehaviour
 {
@@ -10,7 +11,7 @@ public class PlayerHeadTarget : MonoBehaviour
     public GameObject Player;
     public Transform SteeringWheel;
     public float LookAtPlayerSpeed;
-
+    public MultiAimConstraint Constraint;
     public float steeringRotation;
     public float steeringPercentage;
 
@@ -29,20 +30,7 @@ public class PlayerHeadTarget : MonoBehaviour
         
         if (!playerLookAtPed.canLookAtPed)
         {
-            if (steeringPercentage > 0.0f)
-            {
-                transform.position = Vector3.Lerp(CTargetAnchor.position, LTargetAnchor.position, steeringPercentage);
-            }
-            else
-            if (steeringPercentage < 0.0f)
-            {
-                transform.position = Vector3.Lerp(CTargetAnchor.position, RTargetAnchor.position, steeringPercentage);
-            }
-            else
-            if (steeringPercentage == 0.0f)
-            {
-                transform.position = Vector3.Slerp(transform.position, CTargetAnchor.position, LookAtPlayerSpeed * Time.deltaTime);
-            }
+            
         }
         else
         {
