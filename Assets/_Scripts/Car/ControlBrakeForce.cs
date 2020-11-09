@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class ControlBrakeForce : MonoBehaviour
 {
-    public float brakeForce = 1250f;
+    public float maxBrakeForce = 2000f;
     public string brakeInput;
 
     private VehiclePhysics.VPVehicleController controller;
@@ -16,9 +16,13 @@ public class ControlBrakeForce : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        //Between -1 (no braking, and 1 full braking)
         float brake = Input.GetAxis(brakeInput);
-        if (brake == 1) { controller.brakes.maxBrakeTorque = brakeForce; }
-        else { controller.brakes.maxBrakeTorque = 0f; }
         
+        if (brake == -1) { controller.brakes.maxBrakeTorque = 0f; }
+        else {
+            float brakeForce = maxBrakeForce * (brake + 1) / 2; 
+            controller.brakes.maxBrakeTorque = brakeForce; }
+
     }
 }

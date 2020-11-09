@@ -7,6 +7,7 @@ using UnityEngine;
 using Varjo;
 using System.Linq;
 using UnityEngine.SceneManagement;
+using System.Globalization;
 
 public class DataLogger : MonoBehaviour
 {
@@ -40,12 +41,18 @@ public class DataLogger : MonoBehaviour
 
     private string saveFolder;
     private string steerInputAxis;
+    private string gasInputAxis;
+    private string brakeInputAxis;
     [HideInInspector]
     public bool savedData;
     public bool logging;
 
+    private CultureInfo culture = CultureInfo.CreateSpecificCulture("eu-ES");
+    // Use standard numeric format specifiers.
+    private string specifier = "G";
+    
     private void OnApplicationQuit() { if (experimentInput.saveData && !savedData) { SaveData(); } }
-    private void Awake()
+    private void Start()
     {
         StartUpFunction();
     }
@@ -76,6 +83,9 @@ public class DataLogger : MonoBehaviour
 
         List<string> inputs = experimentManager.GetCarControlInput();
         steerInputAxis = inputs[0];
+        gasInputAxis = inputs[1];
+        brakeInputAxis = inputs[2];
+        
 
         carNavigator = car.GetComponent<Navigator>();
 
@@ -124,16 +134,16 @@ public class DataLogger : MonoBehaviour
         {
             Log(columns, file);
 
-            logData[0] = myGazeLogger.fixationData.world.ToString();
-            logData[1] = myGazeLogger.fixationData.target.ToString();
-            logData[2] = myGazeLogger.fixationData.hudSymbology.ToString();
-            logData[3] = myGazeLogger.fixationData.hudText.ToString();
-            logData[4] = myGazeLogger.fixationData.conformalSymbology.ToString();
-            logData[5] = myGazeLogger.fixationData.insideCar.ToString();
-            logData[6] = myGazeLogger.fixationData.leftMirror.ToString();
-            logData[7] = myGazeLogger.fixationData.rightMirror.ToString();
-            logData[8] = myGazeLogger.fixationData.rearMirror.ToString();
-            logData[9] = myGazeLogger.fixationData.unknown.ToString();
+            logData[0] = myGazeLogger.fixationData.world.ToString(specifier,culture);
+            logData[1] = myGazeLogger.fixationData.target.ToString(specifier,culture);
+            logData[2] = myGazeLogger.fixationData.hudSymbology.ToString(specifier,culture);
+            logData[3] = myGazeLogger.fixationData.hudText.ToString(specifier,culture);
+            logData[4] = myGazeLogger.fixationData.conformalSymbology.ToString(specifier,culture);
+            logData[5] = myGazeLogger.fixationData.insideCar.ToString(specifier,culture);
+            logData[6] = myGazeLogger.fixationData.leftMirror.ToString(specifier,culture);
+            logData[7] = myGazeLogger.fixationData.rightMirror.ToString(specifier,culture);
+            logData[8] = myGazeLogger.fixationData.rearMirror.ToString(specifier,culture);
+            logData[9] = myGazeLogger.fixationData.unknown.ToString(specifier,culture);
 
             Log(logData, file);
             file.Flush();
@@ -143,7 +153,7 @@ public class DataLogger : MonoBehaviour
     private void SaveVehicleData()
     {
         Debug.Log("Saving vehicle data...");
-        string[] columns = { "Time", "Frame", "Speed", "DistanceToOptimalPath", "Position", "Rotation", "SteeringInput", "UpcomingOperation" };
+        string[] columns = { "Time", "Frame", "Speed", "DistanceToOptimalPath", "Position", "Rotation", "SteeringInput", "UpcomingOperation", "ThrottleInput", "BrakeInput","TrackProgress" };
         string[] logData = new string[columns.Length];
         string filePath = string.Join("/", saveFolder, vehicleDataFileName);
 
@@ -153,14 +163,18 @@ public class DataLogger : MonoBehaviour
 
             foreach (VehicleDataPoint dataPoint in vehicleData)
             {
-                logData[0] = dataPoint.time.ToString();
+                logData[0] = dataPoint.time.ToString(specifier,culture);
                 logData[1] = dataPoint.frame.ToString();
-                logData[2] = dataPoint.speed.ToString();
-                logData[3] = dataPoint.distanceToOptimalPath.ToString();
+                logData[2] = dataPoint.speed.ToString(specifier,culture);
+                logData[3] = dataPoint.distanceToOptimalPath.ToString(specifier,culture);
                 logData[4] = dataPoint.position;
                 logData[5] = dataPoint.rotation;
-                logData[6] = dataPoint.steerInput.ToString();
+                logData[6] = dataPoint.steerInput.ToString(specifier,culture);
                 logData[7] = dataPoint.upcomingOperation;
+
+                logData[8] = dataPoint.throttleInput.ToString(specifier,culture);
+                logData[9] = dataPoint.brakeInput.ToString(specifier,culture);
+                logData[10] = dataPoint.trackProgression;
 
                 Log(logData, file);
             }
@@ -181,10 +195,10 @@ public class DataLogger : MonoBehaviour
             
             foreach (TargetAlarm alarm in targetDetectionData)
             {
-                logData[0] = alarm.time.ToString();
+                logData[0] = alarm.time.ToString(specifier,culture);
                 logData[1] = alarm.frame.ToString();
                 logData[2] = alarm.alarmType.ToString();
-                logData[3] = alarm.reactionTime.ToString();
+                logData[3] = alarm.reactionTime.ToString(specifier,culture);
                 logData[4] = alarm.targetID;
                 logData[5] = alarm.targetDifficulty.ToString();
 
@@ -234,8 +248,8 @@ public class DataLogger : MonoBehaviour
             {
                 logData[0] = target.GetID();
                 logData[1] = target.detected.ToString();
-                logData[2] = target.reactionTime.ToString();
-                logData[3] = target.totalFixationTime.ToString();
+                logData[2] = target.reactionTime.ToString(specifier,culture);
+                logData[3] = target.totalFixationTime.ToString(specifier,culture);
                 logData[4] = target.difficulty.ToString();
                 logData[5] = target.side.ToString();
                 logData[6] = target.afterTurn.ToString();
@@ -284,7 +298,7 @@ public class DataLogger : MonoBehaviour
             logData[8] = experimentManager.activeExperiment.navigation.name;
             logData[9] = experimentManager.activeExperiment.navigationType.ToString();
             logData[10] = experimentManager.activeExperiment.transparency.ToString();
-            logData[11] = experimentManager.activeExperiment.experimentTime.ToString();
+            logData[11] = experimentManager.activeExperiment.experimentTime.ToString(specifier,culture);
 
             logData[12] = experimentManager.activeNavigationHelper.leftTurns.ToString();
             logData[13] = experimentManager.activeNavigationHelper.rightTurns.ToString();
@@ -307,8 +321,11 @@ public class DataLogger : MonoBehaviour
     }
     public void StartNewMeasurement()
     {
-
+        
         Debug.Log($"Starting new measurement...");
+        
+        StartUpFunction();
+
         logging = true;
         savedData = false;
         saveFolder = SaveFolder();
@@ -360,6 +377,13 @@ public class DataLogger : MonoBehaviour
         dataPoint.steerInput = Input.GetAxis(steerInputAxis);
         dataPoint.speed = car.GetComponent<Rigidbody>().velocity.magnitude;
         dataPoint.upcomingOperation = carNavigator.target.operation.ToString();
+
+        ///extra ///
+        dataPoint.throttleInput = Input.GetAxis(gasInputAxis);
+        dataPoint.brakeInput = car.GetComponent<VehiclePhysics.VPVehicleController>().brakes.maxBrakeTorque;
+        dataPoint.trackProgression = car.GetComponent<SpeedController>().GetTrackProgression().ToString();
+
+        //Debug.Log($"Steerinput: {dataPoint.steerInput}, throttle: {dataPoint.throttleInput}, brake: {dataPoint.brakeInput}...");
         vehicleData.Add(dataPoint);
     }
     private float GetDistanceToOptimalPath(Vector3 car_position)
@@ -459,7 +483,14 @@ public class VehicleDataPoint
     public string rotation;
     public float steerInput;
 
+    
+
     public string upcomingOperation;
+
+    public float throttleInput;
+    public float brakeInput;
+    public string trackProgression;
+
 }
 
 public class TargetAlarm

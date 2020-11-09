@@ -35,17 +35,15 @@ public class ExperimentManager : MonoBehaviour
 
     public KeyCode saveTheData;
 
-    public string ParticpantInputAxisLeft = "SteerButtonLeft";
-    public string ParticpantInputAxisRight = "SteerButtonRight";
-
     [Header("Car Controls")]
-    public string GasWithKeyboard = "GasKeyBoard";
-    public string SteerWithKeyboard = "SteerKeyBoard";
-    public string BrakeWithKeyboard = "BrakeKeyBoard";
 
-    public string Gas = "GasKeyBoard";
-    public string Steer = "Steer";
-    public string Brake = "BrakeKeyBoard";
+    private string GasWithKeyboard = "GasKeyBoard";
+    private string SteerWithKeyboard = "SteerKeyBoard";
+    private string BrakeWithKeyboard = "BrakeKeyBoard";
+
+    private string Gas = "GasKeyBoard";
+    private string Steer = "Steer";
+    private string Brake = "BrakeKeyBoard";
 
     [Header("GameObjects")]
     // expriment objects and lists
@@ -70,7 +68,7 @@ public class ExperimentManager : MonoBehaviour
     private Transform steeringWheel;
 
     private bool lastUserInput = false;
-
+    private float userInputTimeOut = 0f;
     //The data manger handling the saving of vehicle and target detection data Should be added to the experiment manager object 
     private DataLogger dataManager;
     //Maximum raycasts used in determining visbility:  We use Physics.RayCast to check if we can see the target. We cast this to a random positin on the targets edge to see if it is partly visible.
@@ -78,6 +76,7 @@ public class ExperimentManager : MonoBehaviour
     private float lastUserInputTime = 0f;
     public float thresholdUserInput = 0.15f; //The minimum time between user inputs (when within this time only the first one is used)
 
+    private bool savedData = false;
     private void Start()
     {
         StartUpFunctions();
@@ -88,7 +87,7 @@ public class ExperimentManager : MonoBehaviour
 
         experimentInput = player.GetComponent<ExperimentInput>();
         //Set rotation of varjo cam to be zero w.r.t. rig
-        GetVariablesFromSceneManager();
+        SetInputs();
 
         //Get all gameobjects we intend to use from the car (and do some setting up)
         SetGameObjectsFromCar();
@@ -119,7 +118,7 @@ public class ExperimentManager : MonoBehaviour
         //Does not work when in Start() or in Awake()...
         ActivateMirrorCameras();
     }
-    void GetVariablesFromSceneManager()
+    void SetInputs()
     {
         mySceneLoader = GetComponent<MySceneLoader>();
         camType = experimentInput.camType;
@@ -138,6 +137,13 @@ public class ExperimentManager : MonoBehaviour
 
         inputNameKey = experimentInput.inputNameKey;
         saveTheData = experimentInput.saveTheData;
+
+        GasWithKeyboard = experimentInput.GasWithKeyboard;
+        SteerWithKeyboard = experimentInput.SteerWithKeyboard;
+        BrakeWithKeyboard = experimentInput.BrakeWithKeyboard;
+        Gas = experimentInput.Gas;
+        Steer = experimentInput.Steer;
+        Brake = experimentInput.Brake;
 }
     void Update()
     {
@@ -153,7 +159,7 @@ public class ExperimentManager : MonoBehaviour
         if (car.GetComponent<SpeedController>().IsDriving() && userInput) { ProcessUserInputTargetDetection(); }
 
         //First input will be the start driving command (so if not already driving we will start driving)
-        else if (!car.GetComponent<SpeedController>().IsDriving() && userInput && automateSpeed) { car.GetComponent<SpeedController>().StartDriving(true); }
+        else if (!car.GetComponent<SpeedController>().IsDriving() && userInput && automateSpeed) { car.GetComponent<SpeedController>().StartDriving(true); userInputTimeOut = Time.time; }
 
         //Researcher inputs
         if (Input.GetKeyDown(keyToggleSymbology)) { ToggleSymbology(); }
@@ -166,7 +172,7 @@ public class ExperimentManager : MonoBehaviour
 
         if (car.navigationFinished)
         {
-            if (experimentInput.saveData) { dataManager.SaveData(); }
+            if (experimentInput.saveData && !savedData) { dataManager.SaveData(); savedData = true; }
 
             if (car.GetComponent<Rigidbody>().velocity.magnitude < 0.01f) { mySceneLoader.LoadWaitingScene(); }
         }
@@ -472,6 +478,7 @@ public class ExperimentManager : MonoBehaviour
     }
     private bool UserInput()
     {
+        if (userInputTimeOut + 0.5f > Time.time) { lastUserInput = false; return false; }
         //only sends true if last input wasnt already true. (if you hold the steerig button it will continuesly output a value for input.getaxis()....
         if (Input.GetAxis(experimentInput.ParticpantInputAxisLeft) != 1 && Input.GetAxis(experimentInput.ParticpantInputAxisRight) != 1) { lastUserInput = false; return false; }
         else if ((Input.GetAxis(experimentInput.ParticpantInputAxisLeft) == 1 || Input.GetAxis(experimentInput.ParticpantInputAxisRight) == 1) && lastUserInput) { lastUserInput = true;  return false; }
@@ -517,6 +524,8 @@ public class ExperimentManager : MonoBehaviour
         {
             carController.steerAxis = SteerWithKeyboard;
             carController.throttleAndBrakeAxis = GasWithKeyboard;
+            
+
         }
         else
         {

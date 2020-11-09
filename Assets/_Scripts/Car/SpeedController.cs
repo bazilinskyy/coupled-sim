@@ -35,7 +35,7 @@ public class SpeedController : MonoBehaviour
     private VehiclePhysics.VPVehicleController carController;
     private VehiclePhysics.VPStandardInput carInput;
     private VehiclePhysics.SpeedControl.Settings speedSettings;
-
+    private bool gaveError=false;
     private void Start()
     {
         StartUpFunction();
@@ -49,6 +49,7 @@ public class SpeedController : MonoBehaviour
 
         speedSettings = new VehiclePhysics.SpeedControl.Settings();
         speedSettings.speedLimiter = true;
+        carController.speedControl = speedSettings;
     }
     public bool IsDriving() { return startDriving; }
     public void StartDriving(bool input)
@@ -66,16 +67,16 @@ public class SpeedController : MonoBehaviour
     void FixedUpdate()
     {
 
-        if (navigator.target == null) { return; }
-        if (navigator.experimentManager == null) { return; }
-        if (!navigator.experimentManager.automateSpeed) { return; }
-        if (navigator.navigationFinished) { Brake(); return; }
+        if (GetComponent<Navigator>().target == null) { return; }
+        if (GetComponent<Navigator>().experimentManager == null) { return; }
+        if (!GetComponent<Navigator>().experimentManager.automateSpeed) { return; }
+        if (GetComponent<Navigator>().navigationFinished) { Brake(); return; }
 
         //This bool is adjusted by the expriment manager using StartDriving()
         if (!startDriving) { Brake(); return; }
 
-
-        if (targetWaypoint == null) { targetWaypoint = navigator.target; }
+        targetWaypoint = GetComponent<Navigator>().target;
+        if (targetWaypoint == null && !gaveError) { Debug.LogError("Could not find target Waypoint...."); gaveError = true; return; }
 
         setSpeed = speedLimit;
         if (OnStraight())
@@ -137,6 +138,7 @@ public class SpeedController : MonoBehaviour
     }
     void BrakeForCorner(float increment, float desiredSpeed, Rigidbody car, VehiclePhysics.VPStandardInput carInput)
     {
+        return;
         float sign;
         if (car.velocity.magnitude > (desiredSpeed + brakeSpeedMargin)) { sign = 1; }
         else { sign = -1 * letGoBrakeSpeed; }
@@ -149,6 +151,7 @@ public class SpeedController : MonoBehaviour
     }
     void ToggleGas(bool toggle, float increment)
     {
+        //return;
         //If already at max por at zero we can return
         if (toggle && carInput.externalThrottle == maxThrottle) { return; }
         if (!toggle && carInput.externalThrottle == 0) { return; }
@@ -174,7 +177,8 @@ public class SpeedController : MonoBehaviour
     {
         //On straight when distance to corner is less than straightDistance
         if (targetWaypoint.operation == Operation.Straight) { return true; }
-        if (Vector3.Distance(targetWaypoint.transform.position, transform.position) > cornerBrakingDistance) { return true; }
+
+        else if (targetWaypoint.operation.IsTurn() && Vector3.Distance(targetWaypoint.transform.position, transform.position) > cornerBrakingDistance) { return true; }
         else { return false; }
     }
     bool OnCornerApproach()
@@ -203,4 +207,25 @@ public class SpeedController : MonoBehaviour
         if (targetWaypoint.operation == Operation.EndPoint) { return true; }
         else { return false; }
     }
+
+    public TrackProgression GetTrackProgression()
+    {
+        if(targetWaypoint == null) { return TrackProgression.Unkown; }
+        if (OnStraight()) { return TrackProgression.Straight; }
+        else if (OnCorner()) { return TrackProgression.Corner; }
+        else if (OnSpline()) { return TrackProgression.Spline; }
+        else if (OnCornerApproach()) { return TrackProgression.CornerApproach; }
+        else { return TrackProgression.EndPointApproach; }
+
+    }
+}
+
+public enum TrackProgression
+{
+    Unkown,
+    Straight,
+    CornerApproach,
+    Corner,
+    Spline,
+    EndPointApproach
 }

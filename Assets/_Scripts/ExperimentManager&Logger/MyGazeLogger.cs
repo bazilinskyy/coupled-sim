@@ -4,6 +4,8 @@ using UnityEngine;
 using Varjo;
 using System.IO;
 using System;
+using System.Globalization;
+
 public class MyGazeLogger : MonoBehaviour
 {
     StreamWriter writer = null;
@@ -36,7 +38,8 @@ public class MyGazeLogger : MonoBehaviour
     
     const string ValidString = "VALID";
     const string InvalidString = "INVALID";
-
+    
+    private CultureInfo culture = CultureInfo.CreateSpecificCulture("eu-ES");
     //Looking at what exactly?
     public Fixation fixationData;
     private LoggedTags fixatingOn = LoggedTags.World;
@@ -98,7 +101,7 @@ public class MyGazeLogger : MonoBehaviour
         logData[1] = data.captureTime.ToString();
 
         // Log time of experiment (seconds) experiment
-        logData[2] = experimentManager.activeExperiment.experimentTime.ToString();
+        logData[2] = experimentManager.activeExperiment.experimentTime.ToString("G", culture );
 
         // HMD
         logData[3] = hmdPosition.ToString("F3");
@@ -119,18 +122,18 @@ public class MyGazeLogger : MonoBehaviour
         logData[10] = leftInvalid ? InvalidString : ValidString;
         logData[11] = leftInvalid ? "" : Double3ToString(data.left.forward);
         logData[12] = leftInvalid ? "" : Double3ToString(data.left.position);
-        logData[13] = leftInvalid ? "" : data.leftPupilSize.ToString();
+        logData[13] = leftInvalid ? "" : data.leftPupilSize.ToString("G", culture);
 
         // Right eye
         bool rightInvalid = data.rightStatus == VarjoPlugin.GazeEyeStatus.EYE_INVALID;
         logData[14] = rightInvalid ? InvalidString : ValidString;
         logData[15] = rightInvalid ? "" : Double3ToString(data.right.forward);
         logData[16] = rightInvalid ? "" : Double3ToString(data.right.position);
-        logData[17] = rightInvalid ? "" : data.rightPupilSize.ToString();
+        logData[17] = rightInvalid ? "" : data.rightPupilSize.ToString("G", culture);
 
         // Focus
-        logData[18] = invalid ? "" : data.focusDistance.ToString();
-        logData[19] = invalid ? "" : data.focusStability.ToString();
+        logData[18] = invalid ? "" : data.focusDistance.ToString("G", culture);
+        logData[19] = invalid ? "" : data.focusStability.ToString("G", culture);
 
         logData[20] = invalid ? "" : fixatingOn.ToString();
 

@@ -24,11 +24,11 @@ public class ConsoleToGUI : MonoBehaviour
         // for the file ...
         if (fileName == "")
         {
-            string d = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop) + "/Data/YOUR_LOGS";
+            string d = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop).Replace("\\","/") + "/Data/YOUR_LOGS";
             
             System.IO.Directory.CreateDirectory(d);
             string r = Random.Range(1000, 9999).ToString();
-            string fileName = System.DateTime.Now.ToString("MM-dd_HH-mm") + "_" +  GetComponent<ExperimentInput>().subjectName;
+            fileName = System.DateTime.Now.ToString("MM-dd_HH-mm") + "_" +  GetComponent<ExperimentInput>().subjectName;
 
             fileName= d + "/log-" + fileName + ".txt";
             myLog += $"\nCreated log file {fileName}...";

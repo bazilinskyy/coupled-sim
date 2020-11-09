@@ -11,8 +11,10 @@ GameObject:
   - component: {fileID: 8252388277253089911}
   - component: {fileID: 8252388277253089904}
   - component: {fileID: 8252388277253089905}
+  - component: {fileID: 5917611817617453201}
+  - component: {fileID: 4719715245355162008}
   m_Layer: 0
-  m_Name: Camera
+  m_Name: NormalCam
   m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -84,6 +86,67 @@ AudioListener:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8252388277253089906}
   m_Enabled: 1
+--- !u!114 &5917611817617453201
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8252388277253089906}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0a25a1898fc975f42b5cb501831f3b55, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  camType: 0
+  subjectDataFolder: 
+  subjectName: Dummy
+  experimentOrder: 0
+  automateSpeed: 1
+  saveData: 1
+  animationTime: 2.5
+  calibratedUsingHands: 0
+  driverViewHorizontalDistance: 0
+  driverViewVerticalDistance: 0
+  driverViewSideDistance: 0
+  myPermission: 282
+  resetHeadPosition: 283
+  spawnSteeringWheel: 284
+  calibrateGaze: 285
+  resetExperiment: 27
+  keyToggleDriving: 32
+  keyToggleSymbology: 9
+  setToLastWaypoint: 114
+  inputNameKey: 121
+  saveTheData: 288
+  waitingRoomScene: WaitingScene
+  drivingPractiseScene: DrivingPractiseScene
+  targetScene: Targets
+  calibrationScene: CalibrationScene
+  experimentScene1: ExperimentScene1
+  experimentScene2: ExperimentScene2
+  ParticpantInputAxisLeft: SteerButtonLeft
+  ParticpantInputAxisRight: SteerButtonRight
+  GasWithKeyboard: Gas
+  SteerWithKeyboard: Steer
+  BrakeWithKeyboard: Brake
+  Gas: Gas
+  Steer: Steer
+  Brake: Brake
+  sceneArray: []
+  sceneIndex: 0
+--- !u!114 &4719715245355162008
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8252388277253089906}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8ebef93b7394f604086905a1275b3252, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &8252388277361530242
 GameObject:
   m_ObjectHideFlags: 0

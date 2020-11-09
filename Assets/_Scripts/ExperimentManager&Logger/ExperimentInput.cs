@@ -35,8 +35,6 @@ public class ExperimentInput : MonoBehaviour
 
     public KeyCode saveTheData = KeyCode.F7;
 
-    public string ParticpantInputAxisLeft = "SteerButtonLeft";
-    public string ParticpantInputAxisRight = "SteerButtonRight";
 
     public string waitingRoomScene = "WaitingScene";
     public string drivingPractiseScene = "DrivingPractiseScene";
@@ -44,6 +42,19 @@ public class ExperimentInput : MonoBehaviour
     public string calibrationScene = "CalibrationScene";
     public string experimentScene1 = "ExperimentScene1";
     public string experimentScene2 = "ExperimentScene2";
+
+    [Header("Car Controls")]
+
+    public string ParticpantInputAxisLeft = "SteerButtonLeft";
+    public string ParticpantInputAxisRight = "SteerButtonRight";
+
+    public string GasWithKeyboard = "GasKeyBoard";
+    public string SteerWithKeyboard = "SteerKeyBoard";
+    public string BrakeWithKeyboard = "BrakeKeyBoard";
+
+    public string Gas = "Gas";
+    public string Steer = "Steer";
+    public string Brake = "Brake";
 
     public string[] sceneArray;
     public int sceneIndex = 0;
