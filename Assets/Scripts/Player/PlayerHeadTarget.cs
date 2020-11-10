@@ -2,39 +2,49 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Animations.Rigging;
+using UnityEngine.Rendering;
+using VehicleBehaviour;
 
 public class PlayerHeadTarget : MonoBehaviour
 {
-    public Transform CTargetAnchor;
-    public Transform RTargetAnchor;
-    public Transform LTargetAnchor;
     public GameObject Player;
-    public Transform SteeringWheel;
     public float LookAtPlayerSpeed;
+    public Transform CenterAnchor;
     public MultiAimConstraint Constraint;
-    public float steeringRotation;
-    public float steeringPercentage;
-
+    public RigBuilder PlayerRigBuilder;
 
     private PlayerLookAtPed playerLookAtPed;
+    private GameObject target;
 
     private void Start()
     {
         playerLookAtPed = Player.GetComponent<PlayerLookAtPed>();
+        target = new GameObject();
+        var data = Constraint.data.sourceObjects;
+        data.Clear();
+        data.Add(new WeightedTransform(target.transform, 1.0f));
+        Constraint.data.sourceObjects = data;
+        PlayerRigBuilder.Build();
+        target.transform.position = CenterAnchor.position;
     }
 
-    private void Update()
+    private void LateUpdate()
     {
-        steeringRotation = SteeringWheel.localRotation.z;
-        steeringPercentage = steeringRotation / 60.0f;
-        
-        if (!playerLookAtPed.canLookAtPed)
+        if (!playerLookAtPed.CanLookAtPed)
         {
-            
+            if (target.transform.parent is null)
+            {
+                target.transform.parent = CenterAnchor;
+            }
+            target.transform.position = Vector3.Slerp(target.transform.position, CenterAnchor.position, LookAtPlayerSpeed * Time.deltaTime);
         }
-        else
+        else if(playerLookAtPed.IsTargettingPed)
         {
-            transform.position = Vector3.Slerp(transform.position, playerLookAtPed.TargetPed.position, LookAtPlayerSpeed * Time.deltaTime);
+            if (!(target.transform.parent is null))
+            {
+                target.transform.parent = null;
+            }    
+            target.transform.position = Vector3.Slerp(target.transform.position, playerLookAtPed.TargetPed.position, LookAtPlayerSpeed * Time.deltaTime);
         }
     }
 

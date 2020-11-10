@@ -8,15 +8,24 @@ using UnityEngine.SceneManagement;
 public class PlayerLookAtPed : MonoBehaviour
 {
     public Transform PlayerHead;
-    public Transform TargetPed;
-    public Transform PlayerLookAtTarget;
+    private Transform targetPed;
+    public Transform TargetPed { get => targetPed; }
     public GameObject[] Peds;
     public float MaxTrackingDistance;
     public float MaxHeadRotation;
 
-    public bool isTargettingPed;
-    public bool canLookAtPed;
-    public float targetAngle;
+    public bool EnableTracking;
+
+    private bool isTargettingPed;
+
+    public bool IsTargettingPed { get => isTargettingPed; }
+
+    private bool canLookAtPed;
+    public bool CanLookAtPed { get => canLookAtPed; }
+
+    private float targetAngle;
+
+    public float MinTrackingDistance;
 
     private void Start()
     {
@@ -44,22 +53,32 @@ public class PlayerLookAtPed : MonoBehaviour
 
     private void LookForPeds()
     {
-        if (!isTargettingPed)
+        if (!isTargettingPed && EnableTracking)
         {
             foreach (GameObject ped in Peds)
             {
-                if (Vector3.Distance(transform.position, ped.transform.position) < MaxTrackingDistance)
+                var distance = Vector3.Distance(transform.position, ped.transform.position);
+                if (distance < MaxTrackingDistance && distance > MinTrackingDistance)
                 {
-                    TargetPed = ped.transform;
+                    targetPed = ped.transform;
                     isTargettingPed = true;
                 }
             }
         }
         else
-        if (Vector3.Distance(transform.position, TargetPed.position) > MaxTrackingDistance)
         {
-            TargetPed = null;
-            isTargettingPed = false;
+            float distance = 0.0f;
+            if (!(TargetPed is null))
+            {
+                distance = Vector3.Distance(transform.position, TargetPed.position);
+            }
+
+            if (distance > MaxTrackingDistance || distance < MinTrackingDistance || !EnableTracking)
+            {
+                targetPed = null;
+                isTargettingPed = false;
+                canLookAtPed = false;
+            }
         }
     }
 
