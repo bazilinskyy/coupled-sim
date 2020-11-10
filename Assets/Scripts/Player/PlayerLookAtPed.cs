@@ -7,25 +7,25 @@ using UnityEngine.SceneManagement;
 
 public class PlayerLookAtPed : MonoBehaviour
 {
-    public Transform PlayerHead;
+    private bool isTargettingPed;
+    private bool canLookAtPed;
     private Transform targetPed;
-    public Transform TargetPed { get => targetPed; }
-    public GameObject[] Peds;
-    public float MaxTrackingDistance;
-    public float MaxHeadRotation;
 
+
+    public GameObject[] Peds;
+
+    public Transform PlayerHead;
+    public float MaxTrackingDistance;
+    public float MinTrackingDistance;
+    public float MaxHeadRotation;
     public bool EnableTracking;
 
-    private bool isTargettingPed;
-
     public bool IsTargettingPed { get => isTargettingPed; }
-
-    private bool canLookAtPed;
     public bool CanLookAtPed { get => canLookAtPed; }
+    public Transform TargetPed { get => targetPed; }
 
     private float targetAngle;
 
-    public float MinTrackingDistance;
 
     private void Start()
     {
@@ -68,6 +68,7 @@ public class PlayerLookAtPed : MonoBehaviour
         else
         {
             float distance = 0.0f;
+
             if (!(TargetPed is null))
             {
                 distance = Vector3.Distance(transform.position, TargetPed.position);

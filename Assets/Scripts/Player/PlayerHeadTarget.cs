@@ -26,6 +26,7 @@ public class PlayerHeadTarget : MonoBehaviour
         Constraint.data.sourceObjects = data;
         PlayerRigBuilder.Build();
         target.transform.position = CenterAnchor.position;
+        target.name = "Head Tracking Target";
     }
 
     private void LateUpdate()
