@@ -316,7 +316,7 @@ public class Host : NetworkSystem
                 _playerSys.SelectModeGUI();
 
                     // Automatically start game after selecting host (add wait for client)
-                    if(gameStarted == false && AllRolesSelected() && PersistentManager.Instance.clientConnectedToHost == true)
+                    if(gameStarted == false && AllRolesSelected() == true && PersistentManager.Instance.clientConnectedToHost == true)
                     {
                         StartGame();
                         gameStarted = true;
@@ -331,6 +331,7 @@ public class Host : NetworkSystem
                         PersistentManager.Instance.nextScene = false;
                         gameStarted = false;
                     }
+
                     // commented out eHMI GUI since it's not needed
                     /*if (_playerSys.eHMIFixed == false)
                     {

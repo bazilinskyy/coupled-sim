@@ -69,6 +69,7 @@ public class AICar : MonoBehaviour
         acceleration = set_acceleration;                                   // Sets acceleration of object
         target = GetComponent<WaypointProgressTracker>().target;           // Sets intermediate target on the circuit
         ManualCarTrigger = GameObject.FindWithTag("StartAV");
+        startCar = false;
     }
     void Update()
     {

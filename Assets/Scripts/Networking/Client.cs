@@ -86,16 +86,11 @@ public class Client : NetworkSystem
         //_logger.BeginLog($"ClientLog-{roleName}-", _lvlManager.ActiveExperiment, lights, Time.realtimeSinceStartup);
         //_fixedTimeLogger.BeginLog($"ClientFixedTimeLog-{roleName}-", _lvlManager.ActiveExperiment, lights, Time.fixedTime);
 
-        // Do not run update if the application is not visible
-        if (VarjoPlugin.GetGaze().status == VarjoPlugin.GazeStatus.VALID)
-        {
-            VarjoPlugin.RequestGazeCalibration(); // initiate eye-tracking
-        }
-
         // Don't need light information so set to zero.
         _logger.BeginLog($"ClientLog-{roleName}-", _lvlManager.ActiveExperiment, null, Time.realtimeSinceStartup);
         _fixedTimeLogger.BeginLog($"ClientFixedTimeLog-{roleName}-", _lvlManager.ActiveExperiment, null, Time.fixedTime);
     }
+
     //handles game configuration message - spawns level and players
     void OnGameStart(ISynchronizer sync, int _)
     {
@@ -152,7 +147,12 @@ public class Client : NetworkSystem
                 _client.Update(_msgDispatcher);
                 UpdateGame();
                 _logger.LogFrame(_currentPing, Time.realtimeSinceStartup);
-                break;
+                if (PersistentManager.Instance.nextScene == true)
+                {
+                    _currentState = NetState.Lobby;
+                    PersistentManager.Instance.nextScene = false;
+                }
+                    break;
         }
     }
 

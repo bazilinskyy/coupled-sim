@@ -10,7 +10,9 @@ public class SceneNetworkManager : MonoBehaviour
     // Function to broadcast the message from host to client
     public void SendLoadMessage(Host host)
     {
-            host.BroadcastMessage(new LoadSceneMessage());
+        host.BroadcastMessage(new LoadSceneMessage());
+        PersistentManager.Instance.stopLogging = true;
+        PersistentManager.Instance.nextScene = true;
     }
 
     // Action to be taken by Client

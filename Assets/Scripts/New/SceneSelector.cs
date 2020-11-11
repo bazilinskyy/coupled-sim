@@ -39,7 +39,8 @@ public class SceneSelector : MonoBehaviour
 
     private void Awake()
     {
-        Debug.LogError($"variable is {SteamVR.instance.hmd_SerialNumber == "LHR-7863A1E8"}");
+        PersistentManager.Instance.nextScene = false;
+
         if (PersistentManager.Instance.createOrder == true && SteamVR.instance.hmd_SerialNumber == "LHR-7863A1E8")
         {
             PersistentManager.Instance.ExpOrder = SceneRandomizerBlock(); // SceneRandomizer();
@@ -103,9 +104,11 @@ public class SceneSelector : MonoBehaviour
         AsyncOperation asyncOperation = SceneManager.LoadSceneAsync("StartScene");
         // Don't let the Scene activate until you allow it to
         asyncOperation.allowSceneActivation = false;
+
         // Send a message to the client to load new scene and allow host to activate scene
         if(asyncOperation.progress >= 0.9f)
         {
+            Debug.LogError("Next scene allowed to load");
             asyncOperation.allowSceneActivation = true;
             SendLoadMsgToClient = true;
         }
@@ -213,10 +216,10 @@ public class SceneSelector : MonoBehaviour
         }
 
         // Prints the list for debugging
-        for (int i = 0; i < Block.Count; i++)
+        /*for (int i = 0; i < Block.Count; i++)
         {
             Debug.LogError($"List = {Block[i]}");
-        }
+        }*/
 
         return Block;
     }
