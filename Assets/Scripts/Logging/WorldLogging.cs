@@ -95,7 +95,9 @@ public class WorldLogger
         }
 
         // Filename log data
-        _fileWriter = new BinaryWriter(File.Create("ExperimentLogs/" + fileName + DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss") + ".binLog"));
+        //_fileWriter = new BinaryWriter(File.Create("ExperimentLogs/" + fileName + DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss") + ".binLog"));
+        _fileWriter = new BinaryWriter(File.Create("ExperimentLogs/" + "participant_" + PersistentManager.Instance.ParticipantNr + "_Trialnr_" + PersistentManager.Instance.listNr + "_expdef_" + PersistentManager.Instance.experimentnr + "_" + fileName + DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss") + ".binLog"));
+
 
         // Add time to log file
         _startTime = time;
@@ -1019,6 +1021,7 @@ public class LogConverter
     //displays GUI and handles interactions of a log transforming logic
     public void OnGUI()
     {
+        int filecounter = 0;
         convertAll = GUILayout.Toggle(convertAll, "Convert all log files");
         
         if (!_open && GUILayout.Button("Convert log to csv")) // first button
@@ -1045,9 +1048,16 @@ public class LogConverter
             {
                 if(convertAll == true)
                 {
+                    filecounter++;
                     var fullName = "ExperimentLogs/" + name;
                     var csvName = "ExperimentLogs/" + UNITY_WORLD_ROOT + "-" + name.Replace("binLog", "csv");
                     TranslateBinaryLogToCsv(fullName, csvName, _pedestrianSkeletonNames, UNITY_WORLD_ROOT, default, Quaternion.identity);
+                    Debug.LogError($"Converting logfile to csv ({filecounter}/{_fileNames.Count})");
+                    if(filecounter == _fileNames.Count)
+                    {
+                        _open = false;
+                        _selectedFileName = null;
+                    }
                 }
                 else {
                     if (string.IsNullOrEmpty(_selectedFileName))
