@@ -751,7 +751,6 @@ public class LogConverter
             {
                 for (int i = 0; i < pedestrianSkeletonNames.Length; i++) 
                 {
-                    Debug.LogError($"PedestrianSkeletonNames are {i} = {pedestrianSkeletonNames[i]}");// test
                     sb.Append(string.Join(separator, Enumerable.Repeat(pedestrianSkeletonNames[i], columnsPerBone)));
                     if (i < pedestrianSkeletonNames.Length - 1)
                     {
@@ -788,8 +787,6 @@ public class LogConverter
             {
                 writer.Write(separator);
             }
-            // test
-            Debug.LogError($"numPedstrians = {numPedestrians}");
             const string boneTransformHeader = "pos_x;pos_y;pos_z;rot_x;rot_y;rot_z;distance_pe;frame;captureTime;hmdpos_x;hmdpos_y;hmdpos_z;hmdrot_x;hmdrot_y;hmdrot_z;leftEyePupilSize;rightEyePupilSize;focusDistance;focusStability;gazeRayForward_x;gazeRayForward_y;gazeRayForward_z;gazeRayDirection_x;gazeRayDirection_y;gazeRayDirection_z;gazePosition_x;gazePosition_y;gazePosition_z;gazeOrigin_x;gazeOrigin_y;gazeOrigin_z;gapAcceptance;";
             /*if (WorldLogger.returnBodySuit())
             {
@@ -882,10 +879,8 @@ public class LogConverter
                 {
                     line.Add(";;;;;;;;;;;;;;;;;;");
                 }
-                Debug.LogError($"actual data fram pedestrian positions count = {frame.PedestrianPositions.Count}");
                 for (int i = 0; i < frame.PedestrianPositions.Count; i++) 
                 {
-                    Debug.LogError($"i = {i}, with frame pedestrian position = {frame.PedestrianPositions[i]}");
                     var pos = frame.PedestrianPositions[i];
                     var rot = frame.PedestrianRotations[i];
                     var distance_pe = frame.distance_pe;
@@ -906,7 +901,6 @@ public class LogConverter
 
                     var gapAcceptance = frame.gapAcceptance;
 
-                    Debug.LogError($"pos count inside pedestrian actual data = {pos.Count}");
                     for (int j = 0; j < pos.Count; j++)
                     {
                         var p = PosToRefPoint(pos[j]);
