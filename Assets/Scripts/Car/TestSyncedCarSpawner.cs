@@ -9,9 +9,5 @@ public class TestSyncedCarSpawner : CarSpawnerBase
     {
         yield return new WaitForSeconds(5);
         Spawn(TestCar, false);
-        yield return new WaitForSeconds(5);
-        Spawn(TestCar, false);
-        yield return new WaitForSeconds(5);
-        Spawn(TestCar, false);
     }
 }
