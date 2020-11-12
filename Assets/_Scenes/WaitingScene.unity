@@ -529,8 +529,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   text: {fileID: 556010175}
-  leapRig: {fileID: 0}
-  normalCam: {fileID: 0}
+  startPosition: {fileID: 997721524}
+  steeringWheel: {fileID: 2143021678}
+  experimentInput: {fileID: 0}
   blackOutScreen: {fileID: 1476024188}
   myPermission: 282
   resetHeadPosition: 283
@@ -586,6 +587,7 @@ MonoBehaviour:
   eye: 0
   gazeRayRadius: 0.01
   drawDebug: 0
+  logData: 1
   layerMask:
     serializedVersion: 2
     m_Bits: 4294967295
@@ -1819,7 +1821,7 @@ Transform:
   - {fileID: 302180610}
   - {fileID: 377919675}
   m_Father: {fileID: 0}
-  m_RootOrder: 6
+  m_RootOrder: 7
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1302435436
 PrefabInstance:
@@ -2588,4 +2590,79 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 6806943811830621757, guid: 1ce19ed9b57acb84192f659e4fb7ab80,
     type: 3}
   m_PrefabInstance: {fileID: 2009049656}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1001 &2143021677
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 6997499720867166069, guid: 8315fe5cbfead144fb46b68b3ba440d5,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6997499720867166069, guid: 8315fe5cbfead144fb46b68b3ba440d5,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -10
+      objectReference: {fileID: 0}
+    - target: {fileID: 6997499720867166069, guid: 8315fe5cbfead144fb46b68b3ba440d5,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6997499720867166069, guid: 8315fe5cbfead144fb46b68b3ba440d5,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6997499720867166069, guid: 8315fe5cbfead144fb46b68b3ba440d5,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6997499720867166069, guid: 8315fe5cbfead144fb46b68b3ba440d5,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6997499720867166069, guid: 8315fe5cbfead144fb46b68b3ba440d5,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6997499720867166069, guid: 8315fe5cbfead144fb46b68b3ba440d5,
+        type: 3}
+      propertyPath: m_RootOrder
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 6997499720867166069, guid: 8315fe5cbfead144fb46b68b3ba440d5,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6997499720867166069, guid: 8315fe5cbfead144fb46b68b3ba440d5,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6997499720867166069, guid: 8315fe5cbfead144fb46b68b3ba440d5,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6997499720867166070, guid: 8315fe5cbfead144fb46b68b3ba440d5,
+        type: 3}
+      propertyPath: m_Name
+      value: SteeringWheel
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 8315fe5cbfead144fb46b68b3ba440d5, type: 3}
+--- !u!1 &2143021678 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6997499720867166070, guid: 8315fe5cbfead144fb46b68b3ba440d5,
+    type: 3}
+  m_PrefabInstance: {fileID: 2143021677}
   m_PrefabAsset: {fileID: 0}

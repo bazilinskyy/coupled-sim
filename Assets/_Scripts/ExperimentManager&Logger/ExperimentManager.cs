@@ -303,9 +303,6 @@ public class ExperimentManager : MonoBehaviour
             driverView.position += Vector3.up * experimentInput.driverViewVerticalDistance;
             driverView.position += car.transform.right * experimentInput.driverViewSideDistance;
 
-            Debug.Log($"Substraced { car.transform.forward * experimentInput.driverViewHorizontalDistance} from driverview pos...");
-            Debug.Log($"Added { Vector3.up * experimentInput.driverViewVerticalDistance} to driverview pos...");
-            Debug.Log($"Added { car.transform.right * experimentInput.driverViewSideDistance} to driverview pos...");
         }
 
         //Put car in right position
@@ -535,8 +532,6 @@ public class ExperimentManager : MonoBehaviour
         {
             carController.steerAxis = SteerWithKeyboard;
             carController.throttleAndBrakeAxis = GasWithKeyboard;
-            
-
         }
         else
         {

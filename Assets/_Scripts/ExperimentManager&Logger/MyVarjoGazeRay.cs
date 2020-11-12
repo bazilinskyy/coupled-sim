@@ -39,14 +39,15 @@ public class MyVarjoGazeRay : MonoBehaviour
    
     void StartUpFunction()
     {
-        if(gazeLogger.enabled == false) { GetComponent<MyVarjoGazeRay>().enabled = false; return; }
+        if (logData) { gazeLogger = GetComponent<MyGazeLogger>(); }
+        else { GetComponent<MyVarjoGazeRay>().enabled = false; }
+
         // InitGaze must be called before using or calibrating gaze tracking.
         if (!VarjoPlugin.InitGaze())
         {
             Debug.LogError("Failed to initialize gaze");
             GetComponent<MyVarjoGazeRay>().enabled = false;
         }
-        if (logData) { gazeLogger = GetComponent<MyGazeLogger>(); }
     }
     void Update()
     {

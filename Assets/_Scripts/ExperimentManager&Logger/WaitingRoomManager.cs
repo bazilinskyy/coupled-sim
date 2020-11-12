@@ -9,8 +9,9 @@ public class WaitingRoomManager : MonoBehaviour
     private MySceneLoader mySceneLoader;
 
     public TextMesh text;
-    public Transform leapRig;
-    public Transform normalCam;
+    
+    public Transform startPosition;
+    public GameObject steeringWheel;
     private Transform player;
     public ExperimentInput experimentInput;
     public UnityEngine.UI.Image blackOutScreen;
@@ -59,6 +60,19 @@ public class WaitingRoomManager : MonoBehaviour
         GetVariablesFromSceneManager();
 
         SetText();
+
+        SpawnSteeringWheel();
+    }
+    public void SpawnSteeringWheel()
+    {
+        if (experimentInput.calibratedUsingHands)
+        {
+            steeringWheel.transform.position = startPosition.position;
+            steeringWheel.transform.position += startPosition.transform.forward * experimentInput.driverViewHorizontalDistance;
+            steeringWheel.transform.position -= Vector3.up * experimentInput.driverViewVerticalDistance;
+            steeringWheel.transform.position -= startPosition.transform.right * experimentInput.driverViewSideDistance;
+
+        }
     }
     public Transform CameraTransform()
     {
@@ -147,9 +161,6 @@ public class WaitingRoomManager : MonoBehaviour
         if (mostRecentTime == 0f) { Debug.Log("Chose target based on distance..."); }
         else { Debug.Log($"Chose target based on fixation time: {Time.time - mostRecentTime}..."); }
 
-        targetChosen.SetDetected(1f);
-        
+        if (targetChosen != null) { targetChosen.SetDetected(1f); }
     }
-    
-
 }
