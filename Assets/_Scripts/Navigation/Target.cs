@@ -28,7 +28,7 @@ public class Target : MonoBehaviour
     public bool afterTurn = false;
     public Side side;
     public bool difficultPosition;
-
+    public bool isVisible = false;
     public string GetID()
     {
         if (waypoint != null) { return waypoint.name.Last() + "-" + gameObject.name.Last(); }
@@ -93,12 +93,15 @@ public class Target : MonoBehaviour
 
         Debug.Log($"Target {GetID()} is detected: startTimeVisible {startTimeVisible}, detectionTime { detectionTime}, reactiontime: {reactionTime}");
     }
+    public bool IsVisible() { return isVisible; }
 
+    public void SetVisible(bool input) { isVisible = input; }
     public void ResetTarget()
     {
         GetComponent<MeshRenderer>().enabled = true;
         GetComponent<SphereCollider>().enabled = true;
         detected = false;
+        isVisible = false;
         startTimeVisible = defaultVisibilityTime;
         reactionTime = 0f;
         totalFixationTime = 0f;

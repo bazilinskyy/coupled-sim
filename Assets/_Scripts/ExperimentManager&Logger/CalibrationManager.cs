@@ -37,7 +37,6 @@ public class CalibrationManager : MonoBehaviour
     private bool lastUserInput = false;
 
     private readonly int maxNumberOfRandomRayHits = 40;
-    public float thresholdUserInput = 0.15f; //The minimum time between user inputs (when within this time only the first one is used)
     private bool addedTargets;
     
     // Start is called before the first frame update
@@ -67,26 +66,19 @@ public class CalibrationManager : MonoBehaviour
     void Update()
     {
         bool userInput = UserInput();
+
         //Looks for targets to appear in field of view and sets their visibility timer accordingly
         if ( userInput && addedTargets) { ProcessUserInputTargetDetection(); }
-        if (Input.GetKeyDown(resetExperiment)) { mySceneLoader.LoadNextScene();  }
+        if (Input.GetKeyDown(resetExperiment)) {mySceneLoader.LoadCalibrationScene(); }
         if (Input.GetKeyDown(resetHeadPosition)) { Varjo.VarjoPlugin.ResetPose(true, Varjo.VarjoPlugin.ResetRotation.ALL); }
         if (Input.GetKeyDown(calibrateGaze)) { Varjo.VarjoPlugin.RequestGazeCalibration(); }
-        if (Input.GetKeyDown(myPermission)) 
-        {
-            if (!addedTargets)
-            {
-                Varjo.VarjoPlugin.RequestGazeCalibration();
-
-                cross.SetActive(false);
-
-                GetComponent<MySceneLoader>().AddTargetScene();
-                addedTargets = true;
-                instructions.text = "Look at the targets above!";
-            }
-            else{  mySceneLoader.LoadNextScene(); }
+        if (Input.GetKeyDown(myPermission)) { mySceneLoader.LoadNextScene(); }
+        if (Varjo.VarjoPlugin.IsGazeCalibrated() && !addedTargets) { 
+            GetComponent<MySceneLoader>().AddTargetScene(); 
+            addedTargets = true; cross.SetActive(false);
+            instructions.text = "Look at the targets above!";
         }
-        if ((userInput || Input.GetKeyDown(spawnSteeringWheel)) && !addedTargets ) { CalibrateHands(); }
+        if ((userInput && !addedTargets ) || Input.GetKeyDown(spawnSteeringWheel))  { CalibrateHands(); }
     }
     void CalibrateHands()
     {
@@ -114,9 +106,10 @@ public class CalibrationManager : MonoBehaviour
     }
     private bool UserInput()
     {
-        if (Input.GetAxis(experimentInput.ParticpantInputAxisLeft) != 1 && Input.GetAxis(experimentInput.ParticpantInputAxisRight) != 1) { lastUserInput = false; return false; }
-        else if ((Input.GetAxis(experimentInput.ParticpantInputAxisLeft) == 1 || Input.GetAxis(experimentInput.ParticpantInputAxisRight) == 1) && lastUserInput) { lastUserInput = true; return false; }
-        else { return true; }
+        bool input = (Input.GetAxis(experimentInput.ParticpantInputAxisLeft) == 1 || Input.GetAxis(experimentInput.ParticpantInputAxisRight) == 1);
+        if (!input) {  lastUserInput = false; return false; }
+        else if (input && lastUserInput) {  lastUserInput = true; return false; }
+        else { lastUserInput = true; return true; }
     }
 
     void GetVariablesFromSceneManager()
@@ -131,8 +124,8 @@ public class CalibrationManager : MonoBehaviour
         
         resetExperiment = experimentInput.resetExperiment;
         
-        keyToggleDriving = experimentInput.keyToggleDriving;
-        keyToggleSymbology = experimentInput.keyToggleSymbology;
+        keyToggleDriving = experimentInput.toggleDriving;
+        keyToggleSymbology = experimentInput.toggleSymbology;
 
         setToLastWaypoint = experimentInput.setToLastWaypoint;
 

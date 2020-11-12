@@ -13,9 +13,12 @@ public class ExperimentManager : MonoBehaviour
     public bool automateSpeed;
     public bool saveData;
     public Color navigationColor;
-    public MyCameraType camType;
-    public List<ExperimentSetting> experiments;
     private MySceneLoader mySceneLoader;
+
+    [HideInInspector]
+    public MyCameraType camType;
+
+    [HideInInspector]
     public ExperimentInput experimentInput;
 
     [Header("Inputs")]
@@ -130,8 +133,8 @@ public class ExperimentManager : MonoBehaviour
 
         resetExperiment = experimentInput.resetExperiment;
 
-        keyToggleDriving = experimentInput.keyToggleDriving;
-        keyToggleSymbology = experimentInput.keyToggleSymbology;
+        keyToggleDriving = experimentInput.toggleDriving;
+        keyToggleSymbology = experimentInput.toggleSymbology;
 
         setToLastWaypoint = experimentInput.setToLastWaypoint;
 
@@ -159,7 +162,7 @@ public class ExperimentManager : MonoBehaviour
         if (car.GetComponent<SpeedController>().IsDriving() && userInput) { ProcessUserInputTargetDetection(); }
 
         //First input will be the start driving command (so if not already driving we will start driving)
-        else if (!car.GetComponent<SpeedController>().IsDriving() && userInput && automateSpeed) { car.GetComponent<SpeedController>().StartDriving(true); userInputTimeOut = Time.time; }
+        else if (!car.GetComponent<SpeedController>().IsDriving() && userInput && automateSpeed) { car.GetComponent<SpeedController>().StartDriving(true);}
 
         //Researcher inputs
         if (Input.GetKeyDown(keyToggleSymbology)) { ToggleSymbology(); }
@@ -460,12 +463,14 @@ public class ExperimentManager : MonoBehaviour
         int numberOfRandomRayHits = 5;
         foreach (Target target in activeNavigationHelper.GetActiveTargets())
         {
+            if (PassedTarget(target)) { target.SetVisible(false); continue; }
             //If we didnt set start v isibility timer yet 
             if (target.startTimeVisible == target.defaultVisibilityTime)
             {
                 if (TargetIsVisible(target, numberOfRandomRayHits))
                 {
                     Debug.Log($"Target {target.GetID()} became visible at {activeExperiment.experimentTime}s ...");
+                    target.SetVisible(false);
                     target.startTimeVisible = activeExperiment.experimentTime;
                 }
             }
@@ -478,11 +483,11 @@ public class ExperimentManager : MonoBehaviour
     }
     private bool UserInput()
     {
-        if (userInputTimeOut + 0.5f > Time.time) { lastUserInput = false; return false; }
-        //only sends true if last input wasnt already true. (if you hold the steerig button it will continuesly output a value for input.getaxis()....
-        if (Input.GetAxis(experimentInput.ParticpantInputAxisLeft) != 1 && Input.GetAxis(experimentInput.ParticpantInputAxisRight) != 1) { lastUserInput = false; return false; }
-        else if ((Input.GetAxis(experimentInput.ParticpantInputAxisLeft) == 1 || Input.GetAxis(experimentInput.ParticpantInputAxisRight) == 1) && lastUserInput) { lastUserInput = true;  return false; }
-        else { return true; }
+        bool input = (Input.GetAxis(experimentInput.ParticpantInputAxisLeft) == 1 || Input.GetAxis(experimentInput.ParticpantInputAxisRight) == 1);
+
+        if (!input) { lastUserInput = false; return false; }
+        else if (input && lastUserInput) { lastUserInput = true; return false; }
+        else { lastUserInput = true; return true; }
     }
     private void ActivateMirrorCameras()
     {

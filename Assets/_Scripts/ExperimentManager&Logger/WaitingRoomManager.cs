@@ -86,8 +86,8 @@ public class WaitingRoomManager : MonoBehaviour
 
         resetExperiment = experimentInput.resetExperiment;
 
-        keyToggleDriving = experimentInput.keyToggleDriving;
-        keyToggleSymbology = experimentInput.keyToggleSymbology;
+        keyToggleDriving = experimentInput.toggleDriving;
+        keyToggleSymbology = experimentInput.toggleSymbology;
 
         setToLastWaypoint = experimentInput.setToLastWaypoint;
 

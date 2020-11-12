@@ -288,7 +288,7 @@ namespace Varjo
 
             // TODO: framebuffer dimensions can change per frame.
 
-            Debug.Log(string.Format("Creating render target: {0}x{1}", texDesc.width, texDesc.height));
+            //Debug.Log(string.Format("Creating render target: {0}x{1}", texDesc.width, texDesc.height));
             int msaaSamples = 1;
             switch (antiAliasing)
             {

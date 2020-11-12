@@ -6,7 +6,6 @@ public class MySceneLoader : MonoBehaviour
 {
     public GameObject player;
     private ExperimentInput experimentInput;
-    
 
     public Transform startingPosition;
     private bool loading=false;
@@ -26,6 +25,9 @@ public class MySceneLoader : MonoBehaviour
         
         if (startingPosition == null) { return; }
         StartCoroutine(MovePlayerToDestination());
+
+
+        //SceneManager.LoadSceneAsync("newBuildings", LoadSceneMode.Additive);
     }
 
     IEnumerator MovePlayerToDestination()
@@ -45,10 +47,14 @@ public class MySceneLoader : MonoBehaviour
 
         //if (experimentInput.camType == MyCameraType.Leap) { Varjo.VarjoPlugin.ResetPose(true, Varjo.VarjoPlugin.ResetRotation.ALL); }
 
-        blackOutScreen.CrossFadeAlpha(0, experimentInput.animationTime*2, true);
+        blackOutScreen.CrossFadeAlpha(0, experimentInput.animationTime*3, true);
         Debug.Log("Moved player!");
     }
 
+    public void LoadCalibrationScene()
+    {
+        if (!loading) { StartCoroutine(LoadYourAsyncScene(experimentInput.calibrationScene)); }
+    }
     public void LoadNextScene()
     {
         if (!loading && experimentInput.IsNextScene()) { StartCoroutine(LoadYourAsyncScene(experimentInput.GetNextScene()));  }

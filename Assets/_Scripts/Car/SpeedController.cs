@@ -18,7 +18,7 @@ public class SpeedController : MonoBehaviour
     public float brakeIncrement = 0.005f;
     public float throttleIncrement = 0.002f;
     public float maxThrottle = 0.6f;
-    public float maxBrake = 0.3f;
+    public float maxBrake = 0.1f;
 
     public float brakeSpeedMargin = 2f;
     public float letGoBrakeSpeed = 2f;
@@ -87,15 +87,15 @@ public class SpeedController : MonoBehaviour
         }
         else if (OnCornerApproach())
         {
-
             setSpeed = speedLimitCorner;
 
             //Let go gas fastm
             if (carRB.velocity.magnitude > setSpeed) { ToggleGas(false, 0.05f); }
             else { ToggleGas(true, throttleIncrement); }
 
+            float distanceToCorner = Vector3.Magnitude(targetWaypoint.transform.position - transform.position);
             //Brake to get down to desired speed
-            if (carInput.externalThrottle == 0) { BrakeForCorner(brakeIncrement, speedLimitCorner, carRB, carInput); }
+            if (carInput.externalThrottle == 0 && distanceToCorner < cornerBrakingDistance) { BrakeForCorner(brakeIncrement, speedLimitCorner, carRB, carInput); }
 
             //Debug.Log($"Aproaching corner {carRB.velocity.magnitude}, braking with {carInput.externalBrake} * {carController.brakes.maxBrakeTorque}...");
 
@@ -138,7 +138,7 @@ public class SpeedController : MonoBehaviour
     }
     void BrakeForCorner(float increment, float desiredSpeed, Rigidbody car, VehiclePhysics.VPStandardInput carInput)
     {
-        return;
+        
         float sign;
         if (car.velocity.magnitude > (desiredSpeed + brakeSpeedMargin)) { sign = 1; }
         else { sign = -1 * letGoBrakeSpeed; }

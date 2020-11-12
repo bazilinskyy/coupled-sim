@@ -26,12 +26,12 @@ public class ExperimentInput : MonoBehaviour
     public KeyCode calibrateGaze = KeyCode.F4;
     public KeyCode resetExperiment = KeyCode.Escape;
 
-    public KeyCode keyToggleDriving = KeyCode.Space;
+    public KeyCode toggleDriving = KeyCode.D;
 
-    public KeyCode keyToggleSymbology = KeyCode.Tab;
+    public KeyCode toggleSymbology = KeyCode.Tab;
 
-    public KeyCode setToLastWaypoint = KeyCode.R;
-    public KeyCode inputNameKey = KeyCode.Y;
+    public KeyCode setToLastWaypoint = KeyCode.Backspace;
+    public KeyCode inputNameKey = KeyCode.I;
 
     public KeyCode saveTheData = KeyCode.F7;
 
@@ -52,9 +52,9 @@ public class ExperimentInput : MonoBehaviour
     public string SteerWithKeyboard = "SteerKeyBoard";
     public string BrakeWithKeyboard = "BrakeKeyBoard";
 
-    public string Gas = "Gas";
+    public string Gas = "GasKeyBoardas";
     public string Steer = "Steer";
-    public string Brake = "Brake";
+    public string Brake = "BrakeKeyBoard";
 
     public string[] sceneArray;
     public int sceneIndex = 0;

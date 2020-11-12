@@ -32,4 +32,6 @@ public class SetFPSScript : MonoBehaviour
     {
         fps.text = "FPS: " + m_lastFramerate.ToString();
     }
+
+    
 }
