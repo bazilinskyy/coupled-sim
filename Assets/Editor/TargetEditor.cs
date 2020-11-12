@@ -19,6 +19,10 @@ public class TargetEditor : Editor
     SerializedProperty side;
     SerializedProperty difficultPosition;
 
+    SerializedProperty passed;
+    SerializedProperty isVisible;
+
+
     private Target _target;
 
 
@@ -36,6 +40,9 @@ public class TargetEditor : Editor
         afterTurn = serializedObject.FindProperty("afterTurn");
         side = serializedObject.FindProperty("side");
         difficultPosition = serializedObject.FindProperty("difficultPosition");
+
+        passed = serializedObject.FindProperty("passed");
+        isVisible = serializedObject.FindProperty("isVisible");
     }
 
 
@@ -50,6 +57,9 @@ public class TargetEditor : Editor
         EditorGUILayout.PropertyField(afterTurn);
         EditorGUILayout.PropertyField(side);
         EditorGUILayout.PropertyField(difficultPosition);
+
+        EditorGUILayout.PropertyField(passed);
+        EditorGUILayout.PropertyField(isVisible);
 
         //Uncomment if you want to set these to different materials
         /* EditorGUILayout.PropertyField(easy);

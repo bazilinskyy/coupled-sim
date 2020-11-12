@@ -176,10 +176,10 @@ public class CalibrationManager : MonoBehaviour
             foreach (Target target in visibleTargets)
             {
                 //(1)
-                if (target.fixationTime > mostRecentTime)
+                if (target.firstFixationTime > mostRecentTime)
                 {
                     targetChosen = target;
-                    mostRecentTime = target.fixationTime;
+                    mostRecentTime = target.firstFixationTime;
                 }
                 //(2) Stops this when mostRecentTime variables gets set to something else then 0
                 currentDistance = Vector3.Distance(CameraTransform().position, target.transform.position);

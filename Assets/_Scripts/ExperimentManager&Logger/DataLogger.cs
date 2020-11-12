@@ -185,7 +185,7 @@ public class DataLogger : MonoBehaviour
     private void SaveTargetDetectionData()
     {
         Debug.Log("Saving alarms...");
-        string[] columns = { "Time", "Frame", "AlarmType", "ReactionTime", "TargetID", "TargetDifficulty"};
+        string[] columns = { "Time", "Frame", "AlarmType", "ReactionTime", "TargetID", "TargetDifficulty", "totalfixationTime", "FirstFixationTime", "DetectionTime"};
         string[] logData = new string[columns.Length];
         string filePath = string.Join("/", saveFolder, targetDetectionDataFileName);
         
@@ -200,7 +200,11 @@ public class DataLogger : MonoBehaviour
                 logData[2] = alarm.alarmType.ToString();
                 logData[3] = alarm.reactionTime.ToString(specifier,culture);
                 logData[4] = alarm.targetID;
+                
                 logData[5] = alarm.targetDifficulty.ToString();
+                logData[6] = alarm.totalFixationTime.ToString(specifier,culture);
+                logData[7] = alarm.firstFixationTime.ToString(specifier, culture);
+                logData[8] = alarm.detectionTime.ToString(specifier, culture);
 
                 Log(logData, file);
 
@@ -234,7 +238,7 @@ public class DataLogger : MonoBehaviour
     private void SaveTargetInfoData()
     {
         Debug.Log("Saving target info...");
-        string[] columns = { "ID", "Detected", "ReactionTime", "FixationTime", "Difficulty","Side","AfterTurn", "DifficultPosition","waypointOperation","Position" };
+        string[] columns = { "ID", "Detected", "ReactionTime", "FixationTime", "FirstFixationTime", "DetectionTime", "Difficulty","Side","AfterTurn", "DifficultPosition","waypointOperation","Position" };
         string[] logData = new string[columns.Length];
         string filePath = string.Join("/", saveFolder, generalTargetInfo);
         
@@ -247,15 +251,18 @@ public class DataLogger : MonoBehaviour
             foreach(Target target in targets)
             {
                 logData[0] = target.GetID();
-                logData[1] = target.detected.ToString();
+                logData[1] = target.IsDetected().ToString();
                 logData[2] = target.reactionTime.ToString(specifier,culture);
                 logData[3] = target.totalFixationTime.ToString(specifier,culture);
-                logData[4] = target.difficulty.ToString();
-                logData[5] = target.side.ToString();
-                logData[6] = target.afterTurn.ToString();
-                logData[7] = target.difficultPosition.ToString();
-                logData[8] = target.waypoint.operation.ToString();
-                logData[9] = target.transform.position.ToString("F3");
+                logData[4] = target.firstFixationTime.ToString(specifier,culture);
+                logData[5] = target.detectionTime.ToString(specifier, culture);
+                logData[6] = target.difficulty.ToString();
+                logData[7] = target.side.ToString();
+                logData[8] = target.afterTurn.ToString();
+                logData[9] = target.difficultPosition.ToString();
+                logData[10] = target.waypoint.operation.ToString();
+                logData[11] = target.transform.position.ToString("F3");
+                
                 Log(logData, file);
             }
             file.Flush();
@@ -502,12 +509,18 @@ public class TargetAlarm
     public float reactionTime;
     public string targetID;
     public string targetDifficulty;
+    public float detectionTime;
+    public float firstFixationTime;
+    public float totalFixationTime;
 
     public TargetAlarm()
     {
         targetID = "-";
         reactionTime = 0f;
         targetDifficulty = "-";
+        detectionTime = 0f;
+        totalFixationTime = 0f;
+        firstFixationTime = 0f;
     }
 }
 

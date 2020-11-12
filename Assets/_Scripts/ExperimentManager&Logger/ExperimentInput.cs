@@ -14,6 +14,7 @@ public class ExperimentInput : MonoBehaviour
     public bool saveData = true;
     public float animationTime = 2.5f;
 
+    public float FoVCamera = 87;
     public bool calibratedUsingHands = false;
     public float driverViewHorizontalDistance = 0f;
     public float driverViewVerticalDistance = 0f;

@@ -39,8 +39,7 @@ public class Waypoint : MonoBehaviour
                 targetList.Add(target);
             }
         }
-        List<Target> orderedTargetList = targetList.OrderBy(d => d.gameObject.name).ToList();
-        return orderedTargetList;
+        return targetList;
     }
     private void SetMeshRendererNavigationParts(bool renderMe)
     {
@@ -55,7 +54,7 @@ public class Waypoint : MonoBehaviour
     {
         foreach (Target target in GetTargets())
         {
-            if (!target.detected) { target.GetComponent<MeshRenderer>().enabled = enabled; }
+            if (!target.IsDetected()) { target.GetComponent<MeshRenderer>().enabled = enabled; }
         }
     }
     public void RenderMe(bool _renderMe)

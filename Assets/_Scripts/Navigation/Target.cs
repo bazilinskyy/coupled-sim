@@ -21,14 +21,19 @@ public class Target : MonoBehaviour
     [HideInInspector]
     public float totalFixationTime = 0f;
     [HideInInspector]
-    public float fixationTime = 0f;
+    public float firstFixationTime = 0f;
+    public float lastFixationTime = 0f;
+    [HideInInspector]
+    public float detectionTime = 0f;
+
     //Time at which this target was visible
     public float defaultVisibilityTime = -1f;
     public float startTimeVisible = -1f;
     public bool afterTurn = false;
     public Side side;
     public bool difficultPosition;
-    public bool isVisible = false;
+    public bool isVisible = false; //visible is set when we first see the target (gets unset when we pass it with the car, or when we detect it)
+    public bool passed = false;
     public string GetID()
     {
         if (waypoint != null) { return waypoint.name.Last() + "-" + gameObject.name.Last(); }
@@ -40,6 +45,17 @@ public class Target : MonoBehaviour
         ResetTarget();
     }
 
+    public void Passed()
+    {
+        isVisible = false; passed = true;
+        GetComponent<MeshRenderer>().enabled = false;
+        GetComponent<SphereCollider>().enabled = false;
+    }
+
+    public bool IsPassed()
+    {
+        return passed;
+    }
     private void OnDrawGizmos()
     {
         if (transform.hasChanged)
@@ -60,7 +76,9 @@ public class Target : MonoBehaviour
     }
     public void OnHit()
     {
-        if (!detected) { totalFixationTime += Time.deltaTime; fixationTime = Time.time; }
+        //Record time of first fixation
+        if(firstFixationTime == 0f) { firstFixationTime = Time.time; }
+        if (!detected) { totalFixationTime += Time.deltaTime; lastFixationTime = Time.time;  }
     }
     public void SetDifficulty( TargetDifficulty _difficulty)
     {
@@ -82,12 +100,13 @@ public class Target : MonoBehaviour
         return difficulty;
     }
 
-    public void SetDetected(float detectionTime)
+    public void SetDetected(float _detectionTime)
     {
 
         detected = true;
-        
-        reactionTime = detectionTime - startTimeVisible;
+        isVisible = false;
+        reactionTime = _detectionTime - startTimeVisible;
+        detectionTime = _detectionTime;
         GetComponent<MeshRenderer>().enabled = false;
         GetComponent<SphereCollider>().enabled = false;
 
@@ -105,7 +124,7 @@ public class Target : MonoBehaviour
         startTimeVisible = defaultVisibilityTime;
         reactionTime = 0f;
         totalFixationTime = 0f;
-        fixationTime = 0f;
+        firstFixationTime = 0f;
     }
     public bool IsDetected()
     {

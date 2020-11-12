@@ -43,13 +43,16 @@ public class MyGazeLogger : MonoBehaviour
     //Looking at what exactly?
     public Fixation fixationData;
     private LoggedTags fixatingOn = LoggedTags.World;
-    private void Awake()
+    private void Start()
     {
         StartUpFunction();
     }
     void StartUpFunction()
     {
-        //if (!experimentManager.experimentInput.saveData || experimentManager.experimentInput.camType == MyCameraType.Normal) { GetComponent<MyGazeLogger>().enabled = false; return; }
+        experimentManager = GetComponent<ExperimentManager>();
+        if (experimentManager == null) { GetComponent<MyGazeLogger>().enabled = false; return; }
+
+        if (!experimentManager.experimentInput.saveData || experimentManager.experimentInput.camType == MyCameraType.Normal) { GetComponent<MyGazeLogger>().enabled = false; return; }
         // InitGaze must be called before using or calibrating gaze tracking.
         if (!VarjoPlugin.InitGaze())
         {

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using System.Linq;
 
 [RequireComponent(typeof(DataLogger))]
 public class ExperimentManager : MonoBehaviour
@@ -14,6 +15,9 @@ public class ExperimentManager : MonoBehaviour
     public bool saveData;
     public Color navigationColor;
     private MySceneLoader mySceneLoader;
+
+    public List<Target> targetList;
+    public float FoVCamera;
 
     [HideInInspector]
     public MyCameraType camType;
@@ -147,22 +151,25 @@ public class ExperimentManager : MonoBehaviour
         Gas = experimentInput.Gas;
         Steer = experimentInput.Steer;
         Brake = experimentInput.Brake;
+        FoVCamera = experimentInput.FoVCamera;
 }
     void Update()
     {
         activeExperiment.experimentTime += Time.deltaTime;
         bool userInput = UserInput();
         //Looks for targets to appear in field of view and sets their visibility timer accordingly
-        SetTargetVisibilityTime();
+        SetTargetVisibility();
 
         //When I am doing some TESTING
         if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W)) { car.GetComponent<SpeedController>().StartDriving(true); }
+        if (Input.GetKeyDown(KeyCode.Space)){ car.GetComponent<SpeedController>().ToggleDriving(); }
+
 
         //Target detection when we already started driving
         if (car.GetComponent<SpeedController>().IsDriving() && userInput) { ProcessUserInputTargetDetection(); }
 
         //First input will be the start driving command (so if not already driving we will start driving)
-        else if (!car.GetComponent<SpeedController>().IsDriving() && userInput && automateSpeed) { car.GetComponent<SpeedController>().StartDriving(true);}
+        else if (!car.GetComponent<SpeedController>().IsDriving() && userInput && automateSpeed) { car.GetComponent<SpeedController>().StartDriving(true); }
 
         //Researcher inputs
         if (Input.GetKeyDown(keyToggleSymbology)) { ToggleSymbology(); }
@@ -321,22 +328,12 @@ public class ExperimentManager : MonoBehaviour
         //if there is a target visible which has not already been detected
         List<Target> targetList = activeNavigationHelper.GetActiveTargets();
         List<Target> visibleTargets = new List<Target>();
-        int targetCount = 0;
-
+       
         //Check if there are any visible targets
-        foreach (Target target in targetList)
-        {
-            if (target.HasBeenLookedAt()) { visibleTargets.Add(target); }
-            else if (TargetIsVisible(target, maxNumberOfRandomRayHits))
-            {
-                visibleTargets.Add(target);
-                targetCount++;
-                Debug.Log($"{target.GetID()} visible...");
-            }
-        }
+        foreach (Target target in targetList){ if (target.IsVisible()) { visibleTargets.Add(target); }}
 
-        if (targetCount == 0) { dataManager.AddFalseAlarm(); }
-        else if (targetCount == 1) { dataManager.AddTrueAlarm(visibleTargets[0]); visibleTargets[0].SetDetected(activeExperiment.experimentTime); }
+        if (visibleTargets.Count() == 0) { dataManager.AddFalseAlarm(); }
+        else if (visibleTargets.Count() == 1) { dataManager.AddTrueAlarm(visibleTargets[0]); visibleTargets[0].SetDetected(activeExperiment.experimentTime); }
         else
         {
             //When multiple targets are visible we base our decision on:
@@ -350,10 +347,10 @@ public class ExperimentManager : MonoBehaviour
             foreach (Target target in visibleTargets)
             {
                 //(1)
-                if (target.fixationTime > mostRecentTime)
+                if (target.lastFixationTime > mostRecentTime)
                 {
                     targetChosen = target;
-                    mostRecentTime = target.fixationTime;
+                    mostRecentTime = target.lastFixationTime;
                 }
                 //(2) Stops this when mostRecentTime variables gets set to something else then 0
                 currentDistance = Vector3.Distance(CameraTransform().position, target.transform.position);
@@ -418,62 +415,71 @@ public class ExperimentManager : MonoBehaviour
         // Where normal vector = <A,B,Z>
         // pos = the cars position (x,y,z,)
         // a point on the plane Q= (a,b,c) i.e., target position
+        //(2) And we are close to the target ~~ within 35 meters
 
-        float sign = Vector3.Dot(CameraTransform().forward, (CameraTransform().position - target.transform.position));
-        if (sign >= 0) { return true; }
+        if(Vector3.Magnitude(car.transform.position - target.transform.position) > 35) { return false; }
+
+        Vector3 backOfCar = car.transform.position - 2 * car.transform.forward;
+        float sign = Vector3.Dot(car.transform.forward, (backOfCar - target.transform.position));
+        if (sign >= 0) { Debug.Log($"Passed Target {target.GetID()}..."); return true; }
         else { return false; }
     }
     bool TargetIsVisible(Target target, int maxNumberOfRayHits)
     {
         //We will cast rays to the outer edges of the sphere (the edges are determined based on how we are looking towards the sphere)
         //I.e., with the perpendicular vector to the looking direction of the sphere
+        
+        Vector3 vectorToTarget = target.transform.position - CameraTransform().position;
+        //(1) Not in sight of camera
+        float angle = Mathf.Abs(Vector3.Angle(CameraTransform().forward, vectorToTarget));
+        if(angle > FoVCamera ) { return false; }
 
-        bool isVisible = false;
-        Vector3 direction = target.transform.position - CameraTransform().position;
-        Vector3 currentDirection;
-        RaycastHit hit;
+        //(2) If in sight we check if it is not occluded by buildings and such
+        bool isVisible = false;  Vector3 currentDirection;  RaycastHit hit;
         float targetRadius = target.GetComponent<SphereCollider>().radius;
 
-        //If in front of camera we do raycast
-        if (!PassedTarget(target))
+        //Vary the location of the raycast over the edge of the potentially visible target
+        for (int i = 0; i < maxNumberOfRayHits; i++)
         {
-            //Vary the location of the raycast over the edge of the potentially visible target
-            for (int i = 0; i < maxNumberOfRayHits; i++)
-            {
-                Vector3 randomPerpendicularDirection = GetRandomPerpendicularVector(direction);
-                currentDirection = (target.transform.position + randomPerpendicularDirection * targetRadius) - CameraTransform().position;
+            Vector3 randomPerpendicularDirection = GetRandomPerpendicularVector(vectorToTarget);
+            currentDirection = (target.transform.position + randomPerpendicularDirection * targetRadius) - CameraTransform().position;
 
-                if (Physics.Raycast(CameraTransform().position, currentDirection, out hit, 10000f, ~layerToIgnoreForTargetDetection))
+            if (Physics.Raycast(CameraTransform().position, currentDirection, out hit, 10000f, ~layerToIgnoreForTargetDetection))
+            {
+                Debug.DrawRay(CameraTransform().position, currentDirection, Color.green);
+                if (hit.collider.gameObject.tag == "Target")
                 {
-                    Debug.DrawRay(CameraTransform().position, currentDirection, Color.green);
-                    if (hit.collider.gameObject.tag == "Target")
-                    {
-                        Debug.DrawLine(CameraTransform().position, CameraTransform().position + currentDirection * 500, Color.cyan, Time.deltaTime, false);
-                        isVisible = true;
-                        break;
-                    }
+                    Debug.DrawLine(CameraTransform().position, CameraTransform().position + currentDirection * 500, Color.cyan, Time.deltaTime, false);
+                    isVisible = true;
+                    break;
                 }
             }
         }
+        
         return isVisible;
     }
-    void SetTargetVisibilityTime()
+    void SetTargetVisibility()
     {
         //Number of ray hits to be used. We user a smaller amount than when the user actually presses the detection button. Since this function is called many times in Update() 
         int numberOfRandomRayHits = 5;
+        targetList = activeNavigationHelper.GetActiveTargets();
+
         foreach (Target target in activeNavigationHelper.GetActiveTargets())
         {
-            if (PassedTarget(target)) { target.SetVisible(false); continue; }
-            //If we didnt set start v isibility timer yet 
+            //If we havent seen the target before (startTimeVIsibile ==0) we check if its visible at this moment
             if (target.startTimeVisible == target.defaultVisibilityTime)
             {
                 if (TargetIsVisible(target, numberOfRandomRayHits))
                 {
                     Debug.Log($"Target {target.GetID()} became visible at {activeExperiment.experimentTime}s ...");
-                    target.SetVisible(false);
+                    target.SetVisible(true);
                     target.startTimeVisible = activeExperiment.experimentTime;
                 }
+                
             }
+
+            //Check if we are passing the target
+            else if (PassedTarget(target)) { target.Passed(); }
         }
     }
     void SetCameraPosition(Vector3 goalPos, Quaternion goalRot)
