@@ -18,6 +18,7 @@ enum MsgId
 
     S_VisualSync = 123,
     S_LoadScene = 456,
+    S_EndGame = 789,
 
     B_Ping = 500,
 
@@ -60,6 +61,12 @@ public struct VisualSyncMessage : INetMessage
 public struct LoadSceneMessage : INetMessage
 {
     public int MessageId => (int)MsgId.S_LoadScene;
+    public void Sync<T>(T synchronizer) where T : ISynchronizer { }
+}
+
+public struct EndGameMessage : INetMessage
+{
+    public int MessageId => (int)MsgId.S_EndGame;
     public void Sync<T>(T synchronizer) where T : ISynchronizer { }
 }
 

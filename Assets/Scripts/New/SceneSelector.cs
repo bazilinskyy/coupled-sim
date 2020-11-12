@@ -26,17 +26,6 @@ public class SceneSelector : MonoBehaviour
     [SerializeField]
     Mapping _Mapping;
 
-    private void Update()
-    {
-        // If the Host(AV) hits the NextLvl trigger, the client (pedestrian) should switch scenes too
-        /*if (useManualSelection == false && PersistentManager.Instance.client_nextScene == 1 && SteamVR.instance.hmd_SerialNumber == "LHR-85C3EF8C")
-        {
-            PersistentManager.Instance.client_nextScene = 0;
-            Invoke("nextExperiment", 4);
-        }*/
-    }
-
-
     private void Awake()
     {
         PersistentManager.Instance.nextScene = false;
@@ -59,14 +48,31 @@ public class SceneSelector : MonoBehaviour
 
     void OnTriggerEnter(Collider other)
     {
+        Debug.LogError($"listnr = {PersistentManager.Instance.listNr}/{PersistentManager.Instance.ExpOrder.Count - 1}; thus if statement = {PersistentManager.Instance.listNr >= PersistentManager.Instance.ExpOrder.Count-1}" );
+        Debug.LogError($"sendEndGameToCLient in sceneselector = {PersistentManager.Instance.SendEndGameToClient}");
         if (other.transform.tag == "NEXT")
         {
-            if (useManualSelection == false)
+            if (PersistentManager.Instance.ClientClosed == true && PersistentManager.Instance.listNr >= PersistentManager.Instance.ExpOrder.Count-1)
+            {
+                //Application.Quit(); // build version
+                UnityEditor.EditorApplication.isPlaying = false; // editor version
+                Debug.LogError("entered STOP UNITY");
+            }
+            else if (PersistentManager.Instance.listNr >= PersistentManager.Instance.ExpOrder.Count-1)
+            {
+                PersistentManager.Instance.SendEndGameToClient = true; // value doesn't change in host. WHY?
+                Debug.LogError($"Entered send end game to client, value = {PersistentManager.Instance.SendEndGameToClient}");
+            }
+            else if (useManualSelection == false)
             {
                 PersistentManager.Instance.client_nextScene = 1;
 
-                Invoke("nextExperiment", 4);
-
+                if(PersistentManager.Instance.SendEndGameToClient == false)
+                {
+                    Invoke("nextExperiment", 4);
+                    Debug.LogError("Go to next scene");
+                }
+                
                 PersistentManager.Instance.stopLogging = true;
                 PersistentManager.Instance.nextScene = true;
 
@@ -77,12 +83,10 @@ public class SceneSelector : MonoBehaviour
                     PersistentManager.Instance.experimentnr = PersistentManager.Instance.ExpOrder[PersistentManager.Instance.listNr];
                     Debug.LogError($"persistent experiment nr = {PersistentManager.Instance.experimentnr}");
                 }
-                else
+                /*else if(SteamVR.instance.hmd_SerialNumber == "LHR-7863A1E8")
                 {
-                    //Application.Quit(); // build version
-                    //UnityEditor.EditorApplication.isPlaying = false; // editor version
-                    Debug.LogError("entered STOP UNITY");
-                }
+                    SendEndGameToClient = true;
+                }*/
             }
             else if (useManualSelection == true)
             {
@@ -166,7 +170,6 @@ public class SceneSelector : MonoBehaviour
         // Randomize Mapping 1, exp 4-7
         List<int> Block_two = shuffledList(4, 7, 4);
 
-
         // Randomize Mapping 2, exp 8-11
         List<int> Block_three = shuffledList(8, 11, 4);
 
@@ -207,7 +210,7 @@ public class SceneSelector : MonoBehaviour
         else if (_Mapping == Mapping.Mapping1)
         {
             // Randomize Mapping 1, exp 4-7
-            Block = shuffledList(4, 7, 4);
+            Block = shuffledList(5, 6, 1); //shuffledList(4, 7, 1);
         }
         else if (_Mapping == Mapping.Mapping2)
         {

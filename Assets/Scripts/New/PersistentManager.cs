@@ -23,6 +23,9 @@ public class PersistentManager : MonoBehaviour
     public bool clientConnectedToHost;
     public int client_nextScene;
 
+    public bool ClientClosed;
+    public bool SendEndGameToClient;
+
     private void Awake()
     {
         if (Instance == null)

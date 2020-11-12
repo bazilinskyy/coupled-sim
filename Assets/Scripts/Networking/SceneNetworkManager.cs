@@ -15,9 +15,20 @@ public class SceneNetworkManager : MonoBehaviour
         PersistentManager.Instance.nextScene = true;
     }
 
+    public void SendEndGameMessage(Host host)
+    {
+        host.BroadcastMessage(new EndGameMessage());
+    }
+
     // Action to be taken by Client
     public void ClientLoadScene()
     {
         SceneManager.LoadSceneAsync("StartScene");
+    }
+
+    public void ClientEndGame()
+    {
+        //Application.Quit(); // build version
+        UnityEditor.EditorApplication.isPlaying = false; // editor version
     }
 }

@@ -51,6 +51,7 @@ public class Client : NetworkSystem
         _msgDispatcher.AddStaticHandler((int)MsgId.S_AllReady, OnAllReady);
         _msgDispatcher.AddStaticHandler((int)MsgId.S_VisualSync, OnCustomMessage);
         _msgDispatcher.AddStaticHandler((int)MsgId.S_LoadScene, OnLoadMessage);
+        _msgDispatcher.AddStaticHandler((int)MsgId.S_EndGame, OnEndMessage);
         _msgDispatcher.AddStaticHandler((int)MsgId.B_Ping, HandlePing);
         _hmiManager.InitClient(_client, _msgDispatcher);
         aiCarSystem.InitClient(_msgDispatcher);
@@ -70,8 +71,13 @@ public class Client : NetworkSystem
     // Callback for scene loading message
     private void OnLoadMessage(ISynchronizer sync, int srcPlayerId)
     {
-        Debug.LogError("received message from Host");
         _sceneNetworkManager.ClientLoadScene();
+    }
+
+    // Callback for game ending message
+    private void OnEndMessage(ISynchronizer sync, int srcPlayerId)
+    {
+        _sceneNetworkManager.ClientEndGame();
     }
 
     //handles "all players ready" message - starts the simulation, logging etc.
@@ -208,7 +214,7 @@ public class Client : NetworkSystem
                 {
                         //_ip = GUILayout.TextField(_ip);   // Manual input
                         //_ip = "127.0.0.1";                //Connect to own pc 
-                        _ip = "169.254.7.83";//Connect to main pc: TUD1002063
+                        _ip = "169.254.92.216";//Connect to main pc: TUD1002063
                     IPAddress addr;
                     if (IPAddress.TryParse(_ip, out addr))
                     {

@@ -345,7 +345,12 @@ public class Host : NetworkSystem
                         _sceneNetworkManager.SendLoadMessage(this);
                         _SceneSelector.setSendLoadMsgToCLient();
                     }
-
+                    if(PersistentManager.Instance.SendEndGameToClient == true)
+                    {
+                        Debug.LogError("Host send message to end client game");
+                        _sceneNetworkManager.SendEndGameMessage(this);
+                        PersistentManager.Instance.ClientClosed = true;
+                    }
             }
             break;
         }
