@@ -65,6 +65,7 @@ public class MyGazeLogger : MonoBehaviour
     {
         // Do not run update if the application is not visible
         if (!VarjoManager.Instance.IsLayerVisible() || VarjoManager.Instance.IsInStandBy()) { return; }
+        
         if (Input.GetKeyDown(toggleLoggingKey))
         {
             if (!logging) { StartLogging(); }

@@ -29,7 +29,7 @@ public class ExperimentInput : MonoBehaviour
 
     public KeyCode toggleDriving = KeyCode.D;
 
-    public KeyCode toggleSymbology = KeyCode.Tab;
+    public KeyCode toggleSymbology = KeyCode.T;
 
     public KeyCode setToLastWaypoint = KeyCode.Backspace;
     public KeyCode inputNameKey = KeyCode.I;
