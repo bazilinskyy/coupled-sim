@@ -300,10 +300,10 @@ public class Host : NetworkSystem
                 GUI.enabled = true;
                     //GUILayout.Label("Experiment:");
                     // test: select experiment definition via sceneselector
-                    
+
                     // ERROR:
                     //GUILayout.Label($"Experiment: {_lvlManager.Experiments[_SceneSelector.sceneSelect].Name}"); //GUILayout.Label($"Experiment: {_lvlManager.Experiments[_SceneSelector.getSceneSelect()].Name}");
-                    _selectedExperiment = _SceneSelector.sceneSelect; //_SceneSelector.getSceneSelect();
+                    _selectedExperiment = PersistentManager.Instance.experimentnr; //_SceneSelector.sceneSelect; //_SceneSelector.getSceneSelect();
                     
                 /*for (int i = 0; i < _lvlManager.Experiments.Length; i++)
                 {
@@ -347,7 +347,6 @@ public class Host : NetworkSystem
                     }
                     if(PersistentManager.Instance.SendEndGameToClient == true)
                     {
-                        Debug.LogError("Host send message to end client game");
                         _sceneNetworkManager.SendEndGameMessage(this);
                         PersistentManager.Instance.ClientClosed = true;
                     }
