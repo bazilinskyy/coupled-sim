@@ -30,11 +30,11 @@ public class LightProbePlacer : MonoBehaviour
                 for(int x = 0; x < xCount; x++)
                 {
                     Vector3 checkPos = Vector3.zero;
-                    Vector3 probePos = new Vector3(x * probeOffset.x, z * layerHight, y * probeOffset.y);
+                    Vector3 probePos = new Vector3(x * probeOffset.x, z * layerHight + 0.30f, y * probeOffset.y);
                     checkPos = transform.parent.TransformPoint(probePos);
                     checkPos = new Vector3(checkPos.x, 1000, checkPos.z);
                     RaycastHit hit;
-
+                    /*
                     if (Physics.Raycast(checkPos, Vector3.down, out hit))
                     {                    
                         probePos = new Vector3(probePos.x, hit.point.y + (layerHight * z) , probePos.z);
@@ -48,7 +48,7 @@ public class LightProbePlacer : MonoBehaviour
                     {
                         probePos.y = z * layerHight;
                     }
-                    
+                    */
                     positions.Add(probePos);
                 }
             }
