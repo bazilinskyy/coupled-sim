@@ -18,10 +18,7 @@ public class SyncedGazeRay : MonoBehaviour
         gazeRayOrigin = gazeRayOrigin_t.position;
         gazeRayDirection = gazeRayDirection_t.position;
 
-        //GameObject go_Gaze = gameObject.transform.Find("Gaze").gameObject;
-
-
-        if (PersistentManager.Instance._visualizeGaze == true)
+        if (PersistentManager.Instance._visualizeGaze == true || PersistentManager.Instance._visualizeGaze_client == true)
         {
             //SyncLineDrawer_.DrawLineInGameView(go_Gaze, gazeRayOrigin, gazeRayOrigin + gazeRayDirection * 10.0f, Color.red, 0.04f, false);
             SyncLineDrawer_.DrawLineInGameView(go_Gaze, gazeRayOrigin, gazeRayDirection, Color.cyan, 0.07f, false);

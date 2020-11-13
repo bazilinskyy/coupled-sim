@@ -19,7 +19,7 @@ public class Network_remote_varjo : MonoBehaviour
     long CaptureTime_pe; double LeftEyePupilSize_pe; double RightEyePupilSize_pe;
 
     // Define data to network for NetworkObject_3
-    double FocusDistance_pe; double FocusStability_pe; int client_nextScene;
+    double FocusDistance_pe; double FocusStability_pe; int expnr;
 
     // Define data to network for NetworkObject_4
     Vector3 HmdPos_pe;
@@ -56,7 +56,7 @@ public class Network_remote_varjo : MonoBehaviour
             CaptureTime_pe = script.CaptureTime; LeftEyePupilSize_pe = script.LeftPupilSize; RightEyePupilSize_pe = script.RightPupilSize;
 
             // Get data for NetworkObject_3
-            FocusDistance_pe = script.FocusDistance; FocusStability_pe = script.FocusStability; //client_nextScene = PersistentManager.Instance.client_nextScene; // Last point was used to network the switch, now using messages instead
+            FocusDistance_pe = script.FocusDistance; FocusStability_pe = script.FocusStability; expnr = PersistentManager.Instance.experimentnr;
 
             // Get data for NetworkObject_4
             HmdPos_pe = script.hmdposition;
@@ -91,7 +91,7 @@ public class Network_remote_varjo : MonoBehaviour
             }
             if (gameObject.name == "NetworkObject_3" && SteamVR.instance.hmd_SerialNumber == hmdserial)  
             {
-                transform.position = new Vector3((float)FocusDistance_pe, (float)FocusStability_pe, 0); //client_nextScene);
+                transform.position = new Vector3((float)FocusDistance_pe, (float)FocusStability_pe, expnr); 
                 //Debug.LogError($"3 - foc dist = {(float)FocusDistance_pe} and foc stab = {(float)FocusStability_pe}");
                 //Debug.LogError($"3 - trans pos = {transform.position}");
             }
@@ -136,7 +136,7 @@ public class Network_remote_varjo : MonoBehaviour
         else if(script.getGazeStatus() == VarjoPlugin.GazeStatus.INVALID)
         {
             // Change gaze status to invalid
-            if (gameObject.name == "NetworkObject_1" && SteamVR.instance.hmd_SerialNumber == "LHR-7863A1E8") //LHR-7863A1E8 //LHR-85C3EF8C
+            if (gameObject.name == "NetworkObject_1" && SteamVR.instance.hmd_SerialNumber == hmdserial) //LHR-7863A1E8 //LHR-85C3EF8C
             {
                 transform.position = new Vector3(status_pe, 0, 0);
                 //Debug.LogError($"1.2 - status = {status_pe}");

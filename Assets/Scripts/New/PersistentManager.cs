@@ -12,6 +12,7 @@ public class PersistentManager : MonoBehaviour
     public int experimentnr;
     public bool _StopWithEyeGaze;
     public bool _visualizeGaze;
+    public bool _visualizeGaze_client;
 
     public List<int> ExpOrder;
     public bool createOrder = true;

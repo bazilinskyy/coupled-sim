@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 1744578683236520932}
   - component: {fileID: 6065002259583173124}
   - component: {fileID: 6517828284230680988}
+  - component: {fileID: 318725472337296383}
   m_Layer: 10
   m_Name: Participant_varjoV2
   m_TagString: Pedestrian
@@ -154,6 +155,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _speed: 2
   _rotateSpeed: 100
+--- !u!114 &318725472337296383
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1207130846115938}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ec7698e71e704174ab527f928b3dd298, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &579027949677450794
 GameObject:
   m_ObjectHideFlags: 0
@@ -354,6 +367,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   SyncGazePedestrian: {fileID: 4127890842416630236}
+  hmdserial: LHR-85C3EF8C
   status_pe: 0
 --- !u!1 &928915851510587853
 GameObject:
@@ -492,6 +506,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   SyncGazePedestrian: {fileID: 4127890842416630236}
+  hmdserial: LHR-85C3EF8C
   status_pe: 0
 --- !u!1 &2192917865236932308
 GameObject:
@@ -600,6 +615,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   SyncGazePedestrian: {fileID: 4127890842416630236}
+  hmdserial: LHR-85C3EF8C
   status_pe: 0
 --- !u!1 &2329254223929085668
 GameObject:
@@ -708,6 +724,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   SyncGazePedestrian: {fileID: 4127890842416630236}
+  hmdserial: LHR-85C3EF8C
   status_pe: 0
 --- !u!1 &2346896275953501547
 GameObject:
@@ -816,6 +833,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   SyncGazePedestrian: {fileID: 4127890842416630236}
+  hmdserial: LHR-85C3EF8C
   status_pe: 0
 --- !u!114 &7059275133755152007
 MonoBehaviour:
@@ -8680,6 +8698,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   SyncGazePedestrian: {fileID: 4127890842416630236}
+  hmdserial: LHR-85C3EF8C
   status_pe: 0
 --- !u!1 &4127890842416630236
 GameObject:
@@ -8867,6 +8886,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   SyncGazePedestrian: {fileID: 4127890842416630236}
+  hmdserial: LHR-85C3EF8C
   status_pe: 0
 --- !u!1 &5266289057600739976
 GameObject:
@@ -8975,6 +8995,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   SyncGazePedestrian: {fileID: 4127890842416630236}
+  hmdserial: LHR-85C3EF8C
   status_pe: 0
 --- !u!1 &5338325867927314009
 GameObject:
@@ -9180,6 +9201,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   SyncGazePedestrian: {fileID: 4127890842416630236}
+  hmdserial: LHR-85C3EF8C
   status_pe: 0
 --- !u!1 &7493322012901394392
 GameObject:
@@ -9366,12 +9388,6 @@ PrefabInstance:
     m_RemovedComponents:
     - {fileID: 114241173252932152, guid: 3fae7923a8aec364bb24e25c4aa6f079, type: 3}
   m_SourcePrefab: {fileID: 100100000, guid: 3fae7923a8aec364bb24e25c4aa6f079, type: 3}
---- !u!1 &3440465198829430456 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1018523678192792, guid: 3fae7923a8aec364bb24e25c4aa6f079,
-    type: 3}
-  m_PrefabInstance: {fileID: 3440014031742226976}
-  m_PrefabAsset: {fileID: 0}
 --- !u!20 &3457266540128744198 stripped
 Camera:
   m_CorrespondingSourceObject: {fileID: 20212394771702054, guid: 3fae7923a8aec364bb24e25c4aa6f079,
@@ -9387,6 +9403,12 @@ Transform:
 --- !u!4 &3436981136017020138 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4502135317825226, guid: 3fae7923a8aec364bb24e25c4aa6f079,
+    type: 3}
+  m_PrefabInstance: {fileID: 3440014031742226976}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &3440465198829430456 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1018523678192792, guid: 3fae7923a8aec364bb24e25c4aa6f079,
     type: 3}
   m_PrefabInstance: {fileID: 3440014031742226976}
   m_PrefabAsset: {fileID: 0}

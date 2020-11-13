@@ -140,7 +140,7 @@ namespace VarjoExample
                 //crossHair.DrawLineInGameView(gameObject, gazeRayOrigin + gazeRayDirection * 5.0f, gazeRayOrigin + gazeRayDirection * 10.0f, Color.green, 0.07f, false);
 
                 // Visualize gaze for all
-                if (PersistentManager.Instance._visualizeGaze == true)
+                if (PersistentManager.Instance._visualizeGaze == true || PersistentManager.Instance._visualizeGaze_client == true)
                 {
                     crossHair.DrawLineInGameView(gameObject, gazeRayOrigin, gazeRayOrigin + gazeRayDirection * 30.0f, Color.green, 0.07f, true);
                 }

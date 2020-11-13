@@ -130,7 +130,7 @@ namespace VarjoExample
                 gazeRayDirection = transform.TransformVector(gazeRayForward);
                 gazeRayOrigin = transform.TransformPoint(gazePosition);         
 
-                if (SteamVR.instance.hmd_SerialNumber == "LHR-7863A1E8") // LHR-85C3EF8C
+                if (SteamVR.instance.hmd_SerialNumber == "LHR-85C3EF8C") // LHR-85C3EF8C
                 {
                     // Raycast into world, only see objects in the "target layer"
                     if (Physics.SphereCast(gazeRayOrigin, gazeRayRadius, gazeRayDirection, out gazeRayHit, Mathf.Infinity, 1 << LayerMask.NameToLayer(target)))

@@ -32,7 +32,7 @@ public class PositionSetterGaze : MonoBehaviour
                 }
                 if (gameObject.name == "GazeDirection" && SteamVR.instance.hmd_SerialNumber == "LHR-7863A1E8")
                 {
-                    transform.position = _gazeRayOrigin + _gazeRayDirection * 50.0f;
+                    transform.position = _gazeRayOrigin + _gazeRayDirection * 100.0f;
                     //Debug.LogError($"Gaze direction found {_gazeRayDirection}, transform from {transform.name} = {transform.position}");
                 }
             }
