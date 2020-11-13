@@ -48,20 +48,16 @@ public class SceneSelector : MonoBehaviour
 
     void OnTriggerEnter(Collider other)
     {
-        Debug.LogError($"listnr = {PersistentManager.Instance.listNr}/{PersistentManager.Instance.ExpOrder.Count - 1}; thus if statement = {PersistentManager.Instance.listNr >= PersistentManager.Instance.ExpOrder.Count-1}" );
-        Debug.LogError($"sendEndGameToCLient in sceneselector = {PersistentManager.Instance.SendEndGameToClient}");
         if (other.transform.tag == "NEXT")
         {
             if (PersistentManager.Instance.ClientClosed == true && PersistentManager.Instance.listNr >= PersistentManager.Instance.ExpOrder.Count-1)
             {
                 //Application.Quit(); // build version
                 UnityEditor.EditorApplication.isPlaying = false; // editor version
-                Debug.LogError("entered STOP UNITY");
             }
             else if (PersistentManager.Instance.listNr >= PersistentManager.Instance.ExpOrder.Count-1)
             {
                 PersistentManager.Instance.SendEndGameToClient = true; // value doesn't change in host. WHY?
-                Debug.LogError($"Entered send end game to client, value = {PersistentManager.Instance.SendEndGameToClient}");
             }
             else if (useManualSelection == false)
             {
@@ -70,7 +66,6 @@ public class SceneSelector : MonoBehaviour
                 if(PersistentManager.Instance.SendEndGameToClient == false)
                 {
                     Invoke("nextExperiment", 4);
-                    Debug.LogError("Go to next scene");
                 }
                 
                 PersistentManager.Instance.stopLogging = true;
@@ -219,10 +214,10 @@ public class SceneSelector : MonoBehaviour
         }
 
         // Prints the list for debugging
-        /*for (int i = 0; i < Block.Count; i++)
+        for (int i = 0; i < Block.Count; i++)
         {
             Debug.LogError($"List = {Block[i]}");
-        }*/
+        }
 
         return Block;
     }
