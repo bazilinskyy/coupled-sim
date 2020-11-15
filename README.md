@@ -248,6 +248,8 @@ In this section, the additions made by Johnson Mok during his Master Thesis are 
 	- Role selection
 	- Stop logging inbetween experiments
 	- Network system state
+	- Netork load next scene
+	- End game + network end game
 - Varjo
 	- Varjo camera on prefab.
 	- Position setter for varjo.
@@ -1132,6 +1134,179 @@ if(PersistentManager.Instance.nextScene == true)
 }
 ```
 
+## Network load next scene
+With the code above, the Host is able to load the next scene automatically. Network messages are needed to allow the Client to load the next scene too.
+The code to load the next scene is already defined, so only a message has to be send to the client, telling it to load the next scene.
+For this, four pieces of code are needed (see visualSyncManager for reference).
+For this we need to create a manager which handles triggers, defines the broadcast message from the host and defines the action to be taken by the client upon receiving the message.
+The manager is called: 'SceneNetworkManager'
+```
+// Function to broadcast the message from host to client
+public void SendLoadMessage(Host host)
+{
+        host.BroadcastMessage(new LoadSceneMessage());
+        PersistentManager.Instance.stopLogging = true;
+        PersistentManager.Instance.nextScene = true;
+}
+
+// Action to be taken by Client
+public void ClientLoadScene()
+{
+        SceneManager.LoadSceneAsync("StartScene");
+}
+```
+
+Next, the Messages script contains the structures of the messages. Like the rest of the messages, you need to define a MsgId.
+```
+enum MsgId
+{
+	...
+	S_LoadScene = 456,
+	...
+}
+```
+
+As structure, the code is as follows:
+```
+public struct LoadSceneMessage : INetMessage
+{
+    public int MessageId => (int)MsgId.S_LoadScene;
+    public void Sync<T>(T synchronizer) where T : ISynchronizer { }
+}
+```
+
+Now that the required functions are created. We need to add the reader to the client and determine when the host sends the message.
+In the client, simply set up the message handler and define the callback function for the load game message.
+```
+// Message handler
+_msgDispatcher.AddStaticHandler((int)MsgId.S_LoadScene, OnLoadMessage);
+
+// Callback function
+private void OnLoadMessage(ISynchronizer sync, int srcPlayerId)
+{
+        _sceneNetworkManager.ClientLoadScene();
+}
+```
+
+The message to be broadcasted by the host is only send when the host has loaded 90% of the scene already. 
+This is done with the variable 'SendLoadMsgToClient', which is used as the constraint for the sending of the message
+in the Host script.
+In 'SceneSelector':
+```
+AsyncOperation asyncOperation = SceneManager.LoadSceneAsync("StartScene");
+// Don't let the Scene activate until you allow it to
+asyncOperation.allowSceneActivation = false;
+
+// Send a message to the client to load new scene and allow host to activate scene
+if(asyncOperation.progress >= 0.9f)
+{
+	asyncOperation.allowSceneActivation = true;
+        SendLoadMsgToClient = true;
+}
+```
+
+And in the host script, inside the InGame Netstate the code below is used. The setSendLoadMsgToClient function
+is used to reset the SendLoadMsgToClient variable in the 'SceneSelector' script.
+```
+if (_SceneSelector.SendLoadMsgToClient == true)
+{
+	_sceneNetworkManager.SendLoadMessage(this);
+	_SceneSelector.setSendLoadMsgToCLient();
+}
+```
+
+This same persistent variable 'SendEndGameToClient' is used in the Host script as the conditino to broadcast the end game message.
+Which is done inside the InGame NetState of the host:
+```
+if(PersistentManager.Instance.SendEndGameToClient == true)
+{
+	_sceneNetworkManager.SendEndGameMessage(this);
+	PersistentManager.Instance.ClientClosed = true;
+}
+```
+
+## End game + Network end game
+The game is ended when the player has played all the scenarios in the experiment definition list. 
+In code this is defined as follows in the OnTriggerEnter(Collider other) function:
+```
+if (PersistentManager.Instance.ClientClosed == true && PersistentManager.Instance.listNr >= PersistentManager.Instance.ExpOrder.Count-1)
+{
+	//Application.Quit(); // build version
+        UnityEditor.EditorApplication.isPlaying = false; // editor version
+}
+```
+
+The Persistent variable 'ClientClosed' is needed for the networking of the close game message to the clients. The host is only allowed to closes the game 
+once the client has closed its game. To send a message to the client we first need to create the message.
+For this we need to create a manager which handles triggers, defines the broadcast message from the host and defines the action to be taken by the client upon receiving the message.
+The manager is called: 'SceneNetworkManager'
+```
+// Function to broadcast the message from host to client
+public void SendEndGameMessage(Host host)
+{
+	host.BroadcastMessage(new EndGameMessage());
+}
+
+// Action to be taken by Client
+public void ClientEndGame()
+{
+	//Application.Quit(); // build version
+        UnityEditor.EditorApplication.isPlaying = false; // editor version
+}
+```
+
+Next, the Messages script contains the structures of the messages. Like the rest of the messages, you need to define a MsgId.
+```
+enum MsgId
+{
+	...
+	S_Endgame = 789,
+	...
+}
+```
+
+As structure, the code is as follows:
+```
+public struct EndGameMessage : INetMessage
+{
+    public int MessageId => (int)MsgId.S_EndGame;
+    public void Sync<T>(T synchronizer) where T : ISynchronizer { }
+}
+```
+
+Now that the required functions are created. We need to add the reader to the client and determine when the host sends the message.
+In the client, simply set up the message handler and define the callback function for the game ending message.
+```
+// Message handler
+_msgDispatcher.AddStaticHandler((int)MsgId.S_EndGame, OnEndMessage);
+
+// Callback function
+private void OnEndMessage(ISynchronizer sync, int srcPlayerId)
+{
+	_sceneNetworkManager.ClientEndGame();
+}
+```
+
+To set up the message for the host, we first need to determine when the game has ended, which is done in the sceneselector as defined above.
+```
+else if (PersistentManager.Instance.listNr >= PersistentManager.Instance.ExpOrder.Count-1)
+{
+	PersistentManager.Instance.SendEndGameToClient = true; 
+}
+```
+
+This same persistent variable 'SendEndGameToClient' is used in the Host script as the conditino to broadcast the end game message.
+Which is done inside the InGame NetState of the host:
+```
+if(PersistentManager.Instance.SendEndGameToClient == true)
+{
+	_sceneNetworkManager.SendEndGameMessage(this);
+	PersistentManager.Instance.ClientClosed = true;
+}
+```
+
+On top of the broadcasting of the message, the variable 'ClientClosed' is set to true. 
+To allow the host to shut down the game too after sending the end game message to the clients.
 
 
 # Varjo
