@@ -172,6 +172,11 @@ public class NavigationHelper : MonoBehaviour
         RenderNavigationType(NavigationType.HighlightedRoad, renderHighlightedRoad);
 
     }
+
+    public void ResetTargets()
+    {
+        foreach(Target target in GetAllTargets()) { target.ResetTarget(); }
+    }
     public Vector3 [] GetNavigationLine()
     {
         return gameObject.GetComponent<SplineCreator>().GetNavigationLine();

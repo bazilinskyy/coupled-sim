@@ -184,6 +184,7 @@ GameObject:
   - component: {fileID: 8252388277253089905}
   - component: {fileID: 5917611817617453201}
   - component: {fileID: 4719715245355162008}
+  - component: {fileID: 1304789377}
   m_Layer: 0
   m_Name: NormalCam
   m_TagString: Player
@@ -238,12 +239,12 @@ Camera:
   m_CullingMask:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_RenderingPath: -1
+  m_RenderingPath: 1
   m_TargetTexture: {fileID: 0}
   m_TargetDisplay: 0
   m_TargetEye: 3
   m_HDR: 1
-  m_AllowMSAA: 1
+  m_AllowMSAA: 0
   m_AllowDynamicResolution: 0
   m_ForceIntoRT: 0
   m_OcclusionCulling: 1
@@ -324,6 +325,14 @@ MonoBehaviour:
   showLogScreen: 1
   showLogUser: 0
   m_refreshTime: 0.5
+--- !u!124 &1304789377
+Behaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8252388277253089906}
+  m_Enabled: 1
 --- !u!1 &8252388277361530242
 GameObject:
   m_ObjectHideFlags: 0

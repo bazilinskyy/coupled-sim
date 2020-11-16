@@ -153,6 +153,7 @@ public class SplineCreator : MonoBehaviour
 			navigationPartGameObject.GetComponent<MeshFilter>().mesh = mesh = new Mesh();
 			navigationPartGameObject.GetComponent<MeshRenderer>().material = navigationPartMaterial;
 			navigationPartGameObject.GetComponent<MeshRenderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+			navigationPartGameObject.GetComponent<MeshRenderer>().receiveShadows = false;
 			navigationPartGameObject.GetComponent<MeshCollider>().sharedMesh = mesh;
 
 			navigationPartGameObject.gameObject.tag = symbologyTag;

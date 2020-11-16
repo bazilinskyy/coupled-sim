@@ -16,23 +16,6 @@ public class WaitingRoomManager : MonoBehaviour
     public ExperimentInput experimentInput;
     public UnityEngine.UI.Image blackOutScreen;
 
-    public KeyCode myPermission = KeyCode.F1;
-    public KeyCode resetHeadPosition = KeyCode.F2;
-    public KeyCode spawnSteeringWheel = KeyCode.F3;
-    public KeyCode calibrateGaze = KeyCode.F4;
-    public KeyCode resetExperiment = KeyCode.Escape;
-
-    public KeyCode keyToggleDriving = KeyCode.Space;
-
-    public KeyCode keyToggleSymbology = KeyCode.Tab;
-
-    public KeyCode setToLastWaypoint = KeyCode.R;
-    public KeyCode inputNameKey = KeyCode.Y;
-
-    public KeyCode saveTheData = KeyCode.F7;
-
-    private readonly int maxNumberOfRandomRayHits = 40;
-    private float lastUserInputTime = 0f;
     public float thresholdUserInput = 0.15f; //The minimum time between user inputs (when within this time only the first one is used)
 
     private float userInputTime = 0f; private readonly float userInputThresholdTime = 0.2f;
@@ -57,7 +40,8 @@ public class WaitingRoomManager : MonoBehaviour
         DontDestroyOnLoad(player);
 
         blackOutScreen.color = new Color(0, 0, 0, 1f); blackOutScreen.CrossFadeAlpha(0f, 0f, true);
-        GetVariablesFromSceneManager();
+
+        mySceneLoader = GetComponent<MySceneLoader>();
 
         SetText();
 
@@ -86,27 +70,6 @@ public class WaitingRoomManager : MonoBehaviour
         if ((userInputTime + userInputThresholdTime) > Time.time) { return false; }
         if (Input.GetAxis(experimentInput.ParticpantInputAxisLeft) == 1 || Input.GetAxis(experimentInput.ParticpantInputAxisRight) == 1) { userInputTime = Time.time; return true; }
         else { return false; }
-    }
-
-    void GetVariablesFromSceneManager()
-    {
-        mySceneLoader = GetComponent<MySceneLoader>();
-        camType = experimentInput.camType;
-
-        myPermission = experimentInput.myPermission;
-        resetHeadPosition = experimentInput.resetHeadPosition;
-        spawnSteeringWheel = experimentInput.spawnSteeringWheel;
-        calibrateGaze = experimentInput.calibrateGaze;
-
-        resetExperiment = experimentInput.resetExperiment;
-
-        keyToggleDriving = experimentInput.toggleDriving;
-        keyToggleSymbology = experimentInput.toggleSymbology;
-
-        setToLastWaypoint = experimentInput.setToLastWaypoint;
-
-        inputNameKey = experimentInput.inputNameKey;
-        saveTheData = experimentInput.saveTheData;
     }
 
     void SetText()

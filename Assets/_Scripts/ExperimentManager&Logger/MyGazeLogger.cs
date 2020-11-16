@@ -50,9 +50,10 @@ public class MyGazeLogger : MonoBehaviour
     void StartUpFunction()
     {
         experimentManager = GetComponent<ExperimentManager>();
+
         if (experimentManager == null) { GetComponent<MyGazeLogger>().enabled = false; return; }
 
-        if (!experimentManager.experimentInput.saveData || experimentManager.experimentInput.camType == MyCameraType.Normal) { GetComponent<MyGazeLogger>().enabled = false; return; }
+        if (!Utils.GetExperimentInput().saveData || Utils.GetExperimentInput().camType == MyCameraType.Normal) { GetComponent<MyGazeLogger>().enabled = false; return; }
         // InitGaze must be called before using or calibrating gaze tracking.
         if (!VarjoPlugin.InitGaze())
         {
@@ -65,6 +66,7 @@ public class MyGazeLogger : MonoBehaviour
     {
         // Do not run update if the application is not visible
         if (!VarjoManager.Instance.IsLayerVisible() || VarjoManager.Instance.IsInStandBy()) { return; }
+        
         if (Input.GetKeyDown(toggleLoggingKey))
         {
             if (!logging) { StartLogging(); }

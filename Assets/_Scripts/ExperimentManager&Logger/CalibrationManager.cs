@@ -13,30 +13,15 @@ public class CalibrationManager : MonoBehaviour
     public Transform startPosition;
     private ExperimentInput experimentInput;
     
-    private MyCameraType camType;
     public TextMesh instructions;
     private Transform player;
     public UnityEngine.UI.Image blackOutScreen;
     private MySceneLoader mySceneLoader;
 
-    public KeyCode myPermission = KeyCode.F1;
-    public KeyCode resetHeadPosition = KeyCode.F2;
-    public KeyCode spawnSteeringWheel = KeyCode.F3;
-    public KeyCode calibrateGaze = KeyCode.F4;
-    public KeyCode resetExperiment = KeyCode.Escape;
-
-    public KeyCode keyToggleDriving = KeyCode.Space;
-
-    public KeyCode keyToggleSymbology = KeyCode.Tab;
-
-    public KeyCode setToLastWaypoint = KeyCode.R;
-    public KeyCode inputNameKey = KeyCode.Y;
-
-    public KeyCode saveTheData = KeyCode.F7;
-
+  
     private bool lastUserInput = false;
 
-    private readonly int maxNumberOfRandomRayHits = 40;
+    
     private bool addedTargets;
     
     // Start is called before the first frame update
@@ -54,7 +39,8 @@ public class CalibrationManager : MonoBehaviour
         steeringWheel.transform.position = -Vector3.up * 1;
 
         Varjo.VarjoPlugin.ResetPose(true, Varjo.VarjoPlugin.ResetRotation.ALL);
-        GetVariablesFromSceneManager();
+
+        mySceneLoader = GetComponent<MySceneLoader>();
 
         if (!experimentInput.ReadCSVSettingsFile()) 
         {
@@ -69,16 +55,16 @@ public class CalibrationManager : MonoBehaviour
 
         //Looks for targets to appear in field of view and sets their visibility timer accordingly
         if ( userInput && addedTargets) { ProcessUserInputTargetDetection(); }
-        if (Input.GetKeyDown(resetExperiment)) {mySceneLoader.LoadCalibrationScene(); }
-        if (Input.GetKeyDown(resetHeadPosition)) { Varjo.VarjoPlugin.ResetPose(true, Varjo.VarjoPlugin.ResetRotation.ALL); }
-        if (Input.GetKeyDown(calibrateGaze)) { Varjo.VarjoPlugin.RequestGazeCalibration(); }
-        if (Input.GetKeyDown(myPermission)) { mySceneLoader.LoadNextScene(); }
+        if (Input.GetKeyDown(experimentInput.resetExperiment)) {mySceneLoader.LoadCalibrationScene(); }
+        if (Input.GetKeyDown(experimentInput.resetHeadPosition)) { Varjo.VarjoPlugin.ResetPose(true, Varjo.VarjoPlugin.ResetRotation.ALL); }
+        if (Input.GetKeyDown(experimentInput.calibrateGaze)) { Varjo.VarjoPlugin.RequestGazeCalibration(); }
+        if (Input.GetKeyDown(experimentInput.myPermission)) { mySceneLoader.LoadNextScene(); }
         if (Varjo.VarjoPlugin.IsGazeCalibrated() && !addedTargets) { 
             GetComponent<MySceneLoader>().AddTargetScene(); 
             addedTargets = true; cross.SetActive(false);
             instructions.text = "Look at the targets above!";
         }
-        if ((userInput && !addedTargets ) || Input.GetKeyDown(spawnSteeringWheel))  { CalibrateHands(); }
+        if ((userInput && !addedTargets ) || Input.GetKeyDown(experimentInput.spawnSteeringWheel))  { CalibrateHands(); }
     }
     void CalibrateHands()
     {
@@ -90,7 +76,6 @@ public class CalibrationManager : MonoBehaviour
             steeringWheelCalibration.leftHand = player.Find("Hand Models").Find("Hand_Left").GetComponent<RiggedHand>();
             steeringWheelCalibration.rightHand = player.Find("Hand Models").Find("Hand_Right").GetComponent<RiggedHand>();
             steeringWheelCalibration.steeringWheel = steeringWheel.transform;
-
             
             
             bool success = steeringWheelCalibration.SetPositionUsingHands();
@@ -112,27 +97,6 @@ public class CalibrationManager : MonoBehaviour
         else { lastUserInput = true; return true; }
     }
 
-    void GetVariablesFromSceneManager()
-    {
-        mySceneLoader = GetComponent<MySceneLoader>(); 
-        camType = experimentInput.camType;
-        
-        myPermission = experimentInput.myPermission;
-        resetHeadPosition = experimentInput.resetHeadPosition;
-        spawnSteeringWheel = experimentInput.spawnSteeringWheel;
-        calibrateGaze = experimentInput.calibrateGaze;
-        
-        resetExperiment = experimentInput.resetExperiment;
-        
-        keyToggleDriving = experimentInput.toggleDriving;
-        keyToggleSymbology = experimentInput.toggleSymbology;
-
-        setToLastWaypoint = experimentInput.setToLastWaypoint;
-
-        inputNameKey = experimentInput.inputNameKey;
-        saveTheData = experimentInput.saveTheData;
-
-    }
     List<Target> ActiveTargets()
     {
         List<Target> targetList = new List<Target>();
@@ -179,9 +143,9 @@ public class CalibrationManager : MonoBehaviour
     }
     public Transform CameraTransform()
     {
-        if (camType == MyCameraType.Leap) { return player.Find("VarjoCameraRig").Find("VarjoCamera"); }
-        else if(camType == MyCameraType.Varjo) { return player.Find("VarjoCamera"); }
-        else if (camType == MyCameraType.Normal) { return player; }
+        if (experimentInput.camType == MyCameraType.Leap) { return player.Find("VarjoCameraRig").Find("VarjoCamera"); }
+        else if(experimentInput.camType == MyCameraType.Varjo) { return player.Find("VarjoCamera"); }
+        else if (experimentInput.camType == MyCameraType.Normal) { return player; }
         else { throw new System.Exception("Error in retrieving used camera transform in Experiment Manager.cs..."); }
     }
 }

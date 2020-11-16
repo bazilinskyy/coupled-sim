@@ -28,7 +28,7 @@ public class Target : MonoBehaviour
 
     //Time at which this target was visible
     public float defaultVisibilityTime = -1f;
-    public float startTimeVisible = -1f;
+    public float startTimeVisible = -1f; // == defaultVisibilityTime
     public bool afterTurn = false;
     public Side side;
     public bool difficultPosition;
@@ -48,8 +48,8 @@ public class Target : MonoBehaviour
     public void Passed()
     {
         isVisible = false; passed = true;
-        GetComponent<MeshRenderer>().enabled = false;
-        GetComponent<SphereCollider>().enabled = false;
+        /*GetComponent<MeshRenderer>().enabled = false;
+        GetComponent<SphereCollider>().enabled = false;*/
     }
 
     public bool IsPassed()
@@ -76,9 +76,13 @@ public class Target : MonoBehaviour
     }
     public void OnHit()
     {
+        if (detected) { return; }
+        
         //Record time of first fixation
         if(firstFixationTime == 0f) { firstFixationTime = Time.time; }
-        if (!detected) { totalFixationTime += Time.deltaTime; lastFixationTime = Time.time;  }
+
+        totalFixationTime += Time.deltaTime; 
+        lastFixationTime = Time.time;
     }
     public void SetDifficulty( TargetDifficulty _difficulty)
     {
@@ -103,8 +107,7 @@ public class Target : MonoBehaviour
     public void SetDetected(float _detectionTime)
     {
 
-        detected = true;
-        isVisible = false;
+        detected = true;  isVisible = false;
         reactionTime = _detectionTime - startTimeVisible;
         detectionTime = _detectionTime;
         GetComponent<MeshRenderer>().enabled = false;
@@ -119,12 +122,10 @@ public class Target : MonoBehaviour
     {
         GetComponent<MeshRenderer>().enabled = true;
         GetComponent<SphereCollider>().enabled = true;
-        detected = false;
-        isVisible = false;
+        detected = false;    isVisible = false;
         startTimeVisible = defaultVisibilityTime;
-        reactionTime = 0f;
-        totalFixationTime = 0f;
-        firstFixationTime = 0f;
+        reactionTime = 0f; totalFixationTime = 0f; firstFixationTime = 0f;
+        detectionTime = 0f; lastFixationTime = 0f;
     }
     public bool IsDetected()
     {

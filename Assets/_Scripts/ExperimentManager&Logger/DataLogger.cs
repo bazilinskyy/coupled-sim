@@ -76,7 +76,7 @@ public class DataLogger : MonoBehaviour
         myGazeLogger.experimentManager = experimentManager;
         myGazeLogger.startAutomatically = false;
         myGazeLogger.useCustomLogPath = true;
-        if (experimentManager.camType != MyCameraType.Normal) { myGazeLogger.cam = experimentManager.CameraTransform(); }
+        if (experimentInput.camType != MyCameraType.Normal) { myGazeLogger.cam = experimentManager.CameraTransform(); }
 
         navigationHelper = navigation.GetComponent<NavigationHelper>();
         navigationLine = navigationHelper.GetNavigationLine();
@@ -98,7 +98,7 @@ public class DataLogger : MonoBehaviour
     {
         if (!logging) { return; }
         Debug.Log($"Saving all data to {saveFolder}...");
-        if (experimentManager.camType != MyCameraType.Normal) { SaveFixationData(); myGazeLogger.StopLogging();  }
+        if (experimentInput.camType != MyCameraType.Normal) { SaveFixationData(); myGazeLogger.StopLogging();  }
 
         SaveVehicleData();
         SaveTargetDetectionData();
@@ -340,7 +340,7 @@ public class DataLogger : MonoBehaviour
         vehicleData = new List<VehicleDataPoint>();
         targetDetectionData = new List<TargetAlarm>();
 
-        if (experimentManager.camType != MyCameraType.Normal)
+        if (experimentInput.camType != MyCameraType.Normal)
         {
             myGazeLogger.customLogPath = saveFolder + "/";
             myGazeLogger.fixationData = new Fixation();
