@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: 6517828284230680988}
   m_Layer: 10
   m_Name: Participant
-  m_TagString: Pedestrian
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -455,6 +455,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 4935557633822840}
     m_Modifications:
+    - target: {fileID: 128066, guid: 1d3b1a1513de66247974634911345b98, type: 3}
+      propertyPath: m_TagString
+      value: Pedestrian
+      objectReference: {fileID: 0}
     - target: {fileID: 129800, guid: 1d3b1a1513de66247974634911345b98, type: 3}
       propertyPath: m_Name
       value: BlueSuitFree01
