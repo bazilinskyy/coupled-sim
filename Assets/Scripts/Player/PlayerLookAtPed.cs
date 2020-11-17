@@ -22,6 +22,8 @@ public class PlayerLookAtPed : MonoBehaviour
     public float MaxHeadRotation;
     public bool EnableTracking;
 
+    public static bool EnableTrackingWhileYielding;
+
     public bool IsTargettingPed { get => isTargettingPed; }
     public bool CanLookAtPed { get => canLookAtPed; }
     public Transform TargetPed { get => targetPed; }
@@ -37,7 +39,7 @@ public class PlayerLookAtPed : MonoBehaviour
 
     private void Update()
     {
-        if (CarRigidbody.velocity.magnitude < 0.1f && CarRigidbody.velocity.magnitude > -0.1f)
+        if (CarRigidbody.velocity.magnitude < 0.1f && CarRigidbody.velocity.magnitude > -0.1f && !EnableTrackingWhileYielding)
         {
             EnableTracking = false;
         }

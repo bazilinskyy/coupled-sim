@@ -12,9 +12,10 @@ public class SpeedSettings : MonoBehaviour
     public float acceleration = 0;      //m/s^2
     //Advanced Kinematics
     public float jerk = 5;              //m/s^3
-    public bool resetSpeedAfterStop = false;
+    //public bool resetSpeedAfterStop = false;
     //Yielding
     public bool causeToYield;
+    public bool lookAtPlayerWhileYielding;
     public float yieldTime;
     public float brakingAcceleration; //must be negative
     //Dynamics
