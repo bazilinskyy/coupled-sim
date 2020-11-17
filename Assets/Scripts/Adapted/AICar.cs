@@ -33,6 +33,11 @@ public class AICar : MonoBehaviour
     private float startlocation;
     private float delta_distance;
 
+    private float speedAfterYield;
+    private float accAfterYield;
+    private float yieldingTime;
+    private bool shouldYield;
+
     public bool WaitInputX = false;
     public bool WaitTrialX = false;
     public bool WaitTrialZ = false;
@@ -79,6 +84,11 @@ public class AICar : MonoBehaviour
 
         //  Change of Ambient Traffic rotations based on current heading and target position
         theRigidbody.angularVelocity = new Vector3(0f, psi * turn_rate_degree * Mathf.PI / 360f, 0f);
+
+        if (shouldYield && speed == 0.0f)
+        {
+            StartCoroutine(Yield(yieldingTime));
+        }
         
         // This statement is applied when the car is just driving.
         if ((braking == false) && (reset == false))
@@ -273,8 +283,20 @@ public class AICar : MonoBehaviour
             // If WaypointNumber is one, take over settings
             if (other.GetComponent<SpeedSettings>().WaypointNumber == 1)
             {
-                set_speed = other.GetComponent<SpeedSettings>().speed;
-                set_acceleration = other.GetComponent<SpeedSettings>().acceleration;
+                if (other.GetComponent<SpeedSettings>().causeToYield)
+                {
+                    set_speed = 0;
+                    set_acceleration = other.GetComponent<SpeedSettings>().brakingAcceleration;
+                    speedAfterYield = other.GetComponent<SpeedSettings>().speed;
+                    accAfterYield = other.GetComponent<SpeedSettings>().acceleration;
+                    yieldingTime = other.GetComponent<SpeedSettings>().yieldTime;
+                    shouldYield = true;
+                }
+                else
+                {
+                    set_speed = other.GetComponent<SpeedSettings>().speed;
+                    set_acceleration = other.GetComponent<SpeedSettings>().acceleration;
+                }
             }
             // If WaypointNumber is two, destroy gameobject.
             else if (other.GetComponent<SpeedSettings>().WaypointNumber == 2)
@@ -316,5 +338,13 @@ public class AICar : MonoBehaviour
             set_acceleration = other.GetComponent<SpeedSettings>().acceleration;
             jerk = -Mathf.Abs(other.GetComponent<SpeedSettings>().jerk);
         }
+    }
+
+    private IEnumerator Yield(float yieldTime)
+    {
+        yield return new WaitForSeconds(yieldTime);
+        set_speed = speedAfterYield;
+        set_acceleration = accAfterYield;
+        shouldYield = false;
     }
 }

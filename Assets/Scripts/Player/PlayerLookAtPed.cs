@@ -9,11 +9,13 @@ public class PlayerLookAtPed : MonoBehaviour
 {
     private bool isTargettingPed;
     private bool canLookAtPed;
+    private bool enableTrackingOrg;
     private Transform targetPed;
 
 
     public GameObject[] Peds;
 
+    public Rigidbody CarRigidbody;
     public Transform PlayerHead;
     public float MaxTrackingDistance;
     public float MinTrackingDistance;
@@ -30,10 +32,20 @@ public class PlayerLookAtPed : MonoBehaviour
     private void Start()
     {
         Peds = GameObject.FindGameObjectsWithTag("Pedestrian");
+        enableTrackingOrg = EnableTracking;
     }
 
     private void Update()
     {
+        if (CarRigidbody.velocity.magnitude < 0.1f && CarRigidbody.velocity.magnitude > -0.1f)
+        {
+            EnableTracking = false;
+        }
+        else
+        {
+            EnableTracking = enableTrackingOrg;
+        }
+
         LookForPeds();
 
         if (isTargettingPed)
