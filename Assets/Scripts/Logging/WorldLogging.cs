@@ -292,6 +292,7 @@ public class WorldLogger
             var N7 = pedestrian.transform.Find("NetworkObject_7");
             var N8 = pedestrian.transform.Find("NetworkObject_8");
             var N9 = pedestrian.transform.Find("NetworkObject_9");
+            var N10 = pedestrian.transform.Find("NetworkObject_10");
 
             float gaze_status_pe = Mathf.Round(N1.position.x);
             if (gaze_status_pe == (float)VarjoPlugin.GazeStatus.VALID && pedestrian.transform.Find("Gaze"))
@@ -353,15 +354,15 @@ public class WorldLogger
             _fileWriter.Write(gazeRayOrigin_pe_x);      _fileWriter.Write(gazeRayOrigin_pe_y);      _fileWriter.Write(gazeRayOrigin_pe_z);
 
             // Vive controller
-            if (pedestrian.transform.GetComponentInChildren<ViveInput>() != null)
-            {
-                gapAcceptance = pedestrian.transform.GetComponentInChildren<ViveInput>().getGapAcceptance();
-            }
-            else if (pedestrian.transform.GetComponentInChildren<ViveInput>() != null)
+            //if (pedestrian.transform.GetComponentInChildren<ViveInput>() != null)
+            //{
+                gapAcceptance = N10.position.x; //pedestrian.transform.GetComponentInChildren<ViveInput>().getGapAcceptance();
+            //}
+            /*else if (pedestrian.transform.GetComponentInChildren<ViveInput>() == null)
             {
                 Debug.LogError("Vive controller action script called [ViveInput] is missing");
                 gapAcceptance = -9.0f;
-            }
+            }*/
             _fileWriter.Write(gapAcceptance);
 
         }
@@ -577,7 +578,6 @@ public class LogConverter
                 var eventType = (LogFrameType)reader.ReadInt32(); //Debug.LogError($"8 eventType = {eventType}");
                 if (eventType == LogFrameType.AICarSpawn)
                 {
-                    Debug.LogError("eventtype aicarspawn");
                     numAICars++;
                     continue;
                 }

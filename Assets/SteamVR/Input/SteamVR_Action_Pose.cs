@@ -568,7 +568,6 @@ namespace Valve.VR
             lastAngularVelocity = angularVelocity;
 
             EVRInputError err;
-
             if (framesAhead == 0)
                 err = OpenVR.Input.GetPoseActionDataForNextFrame(handle, universeOrigin, ref poseActionData, poseActionData_size, inputSourceHandle);
             else

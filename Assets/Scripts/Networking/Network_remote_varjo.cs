@@ -8,9 +8,8 @@ using Valve.VR;
 public class Network_remote_varjo : MonoBehaviour
 {
     public GameObject SyncGazePedestrian;
+    public GameObject ViveInput_go;
     public string hmdserial = "LHR-85C3EF8C"; //LHR-7863A1E8 //LHR-85C3EF8C
-
-
 
     // Define data to network for NetworkObject_1
     public float status_pe; float distance_pe;  long Frame_pe;
@@ -39,12 +38,39 @@ public class Network_remote_varjo : MonoBehaviour
     // Define data to network for NetworkObject_9
     Vector3 gazeRayOrigin_pe;
 
+    // Define data to network for NetworkObject_10
+    float GapAcceptance;
+
     void FixedUpdate()
     {
         var script = SyncGazePedestrian.GetComponent<VarjoGazeRay_CS_1>();
+        var viveinput_script = ViveInput_go.GetComponent<ViveInput>();
 
         // Gaze status
         status_pe = (float)script.getGazeStatus();
+
+        // Get data for NON-gaze dependent variables
+            // Get data for NetworkObject_3
+            expnr = PersistentManager.Instance.experimentnr;
+
+            // Get data for NetworkObject_10
+            if (viveinput_script != null)
+            {
+                GapAcceptance = viveinput_script.getGapAcceptance();
+                //Debug.LogError($"gapacceptance in network remote varjo = {GapAcceptance}");
+            }
+            else if (viveinput_script == null)
+            {
+                GapAcceptance = -1f;
+            }
+
+            // Apply the right pose according to the gameobject name that don't require gaze
+            if (gameObject.name == "NetworkObject_10" && SteamVR.instance.hmd_SerialNumber == hmdserial)
+            {
+                transform.position = new Vector3(GapAcceptance, 0, 0);
+                //Debug.LogError($"10 - gapacceptance = {GapAcceptance}");
+                //Debug.LogError($"10 - trans pos = {transform.position}");
+            }
 
         // Check whether eye-tracking is established first
         if (script.getGazeStatus() != VarjoPlugin.GazeStatus.INVALID)
@@ -56,7 +82,7 @@ public class Network_remote_varjo : MonoBehaviour
             CaptureTime_pe = script.CaptureTime; LeftEyePupilSize_pe = script.LeftPupilSize; RightEyePupilSize_pe = script.RightPupilSize;
 
             // Get data for NetworkObject_3
-            FocusDistance_pe = script.FocusDistance; FocusStability_pe = script.FocusStability; expnr = PersistentManager.Instance.experimentnr;
+            FocusDistance_pe = script.FocusDistance; FocusStability_pe = script.FocusStability; 
 
             // Get data for NetworkObject_4
             HmdPos_pe = script.hmdposition;
@@ -131,7 +157,6 @@ public class Network_remote_varjo : MonoBehaviour
                 //Debug.LogError($"9 - gazerayorigin = {gazeRayOrigin_pe}");
                 //Debug.LogError($"9 - trans pos = {transform.position}");
             }
-
         }
         else if(script.getGazeStatus() == VarjoPlugin.GazeStatus.INVALID)
         {
@@ -139,8 +164,38 @@ public class Network_remote_varjo : MonoBehaviour
             if (gameObject.name == "NetworkObject_1" && SteamVR.instance.hmd_SerialNumber == hmdserial) //LHR-7863A1E8 //LHR-85C3EF8C
             {
                 transform.position = new Vector3(status_pe, 0, 0);
-                //Debug.LogError($"1.2 - status = {status_pe}");
-                //Debug.LogError($"1.2 - trans pos = {transform.position}");
+            }
+            if (gameObject.name == "NetworkObject_2" && SteamVR.instance.hmd_SerialNumber == hmdserial)
+            {
+                transform.position = new Vector3(-1, -1, -1);
+            }
+            if (gameObject.name == "NetworkObject_3" && SteamVR.instance.hmd_SerialNumber == hmdserial)
+            {
+                transform.position = new Vector3(-1, -1, -1);
+            }
+            if (gameObject.name == "NetworkObject_4" && SteamVR.instance.hmd_SerialNumber == hmdserial)
+            {
+                transform.position = new Vector3(-1, -1, -1);
+            }
+            if (gameObject.name == "NetworkObject_5" && SteamVR.instance.hmd_SerialNumber == hmdserial)
+            {
+                transform.position = new Vector3(-1, -1, -1);
+            }
+            if (gameObject.name == "NetworkObject_6" && SteamVR.instance.hmd_SerialNumber == hmdserial)
+            {
+                transform.position = new Vector3(-1, -1, -1);
+            }
+            if (gameObject.name == "NetworkObject_7" && SteamVR.instance.hmd_SerialNumber == hmdserial)
+            {
+                transform.position = new Vector3(-1, -1, -1);
+            }
+            if (gameObject.name == "NetworkObject_8" && SteamVR.instance.hmd_SerialNumber == hmdserial)
+            {
+                transform.position = new Vector3(-1, -1, -1);
+            }
+            if (gameObject.name == "NetworkObject_9" && SteamVR.instance.hmd_SerialNumber == hmdserial)
+            {
+                transform.position = new Vector3(-1, -1, -1); ;
             }
         }
     }

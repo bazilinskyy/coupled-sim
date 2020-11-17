@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 6065002259583173124}
   - component: {fileID: 6517828284230680988}
   - component: {fileID: 318725472337296383}
+  - component: {fileID: 4203642657921975656}
   m_Layer: 10
   m_Name: Participant_varjoV2
   m_TagString: Pedestrian
@@ -50,6 +51,7 @@ Transform:
   - {fileID: 8076688687877089771}
   - {fileID: 40200480103506277}
   - {fileID: 4125231102175140624}
+  - {fileID: 8775970736267046149}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -110,6 +112,7 @@ MonoBehaviour:
   - {fileID: 8076688687877089771}
   - {fileID: 40200480103506277}
   - {fileID: 4125231102175140624}
+  - {fileID: 8775970736267046149}
   _carBlinkers: {fileID: 0}
 --- !u!136 &1744578683236520932
 CapsuleCollider:
@@ -167,6 +170,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ec7698e71e704174ab527f928b3dd298, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &4203642657921975656
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1207130846115938}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c4bc5db9c652ff8408b7cda0197f87f1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  vrCameraPrefab: {fileID: 0}
+  disableObjectsOnLoad: []
 --- !u!1 &579027949677450794
 GameObject:
   m_ObjectHideFlags: 0
@@ -367,6 +384,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   SyncGazePedestrian: {fileID: 4127890842416630236}
+  ViveInput_go: {fileID: 7493322012901394392}
   hmdserial: LHR-85C3EF8C
   status_pe: 0
 --- !u!1 &928915851510587853
@@ -506,6 +524,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   SyncGazePedestrian: {fileID: 4127890842416630236}
+  ViveInput_go: {fileID: 7493322012901394392}
   hmdserial: LHR-85C3EF8C
   status_pe: 0
 --- !u!1 &2192917865236932308
@@ -615,6 +634,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   SyncGazePedestrian: {fileID: 4127890842416630236}
+  ViveInput_go: {fileID: 7493322012901394392}
   hmdserial: LHR-85C3EF8C
   status_pe: 0
 --- !u!1 &2329254223929085668
@@ -724,6 +744,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   SyncGazePedestrian: {fileID: 4127890842416630236}
+  ViveInput_go: {fileID: 7493322012901394392}
   hmdserial: LHR-85C3EF8C
   status_pe: 0
 --- !u!1 &2346896275953501547
@@ -833,6 +854,117 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   SyncGazePedestrian: {fileID: 4127890842416630236}
+  ViveInput_go: {fileID: 7493322012901394392}
+  hmdserial: LHR-85C3EF8C
+  status_pe: 0
+--- !u!1 &3350832115046365808
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8775970736267046149}
+  - component: {fileID: 2063131566101205604}
+  - component: {fileID: 6281354171358856755}
+  - component: {fileID: 3263472445547626905}
+  - component: {fileID: 167991912614096742}
+  m_Layer: 0
+  m_Name: NetworkObject_10
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8775970736267046149
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3350832115046365808}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 4935557633822840}
+  m_RootOrder: 18
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!33 &2063131566101205604
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3350832115046365808}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &6281354171358856755
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3350832115046365808}
+  m_Enabled: 0
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+--- !u!65 &3263472445547626905
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3350832115046365808}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 0
+  serializedVersion: 2
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &167991912614096742
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3350832115046365808}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: af02c0aa9ad9f6a42a24829c9a9bd788, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  SyncGazePedestrian: {fileID: 4127890842416630236}
+  ViveInput_go: {fileID: 7493322012901394392}
   hmdserial: LHR-85C3EF8C
   status_pe: 0
 --- !u!114 &7059275133755152007
@@ -8698,6 +8830,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   SyncGazePedestrian: {fileID: 4127890842416630236}
+  ViveInput_go: {fileID: 7493322012901394392}
   hmdserial: LHR-85C3EF8C
   status_pe: 0
 --- !u!1 &4127890842416630236
@@ -8886,6 +9019,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   SyncGazePedestrian: {fileID: 4127890842416630236}
+  ViveInput_go: {fileID: 7493322012901394392}
   hmdserial: LHR-85C3EF8C
   status_pe: 0
 --- !u!1 &5266289057600739976
@@ -8995,6 +9129,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   SyncGazePedestrian: {fileID: 4127890842416630236}
+  ViveInput_go: {fileID: 7493322012901394392}
   hmdserial: LHR-85C3EF8C
   status_pe: 0
 --- !u!1 &5338325867927314009
@@ -9094,6 +9229,53 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Camera: {fileID: 2106744443282349722}
+--- !u!33 &7819198278535247108
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6810389265092802548}
+  m_Mesh: {fileID: 0}
+--- !u!23 &1964678036367429591
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6810389265092802548}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 0}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
 --- !u!1 &6948601792219433216
 GameObject:
   m_ObjectHideFlags: 0
@@ -9201,6 +9383,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   SyncGazePedestrian: {fileID: 4127890842416630236}
+  ViveInput_go: {fileID: 7493322012901394392}
   hmdserial: LHR-85C3EF8C
   status_pe: 0
 --- !u!1 &7493322012901394392
@@ -9475,6 +9658,10 @@ PrefabInstance:
       propertyPath: m_Mesh
       value: 
       objectReference: {fileID: 0}
+    - target: {fileID: 11417306, guid: 4d293c8e162f3874b982baadd71153d2, type: 3}
+      propertyPath: modelOverride
+      value: lh_basestation_vive
+      objectReference: {fileID: 0}
     - target: {fileID: 1000014254142504, guid: 4d293c8e162f3874b982baadd71153d2, type: 3}
       propertyPath: m_IsActive
       value: 1
@@ -9490,6 +9677,12 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 4d293c8e162f3874b982baadd71153d2, type: 3}
+--- !u!1 &6810389265092802548 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 147176, guid: 4d293c8e162f3874b982baadd71153d2,
+    type: 3}
+  m_PrefabInstance: {fileID: 6810389265092921628}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &6810389265092519216 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 420908, guid: 4d293c8e162f3874b982baadd71153d2,

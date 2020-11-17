@@ -16,12 +16,12 @@ public class ViveInput : MonoBehaviour
     }
     private void OnTriggerPressed(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
     {
-        //Debug.Log("Trigger was pressed");
+        Debug.LogError("Trigger was pressed");
         triggerPulled = 1.0f;
     }
     private void OnTriggerReleased(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
     {
-        //Debug.Log("Trigger was released");
+        Debug.LogError("Trigger was released");
         triggerPulled = 0.0f;
     }
 
