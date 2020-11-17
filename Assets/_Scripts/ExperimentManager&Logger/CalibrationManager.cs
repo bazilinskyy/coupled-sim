@@ -17,13 +17,11 @@ public class CalibrationManager : MonoBehaviour
     private Transform player;
     public UnityEngine.UI.Image blackOutScreen;
     private MySceneLoader mySceneLoader;
-
   
     private bool lastUserInput = false;
 
-    
     private bool addedTargets;
-    
+    private bool unloadedEnvironmentScene = false;
     // Start is called before the first frame update
     private void Start()
     {
@@ -42,6 +40,9 @@ public class CalibrationManager : MonoBehaviour
 
         mySceneLoader = GetComponent<MySceneLoader>();
 
+        //Load environment scene
+        SceneManager.LoadSceneAsync("Environment", LoadSceneMode.Additive);
+
         if (!experimentInput.ReadCSVSettingsFile()) 
         {
             instructions.text = "Error in reading the experimentSettings file....\nPlease tell Marc :)";
@@ -58,13 +59,22 @@ public class CalibrationManager : MonoBehaviour
         if (Input.GetKeyDown(experimentInput.resetExperiment)) {mySceneLoader.LoadCalibrationScene(); }
         if (Input.GetKeyDown(experimentInput.resetHeadPosition)) { Varjo.VarjoPlugin.ResetPose(true, Varjo.VarjoPlugin.ResetRotation.ALL); }
         if (Input.GetKeyDown(experimentInput.calibrateGaze)) { Varjo.VarjoPlugin.RequestGazeCalibration(); }
-        if (Input.GetKeyDown(experimentInput.myPermission)) { mySceneLoader.LoadNextScene(); }
-        if (Varjo.VarjoPlugin.IsGazeCalibrated() && !addedTargets) { 
-            GetComponent<MySceneLoader>().AddTargetScene(); 
+        if (Input.GetKeyDown(experimentInput.myPermission)) { mySceneLoader.LoadNextDrivingScene(true,false); }
+        if (Varjo.VarjoPlugin.IsGazeCalibrated() && !addedTargets) {
+            mySceneLoader.AddTargetScene(); 
             addedTargets = true; cross.SetActive(false);
             instructions.text = "Look at the targets above!";
         }
         if ((userInput && !addedTargets ) || Input.GetKeyDown(experimentInput.spawnSteeringWheel))  { CalibrateHands(); }
+
+        if (Input.GetKeyDown(KeyCode.T)) { mySceneLoader.AddTargetScene(); }
+
+        if(experimentInput.environment != null && !unloadedEnvironmentScene) 
+        {
+            DontDestroyOnLoad(experimentInput.environment);
+            SceneManager.UnloadSceneAsync("Environment");
+            unloadedEnvironmentScene = true;
+        }
     }
     void CalibrateHands()
     {

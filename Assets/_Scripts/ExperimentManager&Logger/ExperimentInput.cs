@@ -6,6 +6,8 @@ public class ExperimentInput : MonoBehaviour
   
     public MyCameraType camType = MyCameraType.Leap;
 
+    public GameObject environment;
+
     public string subjectDataFolder;
     public string subjectName = "Dummy";
     public int experimentOrder;
@@ -59,7 +61,7 @@ public class ExperimentInput : MonoBehaviour
 
     public string[] sceneArray;
     public int sceneIndex = 0;
-
+    public string currentDrivingScene;
 
     private void Awake()
     {
@@ -79,10 +81,11 @@ public class ExperimentInput : MonoBehaviour
     }
     public string GetNextScene()
     {
-        string nextScene = sceneArray[sceneIndex];
+        currentDrivingScene = sceneArray[sceneIndex];
+        
         sceneIndex++;
 
-        return nextScene;
+        return currentDrivingScene;
     }
 
     public bool IsNextScene()

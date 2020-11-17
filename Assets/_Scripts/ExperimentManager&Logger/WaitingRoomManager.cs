@@ -9,7 +9,7 @@ public class WaitingRoomManager : MonoBehaviour
     private MySceneLoader mySceneLoader;
 
     public TextMesh text;
-    
+
     public Transform startPosition;
     public GameObject steeringWheel;
     private Transform player;
@@ -27,7 +27,8 @@ public class WaitingRoomManager : MonoBehaviour
     
     private void Update()
     {
-        if (Input.GetKeyDown(experimentInput.myPermission)) { mySceneLoader.LoadNextScene(); }
+
+        if (Input.GetKeyDown(experimentInput.myPermission)) { mySceneLoader.LoadNextDrivingScene(false,true); }
         
         //Looks for targets to appear in field of view and sets their visibility timer accordingly
         if (UserInput()) { ProcessUserInputTargetDetection(); }
