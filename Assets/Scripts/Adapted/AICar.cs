@@ -290,7 +290,7 @@ public class AICar : MonoBehaviour
                     speedAfterYield = other.GetComponent<SpeedSettings>().speed;
                     accAfterYield = other.GetComponent<SpeedSettings>().acceleration;
                     yieldingTime = other.GetComponent<SpeedSettings>().yieldTime;
-                    PlayerLookAtPed.EnableTrackingWhileYielding = other.GetComponent<SpeedSettings>().lookAtPlayerWhileYielding;
+                    //PlayerLookAtPed.EnableTrackingWhileYielding = other.GetComponent<SpeedSettings>().lookAtPlayerWhileYielding;
                     shouldYield = true;
                 }
                 else

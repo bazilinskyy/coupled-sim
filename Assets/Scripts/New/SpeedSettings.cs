@@ -18,7 +18,31 @@ public class SpeedSettings : MonoBehaviour
     public bool lookAtPlayerWhileYielding;
     public float yieldTime;
     public float brakingAcceleration; //must be negative
+    public float lookAtPedFromSeconds;
+    public float lookAtPedToSeconds;
     //Dynamics
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.gameObject.CompareTag("ManualCar") && lookAtPlayerWhileYielding)
+        {
+            StartCoroutine(LookAtPlayerAfterCarStops(other.gameObject.GetComponent<AICar>()));
+        }
+    }
+
+    private IEnumerator LookAtPlayerAfterCarStops(AICar car)
+    {
+        while (car.speed > 0.0f)
+        {
+            yield return null;
+        }
+        PlayerLookAtPed.EnableTrackingWhileYielding = false;
+        yield return new WaitForSeconds(lookAtPedFromSeconds);
+        PlayerLookAtPed.EnableTrackingWhileYielding = true;
+        yield return new WaitForSeconds(lookAtPedToSeconds - lookAtPedFromSeconds);
+        PlayerLookAtPed.EnableTrackingWhileYielding = false;
+    }
+
 }
 //switch 
 //        {
