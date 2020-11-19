@@ -10,7 +10,7 @@ public class ConsoleToGUI : MonoBehaviour
     public Text fps;
     public bool showLogScreen = true;
     public bool showLogUser = true;
-    int kChars = 700;
+    int kChars = 400;
     
     //fps stuff
     int m_frameCounter = 0;

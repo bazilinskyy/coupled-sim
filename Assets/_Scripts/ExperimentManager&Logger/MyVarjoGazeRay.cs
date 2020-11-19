@@ -16,7 +16,7 @@ public class MyVarjoGazeRay : MonoBehaviour
     public bool drawDebug = true;
 
     public bool logData = true;
-    VarjoPlugin.GazeData data;
+    public VarjoPlugin.GazeData data;
     RaycastHit gazeRayHit;
     Vector3 gazeRayForward;
     Vector3 gazeRayDirection;
@@ -39,7 +39,7 @@ public class MyVarjoGazeRay : MonoBehaviour
    
     void StartUpFunction()
     {
-        if(Utils.GetExperimentInput().camType == MyCameraType.Normal) { enabled = false; return; }
+        if(MyUtils.GetExperimentInput().camType == MyCameraType.Normal) { enabled = false; return; }
         if (logData) { gazeLogger = GetComponent<MyGazeLogger>(); }
        
         // InitGaze must be called before using or calibrating gaze tracking.

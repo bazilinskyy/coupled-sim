@@ -32,8 +32,7 @@ public class Target : MonoBehaviour
     public bool afterTurn = false;
     public Side side;
     public bool difficultPosition;
-    public bool isVisible = false; //visible is set when we first see the target (gets unset when we pass it with the car, or when we detect it)
-    public bool passed = false;
+    public bool hasBeenVisible = false; //visible is set when we first see the target (gets unset when we pass it with the car, or when we detect it)
     public string GetID()
     {
         if (waypoint != null) { return waypoint.name.Last() + "-" + gameObject.name.Last(); }
@@ -44,18 +43,7 @@ public class Target : MonoBehaviour
     {
         ResetTarget();
     }
-
-    public void Passed()
-    {
-        isVisible = false; passed = true;
-        /*GetComponent<MeshRenderer>().enabled = false;
-        GetComponent<SphereCollider>().enabled = false;*/
-    }
-
-    public bool IsPassed()
-    {
-        return passed;
-    }
+ 
     private void OnDrawGizmos()
     {
         if (transform.hasChanged)
@@ -99,15 +87,12 @@ public class Target : MonoBehaviour
 
         GetComponent<MeshRenderer>().sharedMaterial = material;
     }
-    public TargetDifficulty GetTargetDifficulty()
-    {
-        return difficulty;
-    }
+    public TargetDifficulty GetTargetDifficulty(){ return difficulty; }
 
     public void SetDetected(float _detectionTime)
     {
 
-        detected = true;  isVisible = false;
+        detected = true;  hasBeenVisible = false;
         reactionTime = _detectionTime - startTimeVisible;
         detectionTime = _detectionTime;
         GetComponent<MeshRenderer>().enabled = false;
@@ -115,23 +100,33 @@ public class Target : MonoBehaviour
 
         Debug.Log($"Target {GetID()} is detected: startTimeVisible {startTimeVisible}, detectionTime { detectionTime}, reactiontime: {reactionTime}");
     }
-    public bool IsVisible() { return isVisible; }
+    public bool HasBeenVisible() { return hasBeenVisible; }
 
-    public void SetVisible(bool input) { isVisible = input; }
+    public void SetVisible(bool input, float time) { 
+        hasBeenVisible = input;
+        startTimeVisible = time;
+    }
     public void ResetTarget()
     {
         GetComponent<MeshRenderer>().enabled = true;
         GetComponent<SphereCollider>().enabled = true;
-        detected = false;    isVisible = false;
+        detected = false;    hasBeenVisible = false;
         startTimeVisible = defaultVisibilityTime;
         reactionTime = 0f; totalFixationTime = 0f; firstFixationTime = 0f;
         detectionTime = 0f; lastFixationTime = 0f;
     }
-    public bool IsDetected()
-    {
-        return detected;
-    }
 
+    public bool InFoV(Transform cam, float FoV )
+    {
+        //Checks whether in FoV
+        //Angle between forward vector and vector to target should be less then FoV/2
+        Vector3 toTarget = transform.position - cam.position;
+        float angleCamTarget = Vector3.Angle(cam.forward, toTarget);
+        
+        if(angleCamTarget > FoV / 2 || angleCamTarget < -FoV/2) {  return false; }
+        else {  return true; }
+    }
+    public bool IsDetected(){ return detected; }
     public Side GetRoadSide()
     {
         //Targets should always be placed between the parent waypoint and the next waypoint!

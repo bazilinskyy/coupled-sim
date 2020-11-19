@@ -15,9 +15,9 @@ public class MySceneLoader : MonoBehaviour
     private float timeWaited = 0f;
     private void Start()
     {
-        player = GameObject.FindGameObjectWithTag("Player");
+        player = MyUtils.GetPlayer();
+        experimentInput = MyUtils.GetExperimentInput();
 
-        experimentInput = player.GetComponent<ExperimentInput>();
         blackOutScreen = GameObject.FindGameObjectWithTag("BlackOutScreen").GetComponent<UnityEngine.UI.Image>();
         blackOutScreen.color = new Color(0, 0, 0, 1f); blackOutScreen.CrossFadeAlpha(1f, 0f, true);
 
@@ -69,19 +69,6 @@ public class MySceneLoader : MonoBehaviour
     public void AddTargetScene()
     {
         SceneManager.LoadSceneAsync(experimentInput.targetScene, LoadSceneMode.Additive);
-    }
-
-  IEnumerator HandleScene(string sceneName, bool load) 
-    {
-        AsyncOperation operation;
-        if (load) { operation = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Additive); }
-        else { operation = SceneManager.UnloadSceneAsync(sceneName); }
-
-        while (!operation.isDone)
-        {
-            yield return null;
-        }
-        yield return true;
     }
 
     IEnumerator LoadYourAsyncScene(string sceneName, bool enableEnvironment, bool unloadCalibrationScene=false, bool unloadWaitingRoomScene=false)

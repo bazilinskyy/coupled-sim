@@ -7,6 +7,7 @@ public class ExperimentInput : MonoBehaviour
     public MyCameraType camType = MyCameraType.Leap;
 
     public GameObject environment;
+    public bool debug = true;
 
     public string subjectDataFolder;
     public string subjectName = "Dummy";

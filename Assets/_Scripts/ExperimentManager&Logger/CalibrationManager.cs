@@ -22,15 +22,18 @@ public class CalibrationManager : MonoBehaviour
 
     private bool addedTargets;
     private bool unloadedEnvironmentScene = false;
+
+    private float someTime= 0f;
     // Start is called before the first frame update
     private void Start()
     {
+        Application.targetFrameRate = 300;
         StartScene();
     }
     void StartScene()
     {
-        player = GameObject.FindGameObjectWithTag("Player").transform;
-        experimentInput = player.GetComponent<ExperimentInput>();
+        player = MyUtils.GetPlayer().transform;
+        experimentInput = MyUtils.GetExperimentInput();
 
         //Spawn steeringwheel beneath plane.
         steeringWheel.transform.rotation = startPosition.rotation;
@@ -47,15 +50,19 @@ public class CalibrationManager : MonoBehaviour
         {
             instructions.text = "Error in reading the experimentSettings file....\nPlease tell Marc :)";
         }
-
     }
-    
-    void Update()
+    private void LateUpdate()
     {
+        //In late update because we firt want to process eyetracking data
         bool userInput = UserInput();
 
         //Looks for targets to appear in field of view and sets their visibility timer accordingly
-        if ( userInput && addedTargets) { ProcessUserInputTargetDetection(); }
+        if (userInput && addedTargets) { ProcessUserInputTargetDetection(); }
+        if ((userInput && !addedTargets) || Input.GetKeyDown(experimentInput.spawnSteeringWheel)) { CalibrateHands(); }
+    }
+    void Update()
+    {
+       
         if (Input.GetKeyDown(experimentInput.resetExperiment)) {mySceneLoader.LoadCalibrationScene(); }
         if (Input.GetKeyDown(experimentInput.resetHeadPosition)) { Varjo.VarjoPlugin.ResetPose(true, Varjo.VarjoPlugin.ResetRotation.ALL); }
         if (Input.GetKeyDown(experimentInput.calibrateGaze)) { Varjo.VarjoPlugin.RequestGazeCalibration(); }
@@ -65,8 +72,7 @@ public class CalibrationManager : MonoBehaviour
             addedTargets = true; cross.SetActive(false);
             instructions.text = "Look at the targets above!";
         }
-        if ((userInput && !addedTargets ) || Input.GetKeyDown(experimentInput.spawnSteeringWheel))  { CalibrateHands(); }
-
+        
         if (Input.GetKeyDown(KeyCode.T)) { mySceneLoader.AddTargetScene(); }
 
         if(experimentInput.environment != null && !unloadedEnvironmentScene) 
@@ -124,7 +130,8 @@ public class CalibrationManager : MonoBehaviour
         
         //When multiple targets are visible we base our decision on:
         //(1) On which target has been looked at most recently
-        //(2) Or closest target
+        //(2) Target closest to looking direction
+        //(3) Or closest target
         Target targetChosen = null;
         float mostRecentTime = 0f;
         float smallestDistance = 100000f;
@@ -132,6 +139,7 @@ public class CalibrationManager : MonoBehaviour
 
         foreach (Target target in visibleTargets)
         {
+            
             //(1)
             if (target.firstFixationTime > mostRecentTime)
             {

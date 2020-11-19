@@ -49,7 +49,6 @@ public class ExperimentManager : MonoBehaviour
     //The data manger handling the saving of vehicle and target detection data Should be added to the experiment manager object 
     private DataLogger dataManager;
     //Maximum raycasts used in determining visbility:  We use Physics.RayCast to check if we can see the target. We cast this to a random positin on the targets edge to see if it is partly visible.
-    private float lastUserInputTime = 0f;
     public float thresholdUserInput = 0.15f; //The minimum time between user inputs (when within this time only the first one is used)
 
     private bool savedData = false;
@@ -59,9 +58,8 @@ public class ExperimentManager : MonoBehaviour
     }
     void StartUpFunctions()
     {
-        player = GameObject.FindGameObjectWithTag("Player").transform;
-
-        experimentInput = player.GetComponent<ExperimentInput>();
+        player = MyUtils.GetPlayer().transform;
+        experimentInput = MyUtils.GetExperimentInput();
 
         mySceneLoader = GetComponent<MySceneLoader>();
 
@@ -94,11 +92,21 @@ public class ExperimentManager : MonoBehaviour
         //Does not work when in Start() or in Awake()...
         ActivateMirrorCameras();
     }
+    private void LateUpdate()
+    {
+        //We dot this as late update to make sure gaze data (which is used to determine which target the participant is detecting) is processed 
+        //before this code is exectured
 
+        bool userInput = UserInput();
+        //Target detection when we already started driving
+        if (car.GetComponent<SpeedController>().IsDriving() && userInput) { ProcessUserInputTargetDetection(); }
+        //First input will be the start driving command (so if not already driving we will start driving)
+        else if (!car.GetComponent<SpeedController>().IsDriving() && userInput && automateSpeed) { car.GetComponent<SpeedController>().StartDriving(true); }
+        
+    }
     void Update()
     {
         activeExperiment.experimentTime += Time.deltaTime;
-        bool userInput = UserInput();
         //Looks for targets to appear in field of view and sets their visibility timer accordingly
         SetTargetVisibilityTime();
 
@@ -107,14 +115,6 @@ public class ExperimentManager : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Space)){ car.GetComponent<SpeedController>().ToggleDriving(); }
         if (Input.GetKeyDown(experimentInput.calibrateGaze)) { Varjo.VarjoPlugin.RequestGazeCalibration(); }
         if (Input.GetKeyDown(experimentInput.resetHeadPosition)) { Varjo.VarjoPlugin.ResetPose(true, Varjo.VarjoPlugin.ResetRotation.ALL); }
-        
-        
-
-        //Target detection when we already started driving
-        if (car.GetComponent<SpeedController>().IsDriving() && userInput) { ProcessUserInputTargetDetection(); }
-
-        //First input will be the start driving command (so if not already driving we will start driving)
-        else if (!car.GetComponent<SpeedController>().IsDriving() && userInput && automateSpeed) { car.GetComponent<SpeedController>().StartDriving(true); }
 
         //Researcher inputs
         if (Input.GetKeyDown(experimentInput.toggleSymbology)) { Debug.Log("sWITCHING SYMBOLOGY..."); ToggleSymbology(); }
@@ -124,7 +124,6 @@ public class ExperimentManager : MonoBehaviour
         if (Input.GetKeyDown(experimentInput.resetExperiment)) { ResetExperiment(); }
         if (Input.GetKeyDown(KeyCode.LeftShift)) { TeleportToNextWaypoint(); }
         
-
         if (car.navigationFinished)
         {
             if (experimentInput.saveData && !savedData) { dataManager.SaveData(); savedData = true; }
@@ -267,15 +266,18 @@ public class ExperimentManager : MonoBehaviour
     }
     void ProcessUserInputTargetDetection()
     {
-        //Double inputs within thresholdUserInput time are discarded
-        if (Time.time < (lastUserInputTime + thresholdUserInput)) { return; }
-        lastUserInputTime = Time.time;
+
+        //When multiple targets are visible we base our decision on:
+        //(1) On which target has been looked at most recently
+        //(2) Target closest to looking direction
+        //(3) Or closest target
+
         //if there is a target visible which has not already been detected
         List<Target> targetList = activeNavigationHelper.GetActiveTargets();
         List<Target> visibleTargets = new List<Target>();
        
         //Check if there are any visible targets
-        foreach (Target target in targetList){ if (target.IsVisible() && TargetInFrontOfCar(target)) { visibleTargets.Add(target); }}
+        foreach (Target target in targetList){ if (target.HasBeenVisible() && target.InFoV(CameraTransform(), experimentInput.FoVCamera)) { visibleTargets.Add(target); }}
 
         if (visibleTargets.Count() == 0) { dataManager.AddFalseAlarm(); }
         else if (visibleTargets.Count() == 1) { dataManager.AddTrueAlarm(visibleTargets[0]); visibleTargets[0].SetDetected(activeExperiment.experimentTime); }
@@ -283,10 +285,9 @@ public class ExperimentManager : MonoBehaviour
         {
             //When multiple targets are visible we base our decision on:
             //(1) On which target has been looked at most recently
-            //(2) Or closest target
             Target targetChosen = null;
             float mostRecentTime = 0f;
-            
+
 
             foreach (Target target in visibleTargets)
             {
@@ -298,6 +299,57 @@ public class ExperimentManager : MonoBehaviour
                 }
             }
 
+            /* //(2) Check using angle between general gaze direction and target 
+             float minAngle = 1000f;
+             if (targetChosen == null && experimentInput.camType != MyCameraType.Normal)
+             {
+
+                 Varjo.VarjoPlugin.GazeData dataSinceLastUpdate = Varjo.VarjoPlugin.GetGaze();
+                 if (dataSinceLastUpdate.status == Varjo.VarjoPlugin.GazeStatus.VALID)
+                 {
+
+                     Debug.Log("Got valid data...");
+                     Vector3 gazeDirection = MyUtils.TransformToWorldAxis(dataSinceLastUpdate.gaze.forward, dataSinceLastUpdate.gaze.position);
+
+                     foreach (Target target in visibleTargets)
+                     {
+                         Vector3 CamToTarget = target.transform.position - CameraTransform().position;
+                         float angle = Vector3.Angle(gazeDirection, CamToTarget);
+
+                         if (angle < minAngle) { minAngle = angle; targetChosen = target; }
+                     }
+                 }
+                *//* //From last to most recent = 0 -> end
+                 List<Varjo.VarjoPlugin.GazeData> dataSinceLastUpdate = Varjo.VarjoPlugin.GetGazeList();
+
+                 Debug.Log($"Checking angles, got {dataSinceLastUpdate.Count()} gaze points...");
+                 for(int i = dataSinceLastUpdate.Count() - 1; i >=0; i--)
+                 {
+                     Debug.Log($"Checking gaze data {i}...");
+                     if(dataSinceLastUpdate[i].status == Varjo.VarjoPlugin.GazeStatus.VALID)
+                     {
+
+                         Debug.Log("Got valid data...");
+                         Vector3 gazeDirection1 = MyUtils.TransformToWorldAxis(dataSinceLastUpdate[i].gaze.forward, dataSinceLastUpdate[i].gaze.position);
+                         Vector3 gazeDirection2 = MyUtils.TransformToWorldAxis(Double3ToVector3(dataSinceLastUpdate[i].gaze.forward), Double3ToVector3(dataSinceLastUpdate[i].gaze.position));
+
+                         if(gazeDirection1 == gazeDirection2) { Debug.Log("Gazes match..."); }
+                         else { Debug.Log($"No match {gazeDirection1} {gazeDirection2}..."); }
+
+
+                         foreach (Target target in visibleTargets) 
+                         {
+                             Vector3 CamToTarget = target.transform.position - CameraTransform().position;
+                             float angle = Vector3.Angle(gazeDirection1, CamToTarget);
+
+                             if(angle < minAngle) { targetChosen = target;}
+                         }
+                     }
+                 }
+             }
+            if (minAngle != 1000f) { Debug.Log($"Chose {targetChosen.gameObject.name} with angle {minAngle}..."); }
+            */
+            //(3)
             if (targetChosen == null) { 
                 Debug.Log("Chosing target based on distance...");
                 float smallestDistance = 100000f;
@@ -319,6 +371,7 @@ public class ExperimentManager : MonoBehaviour
             targetChosen.SetDetected(activeExperiment.experimentTime);
         }
     }
+
     Vector3 GetRandomPerpendicularVector(Vector3 vec)
     {
 
@@ -359,20 +412,6 @@ public class ExperimentManager : MonoBehaviour
         Vector3 normal = new Vector3(x / mag, y / mag, z / mag);
         return normal;
     }
-    private bool PassedTarget(Target target)
-    {
-        //Passed target if 
-        //(1) passes the plane made by the waypoint and its forward direction. 
-        // plane equation is A(x-a) + B(y-b) + C(z-c) = 0 = dot(Normal, planePoint - targetPoint)
-        // Where normal vector = <A,B,Z>
-        // pos = the cars position (x,y,z,)
-        // a point on the plane Q= (a,b,c) i.e., target position
-        //(2) And we are close to the target ~~ within 35 meters
-
-        if (Vector3.Magnitude(car.transform.position - target.transform.position) > 35) { return false; }
-        if (TargetInFrontOfCar(target)){ return false; }
-        else { Debug.Log($"Passed Target {target.GetID()}..."); return true; }
-    }
     bool TargetIsVisible(Target target, int maxNumberOfRayHits)
     {
         //We will cast rays to the outer edges of the sphere (the edges are determined based on how we are looking towards the sphere)
@@ -407,8 +446,7 @@ public class ExperimentManager : MonoBehaviour
         
         return isVisible;
     }
-
-    bool TargetInFrontOfCar(Target target)
+    bool TargetInFOV(Target target)
     {
         Vector3 backOfCar = car.transform.position - 4 * car.transform.forward;
         float sign = Vector3.Dot(car.transform.forward, (backOfCar - target.transform.position));
@@ -420,18 +458,16 @@ public class ExperimentManager : MonoBehaviour
     {
         //Number of ray hits to be used. We user a smaller amount than when the user actually presses the detection button. Since this function is called many times in Update() 
         int numberOfRandomRayHits = 3;
-        targetList = activeNavigationHelper.GetActiveTargets();
 
         foreach (Target target in activeNavigationHelper.GetActiveTargets())
         {
-            //If we havent seen the target before (startTimeVIsibile ==0) we check if its visible at this moment
-            if (target.startTimeVisible == target.defaultVisibilityTime)
+            //If we havent seen the target before
+            if (!target.HasBeenVisible())
             {
                 if (TargetIsVisible(target, numberOfRandomRayHits))
                 {
                     Debug.Log($"Target {target.GetID()} became visible at {activeExperiment.experimentTime}s ...");
-                    target.SetVisible(true);
-                    target.startTimeVisible = activeExperiment.experimentTime;
+                    target.SetVisible(true, activeExperiment.experimentTime);
                 }
             }
         }

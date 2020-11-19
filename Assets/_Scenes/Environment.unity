@@ -17,7 +17,7 @@ RenderSettings:
   m_Fog: 1
   m_FogColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   m_FogMode: 3
-  m_FogDensity: 0.003
+  m_FogDensity: 0.005
   m_LinearFogStart: 0
   m_LinearFogEnd: 300
   m_AmbientSkyColor: {r: 0.212, g: 0.227, b: 0.259, a: 1}
@@ -34,11 +34,11 @@ RenderSettings:
   m_SpotCookie: {fileID: 10001, guid: 0000000000000000e000000000000000, type: 0}
   m_DefaultReflectionMode: 0
   m_DefaultReflectionResolution: 2048
-  m_ReflectionBounces: 1
+  m_ReflectionBounces: 5
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 114363450}
-  m_IndirectSpecularColor: {r: 0.27495274, g: 0.3648159, b: 0.49443612, a: 1}
+  m_IndirectSpecularColor: {r: 0.27495125, g: 0.36481646, b: 0.49443516, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -56,15 +56,15 @@ LightmapSettings:
   m_LightmapEditorSettings:
     serializedVersion: 12
     m_Resolution: 2
-    m_BakeResolution: 2
-    m_AtlasSize: 32
-    m_AO: 0
+    m_BakeResolution: 40
+    m_AtlasSize: 2048
+    m_AO: 1
     m_AOMaxDistance: 1
     m_CompAOExponent: 1
     m_CompAOExponentDirect: 0
     m_ExtractAmbientOcclusion: 0
     m_Padding: 2
-    m_LightmapParameters: {fileID: 15203, guid: 0000000000000000f000000000000000,
+    m_LightmapParameters: {fileID: 15200, guid: 0000000000000000f000000000000000,
       type: 0}
     m_LightmapsBakeMode: 1
     m_TextureCompression: 1
@@ -72,23 +72,23 @@ LightmapSettings:
     m_FinalGatherFiltering: 1
     m_FinalGatherRayCount: 256
     m_ReflectionCompression: 2
-    m_MixedBakeMode: 2
+    m_MixedBakeMode: 1
     m_BakeBackend: 2
     m_PVRSampling: 1
-    m_PVRDirectSampleCount: 2
-    m_PVRSampleCount: 8
-    m_PVRBounces: 0
-    m_PVREnvironmentSampleCount: 8
+    m_PVRDirectSampleCount: 32
+    m_PVRSampleCount: 1024
+    m_PVRBounces: 4
+    m_PVREnvironmentSampleCount: 1024
     m_PVREnvironmentReferencePointCount: 2048
-    m_PVRFilteringMode: 0
+    m_PVRFilteringMode: 1
     m_PVRDenoiserTypeDirect: 0
     m_PVRDenoiserTypeIndirect: 1
     m_PVRDenoiserTypeAO: 1
     m_PVRFilterTypeDirect: 0
     m_PVRFilterTypeIndirect: 0
     m_PVRFilterTypeAO: 0
-    m_PVREnvironmentMIS: 1
-    m_PVRCulling: 1
+    m_PVREnvironmentMIS: 0
+    m_PVRCulling: 0
     m_PVRFilteringGaussRadiusDirect: 1
     m_PVRFilteringGaussRadiusIndirect: 5
     m_PVRFilteringGaussRadiusAO: 2
@@ -98,9 +98,9 @@ LightmapSettings:
     m_ExportTrainingData: 0
     m_TrainingDataDestination: TrainingData
     m_LightProbeSampleCountMultiplier: 4
-  m_LightingDataAsset: {fileID: 112000004, guid: e6c1aa780aa1b7c419dab28f24496335,
+  m_LightingDataAsset: {fileID: 112000000, guid: 3faf7e54de20f0440baa609c3609eb87,
     type: 2}
-  m_UseShadowmask: 1
+  m_UseShadowmask: 0
 --- !u!196 &4
 NavMeshSettings:
   serializedVersion: 2
@@ -5333,6 +5333,7 @@ GameObject:
   m_Component:
   - component: {fileID: 114363449}
   - component: {fileID: 114363450}
+  - component: {fileID: 114363451}
   m_Layer: 0
   m_Name: MainLight
   m_TagString: Untagged
@@ -5365,8 +5366,8 @@ Light:
   serializedVersion: 10
   m_Type: 1
   m_Shape: 0
-  m_Color: {r: 1, g: 0.9430511, b: 0.7877358, a: 1}
-  m_Intensity: 1.1
+  m_Color: {r: 0.8773585, g: 0.7122096, b: 0.29383236, a: 1}
+  m_Intensity: 0.8
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -5405,16 +5406,32 @@ Light:
     serializedVersion: 2
     m_Bits: 4294967295
   m_RenderingLayerMask: 1
-  m_Lightmapping: 2
+  m_Lightmapping: 1
   m_LightShadowCasterMode: 0
   m_AreaSize: {x: 1, y: 1}
   m_BounceIntensity: 1
   m_ColorTemperature: 6570
   m_UseColorTemperature: 0
-  m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
+  m_BoundingSphereOverride: {x: 0, y: 2, z: 2.3509887e-38, w: 0.00000001110908}
   m_UseBoundingSphereOverride: 0
   m_ShadowRadius: 0
   m_ShadowAngle: 20
+--- !u!123 &114363451
+LensFlare:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 114363448}
+  m_Enabled: 1
+  m_Flare: {fileID: 12100000, guid: 09ebe82dbd1113c3d000dc0b8d76c639, type: 2}
+  m_Color: {r: 1, g: 1, b: 1, a: 0}
+  m_Brightness: 1
+  m_FadeSpeed: 3
+  m_IgnoreLayers:
+    serializedVersion: 2
+    m_Bits: 6
+  m_Directional: 1
 --- !u!1 &116110766
 GameObject:
   m_ObjectHideFlags: 0
@@ -70215,6 +70232,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 45e95756cb6485245a8ce483c6cc11db, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  disableMe: 1
 --- !u!1 &1541915846
 GameObject:
   m_ObjectHideFlags: 0
@@ -77898,7 +77916,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1700839740}
   - component: {fileID: 1700839738}
-  - component: {fileID: 1700839739}
   m_Layer: 0
   m_Name: RimLight
   m_TagString: Untagged
@@ -77918,7 +77935,7 @@ Light:
   m_Type: 1
   m_Shape: 0
   m_Color: {r: 0.84313726, g: 0.967903, b: 1, a: 1}
-  m_Intensity: 0.5
+  m_Intensity: 0.2
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -77957,32 +77974,16 @@ Light:
     serializedVersion: 2
     m_Bits: 4294967295
   m_RenderingLayerMask: 1
-  m_Lightmapping: 2
+  m_Lightmapping: 1
   m_LightShadowCasterMode: 0
   m_AreaSize: {x: 1, y: 1}
-  m_BounceIntensity: 0.4
+  m_BounceIntensity: 0.2
   m_ColorTemperature: 6570
   m_UseColorTemperature: 0
-  m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
+  m_BoundingSphereOverride: {x: 0, y: 2, z: 2.3509887e-38, w: 0.0000000069939716}
   m_UseBoundingSphereOverride: 0
   m_ShadowRadius: 0
   m_ShadowAngle: 20
---- !u!123 &1700839739
-LensFlare:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1700839737}
-  m_Enabled: 1
-  m_Flare: {fileID: 12100000, guid: 09ebe82dbd1113c3d000dc0b8d76c639, type: 2}
-  m_Color: {r: 1, g: 1, b: 1, a: 0}
-  m_Brightness: 0.43
-  m_FadeSpeed: 3
-  m_IgnoreLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_Directional: 0
 --- !u!4 &1700839740
 Transform:
   m_ObjectHideFlags: 0

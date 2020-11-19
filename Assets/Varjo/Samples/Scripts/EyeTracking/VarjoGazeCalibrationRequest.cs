@@ -1,7 +1,4 @@
 ﻿// Copyright 2019 Varjo Technologies Oy. All rights reserved.
-
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using Varjo;
 
@@ -37,15 +34,10 @@ namespace VarjoExample
         public CalibrationType calibrationType = CalibrationType.LEGACY;
         public OutputFilterType outputFilterType = OutputFilterType.STANDARD;
 
+
         void Update()
         {
-            /*if (VarjoManager.Instance.IsLayerVisible())
-            {
-                if (Input.GetKeyDown(key))
-                {
-                    RequestGazeCalibration();
-                }
-            }*/
+   
             if (Input.GetKeyDown(key))
             {
                 RequestGazeCalibration();
@@ -54,6 +46,7 @@ namespace VarjoExample
             {
                 RequestGazeCalibration();
             }
+            
         }
 
         public void RequestGazeCalibration()

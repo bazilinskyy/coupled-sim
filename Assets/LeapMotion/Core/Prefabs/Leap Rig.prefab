@@ -35,8 +35,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 25, y: 30}
-  m_SizeDelta: {x: 500, y: 500}
+  m_AnchoredPosition: {x: 29.2, y: 49.9}
+  m_SizeDelta: {x: 500, y: 90}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &727106573
 CanvasRenderer:
@@ -72,7 +72,7 @@ MonoBehaviour:
     m_BestFit: 0
     m_MinSize: 0
     m_MaxSize: 200
-    m_Alignment: 1
+    m_Alignment: 0
     m_AlignByGeometry: 0
     m_RichText: 1
     m_HorizontalOverflow: 0
@@ -127,8 +127,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -60, y: 17}
-  m_SizeDelta: {x: 800, y: 750}
+  m_AnchoredPosition: {x: -37.1, y: 5}
+  m_SizeDelta: {x: 800, y: 1000}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1974615042
 CanvasRenderer:
@@ -218,6 +218,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   camType: 2
+  environment: {fileID: 0}
+  debug: 1
   subjectDataFolder: 
   subjectName: Dummy
   experimentOrder: 0
@@ -255,6 +257,7 @@ MonoBehaviour:
   Brake: BrakeKeyBoard
   sceneArray: []
   sceneIndex: 0
+  currentDrivingScene: 
 --- !u!114 &1574512658
 MonoBehaviour:
   m_ObjectHideFlags: 0

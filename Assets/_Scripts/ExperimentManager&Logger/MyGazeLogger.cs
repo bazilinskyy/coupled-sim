@@ -32,9 +32,9 @@ public class MyGazeLogger : MonoBehaviour
     bool logging = false;
 
     static readonly string[] ColumnNames = { "Frame", "LogTime", "ExperimentTime", "HMDPosition", "HMDRotation", "HMDWorldPosition",
-                                            "HMDWorldRotation","GazeStatus", "CombinedGazeForward", "CombinedGazePosition", "LeftEyeStatus",
+                                            "HMDWorldRotation","GazeStatus", "CombinedGazeForwardLocal", "CombinedGazePosition", "LeftEyeStatus",
                                             "LeftEyeForward", "LeftEyePosition", "LeftEyePupilSize", "RightEyeStatus", "RightEyeForward",
-                                            "RightEyePosition", "RightEyePupilSize", "FocusDistance", "FocusStability", "LookingAt" };
+                                            "RightEyePosition", "RightEyePupilSize", "FocusDistance", "FocusStability", "LookingAt", "CombinedGazeForwardWorld" };
     
     const string ValidString = "VALID";
     const string InvalidString = "INVALID";
@@ -53,7 +53,7 @@ public class MyGazeLogger : MonoBehaviour
 
         if (experimentManager == null) { GetComponent<MyGazeLogger>().enabled = false; return; }
 
-        if (!Utils.GetExperimentInput().saveData || Utils.GetExperimentInput().camType == MyCameraType.Normal) { GetComponent<MyGazeLogger>().enabled = false; return; }
+        if (!MyUtils.GetExperimentInput().saveData || MyUtils.GetExperimentInput().camType == MyCameraType.Normal) { GetComponent<MyGazeLogger>().enabled = false; return; }
         // InitGaze must be called before using or calibrating gaze tracking.
         if (!VarjoPlugin.InitGaze())
         {
@@ -113,12 +113,15 @@ public class MyGazeLogger : MonoBehaviour
         logData[4] = hmdRotation.ToString("F3");
 
         Quaternion relative = Quaternion.Inverse(experimentManager.driverView.rotation) * experimentManager.CameraTransform().rotation;
+        
         logData[5] = experimentManager.CameraTransform().position.ToString("F3");
         logData[6] = relative.eulerAngles.ToString("F3");// experimentManager.CameraTransform().rotation.eulerAngles.ToString("F3");
 
         // Combined gaze
         bool invalid = data.status == VarjoPlugin.GazeStatus.INVALID;
         logData[7] = invalid ? InvalidString : ValidString;
+
+        //This is relative to the hmd position and rotation
         logData[8] = invalid ? "" : Double3ToString(data.gaze.forward);
         logData[9] = invalid ? "" : Double3ToString(data.gaze.position);
 
@@ -141,6 +144,8 @@ public class MyGazeLogger : MonoBehaviour
         logData[19] = invalid ? "" : data.focusStability.ToString("G", culture);
 
         logData[20] = invalid ? "" : fixatingOn.ToString();
+        logData[21] = "";
+        //logData[21] = invalid ? "" : MyUtils.TransformToWorldAxis(data.gaze.forward, data.gaze.position).ToString("F3");
 
         Log(logData);
     }
@@ -206,9 +211,14 @@ public class MyGazeLogger : MonoBehaviour
     {
         return "(" + doubles[0].ToString() + ", " + doubles[1].ToString() + ", " + doubles[2].ToString() + ")";
     }
+
+    public static Vector3 Double3ToVector3(double[] doubles)
+    {
+        return new Vector3((float)doubles[0], (float)doubles[1], (float)doubles[2]);
+    }
     public void FixatingOn(LoggedTags tag)
     {
-        if(tag != fixatingOn) { Debug.Log($"Fixating on {tag}..."); }
+        //if(tag != fixatingOn) { Debug.Log($"Fixating on {tag}..."); }
         fixationData.FixatingOn(tag);
         fixatingOn = tag;
     }

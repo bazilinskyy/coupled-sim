@@ -55,7 +55,7 @@ MeshRenderer:
   m_DynamicOccludee: 1
   m_MotionVectors: 1
   m_LightProbeUsage: 1
-  m_ReflectionProbeUsage: 1
+  m_ReflectionProbeUsage: 0
   m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
@@ -115,9 +115,12 @@ MonoBehaviour:
   detected: 0
   reactionTime: 0
   totalFixationTime: 0
-  fixationTime: 0
+  firstFixationTime: 0
+  lastFixationTime: 0
+  detectionTime: 0
   defaultVisibilityTime: -1
   startTimeVisible: -1
   afterTurn: 0
   side: 2
   difficultPosition: 0
+  hasBeenVisible: 0

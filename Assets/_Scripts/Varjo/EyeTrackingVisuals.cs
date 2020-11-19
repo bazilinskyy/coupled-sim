@@ -7,67 +7,108 @@ public class EyeTrackingVisuals : MonoBehaviour
 {
 
     public VarjoPlugin.GazeData gazeData;
-    public Transform cam;
-    public Transform gazeHighlights;
-    public KeyCode switchGazeHighlight;
-    public bool highlightGaze = false;
+    public ExperimentManager experimentManager;
+    public GameObject lightObj;
+    public GameObject lightObj2;
+    public KeyCode switchGazeHighlight = KeyCode.H;
+    public bool highlightGaze = true;
+    public bool showCenterGaze = false;
+    private bool isActive = true;
 
-    // Update is called once per frame
+    private void Start()
+    {
+        ExperimentInput player = MyUtils.GetExperimentInput();
+        if (!player.debug) { lightObj.SetActive(false); lightObj2.SetActive(false); enabled = false; }
+    }
     void Update()
     {
 
-        if (Input.GetKeyDown(switchGazeHighlight)) { Debug.Log("Pressing key!"); highlightGaze = !highlightGaze; }
+        if (Input.GetKeyDown(switchGazeHighlight)) { highlightGaze = !highlightGaze; }
         if (highlightGaze)
         {
 
             gazeData = VarjoPlugin.GetGaze();
-            if (gazeData.status == Varjo.VarjoPlugin.GazeStatus.VALID)
+            if (gazeData.status == VarjoPlugin.GazeStatus.VALID)
             {
+                SetLightActive(true);
                 RenderGaze(gazeData);
             }
-            /*else
-            {
-                HideGazeRender();
-            }*/
+            else { SetLightActive(false); }
 
-            /*foreach (var data in dataSinceLastUpdate)
-            {
-                RenderGaze(data);
-            }*/
+        }
+        else
+        {
+            SetLightActive(false);
+        }
+
+        if (showCenterGaze)
+        {
+            lightObj2.transform.position = VarjoManager.Instance.HeadTransform.position;
+            lightObj2.transform.rotation = VarjoManager.Instance.HeadTransform.rotation;
         }
     }
 
+    void SetLightActive(bool input)
+    {
+        if (input != isActive)
+        {
+            lightObj.SetActive(input);
+            isActive = input;
+        }
+        
+    }
     void RenderGaze(VarjoPlugin.GazeData data)
     {
-        bool invalid = data.status == VarjoPlugin.GazeStatus.INVALID;
-        RaycastHit hit;
 
-        if (!invalid)
+        //cast ray with gaze direction and gaze starting position:
+        Vector3 gazePosition = new Vector3((float)data.gaze.position[0], (float)data.gaze.position[1], (float)data.gaze.position[2]);
+        Vector3 start = VarjoManager.Instance.HeadTransform.position + gazePosition;
+
+        //This is realtive to the hmd rotation
+        Vector3 gazeDirectionLocal = new Vector3((float)data.gaze.forward[0], (float)data.gaze.forward[1], (float)data.gaze.forward[2]);
+        Vector3 gazeDirectionWorld = TransformToWorldAxis(gazeDirectionLocal, gazePosition);
+
+        lightObj.transform.position = start;
+        lightObj.transform.rotation = Quaternion.LookRotation(gazeDirectionWorld);
+
+        //Quaternion relative = Quaternion.Inverse(GetComponent<ExperimentManager>().driverView.rotation) * lightObj.transform.rotation;
+        //Debug.Log($"Eyes : {relative.eulerAngles.ToString("F3")}...");
+
+        /*
+        if (someTime + 0.75f < Time.time)
         {
-            //cast ray with gaze direction and gaze starting position:
-            Vector3 start = new Vector3((float)data.gaze.position[0], (float)data.gaze.position[1], (float)data.gaze.position[2]);
+
             
-            start += cam.position;
-            Vector3 gazeDirection = new Vector3((float)data.gaze.forward[0], (float)data.gaze.forward[1], (float)data.gaze.forward[2]);
+            Debug.Log($"gazePosition:{gazePosition}...");
+            Debug.Log($"gazeDirectionLocal:{gazeDirectionLocal}...");
+            Debug.Log($"gazeDirectionWorld:{gazeDirectionWorld}...");
 
-            //if hit something draw a little circle
-            if (Physics.Raycast(start, gazeDirection, out hit, 100f, Physics.AllLayers))
-            {
-                Vector3 hitPosition = new Vector3(hit.point.x, hit.point.y, hit.point.z);
-                gazeHighlights.transform.position = hitPosition;
-            }
-            else
-            {
-                //hide if no hits are gathered
-                HideGazeRender();
-            }
+            
+            Debug.Log($"VarjoManager.Instance.HeadTransform.position:{VarjoManager.Instance.HeadTransform.position}...");
+            Debug.Log($"player.position:{MyUtils.GetPlayer().transform.position}...");
 
+            Debug.Log($"VarjoManager.Instance.HeadTransform.forward:{VarjoManager.Instance.HeadTransform.forward}...");
+            Debug.Log($"player.forward:{MyUtils.GetPlayer().transform.forward}...");
 
-        }
+            //Debug.Log($"{gazeDirectionWorld} and {lightObj2.transform.forward}...");
+            someTime = Time.time;
+        }*/
+
     }
 
-    void HideGazeRender()
+    Vector3 TransformToWorldAxis(Vector3 gaze, Vector3 gazePosition)
     {
-        gazeHighlights.transform.position = new Vector3(0, -1f, 0);
+        Vector4 gazeH = new Vector4(gaze.x, gaze.y, gaze.z, 1);
+        Vector3 xAxis = VarjoManager.Instance.HeadTransform.right;
+        Vector3 yAxis = VarjoManager.Instance.HeadTransform.up;
+        Vector3 zAxis = VarjoManager.Instance.HeadTransform.forward;
+
+        float x = Vector4.Dot(new Vector4(xAxis.x, yAxis.x, zAxis.x, gazePosition.x), gazeH);
+        float y = Vector4.Dot(new Vector4(xAxis.y, yAxis.y, zAxis.y, gazePosition.y), gazeH);
+        float z = Vector4.Dot(new Vector4(xAxis.z, yAxis.z, zAxis.z, gazePosition.z), gazeH);
+
+
+        return new Vector3(x, y, z);
     }
 }
+
