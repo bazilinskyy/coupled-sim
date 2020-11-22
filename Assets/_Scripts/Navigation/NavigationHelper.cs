@@ -65,12 +65,14 @@ public class NavigationHelper : MonoBehaviour
     {
         return (GetNavigationLine(), renderVirtualCable, renderHighlightedRoad, renderHUD, transparency);
     }
+
+    public void CaluclateTargetInfo(){ targetCountInfo = GetTargetCountInfo(); targetDifficultyList = GetTargetDifficultyList(); }
     void CheckChanges()
     {
         //Dont do this while application is running
         if (Application.isPlaying) { return; }
         if(generalWaypointList == null || generalWaypointList.Count() != GetOrderedWaypointList().Count()) { CountTurns(); generalWaypointList = GetOrderedWaypointList(); }
-        if (targetCountInfo.totalTargets != GetAllTargets().Count()) { targetCountInfo = GetTargetCountInfo(); targetDifficultyList = GetTargetDifficultyList(); }
+        if (targetCountInfo.totalTargets != GetAllTargets().Count()) { CaluclateTargetInfo(); }
 
         if (splineCreator == null) { splineCreator = gameObject.GetComponent<SplineCreator>(); }
         if (renderVirtualCable != _renderVirtualCable || renderHighlightedRoad != _renderHighlightedRoad)

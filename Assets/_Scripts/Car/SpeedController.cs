@@ -8,20 +8,20 @@ public class SpeedController : MonoBehaviour
 
     //Lets the vehicle drive and brake according to the set waypoint target using the VPStandardInput speed limit
     [Header("Speed Limits")]
-    public float speedLimitCorner = 5f;
-    public float speedLimit = 10f;
-    public float speedLimitSpline = 8f;
+    private readonly float speedLimitCorner = 5f;
+    private readonly float speedLimit = 10f;
+    private readonly float speedLimitSpline = 8f;
 
     [Header("Tweaking Variables")]
-    public float cornerBrakingDistance = 20f;
-    public float metersLetGoGasEndPoint = 30f;
-    public float brakeIncrement = 0.005f;
-    public float throttleIncrement = 0.002f;
-    public float maxThrottle = 0.6f;
-    public float maxBrake = 0.1f;
+    private readonly float cornerBrakingDistance = 20f;
+    private readonly float metersLetGoGasEndPoint = 30f;
+    private readonly float brakeIncrement = 0.005f;
+    private readonly float throttleIncrement = 0.002f;
+    private readonly float maxThrottle = 0.6f;
+    private readonly float maxBrake = 0.2f;
 
-    public float brakeSpeedMargin = 2f;
-    public float letGoBrakeSpeed = 2f;
+    private readonly float brakeSpeedMargin = 2f;
+    private readonly float letGoBrakeSpeed = 2f;
 
     private float externalThrottle = 0f;
     private float externalBrake = 0f;
@@ -117,7 +117,7 @@ public class SpeedController : MonoBehaviour
             //Debug.Log($"On end point {carRB.velocity.magnitude}...");
             setSpeed = speedLimitSpline;
             //Let go gas when close
-            if (Vector3.Distance(transform.position, targetWaypoint.transform.position) < metersLetGoGasEndPoint) { ToggleGas(false, throttleIncrement); }
+            if (Vector3.Distance(transform.position, targetWaypoint.transform.position) < metersLetGoGasEndPoint) { ToggleGas(false, 0.05f); }
             else { ToggleGas(true, throttleIncrement); }
 
             //Starts brakign when at end point.
@@ -199,6 +199,7 @@ public class SpeedController : MonoBehaviour
     }
     bool OnSpline()
     {
+        if(targetWaypoint.operation == Operation.EndPoint) { return false; }
         if (targetWaypoint.previousWaypoint.operation == Operation.SplinePoint) { return true; }
         else { return false; }
     }

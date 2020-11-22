@@ -371,7 +371,6 @@ public class ExperimentManager : MonoBehaviour
             targetChosen.SetDetected(activeExperiment.experimentTime);
         }
     }
-
     Vector3 GetRandomPerpendicularVector(Vector3 vec)
     {
 
@@ -507,8 +506,11 @@ public class ExperimentManager : MonoBehaviour
     {
         //Get attatched XMLManager
         dataManager = GetComponent<DataLogger>();
+        
         //Throw error if we dont have an xmlManager
         if (dataManager == null) { throw new System.Exception("Error in Experiment Manager -> A XMLManager should be attatched if you want to save data..."); }
+
+        dataManager.navigation = activeExperiment.navigation;
 
         if (experimentInput.saveData) { dataManager.StartNewMeasurement(); }
         else 

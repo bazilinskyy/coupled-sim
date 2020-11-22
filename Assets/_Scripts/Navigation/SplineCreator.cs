@@ -516,6 +516,7 @@ public class SplineCreator : MonoBehaviour
 				waypoint.transform.forward = lastWaypoint.transform.forward;
 				lastPointWasSpline = false;
 			}
+            else { lastPointWasSpline = false; }
 		}
 	}
 	private Vector3[] GetMainSplinePoints(List<Waypoint> waypoints)

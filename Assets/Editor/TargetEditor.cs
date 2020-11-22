@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEditor;
 
-[CustomEditor(typeof(Target))]
+[CustomEditor(typeof(Target)), CanEditMultipleObjects]
 public class TargetEditor : Editor
     {
 

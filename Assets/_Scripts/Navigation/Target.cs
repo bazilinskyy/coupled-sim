@@ -54,6 +54,9 @@ public class Target : MonoBehaviour
 
             if(afterTurn && ((side == Side.Right && waypoint.operation.IsRightTurn()) || (side == Side.Left && waypoint.operation.IsLeftTurn()))){ difficultPosition = true; }
             else { difficultPosition = false; }
+
+            NavigationHelper navHelper = waypoint.transform.parent.GetComponent<NavigationHelper>();
+            if(navHelper != null) { navHelper.CaluclateTargetInfo(); }
         }
     }
     
@@ -132,7 +135,7 @@ public class Target : MonoBehaviour
         //Targets should always be placed between the parent waypoint and the next waypoint!
         if (waypoint == null) { return Side.Undetermined; }
         if (waypoint.nextWaypoint == null) { 
-            Debug.LogError("Can not determine side of the target as there is no next waypoint. (Targes should always be placed IN FRONT of the parent waypoint i.e., in between the parent and next waypoint");
+            Debug.LogError($"Can not determine side of target {GetID()} as there is no next waypoint. (Targes should always be placed IN FRONT of the parent waypoint i.e., in between the parent and next waypoint");
             return Side.Undetermined; }
 
         Vector3 firstWaypointPos = waypoint.transform.position;
