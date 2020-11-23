@@ -85,7 +85,6 @@ public class AICar : MonoBehaviour
         if ((Input.GetKeyDown("space") == true || (StopWithEyeGaze == true && boolVarjoSaysStop == true && n == 1)) && startCar == true)
         {
             Brake_Spacebar();
-            Debug.LogError($"entered brake");
         }
 
         // Start car using arrow up
@@ -102,7 +101,6 @@ public class AICar : MonoBehaviour
         // This statement is applied when the car stood still and is resetting its speed.
         else if ((braking == false) && (reset == true))
         {
-            Debug.LogError("Reset speed");
             Reset_Speed_After_Stopping();
         }
     }
@@ -209,7 +207,6 @@ public class AICar : MonoBehaviour
         set_speed = 0;
         set_acceleration = -2;
         jerk = -Mathf.Abs(-6);
-        Debug.LogError($"Triggerlocation = {first_triggerlocation-17}");
     }
 
 

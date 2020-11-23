@@ -14,7 +14,6 @@ public class NetworkingManager : MonoBehaviour
     WorldLogger _fixedLogger;
     LogConverter _logConverter;
     public SceneSelector _SceneSelector;
-    public bool _nextScene;
     public string _participantNr = "enter";
 
     [SerializeField]
@@ -44,7 +43,6 @@ public class NetworkingManager : MonoBehaviour
     bool hideGui = false;
     void Update()
     {
-        _nextScene = PersistentManager.Instance.nextScene;
         if (Input.GetKeyDown(KeyCode.Escape))
         {
             Application.Quit();

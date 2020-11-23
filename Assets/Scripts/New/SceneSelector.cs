@@ -14,7 +14,7 @@ public class SceneSelector : MonoBehaviour
     public bool useManualSelection;
     public int manualHostRole;
     public int manualClientRole;
-    public bool SendLoadMsgToClient;
+    private bool passed = false;
 
     public enum Mapping
     {
@@ -48,25 +48,28 @@ public class SceneSelector : MonoBehaviour
 
     void OnTriggerEnter(Collider other)
     {
-        if (other.transform.tag == "NEXT")
+        if (other.transform.tag == "NEXT" && !passed)
         {
+            passed = true;
+            // Check if the end of the game is reached & Client has shut down. Shut down host if true
             if (PersistentManager.Instance.ClientClosed == true && PersistentManager.Instance.listNr >= PersistentManager.Instance.ExpOrder.Count-1)
             {
                 //Application.Quit(); // build version
                 UnityEditor.EditorApplication.isPlaying = false; // editor version
             }
-            else if (PersistentManager.Instance.listNr >= PersistentManager.Instance.ExpOrder.Count-1)
+            // Check if the end of the game is reached. Shut down client if true.
+            if (PersistentManager.Instance.listNr >= PersistentManager.Instance.ExpOrder.Count-1)
             {
-                PersistentManager.Instance.SendEndGameToClient = true; // value doesn't change in host. WHY?
+                PersistentManager.Instance.SendEndGameToClient = true; 
             }
-            else if (useManualSelection == false)
+            // The game has not reached the end. Select experiment
+            if (useManualSelection == false)
             {
-                PersistentManager.Instance.client_nextScene = 1;
-
+                // Load next scene in 4 seconds
                 if(PersistentManager.Instance.SendEndGameToClient == false)
                 {
                     Invoke("nextExperiment", 4);
-                }
+                }               
                 
                 PersistentManager.Instance.stopLogging = true;
                 PersistentManager.Instance.nextScene = true;
@@ -78,16 +81,9 @@ public class SceneSelector : MonoBehaviour
                     PersistentManager.Instance.experimentnr = PersistentManager.Instance.ExpOrder[PersistentManager.Instance.listNr];
                     Debug.LogError($"persistent experiment nr = {PersistentManager.Instance.experimentnr}");
                 }
-                /*else if(SteamVR.instance.hmd_SerialNumber == "LHR-7863A1E8")
-                {
-                    SendEndGameToClient = true;
-                }*/
             }
             else if (useManualSelection == true)
             {
-                //Application.Quit(); // build version
-                //UnityEditor.EditorApplication.isPlaying = false; // editor version
-
                 PersistentManager.Instance.stopLogging = true;
                 PersistentManager.Instance.nextScene = true;
                 PersistentManager.Instance.experimentnr = manualSelection;
@@ -95,6 +91,10 @@ public class SceneSelector : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Load the next scene for the Host. The host only activates the next scene when the scene has been loaded for over 90%. At that point, the host also sends a message
+    /// to the client to switch scenes.
+    /// </summary>
     public void nextExperiment()
     {
         //SceneManager.LoadSceneAsync("StartScene");
@@ -105,17 +105,13 @@ public class SceneSelector : MonoBehaviour
         asyncOperation.allowSceneActivation = false;
 
         // Send a message to the client to load new scene and allow host to activate scene
-        if(asyncOperation.progress >= 0.9f)
+        if (asyncOperation.progress >= 0.9f)
         {
             Debug.LogError("Next scene allowed to load");
+            passed = false;
             asyncOperation.allowSceneActivation = true;
-            SendLoadMsgToClient = true;
+            PersistentManager.Instance.SendLoadMsgToClient = true;
         }
-    }
-
-    public void setSendLoadMsgToCLient()
-    {
-        SendLoadMsgToClient = false;
     }
 
     public SceneSelector(LevelManager levelManager) // actually selects the experiment definition
@@ -132,7 +128,10 @@ public class SceneSelector : MonoBehaviour
         }
     }
 
-    public void GazeEffectOnAV()
+    /// <summary>
+    /// Determines whether the Autonomous Vehicle yields based on eye-gaze.
+    /// </summary>
+    public void GazeEffectOnAV() 
     {
         if (PersistentManager.Instance.experimentnr < 4 || PersistentManager.Instance.experimentnr > 8)
         {
@@ -145,6 +144,9 @@ public class SceneSelector : MonoBehaviour
         Debug.LogError($"Stop with eye gaze = {PersistentManager.Instance._StopWithEyeGaze}");
     }
 
+    /// <summary>
+    /// Deteremines whether the eye-gaze visualization is used.
+    /// </summary>
     public void VisualizeGaze()
     {
         if (PersistentManager.Instance.experimentnr < 4)
@@ -157,6 +159,10 @@ public class SceneSelector : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Creates a list of experiment including all the experiment defintions.
+    /// </summary>
+    /// <returns></returns>
     private List<int> SceneRandomizer()
     {
         // Randomize exp 0-3, every exp 3 time
@@ -193,6 +199,10 @@ public class SceneSelector : MonoBehaviour
         return Block_one;
     }
 
+    /// <summary>
+    /// Creates a list of experiments including the experiments associated with the mapping chosen in the Unity editor.
+    /// </summary>
+    /// <returns></returns>
     private List<int> SceneRandomizerBlock()
     {
         List<int> Block = new List<int>();
@@ -205,7 +215,7 @@ public class SceneSelector : MonoBehaviour
         else if (_Mapping == Mapping.Mapping1)
         {
             // Randomize Mapping 1, exp 4-7
-            Block = shuffledList(5, 6, 1); //shuffledList(4, 7, 1);
+            Block = shuffledList(4, 7, 4); //shuffledList(4, 7, 4);
         }
         else if (_Mapping == Mapping.Mapping2)
         {

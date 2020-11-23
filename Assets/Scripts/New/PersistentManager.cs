@@ -22,7 +22,8 @@ public class PersistentManager : MonoBehaviour
     public int hostRole;
     public int clientRole;
     public bool clientConnectedToHost;
-    public int client_nextScene;
+
+    public bool SendLoadMsgToClient;
 
     public bool ClientClosed;
     public bool SendEndGameToClient;

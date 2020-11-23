@@ -23,7 +23,14 @@ public class SceneNetworkManager : MonoBehaviour
     // Action to be taken by Client
     public void ClientLoadScene()
     {
-        SceneManager.LoadSceneAsync("StartScene");
+        //SceneManager.LoadSceneAsync("StartScene");
+        AsyncOperation asyncOperation = SceneManager.LoadSceneAsync("StartScene");
+        // Don't let the Scene activate until you allow it to
+        asyncOperation.allowSceneActivation = false;
+        if (asyncOperation.progress >= 0.9f)
+        {
+            asyncOperation.allowSceneActivation = true;
+        }
     }
 
     public void ClientEndGame()

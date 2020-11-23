@@ -340,10 +340,10 @@ public class Host : NetworkSystem
                     }*/
 
                     // Broadcast message when the host switches scene
-                    if (_SceneSelector.SendLoadMsgToClient == true)
+                    if (PersistentManager.Instance.SendLoadMsgToClient == true)
                     {
                         _sceneNetworkManager.SendLoadMessage(this);
-                        _SceneSelector.setSendLoadMsgToCLient();
+                        PersistentManager.Instance.SendLoadMsgToClient = false;
                     }
                     if(PersistentManager.Instance.SendEndGameToClient == true)
                     {
