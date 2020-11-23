@@ -26,21 +26,21 @@ public class SpeedSettings : MonoBehaviour
     {
         if (other.gameObject.CompareTag("ManualCar") && lookAtPlayerWhileYielding)
         {
-            StartCoroutine(LookAtPlayerAfterCarStops(other.gameObject.GetComponent<AICar>()));
+            StartCoroutine(LookAtPlayerAfterCarStops(other.gameObject.GetComponent<AICar>(), other.gameObject.GetComponentInChildren<PlayerLookAtPed>()));
         }
     }
 
-    private IEnumerator LookAtPlayerAfterCarStops(AICar car)
+    private IEnumerator LookAtPlayerAfterCarStops(AICar car, PlayerLookAtPed driver)
     {
         while (car.speed > 0.0f)
         {
             yield return null;
         }
-        PlayerLookAtPed.EnableTrackingWhileYielding = false;
+        driver.EnableTrackingWhileYielding = false;
         yield return new WaitForSeconds(lookAtPedFromSeconds);
-        PlayerLookAtPed.EnableTrackingWhileYielding = true;
+        driver.EnableTrackingWhileYielding = true;
         yield return new WaitForSeconds(lookAtPedToSeconds - lookAtPedFromSeconds);
-        PlayerLookAtPed.EnableTrackingWhileYielding = false;
+        driver.EnableTrackingWhileYielding = false;
     }
 
 }

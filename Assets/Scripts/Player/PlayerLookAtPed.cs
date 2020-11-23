@@ -21,8 +21,7 @@ public class PlayerLookAtPed : MonoBehaviour
     public float MinTrackingDistance;
     public float MaxHeadRotation;
     public bool EnableTracking;
-
-    public static bool EnableTrackingWhileYielding;
+    public bool EnableTrackingWhileYielding;
 
     public bool IsTargettingPed { get => isTargettingPed; }
     public bool CanLookAtPed { get => canLookAtPed; }
