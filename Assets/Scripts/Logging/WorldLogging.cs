@@ -29,6 +29,10 @@ public class WorldLogger
     int _trialNr;
     int _participantNr;
 
+    // Sound triggers
+    float press;
+    float release;
+
     // Data from varjo HMD
     float distance_pa;
     long Frame_pa;
@@ -197,6 +201,18 @@ public class WorldLogger
             _fileWriter.Write(driver.transform.rotation);
             _fileWriter.Write((int)driver._carBlinkers.State);
 
+            //if(driver.gameObject.GetComponent<AICar>()._press == true){press = 1.0f;}
+            //else{press = -1.0f;}
+            press = PersistentManager.Instance.pressed;
+            Debug.LogError($"Press = {press}");
+            //if (driver.gameObject.GetComponent<AICar>()._release == true){release = 1.0f;}
+            //else { release = -1.0f; }
+            release = PersistentManager.Instance.released;
+            Debug.LogError($"Release = {release}");
+            _fileWriter.Write(press);
+            _fileWriter.Write(release);
+                
+
             var passengerGaze = driver.transform.GetComponentInChildren<VarjoGazeRay_CS>();
             // Code enters the invalid statement and afterwards the valid statement (eye-calibration)
             if (VarjoPlugin.GetGaze().status == VarjoPlugin.GazeStatus.VALID && driver.transform.Find("Gaze"))
@@ -354,17 +370,9 @@ public class WorldLogger
             _fileWriter.Write(gazeRayOrigin_pe_x);      _fileWriter.Write(gazeRayOrigin_pe_y);      _fileWriter.Write(gazeRayOrigin_pe_z);
 
             // Vive controller
-            //if (pedestrian.transform.GetComponentInChildren<ViveInput>() != null)
-            //{
-                gapAcceptance = N10.position.x; //pedestrian.transform.GetComponentInChildren<ViveInput>().getGapAcceptance();
-            //}
-            /*else if (pedestrian.transform.GetComponentInChildren<ViveInput>() == null)
-            {
-                Debug.LogError("Vive controller action script called [ViveInput] is missing");
-                gapAcceptance = -9.0f;
-            }*/
-            _fileWriter.Write(gapAcceptance);
+            gapAcceptance = N10.position.x; //pedestrian.transform.GetComponentInChildren<ViveInput>().getGapAcceptance();
 
+            _fileWriter.Write(gapAcceptance);
         }
         if (_lights != null)
         {
@@ -469,6 +477,9 @@ public class LogConverter
         public List<LightState> CarLightStates = new List<LightState>();
         public List<LightState> PedestrianLightStates = new List<LightState>();
         public Vector3 LocalDriverRbVelocity;
+        // Sound data
+        public float _press;
+        public float _release;
         // Varjo data of the passenger
         public float distance_pa;
         public long Frame_pa;
@@ -522,7 +533,7 @@ public class LogConverter
         const string separator = ";";
 
         // Column headers
-        const int columnsPerDriver = 3 /*pos x,y,z*/ + 3 /*rot x,y,z */ + 1 /*blinkers*/ + 1 /*distance_pa*/+ 1 /*Frame*/ + 1 /*CaptureTime*/ + 3 /*hmdposition_xyz*/ + 3 /*hmdrotation_xyz*/ + 2 /*eyePupilSize*/ + 1 /*focusDistance*/ + 1 /*focusStability*/ + 3 /*gazeForward_xyz*/  + 3 /* gazeDirection_xyz */+ 3 /*gazePosition_xyz*/ + 3 /*gazeOrigin_xyz*/ + 3 /* local velocity */ + 3 /* local smooth velocity */ + 3 /* world velocity */ + 3 /* world velocity smooth */;
+        const int columnsPerDriver = 3 /*pos x,y,z*/ + 3 /*rot x,y,z */ + 1 /*blinkers*/ + 2 /*sound*/ + 1 /*distance_pa*/+ 1 /*Frame*/ + 1 /*CaptureTime*/ + 3 /*hmdposition_xyz*/ + 3 /*hmdrotation_xyz*/ + 2 /*eyePupilSize*/ + 1 /*focusDistance*/ + 1 /*focusStability*/ + 3 /*gazeForward_xyz*/  + 3 /* gazeDirection_xyz */+ 3 /*gazePosition_xyz*/ + 3 /*gazeOrigin_xyz*/ + 3 /* local velocity */ + 3 /* local smooth velocity */ + 3 /* world velocity */ + 3 /* world velocity smooth */;
         const int columnsForLocalDriver = columnsPerDriver + 3 /* rb velocity x,y,z */ + 3 /* rb velocity local x,y,z */; 
 
         // Column headers for bodysuit tracking
@@ -602,6 +613,8 @@ public class LogConverter
                     frame.DriverRotations.Add(reader.ReadQuaternion());
                     var blinkerstate = (BlinkerState)reader.ReadInt32(); //Debug.LogError($"9 blinkerstate = {blinkerstate}");
                     frame.BlinkerStates.Add(blinkerstate); //frame.BlinkerStates.Add((BlinkerState)reader.ReadInt32());
+                    frame._press = reader.ReadSingle();
+                    frame._release = reader.ReadSingle();
                     frame.distance_pa = reader.ReadSingle();
                     frame.Frame_pa = reader.ReadInt64();
                     frame.CaptureTime_pa = reader.ReadInt64();
@@ -770,7 +783,7 @@ public class LogConverter
             writer.Write(separator); // for the Timestamp column
             writer.Write(separator); // for the Ping column
 
-            const string driverTransformHeader = "pos_x;pos_y;pos_z;rot_x;rot_y;rot_z;blinkers;distance_pa;frame;captureTime;hmdpos_x;hmdpos_y;hmdpos_z;hmdrot_x;hmdrot_y;hmdrot_z;leftEyePupilSize;rightEyePupilSize;focusDistance;focusStability;gazeRayForward_x;gazeRayForward_y;gazeRayForward_z;gazeRayDirection_x;gazeRayDirection_y;gazeRayDirection_z;gazePosition_x;gazePosition_y;gazePosition_z;gazeOrigin_x;gazeOrigin_y;gazeOrigin_z;vel_local_x;vel_local_y;vel_local_z;vel_local_smooth_x;vel_local_smooth_y;vel_local_smooth_z;vel_x;vel_y;vel_z;vel_smooth_x;vel_smooth_y;vel_smooth_z"; // added distance after blinkers
+            const string driverTransformHeader = "pos_x;pos_y;pos_z;rot_x;rot_y;rot_z;blinkers;press;release;distance_pa;frame;captureTime;hmdpos_x;hmdpos_y;hmdpos_z;hmdrot_x;hmdrot_y;hmdrot_z;leftEyePupilSize;rightEyePupilSize;focusDistance;focusStability;gazeRayForward_x;gazeRayForward_y;gazeRayForward_z;gazeRayDirection_x;gazeRayDirection_y;gazeRayDirection_z;gazePosition_x;gazePosition_y;gazePosition_z;gazeOrigin_x;gazeOrigin_y;gazeOrigin_z;vel_local_x;vel_local_y;vel_local_z;vel_local_smooth_x;vel_local_smooth_y;vel_local_smooth_z;vel_x;vel_y;vel_z;vel_smooth_x;vel_smooth_y;vel_smooth_z"; // added distance after blinkers
             const string localDriverTransformHeader = driverTransformHeader + ";rb_vel_x;rb_vel_y;rb_vel_z;rb_vel_local_x;rb_vel_local_y;rb_vel_local_z";
             List<string> headers = new List<string>();
             for (int i = 0; i < numDrivers; i++)
@@ -829,6 +842,8 @@ public class LogConverter
                     var rot = frame.DriverRotations[i];
                     var euler = RotToRefPoint(rot).eulerAngles;
                     var blinkers = frame.BlinkerStates[i];
+                    var press = frame._press;
+                    var release = frame._release;
                     var distance_pa = frame.distance_pa;
                     var Frame_pa = frame.Frame_pa;
                     var CaptureTime_pa = frame.CaptureTime_pa;
@@ -849,11 +864,11 @@ public class LogConverter
                     {
                         if (i == localDriver)
                         {
-                            line.Add($"{pos.x};{pos.y};{pos.z};{euler.x};{euler.y};{euler.z};{(BlinkerState)blinkers};{distance_pa};{Frame_pa};{CaptureTime_pa};{HmdPos_pa_x};{HmdPos_pa_y};{HmdPos_pa_z};{HmdRot_pa_x};{HmdRot_pa_y};{HmdRot_pa_z};{LeftEyePupilSize_pa};{RightEyePupilSize_pa};{FocusDistance_pa};{FocusStability_pa};{gazeRayForward_pa_x};{gazeRayForward_pa_y};{gazeRayForward_pa_z};{gazeRayDirection_pa_x};{gazeRayDirection_pa_y};{gazeRayDirection_pa_z};{gazePosition_pa_x};{gazePosition_pa_y};{gazePosition_pa_z};{gazeRayOrigin_pa_x};{gazeRayOrigin_pa_y};{gazeRayOrigin_pa_z};0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0");
+                            line.Add($"{pos.x};{pos.y};{pos.z};{euler.x};{euler.y};{euler.z};{(BlinkerState)blinkers};{press};{release};{distance_pa};{Frame_pa};{CaptureTime_pa};{HmdPos_pa_x};{HmdPos_pa_y};{HmdPos_pa_z};{HmdRot_pa_x};{HmdRot_pa_y};{HmdRot_pa_z};{LeftEyePupilSize_pa};{RightEyePupilSize_pa};{FocusDistance_pa};{FocusStability_pa};{gazeRayForward_pa_x};{gazeRayForward_pa_y};{gazeRayForward_pa_z};{gazeRayDirection_pa_x};{gazeRayDirection_pa_y};{gazeRayDirection_pa_z};{gazePosition_pa_x};{gazePosition_pa_y};{gazePosition_pa_z};{gazeRayOrigin_pa_x};{gazeRayOrigin_pa_y};{gazeRayOrigin_pa_z};0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0");
                         }
                         else
                         {
-                            line.Add($"{pos.x};{pos.y};{pos.z};{euler.x};{euler.y};{euler.z};{(BlinkerState)blinkers};{distance_pa};{Frame_pa};{CaptureTime_pa};{HmdPos_pa_x};{HmdPos_pa_y};{HmdPos_pa_z};{HmdRot_pa_x};{HmdRot_pa_y};{HmdRot_pa_z};{LeftEyePupilSize_pa};{RightEyePupilSize_pa};{FocusDistance_pa};{FocusStability_pa};{gazeRayForward_pa_x};{gazeRayForward_pa_y};{gazeRayForward_pa_z};{gazeRayDirection_pa_x};{gazeRayDirection_pa_y};{gazeRayDirection_pa_z};{gazePosition_pa_x};{gazePosition_pa_y};{gazePosition_pa_z};{gazeRayOrigin_pa_x};{gazeRayOrigin_pa_y};{gazeRayOrigin_pa_z};0;0;0;0;0;0;0;0;0;0;0;0");
+                            line.Add($"{pos.x};{pos.y};{pos.z};{euler.x};{euler.y};{euler.z};{(BlinkerState)blinkers};{press};{release};{distance_pa};{Frame_pa};{CaptureTime_pa};{HmdPos_pa_x};{HmdPos_pa_y};{HmdPos_pa_z};{HmdRot_pa_x};{HmdRot_pa_y};{HmdRot_pa_z};{LeftEyePupilSize_pa};{RightEyePupilSize_pa};{FocusDistance_pa};{FocusStability_pa};{gazeRayForward_pa_x};{gazeRayForward_pa_y};{gazeRayForward_pa_z};{gazeRayDirection_pa_x};{gazeRayDirection_pa_y};{gazeRayDirection_pa_z};{gazePosition_pa_x};{gazePosition_pa_y};{gazePosition_pa_z};{gazeRayOrigin_pa_x};{gazeRayOrigin_pa_y};{gazeRayOrigin_pa_z};0;0;0;0;0;0;0;0;0;0;0;0");
                         }
                     }
                     else
@@ -869,11 +884,11 @@ public class LogConverter
                         {
                             var rbVel = frame.LocalDriverRbVelocity;
                             var rbVelLocal = inverseRotation * rbVel;
-                            line.Add($"{pos.x};{pos.y};{pos.z};{euler.x};{euler.y};{euler.z};{(BlinkerState)blinkers};{distance_pa};{Frame_pa};{CaptureTime_pa};{HmdPos_pa_x};{HmdPos_pa_y};{HmdPos_pa_z};{HmdRot_pa_x};{HmdRot_pa_y};{HmdRot_pa_z};{LeftEyePupilSize_pa};{RightEyePupilSize_pa};{FocusDistance_pa};{FocusStability_pa};{gazeRayForward_pa_x};{gazeRayForward_pa_y};{gazeRayForward_pa_z};{gazeRayDirection_pa_x};{gazeRayDirection_pa_y};{gazeRayDirection_pa_z};{gazePosition_pa_x};{gazePosition_pa_y};{gazePosition_pa_z};{gazeRayOrigin_pa_x};{gazeRayOrigin_pa_y};{gazeRayOrigin_pa_z};{speed.x};{speed.y};{speed.z};{localSmooth.x};{localSmooth.y};{localSmooth.z};{vel.x};{vel.y};{vel.z};{velSmooth.x};{velSmooth.y};{velSmooth.z};{rbVel.x};{rbVel.y};{rbVel.z};{rbVelLocal.x};{rbVelLocal.y};{rbVelLocal.z}");
+                            line.Add($"{pos.x};{pos.y};{pos.z};{euler.x};{euler.y};{euler.z};{(BlinkerState)blinkers};{press};{release};{distance_pa};{Frame_pa};{CaptureTime_pa};{HmdPos_pa_x};{HmdPos_pa_y};{HmdPos_pa_z};{HmdRot_pa_x};{HmdRot_pa_y};{HmdRot_pa_z};{LeftEyePupilSize_pa};{RightEyePupilSize_pa};{FocusDistance_pa};{FocusStability_pa};{gazeRayForward_pa_x};{gazeRayForward_pa_y};{gazeRayForward_pa_z};{gazeRayDirection_pa_x};{gazeRayDirection_pa_y};{gazeRayDirection_pa_z};{gazePosition_pa_x};{gazePosition_pa_y};{gazePosition_pa_z};{gazeRayOrigin_pa_x};{gazeRayOrigin_pa_y};{gazeRayOrigin_pa_z};{speed.x};{speed.y};{speed.z};{localSmooth.x};{localSmooth.y};{localSmooth.z};{vel.x};{vel.y};{vel.z};{velSmooth.x};{velSmooth.y};{velSmooth.z};{rbVel.x};{rbVel.y};{rbVel.z};{rbVelLocal.x};{rbVelLocal.y};{rbVelLocal.z}");
                         }
                         else
                         {
-                            line.Add($"{pos.x};{pos.y};{pos.z};{euler.x};{euler.y};{euler.z};{(BlinkerState)blinkers};{distance_pa};{Frame_pa};{CaptureTime_pa};{HmdPos_pa_x};{HmdPos_pa_y};{HmdPos_pa_z};{HmdRot_pa_x};{HmdRot_pa_y};{HmdRot_pa_z};{LeftEyePupilSize_pa};{RightEyePupilSize_pa};{FocusDistance_pa};{FocusStability_pa};{gazeRayForward_pa_x};{gazeRayForward_pa_y};{gazeRayForward_pa_z};{gazeRayDirection_pa_x};{gazeRayDirection_pa_y};{gazeRayDirection_pa_z};{gazePosition_pa_x};{gazePosition_pa_y};{gazePosition_pa_z};{gazeRayOrigin_pa_x};{gazeRayOrigin_pa_y};{gazeRayOrigin_pa_z};{speed.x};{speed.y};{speed.z};{localSmooth.x};{localSmooth.y};{localSmooth.z};{vel.x};{vel.y};{vel.z};{velSmooth.x};{velSmooth.y};{velSmooth.z}");
+                            line.Add($"{pos.x};{pos.y};{pos.z};{euler.x};{euler.y};{euler.z};{(BlinkerState)blinkers};{press};{release};{distance_pa};{Frame_pa};{CaptureTime_pa};{HmdPos_pa_x};{HmdPos_pa_y};{HmdPos_pa_z};{HmdRot_pa_x};{HmdRot_pa_y};{HmdRot_pa_z};{LeftEyePupilSize_pa};{RightEyePupilSize_pa};{FocusDistance_pa};{FocusStability_pa};{gazeRayForward_pa_x};{gazeRayForward_pa_y};{gazeRayForward_pa_z};{gazeRayDirection_pa_x};{gazeRayDirection_pa_y};{gazeRayDirection_pa_z};{gazePosition_pa_x};{gazePosition_pa_y};{gazePosition_pa_z};{gazeRayOrigin_pa_x};{gazeRayOrigin_pa_y};{gazeRayOrigin_pa_z};{speed.x};{speed.y};{speed.z};{localSmooth.x};{localSmooth.y};{localSmooth.z};{vel.x};{vel.y};{vel.z};{velSmooth.x};{velSmooth.y};{velSmooth.z}");
                         }
                     }
                 }

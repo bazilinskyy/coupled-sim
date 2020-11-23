@@ -52,6 +52,9 @@ public class AICar : MonoBehaviour
     private GameObject ManualCarTrigger;
     private bool InitiateAV;
 
+    //public bool _press = false;
+    //public bool _release = false;
+
     // Game related variables
     public Transform target;                                               // Target on waypoint circuit that cars will follow
     private Rigidbody theRigidbody;                                        // Variable for the rigid body this script is attached to
@@ -70,6 +73,9 @@ public class AICar : MonoBehaviour
         target = GetComponent<WaypointProgressTracker>().target;           // Sets intermediate target on the circuit
         ManualCarTrigger = GameObject.FindWithTag("StartAV");
         startCar = false;
+        Debug.Log($"Entered start aicar");
+        PersistentManager.Instance.pressed = -1.0f;
+        PersistentManager.Instance.released = -1.0f;
     }
     void Update()
     {
@@ -158,11 +164,26 @@ public class AICar : MonoBehaviour
         else
         {
             Brake_AV(other);
+            LogSound(other);
         }
     }
 
     /////////////////////////////   LOCAL FUNCTIONS     /////////////////////////////
     
+    void LogSound(Collider other)
+    {
+        if (other.gameObject.CompareTag("PressNow"))
+        {
+            //_press = true;
+            PersistentManager.Instance.pressed = 1.0f;
+        }
+        else if (other.gameObject.CompareTag("ReleaseNow"))
+        {
+            //_release = true;
+            PersistentManager.Instance.released = 1.0f;
+        }
+    }
+
     void Brake_AV(Collider other)
     {
         if (other.gameObject.CompareTag("StartTrial_Z") && StopWithEyeGaze == false)                // Change tag, resume driving after stopping for 2 seconds in the Z direction.
@@ -170,23 +191,27 @@ public class AICar : MonoBehaviour
             WaitTrialZ = true;
             triggerlocation = other.gameObject.transform.position.z;
             first_triggerlocation = other.gameObject.transform.position.z;
+            Brake_Set_Variables(other);
         }
         else if (other.gameObject.CompareTag("Brake_Z"))                // Change tag, stop completely.
         {
             BrakeZ = true;
             triggerlocation = other.gameObject.transform.position.z;
+            Brake_Set_Variables(other);
         }
         else if (other.gameObject.CompareTag("StartTrial_X") && StopWithEyeGaze == false)           // Change tag, resume driving after stopping for 2 seconds in the X direction.
         {
             WaitTrialX = true;
             triggerlocation = other.gameObject.transform.position.x;
+            Brake_Set_Variables(other);
         }
         else if (other.gameObject.CompareTag("Brake_X"))                // Change tag, stop completely.
         {
             BrakeX = true;
             triggerlocation = other.gameObject.transform.position.x;
-        }
             Brake_Set_Variables(other);
+        }
+            
     }
 
     void Brake_Set_Variables(Collider other)

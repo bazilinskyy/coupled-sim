@@ -28,6 +28,9 @@ public class PersistentManager : MonoBehaviour
     public bool ClientClosed;
     public bool SendEndGameToClient;
 
+    public float pressed;
+    public float released;
+
     private void Awake()
     {
         if (Instance == null)
