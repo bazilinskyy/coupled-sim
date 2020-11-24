@@ -19,20 +19,16 @@ public class SceneSelector : MonoBehaviour
     private void Awake()
     {
         PersistentManager.Instance.nextScene = false;
-        /*if (PersistentManager.Instance.createOrder == true && SteamVR.instance.hmd_SerialNumber == "LHR-7863A1E8")
+    }
+
+    private void Update()
+    {
+        // Check if the end of the game is reached & Client has shut down. Shut down host if true
+        if (PersistentManager.Instance.ClientClosed == true && PersistentManager.Instance.listNr >= PersistentManager.Instance.ExpOrder.Count - 1)
         {
-            PersistentManager.Instance.ExpOrder = SceneRandomizerBlock(); // SceneRandomizer();
-            PersistentManager.Instance.createOrder = false;
-            if (useManualSelection == false)
-            {
-                PersistentManager.Instance.experimentnr = PersistentManager.Instance.ExpOrder[0];
-                Debug.LogError($"Experiment nr = {PersistentManager.Instance.experimentnr}");
-            }
-            else if(useManualSelection == true)
-            {
-                PersistentManager.Instance.experimentnr = manualSelection;
-            }
-        }*/
+            //Application.Quit(); // build version
+            UnityEditor.EditorApplication.isPlaying = false; // editor version
+        }
     }
 
     void OnTriggerEnter(Collider other)
@@ -40,12 +36,6 @@ public class SceneSelector : MonoBehaviour
         if (other.transform.tag == "NEXT" && !passed)
         {
             passed = true;
-            // Check if the end of the game is reached & Client has shut down. Shut down host if true
-            if (PersistentManager.Instance.ClientClosed == true && PersistentManager.Instance.listNr >= PersistentManager.Instance.ExpOrder.Count-1)
-            {
-                //Application.Quit(); // build version
-                UnityEditor.EditorApplication.isPlaying = false; // editor version
-            }
             // Check if the end of the game is reached. Shut down client if true.
             if (PersistentManager.Instance.listNr >= PersistentManager.Instance.ExpOrder.Count-1)
             {
@@ -220,7 +210,7 @@ public class SceneSelector : MonoBehaviour
         else if (PersistentManager.Instance.mapping == 1)
         {
             // Randomize Mapping 1, exp 4-7
-            Block = shuffledList(4, 7, 4); //shuffledList(4, 7, 4);
+            Block = shuffledList(5, 6, 1); //shuffledList(4, 7, 4);
         }
         else if (PersistentManager.Instance.mapping == 2)
         {
