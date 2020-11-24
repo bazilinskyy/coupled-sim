@@ -204,11 +204,9 @@ public class WorldLogger
             //if(driver.gameObject.GetComponent<AICar>()._press == true){press = 1.0f;}
             //else{press = -1.0f;}
             press = PersistentManager.Instance.pressed;
-            Debug.LogError($"Press = {press}");
             //if (driver.gameObject.GetComponent<AICar>()._release == true){release = 1.0f;}
             //else { release = -1.0f; }
             release = PersistentManager.Instance.released;
-            Debug.LogError($"Release = {release}");
             _fileWriter.Write(press);
             _fileWriter.Write(release);
                 

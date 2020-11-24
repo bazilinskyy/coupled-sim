@@ -278,7 +278,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _SceneSelector: {fileID: 0}
-  _nextScene: 0
   _participantNr: ParticipantNumber
   _aiCarSystem:
     Prefabs:
@@ -350,6 +349,7 @@ MonoBehaviour:
   experimentnr: 0
   _StopWithEyeGaze: 0
   _visualizeGaze: 0
+  _visualizeGaze_client: 0
   ExpOrder: 
   createOrder: 1
   listNr: 0
@@ -357,7 +357,11 @@ MonoBehaviour:
   hostRole: 0
   clientRole: 1
   clientConnectedToHost: 0
-  client_nextScene: 0
+  SendLoadMsgToClient: 0
+  ClientClosed: 0
+  SendEndGameToClient: 0
+  pressed: 0
+  released: 0
 --- !u!114 &301934537
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -511,7 +515,6 @@ MonoBehaviour:
   useManualSelection: 0
   manualHostRole: 0
   manualClientRole: 1
-  SendLoadMsgToClient: 0
   _Mapping: 1
 --- !u!1 &1531541351
 GameObject:

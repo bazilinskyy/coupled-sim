@@ -15,6 +15,7 @@ public class Host : NetworkSystem
     AICarSyncSystem _aiCarSystem;
     WorldLogger _logger;
     WorldLogger _fixedTimeLogger;
+    OrderLogging _orderLogger;
     HMIManager _hmiManager;
     VisualSyncManager _visualSyncManager;
     SceneNetworkManager _sceneNetworkManager;
@@ -30,13 +31,14 @@ public class Host : NetworkSystem
 
     public bool gameStarted = false; // test
 
-    public Host(LevelManager levelManager, PlayerSystem playerSys, AICarSyncSystem aiCarSystem, WorldLogger logger, WorldLogger fixedLogger)
+    public Host(LevelManager levelManager, PlayerSystem playerSys, AICarSyncSystem aiCarSystem, WorldLogger logger, WorldLogger fixedLogger, OrderLogging orderlogger)
     {
         _playerSys = playerSys;
         _lvlManager = levelManager;
         _aiCarSystem = aiCarSystem;
         _logger = logger;
         _fixedTimeLogger = fixedLogger;
+        _orderLogger = orderlogger;
         _host = new UNetHost();
         _host.Init();
 
@@ -141,6 +143,7 @@ public class Host : NetworkSystem
 
                             _logger.BeginLog($"HostLog-{roleName}-", _lvlManager.ActiveExperiment, _lights, Time.realtimeSinceStartup);
                             _fixedTimeLogger.BeginLog($"HostFixedTimeLog-{roleName}-", _lvlManager.ActiveExperiment, _lights, Time.fixedTime);
+                            _orderLogger.BeginLog(PersistentManager.Instance.ExpOrder, PersistentManager.Instance.ParticipantNr);
                         }
                         break;
                 }

@@ -12,6 +12,7 @@ public class NetworkingManager : MonoBehaviour
     PlayerSystem _playerSystem;
     WorldLogger _logger;
     WorldLogger _fixedLogger;
+    OrderLogging _orderLogger;
     LogConverter _logConverter;
     public SceneSelector _SceneSelector;
     public string _participantNr = "enter";
@@ -29,6 +30,7 @@ public class NetworkingManager : MonoBehaviour
         _levelManager = new LevelManager(_playerSystem, Experiments);
         _logger = new WorldLogger(_playerSystem, _aiCarSystem);
         _fixedLogger = new WorldLogger(_playerSystem, _aiCarSystem);
+        _orderLogger = new OrderLogging();
         _logConverter = new LogConverter(_playerSystem.PedestrianPrefab);
         _participantNr = "enter";
     }
@@ -93,7 +95,7 @@ public class NetworkingManager : MonoBehaviour
             {
                 if (_netSystem == null)
                 {
-                    _netSystem = new Host(_levelManager, _playerSystem, _aiCarSystem, _logger, _fixedLogger);
+                    _netSystem = new Host(_levelManager, _playerSystem, _aiCarSystem, _logger, _fixedLogger, _orderLogger);
                     PersistentManager.Instance.nextScene = false;
                     if(_SceneSelector.useManualSelection == false) 
                     {
