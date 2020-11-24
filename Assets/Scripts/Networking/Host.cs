@@ -299,8 +299,10 @@ public class Host : NetworkSystem
                     }
                 }
                     _SceneSelector.CreateExpList();
+                    _SceneSelector.GazeEffectOnAV();
+                    _SceneSelector.VisualizeGaze();
 
-                GUI.enabled = true;
+                    GUI.enabled = true;
                     //GUILayout.Label("Experiment:");
                     // test: select experiment definition via sceneselector
 
