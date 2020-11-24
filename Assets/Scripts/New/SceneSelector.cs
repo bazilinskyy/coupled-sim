@@ -204,18 +204,23 @@ public class SceneSelector : MonoBehaviour
 
         if (PersistentManager.Instance.mapping == 0)
         {
-            // Randomize exp 0-3, every exp 4 times
+            // Baseline, exp 0-3, every exp 4 times
             Block = shuffledList(0, 3, 4);
+            // Add 2 practice rounds
+            Block.Insert(0, 0);
+            Block.Insert(1, 1);
         }
-        else if (PersistentManager.Instance.mapping == 1)
+        else if (PersistentManager.Instance.mapping == 1) // Mapping 1, exp 4-7
         {
-            // Randomize Mapping 1, exp 4-7
-            Block = shuffledList(5, 6, 1); //shuffledList(4, 7, 4);
+            Block = shuffledList(4, 7, 4);
+            Block.Insert(0, 4);
+            Block.Insert(1, 5);
         }
-        else if (PersistentManager.Instance.mapping == 2)
+        else if (PersistentManager.Instance.mapping == 2) // Mapping 2, exp 8-11
         {
-            // Randomize Mapping 2, exp 8-11
             Block = shuffledList(8, 11, 4);
+            Block.Insert(0, 8);
+            Block.Insert(1, 9);
         }
 
         // Prints the list for debugging
