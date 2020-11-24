@@ -147,7 +147,6 @@ public class SceneSelector : MonoBehaviour
         {
             PersistentManager.Instance._StopWithEyeGaze = true;
         }
-        Debug.LogError($"Stop with eye gaze = {PersistentManager.Instance._StopWithEyeGaze}");
     }
 
     /// <summary>

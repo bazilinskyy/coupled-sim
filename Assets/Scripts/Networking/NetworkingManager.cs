@@ -15,7 +15,9 @@ public class NetworkingManager : MonoBehaviour
     OrderLogging _orderLogger;
     LogConverter _logConverter;
     public SceneSelector _SceneSelector;
-    public string _participantNr = "enter";
+    //public string _participantNr = "enter";
+    public string[] participantOptions = { "Duo1", "Duo2", "Duo3", "Duo4", "Duo5", "Duo6", "Duo7", "Duo8", "Duo9", "Duo10", "Duo11", "Duo12", "Duo13", "Duo14", "Duo15", "Duo16", "Duo17", "Duo18", "Duo19", "Duo20" };
+    private int participantInt = 0;
     public string[] mappingOptions = {"Baseline", "Mapping1", "Mapping2"};
     private int mappingInt = 0;
 
@@ -34,7 +36,7 @@ public class NetworkingManager : MonoBehaviour
         _fixedLogger = new WorldLogger(_playerSystem, _aiCarSystem);
         _orderLogger = new OrderLogging();
         _logConverter = new LogConverter(_playerSystem.PedestrianPrefab);
-        _participantNr = "enter";
+        //_participantNr = "enter";
     }
 
     void Start()
@@ -87,19 +89,13 @@ public class NetworkingManager : MonoBehaviour
         if (_netSystem == null) 
         {
             GUILayout.Label("Participant number:");
-            _participantNr = GUILayout.TextField(_participantNr);
-
+            participantInt = GUILayout.SelectionGrid(participantInt, participantOptions, 4);
+            PersistentManager.Instance.ParticipantNr = participantInt + 1;
             GUILayout.Label("Mapping:");
             GUILayout.BeginHorizontal("Box");
             mappingInt = GUILayout.SelectionGrid(mappingInt, mappingOptions, 3);
             GUILayout.EndHorizontal();
             PersistentManager.Instance.mapping = mappingInt;
-
-            if (_participantNr != "enter")
-            {
-                PersistentManager.Instance.ParticipantNr = int.Parse(_participantNr);
-            }
-
             if (GUILayout.Button("Start Host"))
             {
                 if (_netSystem == null)
