@@ -16,21 +16,10 @@ public class SceneSelector : MonoBehaviour
     public int manualClientRole;
     private bool passed = false;
 
-    public enum Mapping
-    {
-        Baseline,
-        Mapping1,
-        Mapping2
-    };
-
-    [SerializeField]
-    Mapping _Mapping;
-
     private void Awake()
     {
         PersistentManager.Instance.nextScene = false;
-
-        if (PersistentManager.Instance.createOrder == true && SteamVR.instance.hmd_SerialNumber == "LHR-7863A1E8")
+        /*if (PersistentManager.Instance.createOrder == true && SteamVR.instance.hmd_SerialNumber == "LHR-7863A1E8")
         {
             PersistentManager.Instance.ExpOrder = SceneRandomizerBlock(); // SceneRandomizer();
             PersistentManager.Instance.createOrder = false;
@@ -43,7 +32,7 @@ public class SceneSelector : MonoBehaviour
             {
                 PersistentManager.Instance.experimentnr = manualSelection;
             }
-        }
+        }*/
     }
 
     void OnTriggerEnter(Collider other)
@@ -117,7 +106,6 @@ public class SceneSelector : MonoBehaviour
     public SceneSelector(LevelManager levelManager) // actually selects the experiment definition
     {
         _lvlManager = levelManager;
-        //Debug.LogError($"persistent experiment nr = {PersistentManager.Instance.experimentnr}");
 
         // experiment definition selection
         sceneSelect = PersistentManager.Instance.experimentnr;
@@ -125,6 +113,24 @@ public class SceneSelector : MonoBehaviour
         {
             Debug.LogError("Selected experiment definition out of bounds.");
             Debug.LogError($"experiment nr = {sceneSelect}");
+        }
+    }
+
+    public void CreateExpList()
+    {
+        if (PersistentManager.Instance.createOrder == true && SteamVR.instance.hmd_SerialNumber == "LHR-7863A1E8")
+        {
+            PersistentManager.Instance.ExpOrder = SceneRandomizerBlock(); // SceneRandomizer();
+            PersistentManager.Instance.createOrder = false;
+            if (useManualSelection == false)
+            {
+                PersistentManager.Instance.experimentnr = PersistentManager.Instance.ExpOrder[0];
+                Debug.LogError($"Experiment nr = {PersistentManager.Instance.experimentnr}");
+            }
+            else if (useManualSelection == true)
+            {
+                PersistentManager.Instance.experimentnr = manualSelection;
+            }
         }
     }
 
@@ -207,27 +213,27 @@ public class SceneSelector : MonoBehaviour
     {
         List<int> Block = new List<int>();
 
-        if (_Mapping == Mapping.Baseline)
+        if (PersistentManager.Instance.mapping == 0)
         {
             // Randomize exp 0-3, every exp 4 times
             Block = shuffledList(0, 3, 4);
         }
-        else if (_Mapping == Mapping.Mapping1)
+        else if (PersistentManager.Instance.mapping == 1)
         {
             // Randomize Mapping 1, exp 4-7
             Block = shuffledList(4, 7, 4); //shuffledList(4, 7, 4);
         }
-        else if (_Mapping == Mapping.Mapping2)
+        else if (PersistentManager.Instance.mapping == 2)
         {
             // Randomize Mapping 2, exp 8-11
             Block = shuffledList(8, 11, 4);
         }
 
         // Prints the list for debugging
-        for (int i = 0; i < Block.Count; i++)
+        /*for (int i = 0; i < Block.Count; i++)
         {
             Debug.LogError($"List = {Block[i]}");
-        }
+        }*/
 
         return Block;
     }

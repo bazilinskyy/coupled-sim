@@ -298,7 +298,7 @@ public class Host : NetworkSystem
                         gameStarted = true;
                     }
                 }
-
+                    _SceneSelector.CreateExpList();
 
                 GUI.enabled = true;
                     //GUILayout.Label("Experiment:");

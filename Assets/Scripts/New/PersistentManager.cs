@@ -31,6 +31,8 @@ public class PersistentManager : MonoBehaviour
     public float pressed;
     public float released;
 
+    public int mapping;
+
     public bool LogOrder = true;
 
     private void Awake()

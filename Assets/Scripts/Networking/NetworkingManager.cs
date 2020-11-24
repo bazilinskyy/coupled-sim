@@ -16,6 +16,8 @@ public class NetworkingManager : MonoBehaviour
     LogConverter _logConverter;
     public SceneSelector _SceneSelector;
     public string _participantNr = "enter";
+    public string[] mappingOptions = {"Baseline", "Mapping1", "Mapping2"};
+    private int mappingInt = 0;
 
     [SerializeField]
     AICarSyncSystem _aiCarSystem;
@@ -86,6 +88,13 @@ public class NetworkingManager : MonoBehaviour
         {
             GUILayout.Label("Participant number:");
             _participantNr = GUILayout.TextField(_participantNr);
+
+            GUILayout.Label("Mapping:");
+            GUILayout.BeginHorizontal("Box");
+            mappingInt = GUILayout.SelectionGrid(mappingInt, mappingOptions, 3);
+            GUILayout.EndHorizontal();
+            PersistentManager.Instance.mapping = mappingInt;
+
             if (_participantNr != "enter")
             {
                 PersistentManager.Instance.ParticipantNr = int.Parse(_participantNr);
