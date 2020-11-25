@@ -11,7 +11,6 @@ public class OrderLogging : MonoBehaviour
 
     public void BeginLog(List<int> block, int participantNr)
     {
-        Debug.LogError(PersistentManager.Instance.LogOrder);
         if (PersistentManager.Instance.LogOrder == true)
         {
             _block = block;
