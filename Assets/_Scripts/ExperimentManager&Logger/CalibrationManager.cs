@@ -41,10 +41,9 @@ public class CalibrationManager : MonoBehaviour
 
         Varjo.VarjoPlugin.ResetPose(true, Varjo.VarjoPlugin.ResetRotation.ALL);
 
-        mySceneLoader = GetComponent<MySceneLoader>();
-
-        //Load environment scene
-        SceneManager.LoadSceneAsync("Environment", LoadSceneMode.Additive);
+        mySceneLoader = player.GetComponent<MySceneLoader>();
+        mySceneLoader.LoadEnvironment();
+        mySceneLoader.MovePlayer(startPosition);
 
         if (!experimentInput.ReadCSVSettingsFile()) 
         {
@@ -65,9 +64,9 @@ public class CalibrationManager : MonoBehaviour
        
         if (Input.GetKeyDown(experimentInput.resetExperiment)) {mySceneLoader.LoadCalibrationScene(); }
         if (Input.GetKeyDown(experimentInput.resetHeadPosition)) { Varjo.VarjoPlugin.ResetPose(true, Varjo.VarjoPlugin.ResetRotation.ALL); }
-        if (Input.GetKeyDown(experimentInput.calibrateGaze)) { Varjo.VarjoPlugin.RequestGazeCalibration(); }
+        if (Input.GetKeyDown(experimentInput.calibrateGaze)) { RequestGazeCalibration(); }
         if (Input.GetKeyDown(experimentInput.myPermission)) { mySceneLoader.LoadNextDrivingScene(true,false); }
-        if (Varjo.VarjoPlugin.IsGazeCalibrated() && !addedTargets) {
+        if (Varjo.VarjoPlugin.IsGazeCalibrated() && (experimentInput.camType == MyCameraType.Normal || experimentInput.calibratedUsingHands) && !addedTargets) {
             mySceneLoader.AddTargetScene(); 
             addedTargets = true; cross.SetActive(false);
             instructions.text = "Look at the targets above!";
@@ -81,6 +80,22 @@ public class CalibrationManager : MonoBehaviour
             SceneManager.UnloadSceneAsync("Environment");
             unloadedEnvironmentScene = true;
         }
+    }
+    void RequestGazeCalibration()
+    {
+
+        Varjo.VarjoPlugin.GazeCalibrationParameters[] parameters = new Varjo.VarjoPlugin.GazeCalibrationParameters[2];
+
+        parameters[0] = new Varjo.VarjoPlugin.GazeCalibrationParameters();
+        parameters[0].key = "GazeCalibrationType";
+        parameters[0].value = "Fast"; //"Legacy"
+
+        parameters[1] = new Varjo.VarjoPlugin.GazeCalibrationParameters();
+        parameters[1].key = "OutputFilterType";
+        parameters[1].value = "Standard";
+
+        Varjo.VarjoPlugin.RequestGazeCalibrationWithParameters(parameters);
+
     }
     void CalibrateHands()
     {

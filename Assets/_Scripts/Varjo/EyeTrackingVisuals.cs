@@ -70,7 +70,7 @@ public class EyeTrackingVisuals : MonoBehaviour
 
         lightObj.transform.position = start;
         lightObj.transform.rotation = Quaternion.LookRotation(gazeDirectionWorld);
-
+        //Debug.Log($"Set highlight to {gazeDirectionLocal} ...");
         //Quaternion relative = Quaternion.Inverse(GetComponent<ExperimentManager>().driverView.rotation) * lightObj.transform.rotation;
         //Debug.Log($"Eyes : {relative.eulerAngles.ToString("F3")}...");
 

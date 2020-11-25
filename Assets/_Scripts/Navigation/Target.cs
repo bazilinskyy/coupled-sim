@@ -55,8 +55,13 @@ public class Target : MonoBehaviour
             if(afterTurn && ((side == Side.Right && waypoint.operation.IsRightTurn()) || (side == Side.Left && waypoint.operation.IsLeftTurn()))){ difficultPosition = true; }
             else { difficultPosition = false; }
 
-            NavigationHelper navHelper = waypoint.transform.parent.GetComponent<NavigationHelper>();
-            if(navHelper != null) { navHelper.CaluclateTargetInfo(); }
+            try
+            {
+                NavigationHelper navHelper = waypoint.transform.parent.GetComponent<NavigationHelper>();
+                if (navHelper != null){ navHelper.CaluclateTargetInfo(); }
+            }
+            catch { }
+
         }
     }
     

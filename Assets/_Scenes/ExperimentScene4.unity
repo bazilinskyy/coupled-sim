@@ -97,7 +97,8 @@ LightmapSettings:
     m_ExportTrainingData: 0
     m_TrainingDataDestination: TrainingData
     m_LightProbeSampleCountMultiplier: 4
-  m_LightingDataAsset: {fileID: 0}
+  m_LightingDataAsset: {fileID: 112000002, guid: 4d3fb2555992c97478c849dfca436dce,
+    type: 2}
   m_UseShadowmask: 1
 --- !u!196 &4
 NavMeshSettings:
@@ -3768,80 +3769,6 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
---- !u!1001 &637378107
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 8252388277253089906, guid: 41c9d2ae4df007d408130519f88a5729,
-        type: 3}
-      propertyPath: m_Name
-      value: NormalCam
-      objectReference: {fileID: 0}
-    - target: {fileID: 8252388277253089911, guid: 41c9d2ae4df007d408130519f88a5729,
-        type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 5.554013
-      objectReference: {fileID: 0}
-    - target: {fileID: 8252388277253089911, guid: 41c9d2ae4df007d408130519f88a5729,
-        type: 3}
-      propertyPath: m_LocalPosition.y
-      value: -2.8755493
-      objectReference: {fileID: 0}
-    - target: {fileID: 8252388277253089911, guid: 41c9d2ae4df007d408130519f88a5729,
-        type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0.3457508
-      objectReference: {fileID: 0}
-    - target: {fileID: 8252388277253089911, guid: 41c9d2ae4df007d408130519f88a5729,
-        type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8252388277253089911, guid: 41c9d2ae4df007d408130519f88a5729,
-        type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8252388277253089911, guid: 41c9d2ae4df007d408130519f88a5729,
-        type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8252388277253089911, guid: 41c9d2ae4df007d408130519f88a5729,
-        type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 8252388277253089911, guid: 41c9d2ae4df007d408130519f88a5729,
-        type: 3}
-      propertyPath: m_RootOrder
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 8252388277253089911, guid: 41c9d2ae4df007d408130519f88a5729,
-        type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8252388277253089911, guid: 41c9d2ae4df007d408130519f88a5729,
-        type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8252388277253089911, guid: 41c9d2ae4df007d408130519f88a5729,
-        type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8252388277361530241, guid: 41c9d2ae4df007d408130519f88a5729,
-        type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 41c9d2ae4df007d408130519f88a5729, type: 3}
 --- !u!43 &650787290
 Mesh:
   m_ObjectHideFlags: 0
@@ -8685,7 +8612,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1990137948
 Transform:
   m_ObjectHideFlags: 0
@@ -9222,7 +9149,7 @@ MonoBehaviour:
   _renderVirtualCable: 1
   _renderHighlightedRoad: 0
   _renderHUD: 1
-  _pressMeToRerender: 0
+  _RenderAndCalculate: 0
   lengthTrack: 765.20374
   leftTurns: 4
   rightTurns: 4
@@ -9279,7 +9206,7 @@ Transform:
   - {fileID: 59202370}
   - {fileID: 866240790}
   m_Father: {fileID: 0}
-  m_RootOrder: 3
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2126232723
 GameObject:

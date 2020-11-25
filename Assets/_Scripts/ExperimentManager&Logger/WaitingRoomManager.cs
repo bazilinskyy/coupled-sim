@@ -36,13 +36,10 @@ public class WaitingRoomManager : MonoBehaviour
     void StartingScene()
     {
         player = GameObject.FindGameObjectWithTag("Player").transform;
-        experimentInput = player.GetComponent<ExperimentInput>();
+        experimentInput = player.GetComponent<ExperimentInput>();        
 
-        DontDestroyOnLoad(player);
-
-        blackOutScreen.color = new Color(0, 0, 0, 1f); blackOutScreen.CrossFadeAlpha(0f, 0f, true);
-
-        mySceneLoader = GetComponent<MySceneLoader>();
+        mySceneLoader = player.GetComponent<MySceneLoader>();
+        mySceneLoader.MovePlayer(startPosition);
 
         SetText();
 

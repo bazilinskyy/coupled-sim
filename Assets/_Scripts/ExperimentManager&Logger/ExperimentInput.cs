@@ -39,13 +39,15 @@ public class ExperimentInput : MonoBehaviour
 
     public KeyCode saveTheData = KeyCode.F7;
 
-
+    public string environmentScene = "Environment";
     public string waitingRoomScene = "WaitingScene";
     public string drivingPractiseScene = "DrivingPractiseScene";
     public string targetScene = "Targets";
     public string calibrationScene = "CalibrationScene";
     public string experimentScene1 = "ExperimentScene1";
     public string experimentScene2 = "ExperimentScene2";
+    public string experimentScene3 = "ExperimentScene3";
+    public string experimentScene4 = "ExperimentScene4";
 
     [Header("Car Controls")]
 
@@ -69,7 +71,7 @@ public class ExperimentInput : MonoBehaviour
         Varjo.VarjoPlugin.ResetPose(true, Varjo.VarjoPlugin.ResetRotation.ALL);
 
         Debug.Log("Calling start() of experimentInput...");
-        string[] array = {drivingPractiseScene, experimentScene1, experimentScene2 };
+        string[] array = {drivingPractiseScene, experimentScene1, experimentScene2, experimentScene3, experimentScene4 };
         sceneArray = array;
 
         ReadCSVSettingsFile();

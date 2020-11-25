@@ -506,7 +506,6 @@ GameObject:
   m_Component:
   - component: {fileID: 212009550}
   - component: {fileID: 212009549}
-  - component: {fileID: 212009551}
   - component: {fileID: 212009553}
   - component: {fileID: 212009552}
   m_Layer: 0
@@ -533,16 +532,6 @@ MonoBehaviour:
   steeringWheel: {fileID: 2143021678}
   experimentInput: {fileID: 0}
   blackOutScreen: {fileID: 1476024188}
-  myPermission: 282
-  resetHeadPosition: 283
-  spawnSteeringWheel: 284
-  calibrateGaze: 285
-  resetExperiment: 27
-  keyToggleDriving: 32
-  keyToggleSymbology: 9
-  setToLastWaypoint: 114
-  inputNameKey: 121
-  saveTheData: 288
   thresholdUserInput: 0.15
 --- !u!4 &212009550
 Transform:
@@ -558,20 +547,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &212009551
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 212009548}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5651eb15fbe431046a6444a52f24b71d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  player: {fileID: 0}
-  startingPosition: {fileID: 997721524}
 --- !u!114 &212009552
 MonoBehaviour:
   m_ObjectHideFlags: 0

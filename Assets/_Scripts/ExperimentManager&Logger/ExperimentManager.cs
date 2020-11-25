@@ -17,7 +17,6 @@ public class ExperimentManager : MonoBehaviour
     private MySceneLoader mySceneLoader;
 
     public List<Target> targetList;
-    public float FoVCamera;
 
    
     public ExperimentInput experimentInput;
@@ -61,10 +60,12 @@ public class ExperimentManager : MonoBehaviour
         player = MyUtils.GetPlayer().transform;
         experimentInput = MyUtils.GetExperimentInput();
 
-        mySceneLoader = GetComponent<MySceneLoader>();
-
         //Get all gameobjects we intend to use from the car (and do some setting up)
         SetGameObjectsFromCar();
+
+        mySceneLoader = player.GetComponent<MySceneLoader>();
+        mySceneLoader.MovePlayer(driverView);
+
 
         //Set camera (uses the gameobjects set it SetGameObjectsFromCar()) 
         SetCamera();
@@ -117,7 +118,7 @@ public class ExperimentManager : MonoBehaviour
         if (Input.GetKeyDown(experimentInput.resetHeadPosition)) { Varjo.VarjoPlugin.ResetPose(true, Varjo.VarjoPlugin.ResetRotation.ALL); }
 
         //Researcher inputs
-        if (Input.GetKeyDown(experimentInput.toggleSymbology)) { Debug.Log("sWITCHING SYMBOLOGY..."); ToggleSymbology(); }
+        if (Input.GetKeyDown(experimentInput.toggleSymbology)) { ToggleSymbology(); }
         if (Input.GetKeyDown(experimentInput.myPermission)) { car.navigationFinished = true; } //Finish navigation early
         if (Input.GetKeyDown(experimentInput.setToLastWaypoint)) { SetCarToLastWaypoint(); }
         //if (Input.GetKeyDown(experimentInput.resetHeadPosition)) { SetCameraPosition(driverView.position, driverView.rotation); }

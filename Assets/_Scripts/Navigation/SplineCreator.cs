@@ -271,7 +271,8 @@ public class SplineCreator : MonoBehaviour
 	{
 		if(waypoint.nextWaypoint == null)
 		{
-			throw new Exception($"Error in SplineCreator -> Add next waypoint. Next waypoint is missing......Trying again");	
+			return points;
+			//throw new Exception($"Error in SplineCreator -> Add next waypoint. Next waypoint is missing......Trying again");	
 		}
 
 		//Make new array with icreased length

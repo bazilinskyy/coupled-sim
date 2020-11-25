@@ -18,7 +18,7 @@ public class NavigationHelper : MonoBehaviour
     public bool _renderHighlightedRoad; private bool renderHighlightedRoad;
     public bool _renderHUD = true; private bool renderHUD;
     
-    public bool _pressMeToRerender = false; private bool pressMeToRerender = false;
+    public bool _RenderAndCalculate = false; private bool RenderAndCalculate = false;
 
     public float lengthTrack;
     public int leftTurns;
@@ -83,11 +83,14 @@ public class NavigationHelper : MonoBehaviour
             RenderNavigation();
         }
         //if render booleans change --> update mesh
-        if (pressMeToRerender != _pressMeToRerender)
+        if (RenderAndCalculate != _RenderAndCalculate)
         {
-            pressMeToRerender = _pressMeToRerender;
+            RenderAndCalculate = _RenderAndCalculate;
 
             splineCreator.MakeNavigation();
+            CountTurns();
+            CaluclateTargetInfo();
+
         }
 
         if (renderHUD != _renderHUD)

@@ -13,24 +13,36 @@ public class MySceneLoader : MonoBehaviour
     private bool loading=false;
     UnityEngine.UI.Image blackOutScreen;
     private float timeWaited = 0f;
-    private void Start()
+    private bool environmentLoaded = false;
+    private void Awake()
     {
-        player = MyUtils.GetPlayer();
-        experimentInput = MyUtils.GetExperimentInput();
+        player = gameObject; // MyUtils.GetPlayer();
+        experimentInput = player.GetComponent<ExperimentInput>(); // MyUtils.GetExperimentInput();
 
         blackOutScreen = GameObject.FindGameObjectWithTag("BlackOutScreen").GetComponent<UnityEngine.UI.Image>();
         blackOutScreen.color = new Color(0, 0, 0, 1f); blackOutScreen.CrossFadeAlpha(1f, 0f, true);
+        
+        blackOutScreen.CrossFadeAlpha(0, experimentInput.animationTime * 3, false);
 
         if (player == null) { Debug.LogError("Could not find player...."); return; }
 
         //DontDestroyOnLoad(player); Debug.Log("Found player!");
-        
+/*        
         if (startingPosition == null) { return; }
-        StartCoroutine(MovePlayerToDestination());
+
+        
+        StartCoroutine(MovePlayerToDestination());*/
     }
 
+    public void MovePlayer(Transform position)
+    {
+        player.transform.parent = position;
+        player.transform.position = position.position;
+        player.transform.rotation = position.rotation;
+    }
     IEnumerator MovePlayerToDestination()
     {
+        /*
         int NScenes = SceneManager.GetAllScenes().Length;
         //The environemtn scenes gets put in the DontDestroy on Load scene. So we always have 2 scenes
         while (NScenes > 2 && timeWaited < 5f) 
@@ -39,7 +51,7 @@ public class MySceneLoader : MonoBehaviour
             if (timeWaited == 0f) { Debug.Log($"Waiting, currently on {NScenes} scenes..."); } 
             timeWaited += 0.01f; 
             yield return new WaitForSeconds(0.01f); 
-        }
+        }*/
         timeWaited = 0f;
 
         player.transform.parent = startingPosition;
@@ -48,22 +60,32 @@ public class MySceneLoader : MonoBehaviour
 
         //if (experimentInput.camType == MyCameraType.Leap) { Varjo.VarjoPlugin.ResetPose(true, Varjo.VarjoPlugin.ResetRotation.ALL); }
 
-        blackOutScreen.CrossFadeAlpha(0, experimentInput.animationTime*2, false);
+        
         Debug.Log("Moved player!");
+        yield return null;
+    }
+
+    public void LoadEnvironment() {
+
+        StartCoroutine(LoadEnvironementScene());
+
     }
 
     public void LoadCalibrationScene()
     {
-        if (!loading) { StartCoroutine(LoadYourAsyncScene(experimentInput.calibrationScene, false,false,false)); }
+        if (!loading) { SceneManager.LoadSceneAsync(experimentInput.calibrationScene, LoadSceneMode.Single); }
     }
     public void LoadNextDrivingScene(bool unloadCalibrationScene, bool unloadWaitingRoomScene)
     {
-        if (!loading && experimentInput.IsNextScene()) { StartCoroutine(LoadYourAsyncScene(experimentInput.GetNextScene(), true, unloadCalibrationScene, unloadWaitingRoomScene)); }
+        if (!loading && experimentInput.IsNextScene()) { StartCoroutine(LoadExperiment(experimentInput.GetNextScene(), unloadCalibrationScene, unloadWaitingRoomScene)); }
+        //if (environmentLoaded) { StartCoroutine(LoadExperiment(experimentInput.GetNextScene())); }
+        //operation = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Single);
     } 
 
     public void LoadWaitingScene()
     {
-        if (!loading) { StartCoroutine(LoadYourAsyncScene(experimentInput.waitingRoomScene, false, false, false)); }
+        if (!loading) { StartCoroutine(LoadWaitingSceneAsync()); }
+        
     }
 
     public void AddTargetScene()
@@ -71,9 +93,149 @@ public class MySceneLoader : MonoBehaviour
         SceneManager.LoadSceneAsync(experimentInput.targetScene, LoadSceneMode.Additive);
     }
 
-    IEnumerator LoadYourAsyncScene(string sceneName, bool enableEnvironment, bool unloadCalibrationScene=false, bool unloadWaitingRoomScene=false)
+    IEnumerator LoadEnvironementScene()
+    {
+        AsyncOperation operation = SceneManager.LoadSceneAsync(experimentInput.environmentScene, LoadSceneMode.Additive);
+        operation.allowSceneActivation = false;
+
+        while (operation.progress < 0.9f)
+        {
+            yield return null;
+        }
+
+        operation.allowSceneActivation = true;
+
+        bool foundEnvironement = false;
+        while (!foundEnvironement)
+        {
+            GameObject env = GameObject.FindGameObjectWithTag("Environment");
+            if(env != null) {
+                Debug.Log("Found environement!");
+                experimentInput.environment = env; 
+                foundEnvironement = true;
+                env.SetActive(false);
+                 }
+            else { yield return null; }
+        }
+
+    }
+
+    IEnumerator LoadExperiment(string sceneName, bool unloadCalibrationScene, bool unloadWaitingRoomScene)
+    {
+        loading = true;  Debug.Log($"Loading next scene: {sceneName}...");
+        player.transform.parent = null;
+
+        DontDestroyOnLoad(player);
+        
+        blackOutScreen.CrossFadeAlpha(1f, experimentInput.animationTime, false);
+        yield return new WaitForSeconds(experimentInput.animationTime);
+
+        AsyncOperation operation = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Additive);
+        while (!operation.isDone)
+        {
+            yield return null;
+        }
+        experimentInput.environment.SetActive(true);
+        //Scene newScene = SceneManager.GetSceneByName(sceneName);
+        //SceneManager.MoveGameObjectToScene(player, newScene);
+
+        if (unloadCalibrationScene) { operation = SceneManager.UnloadSceneAsync(experimentInput.calibrationScene); SceneManager.UnloadSceneAsync(experimentInput.targetScene); }
+        if (unloadWaitingRoomScene) { operation = SceneManager.UnloadSceneAsync(experimentInput.waitingRoomScene); }
+
+        while (!operation.isDone)
+        {
+            yield return null;
+        }
+
+        blackOutScreen.CrossFadeAlpha(0f, experimentInput.animationTime*2f, false);
+        yield return new WaitForSeconds(experimentInput.animationTime);
+
+        loading = false;
+
+    }
+    /*IEnumerator LoadEnvironment()
+    {
+        
+        player.transform.parent = null;
+
+        DontDestroyOnLoad(player);
+        blackOutScreen.CrossFadeAlpha(1f, experimentInput.animationTime, false);
+        yield return new WaitForSeconds(experimentInput.animationTime);
+
+
+        AsyncOperation operation = SceneManager.LoadSceneAsync("Environment", LoadSceneMode.Single);
+
+        while (!operation.isDone)
+        {
+            yield return null;
+        }
+        environmentLoaded = true;
+
+    }*/
+
+    IEnumerator LoadWaitingSceneAsync()
+    {
+       loading = true; Debug.Log($"Loading next scene: {experimentInput.waitingRoomScene}...");
+        player.transform.parent = null;
+
+        DontDestroyOnLoad(player);
+
+
+        blackOutScreen.CrossFadeAlpha(1f, experimentInput.animationTime, false);
+        yield return new WaitForSeconds(experimentInput.animationTime);
+
+        AsyncOperation operation = SceneManager.LoadSceneAsync(experimentInput.waitingRoomScene, LoadSceneMode.Additive);
+
+        while (!operation.isDone)
+        {
+            yield return null;
+        }
+
+        string drivingScene = experimentInput.currentDrivingScene;
+        Scene oldScene = SceneManager.GetSceneByName(drivingScene);
+
+        operation = SceneManager.UnloadSceneAsync(oldScene);
+
+        while (!operation.isDone)
+        {
+            yield return null;
+        }
+        experimentInput.environment.SetActive(false);
+        loading = false;
+
+        blackOutScreen.CrossFadeAlpha(0f, experimentInput.animationTime*2, false);
+    }
+   /* IEnumerator LoadExperiment(string sceneName, bool enableEnvironment, bool unloadCalibrationScene = false, bool unloadWaitingRoomScene = false)
     {
         loading = true; Debug.Log($"Loading next scene: {sceneName}...");
+        player.transform.parent = null;
+
+        DontDestroyOnLoad(player);
+        DontDestroyOnLoad(experimentInput.environment);
+
+        blackOutScreen.CrossFadeAlpha(1f, experimentInput.animationTime, false);
+        yield return new WaitForSeconds(experimentInput.animationTime);
+
+        AsyncOperation operation = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Additive);
+            
+        while (!operation.isDone)
+        {
+            yield return null;
+        }
+        Scene newScene = SceneManager.GetSceneByName(sceneName);
+        Debug.Log($"Setting environment to {enableEnvironment}...");
+        experimentInput.environment.SetActive(enableEnvironment);
+
+        SceneManager.MoveGameObjectToScene(player, newScene);
+        //SceneManager.MoveGameObjectToScene(environment, newScene);
+
+        SceneManager.UnloadSceneAsync("CalibrationScene");
+    }*/
+
+    IEnumerator LoadYourAsyncScene(string sceneName, bool enableEnvironment, bool unloadCalibrationScene=false, bool unloadWaitingRoomScene=false)
+    {
+        return null;
+        /*loading = true; Debug.Log($"Loading next scene: {sceneName}...");
         player.transform.parent = null;
 
         DontDestroyOnLoad(player);
@@ -121,6 +283,7 @@ public class MySceneLoader : MonoBehaviour
         Scene newScene = SceneManager.GetSceneByName(sceneName);
 
         SceneManager.MoveGameObjectToScene(player, newScene);
+        */
     }
 }
 
