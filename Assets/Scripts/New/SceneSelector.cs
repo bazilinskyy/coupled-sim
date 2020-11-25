@@ -129,11 +129,11 @@ public class SceneSelector : MonoBehaviour
     /// </summary>
     public void GazeEffectOnAV() 
     {
-        if (PersistentManager.Instance.experimentnr < 4 || PersistentManager.Instance.experimentnr > 8)
+        if (PersistentManager.Instance.experimentnr < 4 || PersistentManager.Instance.experimentnr >= 8)
         {
             PersistentManager.Instance._StopWithEyeGaze = false;
         }
-        if (PersistentManager.Instance.experimentnr >= 4 && PersistentManager.Instance.experimentnr <= 8)
+        if (PersistentManager.Instance.experimentnr >= 4 && PersistentManager.Instance.experimentnr < 8)
         {
             PersistentManager.Instance._StopWithEyeGaze = true;
         }
