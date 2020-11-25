@@ -18,7 +18,7 @@ public class NetworkingManager : MonoBehaviour
     //public string _participantNr = "enter";
     public string[] participantOptions = { "Duo1", "Duo2", "Duo3", "Duo4", "Duo5", "Duo6", "Duo7", "Duo8", "Duo9", "Duo10", "Duo11", "Duo12", "Duo13", "Duo14", "Duo15", "Duo16", "Duo17", "Duo18", "Duo19", "Duo20" };
     private int participantInt = 0;
-    public string[] mappingOptions = {"Baseline", "Mapping1", "Mapping2"};
+    public string[] mappingOptions = {"Baseline", "Mapping1", "Mapping2", "Practice"};
     private int mappingInt = 0;
 
     [SerializeField]
@@ -91,7 +91,7 @@ public class NetworkingManager : MonoBehaviour
             PersistentManager.Instance.ParticipantNr = participantInt + 1;
             GUILayout.Label("Mapping:");
             GUILayout.BeginHorizontal("Box");
-            mappingInt = GUILayout.SelectionGrid(mappingInt, mappingOptions, 3);
+            mappingInt = GUILayout.SelectionGrid(mappingInt, mappingOptions, 4);
             GUILayout.EndHorizontal();
             PersistentManager.Instance.mapping = mappingInt;
             if (GUILayout.Button("Start Host"))
