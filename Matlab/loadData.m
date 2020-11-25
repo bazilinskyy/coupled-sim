@@ -40,33 +40,37 @@ end
 % toc
 M = Data_char;
 
+%% Data sound
+sound.press = M(:,10);
+sound.release = M(:,11);
+
 %% Data passenger and AV
 Data.dt = M(1,1); % in [s]
 Data.Time = M(:,1);
 pa.pos = struct3Coordinate(M(:,3:5));
 pa.rot = struct3Coordinate(M(:,6:8));
 
-pa.distance = M(:,10);
-pa.other.frame = M(:,11);
-pa.other.captureTime = M(:,12);
-pa.other.hmdpos = struct3Coordinate(M(:,13:15));
-pa.other.hmdrot = struct3Coordinate(M(:,16:18));
-pa.other.leftEyePupilSize = M(:,19);
-pa.other.rightEyePupilSize = M(:,20);
-pa.other.focusDistance = M(:,21);
-pa.other.focusStability = M(:,22);
+pa.distance = M(:,12);
+pa.other.frame = M(:,13);
+pa.other.captureTime = M(:,14);
+pa.other.hmdpos = struct3Coordinate(M(:,15:17));
+pa.other.hmdrot = struct3Coordinate(M(:,18:20));
+pa.other.leftEyePupilSize = M(:,21);
+pa.other.rightEyePupilSize = M(:,22);
+pa.other.focusDistance = M(:,23);
+pa.other.focusStability = M(:,24);
 
-pa.HMD.gaze_dir = struct3Coordinate(M(:,23:25));
-pa.world.gaze_dir = struct3Coordinate(M(:,26:28));
-pa.HMD.gaze_origin = struct3Coordinate(M(:,29:31));
-pa.world.gaze_origin = struct3Coordinate(M(:,32:34));
+pa.HMD.gaze_dir = struct3Coordinate(M(:,25:27));
+pa.world.gaze_dir = struct3Coordinate(M(:,28:30));
+pa.HMD.gaze_origin = struct3Coordinate(M(:,31:33));
+pa.world.gaze_origin = struct3Coordinate(M(:,34:36));
 
-pa.local.v = struct3Coordinate(M(:,35:37));
-pa.local.v_smooth = struct3Coordinate(M(:,38:40));
-pa.world.v = struct3Coordinate(M(:,41:43));
-pa.world.v_smooth = struct3Coordinate(M(:,44:46));
-pa.world.rb_v = struct3Coordinate(M(:,47:49));
-pa.local.rb_v = struct3Coordinate(M(:,50:52));
+pa.local.v = struct3Coordinate(M(:,37:39));
+pa.local.v_smooth = struct3Coordinate(M(:,40:42));
+pa.world.v = struct3Coordinate(M(:,43:45));
+pa.world.v_smooth = struct3Coordinate(M(:,46:48));
+pa.world.rb_v = struct3Coordinate(M(:,49:51));
+pa.local.rb_v = struct3Coordinate(M(:,52:54));
 
 %% Data distraction AV if present
 %Need to write logic to determine whether AV is present
@@ -105,28 +109,26 @@ end
 %% Data pedestrian (when AV is absent)
 if(extracar == false)
     diAV = 0;
-pe.pos = struct3Coordinate(M(:,53:55));
-pe.rot = struct3Coordinate(M(:,56:58));
+pe.pos = struct3Coordinate(M(:,55:57));
+pe.rot = struct3Coordinate(M(:,58:60));
 
-pe.distance = M(:,59);
-pe.distance2 = M(:,144);
-pe.distance3 = M(:,177);
+pe.distance = M(:,61);
 
-pe.other.frame = M(:,60);
-pe.other.captureTime = M(:,61);
-pe.other.hmdpos = struct3Coordinate(M(:,62:64));
-pe.other.hmdrot = struct3Coordinate(M(:,65:67));
-pe.other.leftEyePupilSize = M(:,68);
-pe.other.rightEyePupilSize = M(:,69);
-pe.other.focusDistance = M(:,70);
-pe.other.focusStability = M(:,71);
+pe.other.frame = M(:,62);
+pe.other.captureTime = M(:,63);
+pe.other.hmdpos = struct3Coordinate(M(:,64:66));
+pe.other.hmdrot = struct3Coordinate(M(:,67:69));
+pe.other.leftEyePupilSize = M(:,70);
+pe.other.rightEyePupilSize = M(:,71);
+pe.other.focusDistance = M(:,72);
+pe.other.focusStability = M(:,73);
 
-pe.HMD.gaze_dir = struct3Coordinate(M(:,72:74));
-pe.world.gaze_dir = struct3Coordinate(M(:,75:77));
-pe.HMD.gaze_origin = struct3Coordinate(M(:,78:80));
-pe.world.gaze_origin = struct3Coordinate(M(:,81:83));
+pe.HMD.gaze_dir = struct3Coordinate(M(:,74:76));
+pe.world.gaze_dir = struct3Coordinate(M(:,77:79));
+pe.HMD.gaze_origin = struct3Coordinate(M(:,80:82));
+pe.world.gaze_origin = struct3Coordinate(M(:,83:85));
 
-pe.gapAcceptance = M(:,84);
+pe.gapAcceptance = M(:,86);
 end
 %%
 t = toc;

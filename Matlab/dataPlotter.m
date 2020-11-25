@@ -103,7 +103,7 @@ grid on;
 title("Gap Acceptance vs Distances");
 yyaxis left
 plot(Data.Time, pe.gapAcceptance);
-ylabel("eye gaze distance pedestrian 3");
+ylabel("Gap acceptance");
 yyaxis right
 plot(Data.Time, pa.pos.z);
 ylim([-10 100]);
@@ -116,9 +116,11 @@ grid on;
 yyaxis left
 plot(Data.Time, pa.distance);
 ylabel("Distance_{Eye-gaze passenger} in [m]");
+ylim([-10 50]);
 yyaxis right
 plot(Data.Time, pe.distance);
 ylabel("Distance_{Eye-gaze pedestrian} in [m]");
+ylim([-10 50]);
 xlabel('Time in [s]'); 
 title("Passenger distance vs AV Pedestrian distance");
 
