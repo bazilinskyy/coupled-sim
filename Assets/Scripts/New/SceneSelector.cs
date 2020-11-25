@@ -79,7 +79,7 @@ public class SceneSelector : MonoBehaviour
         //SceneManager.LoadSceneAsync("StartScene");
         Debug.LogError("SWITCHING SCENES");
 
-        AsyncOperation asyncOperation = SceneManager.LoadSceneAsync("StartScene");
+        AsyncOperation asyncOperation = SceneManager.LoadSceneAsync("StartScene", LoadSceneMode.Single);
         // Don't let the Scene activate until you allow it to
         asyncOperation.allowSceneActivation = false;
 

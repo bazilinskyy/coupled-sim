@@ -24,7 +24,7 @@ public class SceneNetworkManager : MonoBehaviour
     public void ClientLoadScene()
     {
         //SceneManager.LoadSceneAsync("StartScene");
-        AsyncOperation asyncOperation = SceneManager.LoadSceneAsync("StartScene");
+        AsyncOperation asyncOperation = SceneManager.LoadSceneAsync("StartScene", LoadSceneMode.Single);
         // Don't let the Scene activate until you allow it to
         asyncOperation.allowSceneActivation = false;
         if (asyncOperation.progress >= 0.9f)
