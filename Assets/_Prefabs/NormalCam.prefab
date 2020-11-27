@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 6003103185662757984}
   - component: {fileID: 6965106830300153921}
   - component: {fileID: 4837464700757075531}
-  m_Layer: 5
+  m_Layer: 10
   m_Name: FPS
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -104,7 +104,7 @@ GameObject:
   - component: {fileID: 9101364613104010456}
   - component: {fileID: 3084386279874433210}
   - component: {fileID: 6382367807487291578}
-  m_Layer: 5
+  m_Layer: 10
   m_Name: Log
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -185,13 +185,13 @@ GameObject:
   - component: {fileID: 5917611817617453201}
   - component: {fileID: 4719715245355162008}
   - component: {fileID: 1304789377}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: NormalCam
   m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &8252388277253089911
 Transform:
   m_ObjectHideFlags: 0
@@ -271,6 +271,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   camType: 0
+  environment: {fileID: 0}
+  debug: 1
   subjectDataFolder: 
   subjectName: Dummy
   experimentOrder: 0
@@ -292,12 +294,15 @@ MonoBehaviour:
   setToLastWaypoint: 114
   inputNameKey: 121
   saveTheData: 288
+  environmentScene: Environment
   waitingRoomScene: WaitingScene
   drivingPractiseScene: DrivingPractiseScene
   targetScene: Targets
   calibrationScene: CalibrationScene
   experimentScene1: ExperimentScene1
   experimentScene2: ExperimentScene2
+  experimentScene3: ExperimentScene3
+  experimentScene4: ExperimentScene4
   ParticpantInputAxisLeft: Fire2
   ParticpantInputAxisRight: Fire3
   GasWithKeyboard: GasKeyBoard
@@ -308,6 +313,7 @@ MonoBehaviour:
   Brake: Brake
   sceneArray: []
   sceneIndex: 0
+  currentDrivingScene: 
 --- !u!114 &4719715245355162008
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -345,7 +351,7 @@ GameObject:
   - component: {fileID: 8252388277361530246}
   - component: {fileID: 8252388277361530247}
   - component: {fileID: 8252388277361530240}
-  m_Layer: 5
+  m_Layer: 10
   m_Name: Canvas
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -445,7 +451,7 @@ GameObject:
   - component: {fileID: 8252388278164760199}
   - component: {fileID: 8252388278164760197}
   - component: {fileID: 8252388278164760198}
-  m_Layer: 5
+  m_Layer: 10
   m_Name: BlackOutScreen
   m_TagString: BlackOutScreen
   m_Icon: {fileID: 0}

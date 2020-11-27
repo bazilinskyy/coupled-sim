@@ -78,7 +78,7 @@ public class ExperimentManager : MonoBehaviour
 
         SetCarControlInput();
 
-        activeNavigationHelper.SetUp(activeExperiment.navigationType, activeExperiment.transparency, car, HUDMaterials);
+        activeNavigationHelper.SetUp(activeExperiment.navigationType, activeExperiment.transparency, car, HUDMaterials, activeExperiment.difficulty); ;
 
         //Set DataManager
         SetDataManager();
@@ -88,7 +88,6 @@ public class ExperimentManager : MonoBehaviour
         SetUpCar();
 
         GoToCar();
-
         //Activate mirror cameras (When working with the varjo it deactivates all other cameras....)
         //Does not work when in Start() or in Awake()...
         ActivateMirrorCameras();
@@ -151,8 +150,8 @@ public class ExperimentManager : MonoBehaviour
         if (nextNavType == NavigationType.HighlightedRoad) { nextNavType = GetNextNavigationType(); activeExperiment.navigationType = nextNavType; }
 
         
-        activeNavigationHelper.SetUp(nextNavType, activeExperiment.transparency, car, HUDMaterials);
-        activeNavigationHelper.RenderNavigationArrow();
+        activeNavigationHelper.SetUp(activeExperiment.navigationType, activeExperiment.transparency, car, HUDMaterials, activeExperiment.difficulty, false);
+        //activeNavigationHelper.RenderNavigationArrow();
         Debug.Log($"Switched to {nextNavType}...");
     }
     NavigationType GetNextNavigationType()
@@ -203,7 +202,7 @@ public class ExperimentManager : MonoBehaviour
     {
         if (experimentInput.saveData) { dataManager.SaveData(); dataManager.StartNewMeasurement(); }
 
-        activeNavigationHelper.SetUp(activeExperiment.navigationType, activeExperiment.transparency, car, HUDMaterials);
+        activeNavigationHelper.SetUp(activeExperiment.navigationType, activeExperiment.transparency, car, HUDMaterials, activeExperiment.difficulty);
         activeNavigationHelper.ResetTargets();
         car.GetComponent<SpeedController>().StartDriving(false);
         SetUpCar();
@@ -271,7 +270,6 @@ public class ExperimentManager : MonoBehaviour
         //When multiple targets are visible we base our decision on:
         //(1) On which target has been looked at most recently
         //(2) Target closest to looking direction
-        //(3) Or closest target
 
         //if there is a target visible which has not already been detected
         List<Target> targetList = activeNavigationHelper.GetActiveTargets();
@@ -285,72 +283,44 @@ public class ExperimentManager : MonoBehaviour
         else
         {
             //When multiple targets are visible we base our decision on:
-            //(1) On which target has been looked at most recently
+            //(1) On which target has been looked at most recently (max 1 second)
             Target targetChosen = null;
-            float mostRecentTime = 0f;
-
-
+            float mostRecentTime = 1f;
             foreach (Target target in visibleTargets)
             {
-                //(1)
-                if (target.lastFixationTime > mostRecentTime)
+                float timeSinceFixation = Time.time - target.lastFixationTime;
+                if (timeSinceFixation < mostRecentTime)
                 {
                     targetChosen = target;
-                    mostRecentTime = target.lastFixationTime;
+                    mostRecentTime = timeSinceFixation;
                 }
             }
 
-            /* //(2) Check using angle between general gaze direction and target 
-             float minAngle = 1000f;
-             if (targetChosen == null && experimentInput.camType != MyCameraType.Normal)
-             {
+            //If previous method did not find a target ->
+            //(2) Check using angle between general gaze direction and target 
+            float minAngle = 10f;
+            if (targetChosen == null && experimentInput.camType != MyCameraType.Normal)
+            {
 
-                 Varjo.VarjoPlugin.GazeData dataSinceLastUpdate = Varjo.VarjoPlugin.GetGaze();
-                 if (dataSinceLastUpdate.status == Varjo.VarjoPlugin.GazeStatus.VALID)
-                 {
+                Varjo.VarjoPlugin.GazeData data = Varjo.VarjoPlugin.GetGaze();
+                if (data.status == Varjo.VarjoPlugin.GazeStatus.VALID)
+                {
 
-                     Debug.Log("Got valid data...");
-                     Vector3 gazeDirection = MyUtils.TransformToWorldAxis(dataSinceLastUpdate.gaze.forward, dataSinceLastUpdate.gaze.position);
+                    Debug.Log("Got valid data...");
+                    Vector3 gazeDirection = MyUtils.TransformToWorldAxis(data.gaze.forward, data.gaze.position);
 
-                     foreach (Target target in visibleTargets)
-                     {
-                         Vector3 CamToTarget = target.transform.position - CameraTransform().position;
-                         float angle = Vector3.Angle(gazeDirection, CamToTarget);
+                    foreach (Target target in visibleTargets)
+                    {
+                        Vector3 CamToTarget = target.transform.position - CameraTransform().position;
+                        float angle = Vector3.Angle(gazeDirection, CamToTarget);
 
-                         if (angle < minAngle) { minAngle = angle; targetChosen = target; }
-                     }
-                 }
-                *//* //From last to most recent = 0 -> end
-                 List<Varjo.VarjoPlugin.GazeData> dataSinceLastUpdate = Varjo.VarjoPlugin.GetGazeList();
+                        if (angle < minAngle) { minAngle = angle; targetChosen = target; }
+                    }
+                }
+            }
+            if (minAngle != 10f) { Debug.Log($"Chose {targetChosen.gameObject.name} with angle {minAngle}..."); }
 
-                 Debug.Log($"Checking angles, got {dataSinceLastUpdate.Count()} gaze points...");
-                 for(int i = dataSinceLastUpdate.Count() - 1; i >=0; i--)
-                 {
-                     Debug.Log($"Checking gaze data {i}...");
-                     if(dataSinceLastUpdate[i].status == Varjo.VarjoPlugin.GazeStatus.VALID)
-                     {
-
-                         Debug.Log("Got valid data...");
-                         Vector3 gazeDirection1 = MyUtils.TransformToWorldAxis(dataSinceLastUpdate[i].gaze.forward, dataSinceLastUpdate[i].gaze.position);
-                         Vector3 gazeDirection2 = MyUtils.TransformToWorldAxis(Double3ToVector3(dataSinceLastUpdate[i].gaze.forward), Double3ToVector3(dataSinceLastUpdate[i].gaze.position));
-
-                         if(gazeDirection1 == gazeDirection2) { Debug.Log("Gazes match..."); }
-                         else { Debug.Log($"No match {gazeDirection1} {gazeDirection2}..."); }
-
-
-                         foreach (Target target in visibleTargets) 
-                         {
-                             Vector3 CamToTarget = target.transform.position - CameraTransform().position;
-                             float angle = Vector3.Angle(gazeDirection1, CamToTarget);
-
-                             if(angle < minAngle) { targetChosen = target;}
-                         }
-                     }
-                 }
-             }
-            if (minAngle != 1000f) { Debug.Log($"Chose {targetChosen.gameObject.name} with angle {minAngle}..."); }
-            */
-            //(3)
+            /*//(3)
             if (targetChosen == null) { 
                 Debug.Log("Chosing target based on distance...");
                 float smallestDistance = 100000f;
@@ -359,7 +329,7 @@ public class ExperimentManager : MonoBehaviour
 
                     //(2) Stops this when mostRecentTime variables gets set to something else then 0
                     currentDistance = Vector3.Distance(CameraTransform().position, target.transform.position);
-                    if (currentDistance < smallestDistance && mostRecentTime == 0f)
+                    if (currentDistance < smallestDistance && mostRecentTime == 1f)
                     {
                         targetChosen = target;
                         smallestDistance = currentDistance;
@@ -367,9 +337,13 @@ public class ExperimentManager : MonoBehaviour
                 }
             }
             else { Debug.Log($"Chose target based on fixation time: {Time.time - mostRecentTime}..."); }
-
-            dataManager.AddTrueAlarm(targetChosen);
-            targetChosen.SetDetected(activeExperiment.experimentTime);
+*/
+            if (targetChosen == null) { dataManager.AddFalseAlarm(); }
+            else
+            {
+                dataManager.AddTrueAlarm(targetChosen);
+                targetChosen.SetDetected(activeExperiment.experimentTime);
+            }
         }
     }
     Vector3 GetRandomPerpendicularVector(Vector3 vec)
@@ -487,9 +461,9 @@ public class ExperimentManager : MonoBehaviour
     }
     private void ActivateMirrorCameras()
     {
-        rearViewMirror.enabled = true; rearViewMirror.cullingMask = -1; // -1 == everything
+        rearViewMirror.enabled = true; rearViewMirror.cullingMask = -1; // ~(1 << 2); // everything except layer 2
 
-        rightMirror.enabled = true; rightMirror.cullingMask = -1;
+        rightMirror.enabled = true; rightMirror.cullingMask = -1;// -1 == everything
 
         leftMirror.enabled = true; leftMirror.cullingMask = -1;
     }
@@ -571,6 +545,7 @@ public class Experiment
     public NavigationType navigationType;
     public float transparency = 0.3f;
 
+    public TargetDifficulty difficulty = TargetDifficulty.easy;
     public bool active;
 
     public Experiment(Transform _navigation, NavigationType _navigationType, float _transparency, bool _active)

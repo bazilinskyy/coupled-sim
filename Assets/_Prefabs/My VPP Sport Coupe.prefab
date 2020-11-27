@@ -1622,8 +1622,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5220046956167569295}
-  m_LocalRotation: {x: 0.0044487147, y: 0.98512334, z: 0.021515539, w: 0.1704385}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalRotation: {x: 0.004448715, y: 0.98512334, z: 0.021515572, w: 0.17043875}
+  m_LocalPosition: {x: -0.000000001559831, y: -2.0806669e-10, z: 0.000000004484238}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 5220046956677313773}
@@ -1654,13 +1654,13 @@ Camera:
     height: 1
   near clip plane: 0.3
   far clip plane: 1000
-  field of view: 35
+  field of view: 30
   orthographic: 0
   orthographic size: 5
   m_Depth: 0
   m_CullingMask:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 1843
   m_RenderingPath: 0
   m_TargetTexture: {fileID: 8400000, guid: 1d400ce4b80fddb48be81f231c77d965, type: 2}
   m_TargetDisplay: 0
@@ -3579,7 +3579,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5220046956733278275}
   m_LocalRotation: {x: -0.5, y: 0.5, z: -0.5, w: 0.5}
-  m_LocalPosition: {x: -0.36830044, y: 1.5191131, z: 2.3590002}
+  m_LocalPosition: {x: -0.36830044, y: 1.3065566, z: 2.3590012}
   m_LocalScale: {x: 0.1, y: 1, z: 0.1}
   m_Children:
   - {fileID: 5220046956888216953}
@@ -3602,6 +3602,7 @@ MonoBehaviour:
   visualAngleVertical: 12
   visualAngleHorizontal: 0
   distance: 2
+  car: {fileID: 6109170175517165885}
   headPosition: {fileID: 5220046955512988221}
   _pressMeToPlace: 1
 --- !u!1 &5220046956734044760
@@ -4231,8 +4232,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5220046956886180367}
-  m_LocalRotation: {x: -0.015013167, y: 0.9251272, z: -0.029517544, w: 0.3782103}
-  m_LocalPosition: {x: 0.000000028156713, y: -0.000000050831385, z: 0.00000006986279}
+  m_LocalRotation: {x: -0.015013158, y: 0.9251275, z: -0.029517414, w: 0.37820953}
+  m_LocalPosition: {x: -0.0000014787003, y: 0.0000002731429, z: 0.000002850136}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 5220046956828768926}
@@ -5504,8 +5505,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5220046957319471794}
-  m_LocalRotation: {x: 0.03810339, y: 0.95382905, z: -0.055712894, w: -0.29266784}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalRotation: {x: 0.038103286, y: 0.9538286, z: -0.05571307, w: -0.29266915}
+  m_LocalPosition: {x: -0.00000050515683, y: -0.00000004283057, z: -0.0000012645528}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 5220046956576579889}
@@ -6459,7 +6460,7 @@ MonoBehaviour:
   gearModeSelectButton: Fire3
   keyboardNumbersSelectGears: 1
   neutralGear: 110
-  reverseGear: 114
+  reverseGear: 0
   externalThrottle: 0
   reverse: 0
   externalBrake: 0
@@ -6608,17 +6609,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c319b7db8c6d0454c834136ddc6c84fe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speedLimitCorner: 5
-  speedLimit: 9
-  speedLimitSpline: 7
-  cornerBrakingDistance: 20
-  metersLetGoGasEndPoint: 30
-  brakeIncrement: 0.005
-  throttleIncrement: 0.002
-  maxThrottle: 0.6
-  maxBrake: 0.5
-  brakeSpeedMargin: 2
-  letGoBrakeSpeed: 4
 --- !u!114 &4900922547360424659
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7316,7 +7306,7 @@ PrefabInstance:
     - target: {fileID: 114462316325742096, guid: 0ba239054da355345bc3be88be60af08,
         type: 3}
       propertyPath: engineExtras.turboMinPitch
-      value: 0.3
+      value: 0.4
       objectReference: {fileID: 0}
     - target: {fileID: 114462316325742096, guid: 0ba239054da355345bc3be88be60af08,
         type: 3}

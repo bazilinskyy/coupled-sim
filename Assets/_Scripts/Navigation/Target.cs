@@ -64,7 +64,12 @@ public class Target : MonoBehaviour
 
         }
     }
-    
+
+    private void Update()
+    {
+        if (!detected && waypoint != null) { GetComponent<MeshRenderer>().enabled = waypoint.renderMe; }
+    }
+
     public bool HasBeenLookedAt()
     {
         if(totalFixationTime > 0f) { return true; }

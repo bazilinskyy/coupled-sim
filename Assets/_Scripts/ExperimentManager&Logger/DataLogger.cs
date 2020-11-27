@@ -360,7 +360,7 @@ public class DataLogger : MonoBehaviour
         for (int i = 0; i < (assetsFolderArray.Length - 2); i++) { baseFolderArray[i] = assetsFolderArray[i]; }
 
         string baseFolder = string.Join("/", baseFolderArray);*/
-        string saveFolder = string.Join("/", experimentInput.subjectDataFolder, SceneManager.GetActiveScene().name + DateTime.Now.ToString("_HH-mm-ss"));
+        string saveFolder = string.Join("/", experimentInput.subjectDataFolder, experimentInput.currentDrivingScene + DateTime.Now.ToString("_HH-mm-ss"));
         Debug.Log($"Creaiting savefolder: {saveFolder}...");
         Directory.CreateDirectory(saveFolder);
         

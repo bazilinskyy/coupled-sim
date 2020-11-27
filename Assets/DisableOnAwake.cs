@@ -5,13 +5,19 @@ using UnityEngine;
 public class DisableOnAwake : MonoBehaviour
 {
     public bool disableMe = true;
+    
     // Start is called before the first frame update
-    void Awake()
+  /*  void Awake()
     {
-        /*GameObject player = GameObject.FindGameObjectWithTag("Player");
+        *//*GameObject player = GameObject.FindGameObjectWithTag("Player");
         player.GetComponent<ExperimentInput>().environment = gameObject;
 
-        if (disableMe) { gameObject.SetActive(false); }*/
-    }
+        if (disableMe) { gameObject.SetActive(false); }*//*
+    }*/
 
+   /* private void Update()
+    {
+        LightmapSettings.lightmaps = lightMap;
+    }
+*/
 }

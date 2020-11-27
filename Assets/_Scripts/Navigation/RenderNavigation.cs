@@ -61,6 +61,7 @@ public class RenderNavigation : MonoBehaviour
         while (currentWaypoint != null && renderedWaypoints <= numberOfWaypoints)
         {
             currentWaypoint.RenderMe(true);
+            if(currentWaypoint.previousWaypoint != null) { currentWaypoint.previousWaypoint.RenderMe(true); }
             //Skip spline points in the count
             if (currentWaypoint.operation != Operation.SplinePoint) { renderedWaypoints++; }
 

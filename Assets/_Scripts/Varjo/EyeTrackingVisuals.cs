@@ -19,6 +19,7 @@ public class EyeTrackingVisuals : MonoBehaviour
     {
         ExperimentInput player = MyUtils.GetExperimentInput();
         if (!player.debug) { lightObj.SetActive(false); lightObj2.SetActive(false); enabled = false; }
+        VarjoPlugin.InitGaze();
     }
     void Update()
     {
@@ -48,10 +49,18 @@ public class EyeTrackingVisuals : MonoBehaviour
         }
     }
 
+    public void Disable()
+    {
+       if(lightObj != null) { lightObj.SetActive(false); }
+       if (lightObj2 != null) { lightObj2.SetActive(false); }
+        enabled = false;
+    }
     void SetLightActive(bool input)
     {
         if (input != isActive)
         {
+            if (input) { Debug.Log("Gaze light activated!"); }
+            else { Debug.Log("Gaze light DEactivated!"); }
             lightObj.SetActive(input);
             isActive = input;
         }

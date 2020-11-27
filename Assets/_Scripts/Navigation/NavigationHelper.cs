@@ -66,6 +66,13 @@ public class NavigationHelper : MonoBehaviour
         return (GetNavigationLine(), renderVirtualCable, renderHighlightedRoad, renderHUD, transparency);
     }
 
+    private void SetTargetDifficulty(TargetDifficulty difficulty)
+    {
+        foreach(Target target in GetAllTargets())
+        {
+            target.SetDifficulty(difficulty);
+        }
+    }
     public void CaluclateTargetInfo(){ targetCountInfo = GetTargetCountInfo(); targetDifficultyList = GetTargetDifficultyList(); }
     void CheckChanges()
     {
@@ -139,7 +146,7 @@ public class NavigationHelper : MonoBehaviour
 
         Transform text = car.HUD.transform.Find("Text");
         TextMesh textMesh = text.gameObject.GetComponent<TextMesh>();
-
+        
         float distanceToTarget = Vector3.Magnitude(car.target.transform.position - car.transform.position);
         int renderedDistance = ((int)distanceToTarget - ((int)distanceToTarget % 5));
         if (renderedDistance < 0) { renderedDistance = 0; }
@@ -177,7 +184,6 @@ public class NavigationHelper : MonoBehaviour
         RenderNavigationType(NavigationType.HighlightedRoad, renderHighlightedRoad);
 
     }
-
     public void ResetTargets()
     {
         foreach(Target target in GetAllTargets()) { target.ResetTarget(); }
@@ -365,14 +371,18 @@ public class NavigationHelper : MonoBehaviour
             waypoint.RenderMe(render);
         }
     }
-    public void SetUp(NavigationType navigationType, float _transparency, Navigator _car, HUDMaterials _HUDMAterials)
+    public void SetUp(NavigationType navigationType, float _transparency, Navigator _car, HUDMaterials _HUDMAterials, TargetDifficulty difficulty, bool resetCar = true )
     {
         //if (makeNavigation) { splineCreator.MakeNavigation(); }
 
+        if (difficulty != TargetDifficulty.None) { SetTargetDifficulty(difficulty); }
+
         HUDMaterials = _HUDMAterials;  transparency = _transparency;
-        car = _car;  car.navigation = transform; car.target = GetFirstTarget();
+
+        if (resetCar) { car = _car; car.navigation = transform; car.target = GetFirstTarget(); }
         
         GetComponent<RenderNavigation>().SetUpNavigationRenderer(car, GetOrderedWaypointList(), car.GetCurrentTarget());
+
 
         if (navigationType == NavigationType.VirtualCable) {
             renderHUD = false;
@@ -391,7 +401,9 @@ public class NavigationHelper : MonoBehaviour
             renderHUD = true;
             car.HUD.SetActive(true);
             HUDPlacer HUDPlacer = car.HUD.GetComponent<HUDPlacer>();
-            HUDPlacer.SetAngles(-3f, 0, 2f); HUDPlacer.PlaceHUD();
+            HUDPlacer.SetAngles(-6f, 0, 2f); HUDPlacer.PlaceHUD();
+            Transform arrows = car.HUD.transform.Find("Arrows");
+            arrows.localScale = new Vector3(0.3f, 1f, .15f);
             RenderNavigationArrow();
             RenderNavigationType(NavigationType.VirtualCable, false);
             RenderNavigationType(NavigationType.HighlightedRoad, false);
@@ -401,7 +413,9 @@ public class NavigationHelper : MonoBehaviour
             renderHUD = true;
             car.HUD.SetActive(true);
             HUDPlacer HUDPlacer = car.HUD.GetComponent<HUDPlacer>();
-            HUDPlacer.SetAngles(12f, 0, 2f); HUDPlacer.PlaceHUD();
+            HUDPlacer.SetAngles(20f, 3.5f, 2f); HUDPlacer.PlaceHUD();
+            Transform arrows = car.HUD.transform.Find("Arrows");
+            arrows.localScale = new Vector3(0.36f, 1f, .18f);
             RenderNavigationArrow();
             RenderNavigationType(NavigationType.VirtualCable, false);
             RenderNavigationType(NavigationType.HighlightedRoad, false);

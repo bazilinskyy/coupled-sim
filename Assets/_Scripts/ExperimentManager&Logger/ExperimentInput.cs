@@ -71,7 +71,7 @@ public class ExperimentInput : MonoBehaviour
         Varjo.VarjoPlugin.ResetPose(true, Varjo.VarjoPlugin.ResetRotation.ALL);
 
         Debug.Log("Calling start() of experimentInput...");
-        string[] array = {drivingPractiseScene, experimentScene1, experimentScene2, experimentScene3, experimentScene4 };
+        string[] array = {drivingPractiseScene, experimentScene1, experimentScene3, experimentScene4 };
         sceneArray = array;
 
         ReadCSVSettingsFile();
@@ -80,8 +80,12 @@ public class ExperimentInput : MonoBehaviour
         subjectDataFolder = string.Join("/", System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop).Replace("\\", "/"), "Data", System.DateTime.Now.ToString("MM-dd_HH-mm") + "_" + subjectName);
         Debug.Log($"Creating {subjectDataFolder}...");
         System.IO.Directory.CreateDirectory(subjectDataFolder);
-        
+
+        if (environment == null) { environment = GameObject.FindGameObjectWithTag("Environment"); }
+
     }
+
+
     public string GetNextScene()
     {
         currentDrivingScene = sceneArray[sceneIndex];

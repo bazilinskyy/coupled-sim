@@ -7,6 +7,7 @@ public class HUDPlacer : MonoBehaviour
     public float visualAngleVertical;
     public float visualAngleHorizontal;
     public float distance;
+    public Transform car;
     public Transform headPosition;
 
     private bool pressMeToPlace; public bool _pressMeToPlace; 
@@ -37,9 +38,13 @@ public class HUDPlacer : MonoBehaviour
     {
         float visualAngleVerticalRadians = visualAngleVertical * Mathf.PI / 180;
         float visualAngleHorizontalRadians = visualAngleHorizontal * Mathf.PI / 180;
-        forwardVector = new Vector3(0, Mathf.Tan(visualAngleVerticalRadians) * distance, distance);
-        sideVector = new Vector3(Mathf.Tan(visualAngleHorizontalRadians), 0, 0);
-        transform.position = headPosition.position + forwardVector + sideVector;
+        /*forwardVector = new Vector3(0, Mathf.Tan(visualAngleVerticalRadians) * distance, distance);
+        sideVector = new Vector3(Mathf.Tan(visualAngleHorizontalRadians), 0, 0);*/
+        float up = Mathf.Tan(visualAngleVerticalRadians);
+        float right = Mathf.Tan(visualAngleHorizontalRadians) * distance;
+        float forward = distance;
+
+        transform.position = headPosition.position + car.forward * forward + car.right * right + car.up * up;
     }
 
     public void SetAngles(float vertical, float horizontal, float _distance)

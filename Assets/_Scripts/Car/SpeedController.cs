@@ -121,7 +121,7 @@ public class SpeedController : MonoBehaviour
             else { ToggleGas(true, throttleIncrement); }
 
             //Starts brakign when at end point.
-            if (Vector3.Distance(transform.position, targetWaypoint.transform.position) < 7.5f) { Brake(); }
+            if (Vector3.Distance(transform.position, targetWaypoint.transform.position) < 7.5f) { Brake(); GetComponent<Navigator>().navigationFinished = true; }
         }
         else { Debug.LogError("Loop hole should never get here! (SpeedController.cs)..."); }
 

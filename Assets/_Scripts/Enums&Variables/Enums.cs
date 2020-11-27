@@ -63,6 +63,7 @@ public enum TargetDifficulty
     easy,
     medium,
     hard,
+    None,
 }
 
 public enum GameStates

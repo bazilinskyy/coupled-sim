@@ -73,8 +73,7 @@ public class WaitingRoomManager : MonoBehaviour
     void SetText()
     {
         if (!experimentInput.IsNextScene()) { text.text = "All experiments are completed. Thanks for participating!"; }
-        
-        text.text = $"Experiment {experimentInput.GetExperimentNumber()} starts when you are ready!";
+        else { text.text = $"Experiment {experimentInput.GetExperimentNumber()} starts when you are ready!"; }
         
     }
 

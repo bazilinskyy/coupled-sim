@@ -27,7 +27,6 @@ public class CalibrationManager : MonoBehaviour
     // Start is called before the first frame update
     private void Start()
     {
-        Application.targetFrameRate = 300;
         StartScene();
     }
     void StartScene()
@@ -42,8 +41,13 @@ public class CalibrationManager : MonoBehaviour
         Varjo.VarjoPlugin.ResetPose(true, Varjo.VarjoPlugin.ResetRotation.ALL);
 
         mySceneLoader = player.GetComponent<MySceneLoader>();
-        mySceneLoader.LoadEnvironment();
+        
         mySceneLoader.MovePlayer(startPosition);
+        /*
+                experimentInput.environment = GameObject.FindGameObjectWithTag("Environment");
+
+        */
+        experimentInput.environment.SetActive(false);
 
         if (!experimentInput.ReadCSVSettingsFile()) 
         {
@@ -65,21 +69,32 @@ public class CalibrationManager : MonoBehaviour
         if (Input.GetKeyDown(experimentInput.resetExperiment)) {mySceneLoader.LoadCalibrationScene(); }
         if (Input.GetKeyDown(experimentInput.resetHeadPosition)) { Varjo.VarjoPlugin.ResetPose(true, Varjo.VarjoPlugin.ResetRotation.ALL); }
         if (Input.GetKeyDown(experimentInput.calibrateGaze)) { RequestGazeCalibration(); }
-        if (Input.GetKeyDown(experimentInput.myPermission)) { mySceneLoader.LoadNextDrivingScene(true,false); }
-        if (Varjo.VarjoPlugin.IsGazeCalibrated() && (experimentInput.camType == MyCameraType.Normal || experimentInput.calibratedUsingHands) && !addedTargets) {
+        if (Input.GetKeyDown(experimentInput.myPermission)) {
+            if (!addedTargets)
+            {
+                mySceneLoader.AddTargetScene(); addedTargets = true;
+            }
+            mySceneLoader.LoadNextDrivingScene(true,false); 
+        }
+        /*if (Varjo.VarjoPlugin.IsGazeCalibrated() && (experimentInput.camType == MyCameraType.Normal || experimentInput.calibratedUsingHands) && !addedTargets) {
             mySceneLoader.AddTargetScene(); 
             addedTargets = true; cross.SetActive(false);
             instructions.text = "Look at the targets above!";
-        }
+        }*/
         
-        if (Input.GetKeyDown(KeyCode.T)) { mySceneLoader.AddTargetScene(); }
-
-        if(experimentInput.environment != null && !unloadedEnvironmentScene) 
-        {
-            DontDestroyOnLoad(experimentInput.environment);
-            SceneManager.UnloadSceneAsync("Environment");
-            unloadedEnvironmentScene = true;
+        if (Input.GetKeyDown(KeyCode.T)) { 
+            mySceneLoader.AddTargetScene(); 
+            addedTargets = true; 
+            cross.SetActive(false);
+            instructions.text = "Look at the targets above!";
         }
+
+        /*if(experimentInput.environment != null && !unloadedEnvironmentScene) 
+        {
+            //DontDestroyOnLoad(experimentInput.environment);
+            //SceneManager.UnloadSceneAsync("Environment");
+            unloadedEnvironmentScene = true;
+        }*/
     }
     void RequestGazeCalibration()
     {
@@ -147,10 +162,51 @@ public class CalibrationManager : MonoBehaviour
         //(1) On which target has been looked at most recently
         //(2) Target closest to looking direction
         //(3) Or closest target
-        Target targetChosen = null;
+   /*     Target targetChosen = null;
         float mostRecentTime = 0f;
         float smallestDistance = 100000f;
-        float currentDistance;
+        float currentDistance;*/
+
+
+        //When multiple targets are visible we base our decision on:
+        //(1) On which target has been looked at most recently (max 1 second)
+        Target targetChosen = null;
+        float mostRecentTime = 1f;
+        foreach (Target target in visibleTargets)
+        {
+            float timeSinceFixation = Time.time - target.lastFixationTime;
+            if (timeSinceFixation < mostRecentTime)
+            {
+                targetChosen = target;
+                mostRecentTime = timeSinceFixation;
+            }
+        }
+
+        //If previous method did not find a target ->
+        //(2) Check using angle between general gaze direction and target 
+        float minAngle = 10f;
+        if (targetChosen == null && experimentInput.camType != MyCameraType.Normal)
+        {
+
+            Varjo.VarjoPlugin.GazeData data = Varjo.VarjoPlugin.GetGaze();
+            if (data.status == Varjo.VarjoPlugin.GazeStatus.VALID)
+            {
+
+                Debug.Log("Got valid data...");
+                Vector3 gazeDirection = MyUtils.TransformToWorldAxis(data.gaze.forward, data.gaze.position);
+
+                foreach (Target target in visibleTargets)
+                {
+                    Vector3 CamToTarget = target.transform.position - CameraTransform().position;
+                    float angle = Vector3.Angle(gazeDirection, CamToTarget);
+
+                    if (angle < minAngle) { minAngle = angle; targetChosen = target; }
+                }
+            }
+        }
+        if (minAngle != 10f) { Debug.Log($"Chose {targetChosen.gameObject.name} with angle {minAngle}..."); }
+
+/*
 
         foreach (Target target in visibleTargets)
         {
@@ -170,7 +226,7 @@ public class CalibrationManager : MonoBehaviour
             }
         }
         if (mostRecentTime == 0f) { Debug.Log("Chose target based on distance..."); }
-        else { Debug.Log($"Chose target based on fixation time: {Time.time - mostRecentTime}..."); }
+        else { Debug.Log($"Chose target based on fixation time: {Time.time - mostRecentTime}..."); }*/
 
         if (targetChosen != null) { targetChosen.SetDetected(1f); }
     }

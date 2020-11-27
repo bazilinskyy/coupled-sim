@@ -28,11 +28,36 @@ public class MySceneLoader : MonoBehaviour
 
         //DontDestroyOnLoad(player); Debug.Log("Found player!");
 /*        
-        if (startingPosition == null) { return; }
-
-        
+        if (startingPosition == null) { return; }        
         StartCoroutine(MovePlayerToDestination());*/
     }
+
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.X)) 
+        {
+            player.transform.parent = null;
+
+            DontDestroyOnLoad(player);
+
+            blackOutScreen.CrossFadeAlpha(1f, experimentInput.animationTime, false);
+
+            SceneManager.LoadSceneAsync(experimentInput.GetNextScene(), LoadSceneMode.Additive);
+           
+        }
+
+        if (Input.GetKeyDown(KeyCode.C))
+        {
+
+            SceneManager.UnloadSceneAsync(experimentInput.targetScene);
+        }
+        if (Input.GetKeyDown(KeyCode.V))
+        {
+
+            SceneManager.UnloadSceneAsync(experimentInput.calibrationScene);
+        }
+    }
+
 
     public void MovePlayer(Transform position)
     {
@@ -73,10 +98,12 @@ public class MySceneLoader : MonoBehaviour
 
     public void LoadCalibrationScene()
     {
-        if (!loading) { SceneManager.LoadSceneAsync(experimentInput.calibrationScene, LoadSceneMode.Single); }
+        //if (!loading) { SceneManager.LoadSceneAsync(experimentInput.calibrationScene, LoadSceneMode.Single); }
     }
     public void LoadNextDrivingScene(bool unloadCalibrationScene, bool unloadWaitingRoomScene)
     {
+        EyeTrackingVisuals visuals = GetComponent<EyeTrackingVisuals>();
+        if(visuals != null) { visuals.Disable(); }
         if (!loading && experimentInput.IsNextScene()) { StartCoroutine(LoadExperiment(experimentInput.GetNextScene(), unloadCalibrationScene, unloadWaitingRoomScene)); }
         //if (environmentLoaded) { StartCoroutine(LoadExperiment(experimentInput.GetNextScene())); }
         //operation = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Single);
@@ -135,7 +162,6 @@ public class MySceneLoader : MonoBehaviour
         {
             yield return null;
         }
-        experimentInput.environment.SetActive(true);
         //Scene newScene = SceneManager.GetSceneByName(sceneName);
         //SceneManager.MoveGameObjectToScene(player, newScene);
 
@@ -146,6 +172,9 @@ public class MySceneLoader : MonoBehaviour
         {
             yield return null;
         }
+
+        experimentInput.environment.SetActive(true);
+        //experimentInput.environment.GetComponent<LightmapSetter>().ReloadLightMap();
 
         blackOutScreen.CrossFadeAlpha(0f, experimentInput.animationTime*2f, false);
         yield return new WaitForSeconds(experimentInput.animationTime);
@@ -234,7 +263,7 @@ public class MySceneLoader : MonoBehaviour
 
     IEnumerator LoadYourAsyncScene(string sceneName, bool enableEnvironment, bool unloadCalibrationScene=false, bool unloadWaitingRoomScene=false)
     {
-        return null;
+        yield return null;
         /*loading = true; Debug.Log($"Loading next scene: {sceneName}...");
         player.transform.parent = null;
 
