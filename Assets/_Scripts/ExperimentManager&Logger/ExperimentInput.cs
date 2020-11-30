@@ -9,6 +9,8 @@ public class ExperimentInput : MonoBehaviour
     public GameObject environment;
     public bool debug = true;
 
+    public bool makeVirtualCable = true;
+
     public string subjectDataFolder;
     public string subjectName = "Dummy";
     public int experimentOrder;

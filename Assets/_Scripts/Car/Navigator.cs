@@ -22,6 +22,8 @@ public class Navigator : MonoBehaviour
     private Vector3 lastPosition = Vector3.zero;
    
     public GameObject HUD;
+
+
      private void Awake()
     {
         //Set some variables
@@ -113,3 +115,5 @@ public class Navigator : MonoBehaviour
     }
     public NavigationHelper GetNavigationHelper() { return navigationHelper;}
 }
+
+
