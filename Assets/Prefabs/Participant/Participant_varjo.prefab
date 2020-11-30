@@ -324,7 +324,6 @@ MonoBehaviour:
   useOcclusionMesh: 1
   occlusionMaterial: {fileID: 0}
   varjoCamera: {fileID: 3457266540128744198}
-  varjoCamera_pedestrian: {fileID: 0}
   forceVRSupport: 1
   disableVSync: 1
 --- !u!1 &3569788540715169562
@@ -1825,14 +1824,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3947586069784198974}
-  m_LocalRotation: {x: 0.0001649084, y: 0.000018167435, z: 0.0017343841, w: 0.9999985}
+  m_LocalRotation: {x: 0.0001666998, y: 0.0000028967465, z: 0.08715578, w: 0.9961947}
   m_LocalPosition: {x: -0.30699995, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 3945696686140327524}
   m_Father: {fileID: 3954049657838034096}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0.019000001, y: 0.002, z: 10}
 --- !u!1 &3947594772587316724
 GameObject:
   m_ObjectHideFlags: 0
@@ -3210,14 +3209,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3948063654573824982}
-  m_LocalRotation: {x: 0.0009439369, y: -0.00069553946, z: 0.003189022, w: 0.9999942}
+  m_LocalRotation: {x: 0.00027877517, y: -0.0011339554, z: 0.6427877, w: 0.76604354}
   m_LocalPosition: {x: -0.16303666, y: 0, z: -0.000000018626451}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 3953623145063370562}
   m_Father: {fileID: 3945216613507166644}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0.108, y: -0.079, z: 80}
 --- !u!1 &3948063951171090580
 GameObject:
   m_ObjectHideFlags: 0
@@ -4753,14 +4752,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3948226649355559850}
-  m_LocalRotation: {x: -0.00016735443, y: 0.00001826355, z: 0.00088411005, w: 0.99999964}
+  m_LocalRotation: {x: -0.00016660654, y: 0.0000029049065, z: -0.08715578, w: 0.9961947}
   m_LocalPosition: {x: -0.30699956, y: 0, z: 0.0000000055879354}
   m_LocalScale: {x: 1.0000002, y: 0.99999994, z: 1.0000002}
   m_Children:
   - {fileID: 3945259316197271802}
   m_Father: {fileID: 3945188356330575570}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: -0.019000001, y: 0.002, z: -10}
 --- !u!1 &3948232895558971748
 GameObject:
   m_ObjectHideFlags: 0
@@ -4784,14 +4783,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3948232895558971748}
-  m_LocalRotation: {x: -0.0008354861, y: -0.0023817795, z: -0.001509336, w: 0.9999957}
+  m_LocalRotation: {x: 0.0008896234, y: -0.0023635505, z: -0.6427871, w: 0.76604074}
   m_LocalPosition: {x: -0.16278896, y: 0.00000011920929, z: 0}
   m_LocalScale: {x: 1, y: 1.0000001, z: 1}
   m_Children:
   - {fileID: 3945345445074403968}
   m_Father: {fileID: 3954084713178623566}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: -0.096, y: -0.273, z: -80}
 --- !u!1 &3948233189857450734
 GameObject:
   m_ObjectHideFlags: 0
@@ -8057,6 +8056,22 @@ MonoBehaviour:
   eye: 0
   gazeRayRadius: 0.01
   drawDebug: 1
+  gazeRayForward: {x: 0, y: 0, z: 0}
+  gazeRayDirection: {x: 0, y: 0, z: 0}
+  gazePosition: {x: 0, y: 0, z: 0}
+  gazeRayOrigin: {x: 0, y: 0, z: 0}
+  list_role_varjo: []
+  role_varjo: 
+  target: 
+  Frame: 0
+  CaptureTime: 0
+  hmdposition: {x: 0, y: 0, z: 0}
+  hmdrotation: {x: 0, y: 0, z: 0}
+  hmdrotation_quaternion: {x: 0, y: 0, z: 0, w: 0}
+  LeftPupilSize: 0
+  RightPupilSize: 0
+  FocusDistance: 0
+  FocusStability: 0
 --- !u!1 &5338325867927314009
 GameObject:
   m_ObjectHideFlags: 0
