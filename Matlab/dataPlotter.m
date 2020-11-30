@@ -73,30 +73,6 @@ ylim([-10 100]);
 ylabel("AV pos_z in [m]");
 title("Pedestrian distance vs AV position");
 
-% % Only for debugging
-% figure;
-% grid on;
-% title("Distances");
-% yyaxis left
-% plot(Data.Time, pe.distance2);
-% ylabel("eye gaze distance pedestrian 2");
-% yyaxis right
-% plot(Data.Time, pa.pos.z);
-% ylim([-10 100]);
-% ylabel("AV pos_z");
-% 
-% % Only for debugging
-% figure;
-% grid on;
-% title("Distances");
-% yyaxis left
-% plot(Data.Time, pe.distance3);
-% ylabel("eye gaze distance pedestrian 3");
-% yyaxis right
-% plot(Data.Time, pa.pos.z);
-% ylim([-10 100]);
-% ylabel("AV pos_z");
-
 % Pedestrian gap acceptance vs AV position
 figure;
 grid on;
@@ -108,6 +84,15 @@ yyaxis right
 plot(Data.Time, pa.pos.z);
 ylim([-10 100]);
 ylabel("AV pos_z");
+
+% Pedestrian gap acceptance vs time
+figure;
+grid on;
+plot(Data.Time, pe.gapAcceptance);
+ylim([-2 2]);
+title("Gap Acceptance vs Time");
+xlabel("Time in [s]");
+ylabel("Gap Acceptance");
 
 %% Combinations
 % distance_pa vs distance_pe
