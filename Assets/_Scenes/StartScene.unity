@@ -278,7 +278,32 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _SceneSelector: {fileID: 0}
-  _participantNr: ParticipantNumber
+  participantOptions:
+  - Duo1
+  - Duo2
+  - Duo3
+  - Duo4
+  - Duo5
+  - Duo6
+  - Duo7
+  - Duo8
+  - Duo9
+  - Duo10
+  - Duo11
+  - Duo12
+  - Duo13
+  - Duo14
+  - Duo15
+  - Duo16
+  - Duo17
+  - Duo18
+  - Duo19
+  - Duo20
+  mappingOptions:
+  - Baseline
+  - Mapping1
+  - Mapping2
+  - Practice
   _aiCarSystem:
     Prefabs:
     - {fileID: 352613617798921809, guid: 568fe77cfc898694fad6a63eff98d905, type: 3}
@@ -362,6 +387,8 @@ MonoBehaviour:
   SendEndGameToClient: 0
   pressed: 0
   released: 0
+  mapping: 0
+  LogOrder: 1
 --- !u!114 &301934537
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -515,7 +542,6 @@ MonoBehaviour:
   useManualSelection: 0
   manualHostRole: 0
   manualClientRole: 1
-  _Mapping: 1
 --- !u!1 &1531541351
 GameObject:
   m_ObjectHideFlags: 0
