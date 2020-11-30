@@ -157,6 +157,9 @@ public class WorldLogger
             _fileWriter.Write(0);
             _fileWriter.Write(0);
         }
+
+        // Resetting AICar count
+        _lastFrameAICarCount = 0;
     }
 
     string GetHierarchyString(Transform trans)
@@ -177,10 +180,10 @@ public class WorldLogger
     public void LogFrame(float ping, float time)
     {
         // Log down the AI cars, position, time and ping
-        var aiCars = _aiCarSystem.Cars;
+        var aiCars = _aiCarSystem.Cars; Debug.LogError($"number of aicars = {aiCars.Count}, lastframeaicarcount  = {_lastFrameAICarCount}"); //test
         while (aiCars.Count > _lastFrameAICarCount)
         {
-            _fileWriter.Write((int)LogFrameType.AICarSpawn);    //6. int32 eventType
+            _fileWriter.Write((int)LogFrameType.AICarSpawn);  Debug.LogError($"writing aicarspawn logframe");  //6. int32 eventType
             _lastFrameAICarCount++;
         }
         _fileWriter.Write((int)LogFrameType.PositionsUpdate);
@@ -200,17 +203,11 @@ public class WorldLogger
             _fileWriter.Write(driver.transform.position);
             _fileWriter.Write(driver.transform.rotation);
             _fileWriter.Write((int)driver._carBlinkers.State);
-
-            //if(driver.gameObject.GetComponent<AICar>()._press == true){press = 1.0f;}
-            //else{press = -1.0f;}
             press = PersistentManager.Instance.pressed;
-            //if (driver.gameObject.GetComponent<AICar>()._release == true){release = 1.0f;}
-            //else { release = -1.0f; }
             release = PersistentManager.Instance.released;
             _fileWriter.Write(press);
             _fileWriter.Write(release);
                 
-
             var passengerGaze = driver.transform.GetComponentInChildren<VarjoGazeRay_CS>();
             // Code enters the invalid statement and afterwards the valid statement (eye-calibration)
             if (VarjoPlugin.GetGaze().status == VarjoPlugin.GazeStatus.VALID && driver.transform.Find("Gaze"))
