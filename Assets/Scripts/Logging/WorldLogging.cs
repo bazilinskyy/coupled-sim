@@ -180,10 +180,10 @@ public class WorldLogger
     public void LogFrame(float ping, float time)
     {
         // Log down the AI cars, position, time and ping
-        var aiCars = _aiCarSystem.Cars; Debug.LogError($"number of aicars = {aiCars.Count}, lastframeaicarcount  = {_lastFrameAICarCount}"); //test
+        var aiCars = _aiCarSystem.Cars; 
         while (aiCars.Count > _lastFrameAICarCount)
         {
-            _fileWriter.Write((int)LogFrameType.AICarSpawn);  Debug.LogError($"writing aicarspawn logframe");  //6. int32 eventType
+            _fileWriter.Write((int)LogFrameType.AICarSpawn);  //6. int32 eventType
             _lastFrameAICarCount++;
         }
         _fileWriter.Write((int)LogFrameType.PositionsUpdate);
