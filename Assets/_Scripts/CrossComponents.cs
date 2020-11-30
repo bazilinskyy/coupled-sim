@@ -4,6 +4,9 @@ using UnityEngine;
 
 public class CrossComponents : MonoBehaviour
 {
+	public RoadParameters roadParameters;
+	private int pointsPerCorner = 30;
+
     public GameObject forwardCross;
     public GameObject backwardCross;
     public GameObject leftCross;
