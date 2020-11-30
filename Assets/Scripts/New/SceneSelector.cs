@@ -26,8 +26,8 @@ public class SceneSelector : MonoBehaviour
         // Check if the end of the game is reached & Client has shut down. Shut down host if true
         if (PersistentManager.Instance.ClientClosed == true && PersistentManager.Instance.listNr >= PersistentManager.Instance.ExpOrder.Count - 1)
         {
-            //Application.Quit(); // build version
-            UnityEditor.EditorApplication.isPlaying = false; // editor version
+            Application.Quit(); // build version
+            //UnityEditor.EditorApplication.isPlaying = false; // editor version
         }
     }
 

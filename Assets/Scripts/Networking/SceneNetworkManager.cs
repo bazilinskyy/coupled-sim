@@ -35,7 +35,7 @@ public class SceneNetworkManager : MonoBehaviour
 
     public void ClientEndGame()
     {
-        //Application.Quit(); // build version
-        UnityEditor.EditorApplication.isPlaying = false; // editor version
+        Application.Quit(); // build version
+        //UnityEditor.EditorApplication.isPlaying = false; // editor version
     }
 }
