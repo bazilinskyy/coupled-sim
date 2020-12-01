@@ -53,7 +53,7 @@ public class MyGazeLogger : MonoBehaviour
 
         if (experimentManager == null) { GetComponent<MyGazeLogger>().enabled = false; return; }
 
-        if (!MyUtils.GetExperimentInput().saveData || MyUtils.GetExperimentInput().camType == MyCameraType.Normal) { GetComponent<MyGazeLogger>().enabled = false; return; }
+        if (!MyUtils.GetMainManager().saveData || MyUtils.GetMainManager().camType == MyCameraType.Normal) { GetComponent<MyGazeLogger>().enabled = false; return; }
         // InitGaze must be called before using or calibrating gaze tracking.
         if (!VarjoPlugin.InitGaze())
         {

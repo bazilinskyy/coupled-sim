@@ -12,42 +12,67 @@ public class CrossComponents : MonoBehaviour
     public GameObject leftCross;
     public GameObject rightCross;
 
-    public GameObject triggerCentre;
+	public GameObject startPoint;
 
+    public GameObject triggerStart;
+	public GameObject triggerEnd;
 
-    public GameObject rightTrigger;
+	public GameObject rightTrigger;
+	public GameObject rightRightTrigger;
+	public GameObject rightLeftTrigger;
+	public GameObject rightEndTrigger;
 
-    public GameObject leftTrigger;
-    public GameObject straightTrigger;
+	public GameObject leftTrigger;
+	public GameObject leftRightTrigger;
+	public GameObject leftLeftTrigger;
+	public GameObject leftEndTrigger;
 
-    public Waypoints waypoints = new Waypoints();
+	public GameObject straightTrigger;
+	public GameObject straightRightTrigger;
+	public GameObject straightLeftTrigger;
+	public GameObject straightEndTrigger;
+
+	public Waypoints waypoints = new Waypoints();
 
     public TurnType turn1 = TurnType.None;
 
     public TurnType turn2 = TurnType.None;
     
-    public bool makeVirtualCable = true;
-    private void Update()
-    {
-        
-    }
-
     public void SetUpCrossing(TurnType _turn1, TurnType _turn2)
     {
         turn1 = _turn1; turn2 = _turn2;
-        SetTriggers(turn1);
+        SetTriggers();
         SetWaypointTurn2();
-
-        if (makeVirtualCable) { GetComponent<CreateVirtualCable>().MakeVirtualCable(); }
-    }
-        
-    public void SetTriggers(TurnType turn)
+	}
+    public void SetTriggers()
     {
-        if (turn == TurnType.Left) { leftTrigger.tag = "CorrectTurn"; }
-        else if (turn == TurnType.Right) { rightTrigger.tag = "CorrectTurn"; }
-        else if (turn == TurnType.Straight) { straightTrigger.tag = "CorrectTurn"; }
-    }
 
+        if (turn1 == TurnType.Left) { 
+			leftTrigger.tag = "CorrectTurn";
+			leftRightTrigger.tag = turn2 == TurnType.Right ? "CorrectTurn" : "WrongTurn";
+			leftLeftTrigger.tag = turn2 == TurnType.Left ? "CorrectTurn" : "WrongTurn";
+
+			if (turn2 == TurnType.EndPoint) { leftEndTrigger.SetActive(true); }
+		}
+        else if (turn1 == TurnType.Right) { 
+			rightTrigger.tag = "CorrectTurn";
+			rightRightTrigger.tag = turn2 == TurnType.Right ? "CorrectTurn" : "WrongTurn";
+			rightLeftTrigger.tag = turn2 == TurnType.Left ? "CorrectTurn" : "WrongTurn";
+
+			if (turn2 == TurnType.EndPoint) { rightEndTrigger.SetActive(true); }
+		}
+        else if (turn1 == TurnType.Straight) {
+			straightTrigger.tag = "CorrectTurn";
+			straightRightTrigger.tag = turn2 == TurnType.Right ? "CorrectTurn" : "WrongTurn";
+			straightLeftTrigger.tag = turn2 == TurnType.Left ? "CorrectTurn" : "WrongTurn";
+			
+			if (turn2 == TurnType.EndPoint) { straightEndTrigger.SetActive(true); }
+		}
+		else if (turn1 == TurnType.EndPoint)
+        {
+			triggerEnd.SetActive(true);
+        }
+    }
     void SetWaypointTurn2()
     {
         if (turn1 == TurnType.None){ return; } 
@@ -57,7 +82,6 @@ public class CrossComponents : MonoBehaviour
         if (turn1 == TurnType.Right) { waypoints.waypoint2.SetPositionAndRotation(waypoints.right.position, waypoints.right.rotation); }
         if (turn1 == TurnType.Straight) { waypoints.waypoint2.SetPositionAndRotation(waypoints.straight.position, waypoints.straight.rotation); }
     }
-
     public List<Vector3> GetPointsNavigationLine()
     {
         List<Vector3> points = new List<Vector3>();

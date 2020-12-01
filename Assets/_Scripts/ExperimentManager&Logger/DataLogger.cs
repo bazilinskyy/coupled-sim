@@ -8,7 +8,7 @@ using Varjo;
 using System.Linq;
 using UnityEngine.SceneManagement;
 using System.Globalization;
-
+[RequireComponent(typeof(MyGazeLogger))]
 public class DataLogger : MonoBehaviour
 {
     private const string vehicleDataFileName = "vehicleData.csv";
@@ -36,7 +36,7 @@ public class DataLogger : MonoBehaviour
     private List<VehicleDataPoint> vehicleData;
     private List<TargetAlarm> targetDetectionData;
 
-    private ExperimentInput experimentInput;
+    private MainManager experimentInput;
     private Transform player;
 
     private string saveFolder;
@@ -58,10 +58,11 @@ public class DataLogger : MonoBehaviour
     }
     void StartUpFunction()
     {
-        
+        if (!enabled) { return; }
+
         Debug.Log("Started data logger...");
         player = GameObject.FindGameObjectWithTag("Player").transform;
-        experimentInput = player.GetComponent<ExperimentInput>();
+        experimentInput = player.GetComponent<MainManager>();
 
         experimentManager = GetComponent<ExperimentManager>();
         if (!experimentInput.saveData)
@@ -78,8 +79,8 @@ public class DataLogger : MonoBehaviour
         myGazeLogger.useCustomLogPath = true;
         if (experimentInput.camType != MyCameraType.Normal) { myGazeLogger.cam = experimentManager.CameraTransform(); }
 
-        navigationHelper = navigation.GetComponent<NavigationHelper>();
-        navigationLine = navigationHelper.GetNavigationLine();
+        /*navigationHelper = navigation.GetComponent<NavigationHelper>();
+        navigationLine = navigationHelper.GetNavigationLine();*/
 
         List<string> inputs = experimentManager.GetCarControlInput();
         steerInputAxis = inputs[0];
@@ -103,7 +104,7 @@ public class DataLogger : MonoBehaviour
         SaveVehicleData();
         SaveTargetDetectionData();
         SaveTargetInfoData();
-        SaveNavigationData();
+        //SaveNavigationData();
         SaveGeneralExperimentInfo();
 
         logging = false;

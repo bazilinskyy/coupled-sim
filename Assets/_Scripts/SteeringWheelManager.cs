@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class SteeringWheelManager : MonoBehaviour
 {
-    private Transform player;
+   /* private Transform player;
     public Transform startingPosition;
     public GameObject steeringWheelPrefab;
     private GameObject steeringWheel;
@@ -29,5 +29,5 @@ public class SteeringWheelManager : MonoBehaviour
     void CalibrateHands()
     {
         steeringWheel.transform.position = Vector3.zero;
-    }
+    }*/
 }

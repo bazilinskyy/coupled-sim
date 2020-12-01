@@ -56,7 +56,7 @@ public class ConsoleToGUI : MonoBehaviour
 
             System.IO.Directory.CreateDirectory(d);
             string r = Random.Range(1000, 9999).ToString();
-            fileName = System.DateTime.Now.ToString("MM-dd_HH-mm") + "_" + GetComponent<ExperimentInput>().subjectName;
+            fileName = System.DateTime.Now.ToString("MM-dd_HH-mm") + "_" + GetComponent<MainManager>().subjectName;
 
             fileName = d + "/log-" + fileName + ".txt";
             myLog += $"\nCreated log file {fileName}...";

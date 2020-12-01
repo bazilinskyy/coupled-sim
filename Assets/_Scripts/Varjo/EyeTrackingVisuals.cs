@@ -17,7 +17,7 @@ public class EyeTrackingVisuals : MonoBehaviour
 
     private void Start()
     {
-        ExperimentInput player = MyUtils.GetExperimentInput();
+        MainManager player = MyUtils.GetMainManager();
         if (!player.debug) { lightObj.SetActive(false); lightObj2.SetActive(false); enabled = false; }
         VarjoPlugin.InitGaze();
     }

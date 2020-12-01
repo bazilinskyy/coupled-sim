@@ -39,7 +39,7 @@ public class MyVarjoGazeRay : MonoBehaviour
    
     void StartUpFunction()
     {
-        if(MyUtils.GetExperimentInput().camType == MyCameraType.Normal) { enabled = false; return; }
+        if(MyUtils.GetMainManager().camType == MyCameraType.Normal) { enabled = false; return; }
         if (logData) { gazeLogger = GetComponent<MyGazeLogger>(); }
        
         // InitGaze must be called before using or calibrating gaze tracking.

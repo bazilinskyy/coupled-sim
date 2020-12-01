@@ -11,12 +11,12 @@ public class CalibrationManager : MonoBehaviour
     public GameObject steeringWheel;
     public GameObject cross;
     public Transform startPosition;
-    private ExperimentInput experimentInput;
+    private MainManager mainManager;
     
     public TextMesh instructions;
     private Transform player;
     public UnityEngine.UI.Image blackOutScreen;
-    private MySceneLoader mySceneLoader;
+    
   
     private bool lastUserInput = false;
 
@@ -32,24 +32,15 @@ public class CalibrationManager : MonoBehaviour
     void StartScene()
     {
         player = MyUtils.GetPlayer().transform;
-        experimentInput = MyUtils.GetExperimentInput();
+        mainManager = MyUtils.GetMainManager();
 
         //Spawn steeringwheel beneath plane.
         steeringWheel.transform.rotation = startPosition.rotation;
         steeringWheel.transform.position = -Vector3.up * 1;
-
-        Varjo.VarjoPlugin.ResetPose(true, Varjo.VarjoPlugin.ResetRotation.ALL);
-
-        mySceneLoader = player.GetComponent<MySceneLoader>();
         
-        mySceneLoader.MovePlayer(startPosition);
-        /*
-                experimentInput.environment = GameObject.FindGameObjectWithTag("Environment");
+        mainManager.MovePlayer(startPosition);
 
-        */
-        experimentInput.environment.SetActive(false);
-
-        if (!experimentInput.ReadCSVSettingsFile()) 
+        if (!mainManager.ReadCSVSettingsFile()) 
         {
             instructions.text = "Error in reading the experimentSettings file....\nPlease tell Marc :)";
         }
@@ -61,29 +52,29 @@ public class CalibrationManager : MonoBehaviour
 
         //Looks for targets to appear in field of view and sets their visibility timer accordingly
         if (userInput && addedTargets) { ProcessUserInputTargetDetection(); }
-        if ((userInput && !addedTargets) || Input.GetKeyDown(experimentInput.spawnSteeringWheel)) { CalibrateHands(); }
+        if ((userInput && !addedTargets) || Input.GetKeyDown(mainManager.spawnSteeringWheel)) { CalibrateHands(); }
     }
     void Update()
     {
        
-        if (Input.GetKeyDown(experimentInput.resetExperiment)) {mySceneLoader.LoadCalibrationScene(); }
-        if (Input.GetKeyDown(experimentInput.resetHeadPosition)) { Varjo.VarjoPlugin.ResetPose(true, Varjo.VarjoPlugin.ResetRotation.ALL); }
-        if (Input.GetKeyDown(experimentInput.calibrateGaze)) { RequestGazeCalibration(); }
-        if (Input.GetKeyDown(experimentInput.myPermission)) {
+        if (Input.GetKeyDown(mainManager.resetExperiment)) {mainManager.LoadCalibrationScene(); }
+        if (Input.GetKeyDown(mainManager.resetHeadPosition)) { Varjo.VarjoPlugin.ResetPose(true, Varjo.VarjoPlugin.ResetRotation.ALL); }
+        if (Input.GetKeyDown(mainManager.calibrateGaze)) { RequestGazeCalibration(); }
+        if (Input.GetKeyDown(mainManager.myPermission)) {
             if (!addedTargets)
             {
-                mySceneLoader.AddTargetScene(); addedTargets = true;
+                mainManager.AddTargetScene(); addedTargets = true;
             }
-            mySceneLoader.LoadNextDrivingScene(true,false); 
+            mainManager.CalibrationEnded();
         }
         /*if (Varjo.VarjoPlugin.IsGazeCalibrated() && (experimentInput.camType == MyCameraType.Normal || experimentInput.calibratedUsingHands) && !addedTargets) {
             mySceneLoader.AddTargetScene(); 
-            addedTargets = true; cross.SetActive(false);
+            addedTargets = true; cross.SetActve(false);
             instructions.text = "Look at the targets above!";
         }*/
         
         if (Input.GetKeyDown(KeyCode.T)) { 
-            mySceneLoader.AddTargetScene(); 
+            mainManager.AddTargetScene(); 
             addedTargets = true; 
             cross.SetActive(false);
             instructions.text = "Look at the targets above!";
@@ -114,7 +105,7 @@ public class CalibrationManager : MonoBehaviour
     }
     void CalibrateHands()
     {
-        if (experimentInput.camType == MyCameraType.Leap) {
+        if (mainManager.camType == MyCameraType.Leap) {
             Debug.Log("Trying to calibrate...");            
             CalibrateUsingHands steeringWheelCalibration = startPosition.GetComponent<CalibrateUsingHands>();
 
@@ -130,14 +121,14 @@ public class CalibrationManager : MonoBehaviour
                 float horizontalDistance = Mathf.Abs(startPosition.position.z - steeringWheel.transform.position.z);
                 float verticalDistance = Mathf.Abs(startPosition.position.y - steeringWheel.transform.position.y);
                 float sideDistance = startPosition.position.x - steeringWheel.transform.position.x;
-                experimentInput.SetCalibrationDistances(horizontalDistance, verticalDistance, sideDistance);
+                mainManager.SetCalibrationDistances(horizontalDistance, verticalDistance, sideDistance);
                 Debug.Log($"Calibrated steeringhweel with horizontal and vertical distances of, {horizontalDistance} and {verticalDistance}, respectively...");
             }
         }
     }
     private bool UserInput()
     {
-        bool input = (Input.GetAxis(experimentInput.ParticpantInputAxisLeft) == 1 || Input.GetAxis(experimentInput.ParticpantInputAxisRight) == 1);
+        bool input = (Input.GetAxis(mainManager.ParticpantInputAxisLeft) == 1 || Input.GetAxis(mainManager.ParticpantInputAxisRight) == 1);
         if (!input) {  lastUserInput = false; return false; }
         else if (input && lastUserInput) {  lastUserInput = true; return false; }
         else { lastUserInput = true; return true; }
@@ -185,7 +176,7 @@ public class CalibrationManager : MonoBehaviour
         //If previous method did not find a target ->
         //(2) Check using angle between general gaze direction and target 
         float minAngle = 10f;
-        if (targetChosen == null && experimentInput.camType != MyCameraType.Normal)
+        if (targetChosen == null && mainManager.camType != MyCameraType.Normal)
         {
 
             Varjo.VarjoPlugin.GazeData data = Varjo.VarjoPlugin.GetGaze();
@@ -232,9 +223,9 @@ public class CalibrationManager : MonoBehaviour
     }
     public Transform CameraTransform()
     {
-        if (experimentInput.camType == MyCameraType.Leap) { return player.Find("VarjoCameraRig").Find("VarjoCamera"); }
-        else if(experimentInput.camType == MyCameraType.Varjo) { return player.Find("VarjoCamera"); }
-        else if (experimentInput.camType == MyCameraType.Normal) { return player; }
+        if (mainManager.camType == MyCameraType.Leap) { return player.Find("VarjoCameraRig").Find("VarjoCamera"); }
+        else if(mainManager.camType == MyCameraType.Varjo) { return player.Find("VarjoCamera"); }
+        else if (mainManager.camType == MyCameraType.Normal) { return player; }
         else { throw new System.Exception("Error in retrieving used camera transform in Experiment Manager.cs..."); }
     }
 }

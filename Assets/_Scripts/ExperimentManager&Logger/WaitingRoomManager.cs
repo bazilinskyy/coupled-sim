@@ -6,14 +6,14 @@ using UnityEngine.SceneManagement;
 public class WaitingRoomManager : MonoBehaviour
 {
     private MyCameraType camType;
-    private MySceneLoader mySceneLoader;
+    
 
     public TextMesh text;
 
     public Transform startPosition;
     public GameObject steeringWheel;
     private Transform player;
-    public ExperimentInput experimentInput;
+    public MainManager mainManager;
     public UnityEngine.UI.Image blackOutScreen;
 
     public float thresholdUserInput = 0.15f; //The minimum time between user inputs (when within this time only the first one is used)
@@ -28,7 +28,7 @@ public class WaitingRoomManager : MonoBehaviour
     private void Update()
     {
 
-        if (Input.GetKeyDown(experimentInput.myPermission)) { mySceneLoader.LoadNextDrivingScene(false,true); }
+        if (Input.GetKeyDown(mainManager.myPermission)) { mainManager.LoadNextExperiment(); }
         
         //Looks for targets to appear in field of view and sets their visibility timer accordingly
         if (UserInput()) { ProcessUserInputTargetDetection(); }
@@ -36,10 +36,9 @@ public class WaitingRoomManager : MonoBehaviour
     void StartingScene()
     {
         player = GameObject.FindGameObjectWithTag("Player").transform;
-        experimentInput = player.GetComponent<ExperimentInput>();        
+        mainManager = player.GetComponent<MainManager>();        
 
-        mySceneLoader = player.GetComponent<MySceneLoader>();
-        mySceneLoader.MovePlayer(startPosition);
+        mainManager.MovePlayer(startPosition);
 
         SetText();
 
@@ -47,12 +46,12 @@ public class WaitingRoomManager : MonoBehaviour
     }
     public void SpawnSteeringWheel()
     {
-        if (experimentInput.calibratedUsingHands)
+        if (mainManager.calibratedUsingHands)
         {
             steeringWheel.transform.position = startPosition.position;
-            steeringWheel.transform.position += startPosition.transform.forward * experimentInput.driverViewHorizontalDistance;
-            steeringWheel.transform.position -= Vector3.up * experimentInput.driverViewVerticalDistance;
-            steeringWheel.transform.position -= startPosition.transform.right * experimentInput.driverViewSideDistance;
+            steeringWheel.transform.position += startPosition.transform.forward * mainManager.driverViewHorizontalDistance;
+            steeringWheel.transform.position -= Vector3.up * mainManager.driverViewVerticalDistance;
+            steeringWheel.transform.position -= startPosition.transform.right * mainManager.driverViewSideDistance;
 
         }
     }
@@ -66,14 +65,14 @@ public class WaitingRoomManager : MonoBehaviour
     {
         //only sends true once every 0.1 seconds (axis returns 1 for multiple frames when a button is clicked)
         if ((userInputTime + userInputThresholdTime) > Time.time) { return false; }
-        if (Input.GetAxis(experimentInput.ParticpantInputAxisLeft) == 1 || Input.GetAxis(experimentInput.ParticpantInputAxisRight) == 1) { userInputTime = Time.time; return true; }
+        if (Input.GetAxis(mainManager.ParticpantInputAxisLeft) == 1 || Input.GetAxis(mainManager.ParticpantInputAxisRight) == 1) { userInputTime = Time.time; return true; }
         else { return false; }
     }
 
     void SetText()
     {
-        if (!experimentInput.IsNextScene()) { text.text = "All experiments are completed. Thanks for participating!"; }
-        else { text.text = $"Experiment {experimentInput.GetExperimentNumber()} starts when you are ready!"; }
+        if (!mainManager.IsNextExperiment()) { text.text = "All experiments are completed. Thanks for participating!"; }
+        else { text.text = $"Experiment {mainManager.GetExperimentNumber()} starts when you are ready!"; }
         
     }
 

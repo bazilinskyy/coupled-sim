@@ -8,9 +8,9 @@ public static class MyUtils
         return GameObject.FindGameObjectWithTag("Player");
     }
 
-    public static ExperimentInput GetExperimentInput()
+    public static MainManager GetMainManager()
     {
-        return GameObject.FindGameObjectWithTag("Player").GetComponent<ExperimentInput>();
+        return GameObject.FindGameObjectWithTag("Player").GetComponent<MainManager>();
     }
 
     public static Vector3 TransformToWorldAxis(Vector3 gaze, Vector3 gazePosition)

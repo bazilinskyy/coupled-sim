@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class TestManager : MonoBehaviour
 {
-    public UnityEngine.UI.Image blackutScreen;
+    /*public UnityEngine.UI.Image blackutScreen;
     // Start is called before the first frame update
     void Start()
     {
@@ -15,5 +15,5 @@ public class TestManager : MonoBehaviour
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.F1)) { GetComponent<MySceneLoader>().LoadWaitingScene(); }
-    }
+    }*/
 }

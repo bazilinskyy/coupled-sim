@@ -6,44 +6,82 @@ using System.Linq;
 
 public class CreateVirtualCable : MonoBehaviour
 {
-	public Transform navigationPartParent;
 	public RoadParameters roadParameters;
 	public Material navigationPartMaterial;
+	private GameObject navigationSymbology;
 	int pointsPerCorner = 30;
-    CrossComponents crossing;
     Waypoints waypoints;
     private void Awake()
     {
-        
-        waypoints = crossing.waypoints;
-    }
-    public void MakeVirtualCable() 
+
+		MakeNavigationObject();
+	}
+
+	private void MakeNavigationObject()
     {
-		/*List<Vector3> points = new List<Vector3>();
+		navigationSymbology = new GameObject("VirtualCable");
+		//Make gameobejct with mesh and navigationpart component		
+		navigationSymbology.AddComponent(typeof(MeshRenderer));
+		navigationSymbology.AddComponent(typeof(MeshFilter));
+		navigationSymbology.AddComponent(typeof(MeshCollider));
+
+		navigationSymbology.GetComponent<MeshRenderer>().material = navigationPartMaterial;
+		navigationSymbology.GetComponent<MeshRenderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+		navigationSymbology.GetComponent<MeshRenderer>().receiveShadows = false;
+
+	}
+	List<Vector3> GetPointsCrossing(CrossComponents crossing)
+    {
+		waypoints = crossing.waypoints;
+		List<Vector3> points = new List<Vector3>();
 
 		points.Add(waypoints.startPoint.position);
-
-		if (crossing.turn1 == TurnType.None) { Debug.Log("Got None turn type..."); return; }
-		if (crossing.turn1 == TurnType.EndPoint) 
-		{ 
+		
+		if (crossing.turn1 == TurnType.None) { Debug.Log("Got None turn type..."); return points;  }
+		if (crossing.turn1 == TurnType.EndPoint)
+		{
 			points.Add(waypoints.waypoint1.position - 30f * waypoints.waypoint1.forward);
-			CreateNavigationPart(points);
-			return;
+			return points;
 		}
-		else if(crossing.turn1 != TurnType.Straight) 
-		{ 
-			foreach(Vector3 point in GetPointsCorner(waypoints.waypoint1, crossing.turn1)) { points.Add(point); }
+		else if (crossing.turn1 != TurnType.Straight)
+		{
+			foreach (Vector3 point in GetPointsCorner(waypoints.waypoint1, crossing.turn1)) { points.Add(point); }
 		}
 
-		if (crossing.turn2 == TurnType.None) { Debug.Log("Got None turn type..."); return; }
+		if (crossing.turn2 == TurnType.None) { Debug.Log("Got None turn type..."); return points; }
 		if (crossing.turn2 == TurnType.EndPoint) { points.Add(waypoints.waypoint2.position - 30f * waypoints.waypoint2.forward); }
 		else if (crossing.turn2 != TurnType.Straight)
 		{
 			foreach (Vector3 point in GetPointsCorner(waypoints.waypoint2, crossing.turn2)) { points.Add(point); }
-			
+
 		}
-*/
-		//CreateNavigationPart(points);
+		return points;
+	}
+    public void MakeVirtualCable(Crossings crossings)
+    {
+
+		List<Vector3> points = GetPointsCrossing(crossings.currentCrossing.GetComponent<CrossComponents>());
+		if (crossings.nextCrossing != null) { points = points.Concat(GetPointsCrossing(crossings.nextCrossing.GetComponent<CrossComponents>())).ToList(); }
+
+		Debug.Log($"MAking navigation with {points.Count()} points...");
+		CreateNavigationPart(points);
+    }
+	private void CreateNavigationPart(List<Vector3> points)
+	{
+		Vector3[] pointArray = points.ToArray();
+		Mesh mesh;
+
+		
+
+		//Set the mesh
+		navigationSymbology.GetComponent<MeshFilter>().mesh = mesh = new Mesh();
+		navigationSymbology.GetComponent<MeshCollider>().sharedMesh = mesh;
+
+		navigationSymbology.tag = "ConformalSymbology";
+
+		mesh.name = "VirtualCable";
+		mesh.vertices = GetVerticesVirtualCable(pointArray);
+		mesh.triangles = GetTrianglesVirtualCable(mesh.vertices);
 	}
 	private Vector3[] GetPointsCorner(Transform waypoint, TurnType turn)
 	{
@@ -128,30 +166,7 @@ public class CreateVirtualCable : MonoBehaviour
 		}
 		return pointsCircle;
 	}
-	private void CreateNavigationPart(List<Vector3> points)
-	{
-		Vector3 [] pointArray = points.ToArray();
-		Mesh mesh;
-
-		//Make gameobejct with mesh and navigationpart component
-		GameObject navigationPartGameObject = new GameObject("VirtualCable");
-		navigationPartGameObject.AddComponent(typeof(MeshRenderer));
-		navigationPartGameObject.AddComponent(typeof(MeshFilter));
-		navigationPartGameObject.AddComponent(typeof(MeshCollider));
-
-		//Set the mesh
-		navigationPartGameObject.GetComponent<MeshFilter>().mesh = mesh = new Mesh();
-		navigationPartGameObject.GetComponent<MeshRenderer>().material = navigationPartMaterial;
-		navigationPartGameObject.GetComponent<MeshRenderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-		navigationPartGameObject.GetComponent<MeshRenderer>().receiveShadows = false;
-		navigationPartGameObject.GetComponent<MeshCollider>().sharedMesh = mesh;
-
-		navigationPartGameObject.gameObject.tag = "ConformalSymbology";
-
-		mesh.name = "VirtualCable";
-		mesh.vertices = GetVerticesVirtualCable(pointArray);
-		mesh.triangles = GetTrianglesVirtualCable(mesh.vertices);
-	}
+	
 	private int[] GetTrianglesVirtualCable(Vector3[] vertices)
 	{
 		int pipeSegmentCount = roadParameters.pipeSegmentCount;
