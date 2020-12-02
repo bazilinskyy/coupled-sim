@@ -19,7 +19,7 @@ public class newExperimentManager : MonoBehaviour
 
 
     public MainManager mainManager;
-
+    public CrossingSpawner crossingSpawner;
 
     [Header("GameObjects")]
     // expriment objects and lists
@@ -51,27 +51,35 @@ public class newExperimentManager : MonoBehaviour
 
     private bool savedData = false;
     public bool makeVirtualCable = false; public bool renderHUD = false;
-    MyExperimentSetting experimentSettings;
-    private void Start()
+    public MyExperimentSetting experimentSettings;
+
+    UnityEngine.UI.Image blackOutScreen;
+    UnityEngine.UI.Text userUI;
+
+    private void Awake()
     {
         StartUpFunctions();
     }
     void StartUpFunctions()
     {
         player = MyUtils.GetPlayer().transform;
-
+        blackOutScreen = MyUtils.GetBlackOutScreen();
         mainManager = MyUtils.GetMainManager();
+        userUI = MyUtils.GetUserUI();
 
         //Beun settings
         experimentSettings = mainManager.GetExperimentSettings();
-        if (experimentSettings.navigationType == NavigationType.VirtualCable) {makeVirtualCable = true; }
-        else { renderHUD = true; }
+        if (experimentSettings.navigationType == NavigationType.VirtualCable) { makeVirtualCable = true; renderHUD = true; }
+        else { renderHUD = true; makeVirtualCable = true; }
+
+        
+        crossingSpawner.turnsList = experimentSettings.turns.ToArray();
+        crossingSpawner.StartUp();
 
         //Get all gameobjects we intend to use from the car (and do some setting up)
         SetGameObjectsFromCar();
 
         mainManager.MovePlayer(driverView);
-
 
         //Set camera (uses the gameobjects set it SetGameObjectsFromCar()) 
         SetCamera();
@@ -115,7 +123,7 @@ public class newExperimentManager : MonoBehaviour
         activeExperiment.experimentTime += Time.deltaTime;
         //Looks for targets to appear in field of view and sets their visibility timer accordingly
 
-        //SetTargetVisibilityTime();
+        SetTargetVisibilityTime();
 
         //When I am doing some TESTING
         if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W)) { car.GetComponent<SpeedController>().StartDriving(true); }
@@ -139,16 +147,50 @@ public class newExperimentManager : MonoBehaviour
         }
     }
     public void TookWrongTurn() 
-    { 
+    {
+        dataManager.TookWrongTurn();
 
+        car.GetComponent<SpeedController>().StartDriving(false);
+
+        userUI.text = "You took a wrong turn...\n Resetting!";
+
+        StartCoroutine(HandleWrongTurn());
+    }
+
+    IEnumerator HandleWrongTurn()
+    {
+        yield return new WaitForSeconds(1f);
+
+        blackOutScreen.CrossFadeAlpha(1f, mainManager.animationTime, false);
+
+        //Skip this waiting if we load while fading
+        yield return new WaitForSeconds(mainManager.animationTime);
+
+        WaypointStruct target= car.target;
+
+        Vector3 newStartPosition = target.waypoint.transform.position - target.waypoint.transform.forward * 20f;
+
+        StartCoroutine(SetCarSteadyAt(newStartPosition, target.waypoint.transform.rotation));
+
+        car.GetComponent<newNavigator>().RenderNavigationArrow();
+        blackOutScreen.CrossFadeAlpha(0f, mainManager.animationTime*2f, false);
+
+        userUI.text = "";
     }
     private void TeleportToNextWaypoint()
     {
-      /*  if (car.target.nextWaypoint != null)
-        {
-            StartCoroutine(SetCarSteadyAt(car.target.nextWaypoint.transform.position, car.target.nextWaypoint.transform.rotation));
-            car.SetNextTarget();
-        }*/
+
+        Vector3 targetPos = car.target.waypoint.transform.position + car.transform.forward * 7.5f;
+        Vector3 view = new Vector3();
+
+        if(car.target.turn == TurnType.Left) { targetPos -= car.transform.right * 5f; view = -car.transform.right; }
+        if (car.target.turn == TurnType.Right) { targetPos += car.transform.right * 5f; view = car.transform.right; }
+        if (car.target.turn == TurnType.Straight) { targetPos += car.transform.forward * 5f; view = car.transform.forward; }
+
+        Quaternion targetRot = car.transform.rotation;
+        targetRot.SetLookRotation(view);
+
+        StartCoroutine(SetCarSteadyAt(targetPos, targetRot, true));        
     }
     private void ToggleSymbology()
     {
@@ -261,13 +303,13 @@ public class newExperimentManager : MonoBehaviour
             driverView.position += car.transform.right * mainManager.driverViewSideDistance;
 
         }
-
+/*
         //Put car in right position
         Transform startLocation = activeNavigationHelper.GetStartPointNavigation();
 
         //car.SetNewNavigation(activeExperiment.navigation);
 
-        StartCoroutine(SetCarSteadyAt(startLocation.position, startLocation.rotation));
+        StartCoroutine(SetCarSteadyAt(startLocation.position, startLocation.rotation));*/
     }
     void GoToCar()
     {
@@ -419,12 +461,13 @@ public class newExperimentManager : MonoBehaviour
             if (Physics.Raycast(CameraTransform().position, currentDirection, out hit, 10000f, ~layerToIgnoreForTargetDetection))
             {
                 Debug.DrawRay(CameraTransform().position, currentDirection, Color.green);
-                if (hit.collider.gameObject.tag == "Target")
+                if (hit.collider.CompareTag("Target"))
                 {
                     Debug.DrawLine(CameraTransform().position, CameraTransform().position + currentDirection * 500, Color.cyan, Time.deltaTime, false);
                     isVisible = true;
                     break;
                 }
+                //else { Debug.Log($"Hit {hit.collider.gameObject.name}...."); }
             }
         }
 
@@ -443,7 +486,7 @@ public class newExperimentManager : MonoBehaviour
         //Number of ray hits to be used. We user a smaller amount than when the user actually presses the detection button. Since this function is called many times in Update() 
         int numberOfRandomRayHits = 3;
 
-        foreach (Target target in activeNavigationHelper.GetActiveTargets())
+        foreach (Target target in GetActiveTargets())
         {
             //If we havent seen the target before
             if (!target.HasBeenVisible())
@@ -455,6 +498,12 @@ public class newExperimentManager : MonoBehaviour
                 }
             }
         }
+    }
+
+    private List<Target> GetActiveTargets()
+    {
+        return car.GetComponent<CrossingSpawner>().crossings.GetAllTargets();
+
     }
     void SetCameraPosition(Vector3 goalPos, Quaternion goalRot)
     {
@@ -495,7 +544,7 @@ public class newExperimentManager : MonoBehaviour
         //Throw error if we dont have an xmlManager
         if (dataManager == null) { throw new System.Exception("Error in Experiment Manager -> A XMLManager should be attatched if you want to save data..."); }
 
-        dataManager.navigation = activeExperiment.navigation;
+     /*   dataManager.navigation = activeExperiment.navigation;
 
         if (mainManager.saveData) { dataManager.StartNewMeasurement(); }
         else
@@ -503,7 +552,7 @@ public class newExperimentManager : MonoBehaviour
             dataManager.enabled = false;
             try { GetComponent<MyGazeLogger>().enabled = false; } catch { Debug.Log("Could not disable GazeLogger..."); }
             try { GetComponent<MyVarjoGazeRay>().enabled = false; } catch { Debug.Log("Could not ddisable VarjoGazeRay..."); }
-        }
+        }*/
     }
     void SetCarControlInput()
     {
@@ -525,24 +574,44 @@ public class newExperimentManager : MonoBehaviour
         if (reflectionScript != null && player != null) { reflectionScript[0].head = CameraTransform(); }
         else { Debug.Log("Could not set head position for mirro reflection script..."); }
     }
-    IEnumerator SetCarSteadyAt(Vector3 targetPos, Quaternion targetRot)
+    IEnumerator SetCarSteadyAt(Vector3 targetPos, Quaternion targetRot, bool superSonic = false)
     {
         //Somehow car did some back flips when not keeping it steady for some time after repositioning.....
-        float step = 0.01f;
+        float step = 0.005f;
         float totalSeconds = 0.25f;
         float count = 0;
 
+        
+        if (superSonic)
+        {
+            float totalDistance = Vector3.Magnitude(targetPos - car.gameObject.transform.position);
+            float rotationSpeed = Quaternion.Angle(targetRot, car.transform.rotation) / totalSeconds;
+
+            car.transform.rotation = Quaternion.RotateTowards(car.transform.rotation, targetRot, rotationSpeed);
+            while (count < totalSeconds)
+            {
+
+                Vector3 direction = targetPos - car.gameObject.transform.position;
+
+                car.transform.position += direction.normalized * totalDistance * step / totalSeconds;
+                count += step;
+                yield return new WaitForSeconds(step);
+            }
+            count = 0;
+        }
+        
         while (count < totalSeconds)
         {
-            car.gameObject.transform.position = targetPos;
-            car.gameObject.transform.rotation = targetRot;
-
+            car.transform.position = targetPos;
+            car.transform.rotation = targetRot;
+           
             car.GetComponent<Rigidbody>().velocity = Vector3.zero;
             car.GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
 
             count += step;
             yield return new WaitForSeconds(step);
         }
+
     }
 }
 /*

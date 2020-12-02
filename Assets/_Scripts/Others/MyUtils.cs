@@ -13,6 +13,16 @@ public static class MyUtils
         return GameObject.FindGameObjectWithTag("Player").GetComponent<MainManager>();
     }
 
+    public static UnityEngine.UI.Image GetBlackOutScreen()
+    {
+        return GameObject.FindGameObjectWithTag("BlackOutScreen").GetComponent<UnityEngine.UI.Image>();
+    }
+
+    public static UnityEngine.UI.Text GetUserUI()
+    {
+        return GameObject.FindGameObjectWithTag("UserUI").GetComponent<UnityEngine.UI.Text>();
+    }
+
     public static Vector3 TransformToWorldAxis(Vector3 gaze, Vector3 gazePosition)
     {
         Vector4 gazeH = new Vector4(gaze.x, gaze.y, gaze.z, 1);

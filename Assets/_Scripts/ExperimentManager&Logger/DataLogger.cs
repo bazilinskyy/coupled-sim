@@ -28,7 +28,7 @@ public class DataLogger : MonoBehaviour
     private int indexClosestPoint = 0;//Used for calculating the distance to optimal navigation path (i.e., centre of raod)
 
     //Experiment manager;
-    private ExperimentManager experimentManager;
+    private newExperimentManager experimentManager;
 
     private MyGazeLogger myGazeLogger;
    
@@ -36,7 +36,7 @@ public class DataLogger : MonoBehaviour
     private List<VehicleDataPoint> vehicleData;
     private List<TargetAlarm> targetDetectionData;
 
-    private MainManager experimentInput;
+    private MainManager mainManager;
     private Transform player;
 
     private string saveFolder;
@@ -51,7 +51,7 @@ public class DataLogger : MonoBehaviour
     // Use standard numeric format specifiers.
     private string specifier = "G";
     
-    private void OnApplicationQuit() { if (experimentInput.saveData && !savedData) { SaveData(); } }
+    private void OnApplicationQuit() { if (mainManager.saveData && !savedData) { SaveData(); } }
     private void Start()
     {
         StartUpFunction();
@@ -62,10 +62,10 @@ public class DataLogger : MonoBehaviour
 
         Debug.Log("Started data logger...");
         player = GameObject.FindGameObjectWithTag("Player").transform;
-        experimentInput = player.GetComponent<MainManager>();
+        mainManager = player.GetComponent<MainManager>();
 
-        experimentManager = GetComponent<ExperimentManager>();
-        if (!experimentInput.saveData)
+        experimentManager = GetComponent<newExperimentManager>();
+        if (!mainManager.saveData)
         {
             GetComponent<DataLogger>().enabled = false;
             logging = false;
@@ -77,7 +77,7 @@ public class DataLogger : MonoBehaviour
         myGazeLogger.experimentManager = experimentManager;
         myGazeLogger.startAutomatically = false;
         myGazeLogger.useCustomLogPath = true;
-        if (experimentInput.camType != MyCameraType.Normal) { myGazeLogger.cam = experimentManager.CameraTransform(); }
+        if (mainManager.camType != MyCameraType.Normal) { myGazeLogger.cam = experimentManager.CameraTransform(); }
 
         /*navigationHelper = navigation.GetComponent<NavigationHelper>();
         navigationLine = navigationHelper.GetNavigationLine();*/
@@ -90,7 +90,10 @@ public class DataLogger : MonoBehaviour
 
         carNavigator = car.GetComponent<Navigator>();
 
+        StartNewMeasurement();
+
     }
+    public void TookWrongTurn() { Debug.Log("Logging wrong turn..."); }
     private void Update()
     {
         if (logging) { AddVehicleData(); }
@@ -99,7 +102,7 @@ public class DataLogger : MonoBehaviour
     {
         if (!logging) { return; }
         Debug.Log($"Saving all data to {saveFolder}...");
-        if (experimentInput.camType != MyCameraType.Normal) { SaveFixationData(); myGazeLogger.StopLogging();  }
+        if (mainManager.camType != MyCameraType.Normal) { SaveFixationData(); myGazeLogger.StopLogging();  }
 
         SaveVehicleData();
         SaveTargetDetectionData();
@@ -341,7 +344,7 @@ public class DataLogger : MonoBehaviour
         vehicleData = new List<VehicleDataPoint>();
         targetDetectionData = new List<TargetAlarm>();
 
-        if (experimentInput.camType != MyCameraType.Normal)
+        if (mainManager.camType != MyCameraType.Normal)
         {
             myGazeLogger.customLogPath = saveFolder + "/";
             myGazeLogger.fixationData = new Fixation();
@@ -361,7 +364,11 @@ public class DataLogger : MonoBehaviour
         for (int i = 0; i < (assetsFolderArray.Length - 2); i++) { baseFolderArray[i] = assetsFolderArray[i]; }
 
         string baseFolder = string.Join("/", baseFolderArray);*/
-        string saveFolder = string.Join("/", experimentInput.subjectDataFolder, experimentInput.currentDrivingScene + DateTime.Now.ToString("_HH-mm-ss"));
+        Debug.Log(mainManager.subjectDataFolder);
+        Debug.Log(mainManager.GetExperimentNumber());
+        Debug.Log(mainManager.gameObject.name);
+
+        string saveFolder = string.Join("/", mainManager.subjectDataFolder, "Experiment-" + mainManager.GetExperimentNumber().ToString() + DateTime.Now.ToString("_HH-mm-ss"));
         Debug.Log($"Creaiting savefolder: {saveFolder}...");
         Directory.CreateDirectory(saveFolder);
         

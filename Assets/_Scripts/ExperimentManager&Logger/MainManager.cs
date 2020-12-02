@@ -16,7 +16,7 @@ public class MainManager : MonoBehaviour
     public bool makeVirtualCable = true;
     public bool renderHUD = true;
 
-    public string subjectDataFolder;
+    public string subjectDataFolder ="npothing...";
     public string subjectName = "Dummy";
     public int experimentOrder;
 
@@ -68,7 +68,7 @@ public class MainManager : MonoBehaviour
 
     public string[] sceneArray;
     public int experimentIndex = 0;
-    public string currentDrivingScene;
+    
 
     private GameObject player;
     UnityEngine.UI.Image blackOutScreen;
@@ -76,6 +76,9 @@ public class MainManager : MonoBehaviour
     private bool loading = false;
     private void Awake()
     {
+
+        Random.InitState(42);
+
         player = gameObject;
 
         //Fade screen from black to transparent on awake
@@ -109,7 +112,7 @@ public class MainManager : MonoBehaviour
             List<TurnType> turns = new List<TurnType>();
 
             
-            for (int j = 0; j < 3; j++)
+            for (int j = 0; j < 7; j++)
             {
                 random = Random.Range(0, 100);
                 if(random < 50) { turns.Add(TurnType.Left); }
@@ -207,7 +210,7 @@ public class MainManager : MonoBehaviour
         blackOutScreen.CrossFadeAlpha(1f, animationTime, false);
 
         //Skip this waiting if we load while fading
-        yield return new WaitForSeconds(animationTime);
+       // yield return new WaitForSeconds(animationTime);
 
         player.transform.parent = null;
         DontDestroyOnLoad(player);
@@ -235,5 +238,7 @@ public class MyExperimentSetting
     public string experimentName = "Experiment";
     public List<TurnType> turns;
     public NavigationType navigationType;
+    public TargetDifficulty targetDifficulty = TargetDifficulty.easy;
+    public int targetsPerTurn = 3;
 
 }

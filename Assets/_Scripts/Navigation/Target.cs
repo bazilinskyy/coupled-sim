@@ -7,6 +7,8 @@ public class Target : MonoBehaviour
     //Targets for visual search task
     //Targets should always be placed between the parent waypoint and the next waypoint!
     public Waypoint waypoint;
+    public TurnType turnType;
+
     public TargetDifficulty difficulty = TargetDifficulty.easy;
 
     public Material easy;

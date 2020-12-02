@@ -15,7 +15,7 @@ public class MyGazeLogger : MonoBehaviour
     Vector3 hmdPosition;
     Vector3 hmdRotation;
     public Transform cam;
-    public ExperimentManager experimentManager;
+    public newExperimentManager experimentManager;
     [Header("Should only the latest data be logged on each update")]
     public bool oneGazeDataPerFrame = false;
 
@@ -49,7 +49,7 @@ public class MyGazeLogger : MonoBehaviour
     }
     void StartUpFunction()
     {
-        experimentManager = GetComponent<ExperimentManager>();
+        experimentManager = GetComponent<newExperimentManager>();
 
         if (experimentManager == null) { GetComponent<MyGazeLogger>().enabled = false; return; }
 

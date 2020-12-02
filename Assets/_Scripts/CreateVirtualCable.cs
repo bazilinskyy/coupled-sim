@@ -59,11 +59,10 @@ public class CreateVirtualCable : MonoBehaviour
 	}
     public void MakeVirtualCable(Crossings crossings)
     {
+		Debug.Log("Making new Virtual Cable...");
+		List<Vector3> points = GetPointsCrossing(crossings.CurrentCrossing().components);
+		if (crossings.NextCrossing() != null) { points = points.Concat(GetPointsCrossing(crossings.NextCrossing().components)).ToList(); }
 
-		List<Vector3> points = GetPointsCrossing(crossings.currentCrossing.GetComponent<CrossComponents>());
-		if (crossings.nextCrossing != null) { points = points.Concat(GetPointsCrossing(crossings.nextCrossing.GetComponent<CrossComponents>())).ToList(); }
-
-		Debug.Log($"MAking navigation with {points.Count()} points...");
 		CreateNavigationPart(points);
     }
 	private void CreateNavigationPart(List<Vector3> points)

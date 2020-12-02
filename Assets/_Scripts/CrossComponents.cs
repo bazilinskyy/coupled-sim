@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+using System.Linq;
 public class CrossComponents : MonoBehaviour
 {
 	public RoadParameters roadParameters;
@@ -32,37 +32,113 @@ public class CrossComponents : MonoBehaviour
 	public GameObject straightLeftTrigger;
 	public GameObject straightEndTrigger;
 
+	public Transform FirstTurnTargetSpawnPoints;
+	public Transform RightTargetSpawnPoints;
+	public Transform LeftTargetSpawnPoints;
+	public Transform StraightTargetSpawnPoints;
+
+	public Transform TargetParent;
+	public GameObject TargetPrefab;
+
+	public bool isFirstCrossing;
+
 	public Waypoints waypoints = new Waypoints();
+	public List<Target> targetList = new List<Target>(); 
 
     public TurnType turn1 = TurnType.None;
 
     public TurnType turn2 = TurnType.None;
     
-    public void SetUpCrossing(TurnType _turn1, TurnType _turn2)
+    public void SetUpCrossing(TurnType _turn1, TurnType _turn2, MyExperimentSetting settings, bool _isFirstCrossing = false)
     {
-        turn1 = _turn1; turn2 = _turn2;
-        SetTriggers();
+        turn1 = _turn1; turn2 = _turn2; isFirstCrossing = _isFirstCrossing;
+
+		SetTriggers();
         SetWaypointTurn2();
+		
+		//?Remove old targets
+		foreach( Transform child in TargetParent) { Destroy(child.gameObject); }
+		targetList = new List<Target>();
+
+		SpawnTargets(settings);
+	}
+	void SpawnTargets(MyExperimentSetting settings) 
+	{
+		if(settings.targetsPerTurn == 0) { return; }
+		List<Transform> spawnPoints;
+		Transform parentSpawPoints = null;
+		if (!isFirstCrossing) 
+		{
+			parentSpawPoints = FirstTurnTargetSpawnPoints;
+			spawnPoints = SelectRandomSpawnPoints(parentSpawPoints, settings.targetsPerTurn);
+			InstantiateTargets(spawnPoints, turn1, settings);
+		}
+
+		if(turn2 != TurnType.EndPoint || turn2 == TurnType.None)
+        {
+			if (turn2 == TurnType.Right) { parentSpawPoints = RightTargetSpawnPoints; }
+			if (turn2 == TurnType.Left) { parentSpawPoints = LeftTargetSpawnPoints; }
+			if (turn2 == TurnType.Straight) { parentSpawPoints = StraightTargetSpawnPoints; }
+
+			spawnPoints = SelectRandomSpawnPoints(parentSpawPoints, settings.targetsPerTurn);
+			InstantiateTargets(spawnPoints, turn2, settings);
+		}
+	}
+
+	private void InstantiateTargets(List<Transform> spawnPoints, TurnType turn, MyExperimentSetting settings)
+    {
+		GameObject target;
+		foreach (Transform point in spawnPoints)
+		{
+			target = Instantiate(TargetPrefab);
+			target.transform.position = point.position;
+			target.transform.parent = TargetParent;
+			target.GetComponent<Target>().SetDifficulty(settings.targetDifficulty);
+			target.GetComponent<Target>().turnType = turn;
+			targetList.Add(target.GetComponent<Target>());
+		}
+	}
+	private List<Transform> SelectRandomSpawnPoints(Transform parent, int numberOfTargetSpawnPoints)
+    {
+
+		List<Transform> spawnPoints = new List<Transform>();
+		List<Transform> selectedSpawnPoints = new List<Transform>();
+		bool selectionFinished = false;
+		
+		foreach (Transform child in parent) { spawnPoints.Add(child); }
+
+		while (!selectionFinished)
+		{
+			int randomIndex = (int)Mathf.Round(Random.Range(0, spawnPoints.Count() - 1));
+            if (!selectedSpawnPoints.Contains(spawnPoints[randomIndex])){ selectedSpawnPoints.Add(spawnPoints[randomIndex]); }
+			
+			if(selectedSpawnPoints.Count() >= numberOfTargetSpawnPoints) { selectionFinished = true; }
+			if(selectedSpawnPoints.Count() == spawnPoints.Count()) { selectionFinished = true; }
+		}
+
+		return selectedSpawnPoints;
 	}
     public void SetTriggers()
     {
+		rightTrigger.tag = turn1 == TurnType.Right ? "CorrectTurn" : "WrongTurn";
+		leftTrigger.tag = turn1 == TurnType.Left ? "CorrectTurn" : "WrongTurn";
+		straightTrigger.tag = turn1 == TurnType.Straight ? "CorrectTurn" : "WrongTurn";
 
-        if (turn1 == TurnType.Left) { 
-			leftTrigger.tag = "CorrectTurn";
+		if (turn1 == TurnType.Left) { 
 			leftRightTrigger.tag = turn2 == TurnType.Right ? "CorrectTurn" : "WrongTurn";
 			leftLeftTrigger.tag = turn2 == TurnType.Left ? "CorrectTurn" : "WrongTurn";
 
 			if (turn2 == TurnType.EndPoint) { leftEndTrigger.SetActive(true); }
 		}
-        else if (turn1 == TurnType.Right) { 
-			rightTrigger.tag = "CorrectTurn";
+        else if (turn1 == TurnType.Right) {
+
 			rightRightTrigger.tag = turn2 == TurnType.Right ? "CorrectTurn" : "WrongTurn";
 			rightLeftTrigger.tag = turn2 == TurnType.Left ? "CorrectTurn" : "WrongTurn";
 
 			if (turn2 == TurnType.EndPoint) { rightEndTrigger.SetActive(true); }
 		}
         else if (turn1 == TurnType.Straight) {
-			straightTrigger.tag = "CorrectTurn";
+			
 			straightRightTrigger.tag = turn2 == TurnType.Right ? "CorrectTurn" : "WrongTurn";
 			straightLeftTrigger.tag = turn2 == TurnType.Left ? "CorrectTurn" : "WrongTurn";
 			
@@ -196,4 +272,5 @@ public struct Waypoints
     public Transform waypoint1;
     public Transform waypoint2;
 }
+
 

@@ -13,8 +13,8 @@ public class newNavigator : MonoBehaviour
     CrossingSpawner crossingSpawner;
     
 
-    public List<TargetStruct> targetList;
-    public TargetStruct target;
+    public List<WaypointStruct> targetList;
+    public WaypointStruct target;
     int targetIndex = 0;
 
     public bool navigationFinished = false;
@@ -22,7 +22,7 @@ public class newNavigator : MonoBehaviour
     private bool isTriggered = false;
     private float triggerTime = 0f; private float timeOutTime = 2f;
     private bool renderZero = false;
-    
+    public bool atWaypoint = false;
     private void Start()
     {
         crossingSpawner = GetComponent<CrossingSpawner>();
@@ -30,13 +30,13 @@ public class newNavigator : MonoBehaviour
         if (!experimentManager.renderHUD) { HUD.SetActive(false); }
 
         //Add first four targets to list
-        targetList = new List<TargetStruct>();
+        targetList = new List<WaypointStruct>();
 
-        TargetStruct[] targetsCurrent = crossingSpawner.crossings.GetTargets("Current");
-        foreach(TargetStruct target in targetsCurrent) { targetList.Add(target); }
+        WaypointStruct[] targetsCurrent = crossingSpawner.crossings.GetWaypoints("Current");
+        foreach(WaypointStruct target in targetsCurrent) { targetList.Add(target); }
 
-        targetsCurrent = crossingSpawner.crossings.GetTargets("Next");
-        foreach (TargetStruct target in targetsCurrent) { targetList.Add(target); }
+        targetsCurrent = crossingSpawner.crossings.GetWaypoints("Next");
+        foreach (WaypointStruct target in targetsCurrent) { targetList.Add(target); }
 
         target = targetList[targetIndex];
         
@@ -59,15 +59,15 @@ public class newNavigator : MonoBehaviour
     {
         if (!experimentManager.renderHUD) { return; }
 
-        if (target.target == null) { return; }
+        if (target.waypoint == null) { return; }
 
         Transform text = HUD.transform.Find("Text");
         TextMesh textMesh = text.gameObject.GetComponent<TextMesh>();
         
-        float distanceToTarget = Vector3.Magnitude(target.target.transform.position- transform.position);
+        float distanceToTarget = Vector3.Magnitude(target.waypoint.transform.position- transform.position);
         int renderedDistance = ((int)distanceToTarget - ((int)distanceToTarget % 5));
-        if (renderedDistance <= 0) { renderedDistance = 0; renderZero = true; }
-        if (renderZero) { renderedDistance = 0; }
+        if (renderedDistance <= 0) { renderedDistance = 0; atWaypoint = true; }
+        if (atWaypoint) { renderedDistance = 0; }
         textMesh.text = $"{renderedDistance}m";
     }
 
@@ -82,8 +82,8 @@ public class newNavigator : MonoBehaviour
         else if (other.gameObject.CompareTag("CorrectTurn"))
         {
             targetIndex++;
-            isTriggered = true; triggerTime = Time.time; 
-            renderZero = false;
+            isTriggered = true; triggerTime = Time.time;
+            atWaypoint = false;
 
             target = targetList[targetIndex];
             Debug.Log($"Next target = {target.turn}...");
@@ -106,14 +106,14 @@ public class newNavigator : MonoBehaviour
     IEnumerator AddNextTargets()
     {
         yield return new WaitForSeconds(1f);
-        TargetStruct[] newTargets = crossingSpawner.crossings.GetTargets("Next");
-        foreach (TargetStruct target in newTargets) { targetList.Add(target); }
+        WaypointStruct[] newTargets = crossingSpawner.crossings.GetWaypoints("Next");
+        foreach (WaypointStruct target in newTargets) { targetList.Add(target); }
     }
     public void RenderNavigationArrow()
-    {
-        Debug.Log("Rendering navigation arrow!");
-        
+    {  
         if (!experimentManager.renderHUD) { return; }
+        
+        Debug.Log("Rendering navigation arrow!");
 
         Transform arrows = HUD.transform.Find("Arrows");
         if (arrows == null) { Debug.Log("Arrows= null...."); return; }
