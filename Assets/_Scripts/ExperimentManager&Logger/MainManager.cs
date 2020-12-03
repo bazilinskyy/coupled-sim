@@ -112,7 +112,7 @@ public class MainManager : MonoBehaviour
             List<TurnType> turns = new List<TurnType>();
 
             
-            for (int j = 0; j < 7; j++)
+            for (int j = 0; j < 5; j++)
             {
                 random = Random.Range(0, 100);
                 if(random < 50) { turns.Add(TurnType.Left); }
@@ -225,9 +225,11 @@ public class MainManager : MonoBehaviour
     }
     public void MovePlayer(Transform position)
     {
+        
         player.transform.parent = position;
         player.transform.position = position.position;
         player.transform.rotation = position.rotation;
+        Debug.Log("Moved player!");
     }
 
 }

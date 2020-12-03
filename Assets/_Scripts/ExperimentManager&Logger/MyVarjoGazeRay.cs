@@ -24,20 +24,15 @@ public class MyVarjoGazeRay : MonoBehaviour
     Vector3 gazeRayOrigin;
     public LayerMask layerMask = ~0;
     public MyGazeLogger gazeLogger;
-
+    private bool started = false;
     public enum Eye
     {
         both,
         left,
         right
     }
-
-    private void Start()
-    {
-        StartUpFunction();
-    }
    
-    void StartUpFunction()
+    public void StartUp()
     {
         if(MyUtils.GetMainManager().camType == MyCameraType.Normal) { enabled = false; return; }
         if (logData) { gazeLogger = GetComponent<MyGazeLogger>(); }
@@ -48,9 +43,12 @@ public class MyVarjoGazeRay : MonoBehaviour
             Debug.LogError("Failed to initialize gaze");
             GetComponent<MyVarjoGazeRay>().enabled = false;
         }
+        started = true;
+       
     }
     void Update()
     {
+        if (!started) { return; }
 
         // Returns current state of the gaze
         data = VarjoPlugin.GetGaze();

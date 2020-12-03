@@ -67,11 +67,17 @@ public class CrossComponents : MonoBehaviour
 		if(settings.targetsPerTurn == 0) { return; }
 		List<Transform> spawnPoints;
 		Transform parentSpawPoints = null;
+		WaypointStruct waypoint = new WaypointStruct();
+
 		if (!isFirstCrossing) 
 		{
 			parentSpawPoints = FirstTurnTargetSpawnPoints;
 			spawnPoints = SelectRandomSpawnPoints(parentSpawPoints, settings.targetsPerTurn);
-			InstantiateTargets(spawnPoints, turn1, settings);
+			
+			waypoint.turn = turn1; 
+			waypoint.waypoint = waypoints.waypoint1;
+
+			InstantiateTargets(spawnPoints, waypoint, settings);
 		}
 
 		if(turn2 != TurnType.EndPoint || turn2 == TurnType.None)
@@ -81,20 +87,25 @@ public class CrossComponents : MonoBehaviour
 			if (turn2 == TurnType.Straight) { parentSpawPoints = StraightTargetSpawnPoints; }
 
 			spawnPoints = SelectRandomSpawnPoints(parentSpawPoints, settings.targetsPerTurn);
-			InstantiateTargets(spawnPoints, turn2, settings);
+
+			waypoint.turn = turn2; 
+			waypoint.waypoint = waypoints.waypoint2;
+
+			InstantiateTargets(spawnPoints, waypoint, settings);
 		}
 	}
 
-	private void InstantiateTargets(List<Transform> spawnPoints, TurnType turn, MyExperimentSetting settings)
+	private void InstantiateTargets(List<Transform> spawnPoints, WaypointStruct waypoint, MyExperimentSetting settings)
     {
 		GameObject target;
 		foreach (Transform point in spawnPoints)
 		{
+			
 			target = Instantiate(TargetPrefab);
 			target.transform.position = point.position;
 			target.transform.parent = TargetParent;
 			target.GetComponent<Target>().SetDifficulty(settings.targetDifficulty);
-			target.GetComponent<Target>().turnType = turn;
+			target.GetComponent<Target>().waypoint = waypoint;
 			targetList.Add(target.GetComponent<Target>());
 		}
 	}

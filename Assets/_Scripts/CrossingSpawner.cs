@@ -31,8 +31,7 @@ public class CrossingSpawner : MonoBehaviour
 
         crossings = new Crossings(cross1, turns1, cross2, turns2, experimentManager.experimentSettings);
 
-        if (experimentManager.makeVirtualCable) { GetComponent<CreateVirtualCable>().MakeVirtualCable(crossings); }
-
+        GetComponent<CreateVirtualCable>().MakeVirtualCable(crossings, experimentManager.makeVirtualCable);
     }
 
     // Update is called once per frame
@@ -43,16 +42,24 @@ public class CrossingSpawner : MonoBehaviour
 
     void SetNextCrossing()
     {
-        crossings.SetNextCrossing(GetNextTurns(), experimentManager.experimentSettings);
-        turnIndex += 2;
-        //Make virtual cable if nescesrry here.
-        if (experimentManager.makeVirtualCable) { GetComponent<CreateVirtualCable>().MakeVirtualCable(crossings); }
+        if (NextTurns())
+        {
+            crossings.SetNextCrossing(GetNextTurns(), experimentManager.experimentSettings);
+            turnIndex += 2;
+            //Make virtual cable if nescesrry here.
+            GetComponent<CreateVirtualCable>().MakeVirtualCable(crossings, experimentManager.makeVirtualCable);
+        }
 
     }
-
+    bool NextTurns()
+    {
+        if(turnIndex >= turnsList.Count()) { return false; }
+        else { return true; }
+    }
     TurnType[] GetNextTurns()
     {
         TurnType[] turns = new TurnType[2];
+        turns[0] = TurnType.None;  turns[1] = TurnType.None;
         if (turnIndex >= turnsList.Count()) { return turns; }
         if (turnIndex + 1 >= turnsList.Count()) { turns[0] = turnsList[turnIndex];  return turns; }
         else { turns[0] = turnsList[turnIndex]; turns[1] = turnsList[turnIndex+1]; return turns; }
@@ -69,11 +76,16 @@ public class CrossingSpawner : MonoBehaviour
 
         if(other.gameObject.CompareTag("EnterCrossing"))
         {
-            Debug.Log("Enter trigger called, configuring next crossing DO SOMETHING WITH OLD TARGETS...");
+            Debug.Log("Enter trigger called, configuring next crossing...");
+            experimentManager.LogCurrentCrossingTargets(crossings.CurrentCrossing().targetList);
             SetNextCrossing();
             isTriggered = true; triggerTime = Time.time;
         }
-
+        if (other.gameObject.CompareTag("NavigationFinished"))
+        {
+            experimentManager.LogCurrentCrossingTargets(crossings.CurrentCrossing().targetList);
+            isTriggered = true; triggerTime = Time.time;
+        } 
     }
     private void OnTriggerExit(Collider other)
     {
@@ -84,14 +96,6 @@ public class CrossingSpawner : MonoBehaviour
     
     
     
-}
-public enum TurnType
-{
-    Left,
-    Right,
-    Straight,
-    None,
-    EndPoint
 }
 
 [System.Serializable]
@@ -145,15 +149,15 @@ public class Crossings
     public Crossing crossing1 = null;
     public Crossing crossing2 = null;
 
-    public Crossings(GameObject _crossing1, TurnType[] _turns1, GameObject _crossing2, TurnType[] turns2, MyExperimentSetting settings)
+    public Crossings(GameObject _crossing1, TurnType[] turns1, GameObject _crossing2, TurnType[] turns2, MyExperimentSetting settings)
     {
 
         bool isFirstCrossing = true;
 
-        _crossing1.GetComponent<CrossComponents>().SetUpCrossing(_turns1[0], _turns1[1], settings, isFirstCrossing);
+        _crossing1.GetComponent<CrossComponents>().SetUpCrossing(turns1[0], turns1[1], settings, isFirstCrossing);
         crossing1 = new Crossing(_crossing1, true);
 
-        ConfigureNextCrossing(_crossing2, turns2, settings);
+        ConfigureNextCrossing(_crossing2, turns1, turns2, settings);;
         crossing2 = new Crossing(_crossing2, false);
     }
     public void SetNextCrossing(TurnType[] nextTurns, MyExperimentSetting settings)
@@ -163,11 +167,11 @@ public class Crossings
         if (crossing1.isCurrentCrossing) { crossToConfigure = crossing1; }
         else { crossToConfigure = crossing2; }
 
-        ConfigureNextCrossing(crossToConfigure.obj, nextTurns, settings);
+        crossing1.SwitchStatus(); crossing2.SwitchStatus();
+
+        ConfigureNextCrossing(crossToConfigure.obj, CurrentCrossing().turns, nextTurns, settings);
         
         crossToConfigure.UpdateVariables();
-
-        crossing1.SwitchStatus(); crossing2.SwitchStatus();
         }
 
     public Crossing CurrentCrossing()
@@ -180,12 +184,10 @@ public class Crossings
         if (!crossing1.isCurrentCrossing) { return crossing1; }
         else { return crossing2; }
     }
-    void ConfigureNextCrossing(GameObject crossing, TurnType[] turns, MyExperimentSetting settings)
+    void ConfigureNextCrossing(GameObject crossing, TurnType[] currentTurns,  TurnType[] nextTurns, MyExperimentSetting settings)
     {
         Debug.Log("Configuring next crossing..");
-        Debug.Log($"Got turns {turns[0]} and {turns[1]}...");
-
-        TurnType[] currentTurns = CurrentCrossing().turns;
+        Debug.Log($"Got turns {nextTurns[0]} and {nextTurns[1]}...");
 
         if (currentTurns[0] == TurnType.Left && currentTurns[1] == TurnType.Left) { SetNextCrossingTransform(crossing,-96f, -96f, 180); }
         if (currentTurns[0] == TurnType.Left && currentTurns[1] == TurnType.Right) { SetNextCrossingTransform(crossing,96f, -96f, 0); }
@@ -195,7 +197,7 @@ public class Crossings
         if (currentTurns[0] == TurnType.Right && currentTurns[1] == TurnType.Right) { SetNextCrossingTransform(crossing,-96f, 96f, 180); }
 
         //Set turns 
-        crossing.GetComponent<CrossComponents>().SetUpCrossing(turns[0], turns[1], settings);
+        crossing.GetComponent<CrossComponents>().SetUpCrossing(nextTurns[0], nextTurns[1], settings);
 
     }
 

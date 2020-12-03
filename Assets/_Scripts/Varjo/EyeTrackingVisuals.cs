@@ -7,7 +7,7 @@ public class EyeTrackingVisuals : MonoBehaviour
 {
 
     public VarjoPlugin.GazeData gazeData;
-    public ExperimentManager experimentManager;
+    //public ExperimentManager experimentManager;
     public GameObject lightObj;
     public GameObject lightObj2;
     public KeyCode switchGazeHighlight = KeyCode.H;

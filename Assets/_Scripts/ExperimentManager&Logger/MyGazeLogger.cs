@@ -43,17 +43,9 @@ public class MyGazeLogger : MonoBehaviour
     //Looking at what exactly?
     public Fixation fixationData;
     private LoggedTags fixatingOn = LoggedTags.World;
-    private void Start()
+    public void StartUp()
     {
-        StartUpFunction();
-    }
-    void StartUpFunction()
-    {
-        experimentManager = GetComponent<newExperimentManager>();
-
         if (experimentManager == null) { GetComponent<MyGazeLogger>().enabled = false; return; }
-
-        if (!MyUtils.GetMainManager().saveData || MyUtils.GetMainManager().camType == MyCameraType.Normal) { GetComponent<MyGazeLogger>().enabled = false; return; }
         // InitGaze must be called before using or calibrating gaze tracking.
         if (!VarjoPlugin.InitGaze())
         {
@@ -61,9 +53,12 @@ public class MyGazeLogger : MonoBehaviour
             GetComponent<MyGazeLogger>().enabled = false;
         }
         fixationData = new Fixation();
+
+        logging = true;
     }
     void Update()
     {
+        if (!logging) { return; }
         // Do not run update if the application is not visible
         if (!VarjoManager.Instance.IsLayerVisible() || VarjoManager.Instance.IsInStandBy()) { return; }
         

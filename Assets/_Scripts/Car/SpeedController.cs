@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[RequireComponent(typeof(Navigator), typeof(VehiclePhysics.VPStandardInput))]
+[RequireComponent(typeof(newNavigator), typeof(VehiclePhysics.VPStandardInput))]
 public class SpeedController : MonoBehaviour
 {
 
@@ -116,7 +116,7 @@ public class SpeedController : MonoBehaviour
             else { ToggleGas(true, throttleIncrement); }
 
             //Starts brakign when at end point.
-            if (Vector3.Distance(transform.position, target.waypoint.transform.position) < 7.5f) { Brake(); GetComponent<Navigator>().navigationFinished = true; }
+            if (Vector3.Distance(transform.position, target.waypoint.transform.position) < 7.5f) { Brake(); GetComponent<newNavigator>().navigationFinished = true; }
         }
         else { Debug.LogError("Loop hole should never get here! (SpeedController.cs)..."); }
 

@@ -1,4 +1,4 @@
-﻿using System.Collections;
+﻿/*using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -568,3 +568,4 @@ public class ExperimentSetting
     [Range(0.01f, 1f)]
     public float transparency = 0.3f;
 }
+*/

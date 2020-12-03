@@ -6,9 +6,9 @@ public class Target : MonoBehaviour
 {
     //Targets for visual search task
     //Targets should always be placed between the parent waypoint and the next waypoint!
-    public Waypoint waypoint;
-    public TurnType turnType;
+    public WaypointStruct waypoint;
 
+   
     public TargetDifficulty difficulty = TargetDifficulty.easy;
 
     public Material easy;
@@ -37,8 +37,9 @@ public class Target : MonoBehaviour
     public bool hasBeenVisible = false; //visible is set when we first see the target (gets unset when we pass it with the car, or when we detect it)
     public string GetID()
     {
-        if (waypoint != null) { return waypoint.name.Last() + "-" + gameObject.name.Last(); }
-        else { return gameObject.name.Last().ToString(); }
+        return ID.ToString();
+        /*if (waypoint != null) { return waypoint.name.Last() + "-" + gameObject.name.Last(); }
+        else { return gameObject.name.Last().ToString(); }*/
     }
     // Start is called before the first frame update
     void Awake()
@@ -48,7 +49,7 @@ public class Target : MonoBehaviour
  
     private void OnDrawGizmos()
     {
-        if (transform.hasChanged)
+       /* if (transform.hasChanged)
         {
             if (PositionedJustAfterTurn()) { afterTurn = true; }
             else { afterTurn = false; }
@@ -64,12 +65,13 @@ public class Target : MonoBehaviour
             }
             catch { }
 
-        }
+        }*/
     }
 
     private void Update()
     {
-        if (!detected && waypoint != null) { GetComponent<MeshRenderer>().enabled = waypoint.renderMe; }
+        if (detected) { GetComponent<MeshRenderer>().enabled = false; }
+        else { GetComponent<MeshRenderer>().enabled = true; }
     }
 
     public bool HasBeenLookedAt()
@@ -144,37 +146,39 @@ public class Target : MonoBehaviour
     public bool IsDetected(){ return detected; }
     public Side GetRoadSide()
     {
-        //Targets should always be placed between the parent waypoint and the next waypoint!
-        if (waypoint == null) { return Side.Undetermined; }
-        if (waypoint.nextWaypoint == null) { 
-            Debug.LogError($"Can not determine side of target {GetID()} as there is no next waypoint. (Targes should always be placed IN FRONT of the parent waypoint i.e., in between the parent and next waypoint");
-            return Side.Undetermined; }
+        return Side.Undetermined;
+        /* //Targets should always be placed between the parent waypoint and the next waypoint!
+         if (waypoint == null) { return Side.Undetermined; }
+         if (waypoint.nextWaypoint == null) { 
+             Debug.LogError($"Can not determine side of target {GetID()} as there is no next waypoint. (Targes should always be placed IN FRONT of the parent waypoint i.e., in between the parent and next waypoint");
+             return Side.Undetermined; }
 
-        Vector3 firstWaypointPos = waypoint.transform.position;
-        
-        //Adjust waypoint position
-        //Waypoints are positioned just before the crossing (~8 meters)
-        //If this is a turn we are need to be in the middle of the road which we turn on i.e., a little bit more forward
-        if (waypoint.operation.IsTurn()) { firstWaypointPos += waypoint.transform.forward * 7.5f; }
-        Vector3 secondWaypointPos = waypoint.nextWaypoint.transform.position; 
+         Vector3 firstWaypointPos = waypoint.transform.position;
 
-        Vector3 splittingLine = firstWaypointPos - secondWaypointPos;
-        Vector3 normal = Vector3.Cross(splittingLine, Vector3.up);
+         //Adjust waypoint position
+         //Waypoints are positioned just before the crossing (~8 meters)
+         //If this is a turn we are need to be in the middle of the road which we turn on i.e., a little bit more forward
+         if (waypoint.operation.IsTurn()) { firstWaypointPos += waypoint.transform.forward * 7.5f; }
+         Vector3 secondWaypointPos = waypoint.nextWaypoint.transform.position; 
 
-        //Side from spanned plane in the middle of the road        
-        // plane equation is A(x-a) + B(y-b) + C(z-c) = 0 = dot(Normal, planePoint - targetPoint)
-        // Where normal vector = <A,B,Z>
-        // pos = the target position (x,y,z,)
-        // a point on the plane Q= (a,b,c) i.e., waypoint
+         Vector3 splittingLine = firstWaypointPos - secondWaypointPos;
+         Vector3 normal = Vector3.Cross(splittingLine, Vector3.up);
 
-        float sign = Vector3.Dot(normal, (firstWaypointPos - transform.position));
-        if (sign >= 0) {  return Side.Left; }
-        else { return Side.Right; }
+         //Side from spanned plane in the middle of the road        
+         // plane equation is A(x-a) + B(y-b) + C(z-c) = 0 = dot(Normal, planePoint - targetPoint)
+         // Where normal vector = <A,B,Z>
+         // pos = the target position (x,y,z,)
+         // a point on the plane Q= (a,b,c) i.e., waypoint
+
+         float sign = Vector3.Dot(normal, (firstWaypointPos - transform.position));
+         if (sign >= 0) {  return Side.Left; }
+        else { return Side.Right; }*/
     }
 
     public bool PositionedJustAfterTurn()
     {
-        if (waypoint == null) { return false; }
+        return true;
+      /*  if (waypoint == null) { return false; }
         if (!waypoint.operation.IsTurn()) { return false; }
         //We define the target being just after the waypoint if within 20 meters
         float boxSize = 20f; float streetWidth = 10f;
@@ -199,7 +203,7 @@ public class Target : MonoBehaviour
         float maxZ = Mathf.Max(point1.z, point2.z, point3.z, point4.z);
 
         if(transform.position.x > minX && transform.position.x < maxX && transform.position.z > minZ && transform.position.z < maxZ) { return true; }
-        else { return false; }
+        else { return false; }*/
     }
 }
 

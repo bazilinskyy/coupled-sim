@@ -44,6 +44,35 @@ static class OperationMethods
     }
 }
 
+public enum TurnType
+{
+    Left,
+    Right,
+    Straight,
+    None,
+    EndPoint
+}
+static class TurnTypeMethods
+{
+    public static bool IsTurn(this TurnType turn)
+    {
+        TurnType[] turns = { TurnType.Right, TurnType.Left };
+        if (turns.Contains(turn)) { return true; }
+        else { return false; }
+    }
+    public static bool IsLeftTurn(this TurnType turn)
+    {
+        if (turn == TurnType.Left) { return true; }
+        else { return false; }
+    }
+    public static bool IsRightTurn(this TurnType turn)
+    {
+        if (turn == TurnType.Right) { return true; }
+        else { return false; }
+    }
+}
+
+
 //These tags are used for the gazelogger to track what we are looking at exactly, (world is not a real tag but will be used as keyword when nothin else is being looked at)
 public enum LoggedTags
 {

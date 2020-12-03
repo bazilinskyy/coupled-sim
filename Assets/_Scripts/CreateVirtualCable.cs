@@ -6,9 +6,12 @@ using System.Linq;
 
 public class CreateVirtualCable : MonoBehaviour
 {
+	public newExperimentManager experimentManager;
 	public RoadParameters roadParameters;
 	public Material navigationPartMaterial;
 	private GameObject navigationSymbology;
+	private Vector3[] navigationLine;
+
 	int pointsPerCorner = 30;
     Waypoints waypoints;
     private void Awake()
@@ -37,7 +40,7 @@ public class CreateVirtualCable : MonoBehaviour
 
 		points.Add(waypoints.startPoint.position);
 		
-		if (crossing.turn1 == TurnType.None) { Debug.Log("Got None turn type..."); return points;  }
+		if (crossing.turn1 == TurnType.None) { Debug.Log("GOT NONE ON FIRST TURN should not get here... CreateVirutalCable -> GetPointCrossing()"); return points;  }
 		if (crossing.turn1 == TurnType.EndPoint)
 		{
 			points.Add(waypoints.waypoint1.position - 30f * waypoints.waypoint1.forward);
@@ -57,13 +60,21 @@ public class CreateVirtualCable : MonoBehaviour
 		}
 		return points;
 	}
-    public void MakeVirtualCable(Crossings crossings)
+
+	
+    public void MakeVirtualCable(Crossings crossings, bool renderCable)
     {
 		Debug.Log("Making new Virtual Cable...");
 		List<Vector3> points = GetPointsCrossing(crossings.CurrentCrossing().components);
+
+		experimentManager.dataManager.AddCurrentNavigationLine(points.ToArray());
+
 		if (crossings.NextCrossing() != null) { points = points.Concat(GetPointsCrossing(crossings.NextCrossing().components)).ToList(); }
 
-		CreateNavigationPart(points);
+		navigationLine = points.ToArray();
+		
+
+		if (renderCable) { CreateNavigationPart(points); }
     }
 	private void CreateNavigationPart(List<Vector3> points)
 	{
@@ -84,6 +95,7 @@ public class CreateVirtualCable : MonoBehaviour
 	}
 	private Vector3[] GetPointsCorner(Transform waypoint, TurnType turn)
 	{
+
 		//get radius based on waypoint oepration and raodParameter scriptable variable
 		float radius;
 		/*if (waypoint.operation == Operation.TurnRightShort) { radius = roadParameters.radiusShort; }

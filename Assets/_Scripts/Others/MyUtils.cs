@@ -3,6 +3,7 @@ using UnityEngine;
 using Varjo;
 public static class MyUtils
 {
+    private static float lastTime = 0f;
 	public static GameObject GetPlayer()
     {
         return GameObject.FindGameObjectWithTag("Player");
