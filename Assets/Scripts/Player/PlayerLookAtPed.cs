@@ -1,15 +1,11 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
-using UnityEngine.Networking;
-using UnityEngine.SceneManagement;
 
 public class PlayerLookAtPed : MonoBehaviour
 {
     private bool isTargettingPed;
     private bool canLookAtPed;
-    private bool enableTrackingOrg;
     private Transform targetPed;
 
 
@@ -21,7 +17,10 @@ public class PlayerLookAtPed : MonoBehaviour
     public float MinTrackingDistance;
     public float MaxHeadRotation;
     public bool EnableTracking;
-    public bool EnableTrackingWhileYielding;
+    [HideInInspector]
+    public bool trackingEnabledWhenYielding;
+    private bool trackingEnabled;
+
 
     public bool IsTargettingPed { get => isTargettingPed; }
     public bool CanLookAtPed { get => canLookAtPed; }
@@ -33,18 +32,18 @@ public class PlayerLookAtPed : MonoBehaviour
     private void Start()
     {
         Peds = GameObject.FindGameObjectsWithTag("Pedestrian");
-        enableTrackingOrg = EnableTracking;
+        trackingEnabled = EnableTracking;
     }
 
     private void Update()
     {
-        if (CarRigidbody.velocity.magnitude < 0.1f && CarRigidbody.velocity.magnitude > -0.1f && !EnableTrackingWhileYielding)
+        if (CarRigidbody.velocity.magnitude < 0.1f && CarRigidbody.velocity.magnitude > -0.1f && !trackingEnabledWhenYielding)
         {
-            EnableTracking = false;
+            trackingEnabled = false;
         }
         else
         {
-            EnableTracking = enableTrackingOrg;
+            trackingEnabled = EnableTracking;
         }
 
         LookForPeds();
@@ -66,7 +65,7 @@ public class PlayerLookAtPed : MonoBehaviour
 
     private void LookForPeds()
     {
-        if (!isTargettingPed && EnableTracking)
+        if (!isTargettingPed && trackingEnabled)
         {
             foreach (GameObject ped in Peds)
             {
@@ -87,7 +86,7 @@ public class PlayerLookAtPed : MonoBehaviour
                 distance = Vector3.Distance(transform.position, TargetPed.position);
             }
 
-            if (distance > MaxTrackingDistance || distance < MinTrackingDistance || !EnableTracking)
+            if (distance > MaxTrackingDistance || distance < MinTrackingDistance || !trackingEnabled)
             {
                 targetPed = null;
                 isTargettingPed = false;

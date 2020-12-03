@@ -36,11 +36,11 @@ public class SpeedSettings : MonoBehaviour
         {
             yield return null;
         }
-        driver.EnableTrackingWhileYielding = false;
+        driver.trackingEnabledWhenYielding = false;
         yield return new WaitForSeconds(lookAtPedFromSeconds);
-        driver.EnableTrackingWhileYielding = true;
+        driver.trackingEnabledWhenYielding = true;
         yield return new WaitForSeconds(lookAtPedToSeconds - lookAtPedFromSeconds);
-        driver.EnableTrackingWhileYielding = false;
+        driver.trackingEnabledWhenYielding = false;
     }
 
 }
