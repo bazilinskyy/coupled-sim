@@ -186,7 +186,9 @@ public class newExperimentManager : MonoBehaviour
         Quaternion targetRot = car.target.waypoint.rotation;
         targetRot.SetLookRotation(view);
 
-        StartCoroutine(SetCarSteadyAt(targetPos, view, true));        
+        StartCoroutine(SetCarSteadyAt(targetPos, view, true));  
+        
+        
     }
     public void LogCurrentCrossingTargets(List<Target> targets)
     {
@@ -594,7 +596,8 @@ public class newExperimentManager : MonoBehaviour
         if (superSonic)
         {
             float totalDistance = Vector3.Magnitude(targetPos - car.gameObject.transform.position);
-            float rotationSpeed = Vector3.Angle(targetRot, car.transform.forward) / totalSeconds;
+            float rotationSpeed = Vector3.Angle(car.transform.forward, targetRot) / Mathf.PI / (totalSeconds / step) / 2f;
+            Debug.Log($"Rotating with {rotationSpeed} rad/s...");
             while (count < totalSeconds)
             {
 
@@ -609,18 +612,17 @@ public class newExperimentManager : MonoBehaviour
             
             while (count < totalSeconds)
             {
-
                 Vector3 newDirection = Vector3.RotateTowards(car.transform.forward, targetRot, rotationSpeed, 0.0f);
                 car.transform.rotation = Quaternion.LookRotation(newDirection);
 
                 car.transform.position = targetPos;
-                car.GetComponent<Rigidbody>().velocity = Vector3.zero;
                 car.GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
+                car.GetComponent<Rigidbody>().velocity = Vector3.zero;
                 count += step;
                 yield return new WaitForSeconds(step);
             }
-            count = 0;
             
+
         }
         else
         {

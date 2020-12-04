@@ -374,6 +374,9 @@ public class DataLogger : MonoBehaviour
         dataPoint.frame = Time.frameCount;
 
         dataPoint.distanceToOptimalPath = GetDistanceToOptimalPath(car.transform.position);
+        
+        GetComponent<DebugCaller>().DebugThis("optimal distance", dataPoint.distanceToOptimalPath);
+
         dataPoint.position = car.transform.position.ToString("F3");
         dataPoint.rotation = car.transform.rotation.eulerAngles.ToString("F3");
         dataPoint.steerInput = Input.GetAxis(steerInputAxis);
@@ -399,8 +402,6 @@ public class DataLogger : MonoBehaviour
 
         float current_distance, forward_distance, backward_distance;
 
-        string direction;
-
         current_distance = forward_distance = backward_distance = 10000f;
 
 
@@ -412,11 +413,10 @@ public class DataLogger : MonoBehaviour
         int indexLowestValue = GetIndexOfLowestValue(new float[3] { backward_distance, current_distance, forward_distance });
         
         int step;
-        if (indexLowestValue == 0) { direction = "backward"; step = -1; current_distance = backward_distance; }
-        else if (indexLowestValue == 2) { direction = "forward"; step = 1; current_distance = forward_distance; }
+        if (indexLowestValue == 0) { step = -1; current_distance = backward_distance; }
+        else if (indexLowestValue == 2) { step = 1; current_distance = forward_distance; }
         else { return current_distance; }
 
-        Debug.Log($"Checking in {direction} direction...");
 
         float next_distance; int count=0;
         while (true)
