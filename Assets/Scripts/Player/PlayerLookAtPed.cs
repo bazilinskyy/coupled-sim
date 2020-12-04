@@ -69,7 +69,10 @@ public class PlayerLookAtPed : MonoBehaviour
         {
             foreach (GameObject ped in Peds)
             {
-                var distance = Vector3.Distance(transform.position, ped.transform.position);
+                var diffVector = transform.position - ped.transform.position;
+                diffVector.y = 0;
+                var distance = diffVector.magnitude;
+
                 if (distance < MaxTrackingDistance && distance > MinTrackingDistance)
                 {
                     targetPed = ped.transform;
@@ -83,7 +86,9 @@ public class PlayerLookAtPed : MonoBehaviour
 
             if (!(TargetPed is null))
             {
-                distance = Vector3.Distance(transform.position, TargetPed.position);
+                var diffVector = transform.position - TargetPed.position;
+                diffVector.y = 0;
+                distance = diffVector.magnitude;
             }
 
             if (distance > MaxTrackingDistance || distance < MinTrackingDistance || !trackingEnabled)
