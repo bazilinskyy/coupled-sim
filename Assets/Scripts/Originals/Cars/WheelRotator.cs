@@ -13,8 +13,21 @@ public class WheelRotator : MonoBehaviour {
 
     private float RotationSpeed;  
     private float speed = 0;
-	
-	void Update () {
+
+    private void Start()
+    {
+        FrontLeft.GetComponentInParent<WheelCollider>().wheelDampingRate = 1000;
+        FrontRight.GetComponentInParent<WheelCollider>().wheelDampingRate = 1000;
+        RearLeft.GetComponentInParent<WheelCollider>().wheelDampingRate = 1000;
+        RearRight.GetComponentInParent<WheelCollider>().wheelDampingRate = 1000;
+
+        FrontLeft.GetComponentInParent<VehicleBehaviour.Suspension>().enabled = false;
+        FrontRight.GetComponentInParent<VehicleBehaviour.Suspension>().enabled = false;
+        RearLeft.GetComponentInParent<VehicleBehaviour.Suspension>().enabled = false;
+        RearRight.GetComponentInParent<VehicleBehaviour.Suspension>().enabled = false;
+    }
+
+    void Update () {
         
         speed = Mathf.Clamp(GetComponent<Rigidbody>().velocity.magnitude,-30,30); // Not Needed but might be useful, if rotation looks weird because of framerate
         if (speed < 0.05f && speed < 0.05f)
