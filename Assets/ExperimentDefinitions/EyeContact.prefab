@@ -165,10 +165,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   WaypointNumber: 1
-  speed: 15
-  acceleration: 0
+  speed: 5
+  acceleration: 5
   jerk: 0
-  resetSpeedAfterStop: 0
+  causeToYield: 0
+  lookAtPlayerWhileYielding: 0
+  yieldTime: 0
+  brakingAcceleration: 0
+  lookAtPedFromSeconds: 0
+  lookAtPedToSeconds: 0
 --- !u!1 &4338677873096089915
 GameObject:
   m_ObjectHideFlags: 0
@@ -227,10 +232,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   WaypointNumber: 1
-  speed: 15
-  acceleration: 0
+  speed: 5
+  acceleration: 5
   jerk: 0
-  resetSpeedAfterStop: 0
+  causeToYield: 0
+  lookAtPlayerWhileYielding: 0
+  yieldTime: 0
+  brakingAcceleration: 0
+  lookAtPedFromSeconds: 0
+  lookAtPedToSeconds: 0
 --- !u!1 &6692014269374732414
 GameObject:
   m_ObjectHideFlags: 0
@@ -352,10 +362,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   WaypointNumber: 1
-  speed: 15
-  acceleration: 0
+  speed: 5
+  acceleration: 5
   jerk: 0
-  resetSpeedAfterStop: 0
+  causeToYield: 0
+  lookAtPlayerWhileYielding: 0
+  yieldTime: 0
+  brakingAcceleration: 0
+  lookAtPedFromSeconds: 0
+  lookAtPedToSeconds: 0
 --- !u!1 &8623244662689833532
 GameObject:
   m_ObjectHideFlags: 0
@@ -414,10 +429,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   WaypointNumber: 1
-  speed: 15
-  acceleration: 0
+  speed: 5
+  acceleration: 5
   jerk: 0
-  resetSpeedAfterStop: 0
+  causeToYield: 0
+  lookAtPlayerWhileYielding: 0
+  yieldTime: 0
+  brakingAcceleration: 0
+  lookAtPedFromSeconds: 0
+  lookAtPedToSeconds: 0
 --- !u!1001 &2578217452849737129
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -425,6 +445,21 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 7609667120526454229}
     m_Modifications:
+    - target: {fileID: 335904164252127610, guid: 14577e4ea88504c418d314035e8ef748,
+        type: 3}
+      propertyPath: speed
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 335904164252127610, guid: 14577e4ea88504c418d314035e8ef748,
+        type: 3}
+      propertyPath: acceleration
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 335904164252127610, guid: 14577e4ea88504c418d314035e8ef748,
+        type: 3}
+      propertyPath: jerk
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 793232160270688174, guid: 14577e4ea88504c418d314035e8ef748,
         type: 3}
       propertyPath: m_Name
@@ -440,10 +475,60 @@ PrefabInstance:
       propertyPath: m_Name
       value: Waypoint 005
       objectReference: {fileID: 0}
+    - target: {fileID: 1162033834683390883, guid: 14577e4ea88504c418d314035e8ef748,
+        type: 3}
+      propertyPath: speed
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1162033834683390883, guid: 14577e4ea88504c418d314035e8ef748,
+        type: 3}
+      propertyPath: acceleration
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1162033834683390883, guid: 14577e4ea88504c418d314035e8ef748,
+        type: 3}
+      propertyPath: jerk
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2042496965762517288, guid: 14577e4ea88504c418d314035e8ef748,
         type: 3}
       propertyPath: m_Name
       value: Waypoint 006
+      objectReference: {fileID: 0}
+    - target: {fileID: 2061724078773855855, guid: 14577e4ea88504c418d314035e8ef748,
+        type: 3}
+      propertyPath: speed
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 2061724078773855855, guid: 14577e4ea88504c418d314035e8ef748,
+        type: 3}
+      propertyPath: acceleration
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 3134608201853794673, guid: 14577e4ea88504c418d314035e8ef748,
+        type: 3}
+      propertyPath: speed
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 3134608201853794673, guid: 14577e4ea88504c418d314035e8ef748,
+        type: 3}
+      propertyPath: causeToYield
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3134608201853794673, guid: 14577e4ea88504c418d314035e8ef748,
+        type: 3}
+      propertyPath: yieldTime
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3134608201853794673, guid: 14577e4ea88504c418d314035e8ef748,
+        type: 3}
+      propertyPath: brakingAcceleration
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3134608201853794673, guid: 14577e4ea88504c418d314035e8ef748,
+        type: 3}
+      propertyPath: acceleration
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 3923437348286295560, guid: 14577e4ea88504c418d314035e8ef748,
         type: 3}
@@ -535,15 +620,135 @@ PrefabInstance:
       propertyPath: m_Name
       value: Waypoint 008
       objectReference: {fileID: 0}
+    - target: {fileID: 6662153806803356165, guid: 14577e4ea88504c418d314035e8ef748,
+        type: 3}
+      propertyPath: speed
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 6662153806803356165, guid: 14577e4ea88504c418d314035e8ef748,
+        type: 3}
+      propertyPath: acceleration
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 6662153806803356165, guid: 14577e4ea88504c418d314035e8ef748,
+        type: 3}
+      propertyPath: jerk
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7215936243177222289, guid: 14577e4ea88504c418d314035e8ef748,
+        type: 3}
+      propertyPath: speed
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 7215936243177222289, guid: 14577e4ea88504c418d314035e8ef748,
+        type: 3}
+      propertyPath: causeToYield
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7215936243177222289, guid: 14577e4ea88504c418d314035e8ef748,
+        type: 3}
+      propertyPath: yieldTime
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7215936243177222289, guid: 14577e4ea88504c418d314035e8ef748,
+        type: 3}
+      propertyPath: lookAtPlayerWhileYielding
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7215936243177222289, guid: 14577e4ea88504c418d314035e8ef748,
+        type: 3}
+      propertyPath: brakingAcceleration
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7215936243177222289, guid: 14577e4ea88504c418d314035e8ef748,
+        type: 3}
+      propertyPath: acceleration
+      value: 5
+      objectReference: {fileID: 0}
     - target: {fileID: 7827330837466819366, guid: 14577e4ea88504c418d314035e8ef748,
         type: 3}
       propertyPath: m_Name
       value: Traffic Circuit
       objectReference: {fileID: 0}
+    - target: {fileID: 7955630315443538767, guid: 14577e4ea88504c418d314035e8ef748,
+        type: 3}
+      propertyPath: speed
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 7955630315443538767, guid: 14577e4ea88504c418d314035e8ef748,
+        type: 3}
+      propertyPath: causeToYield
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7955630315443538767, guid: 14577e4ea88504c418d314035e8ef748,
+        type: 3}
+      propertyPath: lookAtPlayerWhileYielding
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7955630315443538767, guid: 14577e4ea88504c418d314035e8ef748,
+        type: 3}
+      propertyPath: yieldTime
+      value: 30
+      objectReference: {fileID: 0}
+    - target: {fileID: 7955630315443538767, guid: 14577e4ea88504c418d314035e8ef748,
+        type: 3}
+      propertyPath: brakingAcceleration
+      value: -5
+      objectReference: {fileID: 0}
+    - target: {fileID: 7955630315443538767, guid: 14577e4ea88504c418d314035e8ef748,
+        type: 3}
+      propertyPath: acceleration
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 7955630315443538767, guid: 14577e4ea88504c418d314035e8ef748,
+        type: 3}
+      propertyPath: lookAtPedToSeconds
+      value: 30
+      objectReference: {fileID: 0}
     - target: {fileID: 8264331946725655866, guid: 14577e4ea88504c418d314035e8ef748,
         type: 3}
       propertyPath: m_Name
       value: Waypoint 002
+      objectReference: {fileID: 0}
+    - target: {fileID: 8267803896547607492, guid: 14577e4ea88504c418d314035e8ef748,
+        type: 3}
+      propertyPath: speed
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 8267803896547607492, guid: 14577e4ea88504c418d314035e8ef748,
+        type: 3}
+      propertyPath: acceleration
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 8267803896547607492, guid: 14577e4ea88504c418d314035e8ef748,
+        type: 3}
+      propertyPath: jerk
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8267803896547607492, guid: 14577e4ea88504c418d314035e8ef748,
+        type: 3}
+      propertyPath: causeToYield
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8267803896547607492, guid: 14577e4ea88504c418d314035e8ef748,
+        type: 3}
+      propertyPath: lookAtPlayerWhileYielding
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8267803896547607492, guid: 14577e4ea88504c418d314035e8ef748,
+        type: 3}
+      propertyPath: yieldTime
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8267803896547607492, guid: 14577e4ea88504c418d314035e8ef748,
+        type: 3}
+      propertyPath: brakingAcceleration
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8267803896547607492, guid: 14577e4ea88504c418d314035e8ef748,
+        type: 3}
+      propertyPath: lookAtPedToSeconds
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8597832627193335347, guid: 14577e4ea88504c418d314035e8ef748,
         type: 3}

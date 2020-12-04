@@ -8,10 +8,10 @@ public class SpeedSettings : MonoBehaviour
 {
     //Simple Kinematics
     public int WaypointNumber = 1;
-    public float speed = 50;            //km/h
-    public float acceleration = 0;      //m/s^2
+    public float speed = 5;            //km/h
+    public float acceleration = 5;      //m/s^2
     //Advanced Kinematics
-    public float jerk = 5;              //m/s^3
+    public float jerk = 0;              //m/s^3
     //public bool resetSpeedAfterStop = false;
     //Yielding
     public bool causeToYield;
