@@ -166,7 +166,7 @@ public class newExperimentManager : MonoBehaviour
 
         Vector3 newStartPosition = target.waypoint.transform.position - target.waypoint.transform.forward * 20f;
 
-        StartCoroutine(SetCarSteadyAt(newStartPosition, target.waypoint.transform.rotation));
+        StartCoroutine(SetCarSteadyAt(newStartPosition, target.waypoint.transform.forward));
 
         car.GetComponent<newNavigator>().RenderNavigationArrow();
         blackOutScreen.CrossFadeAlpha(0f, mainManager.animationTime*2f, false);
@@ -177,16 +177,16 @@ public class newExperimentManager : MonoBehaviour
     {
 
         Vector3 targetPos = car.target.waypoint.transform.position + car.transform.forward * 7.5f;
-        Vector3 view = new Vector3();
+        Vector3 view;
 
-        if(car.target.turn == TurnType.Left) { targetPos -= car.transform.right * 5f; view = -car.transform.right; }
-        if (car.target.turn == TurnType.Right) { targetPos += car.transform.right * 5f; view = car.transform.right; }
-        else { targetPos += car.transform.forward * 5f; view = car.transform.forward; }
+        if(car.target.turn == TurnType.Left) { view = -car.target.waypoint.transform.right; }
+        else if (car.target.turn == TurnType.Right) { view = car.target.waypoint.transform.right; }
+        else { view = car.target.waypoint.transform.forward; }
 
-        Quaternion targetRot = car.transform.rotation;
+        Quaternion targetRot = car.target.waypoint.rotation;
         targetRot.SetLookRotation(view);
 
-        StartCoroutine(SetCarSteadyAt(targetPos, targetRot, true));        
+        StartCoroutine(SetCarSteadyAt(targetPos, view, true));        
     }
     public void LogCurrentCrossingTargets(List<Target> targets)
     {
@@ -583,20 +583,18 @@ public class newExperimentManager : MonoBehaviour
         if (reflectionScript != null && player != null) { reflectionScript[0].head = CameraTransform(); }
         else { Debug.Log("Could not set head position for mirro reflection script..."); }
     }
-    IEnumerator SetCarSteadyAt(Vector3 targetPos, Quaternion targetRot, bool superSonic = false)
+    IEnumerator SetCarSteadyAt(Vector3 targetPos, Vector3 targetRot, bool superSonic = false)
     {
         //Somehow car did some back flips when not keeping it steady for some time after repositioning.....
         float step = 0.005f;
         float totalSeconds = 0.25f;
         float count = 0;
 
-        
+
         if (superSonic)
         {
             float totalDistance = Vector3.Magnitude(targetPos - car.gameObject.transform.position);
-            float rotationSpeed = Quaternion.Angle(targetRot, car.transform.rotation) / totalSeconds;
-
-            car.transform.rotation = Quaternion.RotateTowards(car.transform.rotation, targetRot, rotationSpeed);
+            float rotationSpeed = Vector3.Angle(targetRot, car.transform.forward) / totalSeconds;
             while (count < totalSeconds)
             {
 
@@ -607,20 +605,37 @@ public class newExperimentManager : MonoBehaviour
                 yield return new WaitForSeconds(step);
             }
             count = 0;
+
+            
+            while (count < totalSeconds)
+            {
+
+                Vector3 newDirection = Vector3.RotateTowards(car.transform.forward, targetRot, rotationSpeed, 0.0f);
+                car.transform.rotation = Quaternion.LookRotation(newDirection);
+
+                car.transform.position = targetPos;
+                car.GetComponent<Rigidbody>().velocity = Vector3.zero;
+                car.GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
+                count += step;
+                yield return new WaitForSeconds(step);
+            }
+            count = 0;
+            
         }
-        
-        while (count < totalSeconds)
+        else
         {
-            car.transform.position = targetPos;
-            car.transform.rotation = targetRot;
-           
-            car.GetComponent<Rigidbody>().velocity = Vector3.zero;
-            car.GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
+            while (count < totalSeconds)
+            {
+                car.transform.position = targetPos;
+                car.transform.rotation = Quaternion.LookRotation(targetRot);
 
-            count += step;
-            yield return new WaitForSeconds(step);
+                car.GetComponent<Rigidbody>().velocity = Vector3.zero;
+                car.GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
+
+                count += step;
+                yield return new WaitForSeconds(step);
+            }
         }
-
     }
 }
 

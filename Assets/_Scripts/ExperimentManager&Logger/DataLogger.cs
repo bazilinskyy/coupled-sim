@@ -17,7 +17,6 @@ public class DataLogger : MonoBehaviour
     private const string generalTargetInfo = "generalTargetInfo.csv";
     private const string generalExperimentInfo = "GeneralExperimentInfo.csv";
     private const string fixationFileName = "fixationData.csv";
-    private const string dataFolder = "Data";
     //our car
     public GameObject car;
     private newNavigator carNavigator;
@@ -375,8 +374,8 @@ public class DataLogger : MonoBehaviour
         dataPoint.frame = Time.frameCount;
 
         dataPoint.distanceToOptimalPath = GetDistanceToOptimalPath(car.transform.position);
-        dataPoint.position = car.gameObject.transform.position.ToString("F3");
-        dataPoint.rotation = car.gameObject.transform.rotation.eulerAngles.ToString("F3");
+        dataPoint.position = car.transform.position.ToString("F3");
+        dataPoint.rotation = car.transform.rotation.eulerAngles.ToString("F3");
         dataPoint.steerInput = Input.GetAxis(steerInputAxis);
         dataPoint.speed = car.GetComponent<Rigidbody>().velocity.magnitude;
         dataPoint.upcomingOperation = carNavigator.target.turn.ToString();
@@ -395,48 +394,61 @@ public class DataLogger : MonoBehaviour
         //(1) Checks if current line segment is still the closest one 
         //(2)Then calculates the distance to the line they span
         
-        float current_distance,next_distance, former_distance;
+        if(currentNavigationLine.Length < 4) { Debug.Log($"NavigationLine consisting of only {currentNavigationLine.Length} points..."); return 1000f; }
+        if(indexClosestPoint >= currentNavigationLine.Length || indexClosestPoint < 0) { Debug.Log($"Got invalid index {indexClosestPoint}, size currentNavigationLine:{currentNavigationLine.Length}.... "); return 1000f; }
 
-        current_distance = DistanceClosestPointOnLineSegment(currentNavigationLine[indexClosestPoint], currentNavigationLine[indexClosestPoint + 1], car_position);
+        float current_distance, forward_distance, backward_distance;
 
+        string direction;
+
+        current_distance = forward_distance = backward_distance = 10000f;
+
+
+        if (indexClosestPoint + 1 < currentNavigationLine.Length) { current_distance = DistanceClosestPointOnLineSegment(currentNavigationLine[indexClosestPoint], currentNavigationLine[indexClosestPoint + 1], car_position); }
+        if (indexClosestPoint + 2 < currentNavigationLine.Length) { forward_distance = DistanceClosestPointOnLineSegment(currentNavigationLine[indexClosestPoint + 1], currentNavigationLine[indexClosestPoint + 2], car_position); }
+        if (indexClosestPoint - 1 >= 0) { backward_distance = DistanceClosestPointOnLineSegment(currentNavigationLine[indexClosestPoint - 1], currentNavigationLine[indexClosestPoint], car_position); }
+
+
+        int indexLowestValue = GetIndexOfLowestValue(new float[3] { backward_distance, current_distance, forward_distance });
+        
+        int step;
+        if (indexLowestValue == 0) { direction = "backward"; step = -1; current_distance = backward_distance; }
+        else if (indexLowestValue == 2) { direction = "forward"; step = 1; current_distance = forward_distance; }
+        else { return current_distance; }
+
+        Debug.Log($"Checking in {direction} direction...");
+
+        float next_distance; int count=0;
         while (true)
         {
-            //check forward
-            if (indexClosestPoint + 2 >= currentNavigationLine.Length) { break; }
+            count++; if (count > 50) { Debug.LogError("Could not find minimum distance, max count reached..."); return 1000f; }
+            indexClosestPoint += step;
 
-            next_distance = DistanceClosestPointOnLineSegment(currentNavigationLine[indexClosestPoint + 1], currentNavigationLine[indexClosestPoint + 2], car_position);
-            
-            if (next_distance < current_distance)
-            {
-                //If closer we  update distance and index and redo the loop
-                current_distance = next_distance;
-                indexClosestPoint++;
-                continue;
-            }
+            if(indexClosestPoint < 0 || indexClosestPoint >= currentNavigationLine.Length) { Debug.LogError("Could not find minimum distance..."); return 1000f; }
 
-            //check backward
-            if (indexClosestPoint - 2 < 0)
-            {
-                if (next_distance > current_distance) { break; }
-                else { continue; }
-            }
+            next_distance = DistanceClosestPointOnLineSegment(currentNavigationLine[indexClosestPoint], currentNavigationLine[indexClosestPoint + step], car_position);
 
-            
-            former_distance = DistanceClosestPointOnLineSegment(currentNavigationLine[indexClosestPoint - 2], currentNavigationLine[indexClosestPoint  - 1], car_position);
-           
-            if (former_distance < current_distance) { 
-                current_distance = former_distance;
-                indexClosestPoint--;
-                continue;
-            }
-
-            if (former_distance > current_distance && next_distance > current_distance) { break; }
+            if(current_distance <= next_distance) { return current_distance; }
         }
 
-        //GetComponent<DebugCaller>().DebugThis("optimal distance", current_distance);
-
-        return current_distance;
     }
+
+    public int GetIndexOfLowestValue(float[] arr)
+    {
+        float value = float.PositiveInfinity;
+        int index = -1;
+        for (int i = 0; i < arr.Length; i++)
+        {
+            if (arr[i] < value)
+            {
+                index = i;
+                value = arr[i];
+            }
+        }
+        return index;
+    }
+
+
     float DistanceClosestPointOnLineSegment(Vector3 segmentStart, Vector3 segmentEnd, Vector3 point)
     {
         // Shift the problem to the origin to simplify the math.    
