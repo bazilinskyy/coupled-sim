@@ -113,6 +113,13 @@ public class PlayerSystem : MonoBehaviour
         var avatar = GameObject.Instantiate(prefab);
         avatar.transform.position = spawnPoint.position;
         avatar.transform.rotation = spawnPoint.rotation;
+        var cameraSetup = spawnPoint.Point.GetComponent<CameraSetup>();
+        if (cameraSetup != null)
+        {
+            var cam = avatar.GetComponentInChildren<Camera>();
+            cam.fieldOfView = cameraSetup.fieldOfView;
+            cam.transform.localRotation = Quaternion.Euler(cameraSetup.rotation);
+        }
         Avatars.Add(avatar);
         GetAvatarsOfType(avatar.Type).Add(avatar);
         Player2Avatar[player] = avatar;
