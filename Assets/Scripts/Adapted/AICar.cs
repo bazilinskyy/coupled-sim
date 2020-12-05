@@ -11,8 +11,8 @@ using UnityStandardAssets.Utility;
 public class AICar : MonoBehaviour
 {
     // Motion related variables
-    public float set_speed = 30;                                           // Velocity of cars in simulation
-    public float set_acceleration = 2;                                     // Acceleration of cars in simulation
+    private float set_speed = 0;                                           // Velocity of cars in simulation
+    private float set_acceleration = 0;                                     // Acceleration of cars in simulation
     public float jerk = 2;                                                 // Jerk of cars in simulation
     public float turn_rate_degree = 360;
     private float conversion = 3.6f;
@@ -25,6 +25,7 @@ public class AICar : MonoBehaviour
     private Transform rotationAxis;
     private float Timer1;
     private float Timer2;
+    public Transform model;
 
     public bool braking = false;
     public bool reset = false;
@@ -99,14 +100,14 @@ public class AICar : MonoBehaviour
                 acceleration = set_acceleration;
                 t += Mathf.Abs(jerk) / Mathf.Abs(set_acceleration) * Time.fixedDeltaTime;
                 pitch = acceleration / 3 * HasPitch;
-                this.transform.Rotate(-pitch, 0, 0);
+                model.localRotation = Quaternion.Slerp(model.localRotation, Quaternion.Euler(-pitch, 0, 0), 0.5f);
             }
 
             if (set_acceleration > 0f && set_speed > speed || set_acceleration < 0f && set_speed < speed)
             {
                 speed = speed + set_acceleration * Time.fixedDeltaTime * conversion;
                 pitch = acceleration / 3 * HasPitch;
-                this.transform.Rotate(-pitch, 0, 0);
+                model.localRotation = Quaternion.Slerp(model.localRotation, Quaternion.Euler(-pitch, 0, 0), 0.5f);
             }
 
             if (acceleration != 0 && Mathf.Abs(speed) < Mathf.Abs(set_speed) * (1 + tolerance) + tolerance * 10 && Mathf.Abs(speed) > Mathf.Abs(set_speed) * (1 - tolerance) - tolerance * 10)
@@ -150,11 +151,11 @@ public class AICar : MonoBehaviour
                 // Pitches larger than 0.5 degrees are capped at 0.5 degrees.
                 if (pitch < 0.5f)
                 {
-                    this.transform.Rotate(pitch, 0, 0);
+                    model.localRotation = Quaternion.Slerp(model.localRotation, Quaternion.Euler(pitch, 0, 0), 0.5f);
                 }
                 else
                 {
-                    this.transform.Rotate(0.5f, 0, 0);
+                    model.localRotation = Quaternion.Slerp(model.localRotation, Quaternion.Euler(0.5f, 0, 0), 0.5f);
                 }
             }
 
@@ -165,7 +166,7 @@ public class AICar : MonoBehaviour
 
                 if (pitch >= 0)
                 {
-                    this.transform.Rotate(pitch, 0, 0);
+                    model.localRotation = Quaternion.Slerp(model.localRotation, Quaternion.Euler(pitch, 0, 0), 0.5f);
                 }
 
             }
@@ -177,7 +178,7 @@ public class AICar : MonoBehaviour
 
                 if (pitch >= 0)
                 {
-                    this.transform.Rotate(pitch, 0, 0);
+                    model.localRotation = Quaternion.Slerp(model.localRotation, Quaternion.Euler(pitch, 0, 0), 0.5f);
                 }
 
                 speed = 0f;
@@ -191,7 +192,7 @@ public class AICar : MonoBehaviour
 
                 if (pitch >= 0) // Apply pitch only when larger than 0 degrees.
                 {
-                    this.transform.Rotate(pitch, 0, 0);
+                    model.localRotation = Quaternion.Slerp(model.localRotation, Quaternion.Euler(pitch, 0, 0), 0.5f);
                 }
                 Debug.Log(Timer2);
 
