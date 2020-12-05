@@ -241,6 +241,28 @@ MonoBehaviour:
   brakingAcceleration: 0
   lookAtPedFromSeconds: 0
   lookAtPedToSeconds: 0
+--- !u!114 &5413937048606528267
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6095068103262954394}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  WaypointNumber: 1
+  speed: 5
+  acceleration: 5
+  jerk: 0
+  causeToYield: 0
+  lookAtPlayerWhileYielding: 0
+  yieldTime: 0
+  brakingAcceleration: 0
+  lookAtPedFromSeconds: 0
+  lookAtPedToSeconds: 0
 --- !u!1 &6692014269374732414
 GameObject:
   m_ObjectHideFlags: 0
@@ -445,6 +467,11 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 7609667120526454229}
     m_Modifications:
+    - target: {fileID: 186717569252637204, guid: 14577e4ea88504c418d314035e8ef748,
+        type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 335904164252127610, guid: 14577e4ea88504c418d314035e8ef748,
         type: 3}
       propertyPath: speed
@@ -767,9 +794,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 14577e4ea88504c418d314035e8ef748, type: 3}
---- !u!4 &2156529731303194187 stripped
+--- !u!4 &2762136655126269447 stripped
 Transform:
-  m_CorrespondingSourceObject: {fileID: 4479431538822812642, guid: 14577e4ea88504c418d314035e8ef748,
+  m_CorrespondingSourceObject: {fileID: 401594123501511598, guid: 14577e4ea88504c418d314035e8ef748,
+    type: 3}
+  m_PrefabInstance: {fileID: 2578217452849737129}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &6095068103262954394 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8597832627193335347, guid: 14577e4ea88504c418d314035e8ef748,
     type: 3}
   m_PrefabInstance: {fileID: 2578217452849737129}
   m_PrefabAsset: {fileID: 0}
@@ -785,9 +818,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 70852dc981465ea48bb527b9e33a87fd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!4 &2762136655126269447 stripped
+--- !u!4 &2156529731303194187 stripped
 Transform:
-  m_CorrespondingSourceObject: {fileID: 401594123501511598, guid: 14577e4ea88504c418d314035e8ef748,
+  m_CorrespondingSourceObject: {fileID: 4479431538822812642, guid: 14577e4ea88504c418d314035e8ef748,
     type: 3}
   m_PrefabInstance: {fileID: 2578217452849737129}
   m_PrefabAsset: {fileID: 0}
