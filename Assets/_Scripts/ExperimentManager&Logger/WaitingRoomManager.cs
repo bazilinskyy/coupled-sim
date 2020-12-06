@@ -49,9 +49,9 @@ public class WaitingRoomManager : MonoBehaviour
         if (mainManager.calibratedUsingHands)
         {
             steeringWheel.transform.position = startPosition.position;
-            steeringWheel.transform.position += startPosition.transform.forward * mainManager.driverViewHorizontalDistance;
-            steeringWheel.transform.position -= Vector3.up * mainManager.driverViewVerticalDistance;
-            steeringWheel.transform.position -= startPosition.transform.right * mainManager.driverViewSideDistance;
+            steeringWheel.transform.position += startPosition.transform.forward * mainManager.driverViewZToSteeringWheel;
+            steeringWheel.transform.position -= Vector3.up * mainManager.driverViewYToSteeringWheel;
+            steeringWheel.transform.position -= startPosition.transform.right * mainManager.driverViewXToSteeringWheel;
 
         }
     }

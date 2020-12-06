@@ -15,10 +15,8 @@ public class CrossingSpawner : MonoBehaviour
 
     public Crossings crossings;
 
-    private bool finalCrossing;
     private bool isTriggered = false; private float timeOutTime = 2f;
     private float triggerTime = 0f;
-    private int lastIndex = 0;
 
     public newExperimentManager experimentManager;
     public void StartUp()
@@ -37,7 +35,7 @@ public class CrossingSpawner : MonoBehaviour
     // Update is called once per frame
     void Update()
     { 
-        ResetTriggerBoolean();
+        //ResetTriggerBoolean();
     }
 
     void SetNextCrossing()
@@ -71,7 +69,6 @@ public class CrossingSpawner : MonoBehaviour
     }
     private void OnTriggerEnter(Collider other)
     {
-        if (finalCrossing) { return; }
         if (isTriggered) { return; }
 
         if(other.gameObject.CompareTag("EnterCrossing"))
@@ -89,9 +86,11 @@ public class CrossingSpawner : MonoBehaviour
     }
     private void OnTriggerExit(Collider other)
     {
-        string[] triggerTags = { "EnterCrossing", "CorrectTurn", "WrongTurn" };
+        if (!isTriggered) { return; }
+
+        string[] triggerTags = { "EnterCrossing", "CorrectTurn" };
         
-        if (triggerTags.Contains(other.gameObject.tag)) { isTriggered = false; }
+        if (triggerTags.Contains(other.gameObject.tag)) { isTriggered = false; Debug.Log("Exited trigger!"); }
     }
     
     
@@ -149,7 +148,7 @@ public class Crossings
     public Crossing crossing1 = null;
     public Crossing crossing2 = null;
 
-    public Crossings(GameObject _crossing1, TurnType[] turns1, GameObject _crossing2, TurnType[] turns2, MyExperimentSetting settings)
+    public Crossings(GameObject _crossing1, TurnType[] turns1, GameObject _crossing2, TurnType[] turns2, MainExperimentSetting settings)
     {
 
         bool isFirstCrossing = true;
@@ -160,7 +159,7 @@ public class Crossings
         ConfigureNextCrossing(_crossing2, turns1, turns2, settings);;
         crossing2 = new Crossing(_crossing2, false);
     }
-    public void SetNextCrossing(TurnType[] nextTurns, MyExperimentSetting settings)
+    public void SetNextCrossing(TurnType[] nextTurns, MainExperimentSetting settings)
     {
         Crossing crossToConfigure = null;
 
@@ -184,7 +183,7 @@ public class Crossings
         if (!crossing1.isCurrentCrossing) { return crossing1; }
         else { return crossing2; }
     }
-    void ConfigureNextCrossing(GameObject crossing, TurnType[] currentTurns,  TurnType[] nextTurns, MyExperimentSetting settings)
+    void ConfigureNextCrossing(GameObject crossing, TurnType[] currentTurns,  TurnType[] nextTurns, MainExperimentSetting settings)
     {
         Debug.Log("Configuring next crossing..");
         Debug.Log($"Got turns {nextTurns[0]} and {nextTurns[1]}...");

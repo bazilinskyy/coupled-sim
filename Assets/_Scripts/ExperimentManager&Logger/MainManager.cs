@@ -8,7 +8,7 @@ public class MainManager : MonoBehaviour
 
     public MyCameraType camType = MyCameraType.Leap;
 
-    public List<MyExperimentSetting> experiments;
+    public List<MainExperimentSetting> experiments;
 
     public GameObject environment;
     public bool debug = true;
@@ -16,7 +16,7 @@ public class MainManager : MonoBehaviour
     public bool makeVirtualCable = true;
     public bool renderHUD = true;
 
-    public string subjectDataFolder ="npothing...";
+    public string subjectDataFolder ="nothing...";
     public string subjectName = "Dummy";
     public int experimentOrder;
 
@@ -26,9 +26,9 @@ public class MainManager : MonoBehaviour
 
     public float FoVCamera = 87;
     public bool calibratedUsingHands = false;
-    public float driverViewHorizontalDistance = 0f;
-    public float driverViewVerticalDistance = 0f;
-    public float driverViewSideDistance = 0f;
+    public float driverViewZToSteeringWheel = 0f;
+    public float driverViewYToSteeringWheel = 0f;
+    public float driverViewXToSteeringWheel = 0f;
 
     [Header("Inputs")]
     public KeyCode myPermission = KeyCode.F1;
@@ -46,9 +46,7 @@ public class MainManager : MonoBehaviour
 
     public KeyCode saveTheData = KeyCode.F7;
 
-    private string environmentScene = "Environment";
     private string waitingRoomScene = "WaitingScene";
-    private string drivingPractiseScene = "DrivingPractiseScene";
     private string targetScene = "Targets";
     private string calibrationScene = "CalibrationScene";
     private string experimentScene = "newEnvironment";
@@ -104,11 +102,11 @@ public class MainManager : MonoBehaviour
     }
     void AddDummyExperiments()
     {
-        experiments = new List<MyExperimentSetting>();
+        experiments = new List<MainExperimentSetting>();
         float random;
         for (int i = 0; i < 5; i++)
         { 
-            MyExperimentSetting setting = new MyExperimentSetting();
+            MainExperimentSetting setting = new MainExperimentSetting();
             List<TurnType> turns = new List<TurnType>();
 
             
@@ -127,13 +125,13 @@ public class MainManager : MonoBehaviour
             if (random < 50) { setting.navigationType = NavigationType.VirtualCable; }
             else { setting.navigationType = NavigationType.HUD_high; }
             
-            setting.experimentName += i.ToString();
+            setting.name += i.ToString();
 
             experiments.Add(setting);
         }
         
     }
-    public MyExperimentSetting GetCurrentExperimentSettings()
+    public MainExperimentSetting GetCurrentExperimentSettings()
     {
         return experiments[experimentIndex];
     }
@@ -146,13 +144,13 @@ public class MainManager : MonoBehaviour
     {
         return experimentIndex+1;
     }
-    public MyExperimentSetting GetExperimentSettings() { return experiments[experimentIndex]; }
+    public MainExperimentSetting GetExperimentSettings() { return experiments[experimentIndex]; }
     public void SetCalibrationDistances(float horizontal, float vertical, float side)
     {
         calibratedUsingHands = true;
-        driverViewHorizontalDistance = horizontal;
-        driverViewVerticalDistance = vertical;
-        driverViewSideDistance = side;
+        driverViewZToSteeringWheel = horizontal;
+        driverViewYToSteeringWheel = vertical;
+        driverViewXToSteeringWheel = side;
     }
     public bool ReadCSVSettingsFile()
     {
@@ -235,12 +233,23 @@ public class MainManager : MonoBehaviour
 }
 
 [System.Serializable]
-public class MyExperimentSetting
+public class MainExperimentSetting
 {
-    public string experimentName = "Experiment";
+    public string name = "Experiment";
     public List<TurnType> turns;
     public NavigationType navigationType;
+    public float transparency = 0.4f;
     public TargetDifficulty targetDifficulty = TargetDifficulty.easy;
     public int targetsPerTurn = 3;
+    public float experimentTime = 0f;
+
+    public int LeftTurns()
+    {
+        return turns.Where(s => s == TurnType.Left).Count();
+    }
+    public int RightTurns()
+    {
+        return turns.Where(s => s == TurnType.Right).Count();
+    }
 
 }

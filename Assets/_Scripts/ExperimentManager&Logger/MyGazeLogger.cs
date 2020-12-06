@@ -101,7 +101,7 @@ public class MyGazeLogger : MonoBehaviour
         logData[1] = data.captureTime.ToString();
 
         // Log time of experiment (seconds) experiment
-        logData[2] = experimentManager.activeExperiment.experimentTime.ToString("G", culture );
+        logData[2] = experimentManager.experimentSettings.experimentTime.ToString("G", culture );
 
         // HMD
         logData[3] = hmdPosition.ToString("F3");

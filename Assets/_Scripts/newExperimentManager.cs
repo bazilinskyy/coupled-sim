@@ -21,9 +21,6 @@ public class newExperimentManager : MonoBehaviour
     public CrossingSpawner crossingSpawner;
 
     [Header("GameObjects")]
-    // expriment objects and lists
-    public Experiment activeExperiment;
-
     public Material conformal;
     //public HUDMaterials HUDMaterials;
     public LayerMask layerToIgnoreForTargetDetection;
@@ -49,8 +46,9 @@ public class newExperimentManager : MonoBehaviour
 
     private bool savedData = false;
     public bool makeVirtualCable = false; public bool renderHUD = false;
-    public MyExperimentSetting experimentSettings;
+    public MainExperimentSetting experimentSettings;
 
+    private int targetCount = 0;
     UnityEngine.UI.Image blackOutScreen;
     UnityEngine.UI.Text userUI;
 
@@ -70,6 +68,7 @@ public class newExperimentManager : MonoBehaviour
 
         //Beun settings
         experimentSettings = mainManager.GetExperimentSettings();
+
         if (experimentSettings.navigationType == NavigationType.VirtualCable) { makeVirtualCable = true; renderHUD = true; }
         else { renderHUD = true; makeVirtualCable = true; }
 
@@ -116,7 +115,7 @@ public class newExperimentManager : MonoBehaviour
     }
     void Update()
     {
-        activeExperiment.experimentTime += Time.deltaTime;
+        experimentSettings.experimentTime += Time.deltaTime;
         //Looks for targets to appear in field of view and sets their visibility timer accordingly
 
         SetTargetVisibilityTime();
@@ -142,6 +141,14 @@ public class newExperimentManager : MonoBehaviour
             if (car.GetComponent<Rigidbody>().velocity.magnitude < 0.01f) { mainManager.ExperimentEnded(); }
         }
     }
+
+    public int GetNextTargetID()
+    {
+        int count = targetCount;
+        targetCount++;
+        return count;
+    }
+
     public void TookWrongTurn() 
     {
         dataManager.TookWrongTurn();
@@ -162,7 +169,7 @@ public class newExperimentManager : MonoBehaviour
         //Skip this waiting if we load while fading
         yield return new WaitForSeconds(mainManager.animationTime);
 
-        WaypointStruct target= car.target;
+        WaypointStruct target= car.waypoint;
 
         Vector3 newStartPosition = target.waypoint.transform.position - target.waypoint.transform.forward * 20f;
 
@@ -176,14 +183,14 @@ public class newExperimentManager : MonoBehaviour
     private void TeleportToNextWaypoint()
     {
 
-        Vector3 targetPos = car.target.waypoint.transform.position + car.transform.forward * 7.5f;
+        Vector3 targetPos = car.waypoint.waypoint.transform.position + car.transform.forward * 7.5f;
         Vector3 view;
 
-        if(car.target.turn == TurnType.Left) { view = -car.target.waypoint.transform.right; }
-        else if (car.target.turn == TurnType.Right) { view = car.target.waypoint.transform.right; }
-        else { view = car.target.waypoint.transform.forward; }
+        if(car.waypoint.turn == TurnType.Left) { view = -car.waypoint.waypoint.transform.right; }
+        else if (car.waypoint.turn == TurnType.Right) { view = car.waypoint.waypoint.transform.right; }
+        else { view = car.waypoint.waypoint.transform.forward; }
 
-        Quaternion targetRot = car.target.waypoint.rotation;
+        Quaternion targetRot = car.waypoint.waypoint.rotation;
         targetRot.SetLookRotation(view);
 
         StartCoroutine(SetCarSteadyAt(targetPos, view, true));  
@@ -199,9 +206,9 @@ public class newExperimentManager : MonoBehaviour
 
         //Get a list f navigation types
         NavigationType nextNavType = GetNextNavigationType();
-        activeExperiment.navigationType = nextNavType;
+        experimentSettings.navigationType = nextNavType;
 
-        if (nextNavType == NavigationType.HighlightedRoad) { nextNavType = GetNextNavigationType(); activeExperiment.navigationType = nextNavType; }
+        if (nextNavType == NavigationType.HighlightedRoad) { nextNavType = GetNextNavigationType(); experimentSettings.navigationType = nextNavType; }
 
 
         //activeNavigationHelper.SetUp(activeExperiment.navigationType, activeExperiment.transparency, car, HUDMaterials, activeExperiment.difficulty, false);
@@ -214,7 +221,7 @@ public class newExperimentManager : MonoBehaviour
         List<NavigationType> navigationList = new List<NavigationType>();
         foreach (NavigationType type in navigationTypes) { navigationList.Add(type); }
 
-        int index = navigationList.IndexOf(activeExperiment.navigationType);
+        int index = navigationList.IndexOf(experimentSettings.navigationType);
 
         int indexNextType = ((index + 1) == navigationList.Count ? 0 : index + 1);
 
@@ -300,9 +307,9 @@ public class newExperimentManager : MonoBehaviour
         if (mainManager.calibratedUsingHands)
         {
             driverView.position = steeringWheel.transform.position;
-            driverView.position -= car.transform.forward * mainManager.driverViewHorizontalDistance;
-            driverView.position += Vector3.up * mainManager.driverViewVerticalDistance;
-            driverView.position += car.transform.right * mainManager.driverViewSideDistance;
+            driverView.position -= car.transform.forward * mainManager.driverViewZToSteeringWheel;
+            driverView.position += Vector3.up * mainManager.driverViewYToSteeringWheel;
+            driverView.position += car.transform.right * mainManager.driverViewXToSteeringWheel;
 
         }
 /*
@@ -333,7 +340,7 @@ public class newExperimentManager : MonoBehaviour
         foreach (Target target in targetList) { if (target.HasBeenVisible() && target.InFoV(CameraTransform(), mainManager.FoVCamera)) { visibleTargets.Add(target); } }
 
         if (visibleTargets.Count() == 0) { dataManager.AddFalseAlarm(); }
-        else if (visibleTargets.Count() == 1) { dataManager.AddTrueAlarm(visibleTargets[0]); visibleTargets[0].SetDetected(activeExperiment.experimentTime); }
+        else if (visibleTargets.Count() == 1) { dataManager.AddTrueAlarm(visibleTargets[0]); visibleTargets[0].SetDetected(experimentSettings.experimentTime); }
         else
         {
             //When multiple targets are visible we base our decision on:
@@ -396,7 +403,7 @@ public class newExperimentManager : MonoBehaviour
             else
             {
                 dataManager.AddTrueAlarm(targetChosen);
-                targetChosen.SetDetected(activeExperiment.experimentTime);
+                targetChosen.SetDetected(experimentSettings.experimentTime);
             }
         }
     }
@@ -495,8 +502,8 @@ public class newExperimentManager : MonoBehaviour
             {
                 if (TargetIsVisible(target, numberOfRandomRayHits))
                 {
-                    Debug.Log($"Target {target.GetID()} became visible at {activeExperiment.experimentTime}s ...");
-                    target.SetVisible(true, activeExperiment.experimentTime);
+                    //Debug.Log($"Target {target.GetID()} became visible at {experimentSettings.experimentTime}s ...");
+                    target.SetVisible(true, experimentSettings.experimentTime);
                 }
             }
         }
@@ -644,35 +651,17 @@ public class newExperimentManager : MonoBehaviour
 [System.Serializable]
 public class Experiment
 {
-    public Transform navigation;
-    public NavigationHelper navigationHelper;
     public float experimentTime;
     public NavigationType navigationType;
-    public float transparency = 0.3f;
+    public float transparency = 0.4f;
 
     public TargetDifficulty difficulty = TargetDifficulty.easy;
-    public bool active;
 
-    public Experiment(Transform _navigation, NavigationType _navigationType, float _transparency, bool _active)
+    public Experiment(Transform _navigation, NavigationType _navigationType, float _transparency, TargetDifficulty _difficulty)
     {
-        active = _active;
-        navigation = _navigation;
         navigationType = _navigationType;
         transparency = _transparency;
-        navigationHelper = navigation.GetComponent<NavigationHelper>();
         experimentTime = 0f;
+        difficulty = _difficulty;
     }
-    public void SetActive(bool _active)
-    {
-        active = _active;
-        navigation.gameObject.SetActive(_active);
-    }
-}
-[System.Serializable]
-public class ExperimentSetting
-{
-    public Transform navigation;
-    public NavigationType navigationType;
-    [Range(0.01f, 1f)]
-    public float transparency = 0.3f;
 }

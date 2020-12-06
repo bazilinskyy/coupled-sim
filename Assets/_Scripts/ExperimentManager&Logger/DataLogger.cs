@@ -94,12 +94,11 @@ public class DataLogger : MonoBehaviour
         SaveTargetDetectionData();
         SaveTargetInfoData();
         SaveNavigationData();
-        //SaveGeneralExperimentInfo();
+        SaveExperimentInfo();
 
         logging = false;
         savedData = true;
     }
-
     public void AddCurrentNavigationLine(Vector3[] points)
     {
         Debug.Log($"Got new navigation points: {points.Length}...");
@@ -261,46 +260,42 @@ public class DataLogger : MonoBehaviour
             file.Close();
         }
     }
-    void SaveGeneralExperimentInfo()
+    void SaveExperimentInfo()
     {
         Debug.Log("Saving general experiment info...");
-        string[] columns = { "Total Targets", "LeftTarget", "RightTargets", TargetDifficulty.easy.ToString(), TargetDifficulty.medium.ToString(), TargetDifficulty.hard.ToString(), "RelativePositionDriverView", "RelativeRotationDriverView",
-                              "Navigation", "Condition", "Transparency", "TotalExperimentTime", "LeftTurns","RightTurns"};
+        string[] columns = { "Total Targets", "LeftTarget", "RightTargets","TargetDifficulty", "driverViewToSteeringWHeel", "RelativePositionDriverView", "RelativeRotationDriverView", "ExperimentName",
+                              "NavigationType", "Transparency", "TotalExperimentTime", "LeftTurns", "RightTurns"};
         string[] logData = new string[columns.Length];
         string filePath = string.Join("/", saveFolder, generalExperimentInfo);
-        TargetCountInfo targetCountInfo = navigationHelper.targetCountInfo;
-        List<DifficultyCount> targetDifficulty = navigationHelper.targetDifficultyList;
         
         using (StreamWriter file = new StreamWriter(filePath))
         {
             Log(columns, file);
 
             //General target info
-            logData[0] = targetCountInfo.totalTargets.ToString();
-            logData[1] = targetCountInfo.LeftPosition.ToString();
-            logData[2] = targetCountInfo.rightPosition.ToString();
+            logData[0] = TotalTargets().ToString();
+            logData[1] = LeftTargets().ToString();
+            logData[2] = RightTargets().ToString();
+            logData[3] = experimentManager.experimentSettings.targetDifficulty.ToString();
 
-            int index = 3;
-            foreach (DifficultyCount difficltyCount in targetDifficulty)
-            { 
-                logData[index] = difficltyCount.count.ToString();
-                index++;
-            }
+            Vector3 driverViewToSteeringWheel = new Vector3(mainManager.driverViewXToSteeringWheel, mainManager.driverViewYToSteeringWheel, mainManager.driverViewZToSteeringWheel);
+
+            logData[4] = driverViewToSteeringWheel.ToString("F3");
 
             //Info on the driver view
             Vector3 relativePosition = experimentManager.driverView.position - car.transform.position;
             Quaternion relativeRotation = Quaternion.Inverse(car.transform.rotation) * experimentManager.driverView.rotation;
-            logData[6] = relativePosition.ToString("F3");
-            logData[7] = relativeRotation.eulerAngles.ToString("F3");
+            logData[5] = relativePosition.ToString("F3");
+            logData[6] = relativeRotation.eulerAngles.ToString("F3");
 
             //Experiment inputs
-            logData[8] = experimentManager.activeExperiment.navigation.name;
-            logData[9] = experimentManager.activeExperiment.navigationType.ToString();
-            logData[10] = experimentManager.activeExperiment.transparency.ToString();
-            logData[11] = experimentManager.activeExperiment.experimentTime.ToString(specifier,culture);
+            logData[7] = experimentManager.experimentSettings.name;
+            logData[8] = experimentManager.experimentSettings.navigationType.ToString();
+            logData[9] = experimentManager.experimentSettings.transparency.ToString();
+            logData[10] = experimentManager.experimentSettings.experimentTime.ToString(specifier,culture);
 
-            logData[12] = experimentManager.activeExperiment.navigationHelper.leftTurns.ToString();
-            logData[13] = experimentManager.activeExperiment.navigationHelper.rightTurns.ToString();
+            logData[11] = experimentManager.experimentSettings.LeftTurns().ToString();
+            logData[12] = experimentManager.experimentSettings.RightTurns().ToString();
             //Log data and close file
             Log(logData, file);
             file.Flush();
@@ -370,18 +365,18 @@ public class DataLogger : MonoBehaviour
             //StartNewMeasurement();
         }
         VehicleDataPoint dataPoint = new VehicleDataPoint();
-        dataPoint.time = experimentManager.activeExperiment.experimentTime;
+        dataPoint.time = experimentManager.experimentSettings.experimentTime;
         dataPoint.frame = Time.frameCount;
 
         dataPoint.distanceToOptimalPath = GetDistanceToOptimalPath(car.transform.position);
         
-        GetComponent<DebugCaller>().DebugThis("optimal distance", dataPoint.distanceToOptimalPath);
+        //GetComponent<DebugCaller>().DebugThis("optimal distance", dataPoint.distanceToOptimalPath);
 
         dataPoint.position = car.transform.position.ToString("F3");
         dataPoint.rotation = car.transform.rotation.eulerAngles.ToString("F3");
         dataPoint.steerInput = Input.GetAxis(steerInputAxis);
         dataPoint.speed = car.GetComponent<Rigidbody>().velocity.magnitude;
-        dataPoint.upcomingOperation = carNavigator.target.turn.ToString();
+        dataPoint.upcomingOperation = carNavigator.waypoint.turn.ToString();
 
         ///extra ///
         dataPoint.throttleInput = Input.GetAxis(gasInputAxis);
@@ -422,17 +417,19 @@ public class DataLogger : MonoBehaviour
         while (true)
         {
             count++; if (count > 50) { Debug.LogError("Could not find minimum distance, max count reached..."); return 1000f; }
-            indexClosestPoint += step;
 
-            if(indexClosestPoint < 0 || indexClosestPoint >= currentNavigationLine.Length) { Debug.LogError("Could not find minimum distance..."); return 1000f; }
+            int nextIndex = indexClosestPoint + step;
 
-            next_distance = DistanceClosestPointOnLineSegment(currentNavigationLine[indexClosestPoint], currentNavigationLine[indexClosestPoint + step], car_position);
+            if (nextIndex < 0 || nextIndex >= currentNavigationLine.Length) { Debug.LogError("Could not find minimum distance..."); return 1000f; }
 
-            if(current_distance <= next_distance) { return current_distance; }
+            next_distance = DistanceClosestPointOnLineSegment(currentNavigationLine[indexClosestPoint], currentNavigationLine[nextIndex], car_position);
+
+            indexClosestPoint+=step;
+
+            if (current_distance <= next_distance) { return current_distance; }
         }
 
     }
-
     public int GetIndexOfLowestValue(float[] arr)
     {
         float value = float.PositiveInfinity;
@@ -447,8 +444,6 @@ public class DataLogger : MonoBehaviour
         }
         return index;
     }
-
-
     float DistanceClosestPointOnLineSegment(Vector3 segmentStart, Vector3 segmentEnd, Vector3 point)
     {
         // Shift the problem to the origin to simplify the math.    
@@ -468,7 +463,7 @@ public class DataLogger : MonoBehaviour
     {
         if (!logging) { return; }
         TargetAlarm alarm = new TargetAlarm();
-        alarm.time = experimentManager.activeExperiment.experimentTime;
+        alarm.time = experimentManager.experimentSettings.experimentTime;
         alarm.frame = Time.frameCount;
         alarm.alarmType = false;
 
@@ -480,7 +475,7 @@ public class DataLogger : MonoBehaviour
         if (!logging) { return; }
         TargetAlarm alarm = new TargetAlarm();
 
-        alarm.time = experimentManager.activeExperiment.experimentTime;
+        alarm.time = experimentManager.experimentSettings.experimentTime;
         alarm.frame = Time.frameCount;
         alarm.alarmType = true;
         alarm.targetID = target.GetID();
@@ -498,6 +493,19 @@ public class DataLogger : MonoBehaviour
         System.Array.Copy(arr1, arrOut, arr1.Length);
         System.Array.Copy(arr2, 0, arrOut, arr1.Length, arr2.Length);
         return arrOut;
+    }
+
+    private int TotalTargets()
+    {
+        return targetInfoData.Count();
+    }
+    private int RightTargets()
+    {
+        return targetInfoData.Where(s => s.side == Side.Right).Count();
+    }
+    private int LeftTargets()
+    {
+        return targetInfoData.Where(s => s.side == Side.Left).Count();
     }
 }
 public class VehicleDataPoint
@@ -529,7 +537,7 @@ public class TargetInfo
     public TargetDifficulty difficulty;
     public TurnType upcomingTurn;
     public Vector3 position;
-
+    public Side side;
     public TargetInfo(Target target)
     {
         ID = target.GetID();
@@ -541,6 +549,7 @@ public class TargetInfo
         difficulty = target.difficulty;
         upcomingTurn = target.waypoint.turn;
         position = target.transform.position;
+        side = target.side;
     }
 
 }

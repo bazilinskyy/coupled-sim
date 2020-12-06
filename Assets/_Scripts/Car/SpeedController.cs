@@ -69,14 +69,14 @@ public class SpeedController : MonoBehaviour
     void FixedUpdate()
     {
 
-        if (GetComponent<newNavigator>().target.waypoint == null) { return; }
+        if (GetComponent<newNavigator>().waypoint.waypoint == null) { return; }
         if (!mainManager.automateSpeed) { return; }
         if (GetComponent<newNavigator>().navigationFinished) { Brake(); return; }
 
         //This bool is adjusted by the expriment manager using StartDriving()
         if (!startDriving) { Brake(); return; }
 
-        target = GetComponent<newNavigator>().target;
+        target = GetComponent<newNavigator>().waypoint;
         if (target.waypoint == null && !gaveError) { Debug.LogError("Could not find target Waypoint...."); gaveError = true; return; }
 
         setSpeed = speedLimit;
@@ -129,7 +129,7 @@ public class SpeedController : MonoBehaviour
         }
 
         //Update target waypoint
-        target = navigator.target;
+        target = navigator.waypoint;
     }
     void BrakeForCorner(float increment, float desiredSpeed, Rigidbody car, VehiclePhysics.VPStandardInput carInput)
     {

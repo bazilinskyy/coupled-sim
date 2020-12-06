@@ -48,8 +48,12 @@ public class CrossComponents : MonoBehaviour
     public TurnType turn1 = TurnType.None;
 
     public TurnType turn2 = TurnType.None;
-    
-    public void SetUpCrossing(TurnType _turn1, TurnType _turn2, MyExperimentSetting settings, bool _isFirstCrossing = false)
+	private newExperimentManager experimentManager;
+    private void Awake()
+    {
+		experimentManager = MyUtils.GetExperimentManager();
+    }
+    public void SetUpCrossing(TurnType _turn1, TurnType _turn2, MainExperimentSetting settings, bool _isFirstCrossing = false)
     {
         turn1 = _turn1; turn2 = _turn2; isFirstCrossing = _isFirstCrossing;
 
@@ -62,7 +66,7 @@ public class CrossComponents : MonoBehaviour
 
 		SpawnTargets(settings);
 	}
-	void SpawnTargets(MyExperimentSetting settings) 
+	void SpawnTargets(MainExperimentSetting settings) 
 	{
 		if(settings.targetsPerTurn == 0) { return; }
 		List<Transform> spawnPoints;
@@ -95,7 +99,7 @@ public class CrossComponents : MonoBehaviour
 		}
 	}
 
-	private void InstantiateTargets(List<Transform> spawnPoints, WaypointStruct waypoint, MyExperimentSetting settings)
+	private void InstantiateTargets(List<Transform> spawnPoints, WaypointStruct waypoint, MainExperimentSetting settings)
     {
 		GameObject target;
 		foreach (Transform point in spawnPoints)
@@ -104,8 +108,11 @@ public class CrossComponents : MonoBehaviour
 			target = Instantiate(TargetPrefab);
 			target.transform.position = point.position;
 			target.transform.parent = TargetParent;
+			target.transform.name = "Target " + experimentManager.GetNextTargetID().ToString();
 			target.GetComponent<Target>().SetDifficulty(settings.targetDifficulty);
 			target.GetComponent<Target>().waypoint = waypoint;
+			target.GetComponent<Target>().ID = experimentManager.GetNextTargetID();
+			target.GetComponent<Target>().side = point.name == "Left" ? Side.Left : Side.Right;
 			targetList.Add(target.GetComponent<Target>());
 		}
 	}

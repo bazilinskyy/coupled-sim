@@ -13,16 +13,18 @@ public class newNavigator : MonoBehaviour
     CrossingSpawner crossingSpawner;
     
 
-    public List<WaypointStruct> targetList;
-    public WaypointStruct target;
-    int targetIndex = 0;
+    public List<WaypointStruct> waypointList;
+    public WaypointStruct waypoint;
+    int waypointIndex = 0;
 
     public bool navigationFinished = false;
 
-    private bool isTriggered = false;
-    private float triggerTime = 0f; private float timeOutTime = 2f;
+    public bool isTriggered = false;
+    private float triggerTime = 0f; private float timeOutTime = 3f;
     private bool renderZero = false;
     public bool atWaypoint = false;
+
+    int lastIndex = 0;
     private void Start()
     {
         crossingSpawner = GetComponent<CrossingSpawner>();
@@ -30,15 +32,15 @@ public class newNavigator : MonoBehaviour
         if (!experimentManager.renderHUD) { HUD.SetActive(false); }
 
         //Add first four targets to list
-        targetList = new List<WaypointStruct>();
+        waypointList = new List<WaypointStruct>();
 
         WaypointStruct[] targetsCurrent = crossingSpawner.crossings.GetWaypoints("Current");
-        foreach(WaypointStruct target in targetsCurrent) { targetList.Add(target); }
+        foreach(WaypointStruct target in targetsCurrent) { waypointList.Add(target); }
 
         targetsCurrent = crossingSpawner.crossings.GetWaypoints("Next");
-        foreach (WaypointStruct target in targetsCurrent) { targetList.Add(target); }
+        foreach (WaypointStruct target in targetsCurrent) { waypointList.Add(target); }
 
-        target = targetList[targetIndex];
+        waypoint = waypointList[waypointIndex];
         
         RenderNavigationArrow();
     }
@@ -47,7 +49,8 @@ public class newNavigator : MonoBehaviour
     {
         RenderNavigationDistance();
 
-        ResetTriggerBoolean();
+        if (waypointIndex != lastIndex) { Debug.Log(waypointIndex); lastIndex = waypointIndex; }
+        //ResetTriggerBoolean();
     }
     
     void ResetTriggerBoolean()
@@ -59,12 +62,12 @@ public class newNavigator : MonoBehaviour
     {
         if (!experimentManager.renderHUD) { return; }
 
-        if (target.waypoint == null) { return; }
+        if (waypoint.waypoint == null) { return; }
 
         Transform text = HUD.transform.Find("Text");
         TextMesh textMesh = text.gameObject.GetComponent<TextMesh>();
         
-        float distanceToTarget = Vector3.Magnitude(target.waypoint.transform.position- transform.position);
+        float distanceToTarget = Vector3.Magnitude(waypoint.waypoint.transform.position- transform.position);
         int renderedDistance = ((int)distanceToTarget - ((int)distanceToTarget % 5));
         if (renderedDistance <= 0) { renderedDistance = 0; atWaypoint = true; }
         if (atWaypoint) { renderedDistance = 0; }
@@ -74,26 +77,33 @@ public class newNavigator : MonoBehaviour
     private void OnTriggerEnter(Collider other)
     {
         if (isTriggered) { return; }
-        if (other.gameObject.CompareTag("EnterCrossing"))
+
+        if (other.CompareTag("EnterCrossing"))
         {
             isTriggered = true; triggerTime = Time.time;
             StartCoroutine(AddNextTargets());
         }
-        else if (other.gameObject.CompareTag("CorrectTurn"))
+        else if (other.CompareTag("CorrectTurn"))
         {
-            targetIndex++;
+            waypointIndex++;
             isTriggered = true; triggerTime = Time.time;
             atWaypoint = false;
 
-            target = targetList[targetIndex];
-            Debug.Log($"Next target = {target.turn}...");
+            if(waypointIndex < waypointList.Count()) { waypoint = waypointList[waypointIndex]; }
+            else { Debug.Log("Finished waypoint List..."); }
+
+            Debug.Log($"Next target = {waypoint.turn}...");
             RenderNavigationArrow();
         }
-        else if (other.gameObject.CompareTag("WrongTurn"))
+        else if (other.CompareTag("WrongTurn"))
         {
             isTriggered = true; triggerTime = Time.time;
-            targetIndex++;  target = targetList[targetIndex];
+            waypointIndex++; 
 
+            if (waypointIndex < waypointList.Count()) { waypoint = waypointList[waypointIndex]; }
+            else { Debug.Log("Finished waypoint List..."); }
+
+            Debug.Log("Wrong turn!!!!!");
             experimentManager.TookWrongTurn();
         }
         else if (other.gameObject.CompareTag("NavigationFinished"))
@@ -103,24 +113,30 @@ public class newNavigator : MonoBehaviour
 
     }
 
+    private void OnTriggerExit(Collider other)
+    {
+        if (!isTriggered) { return; }
+        string[] triggerTags = { "NavigationFinished", "CorrectTurn", "WrongTurn" };
+
+        if (triggerTags.Contains(other.gameObject.tag)) { isTriggered = false; Debug.Log("Exited trigger!"); }
+
+    }
     IEnumerator AddNextTargets()
     {
         yield return new WaitForSeconds(1f);
-        WaypointStruct[] newTargets = crossingSpawner.crossings.GetWaypoints("Next");
-        foreach (WaypointStruct target in newTargets) { targetList.Add(target); }
+        WaypointStruct[] newWaypoints = crossingSpawner.crossings.GetWaypoints("Next");
+        foreach (WaypointStruct waypoint in newWaypoints) { waypointList.Add(waypoint); }
     }
     public void RenderNavigationArrow()
     {  
         if (!experimentManager.renderHUD) { return; }
-        
-        Debug.Log("Rendering navigation arrow!");
 
         Transform arrows = HUD.transform.Find("Arrows");
         if (arrows == null) { Debug.Log("Arrows= null...."); return; }
-        if (target.turn == TurnType.Right) { arrows.GetComponent<MeshRenderer>().material = HUDMaterials.right; arrows.GetComponent<MoveCollider>().RightArrow(); }
-        else if (target.turn == TurnType.Left) { arrows.GetComponent<MeshRenderer>().material = HUDMaterials.left; arrows.GetComponent<MoveCollider>().LeftArrow(); }
-        else if (target.turn == TurnType.Straight) { arrows.GetComponent<MeshRenderer>().material = HUDMaterials.straight; arrows.GetComponent<MoveCollider>().CenterArrow(); }
-        else if (target.turn == TurnType.EndPoint) { arrows.GetComponent<MeshRenderer>().material = HUDMaterials.destination; arrows.GetComponent<MoveCollider>().CenterArrow(); }
+        if (waypoint.turn == TurnType.Right) { arrows.GetComponent<MeshRenderer>().material = HUDMaterials.right; arrows.GetComponent<MoveCollider>().RightArrow(); }
+        else if (waypoint.turn == TurnType.Left) { arrows.GetComponent<MeshRenderer>().material = HUDMaterials.left; arrows.GetComponent<MoveCollider>().LeftArrow(); }
+        else if (waypoint.turn == TurnType.Straight) { arrows.GetComponent<MeshRenderer>().material = HUDMaterials.straight; arrows.GetComponent<MoveCollider>().CenterArrow(); }
+        else if (waypoint.turn == TurnType.EndPoint) { arrows.GetComponent<MeshRenderer>().material = HUDMaterials.destination; arrows.GetComponent<MoveCollider>().CenterArrow(); }
     }
 
 }
