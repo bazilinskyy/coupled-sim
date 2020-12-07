@@ -5,24 +5,21 @@ using UnityEngine.SceneManagement;
 
 public class WaitingRoomManager : MonoBehaviour
 {
-    private MyCameraType camType;
-    
-
     public TextMesh text;
 
     public Transform startPosition;
     public GameObject steeringWheel;
-    private Transform player;
+    private GameObject player;
     public MainManager mainManager;
     public UnityEngine.UI.Image blackOutScreen;
 
     public float thresholdUserInput = 0.15f; //The minimum time between user inputs (when within this time only the first one is used)
-
+    private List<Target> targetList;
     private float userInputTime = 0f; private readonly float userInputThresholdTime = 0.2f;
     private void Start()
     {
         Debug.Log("Loaded waiting room...");
-        StartingScene();
+        StartUp();
     }
     
     private void Update()
@@ -33,13 +30,14 @@ public class WaitingRoomManager : MonoBehaviour
         //Looks for targets to appear in field of view and sets their visibility timer accordingly
         if (UserInput()) { ProcessUserInputTargetDetection(); }
     }
-    void StartingScene()
+    void StartUp()
     {
-        player = GameObject.FindGameObjectWithTag("Player").transform;
-        mainManager = player.GetComponent<MainManager>();        
+        player = MyUtils.GetPlayer();
+        mainManager = MyUtils.GetMainManager();
 
         mainManager.MovePlayer(startPosition);
 
+        targetList = ActiveTargets();
         SetText();
 
         SpawnSteeringWheel();
@@ -57,8 +55,8 @@ public class WaitingRoomManager : MonoBehaviour
     }
     public Transform CameraTransform()
     {
-        if (camType == MyCameraType.Leap || camType == MyCameraType.Varjo) { return player.Find("VarjoCameraRig").Find("VarjoCamera"); }
-        else if (camType == MyCameraType.Normal) { return player; }
+        if (mainManager.camType == MyCameraType.Leap || mainManager.camType == MyCameraType.Varjo) { return player.transform.Find("VarjoCameraRig").Find("VarjoCamera"); }
+        else if (mainManager.camType == MyCameraType.Normal) { return player.transform; }
         else { throw new System.Exception("Error in retrieving used camera transform in Experiment Manager.cs..."); }
     }
     private bool UserInput()
@@ -89,36 +87,69 @@ public class WaitingRoomManager : MonoBehaviour
     }
     void ProcessUserInputTargetDetection()
     {
-        //if there is a target visible which has not already been detected   
-        List<Target> visibleTargets = ActiveTargets();
-
-
         //When multiple targets are visible we base our decision on:
         //(1) On which target has been looked at most recently
         //(2) Or closest target
         Target targetChosen = null;
         float mostRecentTime = 0f;
-        float smallestDistance = 100000f;
-        float currentDistance;
 
-        foreach (Target target in visibleTargets)
+        foreach (Target target in targetList)
         {
-            //(1)
-            if (target.lastFixationTime > mostRecentTime)
+            if (target.IsDetected()) { continue; }
+            float timeSinceFixation = Time.time - target.lastFixationTime;
+            if (timeSinceFixation < mostRecentTime)
             {
                 targetChosen = target;
-                mostRecentTime = target.lastFixationTime;
-            }
-            //(2) Stops this when mostRecentTime variables gets set to something else then 0
-            currentDistance = Vector3.Distance(CameraTransform().position, target.transform.position);
-            if (currentDistance < smallestDistance && mostRecentTime == 0f)
-            {
-                targetChosen = target;
-                smallestDistance = currentDistance;
+                mostRecentTime = timeSinceFixation;
             }
         }
-        if (mostRecentTime == 0f) { Debug.Log("Chose target based on distance..."); }
-        else { Debug.Log($"Chose target based on fixation time: {Time.time - mostRecentTime}..."); }
+
+        //If previous method did not find a target ->
+        //(2) Check using angle between general gaze direction and target 
+        float minAngle = 10f;
+        if (targetChosen == null && mainManager.camType != MyCameraType.Normal)
+        {
+
+            Varjo.VarjoPlugin.GazeData data = Varjo.VarjoPlugin.GetGaze();
+            if (data.status == Varjo.VarjoPlugin.GazeStatus.VALID)
+            {
+
+                Debug.Log("Got valid data...");
+                Vector3 gazeDirection = MyUtils.TransformToWorldAxis(data.gaze.forward, data.gaze.position);
+
+                foreach (Target target in targetList)
+                {
+                    if (target.IsDetected()) { continue; }
+                    Vector3 CamToTarget = target.transform.position - CameraTransform().position;
+                    float angle = Vector3.Angle(gazeDirection, CamToTarget);
+
+                    if (angle < minAngle) { minAngle = angle; targetChosen = target; }
+                }
+            }
+        }
+        if (minAngle != 10f) { Debug.Log($"Chose {targetChosen.gameObject.name} with angle {minAngle}..."); }
+
+        /*
+
+                foreach (Target target in visibleTargets)
+                {
+
+                    //(1)
+                    if (target.firstFixationTime > mostRecentTime)
+                    {
+                        targetChosen = target;
+                        mostRecentTime = target.firstFixationTime;
+                    }
+                    //(2) Stops this when mostRecentTime variables gets set to something else then 0
+                    currentDistance = Vector3.Distance(CameraTransform().position, target.transform.position);
+                    if (currentDistance < smallestDistance && mostRecentTime == 0f)
+                    {
+                        targetChosen = target;
+                        smallestDistance = currentDistance;
+                    }
+                }
+                if (mostRecentTime == 0f) { Debug.Log("Chose target based on distance..."); }
+                else { Debug.Log($"Chose target based on fixation time: {Time.time - mostRecentTime}..."); }*/
 
         if (targetChosen != null) { targetChosen.SetDetected(1f); }
     }

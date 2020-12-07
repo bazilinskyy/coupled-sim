@@ -11,7 +11,6 @@ public class newExperimentManager : MonoBehaviour
     //Attachted to the object with the experiment manager should be a XMLManager for handling the saving of the data.
     [Header("Experiment Input")]
     public string subjectName;
-    public bool automateSpeed;
     public bool saveData;
     public Color navigationColor;
    
@@ -86,15 +85,7 @@ public class newExperimentManager : MonoBehaviour
         //Set camera (uses the gameobjects set it SetGameObjectsFromCar()) 
         SetCamera();
 
-        //        if (experimentInput.camType; == MyCameraType.Varjo || experimentInput.camType; == MyCameraType.Leap) { Varjo.VarjoPlugin.ResetPose(true, Varjo.VarjoPlugin.ResetRotation.ALL); }
-
         SetCarControlInput();
-
-        //activeNavigationHelper.SetUp(activeExperiment.navigationType, activeExperiment.transparency, car, HUDMaterials, activeExperiment.difficulty); ;
-
-        
-
-        //SetColors();
         //Set up car
         SetUpCar();
 
@@ -112,8 +103,7 @@ public class newExperimentManager : MonoBehaviour
         //Target detection when we already started driving
         if (car.GetComponent<SpeedController>().IsDriving() && userInput) { ProcessUserInputTargetDetection(); }
         //First input will be the start driving command (so if not already driving we will start driving)
-        else if (!car.GetComponent<SpeedController>().IsDriving() && userInput && automateSpeed) { car.GetComponent<SpeedController>().StartDriving(true); }
-
+        else if (!car.GetComponent<SpeedController>().IsDriving() && userInput && mainManager.automateSpeed) { car.GetComponent<SpeedController>().StartDriving(true); }
     }
     void Update()
     {
@@ -133,7 +123,7 @@ public class newExperimentManager : MonoBehaviour
         if (Input.GetKeyDown(mainManager.myPermission)) { car.navigationFinished = true; } //Finish navigation early
         //if (Input.GetKeyDown(mainManager.setToLastWaypoint)) { SetCarToLastWaypoint(); }
         //if (Input.GetKeyDown(experimentInput.resetHeadPosition)) { SetCameraPosition(driverView.position, driverView.rotation); }
-        if (Input.GetKeyDown(mainManager.resetExperiment)) { StartCoroutine(PlaceAtTargetWaypoint()); }
+        if (Input.GetKeyDown(mainManager.resetExperiment)) { ResetExperiment(); }
         if (Input.GetKeyDown(KeyCode.LeftShift)) { TeleportToNextWaypoint(); }
 
         if (car.navigationFinished)
@@ -155,7 +145,7 @@ public class newExperimentManager : MonoBehaviour
 
     public void TookWrongTurn() 
     {
-        dataManager.TookWrongTurn();
+        dataManager.TookWrongTurn(car.GetComponent<newNavigator>().waypoint);
 
         userUI.text = "You took a wrong turn...\n Resetting!";
 
@@ -206,18 +196,24 @@ public class newExperimentManager : MonoBehaviour
     }
     private void TeleportToNextWaypoint()
     {
+        
+        Vector3 targetView;  WaypointStruct targetWaypoint; Vector3 targetPos; Quaternion targetRot;
 
-        Vector3 targetPos = car.waypoint.waypoint.transform.position + car.transform.forward * 7.5f;
-        Vector3 view;
+        //If very close to target waypoint we teleport to the next waypoint
+        if (Vector3.Magnitude(car.transform.position - car.waypoint.waypoint.transform.position) < 10f) { targetWaypoint = car.GetNextWaypoint(); }
+        else { targetWaypoint = car.waypoint; }
 
-        if(car.waypoint.turn == TurnType.Left) { view = -car.waypoint.waypoint.transform.right; }
-        else if (car.waypoint.turn == TurnType.Right) { view = car.waypoint.waypoint.transform.right; }
-        else { view = car.waypoint.waypoint.transform.forward; }
+        targetPos = targetWaypoint.waypoint.transform.position + car.transform.forward * 7.5f;
 
-        Quaternion targetRot = car.waypoint.waypoint.rotation;
-        targetRot.SetLookRotation(view);
+        if (targetWaypoint.turn == TurnType.Left) { targetView = -targetWaypoint.waypoint.transform.right; }
+        else if (targetWaypoint.turn == TurnType.Right) { targetView = targetWaypoint.waypoint.transform.right; }
+        else { targetView = targetWaypoint.waypoint.transform.forward; }
 
-        StartCoroutine(SetCarSteadyAt(targetPos, view, true));
+        targetRot = targetWaypoint.waypoint.rotation;
+        targetRot.SetLookRotation(targetView);
+        
+
+        StartCoroutine(SetCarSteadyAt(targetPos, targetView, true));
         
         
     }
@@ -285,12 +281,7 @@ public class newExperimentManager : MonoBehaviour
     }
     void ResetExperiment()
     {
-        /*if (mainManager.saveData) { dataManager.SaveData(); dataManager.StartNewMeasurement(); }
-
-        activeNavigationHelper.SetUp(activeExperiment.navigationType, activeExperiment.transparency, car, HUDMaterials, activeExperiment.difficulty);
-        activeNavigationHelper.ResetTargets();
-        car.GetComponent<SpeedController>().StartDriving(false);
-        SetUpCar();*/
+        mainManager.ReloadCurrentExperiment();
     }
     public List<string> GetCarControlInput()
     {
@@ -311,17 +302,7 @@ public class newExperimentManager : MonoBehaviour
         }
         return output;
     }
-   /* void SetCarToLastWaypoint()
-    {
-        //Get previouswwaypoint which is not a splinepoint
-        Waypoint previousWaypoint = car.target.previousWaypoint;
-        while (previousWaypoint.operation == Operation.SplinePoint) { previousWaypoint = previousWaypoint.previousWaypoint; }
-
-        Vector3 targetPos = previousWaypoint.transform.position;
-        Quaternion targetRot = previousWaypoint.transform.rotation;
-
-        StartCoroutine(SetCarSteadyAt(targetPos, targetRot));
-    }*/
+  
     void SetUpCar()
     {
         Debug.Log("Setting up car...");
@@ -336,13 +317,11 @@ public class newExperimentManager : MonoBehaviour
             driverView.position += car.transform.right * mainManager.driverViewXToSteeringWheel;
 
         }
-/*
+
         //Put car in right position
-        Transform startLocation = activeNavigationHelper.GetStartPointNavigation();
+        Transform startLocation = crossingSpawner.crossings.CurrentCrossing().components.startPoint.transform;       
 
-        //car.SetNewNavigation(activeExperiment.navigation);
-
-        StartCoroutine(SetCarSteadyAt(startLocation.position, startLocation.rotation));*/
+        StartCoroutine(SetCarSteadyAt(startLocation.position, startLocation.forward));
     }
     void GoToCar()
     {
@@ -532,7 +511,6 @@ public class newExperimentManager : MonoBehaviour
             }
         }
     }
-
     private List<Target> GetActiveTargets()
     {
         return car.GetComponent<CrossingSpawner>().crossings.GetAllTargets();

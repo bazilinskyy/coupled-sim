@@ -17,6 +17,7 @@ public class DataLogger : MonoBehaviour
     private const string generalTargetInfo = "generalTargetInfo.csv";
     private const string generalExperimentInfo = "GeneralExperimentInfo.csv";
     private const string fixationFileName = "fixationData.csv";
+    private const string WrongTurnFileName = "wrongTurns.csv";
     //our car
     private newNavigator car;
     //Current Navigation
@@ -30,7 +31,8 @@ public class DataLogger : MonoBehaviour
     //list of items
     private List<VehicleDataPoint> vehicleData;
     private List<TargetAlarm> targetDetectionData;
-    public List<TargetInfo> targetInfoData;
+    public List<TargetData> targetData;
+    public List<WrongTurnData> wrongTurnData;
 
     private MainManager mainManager;
 
@@ -64,7 +66,8 @@ public class DataLogger : MonoBehaviour
         //initialising lists
         vehicleData = new List<VehicleDataPoint>();
         targetDetectionData = new List<TargetAlarm>();
-        targetInfoData = new List<TargetInfo>();
+        targetData = new List<TargetData>();
+        wrongTurnData = new List<WrongTurnData>();
 
         //Eye fixation stuff
         if (mainManager.camType == MyCameraType.Normal)
@@ -76,15 +79,21 @@ public class DataLogger : MonoBehaviour
 
         else
         {
-            //Set car to be ignored by raycast of gaze logger
+            //Get the gaze logging components
             MyVarjoGazeRay gazeRay = GetComponent<MyVarjoGazeRay>();
             gazeLogger = GetComponent<MyGazeLogger>();
-            gazeRay.layerMask = ~experimentManager.layerToIgnoreForTargetDetection;
-            gazeRay.StartUp();
 
+            //Set car to be ignored by raycast of gaze logger
+            gazeRay.layerMask = ~experimentManager.layerToIgnoreForTargetDetection;
+            
+            //Set logging path and some variables
             gazeLogger.startAutomatically = false;
             gazeLogger.useCustomLogPath = true;
+            gazeLogger.oneGazeDataPerFrame = false;
             gazeLogger.customLogPath = saveFolder + "/";
+            
+            //Start both components
+            gazeRay.StartUp();
             gazeLogger.StartUp();
         }
     }
@@ -93,11 +102,15 @@ public class DataLogger : MonoBehaviour
     {
         foreach(Target target in targets)
         {
-            TargetInfo targetInfo = new TargetInfo(target);
-            targetInfoData.Add(targetInfo);
+            TargetData targetInfo = new TargetData(target);
+            targetData.Add(targetInfo);
         }
     }
-    public void TookWrongTurn() { Debug.Log("Logging wrong turn..."); }
+    public void TookWrongTurn(WaypointStruct waypoint) 
+    { 
+        Debug.Log("Logging wrong turn...");
+        wrongTurnData.Add(new WrongTurnData(waypoint, experimentManager.experimentSettings.experimentTime));
+    }
     private void Update()
     {
         if (logging) { AddVehicleData(); }
@@ -110,12 +123,38 @@ public class DataLogger : MonoBehaviour
 
         SaveVehicleData();
         SaveTargetDetectionData();
-        SaveTargetInfoData();
+        SaveTargetData();
+        SaveWrongTurnData();
         SaveNavigationData();
         SaveExperimentInfo();
 
         logging = false;
         savedData = true;
+    }
+    private void SaveWrongTurnData()
+    {
+        Debug.Log("Saving target info...");
+        string[] columns = { "ExperimentTime", "WaypointID", "TurnType", "WaypointPosition" };
+        string[] logData = new string[columns.Length];
+        string filePath = string.Join("/", saveFolder, WrongTurnFileName);
+
+
+        using (StreamWriter file = new StreamWriter(filePath))
+        {
+            Log(columns, file);
+
+            foreach (WrongTurnData wrongTurn in wrongTurnData)
+            {
+                logData[0] = wrongTurn.time.ToString(specifier,culture);
+                logData[1] = wrongTurn.waypoint.waypointID.ToString();
+                logData[2] = wrongTurn.waypoint.turn.ToString();
+                logData[3] = wrongTurn.waypoint.waypoint.position.ToString("F3");
+
+                Log(logData, file);
+            }
+            file.Flush();
+            file.Close();
+        }
     }
     public void AddCurrentNavigationLine(Vector3[] points)
     {
@@ -248,10 +287,10 @@ public class DataLogger : MonoBehaviour
             file.Close();
         }
     }
-    private void SaveTargetInfoData()
+    private void SaveTargetData()
     {
         Debug.Log("Saving target info...");
-        string[] columns = { "ID", "Detected", "ReactionTime", "TotalFixationTime", "FirstFixationTime", "DetectionTime", "Difficulty","UpcomingTurn","Position", "RoadSide" };
+        string[] columns = { "ID", "Detected", "ReactionTime", "TotalFixationTime", "FirstFixationTime", "DetectionTime", "Difficulty","UpcomingTurn","Position", "RoadSide", "WaypointID" };
         string[] logData = new string[columns.Length];
         string filePath = string.Join("/", saveFolder, generalTargetInfo);
         
@@ -260,7 +299,7 @@ public class DataLogger : MonoBehaviour
         {
             Log(columns, file);
             
-            foreach(TargetInfo targetInfo in targetInfoData)
+            foreach(TargetData targetInfo in targetData)
             {
                 logData[0] = targetInfo.ID;
                 logData[1] = targetInfo.isDetected.ToString();
@@ -272,7 +311,7 @@ public class DataLogger : MonoBehaviour
                 logData[7] = targetInfo.upcomingTurn.ToString();
                 logData[8] = targetInfo.position.ToString("F3");
                 logData[9] = targetInfo.side.ToString();
-                
+                logData[10] = targetInfo.waypointID.ToString();
                 Log(logData, file);
             }
             file.Flush();
@@ -494,18 +533,17 @@ public class DataLogger : MonoBehaviour
         System.Array.Copy(arr2, 0, arrOut, arr1.Length, arr2.Length);
         return arrOut;
     }
-
     private int TotalTargets()
     {
-        return targetInfoData.Count();
+        return targetData.Count();
     }
     private int RightTargets()
     {
-        return targetInfoData.Where(s => s.side == Side.Right).Count();
+        return targetData.Where(s => s.side == Side.Right).Count();
     }
     private int LeftTargets()
     {
-        return targetInfoData.Where(s => s.side == Side.Left).Count();
+        return targetData.Where(s => s.side == Side.Left).Count();
     }
 }
 public class VehicleDataPoint
@@ -526,7 +564,19 @@ public class VehicleDataPoint
     public string trackProgression;
 
 }
-public class TargetInfo
+
+public class WrongTurnData
+{
+    public WaypointStruct waypoint;
+    public float time;
+
+    public WrongTurnData(WaypointStruct _waypoint, float _time)
+    {
+        waypoint = _waypoint;
+        time = _time;
+    }
+}
+public class TargetData
 {
     public string ID;
     public bool isDetected;
@@ -538,7 +588,8 @@ public class TargetInfo
     public TurnType upcomingTurn;
     public Vector3 position;
     public Side side;
-    public TargetInfo(Target target)
+    public int waypointID;
+    public TargetData(Target target)
     {
         ID = target.GetID();
         isDetected = target.IsDetected();
@@ -550,6 +601,7 @@ public class TargetInfo
         upcomingTurn = target.waypoint.turn;
         position = target.transform.position;
         side = target.side;
+        waypointID = target.waypoint.waypointID;
     }
 
 }

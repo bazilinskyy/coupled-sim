@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 
+[RequireComponent(typeof(CreateVirtualCable), typeof(newNavigator))]
 public class CrossingSpawner : MonoBehaviour
 {
     // Start is called before the first frame update
@@ -14,9 +15,15 @@ public class CrossingSpawner : MonoBehaviour
     public GameObject cross2;
 
     public Crossings crossings;
-    public newExperimentManager experimentManager;
+    private newExperimentManager experimentManager;
+    private int waypointID = 0;
     public void StartUp()
     {
+
+        experimentManager = MyUtils.GetExperimentManager();
+
+        if(experimentManager == null) { Debug.Log("Experiment manager == null crosingSpawner......."); }
+
         if(turnsList.Length < 4) { Debug.LogError("Set atleast 4 turnsList...."); enabled = false; return; }
 
         TurnType[] turns1 = { turnsList[0], turnsList[1] };
@@ -28,6 +35,7 @@ public class CrossingSpawner : MonoBehaviour
         GetComponent<CreateVirtualCable>().MakeVirtualCable(crossings, experimentManager.makeVirtualCable);
     }
 
+    public int WaypointID() { waypointID++; return waypointID - 1; }
 
     public void SetNextCrossing()
     {
@@ -37,7 +45,7 @@ public class CrossingSpawner : MonoBehaviour
             crossings.SetNextCrossing(GetNextTurns(), experimentManager.experimentSettings);
             
             //Add new waypoints to the navigator
-            MyUtils.GetCar().GetComponent<newNavigator>().AddWaypoints(crossings.GetWaypoints("Next"));
+            GetComponent<newNavigator>().AddWaypoints(crossings.GetWaypoints("Next"));
             
             //Make virtual cable if nescesrry here.
             GetComponent<CreateVirtualCable>().MakeVirtualCable(crossings, experimentManager.makeVirtualCable);
@@ -103,9 +111,11 @@ public class Crossing
 
         waypoints[0].waypoint = components.waypoints.waypoint1;
         waypoints[0].turn = components.turn1;
+        waypoints[0].waypointID = MyUtils.GetCrossingSpawner().WaypointID();
 
         waypoints[1].waypoint = components.waypoints.waypoint2;
         waypoints[1].turn = components.turn2;
+        waypoints[1].waypointID = MyUtils.GetCrossingSpawner().WaypointID();
     }
 
    public void UpdateVariables()
@@ -224,4 +234,5 @@ public struct WaypointStruct
 {
     public Transform waypoint;
     public TurnType turn;
+    public int waypointID;
 }

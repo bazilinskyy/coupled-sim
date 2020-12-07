@@ -28,6 +28,10 @@ public static class MyUtils
         return GameObject.FindGameObjectWithTag("ExperimentManager").GetComponent<newExperimentManager>();
     }
 
+    public static CrossingSpawner GetCrossingSpawner()
+    {
+        return GameObject.FindGameObjectWithTag("Car").GetComponent<CrossingSpawner>();
+    }
     public static GameObject GetCar()
     {
         return GameObject.FindGameObjectWithTag("Car");

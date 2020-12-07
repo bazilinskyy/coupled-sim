@@ -48,6 +48,11 @@ public class newNavigator : MonoBehaviour
         if (waypointIndex != lastIndex) { Debug.Log(waypointIndex); lastIndex = waypointIndex; }
     }
    
+    public WaypointStruct GetNextWaypoint()
+    {
+        if (waypointIndex + 1 < waypointList.Count()) { return waypointList[waypointIndex + 1]; }
+        else { return waypointList[waypointIndex]; }
+    }
     void RenderNavigationDistance()
     {
         if (!experimentManager.renderHUD) { return; }

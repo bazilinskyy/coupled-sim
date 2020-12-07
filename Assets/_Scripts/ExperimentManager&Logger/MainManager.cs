@@ -195,6 +195,10 @@ public class MainManager : MonoBehaviour
             experimentIndex++;
         }
     }
+    public void ReloadCurrentExperiment()
+    {
+        if (!loading){ StartCoroutine(LoadSceneAsync(experimentScene,true));}
+    }
     public void AddTargetScene() { SceneManager.LoadSceneAsync(targetScene, LoadSceneMode.Additive); }
     public void LoadCalibrationScene()
     {
@@ -207,7 +211,7 @@ public class MainManager : MonoBehaviour
         blackOutScreen.CrossFadeAlpha(1f, animationTime, false);
 
         //Skip this waiting if we load while fading
-       // yield return new WaitForSeconds(animationTime);
+       yield return new WaitForSeconds(animationTime);
 
         player.transform.parent = null;
         DontDestroyOnLoad(player);

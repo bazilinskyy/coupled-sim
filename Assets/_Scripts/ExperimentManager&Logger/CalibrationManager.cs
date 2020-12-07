@@ -21,9 +21,6 @@ public class CalibrationManager : MonoBehaviour
     private bool lastUserInput = false;
 
     private bool addedTargets;
-    private bool unloadedEnvironmentScene = false;
-
-    private float someTime= 0f;
     // Start is called before the first frame update
     private void Start()
     {

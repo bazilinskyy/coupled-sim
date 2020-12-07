@@ -10,7 +10,7 @@ public class CreateVirtualCable : MonoBehaviour
 	public RoadParameters roadParameters;
 	public Material navigationPartMaterial;
 	private GameObject navigationSymbology;
-	private Vector3[] navigationLine;
+	public Vector3[] navigationLine;
 
 	int pointsPerCorner = 30;
     Waypoints waypoints;
@@ -33,31 +33,34 @@ public class CreateVirtualCable : MonoBehaviour
 		navigationSymbology.GetComponent<MeshRenderer>().receiveShadows = false;
 
 	}
-	List<Vector3> GetPointsCrossing(CrossComponents crossing)
+	List<Vector3> GetPointsCrossing(Crossing crossing)
     {
-		waypoints = crossing.waypoints;
+		CrossComponents components= crossing.components;
+		waypoints = components.waypoints;
 		List<Vector3> points = new List<Vector3>();
 
-		points.Add(waypoints.startPoint.position);
+		if (crossing.isCurrentCrossing) { points.Add(waypoints.startPoint.position - waypoints.startPoint.forward * 30f ); }
 		
-		if (crossing.turn1 == TurnType.None) { Debug.Log("GOT NONE ON FIRST TURN should not get here... CreateVirutalCable -> GetPointCrossing()"); return points;  }
-		if (crossing.turn1 == TurnType.EndPoint)
+		if (components.turn1 == TurnType.None) { Debug.Log("GOT NONE ON FIRST TURN should not get here... CreateVirutalCable -> GetPointcomponents()"); return points;  }
+		if (components.turn1 == TurnType.EndPoint)
 		{
-			points.Add(waypoints.waypoint1.position - 30f * waypoints.waypoint1.forward);
+			points.Add(waypoints.waypoint1.position);
 			return points;
 		}
-		else if (crossing.turn1 != TurnType.Straight)
+		else if (components.turn1 != TurnType.Straight)
 		{
-			foreach (Vector3 point in GetPointsCorner(waypoints.waypoint1, crossing.turn1)) { points.Add(point); }
+			foreach (Vector3 point in GetPointsCorner(waypoints.waypoint1, components.turn1)) { points.Add(point); }
 		}
+        else { points.Add(waypoints.waypoint1.position); }
 
-		if (crossing.turn2 == TurnType.None) { Debug.Log("Got None turn type..."); return points; }
-		if (crossing.turn2 == TurnType.EndPoint) { points.Add(waypoints.waypoint2.position - 30f * waypoints.waypoint2.forward); }
-		else if (crossing.turn2 != TurnType.Straight)
+		if (components.turn2 == TurnType.None) { return points; }
+		if (components.turn2 == TurnType.EndPoint) { points.Add(waypoints.waypoint2.position); }
+		else if (components.turn2 != TurnType.Straight)
 		{
-			foreach (Vector3 point in GetPointsCorner(waypoints.waypoint2, crossing.turn2)) { points.Add(point); }
+			foreach (Vector3 point in GetPointsCorner(waypoints.waypoint2, components.turn2)) { points.Add(point); }
 
 		}
+        else { points.Add(waypoints.waypoint2.position); }
 		return points;
 	}
 
@@ -65,24 +68,20 @@ public class CreateVirtualCable : MonoBehaviour
     public void MakeVirtualCable(Crossings crossings, bool renderCable)
     {
 		Debug.Log("Making new Virtual Cable...");
-		List<Vector3> points = GetPointsCrossing(crossings.CurrentCrossing().components);
+		List<Vector3> points = GetPointsCrossing(crossings.CurrentCrossing());
 
 		experimentManager.dataManager.AddCurrentNavigationLine(points.ToArray());
 
-		if (crossings.NextCrossing() != null) { points = points.Concat(GetPointsCrossing(crossings.NextCrossing().components)).ToList(); }
+		if (crossings.NextCrossing() != null) { points = points.Concat(GetPointsCrossing(crossings.NextCrossing())).ToList(); }
 
 		navigationLine = points.ToArray();
 		
 
-		if (renderCable) { CreateNavigationPart(points); }
+		if (renderCable) { CreateNavigationPart(navigationLine); }
     }
-	private void CreateNavigationPart(List<Vector3> points)
+	private void CreateNavigationPart(Vector3[] points)
 	{
-		Vector3[] pointArray = points.ToArray();
 		Mesh mesh;
-
-		
-
 		//Set the mesh
 		navigationSymbology.GetComponent<MeshFilter>().mesh = mesh = new Mesh();
 		navigationSymbology.GetComponent<MeshCollider>().sharedMesh = mesh;
@@ -90,7 +89,7 @@ public class CreateVirtualCable : MonoBehaviour
 		navigationSymbology.tag = "ConformalSymbology";
 
 		mesh.name = "VirtualCable";
-		mesh.vertices = GetVerticesVirtualCable(pointArray);
+		mesh.vertices = GetVerticesVirtualCable(points);
 		mesh.triangles = GetTrianglesVirtualCable(mesh.vertices);
 	}
 	private Vector3[] GetPointsCorner(Transform waypoint, TurnType turn)

@@ -37,7 +37,7 @@ public class MyGazeLogger : MonoBehaviour
     
     const string ValidString = "VALID";
     const string InvalidString = "INVALID";
-    
+    private int count = 0;
     private CultureInfo culture = CultureInfo.CreateSpecificCulture("eu-ES");
     //Looking at what exactly?
     public Fixation fixationData;
@@ -52,9 +52,7 @@ public class MyGazeLogger : MonoBehaviour
             Debug.LogError("Failed to initialize gaze");
             GetComponent<MyGazeLogger>().enabled = false;
         }
-
-        fixationData = new Fixation();
-        logging = true;
+        StartLogging();
     }
     void Update()
     {
@@ -88,6 +86,7 @@ public class MyGazeLogger : MonoBehaviour
     }
     void LogGazeData(VarjoPlugin.GazeData data)
     {
+        Debug.Log($"Logging Gaze count: {count}..."); count++;
         // Get HMD position and rotation
         hmdPosition = VarjoManager.Instance.HeadTransform.position;
         hmdRotation = VarjoManager.Instance.HeadTransform.rotation.eulerAngles;

@@ -92,7 +92,7 @@ SphereCollider:
   m_IsTrigger: 1
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 0.75
+  m_Radius: 0.6
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &-5734429955491872299
 MonoBehaviour:
@@ -106,7 +106,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5bf4d22cb9a01d94fa91eac00102351f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  waypoint: {fileID: 0}
+  waypoint:
+    waypoint: {fileID: 0}
+    turn: 0
   difficulty: 0
   easy: {fileID: 2100000, guid: e97b5e1b79224bc488515cb7a62bb52b, type: 2}
   medium: {fileID: 2100000, guid: 6afc8bda1d0a5434b8091635762d40d8, type: 2}

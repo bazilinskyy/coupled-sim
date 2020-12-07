@@ -55,10 +55,13 @@ public class CrossComponents : MonoBehaviour
     }
     public void SetUpCrossing(TurnType _turn1, TurnType _turn2, MainExperimentSetting settings, bool _isFirstCrossing = false)
     {
+		if(experimentManager == null) { experimentManager = MyUtils.GetExperimentManager(); }
+
         turn1 = _turn1; turn2 = _turn2; isFirstCrossing = _isFirstCrossing;
 
 		SetTriggers();
-        SetWaypointTurn2();
+
+        SetWaypoints();
 		
 		//?Remove old targets
 		foreach( Transform child in TargetParent) { Destroy(child.gameObject); }
@@ -103,8 +106,14 @@ public class CrossComponents : MonoBehaviour
     {
 		GameObject target;
 		List<Transform> orderedSpawnPointList = spawnPoints.OrderByDescending(s => Vector3.Magnitude(s.position - waypoint.waypoint.position)).ToList();
+		if (experimentManager == null) { Debug.Log("Experiment manager == null CrossComponent......."); }
+		if (spawnPoints == null) { Debug.Log("spawnPoints == null CrossComponent......."); }
+		if (orderedSpawnPointList == null) { Debug.Log("orderedSpawnPointList == null CrossComponent......."); }
+		
 		foreach (Transform point in orderedSpawnPointList)
 		{
+			if (experimentManager == null) { Debug.Log("Experiment manager == null CrossComponent......."); }
+			else { Debug.Log($"Resuls of experimentManager.GetNextTargetID() = {experimentManager.GetNextTargetID()}...."); }
 			int ID = experimentManager.GetNextTargetID();
 			//Varies position of target
 			Vector3 sideVariation = point.name == "Right" ? waypoint.waypoint.right*Random.Range(0, 2f) : -waypoint.waypoint.right * Random.Range(0, 2f);
@@ -173,14 +182,16 @@ public class CrossComponents : MonoBehaviour
 			triggerEnd.SetActive(true);
         }
     }
-    void SetWaypointTurn2()
+    void SetWaypoints()
     {
         if (turn1 == TurnType.None){ return; } 
-        if (turn1 == TurnType.EndPoint){ return; }
+        if (turn1 == TurnType.EndPoint){ waypoints.waypoint1.position -= waypoints.waypoint1.forward * 20f; return; }
         
         if (turn1 == TurnType.Left) { waypoints.waypoint2.SetPositionAndRotation(waypoints.left.position, waypoints.left.rotation); }
         if (turn1 == TurnType.Right) { waypoints.waypoint2.SetPositionAndRotation(waypoints.right.position, waypoints.right.rotation); }
         if (turn1 == TurnType.Straight) { waypoints.waypoint2.SetPositionAndRotation(waypoints.straight.position, waypoints.straight.rotation); }
+
+		if(turn2 == TurnType.EndPoint) { waypoints.waypoint2.position -= waypoints.waypoint2.forward * 20f; }
     }
     public List<Vector3> GetPointsNavigationLine()
     {

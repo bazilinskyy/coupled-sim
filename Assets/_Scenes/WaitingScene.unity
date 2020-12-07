@@ -530,7 +530,7 @@ MonoBehaviour:
   text: {fileID: 556010175}
   startPosition: {fileID: 997721524}
   steeringWheel: {fileID: 2143021678}
-  experimentInput: {fileID: 0}
+  mainManager: {fileID: 0}
   blackOutScreen: {fileID: 1476024188}
   thresholdUserInput: 0.15
 --- !u!4 &212009550
@@ -579,8 +579,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 75b1d39c1904b8b4e818c39d1a820b41, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cam: {fileID: 0}
-  experimentManager: {fileID: 0}
   oneGazeDataPerFrame: 0
   startAutomatically: 0
   toggleLoggingKey: 13
@@ -835,6 +833,11 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 1273384150}
     m_Modifications:
+    - target: {fileID: -5734429955491872299, guid: 1ce19ed9b57acb84192f659e4fb7ab80,
+        type: 3}
+      propertyPath: difficulty
+      value: 2
+      objectReference: {fileID: 0}
     - target: {fileID: 6806943811830621756, guid: 1ce19ed9b57acb84192f659e4fb7ab80,
         type: 3}
       propertyPath: m_Name
@@ -910,6 +913,11 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 1273384150}
     m_Modifications:
+    - target: {fileID: -5734429955491872299, guid: 1ce19ed9b57acb84192f659e4fb7ab80,
+        type: 3}
+      propertyPath: difficulty
+      value: 2
+      objectReference: {fileID: 0}
     - target: {fileID: 6806943811830621756, guid: 1ce19ed9b57acb84192f659e4fb7ab80,
         type: 3}
       propertyPath: m_Name
@@ -1328,6 +1336,11 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 1273384150}
     m_Modifications:
+    - target: {fileID: -5734429955491872299, guid: 1ce19ed9b57acb84192f659e4fb7ab80,
+        type: 3}
+      propertyPath: difficulty
+      value: 2
+      objectReference: {fileID: 0}
     - target: {fileID: 6806943811830621756, guid: 1ce19ed9b57acb84192f659e4fb7ab80,
         type: 3}
       propertyPath: m_Name
@@ -1602,6 +1615,11 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 1273384150}
     m_Modifications:
+    - target: {fileID: -5734429955491872299, guid: 1ce19ed9b57acb84192f659e4fb7ab80,
+        type: 3}
+      propertyPath: difficulty
+      value: 2
+      objectReference: {fileID: 0}
     - target: {fileID: 6806943811830621756, guid: 1ce19ed9b57acb84192f659e4fb7ab80,
         type: 3}
       propertyPath: m_Name
@@ -1677,6 +1695,11 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 1273384150}
     m_Modifications:
+    - target: {fileID: -5734429955491872299, guid: 1ce19ed9b57acb84192f659e4fb7ab80,
+        type: 3}
+      propertyPath: difficulty
+      value: 2
+      objectReference: {fileID: 0}
     - target: {fileID: 6806943811830621756, guid: 1ce19ed9b57acb84192f659e4fb7ab80,
         type: 3}
       propertyPath: m_Name
@@ -1954,6 +1977,11 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 1273384150}
     m_Modifications:
+    - target: {fileID: -5734429955491872299, guid: 1ce19ed9b57acb84192f659e4fb7ab80,
+        type: 3}
+      propertyPath: difficulty
+      value: 2
+      objectReference: {fileID: 0}
     - target: {fileID: 6806943811830621756, guid: 1ce19ed9b57acb84192f659e4fb7ab80,
         type: 3}
       propertyPath: m_Name
@@ -2104,6 +2132,11 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 1273384150}
     m_Modifications:
+    - target: {fileID: -5734429955491872299, guid: 1ce19ed9b57acb84192f659e4fb7ab80,
+        type: 3}
+      propertyPath: difficulty
+      value: 2
+      objectReference: {fileID: 0}
     - target: {fileID: 6806943811830621756, guid: 1ce19ed9b57acb84192f659e4fb7ab80,
         type: 3}
       propertyPath: m_Name
@@ -2329,6 +2362,16 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 1273384150}
     m_Modifications:
+    - target: {fileID: -5734429955491872299, guid: 1ce19ed9b57acb84192f659e4fb7ab80,
+        type: 3}
+      propertyPath: difficulty
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 6806943811830621755, guid: 1ce19ed9b57acb84192f659e4fb7ab80,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 628e30a8ac210d44e92cce618e561aa2, type: 2}
     - target: {fileID: 6806943811830621756, guid: 1ce19ed9b57acb84192f659e4fb7ab80,
         type: 3}
       propertyPath: m_Name

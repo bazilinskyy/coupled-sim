@@ -59,8 +59,8 @@ public class EyeTrackingVisuals : MonoBehaviour
     {
         if (input != isActive)
         {
-            if (input) { Debug.Log("Gaze light activated!"); }
-            else { Debug.Log("Gaze light DEactivated!"); }
+/*            if (input) { Debug.Log("Gaze light activated!"); }
+            else { Debug.Log("Gaze light DEactivated!"); }*/
             lightObj.SetActive(input);
             isActive = input;
         }
@@ -79,30 +79,6 @@ public class EyeTrackingVisuals : MonoBehaviour
 
         lightObj.transform.position = start;
         lightObj.transform.rotation = Quaternion.LookRotation(gazeDirectionWorld);
-        //Debug.Log($"Set highlight to {gazeDirectionLocal} ...");
-        //Quaternion relative = Quaternion.Inverse(GetComponent<ExperimentManager>().driverView.rotation) * lightObj.transform.rotation;
-        //Debug.Log($"Eyes : {relative.eulerAngles.ToString("F3")}...");
-
-        /*
-        if (someTime + 0.75f < Time.time)
-        {
-
-            
-            Debug.Log($"gazePosition:{gazePosition}...");
-            Debug.Log($"gazeDirectionLocal:{gazeDirectionLocal}...");
-            Debug.Log($"gazeDirectionWorld:{gazeDirectionWorld}...");
-
-            
-            Debug.Log($"VarjoManager.Instance.HeadTransform.position:{VarjoManager.Instance.HeadTransform.position}...");
-            Debug.Log($"player.position:{MyUtils.GetPlayer().transform.position}...");
-
-            Debug.Log($"VarjoManager.Instance.HeadTransform.forward:{VarjoManager.Instance.HeadTransform.forward}...");
-            Debug.Log($"player.forward:{MyUtils.GetPlayer().transform.forward}...");
-
-            //Debug.Log($"{gazeDirectionWorld} and {lightObj2.transform.forward}...");
-            someTime = Time.time;
-        }*/
-
     }
 
     Vector3 TransformToWorldAxis(Vector3 gaze, Vector3 gazePosition)
