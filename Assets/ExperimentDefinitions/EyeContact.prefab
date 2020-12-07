@@ -132,6 +132,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1174262165444439061}
   - component: {fileID: 5252701326996197527}
+  - component: {fileID: 3728189489666779525}
   m_Layer: 5
   m_Name: Waypoint 004
   m_TagString: WP
@@ -166,6 +167,28 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 8, y: 4, z: 1}
   m_Center: {x: 0, y: 1, z: 0}
+--- !u!114 &3728189489666779525
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2937907642792391175}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  WaypointNumber: 1
+  speed: 10
+  acceleration: -5
+  jerk: 0
+  causeToYield: 0
+  lookAtPlayerWhileYielding: 0
+  yieldTime: 0
+  brakingAcceleration: 0
+  lookAtPedFromSeconds: 0
+  lookAtPedToSeconds: 0
 --- !u!1 &3231446614131538329
 GameObject:
   m_ObjectHideFlags: 0
@@ -224,8 +247,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   WaypointNumber: 1
-  speed: 5
-  acceleration: 5
+  speed: 10
+  acceleration: -5
   jerk: 0
   causeToYield: 0
   lookAtPlayerWhileYielding: 0
@@ -245,7 +268,7 @@ GameObject:
   - component: {fileID: 539960916128604738}
   - component: {fileID: 5597895730372372198}
   m_Layer: 5
-  m_Name: Waypoint 008
+  m_Name: Waypoint 007
   m_TagString: WP
   m_Icon: {fileID: -964228994112308473, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
@@ -291,15 +314,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   WaypointNumber: 1
-  speed: 5
+  speed: 30
   acceleration: 5
   jerk: 0
   causeToYield: 1
   lookAtPlayerWhileYielding: 1
-  yieldTime: 30
+  yieldTime: 10
   brakingAcceleration: -5
   lookAtPedFromSeconds: 0
-  lookAtPedToSeconds: 30
+  lookAtPedToSeconds: 10
 --- !u!1 &3599451005144964128
 GameObject:
   m_ObjectHideFlags: 0
@@ -358,7 +381,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   WaypointNumber: 1
-  speed: 5
+  speed: 30
   acceleration: 5
   jerk: 0
   causeToYield: 0
@@ -425,7 +448,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   WaypointNumber: 1
-  speed: 5
+  speed: 30
   acceleration: 5
   jerk: 0
   causeToYield: 0
@@ -492,8 +515,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   WaypointNumber: 1
-  speed: 5
-  acceleration: 5
+  speed: 10
+  acceleration: -5
   jerk: 0
   causeToYield: 0
   lookAtPlayerWhileYielding: 0
@@ -637,7 +660,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   WaypointNumber: 1
-  speed: 5
+  speed: 30
   acceleration: 5
   jerk: 0
   causeToYield: 0
@@ -705,7 +728,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   WaypointNumber: 1
   speed: 30
-  acceleration: 2
+  acceleration: 5
   jerk: 0
   causeToYield: 0
   lookAtPlayerWhileYielding: 0
@@ -771,7 +794,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   WaypointNumber: 1
-  speed: 5
+  speed: 30
   acceleration: 5
   jerk: 0
   causeToYield: 0
@@ -838,7 +861,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   WaypointNumber: 1
-  speed: 5
+  speed: 30
   acceleration: 5
   jerk: 0
   causeToYield: 0
@@ -922,7 +945,7 @@ GameObject:
   - component: {fileID: 526897863899162354}
   - component: {fileID: 4877170242647977608}
   m_Layer: 5
-  m_Name: Waypoint 007
+  m_Name: Waypoint 008
   m_TagString: WP
   m_Icon: {fileID: -964228994112308473, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
@@ -968,7 +991,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   WaypointNumber: 1
-  speed: 5
+  speed: 30
   acceleration: 5
   jerk: 0
   causeToYield: 0
@@ -1035,7 +1058,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   WaypointNumber: 1
-  speed: 5
+  speed: 30
   acceleration: 5
   jerk: 0
   causeToYield: 0
@@ -1102,7 +1125,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   WaypointNumber: 1
-  speed: 5
+  speed: 30
   acceleration: 5
   jerk: 0
   causeToYield: 0
@@ -1169,7 +1192,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   WaypointNumber: 1
-  speed: 5
+  speed: 30
   acceleration: 5
   jerk: 0
   causeToYield: 0
@@ -1236,7 +1259,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   WaypointNumber: 1
-  speed: 5
+  speed: 30
   acceleration: 5
   jerk: 0
   causeToYield: 0
