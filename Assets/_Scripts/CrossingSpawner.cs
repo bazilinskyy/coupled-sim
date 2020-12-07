@@ -29,7 +29,7 @@ public class CrossingSpawner : MonoBehaviour
     }
 
 
-    void SetNextCrossing()
+    public void SetNextCrossing()
     {
         if (NextTurns())
         {

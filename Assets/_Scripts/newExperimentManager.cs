@@ -155,6 +155,11 @@ public class newExperimentManager : MonoBehaviour
 
         car.GetComponent<SpeedController>().StartDriving(false);
 
+        //Every even number we need to spawn a new crossing (so if we took a wrong turn at waypoint 2--> next waypoint will be uneven and will be on the second crossing
+        //Because of this teleport function we will miss the collider which activates next crossing
+        //So enabling it here.
+        if(car.GetComponent<newNavigator>().waypointIndex % 2 != 0) { crossingSpawner.SetNextCrossing(); Debug.Log("Enabled next crossing!");}
+
         userUI.text = "You took a wrong turn...\n Resetting!";
 
         StartCoroutine(PlaceAtTargetWaypoint());

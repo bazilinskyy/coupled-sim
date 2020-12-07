@@ -15,7 +15,7 @@ public class newNavigator : MonoBehaviour
 
     public List<WaypointStruct> waypointList;
     public WaypointStruct waypoint;
-    int waypointIndex = 0;
+    public int waypointIndex = 0;
 
     public bool navigationFinished = false;
     public bool atWaypoint = false;
