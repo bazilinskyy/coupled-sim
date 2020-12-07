@@ -14,10 +14,6 @@ public class CrossingSpawner : MonoBehaviour
     public GameObject cross2;
 
     public Crossings crossings;
-
-    private bool isTriggered = false; private float timeOutTime = 2f;
-    private float triggerTime = 0f;
-
     public newExperimentManager experimentManager;
     public void StartUp()
     {
@@ -32,11 +28,6 @@ public class CrossingSpawner : MonoBehaviour
         GetComponent<CreateVirtualCable>().MakeVirtualCable(crossings, experimentManager.makeVirtualCable);
     }
 
-    // Update is called once per frame
-    void Update()
-    { 
-        //ResetTriggerBoolean();
-    }
 
     void SetNextCrossing()
     {
@@ -62,38 +53,23 @@ public class CrossingSpawner : MonoBehaviour
         if (turnIndex + 1 >= turnsList.Count()) { turns[0] = turnsList[turnIndex];  return turns; }
         else { turns[0] = turnsList[turnIndex]; turns[1] = turnsList[turnIndex+1]; return turns; }
     }
-    void ResetTriggerBoolean()
-    {
-        if (!isTriggered) { return; }
-        if ((triggerTime + timeOutTime) < Time.time) { isTriggered = false; }
-    }
+
     private void OnTriggerEnter(Collider other)
     {
-        if (isTriggered) { return; }
-
-        if(other.gameObject.CompareTag("EnterCrossing"))
+        if (other.gameObject.CompareTag("EnterCrossing"))
         {
-            Debug.Log("Enter trigger called, configuring next crossing...");
-            experimentManager.LogCurrentCrossingTargets(crossings.CurrentCrossing().targetList);
-            SetNextCrossing();
-            isTriggered = true; triggerTime = Time.time;
+            if (other.GetComponent<MyCollider>().Triggered())
+            {
+                Debug.Log("Enter trigger called, configuring next crossing...");
+                experimentManager.LogCurrentCrossingTargets(crossings.CurrentCrossing().targetList);
+                SetNextCrossing();
+            }
         }
         if (other.gameObject.CompareTag("NavigationFinished"))
         {
-            experimentManager.LogCurrentCrossingTargets(crossings.CurrentCrossing().targetList);
-            isTriggered = true; triggerTime = Time.time;
-        } 
-    }
-    private void OnTriggerExit(Collider other)
-    {
-        if (!isTriggered) { return; }
-
-        string[] triggerTags = { "EnterCrossing", "CorrectTurn" };
-        
-        if (triggerTags.Contains(other.gameObject.tag)) { isTriggered = false; Debug.Log("Exited trigger!"); }
-    }
-    
-    
+            if ((other.GetComponent<MyCollider>().Triggered())) { experimentManager.LogCurrentCrossingTargets(crossings.CurrentCrossing().targetList); }
+        }
+    }    
     
 }
 

@@ -18,10 +18,6 @@ public class newNavigator : MonoBehaviour
     int waypointIndex = 0;
 
     public bool navigationFinished = false;
-
-    public bool isTriggered = false;
-    private float triggerTime = 0f; private float timeOutTime = 3f;
-    private bool renderZero = false;
     public bool atWaypoint = false;
 
     int lastIndex = 0;
@@ -50,14 +46,8 @@ public class newNavigator : MonoBehaviour
         RenderNavigationDistance();
 
         if (waypointIndex != lastIndex) { Debug.Log(waypointIndex); lastIndex = waypointIndex; }
-        //ResetTriggerBoolean();
     }
-    
-    void ResetTriggerBoolean()
-    {
-        if (!isTriggered) { return; }
-        if ((triggerTime + timeOutTime) < Time.time) { isTriggered = false; }
-    }
+   
     void RenderNavigationDistance()
     {
         if (!experimentManager.renderHUD) { return; }
@@ -76,49 +66,42 @@ public class newNavigator : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (isTriggered) { return; }
 
         if (other.CompareTag("EnterCrossing"))
         {
-            isTriggered = true; triggerTime = Time.time;
-            StartCoroutine(AddNextTargets());
+            if (other.GetComponent<MyCollider>().Triggered()) { StartCoroutine(AddNextTargets()); }
+
         }
         else if (other.CompareTag("CorrectTurn"))
         {
-            waypointIndex++;
-            isTriggered = true; triggerTime = Time.time;
-            atWaypoint = false;
+            if (other.GetComponent<MyCollider>().Triggered())
+            {
+                waypointIndex++; atWaypoint = false;
 
-            if(waypointIndex < waypointList.Count()) { waypoint = waypointList[waypointIndex]; }
-            else { Debug.Log("Finished waypoint List..."); }
+                if (waypointIndex < waypointList.Count()) { waypoint = waypointList[waypointIndex]; }
+                else { Debug.Log("Finished waypoint List..."); }
 
-            Debug.Log($"Next target = {waypoint.turn}...");
-            RenderNavigationArrow();
+                Debug.Log($"Next target = {waypoint.turn}...");
+                RenderNavigationArrow();
+            }
         }
         else if (other.CompareTag("WrongTurn"))
         {
-            isTriggered = true; triggerTime = Time.time;
-            waypointIndex++; 
+            if (other.GetComponent<MyCollider>().Triggered())
+            {
+                waypointIndex++;
 
-            if (waypointIndex < waypointList.Count()) { waypoint = waypointList[waypointIndex]; }
-            else { Debug.Log("Finished waypoint List..."); }
+                if (waypointIndex < waypointList.Count()) { waypoint = waypointList[waypointIndex]; }
+                else { Debug.Log("Finished waypoint List..."); }
 
-            Debug.Log("Wrong turn!!!!!");
-            experimentManager.TookWrongTurn();
+                Debug.Log("Wrong turn!!!!!");
+                experimentManager.TookWrongTurn();
+            }
         }
         else if (other.gameObject.CompareTag("NavigationFinished"))
         {
             navigationFinished = true;
         }
-
-    }
-
-    private void OnTriggerExit(Collider other)
-    {
-        if (!isTriggered) { return; }
-        string[] triggerTags = { "NavigationFinished", "CorrectTurn", "WrongTurn" };
-
-        if (triggerTags.Contains(other.gameObject.tag)) { isTriggered = false; Debug.Log("Exited trigger!"); }
 
     }
     IEnumerator AddNextTargets()
