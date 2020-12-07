@@ -339,6 +339,7 @@ namespace UnityStandardAssets.Utility.Inspector
                 {
                     circuit.waypointList.items[n] = children[n];
                 }
+                EditorUtility.SetDirty(circuit);
             }
             y += lineHeight + spacing;
 
@@ -351,6 +352,7 @@ namespace UnityStandardAssets.Utility.Inspector
                 foreach (Transform child in circuit.waypointList.items)
                 {
                     child.name = "Waypoint " + (n++).ToString("000");
+                    EditorUtility.SetDirty(child);
                 }
             }
             y += lineHeight + spacing;
