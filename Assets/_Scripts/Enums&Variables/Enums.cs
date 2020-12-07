@@ -42,6 +42,8 @@ static class OperationMethods
         if (turns.Contains(operation)) { return true; }
         else { return false; }
     }
+
+    
 }
 
 public enum TurnType
@@ -69,6 +71,12 @@ static class TurnTypeMethods
     {
         if (turn == TurnType.Right) { return true; }
         else { return false; }
+    }
+    public static bool IsValidForTargets(this TurnType turn)
+    {
+        TurnType[] turns = { TurnType.None, TurnType.EndPoint };
+        if (turns.Contains(turn)) { return false; }
+        else { return true; }
     }
 }
 

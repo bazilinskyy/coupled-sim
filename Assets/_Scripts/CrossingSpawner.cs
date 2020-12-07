@@ -33,10 +33,16 @@ public class CrossingSpawner : MonoBehaviour
     {
         if (NextTurns())
         {
+            //Set up next crossing
             crossings.SetNextCrossing(GetNextTurns(), experimentManager.experimentSettings);
-            turnIndex += 2;
+            
+            //Add new waypoints to the navigator
+            MyUtils.GetCar().GetComponent<newNavigator>().AddWaypoints(crossings.GetWaypoints("Next"));
+            
             //Make virtual cable if nescesrry here.
             GetComponent<CreateVirtualCable>().MakeVirtualCable(crossings, experimentManager.makeVirtualCable);
+
+            turnIndex += 2;
         }
 
     }

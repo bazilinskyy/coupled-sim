@@ -510,19 +510,13 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: bd622bd9844713544864bef9dff46137, type: 3}
---- !u!1 &685181776 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 6109170175517165887, guid: bd622bd9844713544864bef9dff46137,
-    type: 3}
-  m_PrefabInstance: {fileID: 685181774}
-  m_PrefabAsset: {fileID: 0}
 --- !u!114 &685181778 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 685181778, guid: bd622bd9844713544864bef9dff46137,
     type: 3}
   m_PrefabInstance: {fileID: 685181774}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 685181776}
+  m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 284db6bc5d58943419055f7c18467f12, type: 3}
@@ -534,7 +528,7 @@ MonoBehaviour:
     type: 3}
   m_PrefabInstance: {fileID: 685181774}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 685181776}
+  m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: cbb61f04b0a22cb4abd386b9f8a6af1e, type: 3}
@@ -860,6 +854,7 @@ MonoBehaviour:
     targetDifficulty: 0
     targetsPerTurn: 0
     experimentTime: 0
+  setCarAtTarget: 0
 --- !u!114 &1309504460
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -872,7 +867,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 093567958e9470c43b5a78b29cc5e413, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  car: {fileID: 685181776}
   currentNavigationLine: []
   totalNavigationLine: []
   savedData: 0
@@ -903,8 +897,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 75b1d39c1904b8b4e818c39d1a820b41, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cam: {fileID: 0}
-  experimentManager: {fileID: 1309504459}
   oneGazeDataPerFrame: 0
   startAutomatically: 0
   toggleLoggingKey: 13

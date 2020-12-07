@@ -27,6 +27,11 @@ public static class MyUtils
     {
         return GameObject.FindGameObjectWithTag("ExperimentManager").GetComponent<newExperimentManager>();
     }
+
+    public static GameObject GetCar()
+    {
+        return GameObject.FindGameObjectWithTag("Car");
+    }
     public static Vector3 TransformToWorldAxis(Vector3 gaze, Vector3 gazePosition)
     {
         Vector4 gazeH = new Vector4(gaze.x, gaze.y, gaze.z, 1);

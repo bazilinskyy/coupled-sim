@@ -73,7 +73,7 @@ public class CrossComponents : MonoBehaviour
 		Transform parentSpawPoints = null;
 		WaypointStruct waypoint = new WaypointStruct();
 
-		if (!isFirstCrossing) 
+		if (!isFirstCrossing && turn1.IsValidForTargets()) 
 		{
 			parentSpawPoints = FirstTurnTargetSpawnPoints;
 			spawnPoints = SelectRandomSpawnPoints(parentSpawPoints, settings.targetsPerTurn);
@@ -84,11 +84,11 @@ public class CrossComponents : MonoBehaviour
 			InstantiateTargets(spawnPoints, waypoint, settings);
 		}
 
-		if(turn2 != TurnType.EndPoint || turn2 == TurnType.None)
+		if(turn2.IsValidForTargets() && turn1.IsValidForTargets())
         {
-			if (turn2 == TurnType.Right) { parentSpawPoints = RightTargetSpawnPoints; }
-			if (turn2 == TurnType.Left) { parentSpawPoints = LeftTargetSpawnPoints; }
-			if (turn2 == TurnType.Straight) { parentSpawPoints = StraightTargetSpawnPoints; }
+			if (turn1 == TurnType.Right) { parentSpawPoints = RightTargetSpawnPoints; }
+			if (turn1 == TurnType.Left) { parentSpawPoints = LeftTargetSpawnPoints; }
+			if (turn1 == TurnType.Straight) { parentSpawPoints = StraightTargetSpawnPoints; }
 
 			spawnPoints = SelectRandomSpawnPoints(parentSpawPoints, settings.targetsPerTurn);
 
@@ -102,16 +102,22 @@ public class CrossComponents : MonoBehaviour
 	private void InstantiateTargets(List<Transform> spawnPoints, WaypointStruct waypoint, MainExperimentSetting settings)
     {
 		GameObject target;
-		foreach (Transform point in spawnPoints)
+		List<Transform> orderedSpawnPointList = spawnPoints.OrderByDescending(s => Vector3.Magnitude(s.position - waypoint.waypoint.position)).ToList();
+		foreach (Transform point in orderedSpawnPointList)
 		{
-			
+			int ID = experimentManager.GetNextTargetID();
+			//Varies position of target
+			Vector3 sideVariation = point.name == "Right" ? waypoint.waypoint.right*Random.Range(0, 2f) : -waypoint.waypoint.right * Random.Range(0, 2f);
+			Vector3 forwardVariation = waypoint.waypoint.forward * Random.Range(-4f, 4f);
+			Vector3 positionTarget = point.position + forwardVariation + sideVariation;
+
 			target = Instantiate(TargetPrefab);
-			target.transform.position = point.position;
+			target.transform.position = positionTarget;
 			target.transform.parent = TargetParent;
-			target.transform.name = "Target " + experimentManager.GetNextTargetID().ToString();
+			target.transform.name = "Target " + ID.ToString();
 			target.GetComponent<Target>().SetDifficulty(settings.targetDifficulty);
 			target.GetComponent<Target>().waypoint = waypoint;
-			target.GetComponent<Target>().ID = experimentManager.GetNextTargetID();
+			target.GetComponent<Target>().ID = ID;
 			target.GetComponent<Target>().side = point.name == "Left" ? Side.Left : Side.Right;
 			targetList.Add(target.GetComponent<Target>());
 		}

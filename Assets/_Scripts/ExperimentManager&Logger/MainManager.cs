@@ -10,7 +10,6 @@ public class MainManager : MonoBehaviour
 
     public List<MainExperimentSetting> experiments;
 
-    public GameObject environment;
     public bool debug = true;
 
     public bool makeVirtualCable = true;

@@ -67,21 +67,12 @@ public class newNavigator : MonoBehaviour
     private void OnTriggerEnter(Collider other)
     {
 
-        if (other.CompareTag("EnterCrossing"))
-        {
-            if (other.GetComponent<MyCollider>().Triggered()) { StartCoroutine(AddNextTargets()); }
-
-        }
-        else if (other.CompareTag("CorrectTurn"))
+        if (other.CompareTag("CorrectTurn"))
         {
             if (other.GetComponent<MyCollider>().Triggered())
             {
-                waypointIndex++; atWaypoint = false;
-
-                if (waypointIndex < waypointList.Count()) { waypoint = waypointList[waypointIndex]; }
-                else { Debug.Log("Finished waypoint List..."); }
-
-                Debug.Log($"Next target = {waypoint.turn}...");
+                atWaypoint = false;
+                SetNextWaypoint();
                 RenderNavigationArrow();
             }
         }
@@ -89,12 +80,6 @@ public class newNavigator : MonoBehaviour
         {
             if (other.GetComponent<MyCollider>().Triggered())
             {
-                waypointIndex++;
-
-                if (waypointIndex < waypointList.Count()) { waypoint = waypointList[waypointIndex]; }
-                else { Debug.Log("Finished waypoint List..."); }
-
-                Debug.Log("Wrong turn!!!!!");
                 experimentManager.TookWrongTurn();
             }
         }
@@ -104,11 +89,26 @@ public class newNavigator : MonoBehaviour
         }
 
     }
+
+    public void SetNextWaypoint()
+    {
+        waypointIndex++;
+
+        if (waypointIndex < waypointList.Count()) { waypoint = waypointList[waypointIndex]; }
+        else { Debug.Log("Finished waypoint List..."); }
+
+        Debug.Log($"Next target = {waypoint.turn}...");
+    }
     IEnumerator AddNextTargets()
     {
+       
         yield return new WaitForSeconds(1f);
         WaypointStruct[] newWaypoints = crossingSpawner.crossings.GetWaypoints("Next");
-        foreach (WaypointStruct waypoint in newWaypoints) { waypointList.Add(waypoint); }
+        
+    }
+    public void AddWaypoints(WaypointStruct[] waypoints)
+    {
+        foreach (WaypointStruct waypoint in waypoints) { waypointList.Add(waypoint); }
     }
     public void RenderNavigationArrow()
     {  

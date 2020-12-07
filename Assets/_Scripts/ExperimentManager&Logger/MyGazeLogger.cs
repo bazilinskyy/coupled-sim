@@ -14,8 +14,7 @@ public class MyGazeLogger : MonoBehaviour
 
     Vector3 hmdPosition;
     Vector3 hmdRotation;
-    public Transform cam;
-    public newExperimentManager experimentManager;
+    private newExperimentManager experimentManager;
     [Header("Should only the latest data be logged on each update")]
     public bool oneGazeDataPerFrame = false;
 
@@ -45,6 +44,7 @@ public class MyGazeLogger : MonoBehaviour
     private LoggedTags fixatingOn = LoggedTags.World;
     public void StartUp()
     {
+        experimentManager = MyUtils.GetExperimentManager();
         if (experimentManager == null) { GetComponent<MyGazeLogger>().enabled = false; return; }
         // InitGaze must be called before using or calibrating gaze tracking.
         if (!VarjoPlugin.InitGaze())
@@ -52,8 +52,8 @@ public class MyGazeLogger : MonoBehaviour
             Debug.LogError("Failed to initialize gaze");
             GetComponent<MyGazeLogger>().enabled = false;
         }
-        fixationData = new Fixation();
 
+        fixationData = new Fixation();
         logging = true;
     }
     void Update()

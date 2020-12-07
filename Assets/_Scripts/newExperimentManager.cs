@@ -51,6 +51,8 @@ public class newExperimentManager : MonoBehaviour
     private int targetCount = 0;
     UnityEngine.UI.Image blackOutScreen;
     UnityEngine.UI.Text userUI;
+    public  bool setCarAtTarget = false;
+
 
     private void Awake()
     {
@@ -131,14 +133,16 @@ public class newExperimentManager : MonoBehaviour
         if (Input.GetKeyDown(mainManager.myPermission)) { car.navigationFinished = true; } //Finish navigation early
         //if (Input.GetKeyDown(mainManager.setToLastWaypoint)) { SetCarToLastWaypoint(); }
         //if (Input.GetKeyDown(experimentInput.resetHeadPosition)) { SetCameraPosition(driverView.position, driverView.rotation); }
-        if (Input.GetKeyDown(mainManager.resetExperiment)) { ResetExperiment(); }
+        if (Input.GetKeyDown(mainManager.resetExperiment)) { StartCoroutine(PlaceAtTargetWaypoint()); }
         if (Input.GetKeyDown(KeyCode.LeftShift)) { TeleportToNextWaypoint(); }
 
         if (car.navigationFinished)
         {
+            LogCurrentCrossingTargets(crossingSpawner.crossings.NextCrossing().targetList);
+
             if (mainManager.saveData && !savedData) { dataManager.SaveData(); savedData = true; }
 
-            if (car.GetComponent<Rigidbody>().velocity.magnitude < 0.01f) { mainManager.ExperimentEnded(); }
+            if (car.GetComponent<Rigidbody>().velocity.magnitude < 0.5f) { mainManager.ExperimentEnded(); }
         }
     }
 
@@ -153,20 +157,35 @@ public class newExperimentManager : MonoBehaviour
     {
         dataManager.TookWrongTurn();
 
-        car.GetComponent<SpeedController>().StartDriving(false);
-
-        //Every even number we need to spawn a new crossing (so if we took a wrong turn at waypoint 2--> next waypoint will be uneven and will be on the second crossing
-        //Because of this teleport function we will miss the collider which activates next crossing
-        //So enabling it here.
-        if(car.GetComponent<newNavigator>().waypointIndex % 2 != 0) { crossingSpawner.SetNextCrossing(); Debug.Log("Enabled next crossing!");}
-
         userUI.text = "You took a wrong turn...\n Resetting!";
 
-        StartCoroutine(PlaceAtTargetWaypoint());
-    }
+        //Setting next waypoint
+        car.GetComponent<newNavigator>().SetNextWaypoint();
 
-    IEnumerator PlaceAtTargetWaypoint()
+        //Putting car at next waypoint
+        StartCoroutine(PlaceAtTargetWaypoint(true));
+
+        //We wait for the car to be placeced at the next waypoint before setting next crossing
+        StartCoroutine(SetNextWaypointCrossing());
+    }
+    IEnumerator SetNextWaypointCrossing()
     {
+        while (!setCarAtTarget)
+        {
+            yield return new WaitForEndOfFrame();
+        }
+
+        //Telporting to next waypoint will skip the triggers for next crossing to be made...
+        //New crossings are made after every UNeven waypoint so if we made a wrong turn at an uneven waypoint we manually set next crossing here...
+        //After a wrong turn AT a uneven waypoint we will be set at the NEXT waypoint. This one will thus be even
+        if ((car.GetComponent<newNavigator>().waypointIndex % 2) == 0) { crossingSpawner.SetNextCrossing(); Debug.Log("Enabled next crossing!"); }
+
+        setCarAtTarget = false;
+    }
+    IEnumerator PlaceAtTargetWaypoint(bool _setAtCarTargetBoolean =false)
+    {
+        car.GetComponent<SpeedController>().StartDriving(false);
+
         yield return new WaitForSeconds(1f);
 
         blackOutScreen.CrossFadeAlpha(1f, mainManager.animationTime, false);
@@ -178,7 +197,7 @@ public class newExperimentManager : MonoBehaviour
 
         Vector3 newStartPosition = target.waypoint.transform.position - target.waypoint.transform.forward * 20f;
 
-        StartCoroutine(SetCarSteadyAt(newStartPosition, target.waypoint.transform.forward));
+        StartCoroutine(SetCarSteadyAt(newStartPosition, target.waypoint.transform.forward, false, _setAtCarTargetBoolean));
 
         car.GetComponent<newNavigator>().RenderNavigationArrow();
         blackOutScreen.CrossFadeAlpha(0f, mainManager.animationTime*2f, false);
@@ -198,7 +217,7 @@ public class newExperimentManager : MonoBehaviour
         Quaternion targetRot = car.waypoint.waypoint.rotation;
         targetRot.SetLookRotation(view);
 
-        StartCoroutine(SetCarSteadyAt(targetPos, view, true));  
+        StartCoroutine(SetCarSteadyAt(targetPos, view, true));
         
         
     }
@@ -557,25 +576,8 @@ public class newExperimentManager : MonoBehaviour
         
         //Throw error if we dont have an xmlManager
         if (dataManager == null) { throw new System.Exception("Error in Experiment Manager -> A XMLManager should be attatched if you want to save data..."); }
-        
-        dataManager.StartUp();
 
-        if(mainManager.camType == MyCameraType.Normal) 
-        {
-            GetComponent<MyVarjoGazeRay>().enabled = false;
-            GetComponent<MyGazeLogger>().enabled = false;
-            return; 
-        }
-        //Set car to be ignored by raycast of gaze logger
-        MyVarjoGazeRay gazeRay = GetComponent<MyVarjoGazeRay>();
-        MyGazeLogger gazeLogger = GetComponent<MyGazeLogger>();
-        gazeRay.layerMask = ~layerToIgnoreForTargetDetection; gazeRay.StartUp();
-
-        gazeLogger.experimentManager = this;
-        gazeLogger.startAutomatically = false;
-        gazeLogger.useCustomLogPath = true;
-        gazeLogger.cam = CameraTransform();
-        gazeLogger.StartUp();
+        dataManager.StartUp();        
     }
     void SetCarControlInput()
     {
@@ -597,7 +599,7 @@ public class newExperimentManager : MonoBehaviour
         if (reflectionScript != null && player != null) { reflectionScript[0].head = CameraTransform(); }
         else { Debug.Log("Could not set head position for mirro reflection script..."); }
     }
-    IEnumerator SetCarSteadyAt(Vector3 targetPos, Vector3 targetRot, bool superSonic = false)
+    IEnumerator SetCarSteadyAt(Vector3 targetPos, Vector3 targetRot, bool superSonic = false, bool _setCarAtTargetBool = false)
     {
         //Somehow car did some back flips when not keeping it steady for some time after repositioning.....
         float step = 0.005f;
@@ -622,7 +624,7 @@ public class newExperimentManager : MonoBehaviour
             count = 0;
 
             
-            while (count < totalSeconds)
+            while (count < totalSeconds/3)
             {
                 Vector3 newDirection = Vector3.RotateTowards(car.transform.forward, targetRot, rotationSpeed, 0.0f);
                 car.transform.rotation = Quaternion.LookRotation(newDirection);
@@ -650,6 +652,7 @@ public class newExperimentManager : MonoBehaviour
                 yield return new WaitForSeconds(step);
             }
         }
+        setCarAtTarget = _setCarAtTargetBool;
     }
 }
 

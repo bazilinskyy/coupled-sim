@@ -8,7 +8,7 @@ using Varjo;
 using System.Linq;
 using UnityEngine.SceneManagement;
 using System.Globalization;
-[RequireComponent(typeof(MyGazeLogger))]
+[RequireComponent(typeof(MyGazeLogger), typeof(MyVarjoGazeRay))]
 public class DataLogger : MonoBehaviour
 {
     private const string vehicleDataFileName = "vehicleData.csv";
@@ -18,18 +18,14 @@ public class DataLogger : MonoBehaviour
     private const string generalExperimentInfo = "GeneralExperimentInfo.csv";
     private const string fixationFileName = "fixationData.csv";
     //our car
-    public GameObject car;
-    private newNavigator carNavigator;
+    private newNavigator car;
     //Current Navigation
-    private NavigationHelper navigationHelper;
     public Vector3[] currentNavigationLine = new Vector3[0];
     public Vector3[] totalNavigationLine;
     private int indexClosestPoint = 0;//Used for calculating the distance to optimal navigation path (i.e., centre of raod)
 
     //Experiment manager;
     private newExperimentManager experimentManager;
-
-    private MyGazeLogger myGazeLogger;
    
     //list of items
     private List<VehicleDataPoint> vehicleData;
@@ -41,11 +37,11 @@ public class DataLogger : MonoBehaviour
     private string saveFolder;
     private string steerInputAxis;
     private string gasInputAxis;
-    private string brakeInputAxis;
     [HideInInspector]
     public bool savedData = false;
     public bool logging;
 
+    private MyGazeLogger gazeLogger;
     private CultureInfo culture = CultureInfo.CreateSpecificCulture("eu-ES");
     // Use standard numeric format specifiers.
     private string specifier = "G";
@@ -54,21 +50,43 @@ public class DataLogger : MonoBehaviour
 
     public void StartUp()
     {
-        
         Debug.Log("Started data logger...");
         mainManager = MyUtils.GetMainManager();
-
-        experimentManager = GetComponent<newExperimentManager>();
+        experimentManager = MyUtils.GetExperimentManager();
+        car = MyUtils.GetCar().GetComponent<newNavigator>();
 
         List<string> inputs = experimentManager.GetCarControlInput();
         steerInputAxis = inputs[0];
         gasInputAxis = inputs[1];
-        brakeInputAxis = inputs[2];
 
-        carNavigator = car.GetComponent<newNavigator>();
+        logging = true; savedData = false; saveFolder = SaveFolder();
 
-        StartNewMeasurement();
+        //initialising lists
+        vehicleData = new List<VehicleDataPoint>();
+        targetDetectionData = new List<TargetAlarm>();
+        targetInfoData = new List<TargetInfo>();
 
+        //Eye fixation stuff
+        if (mainManager.camType == MyCameraType.Normal)
+        {
+            GetComponent<MyVarjoGazeRay>().enabled = false;
+            GetComponent<MyGazeLogger>().enabled = false;
+            return;
+        }
+
+        else
+        {
+            //Set car to be ignored by raycast of gaze logger
+            MyVarjoGazeRay gazeRay = GetComponent<MyVarjoGazeRay>();
+            gazeLogger = GetComponent<MyGazeLogger>();
+            gazeRay.layerMask = ~experimentManager.layerToIgnoreForTargetDetection;
+            gazeRay.StartUp();
+
+            gazeLogger.startAutomatically = false;
+            gazeLogger.useCustomLogPath = true;
+            gazeLogger.customLogPath = saveFolder + "/";
+            gazeLogger.StartUp();
+        }
     }
     
     public void LogTargets(List<Target> targets)
@@ -88,7 +106,7 @@ public class DataLogger : MonoBehaviour
     {
         if (!logging) { return; }
         Debug.Log($"Saving all data to {saveFolder}...");
-        if (mainManager.camType != MyCameraType.Normal) { SaveFixationData(); myGazeLogger.StopLogging();  }
+        if (mainManager.camType != MyCameraType.Normal) { SaveFixationData(); gazeLogger.StopLogging();  }
 
         SaveVehicleData();
         SaveTargetDetectionData();
@@ -131,16 +149,16 @@ public class DataLogger : MonoBehaviour
         {
             Log(columns, file);
 
-            logData[0] = myGazeLogger.fixationData.world.ToString(specifier,culture);
-            logData[1] = myGazeLogger.fixationData.target.ToString(specifier,culture);
-            logData[2] = myGazeLogger.fixationData.hudSymbology.ToString(specifier,culture);
-            logData[3] = myGazeLogger.fixationData.hudText.ToString(specifier,culture);
-            logData[4] = myGazeLogger.fixationData.conformalSymbology.ToString(specifier,culture);
-            logData[5] = myGazeLogger.fixationData.insideCar.ToString(specifier,culture);
-            logData[6] = myGazeLogger.fixationData.leftMirror.ToString(specifier,culture);
-            logData[7] = myGazeLogger.fixationData.rightMirror.ToString(specifier,culture);
-            logData[8] = myGazeLogger.fixationData.rearMirror.ToString(specifier,culture);
-            logData[9] = myGazeLogger.fixationData.unknown.ToString(specifier,culture);
+            logData[0] = gazeLogger.fixationData.world.ToString(specifier,culture);
+            logData[1] = gazeLogger.fixationData.target.ToString(specifier,culture);
+            logData[2] = gazeLogger.fixationData.hudSymbology.ToString(specifier,culture);
+            logData[3] = gazeLogger.fixationData.hudText.ToString(specifier,culture);
+            logData[4] = gazeLogger.fixationData.conformalSymbology.ToString(specifier,culture);
+            logData[5] = gazeLogger.fixationData.insideCar.ToString(specifier,culture);
+            logData[6] = gazeLogger.fixationData.leftMirror.ToString(specifier,culture);
+            logData[7] = gazeLogger.fixationData.rightMirror.ToString(specifier,culture);
+            logData[8] = gazeLogger.fixationData.rearMirror.ToString(specifier,culture);
+            logData[9] = gazeLogger.fixationData.unknown.ToString(specifier,culture);
 
             Log(logData, file);
             file.Flush();
@@ -233,7 +251,7 @@ public class DataLogger : MonoBehaviour
     private void SaveTargetInfoData()
     {
         Debug.Log("Saving target info...");
-        string[] columns = { "ID", "Detected", "ReactionTime", "TotalFixationTime", "FirstFixationTime", "DetectionTime", "Difficulty","UpcomingTurn","Position" };
+        string[] columns = { "ID", "Detected", "ReactionTime", "TotalFixationTime", "FirstFixationTime", "DetectionTime", "Difficulty","UpcomingTurn","Position", "RoadSide" };
         string[] logData = new string[columns.Length];
         string filePath = string.Join("/", saveFolder, generalTargetInfo);
         
@@ -253,6 +271,7 @@ public class DataLogger : MonoBehaviour
                 logData[6] = targetInfo.difficulty.ToString();
                 logData[7] = targetInfo.upcomingTurn.ToString();
                 logData[8] = targetInfo.position.ToString("F3");
+                logData[9] = targetInfo.side.ToString();
                 
                 Log(logData, file);
             }
@@ -313,26 +332,7 @@ public class DataLogger : MonoBehaviour
         }
         file.WriteLine(line);
     }
-    public void StartNewMeasurement()
-    {
-        Debug.Log($"Starting new measurement...");
-
-        logging = true;
-        savedData = false;
-        saveFolder = SaveFolder();
-
-        vehicleData = new List<VehicleDataPoint>();
-        targetDetectionData = new List<TargetAlarm>();
-        targetInfoData = new List<TargetInfo>();
-
-        if (mainManager.camType != MyCameraType.Normal)
-        {
-            myGazeLogger.customLogPath = saveFolder + "/";
-            myGazeLogger.fixationData = new Fixation();
-            if (myGazeLogger.IsLogging()) { myGazeLogger.RestartLogging(); }
-            else { myGazeLogger.StartLogging(); }
-        }
-    }
+ 
     private string SaveFolder()
     {
         //Save folder will be .../unityproject/Data/subjectName-date/subjectName/navigationName
@@ -360,7 +360,7 @@ public class DataLogger : MonoBehaviour
     {
         if (vehicleData == null)
         {
-            Debug.LogError("ERROR: Vehicle data was corrupted... Re-started measurement...");
+            GetComponent<DebugCaller>().DebugThis("DataLogger error", "ERROR: Vehicle data was corrupted...");
             return;
             //StartNewMeasurement();
         }
@@ -376,7 +376,7 @@ public class DataLogger : MonoBehaviour
         dataPoint.rotation = car.transform.rotation.eulerAngles.ToString("F3");
         dataPoint.steerInput = Input.GetAxis(steerInputAxis);
         dataPoint.speed = car.GetComponent<Rigidbody>().velocity.magnitude;
-        dataPoint.upcomingOperation = carNavigator.waypoint.turn.ToString();
+        dataPoint.upcomingOperation = car.waypoint.turn.ToString();
 
         ///extra ///
         dataPoint.throttleInput = Input.GetAxis(gasInputAxis);
