@@ -7,7 +7,9 @@ using System.Linq;
 
 public class CalibrationManager : MonoBehaviour
 {
-    
+    public GameObject leapRig;
+    public GameObject normalCam;
+
     public GameObject steeringWheel;
     public GameObject cross;
     public Transform startPosition;
@@ -16,8 +18,8 @@ public class CalibrationManager : MonoBehaviour
     public TextMesh instructions;
     private Transform player;
     public UnityEngine.UI.Image blackOutScreen;
-    
-  
+
+    private bool startedGazeRay = false;
     private bool lastUserInput = false;
 
     private bool addedTargets;
@@ -28,7 +30,9 @@ public class CalibrationManager : MonoBehaviour
     }
     void StartScene()
     {
+        //Instantiate player when he is not present
         player = MyUtils.GetPlayer().transform;
+
         mainManager = MyUtils.GetMainManager();
 
         //Spawn steeringwheel beneath plane.
@@ -49,15 +53,15 @@ public class CalibrationManager : MonoBehaviour
 
         //Looks for targets to appear in field of view and sets their visibility timer accordingly
         if (userInput && addedTargets) { ProcessUserInputTargetDetection(); }
-        if ((userInput && !addedTargets) || Input.GetKeyDown(mainManager.spawnSteeringWheel)) { CalibrateHands(); }
+        if ((userInput && !addedTargets) || Input.GetKeyDown(mainManager.SpawnSteeringWheel)) { CalibrateHands(); }
     }
     void Update()
     {
        
-        if (Input.GetKeyDown(mainManager.resetExperiment)) {mainManager.LoadCalibrationScene(); }
-        if (Input.GetKeyDown(mainManager.resetHeadPosition)) { Varjo.VarjoPlugin.ResetPose(true, Varjo.VarjoPlugin.ResetRotation.ALL); }
-        if (Input.GetKeyDown(mainManager.calibrateGaze)) { RequestGazeCalibration(); }
-        if (Input.GetKeyDown(mainManager.myPermission)) {
+        if (Input.GetKeyDown(mainManager.ResetExperiment)) {mainManager.LoadCalibrationScene(); }
+        if (Input.GetKeyDown(mainManager.ResetHeadPosition)) { Varjo.VarjoPlugin.ResetPose(true, Varjo.VarjoPlugin.ResetRotation.ALL); }
+        if (Input.GetKeyDown(mainManager.CalibrateGaze)) { RequestGazeCalibration(); }
+        if (Input.GetKeyDown(mainManager.MyPermission)) {
             if (!addedTargets)
             {
                 mainManager.AddTargetScene(); addedTargets = true;
@@ -69,6 +73,9 @@ public class CalibrationManager : MonoBehaviour
             addedTargets = true; cross.SetActve(false);
             instructions.text = "Look at the targets above!";
         }*/
+
+        //AFter calibration start gaze ray
+        if (Varjo.VarjoPlugin.IsGazeCalibrated() && !startedGazeRay) { GetComponent<MyVarjoGazeRay>().StartUp(); startedGazeRay = true; }
         
         if (Input.GetKeyDown(KeyCode.T)) { 
             mainManager.AddTargetScene(); 

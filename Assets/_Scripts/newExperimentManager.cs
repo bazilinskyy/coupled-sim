@@ -9,13 +9,13 @@ using System.Linq;
 public class newExperimentManager : MonoBehaviour
 {
     //Attachted to the object with the experiment manager should be a XMLManager for handling the saving of the data.
+    public GameObject normalCam;
+    public GameObject leapRig;
+
     [Header("Experiment Input")]
     public string subjectName;
-    public bool saveData;
     public Color navigationColor;
    
-    public List<Target> targetList;
-
     public MainManager mainManager;
     public CrossingSpawner crossingSpawner;
 
@@ -44,16 +44,15 @@ public class newExperimentManager : MonoBehaviour
     public float thresholdUserInput = 0.15f; //The minimum time between user inputs (when within this time only the first one is used)
 
     private bool savedData = false;
-    public bool makeVirtualCable = false; public bool renderHUD = false;
     public MainExperimentSetting experimentSettings;
 
     private int targetCount = 0;
     UnityEngine.UI.Image blackOutScreen;
-    UnityEngine.UI.Text userUI;
+    UnityEngine.TextMesh carUI;
     public  bool setCarAtTarget = false;
 
 
-    private void Awake()
+    private void Start()
     {
         StartUpFunctions();
     }
@@ -62,17 +61,13 @@ public class newExperimentManager : MonoBehaviour
         player = MyUtils.GetPlayer().transform;
         blackOutScreen = MyUtils.GetBlackOutScreen();
         mainManager = MyUtils.GetMainManager();
-        userUI = MyUtils.GetUserUI();
+        carUI = MyUtils.GetCarUI();
 
         //Set DataManager
         SetDataManager();
 
         //Beun settings
         experimentSettings = mainManager.GetExperimentSettings();
-
-        if (experimentSettings.navigationType == NavigationType.VirtualCable) { makeVirtualCable = true; renderHUD = true; }
-        else { renderHUD = true; makeVirtualCable = true; }
-
         
         crossingSpawner.turnsList = experimentSettings.turns.ToArray();
         crossingSpawner.StartUp();
@@ -94,6 +89,34 @@ public class newExperimentManager : MonoBehaviour
         //Does not work when in Start() or in Awake()...
         ActivateMirrorCameras();
     }
+
+    public bool MakeVirtualCable()
+    {
+        if (experimentSettings.navigationType == NavigationType.VirtualCable) { return true; }
+        else { return false; }
+    }
+
+    public bool RenderHUD()
+    {
+        if (experimentSettings.navigationType == NavigationType.HUD_low || experimentSettings.navigationType == NavigationType.HUD_high) { return true; }
+        else { return false; }
+    }
+
+    public float[] GetHUDInputs()
+    {
+        if (experimentSettings.navigationType == NavigationType.HUD_high)
+        {
+            float[] HUDPlacerInputs = { -6f, 0, 2f };
+            return HUDPlacerInputs;
+        }
+        else if (experimentSettings.navigationType == NavigationType.HUD_low)
+        {
+            float[] HUDPlacerInputs = { 20f, 3.5f, 2f };
+            return HUDPlacerInputs;
+        }
+        else { return new float[] { 0, 0, 0 }; }
+    }
+
     private void LateUpdate()
     {
         //We dot this as late update to make sure gaze data (which is used to determine which target the participant is detecting) is processed 
@@ -115,27 +138,29 @@ public class newExperimentManager : MonoBehaviour
         //When I am doing some TESTING
         if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W)) { car.GetComponent<SpeedController>().StartDriving(true); }
         if (Input.GetKeyDown(KeyCode.Space)) { car.GetComponent<SpeedController>().ToggleDriving(); }
-        if (Input.GetKeyDown(mainManager.calibrateGaze)) { Varjo.VarjoPlugin.RequestGazeCalibration(); }
-        if (Input.GetKeyDown(mainManager.resetHeadPosition)) { Varjo.VarjoPlugin.ResetPose(true, Varjo.VarjoPlugin.ResetRotation.ALL); }
+        if (Input.GetKeyDown(mainManager.CalibrateGaze)) { Varjo.VarjoPlugin.RequestGazeCalibration(); }
+        if (Input.GetKeyDown(mainManager.ResetHeadPosition)) { Varjo.VarjoPlugin.ResetPose(true, Varjo.VarjoPlugin.ResetRotation.ALL); }
         if (Input.GetKeyDown(KeyCode.LeftControl)) { StartCoroutine(PlaceAtTargetWaypoint()); }
         //Researcher inputs
-        if (Input.GetKeyDown(mainManager.toggleSymbology)) { ToggleSymbology(); }
-        if (Input.GetKeyDown(mainManager.myPermission)) { car.navigationFinished = true; } //Finish navigation early
+        if (Input.GetKeyDown(mainManager.ToggleSymbology)) { Debug.Log("Toggled symbology!"); ToggleSymbology(); }
+        if (Input.GetKeyDown(mainManager.MyPermission)) { car.navigationFinished = true; } //Finish navigation early
         //if (Input.GetKeyDown(mainManager.setToLastWaypoint)) { SetCarToLastWaypoint(); }
         //if (Input.GetKeyDown(experimentInput.resetHeadPosition)) { SetCameraPosition(driverView.position, driverView.rotation); }
-        if (Input.GetKeyDown(mainManager.resetExperiment)) { ResetExperiment(); }
+        if (Input.GetKeyDown(mainManager.ResetExperiment)) { ResetExperiment(); }
         if (Input.GetKeyDown(KeyCode.LeftShift)) { TeleportToNextWaypoint(); }
 
         if (car.navigationFinished)
         {
             LogCurrentCrossingTargets(crossingSpawner.crossings.NextCrossing().targetList);
 
-            if (mainManager.saveData && !savedData) { dataManager.SaveData(); savedData = true; }
-
             if (car.GetComponent<Rigidbody>().velocity.magnitude < 0.5f) { mainManager.ExperimentEnded(); }
         }
     }
 
+    public void SaveData()
+    {
+        if (!savedData) { dataManager.SaveData(); }
+    }
     public int GetNextTargetID()
     {
         int count = targetCount;
@@ -147,7 +172,8 @@ public class newExperimentManager : MonoBehaviour
     {
         dataManager.TookWrongTurn(car.GetComponent<newNavigator>().waypoint);
 
-        userUI.text = "You took a wrong turn...\n Resetting!";
+
+        carUI.text = "Wrong turn... No problem!";
 
         //Setting next waypoint
         car.GetComponent<newNavigator>().SetNextWaypoint();
@@ -172,7 +198,7 @@ public class newExperimentManager : MonoBehaviour
 
         setCarAtTarget = false;
     }
-    IEnumerator PlaceAtTargetWaypoint(bool _setAtCarTargetBoolean =false)
+    IEnumerator PlaceAtTargetWaypoint(bool _setAtCarTargetBoolean = false)
     {
         car.GetComponent<SpeedController>().StartDriving(false);
 
@@ -192,7 +218,15 @@ public class newExperimentManager : MonoBehaviour
         car.GetComponent<newNavigator>().RenderNavigationArrow();
         blackOutScreen.CrossFadeAlpha(0f, mainManager.animationTime*2f, false);
 
-        userUI.text = "";
+        carUI.text = "Try again!";
+
+        yield return new WaitForSeconds(mainManager.animationTime);
+
+        carUI.text = "";
+
+        car.GetComponent<SpeedController>().StartDriving(true);
+        
+        
     }
     private void TeleportToNextWaypoint()
     {
@@ -230,10 +264,11 @@ public class newExperimentManager : MonoBehaviour
 
         if (nextNavType == NavigationType.HighlightedRoad) { nextNavType = GetNextNavigationType(); experimentSettings.navigationType = nextNavType; }
 
-
-        //activeNavigationHelper.SetUp(activeExperiment.navigationType, activeExperiment.transparency, car, HUDMaterials, activeExperiment.difficulty, false);
-        //activeNavigationHelper.RenderNavigationArrow();
-        Debug.Log($"Switched to {nextNavType}...");
+        if(nextNavType == NavigationType.VirtualCable) { car.GetComponent<CreateVirtualCable>().MakeVirtualCable(); }
+        else if(nextNavType == NavigationType.HUD_high || nextNavType == NavigationType.HUD_low) { PlaceHUD(); }
+            //activeNavigationHelper.SetUp(activeExperiment.navigationType, activeExperiment.transparency, car, HUDMaterials, activeExperiment.difficulty, false);
+            //activeNavigationHelper.RenderNavigationArrow();
+            Debug.Log($"Switched to {nextNavType}...");
     }
     NavigationType GetNextNavigationType()
     {
@@ -308,7 +343,6 @@ public class newExperimentManager : MonoBehaviour
         Debug.Log("Setting up car...");
 
         //Put head position at the right place
-
         if (mainManager.calibratedUsingHands)
         {
             driverView.position = steeringWheel.transform.position;
@@ -317,11 +351,25 @@ public class newExperimentManager : MonoBehaviour
             driverView.position += car.transform.right * mainManager.driverViewXToSteeringWheel;
 
         }
+        //Place HUD
+        PlaceHUD();
 
         //Put car in right position
         Transform startLocation = crossingSpawner.crossings.CurrentCrossing().components.startPoint.transform;       
 
         StartCoroutine(SetCarSteadyAt(startLocation.position, startLocation.forward));
+    }
+
+    void PlaceHUD()
+    {
+        if (RenderHUD())
+        {
+            HUDPlacer HUDPlacer = car.HUD.GetComponent<HUDPlacer>();
+            float[] HUDInputs = GetHUDInputs();
+            HUDPlacer.SetAngles(HUDInputs[0], HUDInputs[1], HUDInputs[2]);
+            HUDPlacer.PlaceHUD();
+        }
+        car.RenderNavigationArrow();
     }
     void GoToCar()
     {

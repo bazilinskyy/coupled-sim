@@ -31,9 +31,9 @@ public class MyGazeLogger : MonoBehaviour
     bool logging = false;
 
     static readonly string[] ColumnNames = { "Frame", "LogTime", "ExperimentTime", "HMDPosition", "HMDRotation", "HMDWorldPosition",
-                                            "HMDWorldRotation","GazeStatus", "CombinedGazeForwardLocal", "CombinedGazePosition", "LeftEyeStatus",
+                                            "HMDWorldRotation","GazeStatus", "CombinedGazeForwardLocal", "CombinedGazePositionLocal", "LeftEyeStatus",
                                             "LeftEyeForward", "LeftEyePosition", "LeftEyePupilSize", "RightEyeStatus", "RightEyeForward",
-                                            "RightEyePosition", "RightEyePupilSize", "FocusDistance", "FocusStability", "LookingAt", "CombinedGazeForwardWorld" };
+                                            "RightEyePosition", "RightEyePupilSize", "FocusDistance", "FocusStability", "LookingAt", "CombinedGazeForwardWorld","CombinedGazepositionWorld"  };
     
     const string ValidString = "VALID";
     const string InvalidString = "INVALID";
@@ -84,9 +84,15 @@ public class MyGazeLogger : MonoBehaviour
         else if (startAutomatically) { if (VarjoPlugin.GetGaze().status == VarjoPlugin.GazeStatus.VALID) { StartLogging(); } }
 
     }
+
+    public VarjoPlugin.GazeData GetLastGaze()
+    {
+        if (logging) { return dataSinceLastUpdate[-1]; }
+        else { throw new Exception(); }
+    }
     void LogGazeData(VarjoPlugin.GazeData data)
     {
-        Debug.Log($"Logging Gaze count: {count}..."); count++;
+        //GetComponent<DebugCaller>().DebugThis("Gaze Log Count", count); count++;
         // Get HMD position and rotation
         hmdPosition = VarjoManager.Instance.HeadTransform.position;
         hmdRotation = VarjoManager.Instance.HeadTransform.rotation.eulerAngles;
@@ -139,7 +145,13 @@ public class MyGazeLogger : MonoBehaviour
 
         logData[20] = invalid ? "" : fixatingOn.ToString();
         logData[21] = "";
-        //logData[21] = invalid ? "" : MyUtils.TransformToWorldAxis(data.gaze.forward, data.gaze.position).ToString("F3");
+        Transform HMD = VarjoManager.Instance.HeadTransform;
+        // Transform gaze direction and origin from HMD space to world space
+        Vector3 gazeRayDirection = HMD.TransformVector(Double3ToVector3(data.gaze.forward));
+        Vector3 gazeRayOrigin = HMD.TransformPoint(Double3ToVector3(data.gaze.position));
+
+        logData[21] = invalid ? "" : gazeRayDirection.ToString("F3");
+        logData[22] = invalid ? "" : gazeRayOrigin.ToString("F3");
 
         Log(logData);
     }
@@ -179,7 +191,7 @@ public class MyGazeLogger : MonoBehaviour
         writer = new StreamWriter(path);
 
         Log(ColumnNames);
-        //Debug.Log("Log file started at: " + path);
+        Debug.Log("GazeLog file started at: " + path);
     }
     public void StopLogging()
     {

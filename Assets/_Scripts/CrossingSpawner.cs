@@ -32,7 +32,7 @@ public class CrossingSpawner : MonoBehaviour
 
         crossings = new Crossings(cross1, turns1, cross2, turns2, experimentManager.experimentSettings);
 
-        GetComponent<CreateVirtualCable>().MakeVirtualCable(crossings, experimentManager.makeVirtualCable);
+        GetComponent<CreateVirtualCable>().MakeVirtualCable(crossings);
     }
 
     public int WaypointID() { waypointID++; return waypointID - 1; }
@@ -48,12 +48,13 @@ public class CrossingSpawner : MonoBehaviour
             GetComponent<newNavigator>().AddWaypoints(crossings.GetWaypoints("Next"));
             
             //Make virtual cable if nescesrry here.
-            GetComponent<CreateVirtualCable>().MakeVirtualCable(crossings, experimentManager.makeVirtualCable);
+            GetComponent<CreateVirtualCable>().MakeVirtualCable(crossings);
 
             turnIndex += 2;
         }
 
     }
+
     bool NextTurns()
     {
         if(turnIndex >= turnsList.Count()) { return false; }

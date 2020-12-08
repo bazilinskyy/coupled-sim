@@ -30,25 +30,25 @@ public class MainManager : MonoBehaviour
     public float driverViewXToSteeringWheel = 0f;
 
     [Header("Inputs")]
-    public KeyCode myPermission = KeyCode.F1;
-    public KeyCode resetHeadPosition = KeyCode.F2;
-    public KeyCode spawnSteeringWheel = KeyCode.F3;
-    public KeyCode calibrateGaze = KeyCode.F4;
-    public KeyCode resetExperiment = KeyCode.Escape;
+    private KeyCode myPermission = KeyCode.F1;
+    private KeyCode resetHeadPosition = KeyCode.F2;
+    private KeyCode spawnSteeringWheel = KeyCode.F3;
+    private KeyCode calibrateGaze = KeyCode.F4;
+    private KeyCode resetExperiment = KeyCode.Escape;
 
-    public KeyCode toggleDriving = KeyCode.D;
+    private KeyCode toggleDriving = KeyCode.D;
 
-    public KeyCode toggleSymbology = KeyCode.T;
+    private KeyCode toggleSymbology = KeyCode.T;
 
-    public KeyCode setToLastWaypoint = KeyCode.Backspace;
-    public KeyCode inputNameKey = KeyCode.I;
+    private KeyCode setToLastWaypoint = KeyCode.Backspace;
+    private KeyCode inputNameKey = KeyCode.I;
 
-    public KeyCode saveTheData = KeyCode.F7;
+    private KeyCode saveTheData = KeyCode.F7;
 
     private string waitingRoomScene = "WaitingScene";
     private string targetScene = "Targets";
     private string calibrationScene = "CalibrationScene";
-    private string experimentScene = "newEnvironment";
+    private string experimentScene = "ExperimentScene";
 
     [Header("Car Controls")]
 
@@ -70,22 +70,36 @@ public class MainManager : MonoBehaviour
     private GameObject player;
     UnityEngine.UI.Image blackOutScreen;
     
-    private bool loading = false;
+    private bool loading = false; 
+    private bool readyToSaveData = false;
+
+    public KeyCode MyPermission { get => myPermission; set => myPermission = value; }
+    public KeyCode ResetHeadPosition { get => resetHeadPosition; set => resetHeadPosition = value; }
+    public KeyCode SpawnSteeringWheel { get => spawnSteeringWheel; set => spawnSteeringWheel = value; }
+    public KeyCode CalibrateGaze { get => calibrateGaze; set => calibrateGaze = value; }
+    public KeyCode ResetExperiment { get => resetExperiment; set => resetExperiment = value; }
+    public KeyCode ToggleDriving { get => toggleDriving; set => toggleDriving = value; }
+    public KeyCode ToggleSymbology { get => toggleSymbology; set => toggleSymbology = value; }
+    public KeyCode SetToLastWaypoint { get => setToLastWaypoint; set => setToLastWaypoint = value; }
+    public KeyCode InputNameKey { get => inputNameKey; set => inputNameKey = value; }
+    public KeyCode SaveTheData { get => saveTheData; set => saveTheData = value; }
+
     private void Awake()
     {
-
         Random.InitState(42);
-
+        
         player = gameObject;
-
         //Fade screen from black to transparent on awake
         blackOutScreen = GameObject.FindGameObjectWithTag("BlackOutScreen").GetComponent<UnityEngine.UI.Image>();
         blackOutScreen.color = new Color(0, 0, 0, 1f); blackOutScreen.CrossFadeAlpha(1f, 0f, true);
         blackOutScreen.CrossFadeAlpha(0, animationTime * 3, false);
 
         //Varjo stuff
-        Varjo.VarjoPlugin.ResetPose(true, Varjo.VarjoPlugin.ResetRotation.ALL);
-        Varjo.VarjoPlugin.InitGaze();
+        if (camType != MyCameraType.Normal)
+        {
+            Varjo.VarjoPlugin.ResetPose(true, Varjo.VarjoPlugin.ResetRotation.ALL);
+            Varjo.VarjoPlugin.InitGaze();
+        }
         
         //Read general settings file
         ReadCSVSettingsFile();
@@ -120,9 +134,10 @@ public class MainManager : MonoBehaviour
             turns.Add(TurnType.EndPoint);
             setting.turns = turns;
 
-            random = Random.Range(0, 100);
-            if (random < 50) { setting.navigationType = NavigationType.VirtualCable; }
-            else { setting.navigationType = NavigationType.HUD_high; }
+            random = Random.Range(0, 1000);
+            if (random < 333) { setting.navigationType = NavigationType.HUD_low; }
+            else if(random < 666) { setting.navigationType = NavigationType.HUD_high; }
+            else { setting.navigationType = NavigationType.VirtualCable; }
             
             setting.name += i.ToString();
 
@@ -184,7 +199,12 @@ public class MainManager : MonoBehaviour
     }
     public void ExperimentEnded()
     {
-        if (!loading) { StartCoroutine(LoadSceneAsync(waitingRoomScene)); }
+        bool loadWhileFading = false;
+        if (!loading) { 
+            StartCoroutine(LoadSceneAsync(waitingRoomScene, loadWhileFading)); 
+            StartCoroutine(SaveDataWhenReady()); 
+        }
+        
     }
     public void LoadNextExperiment()
     {
@@ -211,28 +231,43 @@ public class MainManager : MonoBehaviour
         blackOutScreen.CrossFadeAlpha(1f, animationTime, false);
 
         //Skip this waiting if we load while fading
-       yield return new WaitForSeconds(animationTime);
+        if (!loadWhileFading) { yield return new WaitForSeconds(animationTime); }
 
+        //When screen is black;
+        readyToSaveData = true;
+        
         player.transform.parent = null;
         DontDestroyOnLoad(player);
 
         AsyncOperation operation = SceneManager.LoadSceneAsync(scene, LoadSceneMode.Single);
         
-        while (!operation.isDone) { yield return null; }
+        while (!operation.isDone) { yield return new WaitForEndOfFrame(); }
 
         blackOutScreen.CrossFadeAlpha(0, animationTime, false);
 
-        loading = false;
+        loading = false; readyToSaveData = false;
     }
     public void MovePlayer(Transform position)
     {
-        
+
         player.transform.parent = position;
         player.transform.position = position.position;
         player.transform.rotation = position.rotation;
         Debug.Log("Moved player!");
     }
 
+    IEnumerator SaveDataWhenReady()
+    {
+        while (!readyToSaveData)
+        {
+            yield return new WaitForEndOfFrame();
+        }
+
+        newExperimentManager manager = MyUtils.GetExperimentManager();
+        if (manager != null) { manager.SaveData(); }
+        else { Debug.Log("Manager not found, COULD NOT SAVE DATA....."); }
+        readyToSaveData = false;
+    }
 }
 
 [System.Serializable]
@@ -243,7 +278,8 @@ public class MainExperimentSetting
     public NavigationType navigationType;
     public float transparency = 0.4f;
     public TargetDifficulty targetDifficulty = TargetDifficulty.easy;
-    public int targetsPerTurn = 3;
+    public int minTargets=1;
+    public int maxTargets=3;
     public float experimentTime = 0f;
 
     public int LeftTurns()

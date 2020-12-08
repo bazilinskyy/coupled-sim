@@ -25,7 +25,7 @@ public class WaitingRoomManager : MonoBehaviour
     private void Update()
     {
 
-        if (Input.GetKeyDown(mainManager.myPermission)) { mainManager.LoadNextExperiment(); }
+        if (Input.GetKeyDown(mainManager.MyPermission)) { mainManager.LoadNextExperiment(); }
         
         //Looks for targets to appear in field of view and sets their visibility timer accordingly
         if (UserInput()) { ProcessUserInputTargetDetection(); }

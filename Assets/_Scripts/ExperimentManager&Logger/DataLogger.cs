@@ -83,6 +83,8 @@ public class DataLogger : MonoBehaviour
             MyVarjoGazeRay gazeRay = GetComponent<MyVarjoGazeRay>();
             gazeLogger = GetComponent<MyGazeLogger>();
 
+            gazeLogger.enabled = true; gazeRay.enabled = true;
+
             //Set car to be ignored by raycast of gaze logger
             gazeRay.layerMask = ~experimentManager.layerToIgnoreForTargetDetection;
             

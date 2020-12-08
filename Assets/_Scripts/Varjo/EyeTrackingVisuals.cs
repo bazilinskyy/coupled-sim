@@ -14,12 +14,11 @@ public class EyeTrackingVisuals : MonoBehaviour
     public bool highlightGaze = true;
     public bool showCenterGaze = false;
     private bool isActive = true;
-
+    private bool gotOwnGaze = true;
     private void Start()
     {
-        MainManager player = MyUtils.GetMainManager();
-        if (!player.debug) { lightObj.SetActive(false); lightObj2.SetActive(false); enabled = false; }
-        VarjoPlugin.InitGaze();
+        MainManager mainManager = MyUtils.GetMainManager();
+        if (!mainManager.debug) { lightObj.SetActive(false); lightObj2.SetActive(false); enabled = false; }
     }
     void Update()
     {
@@ -27,8 +26,10 @@ public class EyeTrackingVisuals : MonoBehaviour
         if (Input.GetKeyDown(switchGazeHighlight)) { highlightGaze = !highlightGaze; }
         if (highlightGaze)
         {
+            //Gets d
+            try  { gazeData = MyUtils.GetExperimentManager().GetComponent<MyGazeLogger>().GetLastGaze(); if (gotOwnGaze) { Debug.Log("Got gaze from logger"); gotOwnGaze = false; } }
+            catch { gazeData = VarjoPlugin.GetGaze(); if (!gotOwnGaze) { Debug.Log("Got gaze on my own..."); gotOwnGaze = true; } }
 
-            gazeData = VarjoPlugin.GetGaze();
             if (gazeData.status == VarjoPlugin.GazeStatus.VALID)
             {
                 SetLightActive(true);

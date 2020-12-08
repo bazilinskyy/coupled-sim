@@ -36,7 +36,6 @@ public class MyVarjoGazeRay : MonoBehaviour
     {
         if(MyUtils.GetMainManager().camType == MyCameraType.Normal) { enabled = false; return; }
         gazeLogger = GetComponent<MyGazeLogger>();
-       
         // InitGaze must be called before using or calibrating gaze tracking.
         if (!VarjoPlugin.InitGaze())
         {
@@ -75,18 +74,16 @@ public class MyVarjoGazeRay : MonoBehaviour
                     break;
             }
 
-            // Fetch head pose
-            Vector3 position = VarjoManager.Instance.HeadTransform.position;
-            Quaternion rotation = VarjoManager.Instance.HeadTransform.rotation;
-
+            Transform HMD = VarjoManager.Instance.HeadTransform;
             // Transform gaze direction and origin from HMD space to world space
-            gazeRayDirection = transform.TransformVector(gazeRayForward);
-            gazeRayOrigin = transform.TransformPoint(gazePosition);
+            gazeRayDirection = HMD.TransformVector(gazeRayForward);
+            gazeRayOrigin = HMD.TransformPoint(gazePosition);
 
 
             // Raycast into world
             if (Physics.SphereCast(gazeRayOrigin, gazeRayRadius, gazeRayDirection, out gazeRayHit, 1000f, layerMask))
             {
+                Debug.Log($"Got hit iiwth {gazeRayHit.collider.gameObject.name},{gazeRayHit.collider.gameObject.tag}...");
                 //By default we are looking at the world
                 bool lookingAtWorld = true;
                 //If hti is a target execute OnHit function
@@ -99,6 +96,7 @@ public class MyVarjoGazeRay : MonoBehaviour
                 {
                     VarjoExample.VarjoGazeTarget target = gazeRayHit.collider.gameObject.GetComponent<VarjoExample.VarjoGazeTarget>();
                     target.OnHit();
+                    Debug.Log("Hit varjo target....");
                 }
 
                 if (logData)

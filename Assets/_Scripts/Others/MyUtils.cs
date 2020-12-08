@@ -23,6 +23,10 @@ public static class MyUtils
     {
         return GameObject.FindGameObjectWithTag("UserUI").GetComponent<UnityEngine.UI.Text>();
     }
+    public static UnityEngine.TextMesh GetCarUI()
+    {
+        return GameObject.FindGameObjectWithTag("CarUI").GetComponent<UnityEngine.TextMesh>();
+    }
     public static newExperimentManager GetExperimentManager()
     {
         return GameObject.FindGameObjectWithTag("ExperimentManager").GetComponent<newExperimentManager>();

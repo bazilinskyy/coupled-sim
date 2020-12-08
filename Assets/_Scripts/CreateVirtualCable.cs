@@ -14,13 +14,21 @@ public class CreateVirtualCable : MonoBehaviour
 
 	int pointsPerCorner = 30;
     Waypoints waypoints;
+
+	Crossings crossings;
     private void Awake()
     {
 
 		MakeNavigationObject();
 	}
 
-	private void MakeNavigationObject()
+    private void Update()
+    {
+        if (experimentManager.MakeVirtualCable()) { navigationSymbology.SetActive(true); }
+        else { navigationSymbology.SetActive(false); }
+    }
+
+    private void MakeNavigationObject()
     {
 		navigationSymbology = new GameObject("VirtualCable");
 		//Make gameobejct with mesh and navigationpart component		
@@ -64,12 +72,19 @@ public class CreateVirtualCable : MonoBehaviour
 		return points;
 	}
 
-	
-    public void MakeVirtualCable(Crossings crossings, bool renderCable)
+	public void MakeVirtualCable()
     {
+		if (crossings != null) { MakeVirtualCable(crossings); }
+        else { Debug.Log("Could not make virtual cable yet, crossings not set..."); }
+
+	}
+    public void MakeVirtualCable(Crossings _crossings)
+    {
+		crossings = _crossings;
 		Debug.Log("Making new Virtual Cable...");
 		List<Vector3> points = GetPointsCrossing(crossings.CurrentCrossing());
 
+		crossings = _crossings;
 		experimentManager.dataManager.AddCurrentNavigationLine(points.ToArray());
 
 		if (crossings.NextCrossing() != null) { points = points.Concat(GetPointsCrossing(crossings.NextCrossing())).ToList(); }
@@ -77,7 +92,7 @@ public class CreateVirtualCable : MonoBehaviour
 		navigationLine = points.ToArray();
 		
 
-		if (renderCable) { CreateNavigationPart(navigationLine); }
+		if (experimentManager.MakeVirtualCable()) { CreateNavigationPart(navigationLine); }
     }
 	private void CreateNavigationPart(Vector3[] points)
 	{

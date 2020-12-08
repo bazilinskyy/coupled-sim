@@ -37,11 +37,8 @@ public class SpeedController : MonoBehaviour
     private VehiclePhysics.VPStandardInput carInput;
     private VehiclePhysics.SpeedControl.Settings speedSettings;
     private bool gaveError=false;
-    private void Start()
-    {
-        StartUpFunction();
-    }
-    void StartUpFunction()
+    private bool started = false;
+    public void StartUpFunction()
     {
         mainManager = MyUtils.GetMainManager();
         navigator = GetComponent<newNavigator>();
@@ -52,6 +49,8 @@ public class SpeedController : MonoBehaviour
         speedSettings = new VehiclePhysics.SpeedControl.Settings();
         speedSettings.speedLimiter = true;
         carController.speedControl = speedSettings;
+
+        started = true;
     }
     public bool IsDriving() { return startDriving; }
     public void StartDriving(bool input)
@@ -68,6 +67,7 @@ public class SpeedController : MonoBehaviour
     }
     void FixedUpdate()
     {
+        if (!started) { StartUpFunction(); }
 
         if (GetComponent<newNavigator>().waypoint.waypoint == null) { return; }
         if (!mainManager.automateSpeed) { return; }

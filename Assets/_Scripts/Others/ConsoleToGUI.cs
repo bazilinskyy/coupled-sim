@@ -68,9 +68,6 @@ public class ConsoleToGUI : MonoBehaviour
    
     void OnGUI()
     {
-        if (!showLogUser) { logCanvas.enabled = false; fps.enabled = false; }
-        else { logCanvas.enabled = true; fps.enabled = true; }
-
         if (showLogScreen)
         {
             GUI.matrix = Matrix4x4.TRS(Vector3.zero, Quaternion.identity, new Vector3(Screen.width / 1200.0f, Screen.height / 800.0f, 1.0f));
@@ -79,6 +76,7 @@ public class ConsoleToGUI : MonoBehaviour
             GUI.TextArea(new Rect(560, 10, 100, 20), "FPS: " + m_lastFramerate.ToString());
         }
 
-        if(logCanvas != null) { logCanvas.text = myLog; }
+        if(showLogUser) { logCanvas.text = myLog; fps.enabled = true; logCanvas.enabled = true; }
+        else { logCanvas.enabled = false; fps.enabled = false; }
     }
 }

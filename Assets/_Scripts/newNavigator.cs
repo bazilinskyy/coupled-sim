@@ -21,28 +21,41 @@ public class newNavigator : MonoBehaviour
     public bool atWaypoint = false;
 
     int lastIndex = 0;
+
+    private bool started = false;
     private void Start()
+    {
+        
+    }
+
+    void StartUp()
     {
         crossingSpawner = GetComponent<CrossingSpawner>();
 
-        if (!experimentManager.renderHUD) { HUD.SetActive(false); }
+        if (!experimentManager.RenderHUD()) { HUD.SetActive(false); }
 
         //Add first four targets to list
         waypointList = new List<WaypointStruct>();
 
         WaypointStruct[] targetsCurrent = crossingSpawner.crossings.GetWaypoints("Current");
-        foreach(WaypointStruct target in targetsCurrent) { waypointList.Add(target); }
+        foreach (WaypointStruct target in targetsCurrent) { waypointList.Add(target); }
 
         targetsCurrent = crossingSpawner.crossings.GetWaypoints("Next");
         foreach (WaypointStruct target in targetsCurrent) { waypointList.Add(target); }
 
         waypoint = waypointList[waypointIndex];
-        
+
         RenderNavigationArrow();
+        started = true;
     }
 
     private void Update()
     {
+        if (!started) { StartUp(); }
+
+        if (experimentManager.RenderHUD()) { HUD.SetActive(true); }
+        else { HUD.SetActive(false); }
+
         RenderNavigationDistance();
 
         if (waypointIndex != lastIndex) { Debug.Log(waypointIndex); lastIndex = waypointIndex; }
@@ -55,7 +68,7 @@ public class newNavigator : MonoBehaviour
     }
     void RenderNavigationDistance()
     {
-        if (!experimentManager.renderHUD) { return; }
+        if (!experimentManager.RenderHUD()) { return; }
 
         if (waypoint.waypoint == null) { return; }
 
@@ -117,7 +130,7 @@ public class newNavigator : MonoBehaviour
     }
     public void RenderNavigationArrow()
     {  
-        if (!experimentManager.renderHUD) { return; }
+        if (!experimentManager.RenderHUD()) { return; }
 
         Transform arrows = HUD.transform.Find("Arrows");
         if (arrows == null) { Debug.Log("Arrows= null...."); return; }

@@ -107,7 +107,7 @@ public class CrossComponents : MonoBehaviour
     }
 	void SpawnTargets(MainExperimentSetting settings) 
 	{
-		if(settings.targetsPerTurn == 0) { return; }
+		if(settings.maxTargets == 0) { return; }
 		List<Transform> spawnPoints;
 		Transform parentSpawPoints = null;
 		WaypointStruct waypoint = new WaypointStruct();
@@ -115,7 +115,7 @@ public class CrossComponents : MonoBehaviour
 		if (!isFirstCrossing && turn1.IsOperation()) 
 		{
 			parentSpawPoints = FirstTurnTargetSpawnPoints;
-			spawnPoints = SelectRandomSpawnPoints(parentSpawPoints, settings.targetsPerTurn);
+			spawnPoints = SelectRandomSpawnPoints(parentSpawPoints, settings.minTargets, settings.maxTargets);
 			
 			waypoint.turn = turn1; 
 			waypoint.waypoint = waypoints.waypoint1;
@@ -129,7 +129,7 @@ public class CrossComponents : MonoBehaviour
 			if (turn1 == TurnType.Left) { parentSpawPoints = LeftTargetSpawnPoints; }
 			if (turn1 == TurnType.Straight) { parentSpawPoints = StraightTargetSpawnPoints; }
 
-			spawnPoints = SelectRandomSpawnPoints(parentSpawPoints, settings.targetsPerTurn);
+			spawnPoints = SelectRandomSpawnPoints(parentSpawPoints, settings.minTargets, settings.maxTargets);
 
 			waypoint.turn = turn2; 
 			waypoint.waypoint = waypoints.waypoint2;
@@ -137,7 +137,6 @@ public class CrossComponents : MonoBehaviour
 			InstantiateTargets(spawnPoints, waypoint, settings);
 		}
 	}
-
 	private void InstantiateTargets(List<Transform> spawnPoints, WaypointStruct waypoint, MainExperimentSetting settings)
     {
 		GameObject target;
@@ -163,13 +162,15 @@ public class CrossComponents : MonoBehaviour
 			targetList.Add(target.GetComponent<Target>());
 		}
 	}
-	private List<Transform> SelectRandomSpawnPoints(Transform parent, int numberOfTargetSpawnPoints)
+	private List<Transform> SelectRandomSpawnPoints(Transform parent, int minTargets, int maxTargets)
     {
 
 		List<Transform> spawnPoints = new List<Transform>();
 		List<Transform> selectedSpawnPoints = new List<Transform>();
 		bool selectionFinished = false;
 		
+		int numberOfTargets = Random.Range(minTargets, maxTargets + 1);
+
 		foreach (Transform child in parent) { spawnPoints.Add(child); }
 
 		while (!selectionFinished)
@@ -177,7 +178,7 @@ public class CrossComponents : MonoBehaviour
 			int randomIndex = (int)Mathf.Round(Random.Range(0, spawnPoints.Count() - 1));
             if (!selectedSpawnPoints.Contains(spawnPoints[randomIndex])){ selectedSpawnPoints.Add(spawnPoints[randomIndex]); }
 			
-			if(selectedSpawnPoints.Count() >= numberOfTargetSpawnPoints) { selectionFinished = true; }
+			if(selectedSpawnPoints.Count() >= numberOfTargets) { selectionFinished = true; }
 			if(selectedSpawnPoints.Count() == spawnPoints.Count()) { selectionFinished = true; }
 		}
 
