@@ -58,7 +58,7 @@ public class newNavigator : MonoBehaviour
 
         RenderNavigationDistance();
 
-        if (waypointIndex != lastIndex) { Debug.Log(waypointIndex); lastIndex = waypointIndex; }
+        //if (waypointIndex != lastIndex) { Debug.Log(waypointIndex); lastIndex = waypointIndex; }
     }
    
     public WaypointStruct GetNextWaypoint()
@@ -113,16 +113,9 @@ public class newNavigator : MonoBehaviour
         waypointIndex++;
 
         if (waypointIndex < waypointList.Count()) { waypoint = waypointList[waypointIndex]; }
-        else { Debug.Log("Finished waypoint List..."); }
+        //else { Debug.Log("Finished waypoint List..."); }
 
-        Debug.Log($"Next target = {waypoint.turn}...");
-    }
-    IEnumerator AddNextTargets()
-    {
-       
-        yield return new WaitForSeconds(1f);
-        WaypointStruct[] newWaypoints = crossingSpawner.crossings.GetWaypoints("Next");
-        
+        //Debug.Log($"Next target = {waypoint.turn}...");
     }
     public void AddWaypoints(WaypointStruct[] waypoints)
     {

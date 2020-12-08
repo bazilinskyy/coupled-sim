@@ -25,7 +25,7 @@ public class WaitingRoomManager : MonoBehaviour
     private void Update()
     {
 
-        if (Input.GetKeyDown(mainManager.MyPermission)) { mainManager.LoadNextExperiment(); }
+        if (Input.GetKeyDown(mainManager.MyPermission)) { mainManager.LoadExperiment(); }
         
         //Looks for targets to appear in field of view and sets their visibility timer accordingly
         if (UserInput()) { ProcessUserInputTargetDetection(); }
@@ -70,7 +70,7 @@ public class WaitingRoomManager : MonoBehaviour
     void SetText()
     {
         if (!mainManager.IsNextExperiment()) { text.text = "All experiments are completed. Thanks for participating!"; }
-        else { text.text = $"Experiment {mainManager.GetExperimentNumber()} starts when you are ready!"; }
+        else { text.text = $"Experiment {mainManager.GetExperimentIndex()} starts when you are ready!"; }
         
     }
 

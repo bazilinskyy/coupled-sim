@@ -19,7 +19,7 @@ public class SteeringWheelController : MonoBehaviour
     {
         //The steering wheel should be in (car->physicalCar->Interior)
         try { car = transform.parent.parent.parent; }
-        catch { Debug.Log($"Could not find parent car, using standard steeringInput axis {steeringAxis}..."); }
+        catch {}
         if (car != null) { carInput = car.GetComponent<VehiclePhysics.VPStandardInput>(); }
     }
     private void FixedUpdate()

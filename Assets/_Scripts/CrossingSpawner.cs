@@ -75,7 +75,7 @@ public class CrossingSpawner : MonoBehaviour
         {
             if (other.GetComponent<MyCollider>().Triggered())
             {
-                Debug.Log("Enter trigger called, configuring next crossing...");
+                //Debug.Log("Enter trigger called, configuring next crossing...");
                 experimentManager.LogCurrentCrossingTargets(crossings.CurrentCrossing().targetList);
                 SetNextCrossing();
             }
@@ -182,8 +182,8 @@ public class Crossings
     }
     void ConfigureNextCrossing(GameObject crossing, TurnType[] currentTurns,  TurnType[] nextTurns, MainExperimentSetting settings)
     {
-        Debug.Log("Configuring next crossing..");
-        Debug.Log($"Got turns {nextTurns[0]} and {nextTurns[1]}...");
+/*        Debug.Log("Configuring next crossing..");
+        Debug.Log($"Got turns {nextTurns[0]} and {nextTurns[1]}...");*/
         bool isCurrentCrossing = false;
 
         if (currentTurns[0] == TurnType.Left && currentTurns[1] == TurnType.Left) { SetNextCrossingTransform(crossing,-96f, -96f, 180); }

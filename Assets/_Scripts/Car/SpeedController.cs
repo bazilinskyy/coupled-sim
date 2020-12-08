@@ -55,7 +55,7 @@ public class SpeedController : MonoBehaviour
     public bool IsDriving() { return startDriving; }
     public void StartDriving(bool input)
     {
-        if (input != startDriving) { Debug.Log($"Speed controller = {input}..."); }
+        //if (input != startDriving) { Debug.Log($"Speed controller = {input}..."); }
         startDriving = input;
     }
     public void ToggleDriving()

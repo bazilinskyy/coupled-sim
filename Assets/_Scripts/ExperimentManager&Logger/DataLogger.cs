@@ -52,7 +52,6 @@ public class DataLogger : MonoBehaviour
 
     public void StartUp()
     {
-        Debug.Log("Started data logger...");
         mainManager = MyUtils.GetMainManager();
         experimentManager = MyUtils.GetExperimentManager();
         car = MyUtils.GetCar().GetComponent<newNavigator>();
@@ -160,7 +159,7 @@ public class DataLogger : MonoBehaviour
     }
     public void AddCurrentNavigationLine(Vector3[] points)
     {
-        Debug.Log($"Got new navigation points: {points.Length}...");
+        //Debug.Log($"Got new navigation points: {points.Length}...");
         indexClosestPoint = 0;
         currentNavigationLine = points;
         totalNavigationLine = AppendArrays(totalNavigationLine, points);
@@ -376,24 +375,10 @@ public class DataLogger : MonoBehaviour
  
     private string SaveFolder()
     {
-        //Save folder will be .../unityproject/Data/subjectName-date/subjectName/navigationName
-
-        /*string[] assetsFolderArray = Application.dataPath.Split('/'); //Gives .../unityproject/assest
-
-        //emmit unityfolder/assets and keep root folder
-
-        string[] baseFolderArray = new string[assetsFolderArray.Length - 2];
-        for (int i = 0; i < (assetsFolderArray.Length - 2); i++) { baseFolderArray[i] = assetsFolderArray[i]; }
-
-        string baseFolder = string.Join("/", baseFolderArray);*/
-        Debug.Log(mainManager.subjectDataFolder);
-        Debug.Log(mainManager.GetExperimentNumber());
-        Debug.Log(mainManager.gameObject.name);
-
-        string saveFolder = string.Join("/", mainManager.subjectDataFolder, "Experiment-" + mainManager.GetExperimentNumber().ToString() + DateTime.Now.ToString("_HH-mm-ss"));
-        Debug.Log($"Creaiting savefolder: {saveFolder}...");
-        Directory.CreateDirectory(saveFolder);
+        string saveFolder = string.Join("/", mainManager.subjectDataFolder, experimentManager.experimentSettings.name + DateTime.Now.ToString("_HH-mm-ss"));
         
+        Directory.CreateDirectory(saveFolder);
+        Debug.Log($"Created data folder for {experimentManager.experimentSettings.name}: {saveFolder}...");
 
         return saveFolder;
     }

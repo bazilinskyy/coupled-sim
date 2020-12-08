@@ -81,7 +81,7 @@ public class CreateVirtualCable : MonoBehaviour
     public void MakeVirtualCable(Crossings _crossings)
     {
 		crossings = _crossings;
-		Debug.Log("Making new Virtual Cable...");
+		//Debug.Log("Making new Virtual Cable...");
 		List<Vector3> points = GetPointsCrossing(crossings.CurrentCrossing());
 
 		crossings = _crossings;

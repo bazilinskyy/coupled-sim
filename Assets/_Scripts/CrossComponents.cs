@@ -88,7 +88,6 @@ public class CrossComponents : MonoBehaviour
 
 	void SetBuildingBlocks()
     {
-		Debug.Log($"{gameObject.name} is current crossing ? {isCurrentCrossing}...");
         //Deactivates the building block which corresponds to correct path
 		//Also the next crossing on the map will have all these varibles blocks turned off as they may coincide (spacially) with the first (current) crossing
         if (!isCurrentCrossing)
@@ -98,7 +97,6 @@ public class CrossComponents : MonoBehaviour
         else if (turn1.IsOperation() && turn2.IsOperation()) 
 		{
 			string blockName = turn1.ToString() + turn2.ToString();
-			Debug.Log($"Deactivating {blockName}...");
 			variableBlocks.gameObject.SetActive(true);
 			foreach(Transform child in variableBlocks) { child.gameObject.SetActive(true); }
 			variableBlocks.transform.Find(blockName).gameObject.SetActive(false);

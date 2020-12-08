@@ -66,7 +66,7 @@ public class CalibrationManager : MonoBehaviour
             {
                 mainManager.AddTargetScene(); addedTargets = true;
             }
-            mainManager.CalibrationEnded();
+            mainManager.LoadExperiment();
         }
         /*if (Varjo.VarjoPlugin.IsGazeCalibrated() && (experimentInput.camType == MyCameraType.Normal || experimentInput.calibratedUsingHands) && !addedTargets) {
             mySceneLoader.AddTargetScene(); 
@@ -83,13 +83,6 @@ public class CalibrationManager : MonoBehaviour
             cross.SetActive(false);
             instructions.text = "Look at the targets above!";
         }
-
-        /*if(experimentInput.environment != null && !unloadedEnvironmentScene) 
-        {
-            //DontDestroyOnLoad(experimentInput.environment);
-            //SceneManager.UnloadSceneAsync("Environment");
-            unloadedEnvironmentScene = true;
-        }*/
     }
     void RequestGazeCalibration()
     {

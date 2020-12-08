@@ -60,11 +60,13 @@ public class newExperimentManager : MonoBehaviour
         mainManager = MyUtils.GetMainManager();
         carUI = MyUtils.GetCarUI();
 
+        //Beun settings
+        experimentSettings = mainManager.GetExperimentSettings();
+
         //Set DataManager
         SetDataManager();
 
-        //Beun settings
-        experimentSettings = mainManager.GetExperimentSettings();
+        
         
         crossingSpawner.turnsList = experimentSettings.turns.ToArray();
         crossingSpawner.StartUp();
@@ -139,7 +141,7 @@ public class newExperimentManager : MonoBehaviour
         if (Input.GetKeyDown(mainManager.ResetHeadPosition)) { Varjo.VarjoPlugin.ResetPose(true, Varjo.VarjoPlugin.ResetRotation.ALL); }
         if (Input.GetKeyDown(KeyCode.LeftControl)) { StartCoroutine(PlaceAtTargetWaypoint()); }
         //Researcher inputs
-        if (Input.GetKeyDown(mainManager.ToggleSymbology)) {ToggleSymbology(); }
+        //if (Input.GetKeyDown(mainManager.ToggleSymbology)) {ToggleSymbology(); }
         if (Input.GetKeyDown(mainManager.MyPermission)) { car.navigationFinished = true; } //Finish navigation early
         //if (Input.GetKeyDown(mainManager.setToLastWaypoint)) { SetCarToLastWaypoint(); }
         //if (Input.GetKeyDown(experimentInput.resetHeadPosition)) { SetCameraPosition(driverView.position, driverView.rotation); }
@@ -284,7 +286,7 @@ public class newExperimentManager : MonoBehaviour
 
         int indexNextType = ((index + 1) == navigationList.Count ? 0 : index + 1);
 
-        Debug.Log($"Returning {navigationList[indexNextType]}...");
+        //Debug.Log($"Returning {navigationList[indexNextType]}...");
         return navigationList[indexNextType];
     }
     private void SetGameObjectsFromCar()
@@ -344,8 +346,6 @@ public class newExperimentManager : MonoBehaviour
   
     void SetUpCar()
     {
-        Debug.Log("Setting up car...");
-
         //Put head position at the right place
         if (mainManager.calibratedUsingHands)
         {
@@ -377,7 +377,6 @@ public class newExperimentManager : MonoBehaviour
     }
     void GoToCar()
     {
-        Debug.Log("Returning to car...");
         SetCameraPosition(driverView.position, driverView.rotation);
     }
     void ProcessUserInputTargetDetection()
@@ -641,13 +640,21 @@ public class newExperimentManager : MonoBehaviour
         {
             float totalDistance = Vector3.Magnitude(targetPos - car.gameObject.transform.position);
             float rotationSpeed = Vector3.Angle(car.transform.forward, targetRot) / Mathf.PI / (totalSeconds / step) / 2f;
-            Debug.Log($"Rotating with {rotationSpeed} rad/s...");
+            //Debug.Log($"Rotating with {rotationSpeed} rad/s...");
             while (count < totalSeconds)
             {
 
                 Vector3 direction = targetPos - car.gameObject.transform.position;
 
                 car.transform.position += direction.normalized * totalDistance * step / totalSeconds;
+
+                //Keep car steady in the y direction;
+                Vector3 newPos = car.transform.position; newPos = new Vector3(newPos.x, 0.08f, newPos.z);
+
+                car.transform.position = newPos;
+
+
+
                 count += step;
                 yield return new WaitForSeconds(step);
             }

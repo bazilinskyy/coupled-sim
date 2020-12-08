@@ -103,13 +103,13 @@ public class MainManager : MonoBehaviour
         
         //Read general settings file
         ReadCSVSettingsFile();
-        Debug.Log($"Subject Name = {subjectName}...");
+        
 
         //Set input of data log folder:
         subjectDataFolder = string.Join("/", System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop).Replace("\\", "/"), "Data", System.DateTime.Now.ToString("MM-dd_HH-mm") + "_" + subjectName);
         System.IO.Directory.CreateDirectory(subjectDataFolder);
-        
-        Debug.Log($"Created {subjectDataFolder}...");
+
+        Debug.Log($"Settings file received...\nSubject ID = {subjectName}, DataFolder: {subjectDataFolder}..."); 
 
         AddDummyExperiments();
     }
@@ -155,9 +155,9 @@ public class MainManager : MonoBehaviour
         if (experimentIndex < experiments.Count()) { return true; }
         else { return false; }
     }
-    public int GetExperimentNumber()
+    public int GetExperimentIndex()
     {
-        return experimentIndex+1;
+        return experimentIndex;
     }
     public MainExperimentSetting GetExperimentSettings() { return experiments[experimentIndex]; }
     public void SetCalibrationDistances(float horizontal, float vertical, float side)
@@ -172,7 +172,7 @@ public class MainManager : MonoBehaviour
         string fileName = "experimentSettings.csv";
         string filePath = Application.dataPath + "/" + fileName;
 
-        Debug.Log($"Trying to read {filePath}...");
+        //Debug.Log($"Trying to read {filePath}...");
 
         try
         {
@@ -186,13 +186,9 @@ public class MainManager : MonoBehaviour
 
             return true;
         }
-        catch { Debug.Log("Could not read file...."); return false; }
+        catch { Debug.Log($"Could not read settings file: {filePath}...."); return false; }
     }
     public string GetNextScene() { return calibrationScene; }
-    public void CalibrationEnded()
-    {
-        if (!loading) { bool loadWhileFading = true; StartCoroutine(LoadSceneAsync(experimentScene, loadWhileFading)); }
-    }
     public bool ExperimentFinished()
     {
         if (experimentIndex > experiments.Count()) { return false; }
@@ -203,22 +199,37 @@ public class MainManager : MonoBehaviour
         bool loadWhileFading = false;
         if (!loading) { 
             StartCoroutine(LoadSceneAsync(waitingRoomScene, loadWhileFading)); 
-            StartCoroutine(SaveDataWhenReady()); 
+            StartCoroutine(SaveDataWhenReady());
+            experimentIndex++;
         }
         
     }
-    public void LoadNextExperiment()
+    public void LoadExperiment()
     {
         if (!loading)
         {
+            MainExperimentSetting setting = experiments[experimentIndex];
+
+            if (setting.practiseDrive) { Debug.Log($"Loading {experiments[experimentIndex].name}...\nTurns: {setting.turns.Count()}, Navigation: All, Targets/Turn: [{setting.minTargets},{setting.maxTargets}], Difficutly: All "); }
+            else { Debug.Log($"Loading {experiments[experimentIndex].name}...\nTurns: {setting.turns.Count()}, Navigation:{setting.navigationType}, Targets/Turn: [{setting.minTargets},{setting.maxTargets}], Difficutly: {setting.targetDifficulty}"); }
+
+         loading = true; 
             bool loadWhileFading = true;
             StartCoroutine(LoadSceneAsync(experimentScene, loadWhileFading));
-            experimentIndex++;
+            
         }
     }
     public void ReloadCurrentExperiment()
     {
-        if (!loading){ StartCoroutine(LoadSceneAsync(experimentScene,true));}
+        if (!loading)
+        {
+            MainExperimentSetting setting = experiments[experimentIndex];
+
+            if (setting.practiseDrive) { Debug.Log($"Reloading {experiments[experimentIndex].name}...\nTurns: {setting.turns.Count()}, Navigation: All, Targets/Turn: [{setting.minTargets},{setting.maxTargets}], Difficutly: All "); }
+            else { Debug.Log($"Reloading {experiments[experimentIndex].name}...\nTurns: {setting.turns.Count()}, Navigation:{setting.navigationType}, Targets/Turn: [{setting.minTargets},{setting.maxTargets}], Difficutly: {setting.targetDifficulty}"); }
+
+            StartCoroutine(LoadSceneAsync(experimentScene,true));
+        }
     }
     public void AddTargetScene() { SceneManager.LoadSceneAsync(targetScene, LoadSceneMode.Additive); }
     public void LoadCalibrationScene()
@@ -227,21 +238,21 @@ public class MainManager : MonoBehaviour
     }
     IEnumerator LoadSceneAsync(string scene, bool loadWhileFading = false)
     {
-        loading = true; Debug.Log($"Loading {scene}...");
-
         blackOutScreen.CrossFadeAlpha(1f, animationTime, false);
 
         //Skip this waiting if we load while fading
         if (!loadWhileFading) { yield return new WaitForSeconds(animationTime); }
 
-        //When screen is black;
-        readyToSaveData = true;
-        
+        //When screen is black Yield one frame to give other coroutine time to save the data
+        readyToSaveData = true; yield return new WaitForEndOfFrame();
+
         player.transform.parent = null;
         DontDestroyOnLoad(player);
 
         AsyncOperation operation = SceneManager.LoadSceneAsync(scene, LoadSceneMode.Single);
+
         
+
         while (!operation.isDone) { yield return new WaitForEndOfFrame(); }
 
         blackOutScreen.CrossFadeAlpha(0, animationTime, false);
@@ -254,11 +265,12 @@ public class MainManager : MonoBehaviour
         player.transform.parent = position;
         player.transform.position = position.position;
         player.transform.rotation = position.rotation;
-        Debug.Log("Moved player!");
+        //Debug.Log("Moved player!");
     }
 
     IEnumerator SaveDataWhenReady()
     {
+        Debug.Log("RUnning save data from mainmanager...");        
         while (!readyToSaveData)
         {
             yield return new WaitForEndOfFrame();
@@ -274,7 +286,7 @@ public class MainManager : MonoBehaviour
 [System.Serializable]
 public class MainExperimentSetting
 {
-    public string name = "Experiment";
+    public string name = "Experiment-";
     public List<TurnType> turns;
     public NavigationType navigationType;
     public float transparency = 0.4f;
