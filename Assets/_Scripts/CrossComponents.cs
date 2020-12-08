@@ -7,6 +7,9 @@ public class CrossComponents : MonoBehaviour
 	public RoadParameters roadParameters;
 	private int pointsPerCorner = 30;
 
+	public Transform variableBlocks;
+	public GameObject blockFirstCrossing;
+
     public GameObject forwardCross;
     public GameObject backwardCross;
     public GameObject leftCross;
@@ -49,26 +52,59 @@ public class CrossComponents : MonoBehaviour
 
     public TurnType turn2 = TurnType.None;
 	private newExperimentManager experimentManager;
+	public bool isCurrentCrossing = true;
     private void Awake()
     {
 		experimentManager = MyUtils.GetExperimentManager();
     }
-    public void SetUpCrossing(TurnType _turn1, TurnType _turn2, MainExperimentSetting settings, bool _isFirstCrossing = false)
+	public void SetCurrentCrossing (bool _isCurrentCrossing)
+    {
+		isCurrentCrossing = _isCurrentCrossing;
+		
+		SetBuildingBlocks();
+	}
+	public void SetUpCrossing(TurnType _turn1, TurnType _turn2, MainExperimentSetting settings, bool _isCurrentCrossing, bool _isFirstCrossing = false)
     {
 		if(experimentManager == null) { experimentManager = MyUtils.GetExperimentManager(); }
 
-        turn1 = _turn1; turn2 = _turn2; isFirstCrossing = _isFirstCrossing;
+        turn1 = _turn1; turn2 = _turn2; 
+		isCurrentCrossing = _isCurrentCrossing; isFirstCrossing = _isFirstCrossing;
+
+		//Removes/adds buildings for first crossing
+		blockFirstCrossing.gameObject.SetActive(isFirstCrossing);
 
 		SetTriggers();
 
         SetWaypoints();
-		
+
+		SetBuildingBlocks();
+
 		//?Remove old targets
-		foreach( Transform child in TargetParent) { Destroy(child.gameObject); }
+		foreach ( Transform child in TargetParent) { Destroy(child.gameObject); }
 		targetList = new List<Target>();
 
 		SpawnTargets(settings);
 	}
+
+	void SetBuildingBlocks()
+    {
+		Debug.Log($"{gameObject.name} is current crossing ? {isCurrentCrossing}...");
+        //Deactivates the building block which corresponds to correct path
+		//Also the next crossing on the map will have all these varibles blocks turned off as they may coincide (spacially) with the first (current) crossing
+        if (!isCurrentCrossing)
+        {
+			variableBlocks.gameObject.SetActive(false);
+		}
+        else if (turn1.IsOperation() && turn2.IsOperation()) 
+		{
+			string blockName = turn1.ToString() + turn2.ToString();
+			Debug.Log($"Deactivating {blockName}...");
+			variableBlocks.gameObject.SetActive(true);
+			foreach(Transform child in variableBlocks) { child.gameObject.SetActive(true); }
+			variableBlocks.transform.Find(blockName).gameObject.SetActive(false);
+		}
+		
+    }
 	void SpawnTargets(MainExperimentSetting settings) 
 	{
 		if(settings.targetsPerTurn == 0) { return; }
@@ -76,7 +112,7 @@ public class CrossComponents : MonoBehaviour
 		Transform parentSpawPoints = null;
 		WaypointStruct waypoint = new WaypointStruct();
 
-		if (!isFirstCrossing && turn1.IsValidForTargets()) 
+		if (!isFirstCrossing && turn1.IsOperation()) 
 		{
 			parentSpawPoints = FirstTurnTargetSpawnPoints;
 			spawnPoints = SelectRandomSpawnPoints(parentSpawPoints, settings.targetsPerTurn);
@@ -87,7 +123,7 @@ public class CrossComponents : MonoBehaviour
 			InstantiateTargets(spawnPoints, waypoint, settings);
 		}
 
-		if(turn2.IsValidForTargets() && turn1.IsValidForTargets())
+		if(turn2.IsOperation() && turn1.IsOperation())
         {
 			if (turn1 == TurnType.Right) { parentSpawPoints = RightTargetSpawnPoints; }
 			if (turn1 == TurnType.Left) { parentSpawPoints = LeftTargetSpawnPoints; }
@@ -106,14 +142,10 @@ public class CrossComponents : MonoBehaviour
     {
 		GameObject target;
 		List<Transform> orderedSpawnPointList = spawnPoints.OrderByDescending(s => Vector3.Magnitude(s.position - waypoint.waypoint.position)).ToList();
-		if (experimentManager == null) { Debug.Log("Experiment manager == null CrossComponent......."); }
-		if (spawnPoints == null) { Debug.Log("spawnPoints == null CrossComponent......."); }
-		if (orderedSpawnPointList == null) { Debug.Log("orderedSpawnPointList == null CrossComponent......."); }
-		
+	
 		foreach (Transform point in orderedSpawnPointList)
 		{
-			if (experimentManager == null) { Debug.Log("Experiment manager == null CrossComponent......."); }
-			else { Debug.Log($"Resuls of experimentManager.GetNextTargetID() = {experimentManager.GetNextTargetID()}...."); }
+
 			int ID = experimentManager.GetNextTargetID();
 			//Varies position of target
 			Vector3 sideVariation = point.name == "Right" ? waypoint.waypoint.right*Random.Range(0, 2f) : -waypoint.waypoint.right * Random.Range(0, 2f);

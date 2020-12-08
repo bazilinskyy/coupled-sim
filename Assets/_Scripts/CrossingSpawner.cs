@@ -104,6 +104,8 @@ public class Crossing
         components = _obj.GetComponent<CrossComponents>();
         isCurrentCrossing = _isCurrentCrossing;
 
+        components.isCurrentCrossing = _isCurrentCrossing;
+
         targetList = components.targetList;
 
         turns[0] = components.turn1;
@@ -132,7 +134,10 @@ public class Crossing
         waypoints[1].turn = components.turn2;
     }
 
-    public void SwitchStatus() { isCurrentCrossing = !isCurrentCrossing; }
+    public void SwitchStatus() { 
+        isCurrentCrossing = !isCurrentCrossing;
+        components.SetCurrentCrossing(isCurrentCrossing);
+    }
 }
 [System.Serializable]
 public class Crossings
@@ -143,17 +148,16 @@ public class Crossings
     public Crossings(GameObject _crossing1, TurnType[] turns1, GameObject _crossing2, TurnType[] turns2, MainExperimentSetting settings)
     {
 
-        bool isFirstCrossing = true;
-
-        _crossing1.GetComponent<CrossComponents>().SetUpCrossing(turns1[0], turns1[1], settings, isFirstCrossing);
+        bool isFirstCrossing = true; bool isCurrentCrossing = true;
+        _crossing1.GetComponent<CrossComponents>().SetUpCrossing(turns1[0], turns1[1], settings, isCurrentCrossing, isFirstCrossing);
         crossing1 = new Crossing(_crossing1, true);
 
-        ConfigureNextCrossing(_crossing2, turns1, turns2, settings);;
+        ConfigureNextCrossing(_crossing2, turns1, turns2, settings);
         crossing2 = new Crossing(_crossing2, false);
     }
     public void SetNextCrossing(TurnType[] nextTurns, MainExperimentSetting settings)
     {
-        Crossing crossToConfigure = null;
+        Crossing crossToConfigure;
 
         if (crossing1.isCurrentCrossing) { crossToConfigure = crossing1; }
         else { crossToConfigure = crossing2; }
@@ -179,6 +183,7 @@ public class Crossings
     {
         Debug.Log("Configuring next crossing..");
         Debug.Log($"Got turns {nextTurns[0]} and {nextTurns[1]}...");
+        bool isCurrentCrossing = false;
 
         if (currentTurns[0] == TurnType.Left && currentTurns[1] == TurnType.Left) { SetNextCrossingTransform(crossing,-96f, -96f, 180); }
         if (currentTurns[0] == TurnType.Left && currentTurns[1] == TurnType.Right) { SetNextCrossingTransform(crossing,96f, -96f, 0); }
@@ -188,7 +193,7 @@ public class Crossings
         if (currentTurns[0] == TurnType.Right && currentTurns[1] == TurnType.Right) { SetNextCrossingTransform(crossing,-96f, 96f, 180); }
 
         //Set turns 
-        crossing.GetComponent<CrossComponents>().SetUpCrossing(nextTurns[0], nextTurns[1], settings);
+        crossing.GetComponent<CrossComponents>().SetUpCrossing(nextTurns[0], nextTurns[1], settings, isCurrentCrossing);
 
     }
 

@@ -72,7 +72,7 @@ static class TurnTypeMethods
         if (turn == TurnType.Right) { return true; }
         else { return false; }
     }
-    public static bool IsValidForTargets(this TurnType turn)
+    public static bool IsOperation(this TurnType turn)
     {
         TurnType[] turns = { TurnType.None, TurnType.EndPoint };
         if (turns.Contains(turn)) { return false; }
