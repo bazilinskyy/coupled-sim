@@ -118,15 +118,15 @@ public class MainManager : MonoBehaviour
         experiments = new List<MainExperimentSetting>();
         float random;
         for (int i = 0; i < 5; i++)
-        { 
+        {
             MainExperimentSetting setting = new MainExperimentSetting();
             List<TurnType> turns = new List<TurnType>();
 
-            
+
             for (int j = 0; j < 5; j++)
             {
                 random = Random.Range(0, 100);
-                if(random < 50) { turns.Add(TurnType.Left); }
+                if (random < 50) { turns.Add(TurnType.Left); }
                 else { turns.Add(TurnType.Right); }
 
             }
@@ -136,10 +136,11 @@ public class MainManager : MonoBehaviour
 
             random = Random.Range(0, 1000);
             if (random < 333) { setting.navigationType = NavigationType.HUD_low; }
-            else if(random < 666) { setting.navigationType = NavigationType.HUD_high; }
+            else if (random < 666) { setting.navigationType = NavigationType.HUD_high; }
             else { setting.navigationType = NavigationType.VirtualCable; }
-            
-            setting.name += i.ToString();
+
+            if (i == 0) { setting.name = "PractiseDrive"; setting.practiseDrive = true; }
+            else { setting.name += i.ToString(); }
 
             experiments.Add(setting);
         }
@@ -281,7 +282,7 @@ public class MainExperimentSetting
     public int minTargets=1;
     public int maxTargets=3;
     public float experimentTime = 0f;
-
+    public bool practiseDrive = false;
     public int LeftTurns()
     {
         return turns.Where(s => s == TurnType.Left).Count();

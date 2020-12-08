@@ -8,10 +8,7 @@ using System.Linq;
 [RequireComponent(typeof(DataLogger), typeof(MyGazeLogger),typeof(MyVarjoGazeRay))]
 public class newExperimentManager : MonoBehaviour
 {
-    //Attachted to the object with the experiment manager should be a XMLManager for handling the saving of the data.
-    public GameObject normalCam;
-    public GameObject leapRig;
-
+    
     [Header("Experiment Input")]
     public string subjectName;
     public Color navigationColor;
@@ -50,7 +47,7 @@ public class newExperimentManager : MonoBehaviour
     UnityEngine.UI.Image blackOutScreen;
     UnityEngine.TextMesh carUI;
     public  bool setCarAtTarget = false;
-
+    private int lastWaypointIndex = 0;
 
     private void Start()
     {
@@ -142,7 +139,7 @@ public class newExperimentManager : MonoBehaviour
         if (Input.GetKeyDown(mainManager.ResetHeadPosition)) { Varjo.VarjoPlugin.ResetPose(true, Varjo.VarjoPlugin.ResetRotation.ALL); }
         if (Input.GetKeyDown(KeyCode.LeftControl)) { StartCoroutine(PlaceAtTargetWaypoint()); }
         //Researcher inputs
-        if (Input.GetKeyDown(mainManager.ToggleSymbology)) { Debug.Log("Toggled symbology!"); ToggleSymbology(); }
+        if (Input.GetKeyDown(mainManager.ToggleSymbology)) {ToggleSymbology(); }
         if (Input.GetKeyDown(mainManager.MyPermission)) { car.navigationFinished = true; } //Finish navigation early
         //if (Input.GetKeyDown(mainManager.setToLastWaypoint)) { SetCarToLastWaypoint(); }
         //if (Input.GetKeyDown(experimentInput.resetHeadPosition)) { SetCameraPosition(driverView.position, driverView.rotation); }
@@ -154,6 +151,13 @@ public class newExperimentManager : MonoBehaviour
             LogCurrentCrossingTargets(crossingSpawner.crossings.NextCrossing().targetList);
 
             if (car.GetComponent<Rigidbody>().velocity.magnitude < 0.5f) { mainManager.ExperimentEnded(); }
+        }
+
+        if (experimentSettings.practiseDrive && lastWaypointIndex != car.waypointIndex )
+        {
+            lastWaypointIndex = car.waypointIndex;
+            if ((car.waypointIndex) % (int)Mathf.Floor(experimentSettings.turns.Count()/3) == 0 ) { ToggleSymbology(); }
+            
         }
     }
 
