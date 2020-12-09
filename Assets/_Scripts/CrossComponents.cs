@@ -62,8 +62,8 @@ public class CrossComponents : MonoBehaviour
 	public void SetCurrentCrossing (bool _isCurrentCrossing)
     {
 		isCurrentCrossing = _isCurrentCrossing;
-		
-		SetBuildingBlocks();
+
+		StartCoroutine(SetBuildingBlocks());
 	}
 	public void SetUpCrossing(WaypointStruct[] _waypoints, MainExperimentSetting settings, bool _isCurrentCrossing, bool _isFirstCrossing = false)
     {
@@ -81,7 +81,7 @@ public class CrossComponents : MonoBehaviour
 
         SetWaypoints();
 
-		SetBuildingBlocks();
+		StartCoroutine(SetBuildingBlocks());
 
 		//?Remove old targets
 		foreach ( Transform child in TargetParent) { Destroy(child.gameObject); }
@@ -90,20 +90,19 @@ public class CrossComponents : MonoBehaviour
 		SpawnTargets(settings);
 	}
 
-	void SetBuildingBlocks()
+	IEnumerator SetBuildingBlocks()
     {
         //Deactivates the building block which corresponds to correct path
 		//Also the next crossing on the map will have all these varibles blocks turned off as they may coincide (spacially) with the first (current) crossing
         if (!isCurrentCrossing)
         {
-			variableBlocks.gameObject.SetActive(false);
+			foreach (Transform child in variableBlocks) { child.gameObject.SetActive(false); yield return new WaitForEndOfFrame(); }
 		}
         else if (waypoints[0].turn.IsOperation() && waypoints[1].turn.IsOperation()) 
 		{
-			string blockName = waypoints[0].turn.ToString() + waypoints[1].turn.ToString();
-			variableBlocks.gameObject.SetActive(true);
-			foreach(Transform child in variableBlocks) { child.gameObject.SetActive(true); }
-			variableBlocks.transform.Find(blockName).gameObject.SetActive(false);
+			string blockNameToDeactivate = waypoints[0].turn.ToString() + waypoints[1].turn.ToString();
+
+			foreach (Transform child in variableBlocks) { child.gameObject.SetActive(child.name != blockNameToDeactivate); yield return new WaitForEndOfFrame(); }
 		}
 		
     }
