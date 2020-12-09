@@ -45,12 +45,14 @@ public class CrossComponents : MonoBehaviour
 
 	public bool isFirstCrossing;
 
-	public Waypoints waypoints = new Waypoints();
-	public List<Target> targetList = new List<Target>(); 
+	public WaypointsObjects waypointObjects = new WaypointsObjects();
+	public List<Target> targetList = new List<Target>();
 
-    public TurnType turn1 = TurnType.None;
+	public WaypointStruct[] waypoints;
 
-    public TurnType turn2 = TurnType.None;
+	public TurnType turn1;
+	public TurnType turn2;
+
 	private newExperimentManager experimentManager;
 	public bool isCurrentCrossing = true;
     private void Awake()
@@ -63,11 +65,13 @@ public class CrossComponents : MonoBehaviour
 		
 		SetBuildingBlocks();
 	}
-	public void SetUpCrossing(TurnType _turn1, TurnType _turn2, MainExperimentSetting settings, bool _isCurrentCrossing, bool _isFirstCrossing = false)
+	public void SetUpCrossing(WaypointStruct[] _waypoints, MainExperimentSetting settings, bool _isCurrentCrossing, bool _isFirstCrossing = false)
     {
 		if(experimentManager == null) { experimentManager = MyUtils.GetExperimentManager(); }
+		
+		waypoints = _waypoints;
+		turn1 = waypoints[0].turn; turn2 = waypoints[1].turn;
 
-        turn1 = _turn1; turn2 = _turn2; 
 		isCurrentCrossing = _isCurrentCrossing; isFirstCrossing = _isFirstCrossing;
 
 		//Removes/adds buildings for first crossing
@@ -94,9 +98,9 @@ public class CrossComponents : MonoBehaviour
         {
 			variableBlocks.gameObject.SetActive(false);
 		}
-        else if (turn1.IsOperation() && turn2.IsOperation()) 
+        else if (waypoints[0].turn.IsOperation() && waypoints[1].turn.IsOperation()) 
 		{
-			string blockName = turn1.ToString() + turn2.ToString();
+			string blockName = waypoints[0].turn.ToString() + waypoints[1].turn.ToString();
 			variableBlocks.gameObject.SetActive(true);
 			foreach(Transform child in variableBlocks) { child.gameObject.SetActive(true); }
 			variableBlocks.transform.Find(blockName).gameObject.SetActive(false);
@@ -108,31 +112,24 @@ public class CrossComponents : MonoBehaviour
 		if(settings.maxTargets == 0) { return; }
 		List<Transform> spawnPoints;
 		Transform parentSpawPoints = null;
-		WaypointStruct waypoint = new WaypointStruct();
 
-		if (!isFirstCrossing && turn1.IsOperation()) 
+		if (!isFirstCrossing && waypoints[0].turn.IsOperation()) 
 		{
 			parentSpawPoints = FirstTurnTargetSpawnPoints;
 			spawnPoints = SelectRandomSpawnPoints(parentSpawPoints, settings.minTargets, settings.maxTargets);
-			
-			waypoint.turn = turn1; 
-			waypoint.waypoint = waypoints.waypoint1;
 
-			InstantiateTargets(spawnPoints, waypoint, settings);
+			InstantiateTargets(spawnPoints, waypoints[0], settings);
 		}
 
-		if(turn2.IsOperation() && turn1.IsOperation())
+		if(waypoints[1].turn.IsOperation() && waypoints[0].turn.IsOperation())
         {
-			if (turn1 == TurnType.Right) { parentSpawPoints = RightTargetSpawnPoints; }
-			if (turn1 == TurnType.Left) { parentSpawPoints = LeftTargetSpawnPoints; }
-			if (turn1 == TurnType.Straight) { parentSpawPoints = StraightTargetSpawnPoints; }
+			if (waypoints[0].turn == TurnType.Right) { parentSpawPoints = RightTargetSpawnPoints; }
+			if (waypoints[0].turn == TurnType.Left) { parentSpawPoints = LeftTargetSpawnPoints; }
+			if (waypoints[0].turn == TurnType.Straight) { parentSpawPoints = StraightTargetSpawnPoints; }
 
 			spawnPoints = SelectRandomSpawnPoints(parentSpawPoints, settings.minTargets, settings.maxTargets);
 
-			waypoint.turn = turn2; 
-			waypoint.waypoint = waypoints.waypoint2;
-
-			InstantiateTargets(spawnPoints, waypoint, settings);
+			InstantiateTargets(spawnPoints, waypoints[1], settings);
 		}
 	}
 	private void InstantiateTargets(List<Transform> spawnPoints, WaypointStruct waypoint, MainExperimentSetting settings)
@@ -149,11 +146,22 @@ public class CrossComponents : MonoBehaviour
 			Vector3 forwardVariation = waypoint.waypoint.forward * Random.Range(-4f, 4f);
 			Vector3 positionTarget = point.position + forwardVariation + sideVariation;
 
+			TargetDifficulty targetDifficulty;
+			//During the practise drive we have easy targets for the first half of the track and hard targets for the second half.
+			if(settings.targetDifficulty == TargetDifficulty.EasyAndMedium) 
+			{
+				
+				int NTurns = experimentManager.experimentSettings.turns.Count();
+				if (waypoint.waypointID < (int)Mathf.Floor(NTurns / 2)) { targetDifficulty = TargetDifficulty.easy; }
+				else { targetDifficulty = TargetDifficulty.hard; }
+			}
+            else { targetDifficulty = settings.targetDifficulty; }
+
 			target = Instantiate(TargetPrefab);
 			target.transform.position = positionTarget;
 			target.transform.parent = TargetParent;
 			target.transform.name = "Target " + ID.ToString();
-			target.GetComponent<Target>().SetDifficulty(settings.targetDifficulty);
+			target.GetComponent<Target>().SetDifficulty(targetDifficulty);
 			target.GetComponent<Target>().waypoint = waypoint;
 			target.GetComponent<Target>().ID = ID;
 			target.GetComponent<Target>().side = point.name == "Left" ? Side.Left : Side.Right;
@@ -184,59 +192,62 @@ public class CrossComponents : MonoBehaviour
 	}
     public void SetTriggers()
     {
-		rightTrigger.tag = turn1 == TurnType.Right ? "CorrectTurn" : "WrongTurn";
-		leftTrigger.tag = turn1 == TurnType.Left ? "CorrectTurn" : "WrongTurn";
-		straightTrigger.tag = turn1 == TurnType.Straight ? "CorrectTurn" : "WrongTurn";
+		rightTrigger.tag = waypoints[0].turn == TurnType.Right ? "CorrectTurn" : "WrongTurn";
+		leftTrigger.tag = waypoints[0].turn == TurnType.Left ? "CorrectTurn" : "WrongTurn";
+		straightTrigger.tag = waypoints[0].turn == TurnType.Straight ? "CorrectTurn" : "WrongTurn";
 
-		if (turn1 == TurnType.Left) { 
-			leftRightTrigger.tag = turn2 == TurnType.Right ? "CorrectTurn" : "WrongTurn";
-			leftLeftTrigger.tag = turn2 == TurnType.Left ? "CorrectTurn" : "WrongTurn";
+		if (waypoints[0].turn == TurnType.Left) { 
+			leftRightTrigger.tag = waypoints[1].turn == TurnType.Right ? "CorrectTurn" : "WrongTurn";
+			leftLeftTrigger.tag = waypoints[1].turn == TurnType.Left ? "CorrectTurn" : "WrongTurn";
 
-			if (turn2 == TurnType.EndPoint) { leftEndTrigger.SetActive(true); }
+			if (waypoints[1].turn == TurnType.EndPoint) { leftEndTrigger.SetActive(true); }
 		}
-        else if (turn1 == TurnType.Right) {
+        else if (waypoints[0].turn == TurnType.Right) {
 
-			rightRightTrigger.tag = turn2 == TurnType.Right ? "CorrectTurn" : "WrongTurn";
-			rightLeftTrigger.tag = turn2 == TurnType.Left ? "CorrectTurn" : "WrongTurn";
+			rightRightTrigger.tag = waypoints[1].turn == TurnType.Right ? "CorrectTurn" : "WrongTurn";
+			rightLeftTrigger.tag = waypoints[1].turn == TurnType.Left ? "CorrectTurn" : "WrongTurn";
 
-			if (turn2 == TurnType.EndPoint) { rightEndTrigger.SetActive(true); }
+			if (waypoints[1].turn == TurnType.EndPoint) { rightEndTrigger.SetActive(true); }
 		}
-        else if (turn1 == TurnType.Straight) {
+        else if (waypoints[0].turn == TurnType.Straight) {
 			
-			straightRightTrigger.tag = turn2 == TurnType.Right ? "CorrectTurn" : "WrongTurn";
-			straightLeftTrigger.tag = turn2 == TurnType.Left ? "CorrectTurn" : "WrongTurn";
+			straightRightTrigger.tag = waypoints[1].turn == TurnType.Right ? "CorrectTurn" : "WrongTurn";
+			straightLeftTrigger.tag = waypoints[1].turn == TurnType.Left ? "CorrectTurn" : "WrongTurn";
 			
-			if (turn2 == TurnType.EndPoint) { straightEndTrigger.SetActive(true); }
+			if (waypoints[1].turn == TurnType.EndPoint) { straightEndTrigger.SetActive(true); }
 		}
-		else if (turn1 == TurnType.EndPoint)
+		else if (waypoints[0].turn == TurnType.EndPoint)
         {
 			triggerEnd.SetActive(true);
         }
     }
     void SetWaypoints()
     {
-        if (turn1 == TurnType.None){ return; } 
-        if (turn1 == TurnType.EndPoint){ waypoints.waypoint1.position -= waypoints.waypoint1.forward * 20f; return; }
-        
-        if (turn1 == TurnType.Left) { waypoints.waypoint2.SetPositionAndRotation(waypoints.left.position, waypoints.left.rotation); }
-        if (turn1 == TurnType.Right) { waypoints.waypoint2.SetPositionAndRotation(waypoints.right.position, waypoints.right.rotation); }
-        if (turn1 == TurnType.Straight) { waypoints.waypoint2.SetPositionAndRotation(waypoints.straight.position, waypoints.straight.rotation); }
+		waypoints[0].waypoint = waypointObjects.waypoint1;
 
-		if(turn2 == TurnType.EndPoint) { waypoints.waypoint2.position -= waypoints.waypoint2.forward * 20f; }
+		if (waypoints[0].turn == TurnType.None){ return; } 
+        if (waypoints[0].turn == TurnType.EndPoint){ waypointObjects.waypoint1.position -= waypointObjects.waypoint1.forward * 20f;  return; }
+        
+        if (waypoints[0].turn == TurnType.Left) { waypointObjects.waypoint2.SetPositionAndRotation(waypointObjects.left.position, waypointObjects.left.rotation); }
+        if (waypoints[0].turn == TurnType.Right) { waypointObjects.waypoint2.SetPositionAndRotation(waypointObjects.right.position, waypointObjects.right.rotation); }
+        if (waypoints[0].turn == TurnType.Straight) { waypointObjects.waypoint2.SetPositionAndRotation(waypointObjects.straight.position, waypointObjects.straight.rotation); }
+		if(waypoints[1].turn == TurnType.EndPoint) { waypointObjects.waypoint2.position -= waypointObjects.waypoint2.forward * 20f; }
+
+		waypoints[1].waypoint = waypointObjects.waypoint2;
     }
     public List<Vector3> GetPointsNavigationLine()
     {
         List<Vector3> points = new List<Vector3>();
 
-        points.Add(waypoints.startPoint.position);
+        points.Add(waypointObjects.startPoint.position);
 
-        if (turn1 == TurnType.None) { Debug.Log("Got None turn type..."); return null; }
-        if (turn1 == TurnType.EndPoint) { points.Add(waypoints.waypoint1.position - 30f * waypoints.waypoint1.forward); return points; }
-        else if (turn1 != TurnType.Straight){ foreach (Vector3 point in GetPointsCorner(waypoints.waypoint1, turn1)) { points.Add(point); }}
+        if (waypoints[0].turn == TurnType.None) { Debug.Log("Got None turn type..."); return null; }
+        if (waypoints[0].turn == TurnType.EndPoint) { points.Add(waypointObjects.waypoint1.position - 30f * waypointObjects.waypoint1.forward); return points; }
+        else if (waypoints[0].turn != TurnType.Straight){ foreach (Vector3 point in GetPointsCorner(waypointObjects.waypoint1, waypoints[0].turn)) { points.Add(point); }}
 
-        if (turn2 == TurnType.None) { Debug.Log("Got None turn type..."); return null; }
-        if (turn2 == TurnType.EndPoint) { points.Add(waypoints.waypoint2.position - 30f * waypoints.waypoint2.forward); return points; }
-        else if (turn2 != TurnType.Straight){ foreach (Vector3 point in GetPointsCorner(waypoints.waypoint2, turn2)) { points.Add(point); }}
+        if (waypoints[1].turn == TurnType.None) { Debug.Log("Got None turn type..."); return null; }
+        if (waypoints[1].turn == TurnType.EndPoint) { points.Add(waypointObjects.waypoint2.position - 30f * waypointObjects.waypoint2.forward); return points; }
+        else if (waypoints[1].turn != TurnType.Straight){ foreach (Vector3 point in GetPointsCorner(waypointObjects.waypoint2, waypoints[1].turn)) { points.Add(point); }}
 
 		return points;
     }
@@ -327,7 +338,7 @@ public class CrossComponents : MonoBehaviour
 }
 
 [System.Serializable]
-public struct Waypoints
+public struct WaypointsObjects
 {
     public Transform startPoint;
     public Transform centre;

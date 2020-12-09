@@ -13,7 +13,7 @@ public class CreateVirtualCable : MonoBehaviour
 	public Vector3[] navigationLine;
 
 	int pointsPerCorner = 30;
-    Waypoints waypoints;
+    WaypointsObjects waypoints;
 
 	Crossings crossings;
     private void Awake()
@@ -44,7 +44,7 @@ public class CreateVirtualCable : MonoBehaviour
 	List<Vector3> GetPointsCrossing(Crossing crossing)
     {
 		CrossComponents components= crossing.components;
-		waypoints = components.waypoints;
+		waypoints = components.waypointObjects;
 		List<Vector3> points = new List<Vector3>();
 
 		if (crossing.isCurrentCrossing) { points.Add(waypoints.startPoint.position - waypoints.startPoint.forward * 30f ); }

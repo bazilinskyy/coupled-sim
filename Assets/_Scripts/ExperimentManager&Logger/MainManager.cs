@@ -139,7 +139,11 @@ public class MainManager : MonoBehaviour
             else if (random < 666) { setting.navigationType = NavigationType.HUD_high; }
             else { setting.navigationType = NavigationType.VirtualCable; }
 
-            if (i == 0) { setting.name = "PractiseDrive"; setting.practiseDrive = true; }
+            random = Random.Range(0, 1000);
+            if (random < 500) { setting.targetDifficulty = TargetDifficulty.easy; }
+            else { setting.targetDifficulty = TargetDifficulty.hard; }
+
+            if (i == 0) { setting.name = "PractiseDrive"; setting.targetDifficulty = TargetDifficulty.EasyAndMedium; setting.practiseDrive = true; }
             else { setting.name += i.ToString(); }
 
             experiments.Add(setting);

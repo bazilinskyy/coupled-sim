@@ -88,34 +88,6 @@ public class newExperimentManager : MonoBehaviour
         //Does not work when in Start() or in Awake()...
         ActivateMirrorCameras();
     }
-
-    public bool MakeVirtualCable()
-    {
-        if (experimentSettings.navigationType == NavigationType.VirtualCable) { return true; }
-        else { return false; }
-    }
-
-    public bool RenderHUD()
-    {
-        if (experimentSettings.navigationType == NavigationType.HUD_low || experimentSettings.navigationType == NavigationType.HUD_high) { return true; }
-        else { return false; }
-    }
-
-    public float[] GetHUDInputs()
-    {
-        if (experimentSettings.navigationType == NavigationType.HUD_high)
-        {
-            float[] HUDPlacerInputs = { -6f, 0, 2f };
-            return HUDPlacerInputs;
-        }
-        else if (experimentSettings.navigationType == NavigationType.HUD_low)
-        {
-            float[] HUDPlacerInputs = { 20f, 3.5f, 2f };
-            return HUDPlacerInputs;
-        }
-        else { return new float[] { 0, 0, 0 }; }
-    }
-
     private void LateUpdate()
     {
         //We dot this as late update to make sure gaze data (which is used to determine which target the participant is detecting) is processed 
@@ -162,7 +134,30 @@ public class newExperimentManager : MonoBehaviour
             
         }
     }
-
+    public bool MakeVirtualCable()
+    {
+        if (experimentSettings.navigationType == NavigationType.VirtualCable) { return true; }
+        else { return false; }
+    }
+    public bool RenderHUD()
+    {
+        if (experimentSettings.navigationType == NavigationType.HUD_low || experimentSettings.navigationType == NavigationType.HUD_high) { return true; }
+        else { return false; }
+    }
+    public float[] GetHUDInputs()
+    {
+        if (experimentSettings.navigationType == NavigationType.HUD_high)
+        {
+            float[] HUDPlacerInputs = { -6f, 0, 2f };
+            return HUDPlacerInputs;
+        }
+        else if (experimentSettings.navigationType == NavigationType.HUD_low)
+        {
+            float[] HUDPlacerInputs = { 20f, 3.5f, 2f };
+            return HUDPlacerInputs;
+        }
+        else { return new float[] { 0, 0, 0 }; }
+    }
     public void SaveData()
     {
         if (!savedData) { dataManager.SaveData(); }
@@ -173,7 +168,6 @@ public class newExperimentManager : MonoBehaviour
         targetCount++;
         return count;
     }
-
     public void TookWrongTurn() 
     {
         dataManager.TookWrongTurn(car.GetComponent<newNavigator>().waypoint);

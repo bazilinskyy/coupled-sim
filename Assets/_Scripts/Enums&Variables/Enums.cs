@@ -100,6 +100,7 @@ public enum TargetDifficulty
     easy,
     medium,
     hard,
+    EasyAndMedium,
     None,
 }
 
