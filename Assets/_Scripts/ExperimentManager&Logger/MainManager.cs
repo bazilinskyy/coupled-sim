@@ -196,10 +196,11 @@ public class MainManager : MonoBehaviour
     }
     public void ExperimentEnded()
     {
-        bool loadWhileFading = false;
-        if (!loading) { 
-            StartCoroutine(LoadSceneAsync(waitingRoomScene, loadWhileFading)); 
+        
+        if (!loading) {
+            loading = true; bool loadWhileFading = false;
             StartCoroutine(SaveDataWhenReady());
+            StartCoroutine(LoadSceneAsync(waitingRoomScene, loadWhileFading)); 
             experimentIndex++;
         }
         
@@ -213,8 +214,7 @@ public class MainManager : MonoBehaviour
             if (setting.practiseDrive) { Debug.Log($"Loading {experiments[experimentIndex].name}...\nTurns: {setting.turns.Count()}, Navigation: All, Targets/Turn: [{setting.minTargets},{setting.maxTargets}], Difficutly: All "); }
             else { Debug.Log($"Loading {experiments[experimentIndex].name}...\nTurns: {setting.turns.Count()}, Navigation:{setting.navigationType}, Targets/Turn: [{setting.minTargets},{setting.maxTargets}], Difficutly: {setting.targetDifficulty}"); }
 
-         loading = true; 
-            bool loadWhileFading = true;
+            loading = true; bool loadWhileFading = true;
             StartCoroutine(LoadSceneAsync(experimentScene, loadWhileFading));
             
         }
@@ -228,7 +228,8 @@ public class MainManager : MonoBehaviour
             if (setting.practiseDrive) { Debug.Log($"Reloading {experiments[experimentIndex].name}...\nTurns: {setting.turns.Count()}, Navigation: All, Targets/Turn: [{setting.minTargets},{setting.maxTargets}], Difficutly: All "); }
             else { Debug.Log($"Reloading {experiments[experimentIndex].name}...\nTurns: {setting.turns.Count()}, Navigation:{setting.navigationType}, Targets/Turn: [{setting.minTargets},{setting.maxTargets}], Difficutly: {setting.targetDifficulty}"); }
 
-            StartCoroutine(LoadSceneAsync(experimentScene,true));
+            loading = true; bool loadWhileFading = true;
+            StartCoroutine(LoadSceneAsync(experimentScene, loadWhileFading));
         }
     }
     public void AddTargetScene() { SceneManager.LoadSceneAsync(targetScene, LoadSceneMode.Additive); }
@@ -251,13 +252,12 @@ public class MainManager : MonoBehaviour
 
         AsyncOperation operation = SceneManager.LoadSceneAsync(scene, LoadSceneMode.Single);
 
-        
-
         while (!operation.isDone) { yield return new WaitForEndOfFrame(); }
 
         blackOutScreen.CrossFadeAlpha(0, animationTime, false);
 
         loading = false; readyToSaveData = false;
+        yield break;
     }
     public void MovePlayer(Transform position)
     {
@@ -270,16 +270,16 @@ public class MainManager : MonoBehaviour
 
     IEnumerator SaveDataWhenReady()
     {
-        Debug.Log("RUnning save data from mainmanager...");        
+        
         while (!readyToSaveData)
         {
-            yield return new WaitForEndOfFrame();
+            yield return null;
         }
 
-        newExperimentManager manager = MyUtils.GetExperimentManager();
-        if (manager != null) { manager.SaveData(); }
-        else { Debug.Log("Manager not found, COULD NOT SAVE DATA....."); }
         readyToSaveData = false;
+        MyUtils.GetExperimentManager().SaveData();
+        yield break;
+
     }
 }
 
