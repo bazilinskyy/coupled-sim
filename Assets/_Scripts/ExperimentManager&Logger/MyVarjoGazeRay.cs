@@ -83,16 +83,17 @@ public class MyVarjoGazeRay : MonoBehaviour
             // Raycast into world
             if (Physics.SphereCast(gazeRayOrigin, gazeRayRadius, gazeRayDirection, out gazeRayHit, 1000f, layerMask))
             {
-                Debug.Log($"Got hit iiwth {gazeRayHit.collider.gameObject.name},{gazeRayHit.collider.gameObject.tag}...");
+                
                 //By default we are looking at the world
                 bool lookingAtWorld = true;
                 //If hti is a target execute OnHit function
-                if (gazeRayHit.collider.tag.Equals(LoggedTags.Target.ToString()))
+                if (gazeRayHit.collider.CompareTag(LoggedTags.Target.ToString()))
                 {
+                    
                     Target target = gazeRayHit.collider.gameObject.GetComponent<Target>();
                     target.OnHit();
                 }
-                else if (gazeRayHit.collider.tag.Equals("VarjoTarget"))
+                else if (gazeRayHit.collider.CompareTag("VarjoTarget"))
                 {
                     VarjoExample.VarjoGazeTarget target = gazeRayHit.collider.gameObject.GetComponent<VarjoExample.VarjoGazeTarget>();
                     target.OnHit();
@@ -104,15 +105,16 @@ public class MyVarjoGazeRay : MonoBehaviour
                     //Go through all tags that we log
                     foreach (LoggedTags tag in EnumUtil.GetValues<LoggedTags>())
                     {
-                        if (gazeRayHit.collider.tag.Equals(tag.ToString()))
+                        if (gazeRayHit.collider.CompareTag(tag.ToString()))
                         {
+                            Debug.Log($"{tag}");
                             gazeLogger.FixatingOn(tag);
                             lookingAtWorld = false;
                         }
                     }
 
                     //If hit colliders not tagged we assume it is the world:
-                    if (lookingAtWorld) { gazeLogger.FixatingOn(LoggedTags.World); }
+                    if (lookingAtWorld) { gazeLogger.FixatingOn(LoggedTags.Environment); Debug.Log("World"); }
                 }
                 if (drawDebug)
                 {
@@ -122,7 +124,7 @@ public class MyVarjoGazeRay : MonoBehaviour
             else
             {
                 //Not hitting any colliders so looking at the sky or something...
-                if (logData) { gazeLogger.FixatingOn(LoggedTags.World); }
+                if (logData) { gazeLogger.FixatingOn(LoggedTags.Environment); }
 
                 if (drawDebug)
                 {

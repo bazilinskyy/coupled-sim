@@ -84,7 +84,7 @@ static class TurnTypeMethods
 //These tags are used for the gazelogger to track what we are looking at exactly, (world is not a real tag but will be used as keyword when nothin else is being looked at)
 public enum LoggedTags
 {
-    World,
+    Environment,
     Target,
     HUDSymbology,
     HUDText,

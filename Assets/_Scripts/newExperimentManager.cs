@@ -59,14 +59,13 @@ public class newExperimentManager : MonoBehaviour
         blackOutScreen = MyUtils.GetBlackOutScreen();
         mainManager = MyUtils.GetMainManager();
         carUI = MyUtils.GetCarUI();
+       
 
         //Beun settings
         experimentSettings = mainManager.GetExperimentSettings();
 
         //Set DataManager
         SetDataManager();
-
-        
         
         crossingSpawner.turnsList = experimentSettings.turns.ToArray();
         crossingSpawner.StartUp();
@@ -97,7 +96,7 @@ public class newExperimentManager : MonoBehaviour
         //Target detection when we already started driving
         if (car.GetComponent<SpeedController>().IsDriving() && userInput) { ProcessUserInputTargetDetection(); }
         //First input will be the start driving command (so if not already driving we will start driving)
-        else if (!car.GetComponent<SpeedController>().IsDriving() && userInput && mainManager.automateSpeed) { car.GetComponent<SpeedController>().StartDriving(true); }
+        else if (!car.GetComponent<SpeedController>().IsDriving() && userInput && mainManager.AutomateSpeed) { car.GetComponent<SpeedController>().StartDriving(true); }
     }
     void Update()
     {
@@ -204,10 +203,10 @@ public class newExperimentManager : MonoBehaviour
 
         yield return new WaitForSeconds(1f);
 
-        blackOutScreen.CrossFadeAlpha(1f, mainManager.animationTime, false);
+        blackOutScreen.CrossFadeAlpha(1f, mainManager.AnimationTime, false);
 
         //Skip this waiting if we load while fading
-        yield return new WaitForSeconds(mainManager.animationTime);
+        yield return new WaitForSeconds(mainManager.AnimationTime);
 
         WaypointStruct target= car.waypoint;
 
@@ -216,11 +215,11 @@ public class newExperimentManager : MonoBehaviour
         StartCoroutine(SetCarSteadyAt(newStartPosition, target.waypoint.transform.forward, false, _setAtCarTargetBoolean));
 
         car.GetComponent<newNavigator>().RenderNavigationArrow();
-        blackOutScreen.CrossFadeAlpha(0f, mainManager.animationTime*2f, false);
+        blackOutScreen.CrossFadeAlpha(0f, mainManager.AnimationTime*2f, false);
 
         carUI.text = "Try again!";
 
-        yield return new WaitForSeconds(mainManager.animationTime);
+        yield return new WaitForSeconds(mainManager.AnimationTime);
 
         carUI.text = "";
 
@@ -341,12 +340,12 @@ public class newExperimentManager : MonoBehaviour
     void SetUpCar()
     {
         //Put head position at the right place
-        if (mainManager.calibratedUsingHands)
+        if (mainManager.CalibratedUsingHands)
         {
             driverView.position = steeringWheel.transform.position;
-            driverView.position -= car.transform.forward * mainManager.driverViewZToSteeringWheel;
-            driverView.position += Vector3.up * mainManager.driverViewYToSteeringWheel;
-            driverView.position += car.transform.right * mainManager.driverViewXToSteeringWheel;
+            driverView.position -= car.transform.forward * mainManager.DriverViewZToSteeringWheel;
+            driverView.position += Vector3.up * mainManager.DriverViewYToSteeringWheel;
+            driverView.position += car.transform.right * mainManager.DriverViewXToSteeringWheel;
 
         }
         //Place HUD

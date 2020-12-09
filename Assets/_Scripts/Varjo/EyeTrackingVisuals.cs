@@ -15,20 +15,29 @@ public class EyeTrackingVisuals : MonoBehaviour
     public bool showCenterGaze = false;
     private bool isActive = true;
     private bool gotOwnGaze = true;
+    private MainManager mainManager;
     private void Start()
     {
-        MainManager mainManager = MyUtils.GetMainManager();
-        if (!mainManager.debug) { lightObj.SetActive(false); lightObj2.SetActive(false); enabled = false; }
+        mainManager = MyUtils.GetMainManager();
+        if (!mainManager.DebugMode) { lightObj.SetActive(false); lightObj2.SetActive(false); enabled = false; }
     }
     void Update()
     {
 
         if (Input.GetKeyDown(switchGazeHighlight)) { highlightGaze = !highlightGaze; }
-        if (highlightGaze)
+        if (highlightGaze && VarjoPlugin.IsGazeCalibrated())
         {
             //Gets d
-            try  { gazeData = MyUtils.GetExperimentManager().GetComponent<MyGazeLogger>().GetLastGaze(); if (gotOwnGaze) { Debug.Log("Got gaze from logger"); gotOwnGaze = false; } }
-            catch { gazeData = VarjoPlugin.GetGaze(); if (!gotOwnGaze) { Debug.Log("Got gaze on my own..."); gotOwnGaze = true; } }
+            try
+            {
+                if (mainManager.IsInExperiment) { gazeData = MyUtils.GetExperimentManager().GetComponent<MyGazeLogger>().GetLastGaze(); }
+                else { gazeData = VarjoPlugin.GetGaze(); }
+            }
+            catch { SetLightActive(false); };
+            //try  { gazeData = MyUtils.GetExperimentManager().GetComponent<MyGazeLogger>().GetLastGaze(); if (gotOwnGaze) { Debug.Log("Got gaze from logger"); gotOwnGaze = false; } }
+            //catch { gazeData = VarjoPlugin.GetGaze(); if (!gotOwnGaze) { Debug.Log("Got gaze on my own..."); gotOwnGaze = true; } }
+
+            //gazeData = VarjoPlugin.GetGaze();
 
             if (gazeData.status == VarjoPlugin.GazeStatus.VALID)
             {
@@ -70,18 +79,26 @@ public class EyeTrackingVisuals : MonoBehaviour
     void RenderGaze(VarjoPlugin.GazeData data)
     {
 
-        //cast ray with gaze direction and gaze starting position:
+/*        //cast ray with gaze direction and gaze starting position:
         Vector3 gazePosition = new Vector3((float)data.gaze.position[0], (float)data.gaze.position[1], (float)data.gaze.position[2]);
         Vector3 start = VarjoManager.Instance.HeadTransform.position + gazePosition;
 
         //This is realtive to the hmd rotation
         Vector3 gazeDirectionLocal = new Vector3((float)data.gaze.forward[0], (float)data.gaze.forward[1], (float)data.gaze.forward[2]);
-        Vector3 gazeDirectionWorld = TransformToWorldAxis(gazeDirectionLocal, gazePosition);
+        Vector3 gazeDirectionWorld = TransformToWorldAxis(gazeDirectionLocal, gazePosition);*/
 
-        lightObj.transform.position = start;
-        lightObj.transform.rotation = Quaternion.LookRotation(gazeDirectionWorld);
+         Transform HMD = VarjoManager.Instance.HeadTransform;
+        // Transform gaze direction and origin from HMD space to world space
+        Vector3 gazeRayDirection = HMD.TransformVector(Double3ToVector3(data.gaze.forward));
+        Vector3 gazeRayOrigin = HMD.TransformPoint(Double3ToVector3(data.gaze.position));
+
+        lightObj.transform.position = gazeRayOrigin;
+        lightObj.transform.rotation = Quaternion.LookRotation(gazeRayDirection);
     }
-
+    public static Vector3 Double3ToVector3(double[] doubles)
+    {
+        return new Vector3((float)doubles[0], (float)doubles[1], (float)doubles[2]);
+    }
     Vector3 TransformToWorldAxis(Vector3 gaze, Vector3 gazePosition)
     {
         Vector4 gazeH = new Vector4(gaze.x, gaze.y, gaze.z, 1);

@@ -70,7 +70,7 @@ public class SpeedController : MonoBehaviour
         if (!started) { StartUpFunction(); }
 
         if (GetComponent<newNavigator>().waypoint.waypoint == null) { return; }
-        if (!mainManager.automateSpeed) { return; }
+        if (!mainManager.AutomateSpeed) { return; }
         if (GetComponent<newNavigator>().navigationFinished) { Brake(); return; }
 
         //This bool is adjusted by the expriment manager using StartDriving()

@@ -44,12 +44,12 @@ public class WaitingRoomManager : MonoBehaviour
     }
     public void SpawnSteeringWheel()
     {
-        if (mainManager.calibratedUsingHands)
+        if (mainManager.CalibratedUsingHands)
         {
             steeringWheel.transform.position = startPosition.position;
-            steeringWheel.transform.position += startPosition.transform.forward * mainManager.driverViewZToSteeringWheel;
-            steeringWheel.transform.position -= Vector3.up * mainManager.driverViewYToSteeringWheel;
-            steeringWheel.transform.position -= startPosition.transform.right * mainManager.driverViewXToSteeringWheel;
+            steeringWheel.transform.position += startPosition.transform.forward * mainManager.DriverViewZToSteeringWheel;
+            steeringWheel.transform.position -= Vector3.up * mainManager.DriverViewYToSteeringWheel;
+            steeringWheel.transform.position -= startPosition.transform.right * mainManager.DriverViewXToSteeringWheel;
 
         }
     }

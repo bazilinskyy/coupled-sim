@@ -48,7 +48,7 @@ public class DataLogger : MonoBehaviour
     // Use standard numeric format specifiers.
     private string specifier = "G";
     
-    private void OnApplicationQuit() { if (mainManager.saveData && !savedData) { SaveData(); } }
+    private void OnApplicationQuit() { if (mainManager.SaveData && !savedData) { SaveData(); } }
 
     public void StartUp()
     {
@@ -109,7 +109,6 @@ public class DataLogger : MonoBehaviour
     }
     public void TookWrongTurn(WaypointStruct waypoint) 
     { 
-        Debug.Log("Logging wrong turn...");
         wrongTurnData.Add(new WrongTurnData(waypoint, experimentManager.experimentSettings.experimentTime));
     }
     private void Update()
@@ -119,7 +118,7 @@ public class DataLogger : MonoBehaviour
     public void SaveData()
     {
         if (!logging) { return; }
-        Debug.Log($"Saving all data to {saveFolder}...");
+        Debug.Log($"Saving {experimentManager.experimentSettings.name} data to {saveFolder}...");
         if (mainManager.camType != MyCameraType.Normal) { SaveFixationData(); gazeLogger.StopLogging();  }
 
         SaveVehicleData();
@@ -134,7 +133,6 @@ public class DataLogger : MonoBehaviour
     }
     private void SaveWrongTurnData()
     {
-        Debug.Log("Saving target info...");
         string[] columns = { "ExperimentTime", "WaypointID", "TurnType", "WaypointPosition" };
         string[] logData = new string[columns.Length];
         string filePath = string.Join("/", saveFolder, WrongTurnFileName);
@@ -166,7 +164,6 @@ public class DataLogger : MonoBehaviour
     }
     private void SaveFixationData()
     {
-        Debug.Log("Saving fixation data...");
         //Order of LoggedTag enum
         /*World,
         Target,
@@ -189,7 +186,7 @@ public class DataLogger : MonoBehaviour
         {
             Log(columns, file);
 
-            logData[0] = gazeLogger.fixationData.world.ToString(specifier,culture);
+            logData[0] = gazeLogger.fixationData.environment.ToString(specifier,culture);
             logData[1] = gazeLogger.fixationData.target.ToString(specifier,culture);
             logData[2] = gazeLogger.fixationData.hudSymbology.ToString(specifier,culture);
             logData[3] = gazeLogger.fixationData.hudText.ToString(specifier,culture);
@@ -207,7 +204,6 @@ public class DataLogger : MonoBehaviour
     }
     private void SaveVehicleData()
     {
-        Debug.Log("Saving vehicle data...");
         string[] columns = { "Time", "Frame", "Speed", "DistanceToOptimalPath", "Position", "Rotation", "SteeringInput", "UpcomingOperation", "ThrottleInput", "BrakeInput","TrackProgress" };
         string[] logData = new string[columns.Length];
         string filePath = string.Join("/", saveFolder, vehicleDataFileName);
@@ -239,7 +235,6 @@ public class DataLogger : MonoBehaviour
     }
     private void SaveTargetDetectionData()
     {
-        Debug.Log("Saving alarms...");
         string[] columns = { "Time", "Frame", "AlarmType", "ReactionTime", "TargetID", "TargetDifficulty", "totalfixationTime", "FirstFixationTime", "DetectionTime"};
         string[] logData = new string[columns.Length];
         string filePath = string.Join("/", saveFolder, targetDetectionDataFileName);
@@ -270,7 +265,6 @@ public class DataLogger : MonoBehaviour
     }
     private void SaveNavigationData()
     {
-        Debug.Log("Saving navigation info...");
         string[] columns = { "NavigationLine" };
         string[] logData = new string[columns.Length];
         string filePath = string.Join("/", saveFolder, navigationLineFileName);
@@ -290,7 +284,6 @@ public class DataLogger : MonoBehaviour
     }
     private void SaveTargetData()
     {
-        Debug.Log("Saving target info...");
         string[] columns = { "ID", "Detected", "ReactionTime", "TotalFixationTime", "FirstFixationTime", "DetectionTime", "Difficulty","UpcomingTurn","Position", "RoadSide", "WaypointID" };
         string[] logData = new string[columns.Length];
         string filePath = string.Join("/", saveFolder, generalTargetInfo);
@@ -321,7 +314,6 @@ public class DataLogger : MonoBehaviour
     }
     void SaveExperimentInfo()
     {
-        Debug.Log("Saving general experiment info...");
         string[] columns = { "Total Targets", "LeftTarget", "RightTargets","TargetDifficulty", "driverViewToSteeringWHeel", "RelativePositionDriverView", "RelativeRotationDriverView", "ExperimentName",
                               "NavigationType", "Transparency", "TotalExperimentTime", "LeftTurns", "RightTurns"};
         string[] logData = new string[columns.Length];
@@ -337,7 +329,7 @@ public class DataLogger : MonoBehaviour
             logData[2] = RightTargets().ToString();
             logData[3] = experimentManager.experimentSettings.targetDifficulty.ToString();
 
-            Vector3 driverViewToSteeringWheel = new Vector3(mainManager.driverViewXToSteeringWheel, mainManager.driverViewYToSteeringWheel, mainManager.driverViewZToSteeringWheel);
+            Vector3 driverViewToSteeringWheel = new Vector3(mainManager.DriverViewXToSteeringWheel, mainManager.DriverViewYToSteeringWheel, mainManager.DriverViewZToSteeringWheel);
 
             logData[4] = driverViewToSteeringWheel.ToString("F3");
 
@@ -375,7 +367,7 @@ public class DataLogger : MonoBehaviour
  
     private string SaveFolder()
     {
-        string saveFolder = string.Join("/", mainManager.subjectDataFolder, experimentManager.experimentSettings.name + DateTime.Now.ToString("_HH-mm-ss"));
+        string saveFolder = string.Join("/", mainManager.SubjectDataFolder, experimentManager.experimentSettings.name + DateTime.Now.ToString("_HH-mm-ss"));
         
         Directory.CreateDirectory(saveFolder);
         Debug.Log($"Created data folder for {experimentManager.experimentSettings.name}: {saveFolder}...");

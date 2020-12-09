@@ -5,6 +5,7 @@ using Varjo;
 using System.IO;
 using System;
 using System.Globalization;
+using System.Linq;
 
 public class MyGazeLogger : MonoBehaviour
 {
@@ -37,11 +38,13 @@ public class MyGazeLogger : MonoBehaviour
     
     const string ValidString = "VALID";
     const string InvalidString = "INVALID";
-    private int count = 0;
+    private int logCount = 0; 
+    private float startTime = 0f;
     private CultureInfo culture = CultureInfo.CreateSpecificCulture("eu-ES");
     //Looking at what exactly?
     public Fixation fixationData;
-    private LoggedTags fixatingOn = LoggedTags.World;
+    private LoggedTags fixatingOn = LoggedTags.Environment;
+    private long baseTimeNanoSeconds = 0;
     public void StartUp()
     {
         experimentManager = MyUtils.GetExperimentManager();
@@ -79,6 +82,9 @@ public class MyGazeLogger : MonoBehaviour
                 // Get and log all gaze data since last update
                 dataSinceLastUpdate = VarjoPlugin.GetGazeList();
                 foreach (var data in dataSinceLastUpdate) { LogGazeData(data); }
+
+                CheckLogCount();
+
             }
         }
         else if (startAutomatically) { if (VarjoPlugin.GetGaze().status == VarjoPlugin.GazeStatus.VALID) { StartLogging(); } }
@@ -87,12 +93,24 @@ public class MyGazeLogger : MonoBehaviour
 
     public VarjoPlugin.GazeData GetLastGaze()
     {
-        if (logging) { return dataSinceLastUpdate[-1]; }
+        if (logging) { return dataSinceLastUpdate.Last(); }
         else { throw new Exception(); }
+    }
+
+    void CheckLogCount()
+    {
+        float checkTime = 1f; float minimumLogsPerSecond = 2;
+        if(startTime + checkTime < Time.time) 
+        {
+            startTime = Time.time;  
+            if(logCount < checkTime * minimumLogsPerSecond) { Debug.Log($"Slow gaze logging! Received {logCount} gaze points in the pas {checkTime} seconds..."); }
+            logCount = 0;
+        }
     }
     void LogGazeData(VarjoPlugin.GazeData data)
     {
-        //GetComponent<DebugCaller>().DebugThis("Gaze Log Count", count); count++;
+        logCount++;
+        if (baseTimeNanoSeconds == 0) { baseTimeNanoSeconds = data.captureTime; }
         // Get HMD position and rotation
         hmdPosition = VarjoManager.Instance.HeadTransform.position;
         hmdRotation = VarjoManager.Instance.HeadTransform.rotation.eulerAngles;
@@ -103,7 +121,7 @@ public class MyGazeLogger : MonoBehaviour
         logData[0] = Time.frameCount.ToString();
 
         // Gaze data capture time (nanoseconds)
-        logData[1] = data.captureTime.ToString();
+        logData[1] = (data.captureTime - baseTimeNanoSeconds).ToString();
 
         // Log time of experiment (seconds) experiment
         logData[2] = experimentManager.experimentSettings.experimentTime.ToString("G", culture );
@@ -145,6 +163,7 @@ public class MyGazeLogger : MonoBehaviour
 
         logData[20] = invalid ? "" : fixatingOn.ToString();
         logData[21] = "";
+        
         Transform HMD = VarjoManager.Instance.HeadTransform;
         // Transform gaze direction and origin from HMD space to world space
         Vector3 gazeRayDirection = HMD.TransformVector(Double3ToVector3(data.gaze.forward));
@@ -240,7 +259,7 @@ public class Fixation
     public float rightMirror;
     public float rearMirror;
 
-    public float world;
+    public float environment;
     public float unknown;
 
     public Fixation()
@@ -254,12 +273,12 @@ public class Fixation
         rightMirror = 0f;
         rearMirror = 0f;
         
-        world = 0f;
+        environment = 0f;
         unknown= 0f;
     }
     public void FixatingOn(LoggedTags tag)
     {
-        if (tag == LoggedTags.World) { world += Time.deltaTime; }
+        if (tag == LoggedTags.Environment) { environment += Time.deltaTime; }
         else if (tag == LoggedTags.ConformalSymbology) { conformalSymbology += Time.deltaTime; }
         else if (tag == LoggedTags.HUDSymbology) { hudSymbology += Time.deltaTime; }
         else if (tag == LoggedTags.HUDText) { hudText += Time.deltaTime; }

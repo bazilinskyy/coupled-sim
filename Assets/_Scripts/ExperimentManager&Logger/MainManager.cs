@@ -10,24 +10,24 @@ public class MainManager : MonoBehaviour
 
     public List<MainExperimentSetting> experiments;
 
-    public bool debug = true;
+    private bool debugMode = true;
 
-    public bool makeVirtualCable = true;
-    public bool renderHUD = true;
+    private bool makeVirtualCable = true;
+    private bool renderHUD = true;
 
-    public string subjectDataFolder ="nothing...";
-    public string subjectName = "Dummy";
-    public int experimentOrder;
+    private string subjectDataFolder = "nothing...";
+    private string subjectName = "Dummy";
+    private int experimentOrder;
 
-    public bool automateSpeed = true;
-    public bool saveData = false;
-    public float animationTime = 2.5f;
+    private bool automateSpeed = true;
+    private bool saveData = true;
+    private float animationTime = 2.5f;
 
-    public float FoVCamera = 87;
-    public bool calibratedUsingHands = false;
-    public float driverViewZToSteeringWheel = 0f;
-    public float driverViewYToSteeringWheel = 0f;
-    public float driverViewXToSteeringWheel = 0f;
+    private float foVCamera = 87;
+    private bool calibratedUsingHands = false;
+    private float driverViewZToSteeringWheel = 0f;
+    private float driverViewYToSteeringWheel = 0f;
+    private float driverViewXToSteeringWheel = 0f;
 
     [Header("Inputs")]
     private KeyCode myPermission = KeyCode.F1;
@@ -72,7 +72,7 @@ public class MainManager : MonoBehaviour
     
     private bool loading = false; 
     private bool readyToSaveData = false;
-
+    private bool isInExperiment = false;
     public KeyCode MyPermission { get => myPermission; set => myPermission = value; }
     public KeyCode ResetHeadPosition { get => resetHeadPosition; set => resetHeadPosition = value; }
     public KeyCode SpawnSteeringWheel { get => spawnSteeringWheel; set => spawnSteeringWheel = value; }
@@ -83,6 +83,21 @@ public class MainManager : MonoBehaviour
     public KeyCode SetToLastWaypoint { get => setToLastWaypoint; set => setToLastWaypoint = value; }
     public KeyCode InputNameKey { get => inputNameKey; set => inputNameKey = value; }
     public KeyCode SaveTheData { get => saveTheData; set => saveTheData = value; }
+    public bool DebugMode { get => debugMode; set => debugMode = value; }
+    public bool MakeVirtualCable { get => makeVirtualCable; set => makeVirtualCable = value; }
+    public bool RenderHUD { get => renderHUD; set => renderHUD = value; }
+    public string SubjectDataFolder { get => subjectDataFolder; set => subjectDataFolder = value; }
+    public string SubjectName { get => subjectName; set => subjectName = value; }
+    public int ExperimentOrder { get => experimentOrder; set => experimentOrder = value; }
+    public bool AutomateSpeed { get => automateSpeed; set => automateSpeed = value; }
+    public bool SaveData { get => saveData; set => saveData = value; }
+    public float AnimationTime { get => animationTime; set => animationTime = value; }
+    public float FoVCamera { get => foVCamera; set => foVCamera = value; }
+    public bool CalibratedUsingHands { get => calibratedUsingHands; set => calibratedUsingHands = value; }
+    public float DriverViewZToSteeringWheel { get => driverViewZToSteeringWheel; set => driverViewZToSteeringWheel = value; }
+    public float DriverViewYToSteeringWheel { get => driverViewYToSteeringWheel; set => driverViewYToSteeringWheel = value; }
+    public float DriverViewXToSteeringWheel { get => driverViewXToSteeringWheel; set => driverViewXToSteeringWheel = value; }
+    public bool IsInExperiment { get => isInExperiment; set => isInExperiment = value; }
 
     private void Awake()
     {
@@ -143,12 +158,13 @@ public class MainManager : MonoBehaviour
             if (random < 500) { setting.targetDifficulty = TargetDifficulty.easy; }
             else { setting.targetDifficulty = TargetDifficulty.hard; }
 
-            if (i == 0) { setting.name = "PractiseDrive"; setting.targetDifficulty = TargetDifficulty.EasyAndMedium; setting.practiseDrive = true; }
+            if (i == 0) { setting.name = "PractiseDrive"; setting.targetDifficulty = TargetDifficulty.EasyAndMedium; setting.practiseDrive = true; setting.minTargets = 3; setting.maxTargets = 3; }
             else { setting.name += i.ToString(); }
+
+            setting.navigationType = NavigationType.VirtualCable;
 
             experiments.Add(setting);
         }
-        
     }
     public MainExperimentSetting GetCurrentExperimentSettings()
     {
@@ -193,11 +209,6 @@ public class MainManager : MonoBehaviour
         catch { Debug.Log($"Could not read settings file: {filePath}...."); return false; }
     }
     public string GetNextScene() { return calibrationScene; }
-    public bool ExperimentFinished()
-    {
-        if (experimentIndex > experiments.Count()) { return false; }
-        else { return true; }
-    }
     public void ExperimentEnded()
     {
         
@@ -219,8 +230,7 @@ public class MainManager : MonoBehaviour
             else { Debug.Log($"Loading {experiments[experimentIndex].name}...\nTurns: {setting.turns.Count()}, Navigation:{setting.navigationType}, Targets/Turn: [{setting.minTargets},{setting.maxTargets}], Difficutly: {setting.targetDifficulty}"); }
 
             loading = true; bool loadWhileFading = true;
-            StartCoroutine(LoadSceneAsync(experimentScene, loadWhileFading));
-            
+            StartCoroutine(LoadSceneAsync(experimentScene, loadWhileFading));          
         }
     }
     public void ReloadCurrentExperiment()
@@ -239,6 +249,7 @@ public class MainManager : MonoBehaviour
     public void AddTargetScene() { SceneManager.LoadSceneAsync(targetScene, LoadSceneMode.Additive); }
     public void LoadCalibrationScene()
     {
+        IsInExperiment = false;
         SceneManager.LoadSceneAsync(calibrationScene, LoadSceneMode.Single);
     }
     IEnumerator LoadSceneAsync(string scene, bool loadWhileFading = false)
@@ -261,6 +272,10 @@ public class MainManager : MonoBehaviour
         blackOutScreen.CrossFadeAlpha(0, animationTime, false);
 
         loading = false; readyToSaveData = false;
+
+        if(scene == experimentScene) { IsInExperiment = true; }
+        else { IsInExperiment = false; }
+
         yield break;
     }
     public void MovePlayer(Transform position)
@@ -271,7 +286,6 @@ public class MainManager : MonoBehaviour
         player.transform.rotation = position.rotation;
         //Debug.Log("Moved player!");
     }
-
     IEnumerator SaveDataWhenReady()
     {
         

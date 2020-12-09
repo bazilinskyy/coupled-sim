@@ -94,6 +94,7 @@ public class CrossComponents : MonoBehaviour
     {
         //Deactivates the building block which corresponds to correct path
 		//Also the next crossing on the map will have all these varibles blocks turned off as they may coincide (spacially) with the first (current) crossing
+		//Done in corourtine as these activation operations are expensive
         if (!isCurrentCrossing)
         {
 			foreach (Transform child in variableBlocks) { child.gameObject.SetActive(false); yield return new WaitForEndOfFrame(); }
@@ -104,8 +105,8 @@ public class CrossComponents : MonoBehaviour
 
 			foreach (Transform child in variableBlocks) { child.gameObject.SetActive(child.name != blockNameToDeactivate); yield return new WaitForEndOfFrame(); }
 		}
-		
     }
+
 	void SpawnTargets(MainExperimentSetting settings) 
 	{
 		if(settings.maxTargets == 0) { return; }
