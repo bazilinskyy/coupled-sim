@@ -63,7 +63,7 @@ public class EyeTrackingVisuals : MonoBehaviour
     {
        if(lightObj != null) { lightObj.SetActive(false); }
        if (lightObj2 != null) { lightObj2.SetActive(false); }
-        enabled = false;
+       GetComponent<EyeTrackingVisuals>().enabled = false;
     }
     void SetLightActive(bool input)
     {
@@ -78,14 +78,6 @@ public class EyeTrackingVisuals : MonoBehaviour
     }
     void RenderGaze(VarjoPlugin.GazeData data)
     {
-
-/*        //cast ray with gaze direction and gaze starting position:
-        Vector3 gazePosition = new Vector3((float)data.gaze.position[0], (float)data.gaze.position[1], (float)data.gaze.position[2]);
-        Vector3 start = VarjoManager.Instance.HeadTransform.position + gazePosition;
-
-        //This is realtive to the hmd rotation
-        Vector3 gazeDirectionLocal = new Vector3((float)data.gaze.forward[0], (float)data.gaze.forward[1], (float)data.gaze.forward[2]);
-        Vector3 gazeDirectionWorld = TransformToWorldAxis(gazeDirectionLocal, gazePosition);*/
 
          Transform HMD = VarjoManager.Instance.HeadTransform;
         // Transform gaze direction and origin from HMD space to world space

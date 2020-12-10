@@ -16,6 +16,7 @@ public class CalibrationManager : MonoBehaviour
     private MainManager mainManager;
     
     public TextMesh instructions;
+    public TextMesh otherInstructions;
     private Transform player;
     public UnityEngine.UI.Image blackOutScreen;
 
@@ -61,13 +62,7 @@ public class CalibrationManager : MonoBehaviour
         if (Input.GetKeyDown(mainManager.ResetExperiment)) {mainManager.LoadCalibrationScene(); }
         if (Input.GetKeyDown(mainManager.ResetHeadPosition)) { Varjo.VarjoPlugin.ResetPose(true, Varjo.VarjoPlugin.ResetRotation.ALL); }
         if (Input.GetKeyDown(mainManager.CalibrateGaze)) { RequestGazeCalibration(); }
-        if (Input.GetKeyDown(mainManager.MyPermission)) {
-            if (!addedTargets)
-            {
-                mainManager.AddTargetScene(); addedTargets = true;
-            }
-            mainManager.LoadExperiment();
-        }
+        if (Input.GetKeyDown(mainManager.MyPermission)) {mainManager.LoadExperiment(); }
         /*if (Varjo.VarjoPlugin.IsGazeCalibrated() && (experimentInput.camType == MyCameraType.Normal || experimentInput.calibratedUsingHands) && !addedTargets) {
             mySceneLoader.AddTargetScene(); 
             addedTargets = true; cross.SetActve(false);
@@ -81,7 +76,8 @@ public class CalibrationManager : MonoBehaviour
             mainManager.AddTargetScene(); 
             addedTargets = true; 
             cross.SetActive(false);
-            instructions.text = "Look at the targets above!";
+            instructions.text = "Fixate on the yellow spheres and\npress one of the steering wheel buttons to indicate detection\nafter detection they dissapear.";
+            otherInstructions.text = "";
         }
     }
     void RequestGazeCalibration()

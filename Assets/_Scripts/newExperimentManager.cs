@@ -61,8 +61,11 @@ public class newExperimentManager : MonoBehaviour
         carUI = MyUtils.GetCarUI();
        
 
-        //Beun settings
+        //experiment settings
         experimentSettings = mainManager.GetExperimentSettings();
+        
+        //Turn of visuals if they are presents
+        if(player.GetComponent<EyeTrackingVisuals>() != null) { player.GetComponent<EyeTrackingVisuals>().Disable(); }
 
         //Set DataManager
         SetDataManager();
@@ -116,7 +119,7 @@ public class newExperimentManager : MonoBehaviour
         if (Input.GetKeyDown(mainManager.MyPermission)) { car.navigationFinished = true; } //Finish navigation early
         //if (Input.GetKeyDown(mainManager.setToLastWaypoint)) { SetCarToLastWaypoint(); }
         //if (Input.GetKeyDown(experimentInput.resetHeadPosition)) { SetCameraPosition(driverView.position, driverView.rotation); }
-        if (Input.GetKeyDown(mainManager.ResetExperiment)) { ResetExperiment(); }
+        if (Input.GetKeyDown(mainManager.ResetExperiment)) { StartCoroutine(ResetExperiment()); }
         if (Input.GetKeyDown(KeyCode.LeftShift)) { TeleportToNextWaypoint(); }
 
         if (car.navigationFinished)
@@ -145,12 +148,12 @@ public class newExperimentManager : MonoBehaviour
     }
     public float[] GetHUDInputs()
     {
-        if (experimentSettings.navigationType == NavigationType.HUD_high)
+        if (experimentSettings.navigationType == NavigationType.HUD_low)
         {
             float[] HUDPlacerInputs = { -6f, 0, 2f };
             return HUDPlacerInputs;
         }
-        else if (experimentSettings.navigationType == NavigationType.HUD_low)
+        else if (experimentSettings.navigationType == NavigationType.HUD_high)
         {
             float[] HUDPlacerInputs = { 20f, 3.5f, 2f };
             return HUDPlacerInputs;
@@ -171,32 +174,13 @@ public class newExperimentManager : MonoBehaviour
     {
         dataManager.TookWrongTurn(car.GetComponent<newNavigator>().waypoint);
 
-
         carUI.text = "Wrong turn... No problem!";
-
-        //Setting next waypoint
-        car.GetComponent<newNavigator>().SetNextWaypoint();
 
         //Putting car at next waypoint
         StartCoroutine(PlaceAtTargetWaypoint(true));
 
-        //We wait for the car to be placeced at the next waypoint before setting next crossing
-        StartCoroutine(SetNextWaypointCrossing());
     }
-    IEnumerator SetNextWaypointCrossing()
-    {
-        while (!setCarAtTarget)
-        {
-            yield return new WaitForEndOfFrame();
-        }
-
-        //Telporting to next waypoint will skip the triggers for next crossing to be made...
-        //New crossings are made after every UNeven waypoint so if we made a wrong turn at an uneven waypoint we manually set next crossing here...
-        //After a wrong turn AT a uneven waypoint we will be set at the NEXT waypoint. This one will thus be even
-        if ((car.GetComponent<newNavigator>().waypointIndex % 2) == 0) { crossingSpawner.SetNextCrossing(); Debug.Log("Enabled next crossing!"); }
-
-        setCarAtTarget = false;
-    }
+    
     IEnumerator PlaceAtTargetWaypoint(bool _setAtCarTargetBoolean = false)
     {
         car.GetComponent<SpeedController>().StartDriving(false);
@@ -313,8 +297,13 @@ public class newExperimentManager : MonoBehaviour
         else if (mainManager.camType == MyCameraType.Normal) { return player; }
         else { throw new System.Exception("Error in retrieving used camera transform in Experiment Manager.cs..."); }
     }
-    void ResetExperiment()
+    IEnumerator ResetExperiment()
     {
+        car.GetComponent<SpeedController>().StartDriving(false);
+
+        //Wait till car is at stand still 
+        while(car.GetComponent<Rigidbody>().velocity.magnitude > 0.1f) { yield return new WaitForSeconds(0.1f); }
+
         mainManager.ReloadCurrentExperiment();
     }
     public List<string> GetCarControlInput()

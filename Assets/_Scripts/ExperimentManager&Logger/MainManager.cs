@@ -130,38 +130,60 @@ public class MainManager : MonoBehaviour
     }
     void AddDummyExperiments()
     {
+        List<Condition> conditions = new List<Condition>();  Condition condition;
+        IEnumerable<NavigationType> navigationTypes = EnumUtil.GetValues<NavigationType>();
+
+        foreach (NavigationType type in navigationTypes) 
+        {
+            if(type == NavigationType.HighlightedRoad) { continue; }
+            condition.navigationType = type;
+            condition.targetDifficulty = TargetDifficulty.easy;
+            conditions.Add(condition);
+
+            condition.targetDifficulty = TargetDifficulty.hard;
+            conditions.Add(condition);
+        }
+
         experiments = new List<MainExperimentSetting>();
-        float random;
-        for (int i = 0; i < 5; i++)
+        
+        for (int i = 0; i <= conditions.Count()+1; i++)
         {
             MainExperimentSetting setting = new MainExperimentSetting();
+            int randomInt;
+            //Make settings for practise drive
+            if (i == 0) 
+            { 
+                setting.name = "PractiseDrive"; 
+                setting.targetDifficulty = TargetDifficulty.EasyAndMedium;
+                setting.navigationType = NavigationType.HUD_low;
+                setting.practiseDrive = true; 
+                setting.minTargets = 3; 
+                setting.maxTargets = 3; 
+            }
+            else 
+            {
+                
+                randomInt = Random.Range(0, conditions.Count());
+
+                Condition randomCondition = conditions[randomInt];
+
+                setting.name += i.ToString();
+                setting.navigationType = randomCondition.navigationType;
+                setting.targetDifficulty = randomCondition.targetDifficulty;
+                conditions.Remove(randomCondition);
+            }
+
+            //Add turns
             List<TurnType> turns = new List<TurnType>();
-
-
             for (int j = 0; j < 5; j++)
             {
-                random = Random.Range(0, 100);
-                if (random < 50) { turns.Add(TurnType.Left); }
+                randomInt = Random.Range(0, 100);
+                if (randomInt < 50) { turns.Add(TurnType.Left); }
                 else { turns.Add(TurnType.Right); }
 
             }
-
             turns.Add(TurnType.EndPoint);
             setting.turns = turns;
-
-            random = Random.Range(0, 1000);
-            if (random < 333) { setting.navigationType = NavigationType.HUD_low; }
-            else if (random < 666) { setting.navigationType = NavigationType.HUD_high; }
-            else { setting.navigationType = NavigationType.VirtualCable; }
-
-            random = Random.Range(0, 1000);
-            if (random < 500) { setting.targetDifficulty = TargetDifficulty.easy; }
-            else { setting.targetDifficulty = TargetDifficulty.hard; }
-
-            if (i == 0) { setting.name = "PractiseDrive"; setting.targetDifficulty = TargetDifficulty.EasyAndMedium; setting.practiseDrive = true; setting.minTargets = 3; setting.maxTargets = 3; }
-            else { setting.name += i.ToString(); }
-
-            setting.navigationType = NavigationType.VirtualCable;
 
             experiments.Add(setting);
         }
@@ -213,9 +235,9 @@ public class MainManager : MonoBehaviour
     {
         
         if (!loading) {
-            loading = true; bool loadWhileFading = false;
+            loading = true;
             StartCoroutine(SaveDataWhenReady());
-            StartCoroutine(LoadSceneAsync(waitingRoomScene, loadWhileFading)); 
+            StartCoroutine(LoadSceneAsync(waitingRoomScene));
             experimentIndex++;
         }
         
@@ -229,8 +251,8 @@ public class MainManager : MonoBehaviour
             if (setting.practiseDrive) { Debug.Log($"Loading {experiments[experimentIndex].name}...\nTurns: {setting.turns.Count()}, Navigation: All, Targets/Turn: [{setting.minTargets},{setting.maxTargets}], Difficutly: All "); }
             else { Debug.Log($"Loading {experiments[experimentIndex].name}...\nTurns: {setting.turns.Count()}, Navigation:{setting.navigationType}, Targets/Turn: [{setting.minTargets},{setting.maxTargets}], Difficutly: {setting.targetDifficulty}"); }
 
-            loading = true; bool loadWhileFading = true;
-            StartCoroutine(LoadSceneAsync(experimentScene, loadWhileFading));          
+            loading = true;
+            StartCoroutine(LoadSceneAsync(experimentScene));          
         }
     }
     public void ReloadCurrentExperiment()
@@ -242,8 +264,8 @@ public class MainManager : MonoBehaviour
             if (setting.practiseDrive) { Debug.Log($"Reloading {experiments[experimentIndex].name}...\nTurns: {setting.turns.Count()}, Navigation: All, Targets/Turn: [{setting.minTargets},{setting.maxTargets}], Difficutly: All "); }
             else { Debug.Log($"Reloading {experiments[experimentIndex].name}...\nTurns: {setting.turns.Count()}, Navigation:{setting.navigationType}, Targets/Turn: [{setting.minTargets},{setting.maxTargets}], Difficutly: {setting.targetDifficulty}"); }
 
-            loading = true; bool loadWhileFading = true;
-            StartCoroutine(LoadSceneAsync(experimentScene, loadWhileFading));
+            loading = true;
+            StartCoroutine(LoadSceneAsync(experimentScene));
         }
     }
     public void AddTargetScene() { SceneManager.LoadSceneAsync(targetScene, LoadSceneMode.Additive); }
@@ -252,12 +274,12 @@ public class MainManager : MonoBehaviour
         IsInExperiment = false;
         SceneManager.LoadSceneAsync(calibrationScene, LoadSceneMode.Single);
     }
-    IEnumerator LoadSceneAsync(string scene, bool loadWhileFading = false)
+    IEnumerator LoadSceneAsync(string scene)
     {
         blackOutScreen.CrossFadeAlpha(1f, animationTime, false);
 
         //Skip this waiting if we load while fading
-        if (!loadWhileFading) { yield return new WaitForSeconds(animationTime); }
+        yield return new WaitForSeconds(animationTime);
 
         //When screen is black Yield one frame to give other coroutine time to save the data
         readyToSaveData = true; yield return new WaitForEndOfFrame();
@@ -266,7 +288,18 @@ public class MainManager : MonoBehaviour
         DontDestroyOnLoad(player);
 
         AsyncOperation operation = SceneManager.LoadSceneAsync(scene, LoadSceneMode.Single);
+/*        operation.allowSceneActivation = false;
 
+        while (!operation.isDone)
+        {
+            // Check if the load has finished
+            if (operation.progress >= 0.9f)
+            {
+                operation.allowSceneActivation = true;
+                break;
+            }
+            yield return new WaitForEndOfFrame();
+        }*/
         while (!operation.isDone) { yield return new WaitForEndOfFrame(); }
 
         blackOutScreen.CrossFadeAlpha(0, animationTime, false);
@@ -301,6 +334,11 @@ public class MainManager : MonoBehaviour
     }
 }
 
+public struct Condition
+{
+    public NavigationType navigationType;
+    public TargetDifficulty targetDifficulty;
+}
 [System.Serializable]
 public class MainExperimentSetting
 {

@@ -10,9 +10,9 @@ public class CreateVirtualCable : MonoBehaviour
 	public RoadParameters roadParameters;
 	public Material navigationPartMaterial;
 	private GameObject navigationSymbology;
-	public Vector3[] navigationLine;
-	public  Vector3[] vertices;
-	public int[] triangles;
+	private Vector3[] navigationLine;
+	private  Vector3[] vertices;
+	private int[] triangles;
 	int pointsPerCorner = 30;
     WaypointsObjects waypoints;
 
@@ -139,7 +139,7 @@ public class CreateVirtualCable : MonoBehaviour
 		if (experimentManager.MakeVirtualCable()) { CreateNavigationPart(navigationLine); CreateColliders(); }
     }
 
-    private void OnDrawGizmos()
+    /*private void OnDrawGizmos()
     {
         if(navigationLine.Count() != 0)
         {
@@ -153,7 +153,7 @@ public class CreateVirtualCable : MonoBehaviour
 				i++;
 			}
         }
-    }
+    }*/
     private void CreateNavigationPart(Vector3[] points)
 	{
 		Mesh mesh;
