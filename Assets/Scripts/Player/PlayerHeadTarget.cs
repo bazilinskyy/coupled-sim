@@ -31,21 +31,15 @@ public class PlayerHeadTarget : MonoBehaviour
 
     private void LateUpdate()
     {
-        if (!playerLookAtPed.CanLookAtPed)
+        if(playerLookAtPed.TargetPed != null)
         {
-            if (target.transform.parent is null)
-            {
-                target.transform.parent = CenterAnchor;
-            }
-            target.transform.position = Vector3.Slerp(target.transform.position, CenterAnchor.position, LookAtPlayerSpeed * Time.deltaTime);
-        }
-        else if(playerLookAtPed.IsTargettingPed)
-        {
-            if (!(target.transform.parent is null))
-            {
-                target.transform.parent = null;
-            }    
+            target.transform.parent = null;
             target.transform.position = Vector3.Slerp(target.transform.position, playerLookAtPed.TargetPed.position, LookAtPlayerSpeed * Time.deltaTime);
+        } 
+        else
+        {
+            target.transform.parent = CenterAnchor;
+            target.transform.position = Vector3.Slerp(target.transform.position, CenterAnchor.position, LookAtPlayerSpeed * Time.deltaTime);
         }
     }
 

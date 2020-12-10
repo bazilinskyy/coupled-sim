@@ -4,10 +4,7 @@ using UnityEngine;
 
 public class PlayerLookAtPed : MonoBehaviour
 {
-    private bool isTargettingPed;
-    private bool canLookAtPed;
     private Transform targetPed;
-
 
     public GameObject[] Peds;
 
@@ -19,11 +16,7 @@ public class PlayerLookAtPed : MonoBehaviour
     public bool EnableTracking;
     [HideInInspector]
     public bool trackingEnabledWhenYielding;
-    private bool trackingEnabled;
 
-
-    public bool IsTargettingPed { get => isTargettingPed; }
-    public bool CanLookAtPed { get => canLookAtPed; }
     public Transform TargetPed { get => targetPed; }
 
     private float targetAngle;
@@ -32,72 +25,51 @@ public class PlayerLookAtPed : MonoBehaviour
     private void Start()
     {
         Peds = GameObject.FindGameObjectsWithTag("Pedestrian");
-        trackingEnabled = EnableTracking;
     }
 
     private void Update()
     {
-        if (CarRigidbody.velocity.magnitude < 0.1f && CarRigidbody.velocity.magnitude > -0.1f && !trackingEnabledWhenYielding)
-        {
-            trackingEnabled = false;
-        }
-        else
-        {
-            trackingEnabled = EnableTracking;
-        }
+        bool yielding = CarRigidbody.velocity.magnitude < 0.1f && CarRigidbody.velocity.magnitude > -0.1f;
+        bool trackingEnabled = (yielding ? trackingEnabledWhenYielding : EnableTracking);
 
-        LookForPeds();
-
-        if (isTargettingPed)
-        {
-            Ray targetRay = new Ray(PlayerHead.position, (TargetPed.position - PlayerHead.position) + (new Vector3(0.0f,PlayerHead.position.y,0.0f) - new Vector3(0.0f,TargetPed.position.y,0.0f)));
-            targetAngle = Vector3.Angle(transform.forward, targetRay.direction);
-            if (targetAngle < MaxHeadRotation)
-            {
-                canLookAtPed = true;
-            }
-            else
-            {
-                canLookAtPed = false;
-            }
-        }
-    }
-
-    private void LookForPeds()
-    {
-        if (!isTargettingPed && trackingEnabled)
+        float minDist = float.MaxValue;
+        if (trackingEnabled)
         {
             foreach (GameObject ped in Peds)
             {
-                var diffVector = transform.position - ped.transform.position;
-                diffVector.y = 0;
-                var distance = diffVector.magnitude;
-
-                if (distance < MaxTrackingDistance && distance > MinTrackingDistance)
+                float distance = FlatDistance(transform.position, ped.transform.position);
+                if (minDist > distance)
                 {
+                    minDist = distance;
                     targetPed = ped.transform;
-                    isTargettingPed = true;
                 }
             }
-        }
-        else
+        } else
         {
-            float distance = 0.0f;
+            targetPed = null;
+        }
 
-            if (!(TargetPed is null))
-            {
-                var diffVector = transform.position - TargetPed.position;
-                diffVector.y = 0;
-                distance = diffVector.magnitude;
-            }
+        if ((minDist > MaxTrackingDistance || minDist < MinTrackingDistance) && !yielding)
+        {
+            targetPed = null;
+        }
 
-            if (distance > MaxTrackingDistance || distance < MinTrackingDistance || !trackingEnabled)
+        if (targetPed != null)
+        {
+            Ray targetRay = new Ray(PlayerHead.position, (targetPed.position - PlayerHead.position) + (new Vector3(0.0f,PlayerHead.position.y,0.0f) - new Vector3(0.0f, targetPed.position.y,0.0f)));
+            targetAngle = Vector3.Angle(transform.forward, targetRay.direction);
+            if (targetAngle > MaxHeadRotation)
             {
                 targetPed = null;
-                isTargettingPed = false;
-                canLookAtPed = false;
             }
         }
     }
 
+    private float FlatDistance(Vector3 pos1, Vector3 pos2)
+    {
+        var diffVector = pos1 - pos2;
+        diffVector.y = 0;
+        var distance = diffVector.magnitude;
+        return distance;
+    }
 }
