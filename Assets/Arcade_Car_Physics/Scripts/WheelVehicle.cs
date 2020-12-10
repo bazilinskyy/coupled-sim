@@ -12,9 +12,15 @@ using UnityEngine;
     using MOSC;
 #endif
 
+public interface IVehicle
+{
+    bool Handbrake { get; }
+    float Speed { get; }
+}
+
 namespace VehicleBehaviour {
     [RequireComponent(typeof(Rigidbody))]
-    public class WheelVehicle : MonoBehaviour {
+    public class WheelVehicle : MonoBehaviour, IVehicle {
         
         [Header("Inputs")]
     #if MULTIOSCONTROLS
