@@ -26,17 +26,24 @@ namespace VehicleBehaviour {
         public float pitchSpeed = 0.05f;
 
         private AudioSource _source;
-        private WheelVehicle _vehicle;
+        private IVehicle _vehicle;
         
         void Start () {
             _source = GetComponent<AudioSource>();
-            _vehicle = GetComponent<WheelVehicle>();
+            var aiCar = GetComponent<AICar>();
+            if (aiCar.isActiveAndEnabled) {
+                _vehicle = aiCar;
+            } else
+            {
+                _vehicle = GetComponent<WheelVehicle>();
+            }
         }
         
         void Update () {
             if (_vehicle.Handbrake && _source.clip == rolling)
             {
                 _source.clip = stopping;
+                _source.loop = false;
                 _source.Play();
             }
 
@@ -44,13 +51,14 @@ namespace VehicleBehaviour {
             {
                 _source.clip = starting;
                 _source.Play();
-
+                _source.loop = false;
                 _source.pitch = 1;
             }
 
             if (!_vehicle.Handbrake && !_source.isPlaying)
             {
                 _source.clip = rolling;
+                _source.loop = true;
                 _source.Play();
             }
 
