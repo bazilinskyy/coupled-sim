@@ -8,7 +8,7 @@ using UnityStandardAssets.Utility;
 
 // This script was adapted from the study of De Clercq.
 
-public class AICar : MonoBehaviour
+public class AICar : MonoBehaviour, IVehicle
 {
     // Motion related variables
     private float set_speed = 0;                                           // Velocity of cars in simulation
@@ -52,6 +52,10 @@ public class AICar : MonoBehaviour
 
     // Animation related variables
     private int layer;
+
+    public bool Handbrake => braking;
+
+    public float Speed => speed;
 
     // Use this for initialization
     void Start()
