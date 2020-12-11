@@ -150,7 +150,6 @@ public class CrossComponents : MonoBehaviour
 			//During the practise drive we have easy targets for the first half of the track and hard targets for the second half.
 			if(settings.targetDifficulty == TargetDifficulty.EasyAndMedium) 
 			{
-				
 				int NTurns = experimentManager.experimentSettings.turns.Count();
 				if (waypoint.waypointID < (int)Mathf.Floor(NTurns / 2)) { targetDifficulty = TargetDifficulty.easy; }
 				else { targetDifficulty = TargetDifficulty.hard; }

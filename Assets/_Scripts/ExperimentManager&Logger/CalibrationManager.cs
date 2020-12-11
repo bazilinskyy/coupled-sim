@@ -76,7 +76,7 @@ public class CalibrationManager : MonoBehaviour
             mainManager.AddTargetScene(); 
             addedTargets = true; 
             cross.SetActive(false);
-            instructions.text = "Fixate on the yellow spheres and\npress one of the steering wheel buttons to indicate detection\nafter detection they dissapear.";
+            instructions.text = "Fixate on the yellow spheres and press one\nof the steering wheel buttons to indicate detection.\nAfter detection they will dissapear.";
             otherInstructions.text = "";
         }
     }

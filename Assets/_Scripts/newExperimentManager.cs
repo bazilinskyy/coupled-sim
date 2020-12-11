@@ -48,6 +48,8 @@ public class newExperimentManager : MonoBehaviour
     UnityEngine.TextMesh carUI;
     public  bool setCarAtTarget = false;
     private int lastWaypointIndex = 0;
+    private bool informedOnHardTargets = false;
+    private bool informedOnEasyTargets = false;
 
     private void Start()
     {
@@ -103,6 +105,7 @@ public class newExperimentManager : MonoBehaviour
     }
     void Update()
     {
+
         experimentSettings.experimentTime += Time.deltaTime;
         //Looks for targets to appear in field of view and sets their visibility timer accordingly
 
@@ -129,12 +132,25 @@ public class newExperimentManager : MonoBehaviour
             if (car.GetComponent<Rigidbody>().velocity.magnitude < 0.5f) { mainManager.ExperimentEnded(); }
         }
 
+
+        //Code for practise drive UI
         if (experimentSettings.practiseDrive && lastWaypointIndex != car.waypointIndex )
         {
             lastWaypointIndex = car.waypointIndex;
             if ((car.waypointIndex) % (int)Mathf.Floor(experimentSettings.turns.Count()/3) == 0 ) { ToggleSymbology(); }
-            
+            if ((car.waypointIndex) >= (int)Mathf.Floor(experimentSettings.turns.Count() / 2) && !informedOnHardTargets) { StartCoroutine(InformOnTargetDifficulty("Hard")); informedOnHardTargets = true; } 
         }
+
+        if(experimentSettings.experimentTime > 2f && !informedOnEasyTargets) { StartCoroutine(InformOnTargetDifficulty("Easy")); informedOnEasyTargets = true; }
+    }
+
+    IEnumerator InformOnTargetDifficulty(string difficulty)
+    {
+        carUI.text = $"{difficulty} targets ahead!";
+
+        yield return new WaitForSeconds(3f);
+
+        carUI.text = "";
     }
     public bool MakeVirtualCable()
     {
