@@ -54,7 +54,7 @@ public class CalibrationManager : MonoBehaviour
 
         //Looks for targets to appear in field of view and sets their visibility timer accordingly
         if (userInput && addedTargets) { ProcessUserInputTargetDetection(); }
-        if ((userInput && !addedTargets) || Input.GetKeyDown(mainManager.SpawnSteeringWheel)) { CalibrateHands(); }
+        if ((userInput && !addedTargets && !Varjo.VarjoPlugin.IsGazeCalibrating()) || Input.GetKeyDown(mainManager.SpawnSteeringWheel)) { CalibrateHands(); }
     }
     void Update()
     {

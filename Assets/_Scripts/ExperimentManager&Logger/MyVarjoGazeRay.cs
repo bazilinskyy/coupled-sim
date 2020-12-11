@@ -107,14 +107,14 @@ public class MyVarjoGazeRay : MonoBehaviour
                     {
                         if (gazeRayHit.collider.CompareTag(tag.ToString()))
                         {
-                            Debug.Log($"{tag}");
+                            //Debug.Log($"{tag}");
                             gazeLogger.FixatingOn(tag);
                             lookingAtWorld = false;
                         }
                     }
 
                     //If hit colliders not tagged we assume it is the world:
-                    if (lookingAtWorld) { gazeLogger.FixatingOn(LoggedTags.Environment); Debug.Log("World"); }
+                    if (lookingAtWorld) { gazeLogger.FixatingOn(LoggedTags.Environment); }
                 }
                 if (drawDebug)
                 {

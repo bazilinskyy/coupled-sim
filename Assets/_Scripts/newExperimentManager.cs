@@ -50,7 +50,8 @@ public class newExperimentManager : MonoBehaviour
     private int lastWaypointIndex = 0;
     private bool informedOnHardTargets = false;
     private bool informedOnEasyTargets = false;
-
+    private bool loggedLastTargets = false;
+    private bool startedDriving = false;
     private void Start()
     {
         StartUpFunctions();
@@ -95,21 +96,24 @@ public class newExperimentManager : MonoBehaviour
     private void LateUpdate()
     {
         //We dot this as late update to make sure gaze data (which is used to determine which target the participant is detecting) is processed 
-        //before this code is exectured
+        //before this code is executed
 
+        //This is ina boolean so that if multiple things depend on userinput it stays true 
+        //(calling the function userInput() multiple times leads to complications as it prevents double tapping i.e., multiple input signals within a short time frame
         bool userInput = UserInput();
-        //Target detection when we already started driving
-        if (car.GetComponent<SpeedController>().IsDriving() && userInput) { ProcessUserInputTargetDetection(); }
-        //First input will be the start driving command (so if not already driving we will start driving)
-        else if (!car.GetComponent<SpeedController>().IsDriving() && userInput && mainManager.AutomateSpeed) { car.GetComponent<SpeedController>().StartDriving(true); }
+        
+        //Target detection processing (preventing inputs when the drive is finished or not started)
+        if (userInput && !car.navigationFinished && !startedDriving) { ProcessUserInputTargetDetection(); }
+        
     }
     void Update()
     {
-
         experimentSettings.experimentTime += Time.deltaTime;
         //Looks for targets to appear in field of view and sets their visibility timer accordingly
-
         SetTargetVisibilityTime();
+
+        //Start driving after 2 seconds
+        if(experimentSettings.experimentTime > 2f && !startedDriving) { car.GetComponent<SpeedController>().StartDriving(true); startedDriving=true;}
 
         //When I am doing some TESTING
         if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W)) { car.GetComponent<SpeedController>().StartDriving(true); }
@@ -127,8 +131,10 @@ public class newExperimentManager : MonoBehaviour
 
         if (car.navigationFinished)
         {
-            LogCurrentCrossingTargets(crossingSpawner.crossings.NextCrossing().targetList);
-
+            //Log the last targets (targets of last cross point are automatically logged when leaving the crossing)
+            //As this crossing is the end point we will never leave and not trigger this automated mechanism
+            if (!loggedLastTargets) { LogCurrentCrossingTargets(crossingSpawner.crossings.NextCrossing().targetList); loggedLastTargets = true; }
+            //When car is close to standstill end the experiment
             if (car.GetComponent<Rigidbody>().velocity.magnitude < 0.5f) { mainManager.ExperimentEnded(); }
         }
 
