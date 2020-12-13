@@ -194,13 +194,21 @@ public class newExperimentManager : MonoBehaviour
     }
     public void TookWrongTurn() 
     {
-        dataManager.TookWrongTurn(car.GetComponent<newNavigator>().waypoint);
+        dataManager.LogIrregularity(Irregularity.WrongTurn);
 
         carUI.text = "Wrong turn... No problem!";
 
         //Putting car at next waypoint
         StartCoroutine(PlaceAtTargetWaypoint(true));
+    }
 
+    public void CarOutOfBounce()
+    {
+        dataManager.LogIrregularity(Irregularity.OutOfBounce);
+        //Car got hit by one of the out of bounce triggers
+        carUI.text = "Car out of bounce... No problem!";
+
+        StartCoroutine(PlaceAtTargetWaypoint(true));
     }
     
     IEnumerator PlaceAtTargetWaypoint(bool _setAtCarTargetBoolean = false)

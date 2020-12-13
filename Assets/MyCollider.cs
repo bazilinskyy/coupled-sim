@@ -6,7 +6,7 @@ public class MyCollider : MonoBehaviour
 {
     private bool isTriggered = false;
     private float triggerTime;
-    private float timeOutTime = 4f;
+    private float timeOutTime = 8f;
     void Update()
     {
         ResetTriggerBoolean();

@@ -17,7 +17,7 @@ public class DataLogger : MonoBehaviour
     private const string generalTargetInfo = "generalTargetInfo.csv";
     private const string generalExperimentInfo = "GeneralExperimentInfo.csv";
     private const string fixationFileName = "fixationData.csv";
-    private const string WrongTurnFileName = "wrongTurns.csv";
+    private const string WrongTurnFileName = "carIrregularities.csv";
     //our car
     private newNavigator car;
     //Current Navigation
@@ -32,7 +32,7 @@ public class DataLogger : MonoBehaviour
     private List<VehicleDataPoint> vehicleData;
     private List<TargetAlarm> targetDetectionData;
     public List<TargetData> targetData;
-    public List<WrongTurnData> wrongTurnData;
+    public List<DrivingIrregularities> carIrregularityData;
 
     private MainManager mainManager;
 
@@ -66,7 +66,7 @@ public class DataLogger : MonoBehaviour
         vehicleData = new List<VehicleDataPoint>();
         targetDetectionData = new List<TargetAlarm>();
         targetData = new List<TargetData>();
-        wrongTurnData = new List<WrongTurnData>();
+        carIrregularityData = new List<DrivingIrregularities>();
 
         //Eye fixation stuff
         if (mainManager.camType == MyCameraType.Normal)
@@ -107,9 +107,9 @@ public class DataLogger : MonoBehaviour
             targetData.Add(targetInfo);
         }
     }
-    public void TookWrongTurn(WaypointStruct waypoint) 
+    public void LogIrregularity(Irregularity irregularity) 
     { 
-        wrongTurnData.Add(new WrongTurnData(waypoint, experimentManager.experimentSettings.experimentTime));
+        carIrregularityData.Add(new DrivingIrregularities(car.waypoint,  irregularity, experimentManager.experimentSettings.experimentTime, car.transform.position));
     }
     private void Update()
     {
@@ -124,16 +124,16 @@ public class DataLogger : MonoBehaviour
         SaveVehicleData();
         SaveTargetDetectionData();
         SaveTargetData();
-        SaveWrongTurnData();
+        SaveCarIrregularityData();
         SaveNavigationData();
         SaveExperimentInfo();
 
         logging = false;
         savedData = true;
     }
-    private void SaveWrongTurnData()
+    private void SaveCarIrregularityData()
     {
-        string[] columns = { "ExperimentTime", "WaypointID", "TurnType", "WaypointPosition" };
+        string[] columns = { "ExperimentTime", "Irregularity", "WaypointID", "TurnType", "CarPosition" };
         string[] logData = new string[columns.Length];
         string filePath = string.Join("/", saveFolder, WrongTurnFileName);
 
@@ -142,12 +142,14 @@ public class DataLogger : MonoBehaviour
         {
             Log(columns, file);
 
-            foreach (WrongTurnData wrongTurn in wrongTurnData)
+            foreach (DrivingIrregularities irregularity in carIrregularityData)
             {
-                logData[0] = wrongTurn.time.ToString(specifier,culture);
-                logData[1] = wrongTurn.waypoint.waypointID.ToString();
-                logData[2] = wrongTurn.waypoint.turn.ToString();
-                logData[3] = wrongTurn.waypoint.waypoint.position.ToString("F3");
+                logData[0] = irregularity.time.ToString(specifier,culture);
+                logData[1] = irregularity.irregularity.ToString();
+                logData[2] = irregularity.waypoint.waypointID.ToString();
+                logData[3] = irregularity.waypoint.turn.ToString();
+                logData[4] = irregularity.carPosition.ToString("F3");
+                
 
                 Log(logData, file);
             }
@@ -155,6 +157,8 @@ public class DataLogger : MonoBehaviour
             file.Close();
         }
     }
+
+    
     public void AddCurrentNavigationLine(Vector3[] points)
     {
         //Debug.Log($"Got new navigation points: {points.Length}...");
@@ -544,15 +548,24 @@ public class VehicleDataPoint
 
 }
 
-public class WrongTurnData
+public enum Irregularity
+{
+    WrongTurn,
+    OutOfBounce,
+}
+public class DrivingIrregularities
 {
     public WaypointStruct waypoint;
+    public Irregularity irregularity;
     public float time;
+    public Vector3 carPosition;
 
-    public WrongTurnData(WaypointStruct _waypoint, float _time)
+    public DrivingIrregularities(WaypointStruct _waypoint, Irregularity _irregularity, float _time, Vector3 _carPos)
     {
         waypoint = _waypoint;
         time = _time;
+        irregularity = _irregularity;
+        carPosition = _carPos;
     }
 }
 public class TargetData

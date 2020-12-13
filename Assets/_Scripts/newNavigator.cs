@@ -101,6 +101,13 @@ public class newNavigator : MonoBehaviour
                 experimentManager.TookWrongTurn();
             }
         }
+        else if (other.CompareTag("OutOfBounce"))
+        {
+            if (other.GetComponent<MyCollider>().Triggered())
+            {
+                experimentManager.CarOutOfBounce();
+            }
+        }
         else if (other.gameObject.CompareTag("NavigationFinished"))
         {
             navigationFinished = true;
