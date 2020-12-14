@@ -101,7 +101,7 @@ public class DataLogger : MonoBehaviour
     
     public void LogTargets(List<Target> targets)
     {
-        Debug.Log($"Logging {targets.Count()}... ");
+        //Debug.Log($"Logging {targets.Count()}... ");
         foreach(Target target in targets)
         {
             TargetData targetInfo = new TargetData(target);

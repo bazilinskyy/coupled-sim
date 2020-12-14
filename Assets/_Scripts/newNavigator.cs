@@ -81,40 +81,38 @@ public class newNavigator : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
+        string[] triggers = { "CorrectTurn", "WrongTurn",  "OutOfBounce", "NavigationFinished", "EndStraight", "EnterCrossing" };
+
+        if (!triggers.Contains(other.tag)) { return; }
+        //Check the trigger (this pscripts prevents multiple trigger events happening in quick succesion)
+        if (!other.GetComponent<MyCollider>().Triggered()){ return; }
+        //Handle all triggers
 
         if (other.CompareTag("CorrectTurn"))
         {
-            if (other.GetComponent<MyCollider>().Triggered())
-            {
-                atWaypoint = false;
-                SetNextWaypoint();
-                RenderNavigationArrow();
-            }
+            atWaypoint = false;
+            SetNextWaypoint();
+            RenderNavigationArrow();
+            
         }
-        else if (other.CompareTag("WrongTurn"))
-        {
-            if (other.GetComponent<MyCollider>().Triggered())
-            {
-                experimentManager.TookWrongTurn();
-            }
-        }
-        else if (other.CompareTag("OutOfBounce"))
-        {
-            if (other.GetComponent<MyCollider>().Triggered())
-            {
-                experimentManager.CarOutOfBounce();
-            }
-        }
-        else if (other.gameObject.CompareTag("NavigationFinished"))
-        {
+        else if (other.CompareTag("WrongTurn")){ experimentManager.TookWrongTurn();}
+        else if (other.CompareTag("OutOfBounce")) {experimentManager.CarOutOfBounce(); }
+        else if (other.gameObject.CompareTag("NavigationFinished")){
             navigationFinished = true;
+            //As we dont spawn the next crossing (since this is the last waypoint) we need to manually add the targets of NEXT crossing 
+            //Normally they are added automatically when entering the new crossing....
+            experimentManager.LogTargets(crossingSpawner.crossings.NextCrossing().components.targetList);
         }
-        else if (other.gameObject.CompareTag("EndStraight"))
+        else if (other.gameObject.CompareTag("EndStraight")) { experimentManager.EndOfStraight(); }
+        else if (other.gameObject.CompareTag("EnterCrossing"))
         {
-            if (other.GetComponent<MyCollider>().Triggered())
+            if (!experimentManager.experimentSettings.experimentType.IsTargetCalibration())
             {
-                experimentManager.EndOfStraight();
+                //Debug.Log("Enter trigger called, configuring next crossing...");
+                experimentManager.LogTargets(crossingSpawner.crossings.CurrentCrossing().components.targetList);
+                crossingSpawner.SetNextCrossing();
             }
+            
         }
 
     }

@@ -126,7 +126,7 @@ public class MainManager : MonoBehaviour
         Debug.Log($"Settings file received...\nSubject ID = {subjectName}, DataFolder: {subjectDataFolder}...");
         
         experiments = new List<MainExperimentSetting>();
-        AddTargetCalibrationExperiment();
+        //AddTargetCalibrationExperiment();
         AddDummyExperiments();
     }
 
@@ -142,6 +142,7 @@ public class MainManager : MonoBehaviour
         setting.minTargets = 3;
         setting.maxTargets = 3;
         setting.experimentType = ExperimentType.TargetCalibration;
+        setting.targetDifficulty = TargetDifficulty.easy;
 
         List<TurnType> turns = new List<TurnType>
         {

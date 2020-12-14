@@ -87,11 +87,13 @@ public class newExperimentManager : MonoBehaviour
         if (experimentSettings.experimentType.IsTargetCalibration())
         {
             crossingSpawner.crossings.CurrentCrossing().components.triggerStart.SetActive(false);
+            crossingSpawner.crossings.CurrentCrossing().components.triggerEnd.SetActive(true);
             //Remove targets of next crossing (they might confuse participnats);
             crossingSpawner.crossings.NextCrossing().components.RemoveTargets();
             Transform startPoint = crossingSpawner.crossings.CurrentCrossing().components.startPoint.transform;
             startPoint.position -= 30f * startPoint.forward;
         }
+       
 
         //Get all gameobjects we intend to use from the car (and do some setting up)
         SetGameObjectsFromCar();
@@ -167,14 +169,12 @@ public class newExperimentManager : MonoBehaviour
 
         if (experimentSettings.experimentType.IsPractise() && experimentSettings.experimentTime > 2f && !informedOnEasyTargets) { StartCoroutine(InformOnTargetDifficulty("Easy")); informedOnEasyTargets = true; }
     }
-
     void SetTransparencyEasyMaterial(float transparency)
     {
         Color nextColor = easyMaterial.color;
         nextColor.a = transparency;
         easyMaterial.color = nextColor;
     }
-
     float GetDetectionRate(List<Target> targets)
     {
         if(targets.Count() == 0) { return 0f; }
@@ -205,7 +205,7 @@ public class newExperimentManager : MonoBehaviour
 
             //Log Targets;
             SetProperTargetIDsCalibration();
-            LogCurrentCrossingTargets(components.targetList);
+            LogTargets(components.targetList);
 
             //Remove old targets and spawn new ones
             
@@ -213,7 +213,6 @@ public class newExperimentManager : MonoBehaviour
             components.SpawnTargets(experimentSettings);
         }
     }
-
     void SetProperTargetIDsCalibration()
     {
         foreach(Target target in crossingSpawner.crossings.CurrentCrossing().targetList)
@@ -333,7 +332,7 @@ public class newExperimentManager : MonoBehaviour
 
         StartCoroutine(SetCarSteadyAt(targetPos, targetView, true));
     }
-    public void LogCurrentCrossingTargets(List<Target> targets)
+    public void LogTargets(List<Target> targets)
     {
         dataManager.LogTargets(targets);
     }

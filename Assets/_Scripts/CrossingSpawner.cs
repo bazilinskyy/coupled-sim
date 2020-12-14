@@ -84,31 +84,7 @@ public class CrossingSpawner : MonoBehaviour
             waypoints[1].turn = turnsList[turnIndex+1]; waypoints[1].waypointID = WaypointID(); 
             return waypoints; 
         }
-    }
-
-    private void OnTriggerEnter(Collider other)
-    {
-        if (other.gameObject.CompareTag("EnterCrossing"))
-        {
-            if (other.GetComponent<MyCollider>().Triggered())
-            {
-                if (!experimentManager.experimentSettings.experimentType.IsTargetCalibration())
-                {
-                    //Debug.Log("Enter trigger called, configuring next crossing...");
-                    experimentManager.LogCurrentCrossingTargets(crossings.CurrentCrossing().components.targetList);
-                    SetNextCrossing();
-                }
-            }
-        }
-        if (other.gameObject.CompareTag("NavigationFinished"))
-        {
-            if ((other.GetComponent<MyCollider>().Triggered())) 
-            {   
-                experimentManager.LogCurrentCrossingTargets(crossings.CurrentCrossing().components.targetList);
-                experimentManager.LogCurrentCrossingTargets(crossings.CurrentCrossing().components.targetList);
-            }
-        }
-    }    
+    } 
     
 }
 

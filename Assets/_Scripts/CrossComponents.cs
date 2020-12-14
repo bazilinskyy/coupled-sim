@@ -144,6 +144,7 @@ public class CrossComponents : MonoBehaviour
 		{
 
 			int ID = experimentManager.GetNextTargetID();
+			Debug.Log($"Instantiating target: {ID}...");
 			//Varies position of target
 			Vector3 sideVariation = point.name == "Right" ? waypoint.waypoint.right*Random.Range(0, 2f) : -waypoint.waypoint.right * Random.Range(0, 2f);
 			Vector3 forwardVariation = waypoint.waypoint.forward * Random.Range(-4f, 4f);
