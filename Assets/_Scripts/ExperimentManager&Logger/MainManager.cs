@@ -118,15 +118,41 @@ public class MainManager : MonoBehaviour
         
         //Read general settings file
         ReadCSVSettingsFile();
-        
 
         //Set input of data log folder:
         subjectDataFolder = string.Join("/", System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop).Replace("\\", "/"), "Data", System.DateTime.Now.ToString("MM-dd_HH-mm") + "_" + subjectName);
         System.IO.Directory.CreateDirectory(subjectDataFolder);
 
-        Debug.Log($"Settings file received...\nSubject ID = {subjectName}, DataFolder: {subjectDataFolder}..."); 
-
+        Debug.Log($"Settings file received...\nSubject ID = {subjectName}, DataFolder: {subjectDataFolder}...");
+        
+        experiments = new List<MainExperimentSetting>();
+        AddTargetCalibrationExperiment();
         AddDummyExperiments();
+    }
+
+    void AddTargetCalibrationExperiment()
+    {
+        Condition condition;
+
+        condition.targetDifficulty = TargetDifficulty.None;
+        condition.navigationType = NavigationType.HighlightedRoad;
+
+        MainExperimentSetting setting = new MainExperimentSetting();
+        setting.name = "TargetCalibration";
+        setting.minTargets = 3;
+        setting.maxTargets = 3;
+        setting.experimentType = ExperimentType.TargetCalibration;
+
+        List<TurnType> turns = new List<TurnType>
+        {
+            TurnType.Straight,
+            TurnType.Left,
+            TurnType.Straight,
+            TurnType.EndPoint
+        };
+
+        setting.turns = turns;
+        experiments.Add(setting);
     }
     void AddDummyExperiments()
     {
@@ -144,7 +170,7 @@ public class MainManager : MonoBehaviour
             conditions.Add(condition);
         }
 
-        experiments = new List<MainExperimentSetting>();
+       
         
         for (int i = 0; i <= conditions.Count()+1; i++)
         {
@@ -156,7 +182,7 @@ public class MainManager : MonoBehaviour
                 setting.name = "PractiseDrive"; 
                 setting.targetDifficulty = TargetDifficulty.EasyAndMedium;
                 setting.navigationType = NavigationType.HUD_low;
-                setting.practiseDrive = true; 
+                setting.experimentType = ExperimentType.Practise; 
                 setting.minTargets = 3; 
                 setting.maxTargets = 3; 
             }
@@ -174,19 +200,26 @@ public class MainManager : MonoBehaviour
             }
 
             //Add turns
-            List<TurnType> turns = new List<TurnType>();
-            for (int j = 0; j < 5; j++)
-            {
-                randomInt = Random.Range(0, 100);
-                if (randomInt < 50) { turns.Add(TurnType.Left); }
-                else { turns.Add(TurnType.Right); }
+            List<TurnType> turns = GetRandomTurns(5);
 
-            }
             turns.Add(TurnType.EndPoint);
             setting.turns = turns;
 
             experiments.Add(setting);
         }
+    }
+
+    List<TurnType> GetRandomTurns(int number)
+    {
+        List<TurnType> turns = new List<TurnType>();
+        int randomInt;
+        for (int j = 0; j < number; j++)
+        {
+            randomInt = Random.Range(0, 100);
+            if (randomInt < 50) { turns.Add(TurnType.Left); }
+            else { turns.Add(TurnType.Right); }
+        }
+        return turns;
     }
     public MainExperimentSetting GetCurrentExperimentSettings()
     {
@@ -248,7 +281,7 @@ public class MainManager : MonoBehaviour
         {
             MainExperimentSetting setting = experiments[experimentIndex];
 
-            if (setting.practiseDrive) { Debug.Log($"Loading {experiments[experimentIndex].name}...\nTurns: {setting.turns.Count()}, Navigation: All, Targets/Turn: [{setting.minTargets},{setting.maxTargets}], Difficutly: All "); }
+            if (setting.experimentType.IsPractise()) { Debug.Log($"Loading {experiments[experimentIndex].name}...\nTurns: {setting.turns.Count()}, Navigation: All, Targets/Turn: [{setting.minTargets},{setting.maxTargets}], Difficutly: All "); }
             else { Debug.Log($"Loading {experiments[experimentIndex].name}...\nTurns: {setting.turns.Count()}, Navigation:{setting.navigationType}, Targets/Turn: [{setting.minTargets},{setting.maxTargets}], Difficutly: {setting.targetDifficulty}"); }
 
             loading = true;
@@ -261,7 +294,7 @@ public class MainManager : MonoBehaviour
         {
             MainExperimentSetting setting = experiments[experimentIndex];
 
-            if (setting.practiseDrive) { Debug.Log($"Reloading {experiments[experimentIndex].name}...\nTurns: {setting.turns.Count()}, Navigation: All, Targets/Turn: [{setting.minTargets},{setting.maxTargets}], Difficutly: All "); }
+            if (setting.experimentType.IsPractise()) { Debug.Log($"Reloading {experiments[experimentIndex].name}...\nTurns: {setting.turns.Count()}, Navigation: All, Targets/Turn: [{setting.minTargets},{setting.maxTargets}], Difficutly: All "); }
             else { Debug.Log($"Reloading {experiments[experimentIndex].name}...\nTurns: {setting.turns.Count()}, Navigation:{setting.navigationType}, Targets/Turn: [{setting.minTargets},{setting.maxTargets}], Difficutly: {setting.targetDifficulty}"); }
 
             loading = true;
@@ -350,7 +383,7 @@ public class MainExperimentSetting
     public int minTargets=1;
     public int maxTargets=3;
     public float experimentTime = 0f;
-    public bool practiseDrive = false;
+    public ExperimentType experimentType = ExperimentType.Real;
     public int LeftTurns()
     {
         return turns.Where(s => s == TurnType.Left).Count();
@@ -359,5 +392,5 @@ public class MainExperimentSetting
     {
         return turns.Where(s => s == TurnType.Right).Count();
     }
-
 }
+

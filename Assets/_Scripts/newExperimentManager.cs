@@ -15,7 +15,7 @@ public class newExperimentManager : MonoBehaviour
    
     public MainManager mainManager;
     public CrossingSpawner crossingSpawner;
-
+    public Material easyMaterial;
     [Header("GameObjects")]
     public Material conformal;
     //public HUDMaterials HUDMaterials;
@@ -50,8 +50,12 @@ public class newExperimentManager : MonoBehaviour
     private int lastWaypointIndex = 0;
     private bool informedOnHardTargets = false;
     private bool informedOnEasyTargets = false;
-    private bool loggedLastTargets = false;
     private bool startedDriving = false;
+
+
+    private int targetCountCalibration=0;
+    private float transparencyTargets = 0.5f;
+    private float transparencyStep = 0.05f;
     private void Start()
     {
         StartUpFunctions();
@@ -66,15 +70,28 @@ public class newExperimentManager : MonoBehaviour
 
         //experiment settings
         experimentSettings = mainManager.GetExperimentSettings();
-        
+
         //Turn of visuals if they are presents
-        if(player.GetComponent<EyeTrackingVisuals>() != null) { player.GetComponent<EyeTrackingVisuals>().Disable(); }
+        if (player.GetComponent<EyeTrackingVisuals>() != null) { player.GetComponent<EyeTrackingVisuals>().Disable(); }
+
+        SetTransparencyEasyMaterial(transparencyTargets);
 
         //Set DataManager
         SetDataManager();
         
         crossingSpawner.turnsList = experimentSettings.turns.ToArray();
         crossingSpawner.StartUp();
+
+        //If target calibration is active we do not want to use te entering trigger of the crossing and set the startpoint a bit a back. 
+        //The entering trigger makes sure logging of the targets and setup of next crossing is performed. Both will be taken care of  by differnet functions when using targetCalibration ExperimentType
+        if (experimentSettings.experimentType.IsTargetCalibration())
+        {
+            crossingSpawner.crossings.CurrentCrossing().components.triggerStart.SetActive(false);
+            //Remove targets of next crossing (they might confuse participnats);
+            crossingSpawner.crossings.NextCrossing().components.RemoveTargets();
+            Transform startPoint = crossingSpawner.crossings.CurrentCrossing().components.startPoint.transform;
+            startPoint.position -= 30f * startPoint.forward;
+        }
 
         //Get all gameobjects we intend to use from the car (and do some setting up)
         SetGameObjectsFromCar();
@@ -133,23 +150,78 @@ public class newExperimentManager : MonoBehaviour
         {
             //Log the last targets (targets of last cross point are automatically logged when leaving the crossing)
             //As this crossing is the end point we will never leave and not trigger this automated mechanism
-            if (!loggedLastTargets) { LogCurrentCrossingTargets(crossingSpawner.crossings.NextCrossing().targetList); loggedLastTargets = true; }
+            //if (!loggedLastTargets) { LogCurrentCrossingTargets(crossingSpawner.crossings.NextCrossing().targetList); loggedLastTargets = true; }
+            //Probably not needed anymore needs testing still.
             //When car is close to standstill end the experiment
             if (car.GetComponent<Rigidbody>().velocity.magnitude < 0.5f) { mainManager.ExperimentEnded(); }
         }
 
 
         //Code for practise drive UI
-        if (experimentSettings.practiseDrive && lastWaypointIndex != car.waypointIndex )
+        if (experimentSettings.experimentType.IsPractise() && lastWaypointIndex != car.waypointIndex )
         {
             lastWaypointIndex = car.waypointIndex;
             if ((car.waypointIndex) % (int)Mathf.Floor(experimentSettings.turns.Count()/3) == 0 ) { ToggleSymbology(); }
             if ((car.waypointIndex) >= (int)Mathf.Floor(experimentSettings.turns.Count() / 2) && !informedOnHardTargets) { StartCoroutine(InformOnTargetDifficulty("Hard")); informedOnHardTargets = true; } 
         }
 
-        if(experimentSettings.experimentTime > 2f && !informedOnEasyTargets) { StartCoroutine(InformOnTargetDifficulty("Easy")); informedOnEasyTargets = true; }
+        if (experimentSettings.experimentType.IsPractise() && experimentSettings.experimentTime > 2f && !informedOnEasyTargets) { StartCoroutine(InformOnTargetDifficulty("Easy")); informedOnEasyTargets = true; }
     }
 
+    void SetTransparencyEasyMaterial(float transparency)
+    {
+        Color nextColor = easyMaterial.color;
+        nextColor.a = transparency;
+        easyMaterial.color = nextColor;
+    }
+
+    float GetDetectionRate(List<Target> targets)
+    {
+        if(targets.Count() == 0) { return 0f; }
+
+        int detectionCount = 0;
+        foreach (Target target in targets)
+        {
+            if (target.IsDetected()) { detectionCount++; }
+        }
+        return detectionCount / targets.Count();
+    }
+    public void EndOfStraight()
+    {
+        if (experimentSettings.experimentType.IsTargetCalibration())
+        {
+            CrossComponents components = crossingSpawner.crossings.CurrentCrossing().components;
+
+            //Lower target visibility based on detection rate
+            if(GetDetectionRate(components.targetList) > 0.5f) { transparencyTargets -= transparencyStep; }
+            else { transparencyTargets += transparencyStep; }
+            
+            if (transparencyTargets <= 0f) { car.navigationFinished = true; return; }
+
+            SetTransparencyEasyMaterial(transparencyTargets);
+
+            car.ResetWaypoints();
+            StartCoroutine(PlaceAtTargetWaypoint(false, true));
+
+            //Log Targets;
+            SetProperTargetIDsCalibration();
+            LogCurrentCrossingTargets(components.targetList);
+
+            //Remove old targets and spawn new ones
+            
+            components.RemoveTargets();
+            components.SpawnTargets(experimentSettings);
+        }
+    }
+
+    void SetProperTargetIDsCalibration()
+    {
+        foreach(Target target in crossingSpawner.crossings.CurrentCrossing().targetList)
+        {
+            target.ID = targetCountCalibration;
+            targetCountCalibration++;
+        }
+    }
     IEnumerator InformOnTargetDifficulty(string difficulty)
     {
         carUI.text = $"{difficulty} targets ahead!";
@@ -201,7 +273,6 @@ public class newExperimentManager : MonoBehaviour
         //Putting car at next waypoint
         StartCoroutine(PlaceAtTargetWaypoint(true));
     }
-
     public void CarOutOfBounce()
     {
         dataManager.LogIrregularity(Irregularity.OutOfBounce);
@@ -210,8 +281,7 @@ public class newExperimentManager : MonoBehaviour
 
         StartCoroutine(PlaceAtTargetWaypoint(true));
     }
-    
-    IEnumerator PlaceAtTargetWaypoint(bool _setAtCarTargetBoolean = false)
+    IEnumerator PlaceAtTargetWaypoint(bool _setAtCarTargetBoolean = false, bool setAtStartOfLane = false)
     {
         car.GetComponent<SpeedController>().StartDriving(false);
 
@@ -224,14 +294,15 @@ public class newExperimentManager : MonoBehaviour
 
         WaypointStruct target= car.waypoint;
 
-        Vector3 newStartPosition = target.waypoint.transform.position - target.waypoint.transform.forward * 20f;
+        float distanceFromWaypoint = 20f;
+        if (setAtStartOfLane) { distanceFromWaypoint = 65f; }
+
+        Vector3 newStartPosition = target.waypoint.transform.position - target.waypoint.transform.forward * distanceFromWaypoint;
 
         StartCoroutine(SetCarSteadyAt(newStartPosition, target.waypoint.transform.forward, false, _setAtCarTargetBoolean));
 
         car.GetComponent<newNavigator>().RenderNavigationArrow();
         blackOutScreen.CrossFadeAlpha(0f, mainManager.AnimationTime*2f, false);
-
-        carUI.text = "Try again!";
 
         yield return new WaitForSeconds(mainManager.AnimationTime);
 
@@ -261,8 +332,6 @@ public class newExperimentManager : MonoBehaviour
         
 
         StartCoroutine(SetCarSteadyAt(targetPos, targetView, true));
-        
-        
     }
     public void LogCurrentCrossingTargets(List<Target> targets)
     {
@@ -355,7 +424,6 @@ public class newExperimentManager : MonoBehaviour
         }
         return output;
     }
-  
     void SetUpCar()
     {
         //Put head position at the right place
@@ -375,7 +443,6 @@ public class newExperimentManager : MonoBehaviour
 
         StartCoroutine(SetCarSteadyAt(startLocation.position, startLocation.forward));
     }
-
     void PlaceHUD()
     {
         if (RenderHUD())
@@ -517,7 +584,7 @@ public class newExperimentManager : MonoBehaviour
     {
         //We will cast rays to the outer edges of the sphere (the edges are determined based on how we are looking towards the sphere)
         //I.e., with the perpendicular vector to the looking direction of the sphere
-
+        if(target == null) { return false; }
         Vector3 vectorToTarget = target.transform.position - CameraTransform().position;
         //(1) Not in sight of camera
         float angle = Mathf.Abs(Vector3.Angle(CameraTransform().forward, vectorToTarget));

@@ -83,13 +83,17 @@ public class CrossComponents : MonoBehaviour
 
 		StartCoroutine(SetBuildingBlocks());
 
-		//?Remove old targets
-		foreach ( Transform child in TargetParent) { Destroy(child.gameObject); }
-		targetList = new List<Target>();
+		RemoveTargets();
 
 		SpawnTargets(settings);
 	}
 
+	public void RemoveTargets()
+    {
+		//?Remove old targets
+		foreach (Transform child in TargetParent) { Destroy(child.gameObject); }
+		targetList = new List<Target>();
+	}
 	IEnumerator SetBuildingBlocks()
     {
         //Deactivates the building block which corresponds to correct path
@@ -106,14 +110,13 @@ public class CrossComponents : MonoBehaviour
 			foreach (Transform child in variableBlocks) { child.gameObject.SetActive(child.name != blockNameToDeactivate); yield return new WaitForEndOfFrame(); }
 		}
     }
-
-	void SpawnTargets(MainExperimentSetting settings) 
+	public void SpawnTargets(MainExperimentSetting settings) 
 	{
 		if(settings.maxTargets == 0) { return; }
 		List<Transform> spawnPoints;
 		Transform parentSpawPoints = null;
 
-		if (!isFirstCrossing && waypoints[0].turn.IsOperation()) 
+		if ((!isFirstCrossing || settings.experimentType.IsTargetCalibration()) && waypoints[0].turn.IsOperation()) 
 		{
 			parentSpawPoints = FirstTurnTargetSpawnPoints;
 			spawnPoints = SelectRandomSpawnPoints(parentSpawPoints, settings.minTargets, settings.maxTargets);

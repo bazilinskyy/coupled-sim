@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 1477928663}
-  m_IndirectSpecularColor: {r: 0.5463098, g: 0.5512526, b: 0.52158564, a: 1}
+  m_IndirectSpecularColor: {r: 0, g: 0, b: 0, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -332,6 +332,10 @@ PrefabInstance:
       propertyPath: cross2
       value: 
       objectReference: {fileID: 313054182}
+    - target: {fileID: 685181778, guid: bd622bd9844713544864bef9dff46137, type: 3}
+      propertyPath: crossings.crossing1.obj
+      value: 
+      objectReference: {fileID: 2093106399}
     - target: {fileID: 685181790, guid: bd622bd9844713544864bef9dff46137, type: 3}
       propertyPath: experimentManager
       value: 
@@ -627,7 +631,7 @@ PrefabInstance:
     - target: {fileID: 8252388277253089906, guid: 41c9d2ae4df007d408130519f88a5729,
         type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8252388277253089911, guid: 41c9d2ae4df007d408130519f88a5729,
         type: 3}
@@ -907,6 +911,7 @@ MonoBehaviour:
   navigationColor: {r: 0, g: 0, b: 0, a: 0}
   mainManager: {fileID: 0}
   crossingSpawner: {fileID: 685181778}
+  easyMaterial: {fileID: 2100000, guid: e97b5e1b79224bc488515cb7a62bb52b, type: 2}
   conformal: {fileID: 2100000, guid: 444a8ce3d04a06c42aeb708fea1e8070, type: 2}
   layerToIgnoreForTargetDetection:
     serializedVersion: 2
@@ -924,7 +929,7 @@ MonoBehaviour:
     minTargets: 1
     maxTargets: 3
     experimentTime: 0
-    practiseDrive: 0
+    experimentType: 2
   setCarAtTarget: 0
 --- !u!114 &1309504460
 MonoBehaviour:
@@ -1261,8 +1266,8 @@ MonoBehaviour:
   lineColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
   initialized: 1
   initialName: Distance Tool 1
-  startPoint: {x: 95.93747, y: 0, z: -0.021844864}
-  endPoint: {x: 96.01671, y: 1, z: -7.5747313}
+  startPoint: {x: 16.35478, y: 0, z: -0.021844864}
+  endPoint: {x: 83.83684, y: 1, z: -0.011921883}
   distance: 0
   gizmoRadius: 0.44
   scaleToPixels: 0

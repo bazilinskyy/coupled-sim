@@ -92,14 +92,21 @@ public class CrossingSpawner : MonoBehaviour
         {
             if (other.GetComponent<MyCollider>().Triggered())
             {
-                //Debug.Log("Enter trigger called, configuring next crossing...");
-                experimentManager.LogCurrentCrossingTargets(crossings.CurrentCrossing().targetList);
-                SetNextCrossing();
+                if (!experimentManager.experimentSettings.experimentType.IsTargetCalibration())
+                {
+                    //Debug.Log("Enter trigger called, configuring next crossing...");
+                    experimentManager.LogCurrentCrossingTargets(crossings.CurrentCrossing().components.targetList);
+                    SetNextCrossing();
+                }
             }
         }
         if (other.gameObject.CompareTag("NavigationFinished"))
         {
-            if ((other.GetComponent<MyCollider>().Triggered())) { experimentManager.LogCurrentCrossingTargets(crossings.CurrentCrossing().targetList); }
+            if ((other.GetComponent<MyCollider>().Triggered())) 
+            {   
+                experimentManager.LogCurrentCrossingTargets(crossings.CurrentCrossing().components.targetList);
+                experimentManager.LogCurrentCrossingTargets(crossings.CurrentCrossing().components.targetList);
+            }
         }
     }    
     
@@ -237,7 +244,7 @@ public class Crossings
 
     public List<Target> GetAllTargets()
     {
-        List<Target> targets = CurrentCrossing().targetList.Concat(NextCrossing().targetList).ToList();
+        List<Target> targets = CurrentCrossing().components.targetList.Concat(NextCrossing().components.targetList).ToList();
         return targets;
     }
 }

@@ -101,6 +101,7 @@ public class DataLogger : MonoBehaviour
     
     public void LogTargets(List<Target> targets)
     {
+        Debug.Log($"Logging {targets.Count()}... ");
         foreach(Target target in targets)
         {
             TargetData targetInfo = new TargetData(target);
@@ -157,8 +158,6 @@ public class DataLogger : MonoBehaviour
             file.Close();
         }
     }
-
-    
     public void AddCurrentNavigationLine(Vector3[] points)
     {
         //Debug.Log($"Got new navigation points: {points.Length}...");
@@ -288,11 +287,10 @@ public class DataLogger : MonoBehaviour
     }
     private void SaveTargetData()
     {
-        string[] columns = { "ID", "Detected", "ReactionTime", "TotalFixationTime", "FirstFixationTime", "DetectionTime", "Difficulty","UpcomingTurn","Position", "RoadSide", "WaypointID" };
+        string[] columns = { "ID", "Detected", "ReactionTime", "TotalFixationTime", "FirstFixationTime", "DetectionTime", "Difficulty","UpcomingTurn","Position", "RoadSide", "WaypointID", "Transparency", "DetectionDistance" };
         string[] logData = new string[columns.Length];
         string filePath = string.Join("/", saveFolder, generalTargetInfo);
         
-
         using (StreamWriter file = new StreamWriter(filePath))
         {
             Log(columns, file);
@@ -310,6 +308,8 @@ public class DataLogger : MonoBehaviour
                 logData[8] = targetInfo.position.ToString("F3");
                 logData[9] = targetInfo.side.ToString();
                 logData[10] = targetInfo.waypointID.ToString();
+                logData[11] = targetInfo.transparency.ToString(specifier,culture);
+                logData[12] = targetInfo.detectionDistance.ToString(specifier, culture);
                 Log(logData, file);
             }
             file.Flush();
@@ -368,7 +368,6 @@ public class DataLogger : MonoBehaviour
         }
         file.WriteLine(line);
     }
- 
     private string SaveFolder()
     {
         string saveFolder = string.Join("/", mainManager.SubjectDataFolder, experimentManager.experimentSettings.name + DateTime.Now.ToString("_HH-mm-ss"));
@@ -581,6 +580,8 @@ public class TargetData
     public Vector3 position;
     public Side side;
     public int waypointID;
+    public float transparency;
+    public float detectionDistance;
     public TargetData(Target target)
     {
         ID = target.GetID();
@@ -589,11 +590,13 @@ public class TargetData
         totalFixationTime = target.totalFixationTime;
         firstFixationTime = target.firstFixationTime;
         detectionTime = target.detectionTime;
+        detectionDistance = target.detectionDistance;
         difficulty = target.difficulty;
         upcomingTurn = target.waypoint.turn;
         position = target.transform.position;
         side = target.side;
         waypointID = target.waypoint.waypointID;
+        transparency = target.GetComponent<MeshRenderer>().material.color.a;
     }
 
 }

@@ -27,7 +27,7 @@ public class Target : MonoBehaviour
     public float lastFixationTime = 0f;
     [HideInInspector]
     public float detectionTime = 0f;
-
+    public float detectionDistance = 0f;
     //Time at which this target was visible
     public float defaultVisibilityTime = -1f;
     public float startTimeVisible = -1f; // == defaultVisibilityTime
@@ -112,6 +112,7 @@ public class Target : MonoBehaviour
         detected = true;  hasBeenVisible = false;
         reactionTime = _detectionTime - startTimeVisible;
         detectionTime = _detectionTime;
+        detectionDistance = Vector3.Magnitude(transform.position - MyUtils.GetPlayer().transform.position);
         GetComponent<MeshRenderer>().enabled = false;
         GetComponent<SphereCollider>().enabled = false;
 

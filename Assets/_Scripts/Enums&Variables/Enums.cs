@@ -81,6 +81,29 @@ static class TurnTypeMethods
 }
 
 
+public enum ExperimentType
+{
+    Practise,
+    TargetCalibration,
+    Real
+}
+static class ExperimentTypeMethods
+{
+    public static bool IsPractise(this ExperimentType type)
+    {
+        return type == ExperimentType.Practise;
+    }
+    public static bool IsReal(this ExperimentType type)
+    {
+        return type == ExperimentType.Real;
+    }
+    public static bool IsTargetCalibration(this ExperimentType type)
+    {
+        return type == ExperimentType.TargetCalibration;
+    }
+}
+
+
 //These tags are used for the gazelogger to track what we are looking at exactly, (world is not a real tag but will be used as keyword when nothin else is being looked at)
 public enum LoggedTags
 {

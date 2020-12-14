@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 
-[RequireComponent(typeof(CrossingSpawner))]
+//[RequireComponent(typeof(CrossingSpawner))]
 public class newNavigator : MonoBehaviour
 {
     public HUDMaterials HUDMaterials;
@@ -19,15 +19,7 @@ public class newNavigator : MonoBehaviour
 
     public bool navigationFinished = false;
     public bool atWaypoint = false;
-
-    int lastIndex = 0;
-
     private bool started = false;
-    private void Start()
-    {
-        
-    }
-
     void StartUp()
     {
         crossingSpawner = GetComponent<CrossingSpawner>();
@@ -58,9 +50,14 @@ public class newNavigator : MonoBehaviour
 
         RenderNavigationDistance();
 
-        //if (waypointIndex != lastIndex) { Debug.Log(waypointIndex); lastIndex = waypointIndex; }
     }
    
+    public void ResetWaypoints()
+    {
+        waypointIndex = 0;
+        waypoint = waypointList[waypointIndex];
+
+    }
     public WaypointStruct GetNextWaypoint()
     {
         if (waypointIndex + 1 < waypointList.Count()) { return waypointList[waypointIndex + 1]; }
@@ -111,6 +108,13 @@ public class newNavigator : MonoBehaviour
         else if (other.gameObject.CompareTag("NavigationFinished"))
         {
             navigationFinished = true;
+        }
+        else if (other.gameObject.CompareTag("EndStraight"))
+        {
+            if (other.GetComponent<MyCollider>().Triggered())
+            {
+                experimentManager.EndOfStraight();
+            }
         }
 
     }
