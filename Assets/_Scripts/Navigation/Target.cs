@@ -33,7 +33,9 @@ public class Target : MonoBehaviour
     public float startTimeVisible = -1f; // == defaultVisibilityTime
     public bool afterTurn = false;
     public Side side;
+    public int positionNumber;
     public bool difficultPosition;
+    public float transparency;
     public bool hasBeenVisible = false; //visible is set when we first see the target (gets unset when we pass it with the car, or when we detect it)
     public string GetID()
     {

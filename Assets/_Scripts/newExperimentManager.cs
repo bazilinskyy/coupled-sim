@@ -54,8 +54,12 @@ public class newExperimentManager : MonoBehaviour
 
 
     private int targetCountCalibration=0;
-    private float transparencyTargets = 0.5f;
-    private float transparencyStep = 0.05f;
+    private float transparencyTargets = 0.1f;
+
+
+    private int transparencyIndex = 0;
+    private float[] transparencies = {0.04f, .03f, 0.25f, .02f, .015f, 0.01f, 0.0075f,0.005f };
+
     private void Start()
     {
         StartUpFunctions();
@@ -66,19 +70,18 @@ public class newExperimentManager : MonoBehaviour
         blackOutScreen = MyUtils.GetBlackOutScreen();
         mainManager = MyUtils.GetMainManager();
         carUI = MyUtils.GetCarUI();
-       
-
-        //experiment settings
-        experimentSettings = mainManager.GetExperimentSettings();
-
-        //Turn of visuals if they are presents
-        if (player.GetComponent<EyeTrackingVisuals>() != null) { player.GetComponent<EyeTrackingVisuals>().Disable(); }
-
-        SetTransparencyEasyMaterial(transparencyTargets);
 
         //Set DataManager
         SetDataManager();
         
+        //experiment settings
+        experimentSettings = mainManager.GetExperimentSettings();
+        
+        if (experimentSettings.experimentType.IsTargetCalibration()) { SetNextTransparency(); }
+
+        //Turn of visuals if they are presents
+        SetTransparencyEasyMaterial(transparencyTargets);
+
         crossingSpawner.turnsList = experimentSettings.turns.ToArray();
         crossingSpawner.StartUp();
 
@@ -92,9 +95,9 @@ public class newExperimentManager : MonoBehaviour
             crossingSpawner.crossings.NextCrossing().components.RemoveTargets();
             Transform startPoint = crossingSpawner.crossings.CurrentCrossing().components.startPoint.transform;
             startPoint.position -= 30f * startPoint.forward;
-        }
-       
 
+            car.HUD.SetActive(false);
+        }
         //Get all gameobjects we intend to use from the car (and do some setting up)
         SetGameObjectsFromCar();
 
@@ -168,6 +171,8 @@ public class newExperimentManager : MonoBehaviour
         }
 
         if (experimentSettings.experimentType.IsPractise() && experimentSettings.experimentTime > 2f && !informedOnEasyTargets) { StartCoroutine(InformOnTargetDifficulty("Easy")); informedOnEasyTargets = true; }
+
+        
     }
     void SetTransparencyEasyMaterial(float transparency)
     {
@@ -186,15 +191,26 @@ public class newExperimentManager : MonoBehaviour
         }
         return detectionCount / targets.Count();
     }
+
+    void SetNextTransparency()
+    {
+        transparencyTargets = transparencies[transparencyIndex];
+
+        Debug.Log($"Transparency now:{transparencyTargets}...");
+        if (transparencyIndex < transparencies.Count()-1) { transparencyIndex++; }
+    }
     public void EndOfStraight()
     {
         if (experimentSettings.experimentType.IsTargetCalibration())
         {
             CrossComponents components = crossingSpawner.crossings.CurrentCrossing().components;
 
+            //Log Targets;
+            SetProperTargetIDsCalibration();
+            LogTargets(components.targetList);
+
             //Lower target visibility based on detection rate
-            if(GetDetectionRate(components.targetList) > 0.5f) { transparencyTargets -= transparencyStep; }
-            else { transparencyTargets += transparencyStep; }
+            SetNextTransparency();
             
             if (transparencyTargets <= 0f) { car.navigationFinished = true; return; }
 
@@ -203,9 +219,7 @@ public class newExperimentManager : MonoBehaviour
             car.ResetWaypoints();
             StartCoroutine(PlaceAtTargetWaypoint(false, true));
 
-            //Log Targets;
-            SetProperTargetIDsCalibration();
-            LogTargets(components.targetList);
+           
 
             //Remove old targets and spawn new ones
             

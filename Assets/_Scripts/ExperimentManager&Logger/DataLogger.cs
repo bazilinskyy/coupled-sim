@@ -287,7 +287,9 @@ public class DataLogger : MonoBehaviour
     }
     private void SaveTargetData()
     {
-        string[] columns = { "ID", "Detected", "ReactionTime", "TotalFixationTime", "FirstFixationTime", "DetectionTime", "Difficulty","UpcomingTurn","Position", "RoadSide", "WaypointID", "Transparency", "DetectionDistance" };
+        string[] columns = { "ID", "Detected", "ReactionTime", "TotalFixationTime", "FirstFixationTime",
+                            "DetectionTime", "Difficulty","UpcomingTurn","Position", "RoadSide", "WaypointID",
+                            "Transparency", "DetectionDistance", "PositionNumber" };
         string[] logData = new string[columns.Length];
         string filePath = string.Join("/", saveFolder, generalTargetInfo);
         
@@ -310,6 +312,7 @@ public class DataLogger : MonoBehaviour
                 logData[10] = targetInfo.waypointID.ToString();
                 logData[11] = targetInfo.transparency.ToString(specifier,culture);
                 logData[12] = targetInfo.detectionDistance.ToString(specifier, culture);
+                logData[13] = targetInfo.positionNumber.ToString(specifier, culture);
                 Log(logData, file);
             }
             file.Flush();
@@ -582,6 +585,7 @@ public class TargetData
     public int waypointID;
     public float transparency;
     public float detectionDistance;
+    public int positionNumber;
     public TargetData(Target target)
     {
         ID = target.GetID();
@@ -596,7 +600,8 @@ public class TargetData
         position = target.transform.position;
         side = target.side;
         waypointID = target.waypoint.waypointID;
-        transparency = target.GetComponent<MeshRenderer>().material.color.a;
+        transparency = target.transparency; 
+        positionNumber = target.positionNumber;
     }
 
 }

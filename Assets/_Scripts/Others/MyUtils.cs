@@ -4,7 +4,10 @@ using Varjo;
 public static class MyUtils
 {
     private static float lastTime = 0f;
-	public static GameObject GetPlayer()
+
+    
+
+    public static GameObject GetPlayer()
     {
         return GameObject.FindGameObjectWithTag("Player");
     }
@@ -69,5 +72,7 @@ public static class MyUtils
 
         return new Vector3(x, y, z);
     }
+
+    
 
 }

@@ -3,6 +3,7 @@ using UnityEngine.SceneManagement;
 using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
+using System;
 public class MainManager : MonoBehaviour
 {
 
@@ -16,8 +17,7 @@ public class MainManager : MonoBehaviour
     private bool renderHUD = true;
 
     private string subjectDataFolder = "nothing...";
-    private string subjectName = "Dummy";
-    private int experimentOrder;
+    private string subjectID = "Dummy";
 
     private bool automateSpeed = true;
     private bool saveData = true;
@@ -65,7 +65,10 @@ public class MainManager : MonoBehaviour
 
     public string[] sceneArray;
     public int experimentIndex = 0;
-    
+
+    public int[] experimentOrder = { 0, 1, 2, 3, 4, 5 };
+    public int numberTurns = 12;
+    private ExperimentType experimentType = ExperimentType.Real;
 
     private GameObject player;
     UnityEngine.UI.Image blackOutScreen;
@@ -87,8 +90,7 @@ public class MainManager : MonoBehaviour
     public bool MakeVirtualCable { get => makeVirtualCable; set => makeVirtualCable = value; }
     public bool RenderHUD { get => renderHUD; set => renderHUD = value; }
     public string SubjectDataFolder { get => subjectDataFolder; set => subjectDataFolder = value; }
-    public string SubjectName { get => subjectName; set => subjectName = value; }
-    public int ExperimentOrder { get => experimentOrder; set => experimentOrder = value; }
+    public string SubjectName { get => subjectID; set => subjectID = value; }
     public bool AutomateSpeed { get => automateSpeed; set => automateSpeed = value; }
     public bool SaveData { get => saveData; set => saveData = value; }
     public float AnimationTime { get => animationTime; set => animationTime = value; }
@@ -101,7 +103,7 @@ public class MainManager : MonoBehaviour
 
     private void Awake()
     {
-        Random.InitState(42);
+        UnityEngine.Random.InitState(42);
         
         player = gameObject;
         //Fade screen from black to transparent on awake
@@ -120,29 +122,32 @@ public class MainManager : MonoBehaviour
         ReadCSVSettingsFile();
 
         //Set input of data log folder:
-        subjectDataFolder = string.Join("/", System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop).Replace("\\", "/"), "Data", System.DateTime.Now.ToString("MM-dd_HH-mm") + "_" + subjectName);
+        subjectDataFolder = string.Join("/", System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop).Replace("\\", "/"), "Data", System.DateTime.Now.ToString("MM-dd_HH-mm") + "_" + subjectID);
         System.IO.Directory.CreateDirectory(subjectDataFolder);
 
-        Debug.Log($"Settings file received...\nSubject ID = {subjectName}, DataFolder: {subjectDataFolder}...");
+        Debug.Log($"Settings file received...\nSubject ID = {subjectID}, DataFolder: {subjectDataFolder}...");
         
         experiments = new List<MainExperimentSetting>();
-        //AddTargetCalibrationExperiment();
-        AddDummyExperiments();
-    }
 
+        //If we do a real experiment add the practise drive and the experiments (based on the given order in the settings file)
+        if (experimentType.IsReal())
+        {
+            AddPractiseDrive();
+            AddExperiments(experimentOrder, numberTurns);
+        }
+        else { AddTargetCalibrationExperiment(); }
+        
+    }
     void AddTargetCalibrationExperiment()
     {
-        Condition condition;
-
-        condition.targetDifficulty = TargetDifficulty.None;
-        condition.navigationType = NavigationType.HighlightedRoad;
-
         MainExperimentSetting setting = new MainExperimentSetting();
         setting.name = "TargetCalibration";
+        setting.conditionNumber = 1111;
         setting.minTargets = 3;
         setting.maxTargets = 3;
         setting.experimentType = ExperimentType.TargetCalibration;
         setting.targetDifficulty = TargetDifficulty.easy;
+        setting.navigationType = NavigationType.HighlightedRoad;
 
         List<TurnType> turns = new List<TurnType>
         {
@@ -155,55 +160,51 @@ public class MainManager : MonoBehaviour
         setting.turns = turns;
         experiments.Add(setting);
     }
-    void AddDummyExperiments()
+
+    void AddPractiseDrive()
     {
-        List<Condition> conditions = new List<Condition>();  Condition condition;
-        IEnumerable<NavigationType> navigationTypes = EnumUtil.GetValues<NavigationType>();
+        MainExperimentSetting setting = new MainExperimentSetting();
+        //Make settings for practise drive
+   
+        setting.name = "PractiseDrive";
+        setting.targetDifficulty = TargetDifficulty.EasyAndMedium;
+        setting.navigationType = NavigationType.HUD_low;
+        setting.experimentType = ExperimentType.Practise;
+        setting.minTargets = 3;
+        setting.maxTargets = 3;
+        setting.turns = GetRandomTurns(18);
+        experiments.Add(setting);
+     }
 
-        foreach (NavigationType type in navigationTypes) 
+    Condition MakeCondition(NavigationType navType, TargetDifficulty difficulty) { Condition condition = new Condition() { navigationType = navType, targetDifficulty = difficulty }; return condition; }
+   
+    void AddExperiments(int[] order, int numberTurns)
+    {
+        List<Condition> conditions = new List<Condition>(); 
+
+        //conditions 1 - 6
+        conditions.Add(MakeCondition(NavigationType.HUD_high, TargetDifficulty.easy));
+        conditions.Add(MakeCondition(NavigationType.HUD_high, TargetDifficulty.hard));
+        conditions.Add(MakeCondition(NavigationType.HUD_low, TargetDifficulty.easy));
+        conditions.Add(MakeCondition(NavigationType.HUD_low, TargetDifficulty.hard));
+        conditions.Add(MakeCondition(NavigationType.VirtualCable, TargetDifficulty.easy));
+        conditions.Add(MakeCondition(NavigationType.VirtualCable, TargetDifficulty.hard));
+
+        MainExperimentSetting setting = new MainExperimentSetting();
+
+        for (int i = 0; i < conditions.Count(); i++)
         {
-            if(type == NavigationType.HighlightedRoad) { continue; }
-            condition.navigationType = type;
-            condition.targetDifficulty = TargetDifficulty.easy;
-            conditions.Add(condition);
+            setting = new MainExperimentSetting();
 
-            condition.targetDifficulty = TargetDifficulty.hard;
-            conditions.Add(condition);
-        }
-
-       
-        
-        for (int i = 0; i <= conditions.Count()+1; i++)
-        {
-            MainExperimentSetting setting = new MainExperimentSetting();
-            int randomInt;
-            //Make settings for practise drive
-            if (i == 0) 
-            { 
-                setting.name = "PractiseDrive"; 
-                setting.targetDifficulty = TargetDifficulty.EasyAndMedium;
-                setting.navigationType = NavigationType.HUD_low;
-                setting.experimentType = ExperimentType.Practise; 
-                setting.minTargets = 3; 
-                setting.maxTargets = 3; 
-            }
-            else 
-            {
-                
-                randomInt = Random.Range(0, conditions.Count());
-
-                Condition randomCondition = conditions[randomInt];
-
-                setting.name += i.ToString();
-                setting.navigationType = randomCondition.navigationType;
-                setting.targetDifficulty = randomCondition.targetDifficulty;
-                conditions.Remove(randomCondition);
-            }
+            int conditionNumber = order[i];
+            
+            setting.name += (i+1).ToString();
+            setting.conditionNumber = conditionNumber;
+            setting.navigationType = conditions[conditionNumber].navigationType;
+            setting.targetDifficulty = conditions[conditionNumber].targetDifficulty;
 
             //Add turns
-            List<TurnType> turns = GetRandomTurns(5);
-
-            turns.Add(TurnType.EndPoint);
+            List<TurnType> turns = GetRandomTurns(numberTurns);
             setting.turns = turns;
 
             experiments.Add(setting);
@@ -216,10 +217,11 @@ public class MainManager : MonoBehaviour
         int randomInt;
         for (int j = 0; j < number; j++)
         {
-            randomInt = Random.Range(0, 100);
+            randomInt = UnityEngine.Random.Range(0, 100);
             if (randomInt < 50) { turns.Add(TurnType.Left); }
             else { turns.Add(TurnType.Right); }
         }
+        turns.Add(TurnType.EndPoint);
         return turns;
     }
     public MainExperimentSetting GetCurrentExperimentSettings()
@@ -248,17 +250,25 @@ public class MainManager : MonoBehaviour
         string fileName = "experimentSettings.csv";
         string filePath = Application.dataPath + "/" + fileName;
 
-        //Debug.Log($"Trying to read {filePath}...");
-
         try
         {
             string fileData = System.IO.File.ReadAllText(filePath);
             string[] lines = fileData.Split('\n');
 
+            //Line1: subject ID; Line2: experimentType [0 == real, 1== target calibration]; Line3: experimentOrder; Line4: number of turns
+            //First row is name of object, second is actual input
+
             //Data: [0] = Name, [1] = order
-            string[] lineData = lines[0].Trim().Split(';');
-            subjectName = lineData[0];
-            experimentOrder = int.Parse(lineData[1]);
+            string[] lineData;
+            lineData = lines[0].Trim().Split(';'); subjectID = lineData[1];
+            lineData = lines[1].Trim().Split(';'); experimentType = int.Parse(lineData[1]) == 0 ? ExperimentType.Real : ExperimentType.TargetCalibration;
+
+            //There is no order and number of turns neededd for the target calibration experiment
+            if (!experimentType.IsReal()) { return true; }
+
+            lineData = lines[2].Trim().Split(';'); experimentOrder = Array.ConvertAll(lineData[1].Split(','), s => int.Parse(s));
+            lineData = lines[3].Trim().Split(';'); numberTurns = int.Parse(lineData[1]);
+
 
             return true;
         }
@@ -377,6 +387,7 @@ public struct Condition
 public class MainExperimentSetting
 {
     public string name = "Experiment-";
+    public int conditionNumber = 0;
     public List<TurnType> turns;
     public NavigationType navigationType;
     public float transparency = 0.4f;
