@@ -23,18 +23,15 @@ for i = 1:12
 end
 
 %% Get csv files from location 
-%Get the directory contents
-directory = 'Logdata';
-dirc = dir(directory);
-%Filter out all the folders.
-dirc = dirc(find(~cellfun(@isdir,{dirc(:).name})));
-for i=1:length(dirc)
-   filename         = dirc(i).name;
-   foldername       = dirc(i).folder;
-   fileMove         = join([dirc(i).folder, '\', dirc(i).name]);
+Folder   = join([cd,'\Logdata']);
+FileList = dir(fullfile(Folder, '**', '*.csv'));
+
+%% Move files to destinated location
+for i=1:length(FileList)
+   filename         = FileList(i).name;
+   foldername       = FileList(i).folder;
+   fileMove         = join([FileList(i).folder, '\', FileList(i).name]);
    filename_split   = split(filename, '_');
-%    Participantnr = str2double(filename_split(2));
-%    Trialnr = str2double(filename_split(4));
    ExpDefnr = str2double(filename_split(6));
    for j=0:11
         if(ExpDefnr==j)
