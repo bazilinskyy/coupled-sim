@@ -33,7 +33,7 @@ public class newExperimentManager : MonoBehaviour
     public Transform driverView;
     private Transform player;
     private Transform steeringWheel;
-
+    private Transform startPoint;
     private bool lastUserInput = false;
     //The data manger handling the saving of vehicle and target detection data Should be added to the experiment manager object 
     public DataLogger dataManager;
@@ -56,28 +56,31 @@ public class newExperimentManager : MonoBehaviour
     private int targetCountCalibration=0;
     private float transparencyTargets = 0.1f;
 
+    private float angleTreshold = 1.5f;
+    private float maxAngle = 3f;
 
+    private bool firstStraight = true;
     private int transparencyIndex = 0;
-    private float[] transparencies = {0.04f, .03f, 0.25f, .02f, .015f, 0.01f, 0.0075f,0.005f };
+    private int sizeIndex = 0;
+    private float[] transparencies = { .1f, .05f, .02f, .01f, .005f};
+    private float[] sizes = { 1f, 0.75f, .5f }; //
 
     private void Start()
-    {
-        StartUpFunctions();
-    }
-    void StartUpFunctions()
     {
         player = MyUtils.GetPlayer().transform;
         blackOutScreen = MyUtils.GetBlackOutScreen();
         mainManager = MyUtils.GetMainManager();
         carUI = MyUtils.GetCarUI();
-
-        //Set DataManager
-        SetDataManager();
         
         //experiment settings
         experimentSettings = mainManager.GetExperimentSettings();
-        
-        if (experimentSettings.experimentType.IsTargetCalibration()) { SetNextTransparency(); }
+
+        //Turn off eye visuals
+        if (player.GetComponent<EyeTrackingVisuals>() != null) { player.GetComponent<EyeTrackingVisuals>().Disable(); }
+        //Set DataManager
+        SetDataManager();
+
+        if (experimentSettings.experimentType.IsTargetCalibration()) { transparencyTargets = 0.2f; experimentSettings.targetSize = 1f;  }
 
         //Turn of visuals if they are presents
         SetTransparencyEasyMaterial(transparencyTargets);
@@ -93,11 +96,11 @@ public class newExperimentManager : MonoBehaviour
             crossingSpawner.crossings.CurrentCrossing().components.triggerEnd.SetActive(true);
             //Remove targets of next crossing (they might confuse participnats);
             crossingSpawner.crossings.NextCrossing().components.RemoveTargets();
-            Transform startPoint = crossingSpawner.crossings.CurrentCrossing().components.startPoint.transform;
-            startPoint.position -= 30f * startPoint.forward;
+            startPoint = crossingSpawner.crossings.CurrentCrossing().components.startPointCalibration.transform;
 
             car.HUD.SetActive(false);
         }
+        else { startPoint = crossingSpawner.crossings.CurrentCrossing().components.startPoint.transform; }
         //Get all gameobjects we intend to use from the car (and do some setting up)
         SetGameObjectsFromCar();
 
@@ -125,22 +128,22 @@ public class newExperimentManager : MonoBehaviour
         bool userInput = UserInput();
         
         //Target detection processing (preventing inputs when the drive is finished or not started)
-        if (userInput && !car.navigationFinished && !startedDriving) { ProcessUserInputTargetDetection(); }
+        if (userInput && !car.navigationFinished && startedDriving) { ProcessUserInputTargetDetection(); }
         
     }
     void Update()
     {
         experimentSettings.experimentTime += Time.deltaTime;
         //Looks for targets to appear in field of view and sets their visibility timer accordingly
-        SetTargetVisibilityTime();
+        if (startedDriving) { SetTargetVisibilityTime(); }
 
-        //Start driving after 2 seconds
-        if(experimentSettings.experimentTime > 2f && !startedDriving) { car.GetComponent<SpeedController>().StartDriving(true); startedDriving=true;}
+        //Start of the experiment: Start driving after 2 seconds 
+        if(experimentSettings.experimentTime > 2f && experimentSettings.experimentTime < 3f  && !startedDriving) { car.GetComponent<SpeedController>().StartDriving(true); startedDriving=true;}
 
         //When I am doing some TESTING
-        if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W)) { car.GetComponent<SpeedController>().StartDriving(true); }
+        //if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W)) { car.GetComponent<SpeedController>().StartDriving(true); }
         if (Input.GetKeyDown(KeyCode.Space)) { car.GetComponent<SpeedController>().ToggleDriving(); }
-        if (Input.GetKeyDown(mainManager.CalibrateGaze)) { Varjo.VarjoPlugin.RequestGazeCalibration(); }
+        if (Input.GetKeyDown(mainManager.CalibrateGaze)) { RequestGazeCalibration(); }
         if (Input.GetKeyDown(mainManager.ResetHeadPosition)) { Varjo.VarjoPlugin.ResetPose(true, Varjo.VarjoPlugin.ResetRotation.ALL); }
         if (Input.GetKeyDown(KeyCode.LeftControl)) { StartCoroutine(PlaceAtTargetWaypoint()); }
         //Researcher inputs
@@ -150,7 +153,7 @@ public class newExperimentManager : MonoBehaviour
         //if (Input.GetKeyDown(experimentInput.resetHeadPosition)) { SetCameraPosition(driverView.position, driverView.rotation); }
         if (Input.GetKeyDown(mainManager.ResetExperiment)) { StartCoroutine(ResetExperiment()); }
         if (Input.GetKeyDown(KeyCode.LeftShift)) { TeleportToNextWaypoint(); }
-
+        if (Input.GetKeyDown(KeyCode.Return)) { EndOfStraight(); }
         if (car.navigationFinished)
         {
             //Log the last targets (targets of last cross point are automatically logged when leaving the crossing)
@@ -161,7 +164,12 @@ public class newExperimentManager : MonoBehaviour
             if (car.GetComponent<Rigidbody>().velocity.magnitude < 0.5f) { mainManager.ExperimentEnded(); }
         }
 
+      /*  if (Input.GetKey(KeyCode.UpArrow)){ maxAngle += 0.01f; Debug.Log($"maxAngle = {maxAngle}..."); }
+        if (Input.GetKey(KeyCode.DownArrow)){ maxAngle -= 0.01f; Debug.Log($"maxAngle = {maxAngle}..."); }
 
+        if (Input.GetKey(KeyCode.RightArrow)) { angleTreshold += 0.01f; Debug.Log($"angleTreshold = {angleTreshold}..."); }
+        if (Input.GetKey(KeyCode.LeftArrow)) { angleTreshold -= 0.01f; Debug.Log($"angleTreshold = {angleTreshold}..."); }
+*/
         //Code for practise drive UI
         if (experimentSettings.experimentType.IsPractise() && lastWaypointIndex != car.waypointIndex )
         {
@@ -172,7 +180,22 @@ public class newExperimentManager : MonoBehaviour
 
         if (experimentSettings.experimentType.IsPractise() && experimentSettings.experimentTime > 2f && !informedOnEasyTargets) { StartCoroutine(InformOnTargetDifficulty("Easy")); informedOnEasyTargets = true; }
 
-        
+    }
+    void RequestGazeCalibration()
+    {
+
+        Varjo.VarjoPlugin.GazeCalibrationParameters[] parameters = new Varjo.VarjoPlugin.GazeCalibrationParameters[2];
+
+        parameters[0] = new Varjo.VarjoPlugin.GazeCalibrationParameters();
+        parameters[0].key = "GazeCalibrationType";
+        parameters[0].value = "Legacy"; //"Fast"; 
+
+        parameters[1] = new Varjo.VarjoPlugin.GazeCalibrationParameters();
+        parameters[1].key = "OutputFilterType";
+        parameters[1].value = "Standard";
+
+        Varjo.VarjoPlugin.RequestGazeCalibrationWithParameters(parameters);
+
     }
     void SetTransparencyEasyMaterial(float transparency)
     {
@@ -191,35 +214,48 @@ public class newExperimentManager : MonoBehaviour
         }
         return detectionCount / targets.Count();
     }
-
-    void SetNextTransparency()
+    void SetNextTransparencyAndSize()
     {
-        transparencyTargets = transparencies[transparencyIndex];
+        bool finishedTransparencies = (transparencyIndex == transparencies.Count() - 1);
+        bool finishedSizes = (sizeIndex == sizes.Count() - 1);
 
-        Debug.Log($"Transparency now:{transparencyTargets}...");
-        if (transparencyIndex < transparencies.Count()-1) { transparencyIndex++; }
+        if (finishedTransparencies && !finishedSizes) { transparencyIndex = 0; sizeIndex++; }
+        else if (!finishedTransparencies) { transparencyIndex++; }
+        else { car.navigationFinished = true; return; }
+
+        transparencyTargets = transparencies[transparencyIndex];
+        experimentSettings.targetSize = sizes[sizeIndex]; 
+        Debug.Log($"Target transparency:{transparencyTargets}, size:{experimentSettings.targetSize}...");
+
+        
     }
     public void EndOfStraight()
     {
         if (experimentSettings.experimentType.IsTargetCalibration())
         {
+            //Debug.Log("Restarting striahgt...");
+            
             CrossComponents components = crossingSpawner.crossings.CurrentCrossing().components;
 
             //Log Targets;
-            SetProperTargetIDsCalibration();
+            SetProperTargetIDsCalibration(components.targetList);
             LogTargets(components.targetList);
 
             //Lower target visibility based on detection rate
-            SetNextTransparency();
+            if (firstStraight)
+            {
+                transparencyTargets = transparencies[transparencyIndex];
+                experimentSettings.targetSize = sizes[sizeIndex];
+                firstStraight = false; Debug.Log($"Target transparency:{transparencyTargets}, size:{experimentSettings.targetSize}...");
+            }
+            else { SetNextTransparencyAndSize(); }
             
             if (transparencyTargets <= 0f) { car.navigationFinished = true; return; }
 
             SetTransparencyEasyMaterial(transparencyTargets);
 
             car.ResetWaypoints();
-            StartCoroutine(PlaceAtTargetWaypoint(false, true));
-
-           
+            StartCoroutine(RestartStraight());
 
             //Remove old targets and spawn new ones
             
@@ -227,9 +263,9 @@ public class newExperimentManager : MonoBehaviour
             components.SpawnTargets(experimentSettings);
         }
     }
-    void SetProperTargetIDsCalibration()
+    void SetProperTargetIDsCalibration(List<Target> targets)
     {
-        foreach(Target target in crossingSpawner.crossings.CurrentCrossing().targetList)
+        foreach(Target target in targets)
         {
             target.ID = targetCountCalibration;
             targetCountCalibration++;
@@ -284,7 +320,7 @@ public class newExperimentManager : MonoBehaviour
         carUI.text = "Wrong turn... No problem!";
 
         //Putting car at next waypoint
-        StartCoroutine(PlaceAtTargetWaypoint(true));
+        StartCoroutine(PlaceAtTargetWaypoint());
     }
     public void CarOutOfBounce()
     {
@@ -292,9 +328,28 @@ public class newExperimentManager : MonoBehaviour
         //Car got hit by one of the out of bounce triggers
         carUI.text = "Car out of bounce... No problem!";
 
-        StartCoroutine(PlaceAtTargetWaypoint(true));
+        StartCoroutine(PlaceAtTargetWaypoint());
     }
-    IEnumerator PlaceAtTargetWaypoint(bool _setAtCarTargetBoolean = false, bool setAtStartOfLane = false)
+    IEnumerator RestartStraight()
+    {
+        car.GetComponent<SpeedController>().StartDriving(false);
+        startedDriving = false; //Disables visibilty timer of targets
+        yield return new WaitForSeconds(1f);
+
+        blackOutScreen.CrossFadeAlpha(1f, mainManager.AnimationTime, false);
+
+        //Skip this waiting if we load while fading
+        yield return new WaitForSeconds(mainManager.AnimationTime*1f);
+
+        StartCoroutine(SetCarSteadyAt(startPoint.position, startPoint.forward));
+
+        yield return new WaitForSeconds(2f);
+
+        startedDriving = true; //Enables visibilty timer of targets
+        blackOutScreen.CrossFadeAlpha(0f, 0f, true);
+        car.GetComponent<SpeedController>().StartDriving(true);
+    }
+    IEnumerator PlaceAtTargetWaypoint()
     {
         car.GetComponent<SpeedController>().StartDriving(false);
 
@@ -308,11 +363,10 @@ public class newExperimentManager : MonoBehaviour
         WaypointStruct target= car.waypoint;
 
         float distanceFromWaypoint = 20f;
-        if (setAtStartOfLane) { distanceFromWaypoint = 65f; }
 
         Vector3 newStartPosition = target.waypoint.transform.position - target.waypoint.transform.forward * distanceFromWaypoint;
 
-        StartCoroutine(SetCarSteadyAt(newStartPosition, target.waypoint.transform.forward, false, _setAtCarTargetBoolean));
+        StartCoroutine(SetCarSteadyAt(newStartPosition, target.waypoint.transform.forward, false));
 
         car.GetComponent<newNavigator>().RenderNavigationArrow();
         blackOutScreen.CrossFadeAlpha(0f, mainManager.AnimationTime*2f, false);
@@ -331,7 +385,7 @@ public class newExperimentManager : MonoBehaviour
         Vector3 targetView;  WaypointStruct targetWaypoint; Vector3 targetPos; Quaternion targetRot;
 
         //If very close to target waypoint we teleport to the next waypoint
-        if (Vector3.Magnitude(car.transform.position - car.waypoint.waypoint.transform.position) < 10f) { targetWaypoint = car.GetNextWaypoint(); }
+        if (Vector3.Magnitude(car.transform.position - car.waypoint.waypoint.transform.position) < 20f) { targetWaypoint = car.GetNextWaypoint(); }
         else { targetWaypoint = car.waypoint; }
 
         targetPos = targetWaypoint.waypoint.transform.position + car.transform.forward * 7.5f;
@@ -452,9 +506,7 @@ public class newExperimentManager : MonoBehaviour
         PlaceHUD();
 
         //Put car in right position
-        Transform startLocation = crossingSpawner.crossings.CurrentCrossing().components.startPoint.transform;       
-
-        StartCoroutine(SetCarSteadyAt(startLocation.position, startLocation.forward));
+        StartCoroutine(SetCarSteadyAt(startPoint.position, startPoint.forward));
     }
     void PlaceHUD()
     {
@@ -479,20 +531,23 @@ public class newExperimentManager : MonoBehaviour
         //(2) Target closest to looking direction
 
         //if there is a target visible which has not already been detected
-        List<Target> targetList = GetActiveTargets();
-        List<Target> visibleTargets = new List<Target>();
-
-        //Check if there are any visible targets
-        foreach (Target target in targetList) { if (target.HasBeenVisible() && target.InFoV(CameraTransform(), mainManager.FoVCamera)) { visibleTargets.Add(target); } }
+        List<Target> visibleTargets = GetVisibleTargets();
 
         if (visibleTargets.Count() == 0) { dataManager.AddFalseAlarm(); }
         else if (visibleTargets.Count() == 1) { dataManager.AddTrueAlarm(visibleTargets[0]); visibleTargets[0].SetDetected(experimentSettings.experimentTime); }
-        else
+        else { StartCoroutine(CheckTargetDetection(visibleTargets)); }
+    }
+    IEnumerator CheckTargetDetection(List<Target> visibleTargets)
+    {
+        Target targetChosen = null; 
+        int frameCount = 0; 
+        int maxFrames = 5;
+
+        while (targetChosen == null && frameCount < maxFrames)
         {
             //When multiple targets are visible we base our decision on:
             //(1) On which target has been looked at most recently (max 1 second)
-            Target targetChosen = null;
-            float mostRecentTime = 1f;
+            float mostRecentTime = .5f;
             foreach (Target target in visibleTargets)
             {
                 float timeSinceFixation = Time.time - target.lastFixationTime;
@@ -505,52 +560,59 @@ public class newExperimentManager : MonoBehaviour
 
             //If previous method did not find a target ->
             //(2) Check using angle between general gaze direction and target 
-            float minAngle = 10f;
-            if (targetChosen == null && mainManager.camType != MyCameraType.Normal)
+            
+            //float maxAngle = 3; float angleTreshold = 1f; 
+            float smallestAngle = maxAngle;
+            Varjo.VarjoPlugin.GazeData data = Varjo.VarjoPlugin.GetGaze();
+            if (targetChosen == null && mainManager.camType != MyCameraType.Normal && data.status == Varjo.VarjoPlugin.GazeStatus.VALID)
             {
+                List<float> angles = new List<float>();
 
-                Varjo.VarjoPlugin.GazeData data = Varjo.VarjoPlugin.GetGaze();
-                if (data.status == Varjo.VarjoPlugin.GazeStatus.VALID)
+                Vector3 gazeDirection = MyUtils.TransformToWorldAxis(data.gaze.forward, data.gaze.position);
+
+                foreach (Target target in visibleTargets)
                 {
+                    Vector3 CamToTarget = target.transform.position - CameraTransform().position;
+                    float angle = Vector3.Angle(gazeDirection, CamToTarget);
+                    angles.Add(angle);
+                }
 
-                    Debug.Log("Got valid data...");
-                    Vector3 gazeDirection = MyUtils.TransformToWorldAxis(data.gaze.forward, data.gaze.position);
+                smallestAngle = angles.Min();
+                if (smallestAngle < maxAngle) { targetChosen = visibleTargets[angles.IndexOf(smallestAngle)]; }
 
-                    foreach (Target target in visibleTargets)
+                //if there are angles close together we chose the target which is closest
+                List<float> anglesCloseTogether = angles.Where(s => Mathf.Abs(s - smallestAngle) < angleTreshold).ToList();
+
+                if (anglesCloseTogether.Count() > 1 && targetChosen != null)
+                {
+                    int index; float distanceTargetChosen = 0f; float distanceOfThisTarget;
+                    foreach (float angle in anglesCloseTogether)
                     {
-                        Vector3 CamToTarget = target.transform.position - CameraTransform().position;
-                        float angle = Vector3.Angle(gazeDirection, CamToTarget);
+                        index = angles.IndexOf(angle);
+                        Target targetOfAngle = visibleTargets[index];
 
-                        if (angle < minAngle) { minAngle = angle; targetChosen = target; }
+                        distanceTargetChosen = Vector3.Magnitude(targetChosen.transform.position - CameraTransform().position);
+                        distanceOfThisTarget = Vector3.Magnitude(targetOfAngle.transform.position - CameraTransform().position);
+                        if (distanceTargetChosen > distanceOfThisTarget) { targetChosen = targetOfAngle; }
+
                     }
-                }
-            }
-            if (minAngle != 10f) { Debug.Log($"Chose {targetChosen.gameObject.name} with angle {minAngle}..."); }
 
-            /*//(3)
-            if (targetChosen == null) { 
-                Debug.Log("Chosing target based on distance...");
-                float smallestDistance = 100000f;
-                float currentDistance;
-                foreach (Target target in visibleTargets) {
-
-                    //(2) Stops this when mostRecentTime variables gets set to something else then 0
-                    currentDistance = Vector3.Distance(CameraTransform().position, target.transform.position);
-                    if (currentDistance < smallestDistance && mostRecentTime == 1f)
-                    {
-                        targetChosen = target;
-                        smallestDistance = currentDistance;
-                    } 
+                    Debug.Log($"ANGLE-CLOSEST-method: {targetChosen.gameObject.name}, distance: {distanceTargetChosen},  angle: {smallestAngle}...");
                 }
+                else if (targetChosen != null) { Debug.Log($"ANGLE-method chose {targetChosen.gameObject.name}, angle {smallestAngle}..."); }
             }
-            else { Debug.Log($"Chose target based on fixation time: {Time.time - mostRecentTime}..."); }
-*/
-            if (targetChosen == null) { dataManager.AddFalseAlarm(); }
-            else
-            {
-                dataManager.AddTrueAlarm(targetChosen);
-                targetChosen.SetDetected(experimentSettings.experimentTime);
-            }
+            else if(targetChosen != null) { Debug.Log($"FIXATION-method chose {targetChosen.name}, time since fixation: {mostRecentTime}..."); }
+
+            if (targetChosen == null) { frameCount++; yield return new WaitForEndOfFrame(); }
+            else { break; }  //found a target 
+        }
+
+        //Log user input
+        if (targetChosen == null) { dataManager.AddFalseAlarm(); }
+        else
+        {
+            dataManager.AddTrueAlarm(targetChosen);
+            targetChosen.SetDetected(experimentSettings.experimentTime);
         }
     }
     Vector3 GetRandomPerpendicularVector(Vector3 vec)
@@ -601,11 +663,11 @@ public class newExperimentManager : MonoBehaviour
         Vector3 vectorToTarget = target.transform.position - CameraTransform().position;
         //(1) Not in sight of camera
         float angle = Mathf.Abs(Vector3.Angle(CameraTransform().forward, vectorToTarget));
-        if (angle > mainManager.FoVCamera) { return false; }
+        if (angle > (mainManager.FoVCamera / 2 )) { return false; }
 
         //(2) If in sight we check if it is not occluded by buildings and such
-        bool isVisible = false; Vector3 currentDirection; RaycastHit hit;
-        float targetRadius = target.GetComponent<SphereCollider>().radius;
+        Vector3 currentDirection; RaycastHit hit;
+        float targetRadius = target.GetComponent<SphereCollider>().radius* target.transform.localScale.x * 0.95f;
 
         //Vary the location of the raycast over the edge of the potentially visible target
         for (int i = 0; i < maxNumberOfRayHits; i++)
@@ -619,32 +681,23 @@ public class newExperimentManager : MonoBehaviour
                 if (hit.collider.CompareTag("Target"))
                 {
                     Debug.DrawLine(CameraTransform().position, CameraTransform().position + currentDirection * 500, Color.cyan, Time.deltaTime, false);
-                    isVisible = true;
-                    break;
+                    return true;
                 }
-                //else { Debug.Log($"Hit {hit.collider.gameObject.name}...."); }
+                else { return false; }
             }
         }
 
-        return isVisible;
-    }
-    bool TargetInFOV(Target target)
-    {
-        Vector3 backOfCar = car.transform.position - 4 * car.transform.forward;
-        float sign = Vector3.Dot(car.transform.forward, (backOfCar - target.transform.position));
-
-        if (sign >= 0) { return false; }
-        else { return true; }
+        return false;
     }
     void SetTargetVisibilityTime()
     {
         //Number of ray hits to be used. We user a smaller amount than when the user actually presses the detection button. Since this function is called many times in Update() 
         int numberOfRandomRayHits = 3;
 
-        foreach (Target target in GetActiveTargets())
+        foreach (Target target in GetAllTargets())
         {
             //If we havent seen the target before
-            if (!target.HasBeenVisible())
+            if (!target.HasBeenVisible() && !target.IsDetected())
             {
                 if (TargetIsVisible(target, numberOfRandomRayHits))
                 {
@@ -654,10 +707,18 @@ public class newExperimentManager : MonoBehaviour
             }
         }
     }
-    private List<Target> GetActiveTargets()
+    private List<Target> GetAllTargets()
     {
-        return car.GetComponent<CrossingSpawner>().crossings.GetAllTargets();
+        return crossingSpawner.crossings.GetAllTargets();
+    }
+    private List<Target> GetVisibleTargets()
+    {
+        List<Target> visibleTargets = new List<Target>();
 
+        //Check if there are any visible targets
+        foreach (Target target in GetAllTargets()) { if (target.HasBeenVisible() && target.InFoV(CameraTransform(), mainManager.FoVCamera) && !target.IsDetected()) { visibleTargets.Add(target); } }
+
+        return visibleTargets;
     }
     void SetCameraPosition(Vector3 goalPos, Quaternion goalRot)
     {
@@ -720,25 +781,25 @@ public class newExperimentManager : MonoBehaviour
         if (reflectionScript != null && player != null) { reflectionScript[0].head = CameraTransform(); }
         else { Debug.Log("Could not set head position for mirro reflection script..."); }
     }
-    IEnumerator SetCarSteadyAt(Vector3 targetPos, Vector3 targetRot, bool superSonic = false, bool _setCarAtTargetBool = false)
+    IEnumerator SetCarSteadyAt(Vector3 targetPos, Vector3 targetRot, bool superSonic = false)
     {
+
         //Somehow car did some back flips when not keeping it steady for some time after repositioning.....
-        float step = 0.005f;
-        float totalSeconds = 0.25f;
+        float step = 0.02f;
+        float totalSteps = .5f;
         float count = 0;
-
-
+    
         if (superSonic)
         {
             float totalDistance = Vector3.Magnitude(targetPos - car.gameObject.transform.position);
-            float rotationSpeed = Vector3.Angle(car.transform.forward, targetRot) / Mathf.PI / (totalSeconds / step) / 2f;
+            float rotationSpeed = Vector3.Angle(car.transform.forward, targetRot) / Mathf.PI / (totalSteps / step) / 2f;
             //Debug.Log($"Rotating with {rotationSpeed} rad/s...");
-            while (count < totalSeconds)
+            while (count < totalSteps)
             {
 
                 Vector3 direction = targetPos - car.gameObject.transform.position;
 
-                car.transform.position += direction.normalized * totalDistance * step / totalSeconds;
+                car.transform.position += direction.normalized * totalDistance * step / totalSteps;
 
                 //Keep car steady in the y direction;
                 Vector3 newPos = car.transform.position; newPos = new Vector3(newPos.x, 0.08f, newPos.z);
@@ -752,8 +813,8 @@ public class newExperimentManager : MonoBehaviour
             }
             count = 0;
 
-            
-            while (count < totalSeconds/3)
+
+            while (count < totalSteps / 3)
             {
                 Vector3 newDirection = Vector3.RotateTowards(car.transform.forward, targetRot, rotationSpeed, 0.0f);
                 car.transform.rotation = Quaternion.LookRotation(newDirection);
@@ -764,12 +825,10 @@ public class newExperimentManager : MonoBehaviour
                 count += step;
                 yield return new WaitForSeconds(step);
             }
-            
-
         }
         else
         {
-            while (count < totalSeconds)
+            while (count < totalSteps)
             {
                 car.transform.position = targetPos;
                 car.transform.rotation = Quaternion.LookRotation(targetRot);
@@ -781,7 +840,6 @@ public class newExperimentManager : MonoBehaviour
                 yield return new WaitForSeconds(step);
             }
         }
-        setCarAtTarget = _setCarAtTargetBool;
     }
 }
 

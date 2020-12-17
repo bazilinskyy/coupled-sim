@@ -25,6 +25,7 @@ public class DataLogger : MonoBehaviour
     public Vector3[] totalNavigationLine;
     private int indexClosestPoint = 0;//Used for calculating the distance to optimal navigation path (i.e., centre of raod)
 
+    private GameObject lightObj;
     //Experiment manager;
     private newExperimentManager experimentManager;
    
@@ -44,8 +45,9 @@ public class DataLogger : MonoBehaviour
     public bool logging;
 
     private MyGazeLogger gazeLogger;
-    private CultureInfo culture = CultureInfo.CreateSpecificCulture("eu-ES");
+
     // Use standard numeric format specifiers.
+    private CultureInfo culture = CultureInfo.CreateSpecificCulture("eu-ES");
     private string specifier = "G";
     
     private void OnApplicationQuit() { if (mainManager.SaveData && !savedData) { SaveData(); } }
@@ -289,7 +291,7 @@ public class DataLogger : MonoBehaviour
     {
         string[] columns = { "ID", "Detected", "ReactionTime", "TotalFixationTime", "FirstFixationTime",
                             "DetectionTime", "Difficulty","UpcomingTurn","Position", "RoadSide", "WaypointID",
-                            "Transparency", "DetectionDistance", "PositionNumber" };
+                            "Transparency", "DetectionDistance", "PositionNumber", "Size" };
         string[] logData = new string[columns.Length];
         string filePath = string.Join("/", saveFolder, generalTargetInfo);
         
@@ -313,6 +315,7 @@ public class DataLogger : MonoBehaviour
                 logData[11] = targetInfo.transparency.ToString(specifier,culture);
                 logData[12] = targetInfo.detectionDistance.ToString(specifier, culture);
                 logData[13] = targetInfo.positionNumber.ToString(specifier, culture);
+                logData[14] = targetInfo.size.ToString(specifier, culture);
                 Log(logData, file);
             }
             file.Flush();
@@ -321,7 +324,7 @@ public class DataLogger : MonoBehaviour
     }
     void SaveExperimentInfo()
     {
-        string[] columns = { "Total Targets", "LeftTarget", "RightTargets","TargetDifficulty", "driverViewToSteeringWHeel", "RelativePositionDriverView", "RelativeRotationDriverView", "ExperimentName",
+        string[] columns = { "SubjectID", "SubjectAge", "SubjectSex","TotalTargets", "LeftTarget", "RightTargets","TargetDifficulty", "DriverViewToSteeringWHeel", "RelativePositionDriverView", "RelativeRotationDriverView", "ExperimentName",
                               "NavigationType", "Transparency", "TotalExperimentTime", "LeftTurns", "RightTurns"};
         string[] logData = new string[columns.Length];
         string filePath = string.Join("/", saveFolder, generalExperimentInfo);
@@ -330,30 +333,35 @@ public class DataLogger : MonoBehaviour
         {
             Log(columns, file);
 
+            //General subject info
+            logData[0] = mainManager.SubjectID;
+            logData[1] = mainManager.Age;
+            logData[2] = mainManager.Sex;
+
             //General target info
-            logData[0] = TotalTargets().ToString();
-            logData[1] = LeftTargets().ToString();
-            logData[2] = RightTargets().ToString();
-            logData[3] = experimentManager.experimentSettings.targetDifficulty.ToString();
+            logData[3] = TotalTargets().ToString();
+            logData[4] = LeftTargets().ToString();
+            logData[5] = RightTargets().ToString();
+            logData[6] = experimentManager.experimentSettings.targetDifficulty.ToString();
 
             Vector3 driverViewToSteeringWheel = new Vector3(mainManager.DriverViewXToSteeringWheel, mainManager.DriverViewYToSteeringWheel, mainManager.DriverViewZToSteeringWheel);
 
-            logData[4] = driverViewToSteeringWheel.ToString("F3");
+            logData[7] = driverViewToSteeringWheel.ToString("F3");
 
             //Info on the driver view
             Vector3 relativePosition = experimentManager.driverView.position - car.transform.position;
             Quaternion relativeRotation = Quaternion.Inverse(car.transform.rotation) * experimentManager.driverView.rotation;
-            logData[5] = relativePosition.ToString("F3");
-            logData[6] = relativeRotation.eulerAngles.ToString("F3");
+            logData[8] = relativePosition.ToString("F3");
+            logData[9] = relativeRotation.eulerAngles.ToString("F3");
 
             //Experiment inputs
-            logData[7] = experimentManager.experimentSettings.name;
-            logData[8] = experimentManager.experimentSettings.navigationType.ToString();
-            logData[9] = experimentManager.experimentSettings.transparency.ToString();
-            logData[10] = experimentManager.experimentSettings.experimentTime.ToString(specifier,culture);
+            logData[10] = experimentManager.experimentSettings.name;
+            logData[11] = experimentManager.experimentSettings.navigationType.ToString();
+            logData[12] = experimentManager.experimentSettings.transparency.ToString();
+            logData[13] = experimentManager.experimentSettings.experimentTime.ToString(specifier,culture);
 
-            logData[11] = experimentManager.experimentSettings.LeftTurns().ToString();
-            logData[12] = experimentManager.experimentSettings.RightTurns().ToString();
+            logData[14] = experimentManager.experimentSettings.LeftTurns().ToString();
+            logData[15] = experimentManager.experimentSettings.RightTurns().ToString();
             //Log data and close file
             Log(logData, file);
             file.Flush();
@@ -509,7 +517,7 @@ public class DataLogger : MonoBehaviour
         alarm.targetDifficulty = target.GetTargetDifficulty().ToString();
         targetDetectionData.Add(alarm);
 
-        Debug.Log($"Added true alarm for {target.GetID()}, reaction time: {Math.Round(alarm.reactionTime, 2)}s ...");
+        //Debug.Log($"Added true alarm for {target.GetID()}, reaction time: {Math.Round(alarm.reactionTime, 2)}s ...");
     }
     private Vector3[] AppendArrays(Vector3[] arr1, Vector3[] arr2)
     {
@@ -586,6 +594,7 @@ public class TargetData
     public float transparency;
     public float detectionDistance;
     public int positionNumber;
+    public float size;
     public TargetData(Target target)
     {
         ID = target.GetID();
@@ -602,6 +611,7 @@ public class TargetData
         waypointID = target.waypoint.waypointID;
         transparency = target.transparency; 
         positionNumber = target.positionNumber;
+        size = target.transform.localScale.x;
     }
 
 }

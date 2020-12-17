@@ -18,6 +18,8 @@ public class MainManager : MonoBehaviour
 
     private string subjectDataFolder = "nothing...";
     private string subjectID = "Dummy";
+    private string age = "0";
+    private string sex = "-";
 
     private bool automateSpeed = true;
     private bool saveData = true;
@@ -100,6 +102,9 @@ public class MainManager : MonoBehaviour
     public float DriverViewYToSteeringWheel { get => driverViewYToSteeringWheel; set => driverViewYToSteeringWheel = value; }
     public float DriverViewXToSteeringWheel { get => driverViewXToSteeringWheel; set => driverViewXToSteeringWheel = value; }
     public bool IsInExperiment { get => isInExperiment; set => isInExperiment = value; }
+    public string Age { get => age; set => age = value; }
+    public string Sex { get => sex; set => sex = value; }
+    public string SubjectID { get => subjectID; set => subjectID = value; }
 
     private void Awake()
     {
@@ -144,7 +149,7 @@ public class MainManager : MonoBehaviour
         setting.name = "TargetCalibration";
         setting.conditionNumber = 1111;
         setting.minTargets = 3;
-        setting.maxTargets = 3;
+        setting.maxTargets = 5;
         setting.experimentType = ExperimentType.TargetCalibration;
         setting.targetDifficulty = TargetDifficulty.easy;
         setting.navigationType = NavigationType.HighlightedRoad;
@@ -171,7 +176,7 @@ public class MainManager : MonoBehaviour
         setting.navigationType = NavigationType.HUD_low;
         setting.experimentType = ExperimentType.Practise;
         setting.minTargets = 3;
-        setting.maxTargets = 3;
+        setting.maxTargets = 4;
         setting.turns = GetRandomTurns(18);
         experiments.Add(setting);
      }
@@ -260,14 +265,16 @@ public class MainManager : MonoBehaviour
 
             //Data: [0] = Name, [1] = order
             string[] lineData;
-            lineData = lines[0].Trim().Split(';'); subjectID = lineData[1];
+            lineData = lines[0].Trim().Split(';'); SubjectID = lineData[1];
             lineData = lines[1].Trim().Split(';'); experimentType = int.Parse(lineData[1]) == 0 ? ExperimentType.Real : ExperimentType.TargetCalibration;
 
+            lineData = lines[2].Trim().Split(';'); Age = lineData[1];
+            lineData = lines[3].Trim().Split(';'); Sex = lineData[1];
             //There is no order and number of turns neededd for the target calibration experiment
             if (!experimentType.IsReal()) { return true; }
 
-            lineData = lines[2].Trim().Split(';'); experimentOrder = Array.ConvertAll(lineData[1].Split(','), s => int.Parse(s));
-            lineData = lines[3].Trim().Split(';'); numberTurns = int.Parse(lineData[1]);
+            lineData = lines[4].Trim().Split(';'); experimentOrder = Array.ConvertAll(lineData[1].Split(','), s => int.Parse(s));
+            lineData = lines[5].Trim().Split(';'); numberTurns = int.Parse(lineData[1]);
 
 
             return true;
@@ -396,6 +403,7 @@ public class MainExperimentSetting
     public int maxTargets=3;
     public float experimentTime = 0f;
     public ExperimentType experimentType = ExperimentType.Real;
+    public float targetSize = 1f;
     public int LeftTurns()
     {
         return turns.Where(s => s == TurnType.Left).Count();

@@ -10,7 +10,7 @@ public class ConsoleToGUI : MonoBehaviour
     public Text fps;
     public bool showLogScreen = true;
     public bool showLogUser = true;
-    int kChars = 120;
+    int kChars = 300;
     
     //fps stuff
     int m_frameCounter = 0;
@@ -52,13 +52,9 @@ public class ConsoleToGUI : MonoBehaviour
         // for the file ...
         if (fileName == "")
         {
-            string d = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop).Replace("\\", "/") + "/Data/YOUR_LOGS";
-
-            System.IO.Directory.CreateDirectory(d);
-            string r = Random.Range(1000, 9999).ToString();
             fileName = System.DateTime.Now.ToString("MM-dd_HH-mm") + "_" + GetComponent<MainManager>().SubjectName;
 
-            fileName = d + "/log-" + fileName + ".txt";
+            fileName = MyUtils.GetMainManager().SubjectDataFolder + "/log-" + fileName + ".txt";
             myLog += $"\nCreated log file {fileName}...";
         }
         try { System.IO.File.AppendAllText(fileName, logString + "\n"); }
@@ -76,7 +72,7 @@ public class ConsoleToGUI : MonoBehaviour
             GUI.TextArea(new Rect(560, 10, 100, 20), "FPS: " + m_lastFramerate.ToString());
         }
 
-        if(showLogUser) { logCanvas.text = myLog; fps.enabled = true; logCanvas.enabled = true; }
-        else { logCanvas.enabled = false; fps.enabled = false; }
+        if(showLogUser) { logCanvas.text = myLog; fps.gameObject.SetActive(true); logCanvas.enabled = true; }
+        else { logCanvas.enabled = false; fps.gameObject.SetActive(false); }
     }
 }

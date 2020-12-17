@@ -118,7 +118,7 @@ public class Target : MonoBehaviour
         GetComponent<MeshRenderer>().enabled = false;
         GetComponent<SphereCollider>().enabled = false;
 
-        Debug.Log($"Target {GetID()} is detected: startTimeVisible {startTimeVisible}, detectionTime { detectionTime}, reactiontime: {reactionTime}");
+        //Debug.Log($"Target {GetID()} is detected: startTimeVisible {startTimeVisible}, detectionTime { detectionTime}, reactiontime: {reactionTime}");
     }
     public bool HasBeenVisible() { return hasBeenVisible; }
 

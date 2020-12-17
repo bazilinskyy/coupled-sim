@@ -93,6 +93,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   fps: {fileID: 727106572}
   m_refreshTime: 0.5
+  averageFrameRate: 0
 --- !u!1 &1974615039
 GameObject:
   m_ObjectHideFlags: 0
@@ -222,31 +223,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   camType: 2
   experiments: []
-  environment: {fileID: 0}
-  debug: 1
-  makeVirtualCable: 1
-  renderHUD: 1
-  subjectDataFolder: 
-  subjectName: Dummy
-  experimentOrder: 0
-  automateSpeed: 1
-  saveData: 1
-  animationTime: 2.5
-  FoVCamera: 87
-  calibratedUsingHands: 0
-  driverViewHorizontalDistance: 0
-  driverViewVerticalDistance: 0
-  driverViewSideDistance: 0
-  myPermission: 282
-  resetHeadPosition: 283
-  spawnSteeringWheel: 284
-  calibrateGaze: 285
-  resetExperiment: 27
-  toggleDriving: 100
-  toggleSymbology: 116
-  setToLastWaypoint: 8
-  inputNameKey: 105
-  saveTheData: 288
   ParticpantInputAxisLeft: SteerButtonLeft
   ParticpantInputAxisRight: SteerButtonRight
   GasWithKeyboard: GasKeyBoard
@@ -257,6 +233,8 @@ MonoBehaviour:
   Brake: BrakeKeyBoard
   sceneArray: []
   experimentIndex: 0
+  experimentOrder: 
+  numberTurns: 12
 --- !u!114 &1574512658
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -567,7 +545,6 @@ GameObject:
   - component: {fileID: 1440466192143242889}
   - component: {fileID: 1271025293866340413}
   - component: {fileID: 4247043627135767140}
-  - component: {fileID: 6348724997710393849}
   m_Layer: 10
   m_Name: UI
   m_TagString: UserUI
@@ -635,20 +612,6 @@ MonoBehaviour:
     m_VerticalOverflow: 0
     m_LineSpacing: 1
   m_Text: 
---- !u!114 &6348724997710393849
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2405971803972172623}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c2801d3e0fae6c9438f221791fc041ec, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  fps: {fileID: 4247043627135767140}
-  m_refreshTime: 0.5
 --- !u!1001 &148753797
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1158,12 +1121,6 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 2e636a23b18ad9d4fb6e64ec135230f3, type: 3}
---- !u!4 &2717849729560944564 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 2717849729697501745, guid: 2e636a23b18ad9d4fb6e64ec135230f3,
-    type: 3}
-  m_PrefabInstance: {fileID: 148753797}
-  m_PrefabAsset: {fileID: 0}
 --- !u!114 &6975241445452460918 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 6975241445575458547, guid: 2e636a23b18ad9d4fb6e64ec135230f3,
@@ -1176,6 +1133,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9e0ed5922e911b343b8400997c95409c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!4 &2717849729560944564 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2717849729697501745, guid: 2e636a23b18ad9d4fb6e64ec135230f3,
+    type: 3}
+  m_PrefabInstance: {fileID: 148753797}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1657776102
 PrefabInstance:
   m_ObjectHideFlags: 0

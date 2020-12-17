@@ -92,7 +92,7 @@ SphereCollider:
   m_IsTrigger: 1
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 0.6
+  m_Radius: 1
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &-5734429955491872299
 MonoBehaviour:
@@ -109,6 +109,7 @@ MonoBehaviour:
   waypoint:
     waypoint: {fileID: 0}
     turn: 0
+    waypointID: 0
   difficulty: 0
   easy: {fileID: 2100000, guid: e97b5e1b79224bc488515cb7a62bb52b, type: 2}
   medium: {fileID: 2100000, guid: 6afc8bda1d0a5434b8091635762d40d8, type: 2}
@@ -120,9 +121,12 @@ MonoBehaviour:
   firstFixationTime: 0
   lastFixationTime: 0
   detectionTime: 0
+  detectionDistance: 0
   defaultVisibilityTime: -1
   startTimeVisible: -1
   afterTurn: 0
   side: 2
+  positionNumber: 0
   difficultPosition: 0
+  transparency: 0
   hasBeenVisible: 0

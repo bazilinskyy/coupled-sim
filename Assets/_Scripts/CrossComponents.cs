@@ -16,6 +16,8 @@ public class CrossComponents : MonoBehaviour
     public GameObject rightCross;
 
 	public GameObject startPoint;
+	public GameObject startPointCalibration;
+
 
     public GameObject triggerStart;
 	public GameObject triggerEnd;
@@ -146,8 +148,8 @@ public class CrossComponents : MonoBehaviour
 			int ID = experimentManager.GetNextTargetID();
 			//Debug.Log($"Instantiating target: {ID}...");
 			//Varies position of target number higher than 5 means riught side, lower than 6 -> left side...
-			Vector3 sideVariation = int.Parse(point.name) > 5 ? waypoint.waypoint.right*Random.Range(0, 2f) : -waypoint.waypoint.right * Random.Range(0, 2f);
-			Vector3 forwardVariation = waypoint.waypoint.forward * Random.Range(-4f, 4f);
+			Vector3 sideVariation = int.Parse(point.name) > 5 ? waypoint.waypoint.right*Random.Range(0, 3f) : -waypoint.waypoint.right * Random.Range(0, 3f);
+			Vector3 forwardVariation = waypoint.waypoint.forward * Random.Range(-5f, 5f);
 			Vector3 positionTarget = point.position + forwardVariation + sideVariation;
 
 			TargetDifficulty targetDifficulty;
@@ -170,6 +172,8 @@ public class CrossComponents : MonoBehaviour
 			target.GetComponent<Target>().side = int.Parse(point.name)  < 6 ? Side.Left : Side.Right;
 			target.GetComponent<Target>().positionNumber = int.Parse(point.name);
 			target.GetComponent<Target>().transparency = target.GetComponent<MeshRenderer>().material.color.a;
+			target.transform.localScale = new Vector3(settings.targetSize, settings.targetSize, settings.targetSize);
+			target.GetComponent<SphereCollider>().radius = .75f / settings.targetSize;
 
 			targetList.Add(target.GetComponent<Target>());
 		}

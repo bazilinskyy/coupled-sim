@@ -11,7 +11,17 @@ public static class MyUtils
     {
         return GameObject.FindGameObjectWithTag("Player");
     }
+    public static float GetAverageFPS()
+    {
+        GameObject fpsCounter = GameObject.FindGameObjectWithTag("FPS");
 
+        if(fpsCounter != null && fpsCounter.GetComponent<SetFPSScript>() != null) { return fpsCounter.GetComponent<SetFPSScript>().averageFrameRate; }
+        else { return 30f; }
+    }
+    public static GameObject GetGazeHighLight()
+    {
+        return GameObject.FindGameObjectWithTag("GazeHighLight");
+    }
     public static MainManager GetMainManager()
     {
         return GameObject.FindGameObjectWithTag("Player").GetComponent<MainManager>();

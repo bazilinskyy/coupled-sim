@@ -13,6 +13,10 @@ public class MyGazeLogger : MonoBehaviour
 
     List<VarjoPlugin.GazeData> dataSinceLastUpdate;
 
+    public bool highlightGaze = true;
+
+    public GameObject gazeHighlight;
+    private GameObject lightObj;
     Vector3 hmdPosition;
     Vector3 hmdRotation;
     private newExperimentManager experimentManager;
@@ -45,6 +49,7 @@ public class MyGazeLogger : MonoBehaviour
     public Fixation fixationData;
     private LoggedTags fixatingOn = LoggedTags.Environment;
     private long baseTimeNanoSeconds = 0;
+    
     public void StartUp()
     {
         experimentManager = MyUtils.GetExperimentManager();
@@ -55,8 +60,15 @@ public class MyGazeLogger : MonoBehaviour
             Debug.LogError("Failed to initialize gaze");
             GetComponent<MyGazeLogger>().enabled = false;
         }
+        
+        if (highlightGaze) { StartHighlight(); }
+
         StartLogging();
+
+        
     }
+
+   
     void Update()
     {
         if (!logging) { return; }
@@ -83,6 +95,8 @@ public class MyGazeLogger : MonoBehaviour
                 dataSinceLastUpdate = VarjoPlugin.GetGazeList();
                 foreach (var data in dataSinceLastUpdate) { LogGazeData(data); }
 
+                if (highlightGaze) { RenderGaze(); }
+
                 CheckLogCount();
 
             }
@@ -90,7 +104,20 @@ public class MyGazeLogger : MonoBehaviour
         else if (startAutomatically) { if (VarjoPlugin.GetGaze().status == VarjoPlugin.GazeStatus.VALID) { StartLogging(); } }
 
     }
-
+    public void StartHighlight()
+    {
+        if( lightObj == null)
+        {
+            lightObj = Instantiate(gazeHighlight);
+            lightObj.transform.parent = MyUtils.GetPlayer().transform.Find("VarjoCameraRig").transform.Find("VarjoCamera").transform;
+            
+        }
+        
+    }
+    private void DisableHighlight()
+    {
+        if(lightObj != null) { lightObj.SetActive(false);  }
+    }
     public VarjoPlugin.GazeData GetLastGaze()
     {
         if (logging) { return dataSinceLastUpdate.Last(); }
@@ -210,7 +237,7 @@ public class MyGazeLogger : MonoBehaviour
         writer = new StreamWriter(path);
 
         Log(ColumnNames);
-        Debug.Log("GazeLog file started at: " + path);
+        //Debug.Log("GazeLog file started at: " + path);
     }
     public void StopLogging()
     {
@@ -225,6 +252,21 @@ public class MyGazeLogger : MonoBehaviour
         logging = false;
         //Debug.Log("Logging ended");
     }
+    void RenderGaze()
+    {
+        if(dataSinceLastUpdate.Count() ==0) { return; }
+        if(dataSinceLastUpdate.Last().status == VarjoPlugin.GazeStatus.INVALID) { return; }
+        if(lightObj == null) { return; }
+        
+        Transform HMD = VarjoManager.Instance.HeadTransform;
+        // Transform gaze direction and origin from HMD space to world space
+        Vector3 gazeRayDirection = HMD.TransformVector(Double3ToVector3(dataSinceLastUpdate.Last().gaze.forward));
+        Vector3 gazeRayOrigin = HMD.TransformPoint(Double3ToVector3(dataSinceLastUpdate.Last().gaze.position));
+
+        lightObj.transform.position = gazeRayOrigin;
+        lightObj.transform.rotation = Quaternion.LookRotation(gazeRayDirection);
+    }
+
     public void RestartLogging()
     {
         if (writer != null) { writer.Dispose(); logging = false; }

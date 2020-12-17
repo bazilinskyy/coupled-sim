@@ -1,9 +1,6 @@
 ﻿using Leap.Unity;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.SceneManagement;
-using System.Linq;
 
 public class CalibrationManager : MonoBehaviour
 {
@@ -11,10 +8,11 @@ public class CalibrationManager : MonoBehaviour
     public GameObject normalCam;
 
     public GameObject steeringWheel;
-    public GameObject cross;
+    public GameObject crosses;
     public Transform startPosition;
     private MainManager mainManager;
-    
+
+    public TextMesh gazeQuality;
     public TextMesh instructions;
     public TextMesh otherInstructions;
     private Transform player;
@@ -71,15 +69,23 @@ public class CalibrationManager : MonoBehaviour
 
         //AFter calibration start gaze ray
         if (Varjo.VarjoPlugin.IsGazeCalibrated() && !startedGazeRay) { GetComponent<MyVarjoGazeRay>().StartUp(); startedGazeRay = true; }
-        
-        if (Input.GetKeyDown(KeyCode.T)) { 
+
+        if (Varjo.VarjoPlugin.IsGazeCalibrated()) 
+        {
+            Varjo.VarjoPlugin.GazeEyeCalibrationQuality left = Varjo.VarjoPlugin.GetGazeCalibrationQuality().left;
+            Varjo.VarjoPlugin.GazeEyeCalibrationQuality right = Varjo.VarjoPlugin.GetGazeCalibrationQuality().right;
+            gazeQuality.text = $"Calibration Quality:\nLeft:{left} - Right:{right}"; }
+
+        if (Input.GetKeyDown(KeyCode.T)) 
+        { 
             mainManager.AddTargetScene(); 
             addedTargets = true; 
-            cross.SetActive(false);
+            crosses.SetActive(false);
             instructions.text = "Fixate on the yellow spheres and press one\nof the steering wheel buttons to indicate detection.\nAfter detection they will dissapear.";
             otherInstructions.text = "";
         }
     }
+
     void RequestGazeCalibration()
     {
 
@@ -87,7 +93,7 @@ public class CalibrationManager : MonoBehaviour
 
         parameters[0] = new Varjo.VarjoPlugin.GazeCalibrationParameters();
         parameters[0].key = "GazeCalibrationType";
-        parameters[0].value = "Fast"; //"Legacy"
+        parameters[0].value = "Legacy";//"Fast"; //
 
         parameters[1] = new Varjo.VarjoPlugin.GazeCalibrationParameters();
         parameters[1].key = "OutputFilterType";
