@@ -1,14 +1,14 @@
 %% File ordener.
 % This script reads the title of the file and categorizes it according to the experiment definition; 
 % Author: Johnson Mok
-% Last Updated: 16-12-2020
+% Last Updated: 17-12-2020
 clc
 clear
 disp('Start ordening data...');
 tic;
 
 %% Create folder structure
-name_mainF = 'Data_ordened';
+name_mainF = 'LOG_ordened';
 if(~exist(name_mainF, 'dir'))       % Create main folder
     mkdir(name_mainF)
 end

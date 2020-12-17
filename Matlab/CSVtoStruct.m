@@ -1,11 +1,26 @@
-function [Data] = CSVtoStruct(filename, extracar)
+function [Data] = CSVtoStruct(filename)
 %% Load data
 % This script turns the csv logging file into data structures.
 % Author: Johnson Mok
-% Last Updated: 16-12-2020
+% Last Updated: 17-12-2020
 
-disp('Start loading data...');
+% disp('Start loading data...');
 tic;
+
+%% Info from logfile name
+extracar            = check_diAV(filename);
+name_split          = split(filename,'_');
+idx_exp             = find(contains(name_split,'expdef'));
+Data.expdefNr       = str2double(name_split{idx_exp+1});
+idx_trial           = find(contains(name_split,'Trialnr'));
+Data.trialNr        = str2double(name_split{idx_trial+1});
+idx_par             = find(contains(name_split,'participant'));
+Data.participantNr  = str2double(name_split{idx_par+1});
+timescale_str       = name_split{idx_exp+2};
+timescale_str_split = split(timescale_str,'-');
+Data.timescale      = timescale_str_split{1};
+
+%%
 opts = delimitedTextImportOptions('Delimiter',';',...
                                   'DataLines', 10);
 Loaded_Data = readmatrix(filename,opts);
