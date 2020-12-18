@@ -57,7 +57,7 @@ public class newExperimentManager : MonoBehaviour
     private float transparencyTargets = 0.1f;
 
     private float angleTreshold = 1.5f;
-    private float maxAngle = 3f;
+    private float maxAngle = 2f;
 
     private bool firstStraight = true;
     private int transparencyIndex = 0;
@@ -80,10 +80,7 @@ public class newExperimentManager : MonoBehaviour
         //Set DataManager
         SetDataManager();
 
-        if (experimentSettings.experimentType.IsTargetCalibration()) { transparencyTargets = 0.2f; experimentSettings.targetSize = 1f;  }
-
-        //Turn of visuals if they are presents
-        SetTransparencyEasyMaterial(transparencyTargets);
+        if (experimentSettings.experimentType.IsTargetCalibration()) { transparencyTargets = 0.2f; experimentSettings.targetSize = 1f; SetTransparencyEasyMaterial(transparencyTargets); }
 
         crossingSpawner.turnsList = experimentSettings.turns.ToArray();
         crossingSpawner.StartUp();
@@ -153,7 +150,7 @@ public class newExperimentManager : MonoBehaviour
         //if (Input.GetKeyDown(experimentInput.resetHeadPosition)) { SetCameraPosition(driverView.position, driverView.rotation); }
         if (Input.GetKeyDown(mainManager.ResetExperiment)) { StartCoroutine(ResetExperiment()); }
         if (Input.GetKeyDown(KeyCode.LeftShift)) { TeleportToNextWaypoint(); }
-        if (Input.GetKeyDown(KeyCode.Return)) { EndOfStraight(); }
+        if (Input.GetKeyDown(KeyCode.Return)) { EndOfCalibrationTrial(); }
         if (car.navigationFinished)
         {
             //Log the last targets (targets of last cross point are automatically logged when leaving the crossing)
@@ -229,7 +226,7 @@ public class newExperimentManager : MonoBehaviour
 
         
     }
-    public void EndOfStraight()
+    public void EndOfCalibrationTrial()
     {
         if (experimentSettings.experimentType.IsTargetCalibration())
         {
@@ -263,6 +260,24 @@ public class newExperimentManager : MonoBehaviour
             components.SpawnTargets(experimentSettings);
         }
     }
+
+    void RestartCalibrationTrial()
+    {
+        if (experimentSettings.experimentType.IsTargetCalibration())
+        {
+            //Debug.Log("Restarting striahgt...");
+
+            CrossComponents components = crossingSpawner.crossings.CurrentCrossing().components;
+
+            car.ResetWaypoints();
+            StartCoroutine(RestartStraight());
+
+            //Reset targets
+            foreach (Target target in components.targetList) { target.ResetTarget(); }
+        }
+    }
+
+
     void SetProperTargetIDsCalibration(List<Target> targets)
     {
         foreach(Target target in targets)
@@ -319,8 +334,9 @@ public class newExperimentManager : MonoBehaviour
 
         carUI.text = "Wrong turn... No problem!";
 
-        //Putting car at next waypoint
-        StartCoroutine(PlaceAtTargetWaypoint());
+        //Putting car at next waypoint  or restarting calibration trial
+        if (experimentSettings.experimentType.IsTargetCalibration()) { RestartCalibrationTrial(); }
+        else { StartCoroutine(PlaceAtTargetWaypoint()); }
     }
     public void CarOutOfBounce()
     {
@@ -328,7 +344,9 @@ public class newExperimentManager : MonoBehaviour
         //Car got hit by one of the out of bounce triggers
         carUI.text = "Car out of bounce... No problem!";
 
-        StartCoroutine(PlaceAtTargetWaypoint());
+        //Putting car at next waypoint  or restarting calibration trial
+        if (experimentSettings.experimentType.IsTargetCalibration()) { RestartCalibrationTrial(); }
+        else { StartCoroutine(PlaceAtTargetWaypoint()); }
     }
     IEnumerator RestartStraight()
     {

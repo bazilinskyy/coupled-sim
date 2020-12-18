@@ -103,7 +103,7 @@ public class newNavigator : MonoBehaviour
             //Normally they are added automatically when entering the new crossing....
             experimentManager.LogTargets(crossingSpawner.crossings.NextCrossing().components.targetList);
         }
-        else if (other.gameObject.CompareTag("EndStraight")) { experimentManager.EndOfStraight(); }
+        else if (other.gameObject.CompareTag("EndStraight")) { experimentManager.EndOfCalibrationTrial(); }
         else if (other.gameObject.CompareTag("EnterCrossing"))
         {
             if (!experimentManager.experimentSettings.experimentType.IsTargetCalibration())
