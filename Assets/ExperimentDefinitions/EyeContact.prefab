@@ -55,13 +55,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1965093373}
-  m_LocalRotation: {x: 0, y: -0.56640655, z: 0, w: 0.824126}
+  m_LocalRotation: {x: 0, y: -0.56640625, z: 0, w: 0.82412624}
   m_LocalPosition: {x: 3.355457, y: 0.2338121, z: 1.1790129}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 935614564}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: -69, z: 0}
 --- !u!114 &2369009529382924640
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -74,8 +74,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 464a1302b6d73bc43b4a5f39008fd235, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  fieldOfView: 26.23129
-  rotation: {x: 4.25, y: 0, z: 0}
+  fieldOfView: 20
+  rotation: {x: 5, y: -3, z: 0}
 --- !u!1 &1641824059043848982
 GameObject:
   m_ObjectHideFlags: 0
@@ -180,9 +180,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   WaypointNumber: 1
-  speed: 10
-  acceleration: -5
+  speed: 25
+  acceleration: 5
   jerk: 0
+  overrideTrackingAfterContinuing: 0
   causeToYield: 0
   lookAtPlayerWhileYielding: 0
   yieldTime: 0
@@ -247,9 +248,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   WaypointNumber: 1
-  speed: 10
-  acceleration: -5
+  speed: 25
+  acceleration: 5
   jerk: 0
+  overrideTrackingAfterContinuing: 0
   causeToYield: 0
   lookAtPlayerWhileYielding: 0
   yieldTime: 0
@@ -314,15 +316,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   WaypointNumber: 1
-  speed: 30
+  speed: 25
   acceleration: 5
   jerk: 0
+  overrideTrackingAfterContinuing: 0
   causeToYield: 1
-  lookAtPlayerWhileYielding: 1
+  lookAtPlayerWhileYielding: 0
   yieldTime: 10
   brakingAcceleration: -5
   lookAtPedFromSeconds: 0
-  lookAtPedToSeconds: 10
+  lookAtPedToSeconds: 8
 --- !u!1 &3599451005144964128
 GameObject:
   m_ObjectHideFlags: 0
@@ -381,9 +384,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   WaypointNumber: 1
-  speed: 30
+  speed: 25
   acceleration: 5
   jerk: 0
+  overrideTrackingAfterContinuing: 0
   causeToYield: 0
   lookAtPlayerWhileYielding: 0
   yieldTime: 0
@@ -448,9 +452,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   WaypointNumber: 1
-  speed: 30
+  speed: 25
   acceleration: 5
   jerk: 0
+  overrideTrackingAfterContinuing: 0
   causeToYield: 0
   lookAtPlayerWhileYielding: 0
   yieldTime: 0
@@ -515,9 +520,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   WaypointNumber: 1
-  speed: 10
-  acceleration: -5
+  speed: 25
+  acceleration: 5
   jerk: 0
+  overrideTrackingAfterContinuing: 0
   causeToYield: 0
   lookAtPlayerWhileYielding: 0
   yieldTime: 0
@@ -660,9 +666,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   WaypointNumber: 1
-  speed: 30
+  speed: 25
   acceleration: 5
   jerk: 0
+  overrideTrackingAfterContinuing: 0
   causeToYield: 0
   lookAtPlayerWhileYielding: 0
   yieldTime: 0
@@ -727,9 +734,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   WaypointNumber: 1
-  speed: 30
+  speed: 25
   acceleration: 5
   jerk: 0
+  overrideTrackingAfterContinuing: 0
   causeToYield: 0
   lookAtPlayerWhileYielding: 0
   yieldTime: 0
@@ -794,9 +802,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   WaypointNumber: 1
-  speed: 30
+  speed: 25
   acceleration: 5
   jerk: 0
+  overrideTrackingAfterContinuing: 0
   causeToYield: 0
   lookAtPlayerWhileYielding: 0
   yieldTime: 0
@@ -861,9 +870,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   WaypointNumber: 1
-  speed: 30
+  speed: 25
   acceleration: 5
   jerk: 0
+  overrideTrackingAfterContinuing: 0
   causeToYield: 0
   lookAtPlayerWhileYielding: 0
   yieldTime: 0
@@ -991,9 +1001,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   WaypointNumber: 1
-  speed: 30
+  speed: 25
   acceleration: 5
   jerk: 0
+  overrideTrackingAfterContinuing: 0
   causeToYield: 0
   lookAtPlayerWhileYielding: 0
   yieldTime: 0
@@ -1058,9 +1069,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   WaypointNumber: 1
-  speed: 30
+  speed: 25
   acceleration: 5
   jerk: 0
+  overrideTrackingAfterContinuing: 0
   causeToYield: 0
   lookAtPlayerWhileYielding: 0
   yieldTime: 0
@@ -1125,9 +1137,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   WaypointNumber: 1
-  speed: 30
+  speed: 25
   acceleration: 5
   jerk: 0
+  overrideTrackingAfterContinuing: 0
   causeToYield: 0
   lookAtPlayerWhileYielding: 0
   yieldTime: 0
@@ -1192,9 +1205,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   WaypointNumber: 1
-  speed: 30
+  speed: 25
   acceleration: 5
   jerk: 0
+  overrideTrackingAfterContinuing: 0
   causeToYield: 0
   lookAtPlayerWhileYielding: 0
   yieldTime: 0
@@ -1259,9 +1273,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   WaypointNumber: 1
-  speed: 30
+  speed: 25
   acceleration: 5
   jerk: 0
+  overrideTrackingAfterContinuing: 0
   causeToYield: 0
   lookAtPlayerWhileYielding: 0
   yieldTime: 0
