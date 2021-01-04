@@ -4,6 +4,7 @@
 % Last Updated: 18-12-2020
 
 function PostData = PreProcess(AllData)
+disp('Start removing faulty data from gap acceptance.');
 %% Gap acceptance
 fields_ED = fieldnames(AllData);
 for j = 1:length(fields_ED)
@@ -13,10 +14,15 @@ for j = 1:length(fields_ED)
         for idx = 1:length(fields_participants)
             fields_trials = fieldnames(AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}));
             for i = 1:length(fields_trials)
-              AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}).pe.gapAcceptance(AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}).pe.gapAcceptance<0) = 0;
+                % Filter gapAcceptance
+                AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}).pe.gapAcceptance(AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}).pe.gapAcceptance<0) = 0;
+            
+                % Set startpoint
+                % Function
             end
         end
     end
 end
 PostData = AllData;
+disp('Finished removing faulty data from gap acceptance.');
 end

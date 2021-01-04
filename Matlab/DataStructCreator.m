@@ -11,8 +11,9 @@ clear
 clc
 close all
 
+disp('Creating data structure...');
 %% Get all csv data
-Folder   = cd;
+Folder   = join([cd,'\LOG_ordened']); %cd
 FileList = dir(fullfile(Folder, '**', '*.csv'));
 
 % Convert csv file to data structure
@@ -21,14 +22,17 @@ for i=1:length(FileList)
     path        = FileList(i).folder;
     name        = FileList(i).name;
     filename    = join([path,'\',name]);
-    Data        = CSVtoStruct(filename);
-
+%     Data        = CSVtoStruct(filename);
+    Data        = CSVtoStruct_simple(filename);
+    
     %% Add to DataList
     ED_name = join(['Data_ED_',num2str(Data.expdefNr)]);
     participant = join(['participant_',num2str(Data.participantNr)]);
     trial = join(['trial_',num2str(Data.trialNr)]);
     ParentData.(ED_name).(Data.timescale).(participant).(trial) = Data;
 end
+
+disp('Finished creating data structure.');
 
 %% Folder with data saved
 disp('Saving data...');
