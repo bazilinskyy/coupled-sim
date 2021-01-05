@@ -400,7 +400,7 @@ public class MainExperimentSetting
     public float transparency = 0.4f;
     public TargetDifficulty targetDifficulty = TargetDifficulty.easy;
     public int minTargets=1;
-    public int maxTargets=3;
+    public int maxTargets=4;
     public float experimentTime = 0f;
     public ExperimentType experimentType = ExperimentType.Real;
     public float targetSize = 1f;

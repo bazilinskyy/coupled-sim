@@ -65,6 +65,9 @@ public class newExperimentManager : MonoBehaviour
     private float[] transparencies = { .1f, .05f, .02f, .01f, .005f};
     private float[] sizes = { 1f, 0.75f, .5f }; //
 
+    public int leftTargets = 0;
+    public int rightTargets = 0;
+
     private void Start()
     {
         player = MyUtils.GetPlayer().transform;
@@ -260,7 +263,6 @@ public class newExperimentManager : MonoBehaviour
             components.SpawnTargets(experimentSettings);
         }
     }
-
     void RestartCalibrationTrial()
     {
         if (experimentSettings.experimentType.IsTargetCalibration())
@@ -276,8 +278,6 @@ public class newExperimentManager : MonoBehaviour
             foreach (Target target in components.targetList) { target.ResetTarget(); }
         }
     }
-
-
     void SetProperTargetIDsCalibration(List<Target> targets)
     {
         foreach(Target target in targets)

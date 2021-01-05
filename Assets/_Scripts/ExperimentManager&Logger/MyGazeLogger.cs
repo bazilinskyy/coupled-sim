@@ -30,6 +30,7 @@ public class MyGazeLogger : MonoBehaviour
     public KeyCode toggleLoggingKey = KeyCode.Return;
 
     [Header("Default path is Logs under application data path.")]
+    [Header("Default path is Logs under application data path.")]
     public bool useCustomLogPath = false;
     public string customLogPath = "";
 
@@ -38,7 +39,7 @@ public class MyGazeLogger : MonoBehaviour
     static readonly string[] ColumnNames = { "Frame", "LogTime", "ExperimentTime", "HMDPosition", "HMDRotation", "HMDWorldPosition",
                                             "HMDWorldRotation","GazeStatus", "CombinedGazeForwardLocal", "CombinedGazePositionLocal", "LeftEyeStatus",
                                             "LeftEyeForward", "LeftEyePosition", "LeftEyePupilSize", "RightEyeStatus", "RightEyeForward",
-                                            "RightEyePosition", "RightEyePupilSize", "FocusDistance", "FocusStability", "LookingAt", "CombinedGazeForwardWorld","CombinedGazepositionWorld"  };
+                                            "RightEyePosition", "RightEyePupilSize", "FocusDistance", "FocusStability", "LookingAt", "CombinedGazeForwardWorld","CombinedGazePositionWorld"  };
     
     const string ValidString = "VALID";
     const string InvalidString = "INVALID";

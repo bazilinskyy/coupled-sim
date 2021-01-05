@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
+
 public class CrossComponents : MonoBehaviour
 {
 	public RoadParameters roadParameters;
@@ -89,7 +90,6 @@ public class CrossComponents : MonoBehaviour
 
 		SpawnTargets(settings);
 	}
-
 	public void RemoveTargets()
     {
 		//?Remove old targets
@@ -147,9 +147,9 @@ public class CrossComponents : MonoBehaviour
 
 			int ID = experimentManager.GetNextTargetID();
 			//Debug.Log($"Instantiating target: {ID}...");
-			//Varies position of target number higher than 5 means riught side, lower than 6 -> left side...
-			Vector3 sideVariation = int.Parse(point.name) > 5 ? waypoint.waypoint.right*Random.Range(0, 3f) : -waypoint.waypoint.right * Random.Range(0, 3f);
-			Vector3 forwardVariation = waypoint.waypoint.forward * Random.Range(-5f, 5f);
+			//Varies position of target number: odd = right side, even -> left side...
+			Vector3 sideVariation = waypoint.waypoint.right*Random.Range(-2.5f, 2.5f);
+			Vector3 forwardVariation = waypoint.waypoint.forward * Random.Range(-7f, 7f);
 			Vector3 positionTarget = point.position + forwardVariation + sideVariation;
 
 			TargetDifficulty targetDifficulty;
@@ -180,26 +180,76 @@ public class CrossComponents : MonoBehaviour
 	}
 	private List<Transform> SelectRandomSpawnPoints(Transform parent, int minTargets, int maxTargets)
     {
-
+		//Debug.Log("Selecting spawn points...");
 		List<Transform> spawnPoints = new List<Transform>();
 		List<Transform> selectedSpawnPoints = new List<Transform>();
 		bool selectionFinished = false;
-		
+
+		List<int> leftTargetsIndices = new List<int> { 0, 2, 4, 6, 8 };
+		List<int> rightTargetsIndices = new List<int> { 1, 3, 5, 7, 9 };
+
 		int numberOfTargets = Random.Range(minTargets, maxTargets + 1);
 
-		foreach (Transform child in parent) { spawnPoints.Add(child); }
+		foreach (Transform child in parent) { spawnPoints.Add(child);  }
 
 		while (!selectionFinished)
 		{
-			int randomIndex = (int)Mathf.Round(Random.Range(0, spawnPoints.Count() - 1));
-            if (!selectedSpawnPoints.Contains(spawnPoints[randomIndex])){ selectedSpawnPoints.Add(spawnPoints[randomIndex]); }
+			//Choose left or right target -> higher probability with less targets chosen on that side
+			// NEGATIVE = LEFT (= EVEN INDEXED SPAWN POINT), POSITIVE = RIGHT (= ODD INDEXED SPAWN POINT)
+			float randomNegativeOrPositive = Random.Range(-1f / (2f*experimentManager.leftTargets + 1f), 1f / (2f*experimentManager.rightTargets + 1f));
+			float sign = Mathf.Sign(randomNegativeOrPositive);
 			
+			//Add the targets to the experiment manager 
+			experimentManager.leftTargets += sign < 0 ? 1 : 0;
+			experimentManager.rightTargets += sign > 0 ? 1 : 0;
+			
+			int spawnPointIndex = ChooseTargetSpawnPoint((int)sign, spawnPoints, selectedSpawnPoints, leftTargetsIndices, rightTargetsIndices);
+
+			Transform spawnPointToAdd = spawnPoints.Where(t => t.name == spawnPointIndex.ToString()).First();
+
+			//Debug.Log($"Sign: {sign}, spawnPointToAdd: {spawnPointToAdd.name}, {spawnPointIndex}...");
+
+			selectedSpawnPoints.Add(spawnPointToAdd);
+		
 			if(selectedSpawnPoints.Count() >= numberOfTargets) { selectionFinished = true; }
 			if(selectedSpawnPoints.Count() == spawnPoints.Count()) { selectionFinished = true; }
 		}
 
 		return selectedSpawnPoints;
 	}
+
+	private int ChooseTargetSpawnPoint(int sign, List<Transform> spawnPoints, List<Transform> selectedSpawnPoints, List<int> leftTargetsIndices, List<int> rightTargetsIndices, bool tryingOtherSide=false)
+	{
+		//Chooses a target on either the left or right side
+		List<int> indicesToChooseFrom;
+		int spawnPointIndex = 0;
+		//choose from right array
+		if (sign > 0) { indicesToChooseFrom = rightTargetsIndices; }
+        else { indicesToChooseFrom = leftTargetsIndices; }
+
+		while (indicesToChooseFrom.Count > 0)
+        {
+			int randomListIndex = (int)Random.Range(0, indicesToChooseFrom.Count);
+			spawnPointIndex = indicesToChooseFrom[randomListIndex];
+
+			Transform spawnPointToAdd = spawnPoints.Where(t => t.name == spawnPointIndex.ToString()).First();
+			if (!selectedSpawnPoints.Contains(spawnPointToAdd)){ break; }
+            else { indicesToChooseFrom.Remove(spawnPointIndex); }
+
+		}
+
+		//If somehow we are unable to choose any on this side (if we have more than 5 targets...) we chooe the other side
+		if(indicesToChooseFrom.Count == 0) 
+		{ 
+			Debug.Log("CrossComponents.cs -> ChooseTargetSpawnPoint: Could not choose spawnPointIndex for this side!!\nTrying other side"); 
+			spawnPointIndex = ChooseTargetSpawnPoint(-sign, spawnPoints, selectedSpawnPoints, leftTargetsIndices, rightTargetsIndices, true); 
+		}
+		//If second try also failed something is definetely wrong (or we have more than 10 targets)
+		if(tryingOtherSide && indicesToChooseFrom.Count == 0) { Debug.LogError("Error in CrossComponents.cs -> ChooseTargetSpawnPoint, could not choose spawnPointIndex, MAXIMUM targets = 10!!\nSet targetspawnpoint to 1"); spawnPointIndex = 1; }
+
+		return spawnPointIndex;
+    }
+
     public void SetTriggers()
     {
 		rightTrigger.tag = waypoints[0].turn == TurnType.Right ? "CorrectTurn" : "WrongTurn";
