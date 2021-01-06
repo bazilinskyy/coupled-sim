@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
+using System;
 
 [RequireComponent(typeof(CreateVirtualCable), typeof(newNavigator))]
 public class CrossingSpawner : MonoBehaviour
@@ -175,33 +176,29 @@ public class Crossings
 /*        Debug.Log("Configuring next crossing..");
         Debug.Log($"Got turns {nextTurns[0]} and {nextTurns[1]}...");*/
         bool isCurrentCrossing = false;
-
-        if (currentWaypoints[0].turn == TurnType.Left && currentWaypoints[1].turn == TurnType.Left) { SetNextCrossingTransform(crossing,-96f, -96f, 180); }
-        if (currentWaypoints[0].turn == TurnType.Left && currentWaypoints[1].turn == TurnType.Right) { SetNextCrossingTransform(crossing,96f, -96f, 0); }
-        if (currentWaypoints[0].turn == TurnType.Straight && currentWaypoints[1].turn == TurnType.Left) { SetNextCrossingTransform(crossing,96f, -96f, -90); }
-        if (currentWaypoints[0].turn == TurnType.Straight && currentWaypoints[1].turn == TurnType.Right) { SetNextCrossingTransform(crossing,96f, 96f, 90); }
-        if (currentWaypoints[0].turn == TurnType.Right && currentWaypoints[1].turn == TurnType.Left) { SetNextCrossingTransform(crossing,96f, 96f, 0); }
-        if (currentWaypoints[0].turn == TurnType.Right && currentWaypoints[1].turn == TurnType.Right) { SetNextCrossingTransform(crossing,-96f, 96f, 180); }
+        bool isFirstCrossing = false;
+        Vector3 nextPosition = new Vector3();
+        float rotationAngleY = 0f;
+        if (currentWaypoints[0].turn == TurnType.Left && currentWaypoints[1].turn == TurnType.Left) { nextPosition = GetNextCrossingPosition(-96f, -96f); rotationAngleY = 180f; }
+        if (currentWaypoints[0].turn == TurnType.Left && currentWaypoints[1].turn == TurnType.Right) { nextPosition = GetNextCrossingPosition(96f, -96f); rotationAngleY = 0f; }
+        if (currentWaypoints[0].turn == TurnType.Straight && currentWaypoints[1].turn == TurnType.Left) { nextPosition = GetNextCrossingPosition(96f, -96f); rotationAngleY = -90f; }
+        if (currentWaypoints[0].turn == TurnType.Straight && currentWaypoints[1].turn == TurnType.Right) { nextPosition = GetNextCrossingPosition(96f, 96); rotationAngleY = 90f; }
+        if (currentWaypoints[0].turn == TurnType.Right && currentWaypoints[1].turn == TurnType.Left) { nextPosition = GetNextCrossingPosition(96f, 96f); rotationAngleY = 0f; }
+        if (currentWaypoints[0].turn == TurnType.Right && currentWaypoints[1].turn == TurnType.Right) { nextPosition = GetNextCrossingPosition(-96f, 96f); rotationAngleY = 180f; }
 
         //Set turns 
-        crossing.GetComponent<CrossComponents>().SetUpCrossing(nextWaypoints, settings, isCurrentCrossing);
-
+        crossing.GetComponent<CrossComponents>().SetUpCrossing(nextWaypoints, settings, isCurrentCrossing, isFirstCrossing, nextPosition, CurrentCrossing().obj.transform, rotationAngleY);
     }
 
-    void SetNextCrossingTransform(GameObject crossing, float forward, float right, int angle)
+    Vector3 GetNextCrossingPosition(float forward, float right)
     {
 /*
         Debug.Log($"currentCrossing.forward: {CurrentCrossing().obj.transform.forward}, CurrentCrossing().right: { CurrentCrossing().obj.transform.right}...");
         Debug.Log($"Transforming with {forward} forward and {right} right w.r.t. {CurrentCrossing().obj.transform.position}...");
 */
         Vector3 addition = right * CurrentCrossing().obj.transform.right + forward * CurrentCrossing().obj.transform.forward;
-        crossing.transform.position = CurrentCrossing().obj.transform.position + addition;
-        //Debug.Log($"Results: {crossing.transform.position}...");
+        return CurrentCrossing().obj.transform.position + addition;
 
-        //Debug.Log($"Forward of next crossing before rotation: {crossing.transform.forward}...");
-        crossing.transform.rotation = CurrentCrossing().obj.transform.rotation;
-        crossing.transform.Rotate(crossing.transform.up, angle);
-        //Debug.Log($"Forward of next crossing after rotation: {crossing.transform.forward}...");
     }
 
     public TurnType[] GetTurns(string crossing)

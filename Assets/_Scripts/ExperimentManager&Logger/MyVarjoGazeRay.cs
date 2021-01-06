@@ -83,7 +83,7 @@ public class MyVarjoGazeRay : MonoBehaviour
             // Raycast into world
             if (Physics.SphereCast(gazeRayOrigin, gazeRayRadius, gazeRayDirection, out gazeRayHit, 1000f, layerMask))
             {
-                
+                Vector3 gazeHitPosition = gazeRayHit.point;
                 //By default we are looking at the world
                 bool lookingAtWorld = true;
                 //If hti is a target execute OnHit function
@@ -108,13 +108,13 @@ public class MyVarjoGazeRay : MonoBehaviour
                         if (gazeRayHit.collider.CompareTag(tag.ToString()))
                         {
                             //Debug.Log($"{tag}");
-                            gazeLogger.FixatingOn(tag);
+                            gazeLogger.FixatingOn(tag, gazeHitPosition);
                             lookingAtWorld = false;
                         }
                     }
 
                     //If hit colliders not tagged we assume it is the world:
-                    if (lookingAtWorld) { gazeLogger.FixatingOn(LoggedTags.Environment); }
+                    if (lookingAtWorld) { gazeLogger.FixatingOn(LoggedTags.Environment, gazeHitPosition); }
                 }
                 if (drawDebug)
                 {
@@ -124,7 +124,7 @@ public class MyVarjoGazeRay : MonoBehaviour
             else
             {
                 //Not hitting any colliders so looking at the sky or something...
-                if (logData) { gazeLogger.FixatingOn(LoggedTags.Environment); }
+                if (logData) { gazeLogger.FixatingOn(LoggedTags.Environment, new Vector3()); }
 
                 if (drawDebug)
                 {
@@ -134,7 +134,7 @@ public class MyVarjoGazeRay : MonoBehaviour
 
         }
         //Invailable eye data....
-        else { if (logData) { gazeLogger.FixatingOn(LoggedTags.Unknown); } }
+        else { if (logData) { gazeLogger.FixatingOn(LoggedTags.Unknown, new Vector3()); } }
     }
 }
 

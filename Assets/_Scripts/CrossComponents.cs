@@ -68,7 +68,9 @@ public class CrossComponents : MonoBehaviour
 
 		StartCoroutine(SetBuildingBlocks());
 	}
-	public void SetUpCrossing(WaypointStruct[] _waypoints, MainExperimentSetting settings, bool _isCurrentCrossing, bool _isFirstCrossing = false)
+	public void SetUpCrossing(WaypointStruct[] _waypoints, MainExperimentSetting settings, bool _isCurrentCrossing,
+							bool _isFirstCrossing = false, Vector3 nextPosition=new Vector3(), Transform currentCrossing = null,
+							float rotationAngleY = 0f)
     {
 		if(experimentManager == null) { experimentManager = MyUtils.GetExperimentManager(); }
 		
@@ -89,6 +91,14 @@ public class CrossComponents : MonoBehaviour
 		RemoveTargets();
 
 		SpawnTargets(settings);
+
+		//Put crossing in place
+		if (!isFirstCrossing)
+		{
+			transform.position = nextPosition;
+			transform.rotation = currentCrossing.rotation;
+			transform.Rotate(transform.up, rotationAngleY);
+		}
 	}
 	public void RemoveTargets()
     {
@@ -114,14 +124,17 @@ public class CrossComponents : MonoBehaviour
     }
 	public void SpawnTargets(MainExperimentSetting settings) 
 	{
-		if(settings.maxTargets == 0) { return; }
+		if(settings.targetsPerCrossing == 0) { return; }
 		List<Transform> spawnPoints;
 		Transform parentSpawPoints = null;
+
+		int numberOfTargetsTurn1 = Random.Range(settings.minTargetsPerTurn, settings.maxTargetsPerTurn+1);
+		int numberOfTargetsTurn2 = settings.targetsPerCrossing - numberOfTargetsTurn1;
 
 		if ((!isFirstCrossing || settings.experimentType.IsTargetCalibration()) && waypoints[0].turn.IsOperation()) 
 		{
 			parentSpawPoints = FirstTurnTargetSpawnPoints;
-			spawnPoints = SelectRandomSpawnPoints(parentSpawPoints, settings.minTargets, settings.maxTargets);
+			spawnPoints = SelectRandomSpawnPoints(parentSpawPoints, numberOfTargetsTurn1);
 
 			InstantiateTargets(spawnPoints, waypoints[0], settings);
 		}
@@ -132,7 +145,7 @@ public class CrossComponents : MonoBehaviour
 			if (waypoints[0].turn == TurnType.Left) { parentSpawPoints = LeftTargetSpawnPoints; }
 			if (waypoints[0].turn == TurnType.Straight) { parentSpawPoints = StraightTargetSpawnPoints; }
 
-			spawnPoints = SelectRandomSpawnPoints(parentSpawPoints, settings.minTargets, settings.maxTargets);
+			spawnPoints = SelectRandomSpawnPoints(parentSpawPoints, numberOfTargetsTurn2);
 
 			InstantiateTargets(spawnPoints, waypoints[1], settings);
 		}
@@ -178,7 +191,7 @@ public class CrossComponents : MonoBehaviour
 			targetList.Add(target.GetComponent<Target>());
 		}
 	}
-	private List<Transform> SelectRandomSpawnPoints(Transform parent, int minTargets, int maxTargets)
+	private List<Transform> SelectRandomSpawnPoints(Transform parent, int numberOfTargets)
     {
 		//Debug.Log("Selecting spawn points...");
 		List<Transform> spawnPoints = new List<Transform>();
@@ -187,8 +200,6 @@ public class CrossComponents : MonoBehaviour
 
 		List<int> leftTargetsIndices = new List<int> { 0, 2, 4, 6, 8 };
 		List<int> rightTargetsIndices = new List<int> { 1, 3, 5, 7, 9 };
-
-		int numberOfTargets = Random.Range(minTargets, maxTargets + 1);
 
 		foreach (Transform child in parent) { spawnPoints.Add(child);  }
 

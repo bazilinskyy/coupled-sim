@@ -148,8 +148,7 @@ public class MainManager : MonoBehaviour
         MainExperimentSetting setting = new MainExperimentSetting();
         setting.name = "TargetCalibration";
         setting.conditionNumber = 1111;
-        setting.minTargets = 3;
-        setting.maxTargets = 5;
+        setting.targetsPerCrossing = 8;
         setting.experimentType = ExperimentType.TargetCalibration;
         setting.targetDifficulty = TargetDifficulty.easy;
         setting.navigationType = NavigationType.HighlightedRoad;
@@ -175,8 +174,7 @@ public class MainManager : MonoBehaviour
         setting.targetDifficulty = TargetDifficulty.EasyAndMedium;
         setting.navigationType = NavigationType.HUD_low;
         setting.experimentType = ExperimentType.Practise;
-        setting.minTargets = 3;
-        setting.maxTargets = 4;
+        setting.targetsPerCrossing = 7;
         setting.turns = GetRandomTurns(18);
         experiments.Add(setting);
      }
@@ -299,8 +297,8 @@ public class MainManager : MonoBehaviour
         {
             MainExperimentSetting setting = experiments[experimentIndex];
 
-            if (setting.experimentType.IsPractise()) { Debug.Log($"Loading {experiments[experimentIndex].name}...\nTurns: {setting.turns.Count()}, Navigation: All, Targets/Turn: [{setting.minTargets},{setting.maxTargets}], Difficutly: All "); }
-            else { Debug.Log($"Loading {experiments[experimentIndex].name}...\nTurns: {setting.turns.Count()}, Navigation:{setting.navigationType}, Targets/Turn: [{setting.minTargets},{setting.maxTargets}], Difficutly: {setting.targetDifficulty}"); }
+            if (setting.experimentType.IsPractise()) { Debug.Log($"Loading {experiments[experimentIndex].name}...\nTurns: {setting.turns.Count()}, Navigation: All, Targets/Crossing: [{setting.targetsPerCrossing}], Difficutly: All "); }
+            else { Debug.Log($"Loading {experiments[experimentIndex].name}...\nTurns: {setting.turns.Count()}, Navigation:{setting.navigationType}, Targets/Crossing: [{setting.targetsPerCrossing}], Difficutly: {setting.targetDifficulty}"); }
 
             loading = true;
             StartCoroutine(LoadSceneAsync(experimentScene));          
@@ -312,8 +310,8 @@ public class MainManager : MonoBehaviour
         {
             MainExperimentSetting setting = experiments[experimentIndex];
 
-            if (setting.experimentType.IsPractise()) { Debug.Log($"Reloading {experiments[experimentIndex].name}...\nTurns: {setting.turns.Count()}, Navigation: All, Targets/Turn: [{setting.minTargets},{setting.maxTargets}], Difficutly: All "); }
-            else { Debug.Log($"Reloading {experiments[experimentIndex].name}...\nTurns: {setting.turns.Count()}, Navigation:{setting.navigationType}, Targets/Turn: [{setting.minTargets},{setting.maxTargets}], Difficutly: {setting.targetDifficulty}"); }
+            if (setting.experimentType.IsPractise()) { Debug.Log($"Reloading {experiments[experimentIndex].name}...\nTurns: {setting.turns.Count()}, Navigation: All, Targets/Crossing: [{setting.targetsPerCrossing}], Difficutly: All "); }
+            else { Debug.Log($"Reloading {experiments[experimentIndex].name}...\nTurns: {setting.turns.Count()}, Navigation:{setting.navigationType}, Targets/Crossing: [{setting.targetsPerCrossing}], Difficutly: {setting.targetDifficulty}"); }
 
             loading = true;
             StartCoroutine(LoadSceneAsync(experimentScene));
@@ -399,8 +397,10 @@ public class MainExperimentSetting
     public NavigationType navigationType;
     public float transparency = 0.4f;
     public TargetDifficulty targetDifficulty = TargetDifficulty.easy;
-    public int minTargets=1;
-    public int maxTargets=4;
+    public int targetsPerCrossing = 7;
+    public int minTargetsPerTurn = 2;//min and max should add up tot the total at minimum
+    public int maxTargetsPerTurn = 5;
+
     public float experimentTime = 0f;
     public ExperimentType experimentType = ExperimentType.Real;
     public float targetSize = 1f;
