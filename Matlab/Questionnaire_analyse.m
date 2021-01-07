@@ -1,14 +1,14 @@
-%% Questionnaire analyser
+%% Questionnaire analyser - Pre-experiment
 % This script reads in the questionnaire answers as a csv file and analyses 
-% on the data
+% the data
 % Author: Johnson Mok
-% Last Updated: 04-01-2020
+% Last Updated: 05-01-2020
 clc
 close all
 clear
 
 %% Settings before running this script
-ShowTables = false;
+ShowTables = true;
 ShowPlots  = true;
 
 %% Find questionnaire csv files
@@ -127,16 +127,16 @@ mean_accidents_pe   = mean(Data_preexp_pe.Driving_accidents);
 std_accidents_pe    = std(Data_preexp_pe.Driving_accidents);
 
 % Driver eye contact - unsignalised
-[driverUnsig_pa, driverUnsig_name_pa] = calcSevenLikertScale(Data_preexp_pa.Driver_EyeContract_unsignalised);
-[driverUnsig_pe, driverUnsig_name_pe] = calcSevenLikertScale(Data_preexp_pe.Driver_EyeContract_unsignalised);
+[driverUnsig_pa, driverUnsig_name_pa] = calcSevenLikertScale(Data_preexp_pa.Driver_EyeContact_unsignalised);
+[driverUnsig_pe, driverUnsig_name_pe] = calcSevenLikertScale(Data_preexp_pe.Driver_EyeContact_unsignalised);
 
 % Driver eye contact - zebra
-[driverZebra_pa, driverZebra_name_pa] = calcSevenLikertScale(Data_preexp_pa.Driver_EyeContract_zebra);
-[driverZebra_pe, driverZebra_name_pe] = calcSevenLikertScale(Data_preexp_pe.Driver_EyeContract_zebra);
+[driverZebra_pa, driverZebra_name_pa] = calcSevenLikertScale(Data_preexp_pa.Driver_EyeContact_zebra);
+[driverZebra_pe, driverZebra_name_pe] = calcSevenLikertScale(Data_preexp_pe.Driver_EyeContact_zebra);
 
 % Driver eye contact - signalised
-[driverSig_pa, driverSig_name_pa] = calcSevenLikertScale(Data_preexp_pa.Driver_EyeContract_signalised);
-[driverSig_pe, driverSig_name_pe] = calcSevenLikertScale(Data_preexp_pe.Driver_EyeContract_signalised);
+[driverSig_pa, driverSig_name_pa] = calcSevenLikertScale(Data_preexp_pa.Driver_EyeContact_signalised);
+[driverSig_pe, driverSig_name_pe] = calcSevenLikertScale(Data_preexp_pe.Driver_EyeContact_signalised);
 
 %% Calulations Pre-experiment questionnaire - Crossing Behaviour
 % Frequency walking
@@ -144,16 +144,16 @@ std_accidents_pe    = std(Data_preexp_pe.Driving_accidents);
 [footFreq_pe, footFreq_name_pe] = calcFreq(Data_preexp_pe.Foot_freq);
 
 % Pedestrian eye contact - unsignalised
-[pedestrianUnsig_pa, pedestrianUnsig_name_pa] = calcSevenLikertScale(Data_preexp_pa.Pedestrian_EyeContract_unsignalised);
-[pedestrianUnsig_pe, pedestrianUnsig_name_pe] = calcSevenLikertScale(Data_preexp_pe.Pedestrian_EyeContract_unsignalised);
+[pedestrianUnsig_pa, pedestrianUnsig_name_pa] = calcSevenLikertScale(Data_preexp_pa.Pedestrian_EyeContact_unsignalised);
+[pedestrianUnsig_pe, pedestrianUnsig_name_pe] = calcSevenLikertScale(Data_preexp_pe.Pedestrian_EyeContact_unsignalised);
 
 % Pedestrian eye contact - zebra
-[pedestrianZebra_pa, pedestrianZebra_name_pa] = calcSevenLikertScale(Data_preexp_pa.Pedestrian_EyeContract_zebra);
-[pedestrianZebra_pe, pedestrianZebra_name_pe] = calcSevenLikertScale(Data_preexp_pe.Pedestrian_EyeContract_zebra);
+[pedestrianZebra_pa, pedestrianZebra_name_pa] = calcSevenLikertScale(Data_preexp_pa.Pedestrian_EyeContact_zebra);
+[pedestrianZebra_pe, pedestrianZebra_name_pe] = calcSevenLikertScale(Data_preexp_pe.Pedestrian_EyeContact_zebra);
 
 % Pedestrian eye contact - signalised
-[pedestrianSig_pa, pedestrianSig_name_pa] = calcSevenLikertScale(Data_preexp_pa.Pedestrian_EyeContract_signalised);
-[pedestrianSig_pe, pedestrianSig_name_pe] = calcSevenLikertScale(Data_preexp_pe.Pedestrian_EyeContract_signalised);
+[pedestrianSig_pa, pedestrianSig_name_pa] = calcSevenLikertScale(Data_preexp_pa.Pedestrian_EyeContact_signalised);
+[pedestrianSig_pe, pedestrianSig_name_pe] = calcSevenLikertScale(Data_preexp_pe.Pedestrian_EyeContact_signalised);
 
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -256,17 +256,17 @@ ylabel('Driving_accidents'); title('Driving accidents');
 figure
 % BOXPLOT - driver eyecontact - unsignalised
 subplot(2,3,1);
-boxplot([Data_preexp_pa.Driver_EyeContract_unsignalised; Data_preexp_pe.Driver_EyeContract_unsignalised],[ones(size(Data_preexp_pa.Driver_EyeContract_unsignalised)); 2*ones(size(Data_preexp_pe.Driver_EyeContract_unsignalised))], ...
+boxplot([Data_preexp_pa.Driver_EyeContact_unsignalised; Data_preexp_pe.Driver_EyeContact_unsignalised],[ones(size(Data_preexp_pa.Driver_EyeContact_unsignalised)); 2*ones(size(Data_preexp_pe.Driver_EyeContact_unsignalised))], ...
     'Labels',{'Passenger','Pedestrian'});
 ylabel('[Driver] eye-contact - Unsignalised'); title('Eye-contact searching as a driver at unsignalised crossings');
 % BOXPLOT - driver eyecontact - zebra
 subplot(2,3,2);
-boxplot([Data_preexp_pa.Driver_EyeContract_zebra; Data_preexp_pe.Driver_EyeContract_zebra],[ones(size(Data_preexp_pa.Driver_EyeContract_zebra)); 2*ones(size(Data_preexp_pe.Driver_EyeContract_zebra))], ...
+boxplot([Data_preexp_pa.Driver_EyeContact_zebra; Data_preexp_pe.Driver_EyeContact_zebra],[ones(size(Data_preexp_pa.Driver_EyeContact_zebra)); 2*ones(size(Data_preexp_pe.Driver_EyeContact_zebra))], ...
     'Labels',{'Passenger','Pedestrian'});
 ylabel('[Driver] eye-contact - Zebra'); title('Eye-contact searching as a driver at zebra crossings');
 % BOXPLOT - driver eyecontact - signalised
 subplot(2,3,3);
-boxplot([Data_preexp_pa.Driver_EyeContract_signalised; Data_preexp_pe.Driver_EyeContract_signalised],[ones(size(Data_preexp_pa.Driver_EyeContract_signalised)); 2*ones(size(Data_preexp_pe.Driver_EyeContract_signalised))], ...
+boxplot([Data_preexp_pa.Driver_EyeContact_signalised; Data_preexp_pe.Driver_EyeContact_signalised],[ones(size(Data_preexp_pa.Driver_EyeContact_signalised)); 2*ones(size(Data_preexp_pe.Driver_EyeContact_signalised))], ...
     'Labels',{'Passenger','Pedestrian'});
 ylabel('[Driver] eye-contact - Signalised'); title('Eye-contact searching as a driver at signalised crossings');
 % driver eyecontact - unsignalised
@@ -303,17 +303,17 @@ title('Walking frequency'); ylabel('Number of participants'); legend();
 figure
 % BOXPLOT - pedestrian eyecontact - unsignalised
 subplot(2,3,1);
-boxplot([Data_preexp_pa.Pedestrian_EyeContract_unsignalised; Data_preexp_pe.Pedestrian_EyeContract_unsignalised],[ones(size(Data_preexp_pa.Pedestrian_EyeContract_unsignalised)); 2*ones(size(Data_preexp_pe.Pedestrian_EyeContract_unsignalised))], ...
+boxplot([Data_preexp_pa.Pedestrian_EyeContact_unsignalised; Data_preexp_pe.Pedestrian_EyeContact_unsignalised],[ones(size(Data_preexp_pa.Pedestrian_EyeContact_unsignalised)); 2*ones(size(Data_preexp_pe.Pedestrian_EyeContact_unsignalised))], ...
     'Labels',{'Passenger','Pedestrian'});
 ylabel('[Pedestrian] eye-contact - Unsignalised'); title('Eye-contact searching as a Pedestrian at unsignalised crossings');
 % BOXPLOT - pedestrian eyecontact - zebra
 subplot(2,3,2);
-boxplot([Data_preexp_pa.Pedestrian_EyeContract_zebra; Data_preexp_pe.Pedestrian_EyeContract_zebra],[ones(size(Data_preexp_pa.Pedestrian_EyeContract_zebra)); 2*ones(size(Data_preexp_pe.Pedestrian_EyeContract_zebra))], ...
+boxplot([Data_preexp_pa.Pedestrian_EyeContact_zebra; Data_preexp_pe.Pedestrian_EyeContact_zebra],[ones(size(Data_preexp_pa.Pedestrian_EyeContact_zebra)); 2*ones(size(Data_preexp_pe.Pedestrian_EyeContact_zebra))], ...
     'Labels',{'Passenger','Pedestrian'});
 ylabel('[Pedestrian] eye-contact - Zebra'); title('Eye-contact searching as a Pedestrian at zebra crossings');
 % BOXPLOT - pedestrian eyecontact - signalised
 subplot(2,3,3);
-boxplot([Data_preexp_pa.Pedestrian_EyeContract_signalised; Data_preexp_pe.Pedestrian_EyeContract_signalised],[ones(size(Data_preexp_pa.Pedestrian_EyeContract_signalised)); 2*ones(size(Data_preexp_pe.Pedestrian_EyeContract_signalised))], ...
+boxplot([Data_preexp_pa.Pedestrian_EyeContact_signalised; Data_preexp_pe.Pedestrian_EyeContact_signalised],[ones(size(Data_preexp_pa.Pedestrian_EyeContact_signalised)); 2*ones(size(Data_preexp_pe.Pedestrian_EyeContact_signalised))], ...
     'Labels',{'Passenger','Pedestrian'});
 ylabel('[Pedestrian] eye-contact - Signalised'); title('Eye-contact searching as a Pedestrian at signalised crossings');
 % pedestrian eyecontact - unsignalised
@@ -357,15 +357,15 @@ data.YearLicense                         = str2double(inputcell(:,10));
 data.Driving_freq                        = inputcell(:,11);
 data.Driving_distance                    = inputcell(:,12);
 data.Driving_accidents                   = str2double(inputcell(:,13));
-data.Driver_EyeContract_unsignalised     = str2double(inputcell(:,14));
-data.Driver_EyeContract_zebra            = str2double(inputcell(:,15));
-data.Driver_EyeContract_signalised       = str2double(inputcell(:,16));
+data.Driver_EyeContact_unsignalised     = str2double(inputcell(:,14));
+data.Driver_EyeContact_zebra            = str2double(inputcell(:,15));
+data.Driver_EyeContact_signalised       = str2double(inputcell(:,16));
 % Crossing behaviour
 % data.Foot_freq                               = inputcell(:,17);
 data.Foot_freq                               = cellfun(@(S) S(1:end-1), inputcell(:,17), 'Uniform', 0);
-data.Pedestrian_EyeContract_unsignalised     = str2double(inputcell(:,18));
-data.Pedestrian_EyeContract_zebra            = str2double(inputcell(:,19));
-data.Pedestrian_EyeContract_signalised       = str2double(inputcell(:,20));
+data.Pedestrian_EyeContact_unsignalised     = str2double(inputcell(:,18));
+data.Pedestrian_EyeContact_zebra            = str2double(inputcell(:,19));
+data.Pedestrian_EyeContact_signalised       = str2double(inputcell(:,20));
 end
 % Demographics
 function [male, female, percentageMale, percentageFemale] = calcGender(data)
