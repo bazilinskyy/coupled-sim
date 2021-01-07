@@ -558,7 +558,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1193063156239688, guid: dae2e2be31c98324eac460f702db97e9, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4050235663507654, guid: dae2e2be31c98324eac460f702db97e9, type: 3}
       propertyPath: m_LocalPosition.x
@@ -986,11 +986,13 @@ MonoBehaviour:
   highlightGaze: 0
   gazeHighlight: {fileID: 5271194124920729089, guid: 21640de492bb0bd42ad984783c7bc4b7,
     type: 3}
+  experimentManager: {fileID: 0}
   oneGazeDataPerFrame: 0
   startAutomatically: 0
   toggleLoggingKey: 13
   useCustomLogPath: 0
   customLogPath: 
+  centerView: {fileID: 0}
 --- !u!114 &1309504463
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1471,6 +1473,16 @@ PrefabInstance:
         type: 3}
       propertyPath: isFirstCrossing
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3349807985648649745, guid: 55ff7657005620f4fb2d92a2d1b9a436,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3408949717815262868, guid: 55ff7657005620f4fb2d92a2d1b9a436,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 56.2
       objectReference: {fileID: 0}
     - target: {fileID: 7190030702347406285, guid: 55ff7657005620f4fb2d92a2d1b9a436,
         type: 3}

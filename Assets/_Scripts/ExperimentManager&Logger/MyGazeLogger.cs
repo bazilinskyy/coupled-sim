@@ -19,7 +19,7 @@ public class MyGazeLogger : MonoBehaviour
     private GameObject lightObj;
     Vector3 hmdPosition;
     Vector3 hmdRotation;
-    private newExperimentManager experimentManager;
+    public newExperimentManager experimentManager;
     [Header("Should only the latest data be logged on each update")]
     public bool oneGazeDataPerFrame = false;
 
@@ -41,7 +41,7 @@ public class MyGazeLogger : MonoBehaviour
                                             "LeftEyeStatus", "LeftEyeForward", "LeftEyePosition", "LeftEyePupilSize", "RightEyeStatus",
                                             "RightEyeForward", "RightEyePosition", "RightEyePupilSize", "FocusDistance", "FocusStability",
                                             "LookingAt", "CombinedGazeForwardWorld", "CombinedGazePositionWorld", "PositionGazeHit",
-                                            "CombinedGazeForwardWRTCar", "CombinedGazePositionWRTCar" };
+                                            "CombinedGazePositionWRTCar" };
     
     const string ValidString = "VALID";
     const string InvalidString = "INVALID";
@@ -53,7 +53,7 @@ public class MyGazeLogger : MonoBehaviour
     private LoggedTags fixatingOn = LoggedTags.Environment;
     private Vector3 fixationPosition;
     private long baseTimeNanoSeconds = 0;
-    private Transform centerView;
+    public Transform centerView;
     
     public void StartUp()
     {
@@ -146,8 +146,11 @@ public class MyGazeLogger : MonoBehaviour
         logCount++;
         if (baseTimeNanoSeconds == 0) { baseTimeNanoSeconds = data.captureTime; }
         // Get HMD position and rotation
-        hmdPosition = VarjoManager.Instance.HeadTransform.position;
-        hmdRotation = VarjoManager.Instance.HeadTransform.rotation.eulerAngles;
+
+        Transform HMD = VarjoManager.Instance.HeadTransform;
+
+        hmdPosition = HMD.position;
+        hmdRotation = HMD.rotation.eulerAngles;
 
         string[] logData = new string[ColumnNames.Length];
 
@@ -165,7 +168,7 @@ public class MyGazeLogger : MonoBehaviour
         logData[4] = hmdRotation.ToString("F3");
 
         //Get rotation and position relative to car
-        Quaternion relativeRotation = Quaternion.Inverse(VarjoManager.Instance.HeadTransform.rotation) * centerView.rotation;
+        Quaternion relativeRotation = Quaternion.Inverse(centerView.rotation) * HMD.rotation;
         Vector3 relativePosition = centerView.InverseTransformPoint(hmdPosition);
         logData[5] = relativePosition.ToString("F3");
         logData[6] = relativeRotation.eulerAngles.ToString("F3");// experimentManager.CameraTransform().rotation.eulerAngles.ToString("F3");
@@ -199,7 +202,6 @@ public class MyGazeLogger : MonoBehaviour
         logData[20] = invalid ? "" : fixatingOn.ToString();
         logData[21] = "";
         
-        Transform HMD = VarjoManager.Instance.HeadTransform;
         // Transform gaze direction and origin from HMD space to world space
         Vector3 gazeRayDirection = HMD.TransformVector(Double3ToVector3(data.gaze.forward));
         Vector3 gazeRayOrigin = HMD.TransformPoint(Double3ToVector3(data.gaze.position));
@@ -210,19 +212,16 @@ public class MyGazeLogger : MonoBehaviour
 
         //Get combinade gaze position and rotation relative to car
         //Get rotation and position relative to car
-        Vector3 relativeForward = centerView.InverseTransformDirection(gazeRayDirection);
-        relativePosition = centerView.TransformPoint(gazeRayOrigin);
+        relativePosition = centerView.InverseTransformPoint(gazeRayOrigin + hmdPosition);
 
-        logData[5] = relativePosition.ToString("F3");
-        logData[6] = relativeForward.ToString("F3");// experimentManager.CameraTransform().rotation.eulerAngles.ToString("F3");
+        logData[24] = relativePosition.ToString("F3");
 
         Log(logData);
     }
     // Write given values in the log file
     void Log(string[] values)
     {
-        if (!logging || writer == null)
-            return;
+        if (!logging || writer == null)  return;
 
         string line = "";
         for (int i = 0; i < values.Length; ++i)

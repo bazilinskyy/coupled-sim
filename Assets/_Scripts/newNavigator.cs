@@ -38,6 +38,7 @@ public class newNavigator : MonoBehaviour
         waypoint = waypointList[waypointIndex];
 
         RenderNavigationArrow();
+
         started = true;
     }
 
