@@ -258,7 +258,7 @@ if(ShowTables==true)
     disp(T_acPa);
 end
 
-%% Help functions Pre-experiment Questionnaire
+%% Help functions Post-block Questionnaire
 function data = convertDataBlock_Pa(input)
 data.Date                = input(:,1);
 data.participantNumber   = str2double(input(:,2));
