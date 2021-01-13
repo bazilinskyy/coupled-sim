@@ -43,7 +43,6 @@ static class OperationMethods
         else { return false; }
     }
 
-    
 }
 
 public enum TurnType
@@ -70,6 +69,16 @@ static class TurnTypeMethods
     public static bool IsRightTurn(this TurnType turn)
     {
         if (turn == TurnType.Right) { return true; }
+        else { return false; }
+    }
+    public static bool IsStraight(this TurnType turn)
+    {
+        if (turn == TurnType.Straight) { return true; }
+        else { return false; }
+    }
+    public static bool IsEndPoint(this TurnType turn)
+    {
+        if (turn == TurnType.EndPoint) { return true; }
         else { return false; }
     }
     public static bool IsOperation(this TurnType turn)

@@ -203,17 +203,6 @@ public class newExperimentManager : MonoBehaviour
         nextColor.a = transparency;
         easyMaterial.color = nextColor;
     }
-    float GetDetectionRate(List<Target> targets)
-    {
-        if(targets.Count() == 0) { return 0f; }
-
-        int detectionCount = 0;
-        foreach (Target target in targets)
-        {
-            if (target.IsDetected()) { detectionCount++; }
-        }
-        return detectionCount / targets.Count();
-    }
     void SetNextTransparencyAndSize()
     {
         bool finishedTransparencies = (transparencyIndex == transparencies.Count() - 1);
@@ -308,12 +297,12 @@ public class newExperimentManager : MonoBehaviour
     {
         if (experimentSettings.navigationType == NavigationType.HUD_low)
         {
-            float[] HUDPlacerInputs = { -6f, 0, 2f };
+            float[] HUDPlacerInputs = { -6f, 0, 2.5f };
             return HUDPlacerInputs;
         }
         else if (experimentSettings.navigationType == NavigationType.HUD_high)
         {
-            float[] HUDPlacerInputs = { 20f, 3.5f, 2f };
+            float[] HUDPlacerInputs = { 20f, 3.5f, 2.5f };
             return HUDPlacerInputs;
         }
         else { return new float[] { 0, 0, 0 }; }

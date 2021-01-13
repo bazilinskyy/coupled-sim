@@ -10,6 +10,8 @@ public class HUDPlacer : MonoBehaviour
     public Transform car;
     public Transform headPosition;
 
+    public BoxCollider boxCollider;
+
     private bool pressMeToPlace; public bool _pressMeToPlace; 
 
     private Vector3 forwardVector;
@@ -38,8 +40,7 @@ public class HUDPlacer : MonoBehaviour
     {
         float visualAngleVerticalRadians = visualAngleVertical * Mathf.PI / 180;
         float visualAngleHorizontalRadians = visualAngleHorizontal * Mathf.PI / 180;
-        /*forwardVector = new Vector3(0, Mathf.Tan(visualAngleVerticalRadians) * distance, distance);
-        sideVector = new Vector3(Mathf.Tan(visualAngleHorizontalRadians), 0, 0);*/
+
         float up = Mathf.Tan(visualAngleVerticalRadians);
         float right = Mathf.Tan(visualAngleHorizontalRadians) * distance;
         float forward = distance;
@@ -47,6 +48,17 @@ public class HUDPlacer : MonoBehaviour
         transform.position = headPosition.position + car.forward * forward + car.right * right + car.up * up;
     }
 
+    public void SetBoxCollider(TurnType turn)
+    {
+        Vector3 sizeBoxTurns = new Vector3(5.2f, 0, 10.5f);
+        Vector3 sizeBoxStraight = new Vector3(2.5f, 0, 10.5f);
+        Vector3 sizeBoxEndPoint = new Vector3(4f, 0, 10.5f);
+
+        if (turn.IsLeftTurn()) { boxCollider.center = new Vector3(2.25f, 0, 0); boxCollider.size = sizeBoxTurns; }
+        else if (turn.IsRightTurn()){ boxCollider.center = new Vector3(-2.5f, 0, 0); boxCollider.size = new Vector3(5.7f,0,10.5f); }
+        else if (turn.IsStraight()){ boxCollider.center = new Vector3(0,0,0); boxCollider.size = sizeBoxStraight; }
+        else if (turn.IsEndPoint()) { boxCollider.center = new Vector3(-0.5f,0,0); boxCollider.size = sizeBoxEndPoint; }
+    }
     public void SetAngles(float vertical, float horizontal, float _distance)
     {
         visualAngleVertical = vertical;

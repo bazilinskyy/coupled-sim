@@ -141,6 +141,8 @@ public class newNavigator : MonoBehaviour
         else if (waypoint.turn == TurnType.Left) { arrows.GetComponent<MeshRenderer>().material = HUDMaterials.left; arrows.GetComponent<MoveCollider>().LeftArrow(); }
         else if (waypoint.turn == TurnType.Straight) { arrows.GetComponent<MeshRenderer>().material = HUDMaterials.straight; arrows.GetComponent<MoveCollider>().CenterArrow(); }
         else if (waypoint.turn == TurnType.EndPoint) { arrows.GetComponent<MeshRenderer>().material = HUDMaterials.destination; arrows.GetComponent<MoveCollider>().CenterArrow(); }
+
+        HUD.GetComponent<HUDPlacer>().SetBoxCollider(waypoint.turn);
     }
 
 }
