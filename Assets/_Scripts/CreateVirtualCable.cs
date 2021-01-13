@@ -51,30 +51,22 @@ public class CreateVirtualCable : MonoBehaviour
 		CrossComponents components= crossing.components;
 		waypoints = components.waypointObjects;
 		List<Vector3> points = new List<Vector3>();
-
+		Transform waypoint = waypoints.waypoint1;
+		//Turn 1
 		if (crossing.isCurrentCrossing) { points.Add(waypoints.startPoint.position - waypoints.startPoint.forward * 30f ); }
         else { points.Add(waypoints.startPoint.position); }
 		
 		if (components.turn1 == TurnType.None) { Debug.Log("GOT NONE ON FIRST TURN should not get here... CreateVirutalCable -> GetPointcomponents()"); return points;  }
-		if (components.turn1 == TurnType.EndPoint)
-		{
-			points.Add(waypoints.waypoint1.position);
-			return points;
-		}
-		else if (components.turn1.IsTurn())
-		{
-			foreach (Vector3 point in GetPointsCorner(waypoints.waypoint1, components.turn1)) { points.Add(point); }
-		}
-        else { points.Add(waypoints.waypoint1.position); }
+		if (components.turn1.IsEndPoint()){ points.Add(waypoint.position); return points; }
+		else if (components.turn1.IsTurn()){ foreach (Vector3 point in GetPointsCorner(waypoint, components.turn1)) { points.Add(point); }}
+        else { points.Add(waypoint.position); }
 
+		//Turn 2
+		waypoint = waypoints.waypoint2;
 		if (components.turn2 == TurnType.None) { return points; }
-		if (components.turn2 == TurnType.EndPoint) { points.Add(waypoints.waypoint2.position); }
-		else if (components.turn2.IsTurn())
-		{
-			foreach (Vector3 point in GetPointsCorner(waypoints.waypoint2, components.turn2)) { points.Add(point); }
-
-		}
-        else { points.Add(waypoints.waypoint2.position); }
+		if (components.turn2.IsEndPoint()) { points.Add(waypoint.position); }
+		else if (components.turn2.IsTurn()) { foreach (Vector3 point in GetPointsCorner(waypoint, components.turn2)) { points.Add(point); } }
+		else { points.Add(waypoint.position); }
 		return points;
 	}
 

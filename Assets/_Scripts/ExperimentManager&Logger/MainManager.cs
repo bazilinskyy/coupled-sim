@@ -4,6 +4,8 @@ using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
 using System;
+using System.IO;
+
 public class MainManager : MonoBehaviour
 {
 
@@ -18,8 +20,6 @@ public class MainManager : MonoBehaviour
 
     private string subjectDataFolder = "nothing...";
     private string subjectID = "Dummy";
-    private string age = "0";
-    private string sex = "-";
 
     private bool automateSpeed = true;
     private bool saveData = true;
@@ -68,8 +68,17 @@ public class MainManager : MonoBehaviour
     public string[] sceneArray;
     public int experimentIndex = 0;
 
-    public int[] experimentOrder = { 0, 1, 2, 3, 4, 5 };
-    public int numberTurns = 12;
+    private int[] experimentOrder = { 0, 1, 2};
+    public int[,] orders =
+    {
+        {0,1,2 },
+        {0,2,1 },
+        {1,2,0 },
+        {1,0,2 },
+        {2,0,1 },
+        {2,1,0 },
+    };
+    public int numberTurns = 12; //Make it even,  6 turns = 90 seconden
     private ExperimentType experimentType = ExperimentType.Real;
 
     private GameObject player;
@@ -102,8 +111,6 @@ public class MainManager : MonoBehaviour
     public float DriverViewYToSteeringWheel { get => driverViewYToSteeringWheel; set => driverViewYToSteeringWheel = value; }
     public float DriverViewXToSteeringWheel { get => driverViewXToSteeringWheel; set => driverViewXToSteeringWheel = value; }
     public bool IsInExperiment { get => isInExperiment; set => isInExperiment = value; }
-    public string Age { get => age; set => age = value; }
-    public string Sex { get => sex; set => sex = value; }
     public string SubjectID { get => subjectID; set => subjectID = value; }
 
     private void Awake()
@@ -122,13 +129,17 @@ public class MainManager : MonoBehaviour
             Varjo.VarjoPlugin.ResetPose(true, Varjo.VarjoPlugin.ResetRotation.ALL);
             Varjo.VarjoPlugin.InitGaze();
         }
-        
+
         //Read general settings file
         ReadCSVSettingsFile();
 
+
+
         //Set input of data log folder:
-        subjectDataFolder = string.Join("/", System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop).Replace("\\", "/"), "Data", System.DateTime.Now.ToString("MM-dd_HH-mm") + "_" + subjectID);
+        subjectDataFolder = string.Join("/", System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop).Replace("\\", "/"), "Data", "ID_" + SubjectID + "_" + DateTime.Now.ToString("MM-dd_HH-mm"));
         System.IO.Directory.CreateDirectory(subjectDataFolder);
+        //Save settings file in the subject data folder
+        SaveSettingsFile();
 
         Debug.Log($"Settings file received...\nSubject ID = {subjectID}, DataFolder: {subjectDataFolder}...");
         
@@ -142,6 +153,14 @@ public class MainManager : MonoBehaviour
         }
         else { AddTargetCalibrationExperiment(); }
         
+    }
+    void SaveSettingsFile()
+    {
+        string destination = subjectDataFolder + "/experimentSettings.csv";
+
+        string fileSource = Application.dataPath + "/experimentSettings.csv";
+
+        File.Copy(fileSource, destination);
     }
     void AddTargetCalibrationExperiment()
     {
@@ -164,7 +183,6 @@ public class MainManager : MonoBehaviour
         setting.turns = turns;
         experiments.Add(setting);
     }
-
     void AddPractiseDrive()
     {
         MainExperimentSetting setting = new MainExperimentSetting();
@@ -174,26 +192,30 @@ public class MainManager : MonoBehaviour
         setting.targetDifficulty = TargetDifficulty.EasyAndMedium;
         setting.navigationType = NavigationType.HUD_low;
         setting.experimentType = ExperimentType.Practise;
-        setting.targetsPerCrossing = 7;
-        setting.turns = GetRandomTurns(18);
+        setting.targetsPerCrossing = 8;
+        setting.turns = GetShuffledTurns(4);
         experiments.Add(setting);
      }
-
-    Condition MakeCondition(NavigationType navType, TargetDifficulty difficulty) { Condition condition = new Condition() { navigationType = navType, targetDifficulty = difficulty }; return condition; }
-   
+    Condition MakeCondition(NavigationType navType, TargetDifficulty difficulty) 
+    { 
+        Condition condition = new Condition() 
+        { 
+            navigationType = navType,
+            targetDifficulty = difficulty 
+        }; 
+        return condition; 
+    }
     void AddExperiments(int[] order, int numberTurns)
     {
-        List<Condition> conditions = new List<Condition>(); 
+        //conditions 1 - 3
+        List<Condition> conditions = new List<Condition>()
+        {
+            MakeCondition(NavigationType.HUD_high, TargetDifficulty.easy),
+            MakeCondition(NavigationType.HUD_low, TargetDifficulty.easy),
+            MakeCondition(NavigationType.VirtualCable, TargetDifficulty.easy),
+        };
 
-        //conditions 1 - 6
-        conditions.Add(MakeCondition(NavigationType.HUD_high, TargetDifficulty.easy));
-        conditions.Add(MakeCondition(NavigationType.HUD_high, TargetDifficulty.hard));
-        conditions.Add(MakeCondition(NavigationType.HUD_low, TargetDifficulty.easy));
-        conditions.Add(MakeCondition(NavigationType.HUD_low, TargetDifficulty.hard));
-        conditions.Add(MakeCondition(NavigationType.VirtualCable, TargetDifficulty.easy));
-        conditions.Add(MakeCondition(NavigationType.VirtualCable, TargetDifficulty.hard));
-
-        MainExperimentSetting setting = new MainExperimentSetting();
+        MainExperimentSetting setting;
 
         for (int i = 0; i < conditions.Count(); i++)
         {
@@ -207,24 +229,37 @@ public class MainManager : MonoBehaviour
             setting.targetDifficulty = conditions[conditionNumber].targetDifficulty;
 
             //Add turns
-            List<TurnType> turns = GetRandomTurns(numberTurns);
+            List<TurnType> turns = GetShuffledTurns(numberTurns);
             setting.turns = turns;
 
             experiments.Add(setting);
         }
     }
-
-    List<TurnType> GetRandomTurns(int number)
+    List<TurnType> GetShuffledTurns(int number)
     {
+        //Gives equal amount of turns left and right in random order
         List<TurnType> turns = new List<TurnType>();
-        int randomInt;
-        for (int j = 0; j < number; j++)
+        TurnType turn;
+
+        //Make a list of equal left and right turns
+        for (int i = 1; i <= number; i++)
         {
-            randomInt = UnityEngine.Random.Range(0, 100);
-            if (randomInt < 50) { turns.Add(TurnType.Left); }
-            else { turns.Add(TurnType.Right); }
+            if(i <= number / 2) { turn = TurnType.Left; }
+            else { turn = TurnType.Right; }
+            turns.Add(turn);
+        }
+        
+        //Shuffle the turns:
+        int randomIndex; 
+        for (int i = 0; i < turns.Count(); i++)
+        {
+            randomIndex = UnityEngine.Random.Range(0, turns.Count());
+            turn = turns[randomIndex];
+            turns[randomIndex] = turns[i];
+            turns[i] = turn;
         }
         turns.Add(TurnType.EndPoint);
+       
         return turns;
     }
     public MainExperimentSetting GetCurrentExperimentSettings()
@@ -255,7 +290,7 @@ public class MainManager : MonoBehaviour
 
         try
         {
-            string fileData = System.IO.File.ReadAllText(filePath);
+            string fileData = File.ReadAllText(filePath);
             string[] lines = fileData.Split('\n');
 
             //Line1: subject ID; Line2: experimentType [0 == real, 1== target calibration]; Line3: experimentOrder; Line4: number of turns
@@ -266,18 +301,21 @@ public class MainManager : MonoBehaviour
             lineData = lines[0].Trim().Split(';'); SubjectID = lineData[1];
             lineData = lines[1].Trim().Split(';'); experimentType = int.Parse(lineData[1]) == 0 ? ExperimentType.Real : ExperimentType.TargetCalibration;
 
-            lineData = lines[2].Trim().Split(';'); Age = lineData[1];
-            lineData = lines[3].Trim().Split(';'); Sex = lineData[1];
             //There is no order and number of turns neededd for the target calibration experiment
             if (!experimentType.IsReal()) { return true; }
 
-            lineData = lines[4].Trim().Split(';'); experimentOrder = Array.ConvertAll(lineData[1].Split(','), s => int.Parse(s));
-            lineData = lines[5].Trim().Split(';'); numberTurns = int.Parse(lineData[1]);
+            //Order of experiment is based on subject number
+            int orderIndex = (int.Parse(SubjectID) - 1) % 6;
 
+            experimentOrder[0] = orders[orderIndex, 0];
+            experimentOrder[1] = orders[orderIndex, 1];
+            experimentOrder[2] = orders[orderIndex, 2];
+
+            lineData = lines[2].Trim().Split(';'); numberTurns = int.Parse(lineData[1]);
 
             return true;
-        }
-        catch { Debug.Log($"Could not read settings file: {filePath}...."); return false; }
+    }
+        catch { Debug.LogError($"Could not read settings file: {filePath}...."); return false; }
     }
     public string GetNextScene() { return calibrationScene; }
     public void ExperimentEnded()
@@ -395,7 +433,7 @@ public class MainExperimentSetting
     public int conditionNumber = 0;
     public List<TurnType> turns;
     public NavigationType navigationType;
-    public float transparency = 0.4f;
+    public float transparency = 0.0075f;
     public TargetDifficulty targetDifficulty = TargetDifficulty.easy;
     public int targetsPerCrossing = 7;
     public int minTargetsPerTurn = 2;//min and max should add up tot the total at minimum

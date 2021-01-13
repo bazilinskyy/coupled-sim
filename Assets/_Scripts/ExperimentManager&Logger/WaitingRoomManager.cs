@@ -69,13 +69,16 @@ public class WaitingRoomManager : MonoBehaviour
 
     void SetText()
     {
-        
+        MainExperimentSetting settings = mainManager.GetExperimentSettings();
+
+        string navigationType = "";
+
+        if (settings.navigationType == NavigationType.HUD_low) { navigationType = "low HUD"; }
+        if (settings.navigationType == NavigationType.HUD_high) { navigationType = "high HUD"; }
+        if (settings.navigationType == NavigationType.VirtualCable) { navigationType = "Virtual cable"; }
+
         if (!mainManager.IsNextExperiment()) { text.text = "All experiments are completed. Thanks for participating!"; }
-        else 
-        { 
-            MainExperimentSetting settings = mainManager.GetExperimentSettings(); 
-            text.text = $"Experiment {mainManager.GetExperimentIndex()} starts when you are ready!\nNavigationType: {settings.navigationType}, Target difficulty: {settings.targetDifficulty}"; 
-        }
+        else { text.text = $"Experiment {mainManager.GetExperimentIndex()} starts when you are ready!\nNavigationType: {navigationType}"; }
         
     }
 

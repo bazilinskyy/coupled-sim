@@ -165,15 +165,18 @@ public class CrossComponents : MonoBehaviour
 			Vector3 forwardVariation = waypoint.waypoint.forward * Random.Range(-7f, 7f);
 			Vector3 positionTarget = point.position + forwardVariation + sideVariation;
 
-			TargetDifficulty targetDifficulty;
+			TargetDifficulty targetDifficulty = settings.targetDifficulty;
+			
+			//Not needed anymore as we now have 1 target difficulty
+
 			//During the practise drive we have easy targets for the first half of the track and hard targets for the second half.
-			if(settings.targetDifficulty == TargetDifficulty.EasyAndMedium) 
+			/*if(settings.targetDifficulty == TargetDifficulty.EasyAndMedium) 
 			{
 				int NTurns = experimentManager.experimentSettings.turns.Count();
 				if (waypoint.waypointID < (int)Mathf.Floor(NTurns / 2)) { targetDifficulty = TargetDifficulty.easy; }
 				else { targetDifficulty = TargetDifficulty.hard; }
 			}
-            else { targetDifficulty = settings.targetDifficulty; }
+            else { targetDifficulty = settings.targetDifficulty; }*/
 
 			target = Instantiate(TargetPrefab);
 			target.transform.position = positionTarget;

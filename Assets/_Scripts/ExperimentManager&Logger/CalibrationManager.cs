@@ -16,6 +16,7 @@ public class CalibrationManager : MonoBehaviour
     public TextMesh instructions;
     public TextMesh otherInstructions;
     private Transform player;
+    public Material easyMaterial;
     public UnityEngine.UI.Image blackOutScreen;
 
     private bool startedGazeRay = false;
@@ -39,6 +40,8 @@ public class CalibrationManager : MonoBehaviour
         steeringWheel.transform.position = -Vector3.up * 1;
         
         mainManager.MovePlayer(startPosition);
+
+        SetTransparencyEasyMaterial(mainManager.GetExperimentSettings().transparency);
 
         if (!mainManager.ReadCSVSettingsFile()) 
         {
@@ -85,7 +88,12 @@ public class CalibrationManager : MonoBehaviour
             otherInstructions.text = "";
         }
     }
-
+    void SetTransparencyEasyMaterial(float transparency)
+    {
+        Color nextColor = easyMaterial.color;
+        nextColor.a = transparency;
+        easyMaterial.color = nextColor;
+    }
     void RequestGazeCalibration()
     {
 

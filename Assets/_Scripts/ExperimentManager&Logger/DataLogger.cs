@@ -324,7 +324,7 @@ public class DataLogger : MonoBehaviour
     }
     void SaveExperimentInfo()
     {
-        string[] columns = { "SubjectID", "SubjectAge", "SubjectSex","TotalTargets", "LeftTarget", "RightTargets","TargetDifficulty", "DriverViewToSteeringWHeel", "RelativePositionDriverView", "RelativeRotationDriverView", "ExperimentName",
+        string[] columns = { "SubjectID","TotalTargets", "LeftTarget", "RightTargets","TargetDifficulty", "DriverViewToSteeringWHeel", "RelativePositionDriverView", "RelativeRotationDriverView", "ExperimentName",
                               "NavigationType", "Transparency", "TotalExperimentTime", "LeftTurns", "RightTurns"};
         string[] logData = new string[columns.Length];
         string filePath = string.Join("/", saveFolder, generalExperimentInfo);
@@ -335,33 +335,31 @@ public class DataLogger : MonoBehaviour
 
             //General subject info
             logData[0] = mainManager.SubjectID;
-            logData[1] = mainManager.Age;
-            logData[2] = mainManager.Sex;
 
             //General target info
-            logData[3] = TotalTargets().ToString();
-            logData[4] = LeftTargets().ToString();
-            logData[5] = RightTargets().ToString();
-            logData[6] = experimentManager.experimentSettings.targetDifficulty.ToString();
-
+            logData[1] = TotalTargets().ToString();
+            logData[2] = LeftTargets().ToString();
+            logData[3] = RightTargets().ToString();
+            logData[4] = experimentManager.experimentSettings.targetDifficulty.ToString();
+        
             Vector3 driverViewToSteeringWheel = new Vector3(mainManager.DriverViewXToSteeringWheel, mainManager.DriverViewYToSteeringWheel, mainManager.DriverViewZToSteeringWheel);
 
-            logData[7] = driverViewToSteeringWheel.ToString("F3");
+            logData[5] = driverViewToSteeringWheel.ToString("F3");
 
             //Info on the driver view
             Vector3 relativePosition = experimentManager.driverView.position - car.transform.position;
             Quaternion relativeRotation = Quaternion.Inverse(car.transform.rotation) * experimentManager.driverView.rotation;
-            logData[8] = relativePosition.ToString("F3");
-            logData[9] = relativeRotation.eulerAngles.ToString("F3");
+            logData[6] = relativePosition.ToString("F3");
+            logData[7] = relativeRotation.eulerAngles.ToString("F3");
 
             //Experiment inputs
-            logData[10] = experimentManager.experimentSettings.name;
-            logData[11] = experimentManager.experimentSettings.navigationType.ToString();
-            logData[12] = experimentManager.experimentSettings.transparency.ToString();
-            logData[13] = experimentManager.experimentSettings.experimentTime.ToString(specifier,culture);
+            logData[8] = experimentManager.experimentSettings.name;
+            logData[9] = experimentManager.experimentSettings.navigationType.ToString();
+            logData[10] = experimentManager.experimentSettings.transparency.ToString();
+            logData[11] = experimentManager.experimentSettings.experimentTime.ToString(specifier,culture);
 
-            logData[14] = experimentManager.experimentSettings.LeftTurns().ToString();
-            logData[15] = experimentManager.experimentSettings.RightTurns().ToString();
+            logData[12] = experimentManager.experimentSettings.LeftTurns().ToString();
+            logData[13] = experimentManager.experimentSettings.RightTurns().ToString();
             //Log data and close file
             Log(logData, file);
             file.Flush();
@@ -448,7 +446,7 @@ public class DataLogger : MonoBehaviour
         float next_distance; int count=0;
         while (true)
         {
-            count++; if (count > 50) { Debug.LogError("Could not find minimum distance, max count reached..."); return 1000f; }
+            count++; if (count > 50) { Debug.LogError("Could not find minimum distance within max count loop..."); return 1000f; }
 
             int nextIndex = indexClosestPoint + step;
 

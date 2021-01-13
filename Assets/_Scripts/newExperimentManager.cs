@@ -68,6 +68,7 @@ public class newExperimentManager : MonoBehaviour
     public int leftTargets = 0;
     public int rightTargets = 0;
 
+    private int navigationTypeIndex = 1;
     private void Start()
     {
         player = MyUtils.GetPlayer().transform;
@@ -84,6 +85,7 @@ public class newExperimentManager : MonoBehaviour
         SetDataManager();
 
         if (experimentSettings.experimentType.IsTargetCalibration()) { transparencyTargets = 0.2f; experimentSettings.targetSize = 1f; SetTransparencyEasyMaterial(transparencyTargets); }
+        else { SetTransparencyEasyMaterial(experimentSettings.transparency); }
 
         crossingSpawner.turnsList = experimentSettings.turns.ToArray();
         crossingSpawner.StartUp();
@@ -170,15 +172,22 @@ public class newExperimentManager : MonoBehaviour
         if (Input.GetKey(KeyCode.RightArrow)) { angleTreshold += 0.01f; Debug.Log($"angleTreshold = {angleTreshold}..."); }
         if (Input.GetKey(KeyCode.LeftArrow)) { angleTreshold -= 0.01f; Debug.Log($"angleTreshold = {angleTreshold}..."); }
 */
-        //Code for practise drive UI
-        if (experimentSettings.experimentType.IsPractise() && lastWaypointIndex != car.waypointIndex )
+        //Code for practise drive UI and changing navigation type automtically
+        if (experimentSettings.experimentType.IsPractise() && lastWaypointIndex != car.waypointIndex && navigationTypeIndex < 3 )
         {
+            float turnsPerNavigationType = experimentSettings.turns.Count() / 3;
             lastWaypointIndex = car.waypointIndex;
-            if ((car.waypointIndex) % (int)Mathf.Floor(experimentSettings.turns.Count()/3) == 0 ) { ToggleSymbology(); }
-            if ((car.waypointIndex) >= (int)Mathf.Floor(experimentSettings.turns.Count() / 2) && !informedOnHardTargets) { StartCoroutine(InformOnTargetDifficulty("Hard")); informedOnHardTargets = true; } 
+            if ((car.waypointIndex) > navigationTypeIndex * turnsPerNavigationType ) 
+            { 
+                ToggleSymbology(); 
+                StartCoroutine(InformOnNavigationType());
+                navigationTypeIndex++;
+            }
+            
+            //if ((car.waypointIndex) >= (int)Mathf.Floor(experimentSettings.turns.Count() / 2) && !informedOnHardTargets) { StartCoroutine(InformOnTargetDifficulty("Hard")); informedOnHardTargets = true; } 
         }
 
-        if (experimentSettings.experimentType.IsPractise() && experimentSettings.experimentTime > 2f && !informedOnEasyTargets) { StartCoroutine(InformOnTargetDifficulty("Easy")); informedOnEasyTargets = true; }
+        //if (experimentSettings.experimentType.IsPractise() && experimentSettings.experimentTime > 2f && !informedOnEasyTargets) { StartCoroutine(InformOnTargetDifficulty("Easy")); informedOnEasyTargets = true; }
 
     }
     void RequestGazeCalibration()
@@ -275,9 +284,15 @@ public class newExperimentManager : MonoBehaviour
             targetCountCalibration++;
         }
     }
-    IEnumerator InformOnTargetDifficulty(string difficulty)
+    IEnumerator InformOnNavigationType()
     {
-        carUI.text = $"{difficulty} targets ahead!";
+        string navigationType = "";
+
+        if(experimentSettings.navigationType == NavigationType.HUD_low) { navigationType = "low HUD"; }
+        if (experimentSettings.navigationType == NavigationType.HUD_high) { navigationType = "high HUD"; }
+        if (experimentSettings.navigationType == NavigationType.VirtualCable) { navigationType = "Virtual cable"; }
+
+        carUI.text = $"Switched to {navigationType}...";
 
         yield return new WaitForSeconds(3f);
 
@@ -297,7 +312,7 @@ public class newExperimentManager : MonoBehaviour
     {
         if (experimentSettings.navigationType == NavigationType.HUD_low)
         {
-            float[] HUDPlacerInputs = { -6f, 0, 2.5f };
+            float[] HUDPlacerInputs = { -8f, 0, 2.5f };
             return HUDPlacerInputs;
         }
         else if (experimentSettings.navigationType == NavigationType.HUD_high)
