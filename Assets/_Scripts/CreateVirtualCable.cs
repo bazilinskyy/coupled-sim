@@ -69,7 +69,6 @@ public class CreateVirtualCable : MonoBehaviour
 		else { points.Add(waypoint.position); }
 		return points;
 	}
-
 	void CreateColliders()
     {
         if (navigationLine.Count() < 2) { return; }

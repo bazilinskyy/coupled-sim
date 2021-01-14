@@ -160,7 +160,7 @@ public class MainManager : MonoBehaviour
 
         string fileSource = Application.dataPath + "/experimentSettings.csv";
 
-        File.Copy(fileSource, destination);
+        if (!File.Exists(destination)){ File.Copy(fileSource, destination); }
     }
     void AddTargetCalibrationExperiment()
     {

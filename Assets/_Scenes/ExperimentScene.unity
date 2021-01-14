@@ -499,6 +499,16 @@ PrefabInstance:
       propertyPath: m_LocalPosition.z
       value: 0.00000033253764
       objectReference: {fileID: 0}
+    - target: {fileID: 6109170175124379831, guid: bd622bd9844713544864bef9dff46137,
+        type: 3}
+      propertyPath: m_IsTrigger
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6109170175408495647, guid: bd622bd9844713544864bef9dff46137,
+        type: 3}
+      propertyPath: m_TagString
+      value: Car
+      objectReference: {fileID: 0}
     - target: {fileID: 6109170175517165885, guid: bd622bd9844713544864bef9dff46137,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -559,6 +569,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: Car
       objectReference: {fileID: 0}
+    - target: {fileID: 6109170175612361105, guid: bd622bd9844713544864bef9dff46137,
+        type: 3}
+      propertyPath: m_IsTrigger
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 8422048131351500168, guid: bd622bd9844713544864bef9dff46137,
         type: 3}
       propertyPath: m_Size.x
@@ -618,7 +633,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1193063156239688, guid: dae2e2be31c98324eac460f702db97e9, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4050235663507654, guid: dae2e2be31c98324eac460f702db97e9, type: 3}
       propertyPath: m_LocalPosition.x
@@ -1087,6 +1102,26 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
   gazeLogger: {fileID: 0}
+--- !u!1 &1317141833 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6109170175408495643, guid: bd622bd9844713544864bef9dff46137,
+    type: 3}
+  m_PrefabInstance: {fileID: 685181774}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1317141836
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1317141833}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 460716a7a14cb4e418e064c9a3366fd6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  navigator: {fileID: 685181790}
+  experimentManager: {fileID: 1309504459}
 --- !u!1 &1336482329
 GameObject:
   m_ObjectHideFlags: 0
@@ -1529,20 +1564,25 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 2765655293204458245, guid: 55ff7657005620f4fb2d92a2d1b9a436,
+    - target: {fileID: 1225300308122696699, guid: 55ff7657005620f4fb2d92a2d1b9a436,
         type: 3}
-      propertyPath: isFirstCrossing
+      propertyPath: m_IsTrigger
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 3349807985648649745, guid: 55ff7657005620f4fb2d92a2d1b9a436,
+    - target: {fileID: 6027906250097286880, guid: 55ff7657005620f4fb2d92a2d1b9a436,
         type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0
+      propertyPath: m_Size.z
+      value: 18
       objectReference: {fileID: 0}
-    - target: {fileID: 3408949717815262868, guid: 55ff7657005620f4fb2d92a2d1b9a436,
+    - target: {fileID: 6027906250097286880, guid: 55ff7657005620f4fb2d92a2d1b9a436,
         type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 56.2
+      propertyPath: m_IsTrigger
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6374008543315454368, guid: 55ff7657005620f4fb2d92a2d1b9a436,
+        type: 3}
+      propertyPath: m_IsTrigger
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7190030702347406285, guid: 55ff7657005620f4fb2d92a2d1b9a436,
         type: 3}

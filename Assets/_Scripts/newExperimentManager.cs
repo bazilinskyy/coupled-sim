@@ -62,6 +62,8 @@ public class newExperimentManager : MonoBehaviour
     private bool firstStraight = true;
     private int transparencyIndex = 0;
     private int sizeIndex = 0;
+
+    //Transparencies and sizes for the target calibration experiment
     private float[] transparencies = { .1f, .05f, .02f, .01f, .005f};
     private float[] sizes = { 1f, 0.75f, .5f }; //
 

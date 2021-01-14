@@ -41,7 +41,29 @@ public class newNavigator : MonoBehaviour
 
         started = true;
     }
+    public void CorrectTurnTrigger()
+    {
+        atWaypoint = false;
+        SetNextWaypoint();
+        RenderNavigationArrow();
+    }
 
+    public void EnterCrossingTrigger()
+    {
+        if (!experimentManager.experimentSettings.experimentType.IsTargetCalibration())
+        {
+            //Debug.Log("Enter trigger called, configuring next crossing...");
+            experimentManager.LogTargets(crossingSpawner.crossings.CurrentCrossing().components.targetList);
+            crossingSpawner.SetNextCrossing();
+        }
+    }
+    public void NavigationFinishedTrigger()
+    {
+        navigationFinished = true;
+        //As we dont spawn the next crossing (since this is the last waypoint) we need to manually add the targets of NEXT crossing 
+        //Normally they are added automatically when entering the new crossing....
+        experimentManager.LogTargets(crossingSpawner.crossings.NextCrossing().components.targetList);
+    }
     private void Update()
     {
         if (!started) { StartUp(); }
@@ -78,44 +100,6 @@ public class newNavigator : MonoBehaviour
         if (renderedDistance <= 0) { renderedDistance = 0; atWaypoint = true; }
         if (atWaypoint) { renderedDistance = 0; }
         textMesh.text = $"{renderedDistance}m";
-    }
-
-    private void OnTriggerEnter(Collider other)
-    {
-        string[] triggers = { "CorrectTurn", "WrongTurn",  "OutOfBounce", "NavigationFinished", "EndStraight", "EnterCrossing" };
-
-        if (!triggers.Contains(other.tag)) { return; }
-        //Check the trigger (this pscripts prevents multiple trigger events happening in quick succesion)
-        if (!other.GetComponent<MyCollider>().Triggered()){ return; }
-        //Handle all triggers
-
-        if (other.CompareTag("CorrectTurn"))
-        {
-            atWaypoint = false;
-            SetNextWaypoint();
-            RenderNavigationArrow();
-            
-        }
-        else if (other.CompareTag("WrongTurn")){ experimentManager.TookWrongTurn();}
-        else if (other.CompareTag("OutOfBounce")) {experimentManager.CarOutOfBounce(); }
-        else if (other.gameObject.CompareTag("NavigationFinished")){
-            navigationFinished = true;
-            //As we dont spawn the next crossing (since this is the last waypoint) we need to manually add the targets of NEXT crossing 
-            //Normally they are added automatically when entering the new crossing....
-            experimentManager.LogTargets(crossingSpawner.crossings.NextCrossing().components.targetList);
-        }
-        else if (other.gameObject.CompareTag("EndStraight")) { experimentManager.EndOfCalibrationTrial(); }
-        else if (other.gameObject.CompareTag("EnterCrossing"))
-        {
-            if (!experimentManager.experimentSettings.experimentType.IsTargetCalibration())
-            {
-                //Debug.Log("Enter trigger called, configuring next crossing...");
-                experimentManager.LogTargets(crossingSpawner.crossings.CurrentCrossing().components.targetList);
-                crossingSpawner.SetNextCrossing();
-            }
-            
-        }
-
     }
 
     public void SetNextWaypoint()
