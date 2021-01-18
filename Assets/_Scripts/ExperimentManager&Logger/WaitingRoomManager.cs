@@ -1,11 +1,12 @@
-﻿using System.Collections;
+﻿using Leap.Unity;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class WaitingRoomManager : MonoBehaviour
 {
-    public TextMesh text;
+    public TMPro.TextMeshPro text;
 
     public Transform startPosition;
     public GameObject steeringWheel;
@@ -15,7 +16,11 @@ public class WaitingRoomManager : MonoBehaviour
 
     public float thresholdUserInput = 0.15f; //The minimum time between user inputs (when within this time only the first one is used)
     private List<Target> targetList;
-    private float userInputTime = 0f; private readonly float userInputThresholdTime = 0.2f;
+    
+    private bool lastUserInput = false;
+    private bool reCalibrateHands = false;
+
+    public TMPro.TextMeshPro gazeQuality;
     private void Start()
     {
         Debug.Log("Loaded waiting room...");
@@ -26,9 +31,23 @@ public class WaitingRoomManager : MonoBehaviour
     {
 
         if (Input.GetKeyDown(mainManager.MyPermission)) { mainManager.LoadExperiment(); }
-        
+        if (Input.GetKeyDown(mainManager.CalibrateGaze)) { RequestGazeCalibration(); }
+        if (Input.GetKeyDown(mainManager.ResetHeadPosition)) { Varjo.VarjoPlugin.ResetPose(true, Varjo.VarjoPlugin.ResetRotation.ALL); }
+        if (Input.GetKeyDown(mainManager.ToggleReCalibrateHands)) { reCalibrateHands = !reCalibrateHands; Debug.Log($"Recalbirating hands = {reCalibrateHands}..."); }
+
+        bool userInput = UserInput();
         //Looks for targets to appear in field of view and sets their visibility timer accordingly
-        if (UserInput()) { ProcessUserInputTargetDetection(); }
+        if (userInput && !reCalibrateHands) { ProcessUserInputTargetDetection(); }
+
+        if (userInput && reCalibrateHands) { CalibrateHands(); }
+
+        if (Varjo.VarjoPlugin.IsGazeCalibrated())
+        {
+            Varjo.VarjoPlugin.GazeEyeCalibrationQuality left = Varjo.VarjoPlugin.GetGazeCalibrationQuality().left;
+            Varjo.VarjoPlugin.GazeEyeCalibrationQuality right = Varjo.VarjoPlugin.GetGazeCalibrationQuality().right;
+            gazeQuality.text = $"Calibration Quality:\nLeft:{left} - Right:{right}";
+        }
+
     }
     void StartUp()
     {
@@ -42,6 +61,56 @@ public class WaitingRoomManager : MonoBehaviour
 
         SpawnSteeringWheel();
     }
+    void CalibrateHands()
+    {
+        if (mainManager.camType == MyCameraType.Leap)
+        {
+            Transform player = MyUtils.GetPlayer().transform;
+            Debug.Log("Trying to calibrate...");
+            CalibrateUsingHands steeringWheelCalibration = startPosition.GetComponent<CalibrateUsingHands>();
+
+            steeringWheelCalibration.driverView = startPosition;
+            steeringWheelCalibration.leftHand = player.Find("Hand Models").Find("Hand_Left").GetComponent<RiggedHand>();
+            steeringWheelCalibration.rightHand = player.Find("Hand Models").Find("Hand_Right").GetComponent<RiggedHand>();
+            steeringWheelCalibration.steeringWheel = steeringWheel.transform;
+
+
+            bool success = steeringWheelCalibration.SetPositionUsingHands();
+            if (success)
+            {
+                float horizontalDistance = Mathf.Abs(startPosition.position.z - steeringWheel.transform.position.z);
+                float verticalDistance = Mathf.Abs(startPosition.position.y - steeringWheel.transform.position.y);
+                float sideDistance = startPosition.position.x - steeringWheel.transform.position.x;
+                mainManager.SetCalibrationDistances(horizontalDistance, verticalDistance, sideDistance);
+                Debug.Log($"Calibrated steeringhweel with horizontal and vertical distances of, {horizontalDistance} and {verticalDistance}, respectively...");
+            }
+        }
+    }
+
+    private bool UserInput()
+    {
+        bool input = (Input.GetAxis(mainManager.ParticpantInputAxisLeft) == 1 || Input.GetAxis(mainManager.ParticpantInputAxisRight) == 1);
+
+        if (!input) { lastUserInput = false; return false; }
+        else if (input && lastUserInput) { lastUserInput = true; return false; }
+        else { lastUserInput = true; return true; }
+    }
+    void RequestGazeCalibration()
+    {
+
+        Varjo.VarjoPlugin.GazeCalibrationParameters[] parameters = new Varjo.VarjoPlugin.GazeCalibrationParameters[2];
+
+        parameters[0] = new Varjo.VarjoPlugin.GazeCalibrationParameters();
+        parameters[0].key = "GazeCalibrationType";
+        parameters[0].value = "Legacy"; //"Fast"; 
+
+        parameters[1] = new Varjo.VarjoPlugin.GazeCalibrationParameters();
+        parameters[1].key = "OutputFilterType";
+        parameters[1].value = "Standard";
+
+        Varjo.VarjoPlugin.RequestGazeCalibrationWithParameters(parameters);
+
+    }
     public void SpawnSteeringWheel()
     {
         if (mainManager.CalibratedUsingHands)
@@ -50,7 +119,6 @@ public class WaitingRoomManager : MonoBehaviour
             steeringWheel.transform.position += startPosition.transform.forward * mainManager.DriverViewZToSteeringWheel;
             steeringWheel.transform.position -= Vector3.up * mainManager.DriverViewYToSteeringWheel;
             steeringWheel.transform.position -= startPosition.transform.right * mainManager.DriverViewXToSteeringWheel;
-
         }
     }
     public Transform CameraTransform()
@@ -59,27 +127,26 @@ public class WaitingRoomManager : MonoBehaviour
         else if (mainManager.camType == MyCameraType.Normal) { return player.transform; }
         else { throw new System.Exception("Error in retrieving used camera transform in Experiment Manager.cs..."); }
     }
-    private bool UserInput()
-    {
-        //only sends true once every 0.1 seconds (axis returns 1 for multiple frames when a button is clicked)
-        if ((userInputTime + userInputThresholdTime) > Time.time) { return false; }
-        if (Input.GetAxis(mainManager.ParticpantInputAxisLeft) == 1 || Input.GetAxis(mainManager.ParticpantInputAxisRight) == 1) { userInputTime = Time.time; return true; }
-        else { return false; }
-    }
 
     void SetText()
     {
-        MainExperimentSetting settings = mainManager.GetExperimentSettings();
+        /*if (!mainManager.IsNextExperiment()) { text.text = "All experiments are completed. Thanks for participating!"; }
+        else
+        {
+            MainExperimentSetting settings = mainManager.GetExperimentSettings();
 
-        string navigationType = "";
+            string navigationType = "";
 
-        if (settings.navigationType == NavigationType.HUD_low) { navigationType = "low HUD"; }
-        if (settings.navigationType == NavigationType.HUD_high) { navigationType = "high HUD"; }
-        if (settings.navigationType == NavigationType.VirtualCable) { navigationType = "Virtual cable"; }
+            if (settings.navigationType == NavigationType.HUD_low) { navigationType = "low HUD"; }
+            if (settings.navigationType == NavigationType.HUD_high) { navigationType = "high HUD"; }
+            if (settings.navigationType == NavigationType.VirtualCable) { navigationType = "Virtual cable"; }
 
-        if (!mainManager.IsNextExperiment()) { text.text = "All experiments are completed. Thanks for participating!"; }
-        else { text.text = $"Experiment {mainManager.GetExperimentIndex()} starts when you are ready!\nNavigationType: {navigationType}"; }
-        
+            text.text = $"Experiment {mainManager.GetExperimentIndex()} starts when you are ready!\nNavigationType: {navigationType}"; 
+        }*/
+
+        List<int> score = mainManager.GetSubjectScore();
+        text.text = $"You got {score[1]}/{score[0]} targets!";
+
     }
 
     List<Target> ActiveTargets()
@@ -121,8 +188,6 @@ public class WaitingRoomManager : MonoBehaviour
             Varjo.VarjoPlugin.GazeData data = Varjo.VarjoPlugin.GetGaze();
             if (data.status == Varjo.VarjoPlugin.GazeStatus.VALID)
             {
-
-                Debug.Log("Got valid data...");
                 Vector3 gazeDirection = MyUtils.TransformToWorldAxis(data.gaze.forward, data.gaze.position);
 
                 foreach (Target target in targetList)

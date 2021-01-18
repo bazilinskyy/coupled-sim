@@ -5,7 +5,12 @@ public static class MyUtils
 {
     private static float lastTime = 0f;
 
-    
+    public static bool PlayerIsVarjo()
+    {
+        GameObject player = GetPlayer();
+        if(player.name == "Leap Rig") { return true; }
+        else { return false; }
+    }
 
     public static GameObject GetPlayer()
     {
@@ -31,14 +36,9 @@ public static class MyUtils
     {
         return GameObject.FindGameObjectWithTag("BlackOutScreen").GetComponent<UnityEngine.UI.Image>();
     }
-
-    public static UnityEngine.UI.Text GetUserUI()
+    public static TMPro.TextMeshPro GetCarUI()
     {
-        return GameObject.FindGameObjectWithTag("UserUI").GetComponent<UnityEngine.UI.Text>();
-    }
-    public static UnityEngine.TextMesh GetCarUI()
-    {
-        return GameObject.FindGameObjectWithTag("CarUI").GetComponent<UnityEngine.TextMesh>();
+        return GameObject.FindGameObjectWithTag("CarUI").GetComponent<TMPro.TextMeshPro>();
     }
     public static newExperimentManager GetExperimentManager()
     {

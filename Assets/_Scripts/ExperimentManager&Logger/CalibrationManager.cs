@@ -12,9 +12,9 @@ public class CalibrationManager : MonoBehaviour
     public Transform startPosition;
     private MainManager mainManager;
 
-    public TextMesh gazeQuality;
-    public TextMesh instructions;
-    public TextMesh otherInstructions;
+    public TMPro.TextMeshPro gazeQuality;
+    public TMPro.TextMeshPro instructions;
+    public TMPro.TextMeshPro otherInstructions;
     private Transform player;
     public Material easyMaterial;
     public UnityEngine.UI.Image blackOutScreen;
@@ -55,20 +55,14 @@ public class CalibrationManager : MonoBehaviour
 
         //Looks for targets to appear in field of view and sets their visibility timer accordingly
         if (userInput && addedTargets) { ProcessUserInputTargetDetection(); }
-        if ((userInput && !addedTargets && !Varjo.VarjoPlugin.IsGazeCalibrating()) || Input.GetKeyDown(mainManager.SpawnSteeringWheel)) { CalibrateHands(); }
+        if ((userInput && !addedTargets && !Varjo.VarjoPlugin.IsGazeCalibrating())) { CalibrateHands(); }
     }
     void Update()
     {
-       
         if (Input.GetKeyDown(mainManager.ResetExperiment)) {mainManager.LoadCalibrationScene(); }
         if (Input.GetKeyDown(mainManager.ResetHeadPosition)) { Varjo.VarjoPlugin.ResetPose(true, Varjo.VarjoPlugin.ResetRotation.ALL); }
         if (Input.GetKeyDown(mainManager.CalibrateGaze)) { RequestGazeCalibration(); }
         if (Input.GetKeyDown(mainManager.MyPermission)) {mainManager.LoadExperiment(); }
-        /*if (Varjo.VarjoPlugin.IsGazeCalibrated() && (experimentInput.camType == MyCameraType.Normal || experimentInput.calibratedUsingHands) && !addedTargets) {
-            mySceneLoader.AddTargetScene(); 
-            addedTargets = true; cross.SetActve(false);
-            instructions.text = "Look at the targets above!";
-        }*/
 
         //AFter calibration start gaze ray
         if (Varjo.VarjoPlugin.IsGazeCalibrated() && !startedGazeRay) { GetComponent<MyVarjoGazeRay>().StartUp(); startedGazeRay = true; }
@@ -77,16 +71,19 @@ public class CalibrationManager : MonoBehaviour
         {
             Varjo.VarjoPlugin.GazeEyeCalibrationQuality left = Varjo.VarjoPlugin.GetGazeCalibrationQuality().left;
             Varjo.VarjoPlugin.GazeEyeCalibrationQuality right = Varjo.VarjoPlugin.GetGazeCalibrationQuality().right;
-            gazeQuality.text = $"Calibration Quality:\nLeft:{left} - Right:{right}"; }
-
-        if (Input.GetKeyDown(KeyCode.T)) 
-        { 
-            mainManager.AddTargetScene(); 
-            addedTargets = true; 
-            crosses.SetActive(false);
-            instructions.text = "Fixate on the yellow spheres and press one\nof the steering wheel buttons to indicate detection.\nAfter detection they will dissapear.";
-            otherInstructions.text = "";
+            gazeQuality.text = $"Calibration Quality:\nLeft:{left} - Right:{right}";
         }
+
+        if (Input.GetKeyDown(mainManager.LoadTargetScene)) { AddTargetScene();  }
+    }
+
+    void AddTargetScene()
+    {
+        mainManager.AddTargetScene();
+        addedTargets = true;
+        crosses.SetActive(false);
+        instructions.text = "Fixate on the yellow spheres and press one\nof the steering wheel buttons to indicate detection.\nAfter detection they will dissapear.";
+        otherInstructions.text = "";
     }
     void SetTransparencyEasyMaterial(float transparency)
     {

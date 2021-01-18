@@ -93,7 +93,7 @@ public class newNavigator : MonoBehaviour
         if (waypoint.waypoint == null) { return; }
 
         Transform text = HUD.transform.Find("Text");
-        TextMesh textMesh = text.gameObject.GetComponent<TextMesh>();
+        TMPro.TextMeshPro textMesh = text.gameObject.GetComponent<TMPro.TextMeshPro>();
         
         float distanceToTarget = Vector3.Magnitude(waypoint.waypoint.transform.position- transform.position);
         int renderedDistance = ((int)distanceToTarget - ((int)distanceToTarget % 5));

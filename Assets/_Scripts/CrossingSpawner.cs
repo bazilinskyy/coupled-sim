@@ -60,6 +60,7 @@ public class CrossingSpawner : MonoBehaviour
 
             turnIndex += 2;
         }
+        else { crossings.CurrentCrossing().components.DisableVariableBlocks(); }
 
     }
 

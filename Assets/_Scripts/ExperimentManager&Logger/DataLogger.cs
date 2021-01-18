@@ -8,6 +8,8 @@ using Varjo;
 using System.Linq;
 using UnityEngine.SceneManagement;
 using System.Globalization;
+using System.Reflection;
+
 [RequireComponent(typeof(MyGazeLogger), typeof(MyVarjoGazeRay))]
 public class DataLogger : MonoBehaviour
 {
@@ -24,8 +26,7 @@ public class DataLogger : MonoBehaviour
     public Vector3[] currentNavigationLine = new Vector3[0];
     public Vector3[] totalNavigationLine;
     private int indexClosestPoint = 0;//Used for calculating the distance to optimal navigation path (i.e., centre of raod)
-
-    private GameObject lightObj;
+    
     //Experiment manager;
     private newExperimentManager experimentManager;
    
@@ -45,6 +46,7 @@ public class DataLogger : MonoBehaviour
     public bool logging;
 
     private MyGazeLogger gazeLogger;
+    private Transform centerView;
 
     // Use standard numeric format specifiers.
     private CultureInfo culture = CultureInfo.CreateSpecificCulture("eu-ES");
@@ -57,6 +59,8 @@ public class DataLogger : MonoBehaviour
         mainManager = MyUtils.GetMainManager();
         experimentManager = MyUtils.GetExperimentManager();
         car = MyUtils.GetCar().GetComponent<newNavigator>();
+
+        centerView = car.transform.Find("CenterView");
 
         List<string> inputs = experimentManager.GetCarControlInput();
         steerInputAxis = inputs[0];
@@ -100,7 +104,6 @@ public class DataLogger : MonoBehaviour
             gazeLogger.StartUp();
         }
     }
-    
     public void LogTargets(List<Target> targets)
     {
         //Debug.Log($"Logging {targets.Count()}... ");
@@ -131,8 +134,22 @@ public class DataLogger : MonoBehaviour
         SaveNavigationData();
         SaveExperimentInfo();
 
+        SaveSubjectScore();
         logging = false;
         savedData = true;
+    }
+    private void SaveSubjectScore()
+    {
+        int targetCount = 0;
+        int targetsDetected = 0;
+
+        foreach (TargetData targetInfo in targetData)
+        {
+            targetCount++;
+            if (targetInfo.isDetected) { targetsDetected++; }
+        }
+
+        mainManager.SetSubjectScore(targetCount, targetsDetected);
     }
     private void SaveCarIrregularityData()
     {
@@ -289,7 +306,7 @@ public class DataLogger : MonoBehaviour
     }
     private void SaveTargetData()
     {
-        string[] columns = { "ID", "Detected", "ReactionTime", "TotalFixationTime", "FirstFixationTime",
+        string[] columns = { "ID", "Detected", "startTimeVisible", "ReactionTime", "TotalFixationTime", "FirstFixationTime",
                             "DetectionTime", "Difficulty","UpcomingTurn","Position", "RoadSide", "WaypointID",
                             "Transparency", "DetectionDistance", "PositionNumber", "Size" };
         string[] logData = new string[columns.Length];
@@ -298,24 +315,24 @@ public class DataLogger : MonoBehaviour
         using (StreamWriter file = new StreamWriter(filePath))
         {
             Log(columns, file);
-            
-            foreach(TargetData targetInfo in targetData)
+            foreach (TargetData targetInfo in targetData)
             {
                 logData[0] = targetInfo.ID;
                 logData[1] = targetInfo.isDetected.ToString();
-                logData[2] = targetInfo.reactionTime.ToString(specifier,culture);
-                logData[3] = targetInfo.totalFixationTime.ToString(specifier,culture);
-                logData[4] = targetInfo.firstFixationTime.ToString(specifier,culture);
-                logData[5] = targetInfo.detectionTime.ToString(specifier, culture);
-                logData[6] = targetInfo.difficulty.ToString();
-                logData[7] = targetInfo.upcomingTurn.ToString();
-                logData[8] = targetInfo.position.ToString("F3");
-                logData[9] = targetInfo.side.ToString();
-                logData[10] = targetInfo.waypointID.ToString();
-                logData[11] = targetInfo.transparency.ToString(specifier,culture);
-                logData[12] = targetInfo.detectionDistance.ToString(specifier, culture);
-                logData[13] = targetInfo.positionNumber.ToString(specifier, culture);
-                logData[14] = targetInfo.size.ToString(specifier, culture);
+                logData[2] = targetInfo.startTimeVisible.ToString(specifier, culture);
+                logData[3] = targetInfo.reactionTime.ToString(specifier,culture);
+                logData[4] = targetInfo.totalFixationTime.ToString(specifier,culture);
+                logData[5] = targetInfo.firstFixationTime.ToString(specifier,culture);
+                logData[6] = targetInfo.detectionTime.ToString(specifier, culture);
+                logData[7] = targetInfo.difficulty.ToString();
+                logData[8] = targetInfo.upcomingTurn.ToString();
+                logData[9] = targetInfo.position.ToString("F3");
+                logData[10] = targetInfo.side.ToString();
+                logData[11] = targetInfo.waypointID.ToString();
+                logData[12] = targetInfo.transparency.ToString(specifier,culture);
+                logData[13] = targetInfo.detectionDistance.ToString(specifier, culture);
+                logData[14] = targetInfo.positionNumber.ToString(specifier, culture);
+                logData[15] = targetInfo.size.ToString(specifier, culture);
                 Log(logData, file);
             }
             file.Flush();
@@ -325,7 +342,7 @@ public class DataLogger : MonoBehaviour
     void SaveExperimentInfo()
     {
         string[] columns = { "SubjectID","TotalTargets", "LeftTarget", "RightTargets","TargetDifficulty", "DriverViewToSteeringWHeel", "RelativePositionDriverView", "RelativeRotationDriverView", "ExperimentName",
-                              "NavigationType", "Transparency", "TotalExperimentTime", "LeftTurns", "RightTurns"};
+                              "NavigationType", "Transparency", "TotalExperimentTime", "LeftTurns", "RightTurns",  "CalibrationQualityLeft", "CalibrationQualityRight"};
         string[] logData = new string[columns.Length];
         string filePath = string.Join("/", saveFolder, generalExperimentInfo);
         
@@ -346,9 +363,10 @@ public class DataLogger : MonoBehaviour
 
             logData[5] = driverViewToSteeringWheel.ToString("F3");
 
-            //Info on the driver view
-            Vector3 relativePosition = experimentManager.driverView.position - car.transform.position;
-            Quaternion relativeRotation = Quaternion.Inverse(car.transform.rotation) * experimentManager.driverView.rotation;
+            //Get rotation and position relative to centerView of the car
+            Quaternion relativeRotation = Quaternion.Inverse(centerView.rotation) * experimentManager.driverView.rotation;
+            Vector3 relativePosition = centerView.InverseTransformPoint(experimentManager.driverView.position);
+
             logData[6] = relativePosition.ToString("F3");
             logData[7] = relativeRotation.eulerAngles.ToString("F3");
 
@@ -360,6 +378,10 @@ public class DataLogger : MonoBehaviour
 
             logData[12] = experimentManager.experimentSettings.LeftTurns().ToString();
             logData[13] = experimentManager.experimentSettings.RightTurns().ToString();
+
+            logData[14] = VarjoPlugin.GetGazeCalibrationQuality().left.ToString();
+            logData[15] = VarjoPlugin.GetGazeCalibrationQuality().right.ToString();
+
             //Log data and close file
             Log(logData, file);
             file.Flush();
@@ -578,25 +600,27 @@ public class DrivingIrregularities
 }
 public class TargetData
 {
-    public string ID;
-    public bool isDetected;
-    public float reactionTime;
-    public float totalFixationTime;
-    public float firstFixationTime;
-    public float detectionTime;
-    public TargetDifficulty difficulty;
-    public TurnType upcomingTurn;
-    public Vector3 position;
-    public Side side;
-    public int waypointID;
-    public float transparency;
-    public float detectionDistance;
-    public int positionNumber;
-    public float size;
+    public string ID{ get; set; }
+    public bool isDetected{ get; set; }
+    public float startTimeVisible{ get; set; }
+    public float reactionTime{ get; set; }
+    public float totalFixationTime{ get; set; }
+    public float firstFixationTime{ get; set; }
+    public float detectionTime{ get; set; }
+    public TargetDifficulty difficulty{ get; set; }
+    public TurnType upcomingTurn{ get; set; }
+    public Vector3 position{ get; set; }
+    public Side side{ get; set; }
+    public int waypointID{ get; set; }
+    public float transparency{ get; set; }
+    public float detectionDistance{ get; set; }
+    public int positionNumber{ get; set; }
+    public float size{ get; set; }
     public TargetData(Target target)
     {
         ID = target.GetID();
         isDetected = target.IsDetected();
+        startTimeVisible = target.startTimeVisible;
         reactionTime = target.reactionTime;
         totalFixationTime = target.totalFixationTime;
         firstFixationTime = target.firstFixationTime;

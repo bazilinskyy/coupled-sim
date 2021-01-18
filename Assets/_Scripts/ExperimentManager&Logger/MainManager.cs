@@ -5,6 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System;
 using System.IO;
+using UnityEngine.XR;
 
 public class MainManager : MonoBehaviour
 {
@@ -33,19 +34,14 @@ public class MainManager : MonoBehaviour
 
     [Header("Inputs")]
     private KeyCode myPermission = KeyCode.F1;
+    private KeyCode carOutOfBounce = KeyCode.Alpha1;
     private KeyCode resetHeadPosition = KeyCode.F2;
-    private KeyCode spawnSteeringWheel = KeyCode.F3;
     private KeyCode calibrateGaze = KeyCode.F4;
     private KeyCode resetExperiment = KeyCode.Escape;
-
-    private KeyCode toggleDriving = KeyCode.D;
-
-    private KeyCode toggleSymbology = KeyCode.T;
-
-    private KeyCode setToLastWaypoint = KeyCode.Backspace;
-    private KeyCode inputNameKey = KeyCode.I;
-
-    private KeyCode saveTheData = KeyCode.F7;
+    private KeyCode loadTargetScene = KeyCode.T;
+    private KeyCode teleportToNextWaypoint = KeyCode.LeftShift;
+    private KeyCode toggleDriving = KeyCode.Space;
+    private KeyCode toggleReCalibrateHands = KeyCode.R;
 
     private string waitingRoomScene = "WaitingScene";
     private string targetScene = "Targets";
@@ -68,7 +64,16 @@ public class MainManager : MonoBehaviour
     public string[] sceneArray;
     public int experimentIndex = 0;
 
-    private int[] experimentOrder = { 0, 1, 2};
+    public int[,] subjectScore =
+    {
+        {0,0},
+        {0,0},
+        {0,0},
+        {0,0},
+    };
+    private int scoreIndex = 0;
+
+    private int[] experimentOrder = new int[3];
     public int[,] orders =
     {
         {0,1,2 },
@@ -78,7 +83,9 @@ public class MainManager : MonoBehaviour
         {2,0,1 },
         {2,1,0 },
     };
-    public int numberTurns = 12; //Make it even,  6 turns = 90 seconden
+    public int numberTurns = 0; //Make it even,  6 turns = 90 seconden
+    public int numberTurnsPractiseDrive = 0;
+
     private ExperimentType experimentType = ExperimentType.Real;
 
     private GameObject player;
@@ -89,14 +96,13 @@ public class MainManager : MonoBehaviour
     private bool isInExperiment = false;
     public KeyCode MyPermission { get => myPermission; set => myPermission = value; }
     public KeyCode ResetHeadPosition { get => resetHeadPosition; set => resetHeadPosition = value; }
-    public KeyCode SpawnSteeringWheel { get => spawnSteeringWheel; set => spawnSteeringWheel = value; }
     public KeyCode CalibrateGaze { get => calibrateGaze; set => calibrateGaze = value; }
     public KeyCode ResetExperiment { get => resetExperiment; set => resetExperiment = value; }
+    public KeyCode LoadTargetScene { get => loadTargetScene; set => loadTargetScene = value; }
+    public KeyCode CarOutOfBounce { get => carOutOfBounce; set => carOutOfBounce = value; }
+    public KeyCode TeleportToNextWaypoint { get => teleportToNextWaypoint; set => teleportToNextWaypoint = value; }
     public KeyCode ToggleDriving { get => toggleDriving; set => toggleDriving = value; }
-    public KeyCode ToggleSymbology { get => toggleSymbology; set => toggleSymbology = value; }
-    public KeyCode SetToLastWaypoint { get => setToLastWaypoint; set => setToLastWaypoint = value; }
-    public KeyCode InputNameKey { get => inputNameKey; set => inputNameKey = value; }
-    public KeyCode SaveTheData { get => saveTheData; set => saveTheData = value; }
+    public KeyCode ToggleReCalibrateHands { get => toggleReCalibrateHands; set => toggleReCalibrateHands = value; }
     public bool DebugMode { get => debugMode; set => debugMode = value; }
     public bool MakeVirtualCable { get => makeVirtualCable; set => makeVirtualCable = value; }
     public bool RenderHUD { get => renderHUD; set => renderHUD = value; }
@@ -112,9 +118,11 @@ public class MainManager : MonoBehaviour
     public float DriverViewXToSteeringWheel { get => driverViewXToSteeringWheel; set => driverViewXToSteeringWheel = value; }
     public bool IsInExperiment { get => isInExperiment; set => isInExperiment = value; }
     public string SubjectID { get => subjectID; set => subjectID = value; }
+  
 
     private void Awake()
     {
+        //Make a one time random state: so we get the same 'random' numbers for every subject 
         UnityEngine.Random.InitState(42);
         
         player = gameObject;
@@ -133,10 +141,8 @@ public class MainManager : MonoBehaviour
         //Read general settings file
         ReadCSVSettingsFile();
 
-
-
         //Set input of data log folder:
-        subjectDataFolder = string.Join("/", System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop).Replace("\\", "/"), "Data", "ID_" + SubjectID + "_" + DateTime.Now.ToString("MM-dd_HH-mm"));
+        subjectDataFolder = string.Join("/", System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop).Replace("\\", "/"), "Data", "ID-" + SubjectID + "_" + DateTime.Now.ToString("MM-dd_HH-mm"));
         System.IO.Directory.CreateDirectory(subjectDataFolder);
         //Save settings file in the subject data folder
         SaveSettingsFile();
@@ -149,10 +155,9 @@ public class MainManager : MonoBehaviour
         if (experimentType.IsReal())
         {
             AddPractiseDrive();
-            AddExperiments(experimentOrder, numberTurns);
+            AddExperiments();
         }
         else { AddTargetCalibrationExperiment(); }
-        
     }
     void SaveSettingsFile()
     {
@@ -189,11 +194,10 @@ public class MainManager : MonoBehaviour
         //Make settings for practise drive
    
         setting.name = "PractiseDrive";
-        setting.targetDifficulty = TargetDifficulty.EasyAndMedium;
         setting.navigationType = NavigationType.HUD_low;
         setting.experimentType = ExperimentType.Practise;
         setting.targetsPerCrossing = 8;
-        setting.turns = GetShuffledTurns(4);
+        setting.turns = GetShuffledTurns(numberTurnsPractiseDrive);
         experiments.Add(setting);
      }
     Condition MakeCondition(NavigationType navType, TargetDifficulty difficulty) 
@@ -205,7 +209,7 @@ public class MainManager : MonoBehaviour
         }; 
         return condition; 
     }
-    void AddExperiments(int[] order, int numberTurns)
+    void AddExperiments()
     {
         //conditions 1 - 3
         List<Condition> conditions = new List<Condition>()
@@ -221,12 +225,13 @@ public class MainManager : MonoBehaviour
         {
             setting = new MainExperimentSetting();
 
-            int conditionNumber = order[i];
-            
-            setting.name += (i+1).ToString();
+            int conditionNumber = experimentOrder[i];
+            Condition condition = conditions[conditionNumber];
+
+            setting.name = condition.navigationType.ToString() + "-" + (i+1).ToString();
             setting.conditionNumber = conditionNumber;
-            setting.navigationType = conditions[conditionNumber].navigationType;
-            setting.targetDifficulty = conditions[conditionNumber].targetDifficulty;
+            setting.navigationType = condition.navigationType;
+            setting.targetDifficulty = condition.targetDifficulty;
 
             //Add turns
             List<TurnType> turns = GetShuffledTurns(numberTurns);
@@ -275,7 +280,11 @@ public class MainManager : MonoBehaviour
     {
         return experimentIndex;
     }
-    public MainExperimentSetting GetExperimentSettings() { return experiments[experimentIndex]; }
+    public MainExperimentSetting GetExperimentSettings() 
+    {
+        if (experimentIndex < experiments.Count()) { return experiments[experimentIndex]; }
+        else { return experiments.Last(); }
+    }
     public void SetCalibrationDistances(float horizontal, float vertical, float side)
     {
         calibratedUsingHands = true;
@@ -301,9 +310,6 @@ public class MainManager : MonoBehaviour
             lineData = lines[0].Trim().Split(';'); SubjectID = lineData[1];
             lineData = lines[1].Trim().Split(';'); experimentType = int.Parse(lineData[1]) == 0 ? ExperimentType.Real : ExperimentType.TargetCalibration;
 
-            //There is no order and number of turns neededd for the target calibration experiment
-            if (!experimentType.IsReal()) { return true; }
-
             //Order of experiment is based on subject number
             int orderIndex = (int.Parse(SubjectID) - 1) % 6;
 
@@ -312,6 +318,8 @@ public class MainManager : MonoBehaviour
             experimentOrder[2] = orders[orderIndex, 2];
 
             lineData = lines[2].Trim().Split(';'); numberTurns = int.Parse(lineData[1]);
+
+            lineData = lines[3].Trim().Split(';'); numberTurnsPractiseDrive = int.Parse(lineData[1]);
 
             return true;
     }
@@ -400,11 +408,9 @@ public class MainManager : MonoBehaviour
     }
     public void MovePlayer(Transform position)
     {
-
         player.transform.parent = position;
         player.transform.position = position.position;
         player.transform.rotation = position.rotation;
-        //Debug.Log("Moved player!");
     }
     IEnumerator SaveDataWhenReady()
     {
@@ -419,6 +425,18 @@ public class MainManager : MonoBehaviour
         yield break;
 
     }
+    public void SetSubjectScore(int total, int detected)
+    {
+        if(scoreIndex > 3) { return; }
+        subjectScore[scoreIndex, 0] = total;
+        subjectScore[scoreIndex, 1] = detected;
+        scoreIndex++;
+    }
+
+    public List<int> GetSubjectScore()
+    {
+        return new List<int> { subjectScore[scoreIndex - 1, 0], subjectScore[scoreIndex - 1, 1] };
+    }
 }
 
 public struct Condition
@@ -429,7 +447,7 @@ public struct Condition
 [System.Serializable]
 public class MainExperimentSetting
 {
-    public string name = "Experiment-";
+    public string name = "-";
     public int conditionNumber = 0;
     public List<TurnType> turns;
     public NavigationType navigationType;
@@ -441,7 +459,7 @@ public class MainExperimentSetting
 
     public float experimentTime = 0f;
     public ExperimentType experimentType = ExperimentType.Real;
-    public float targetSize = 1f;
+    public float targetSize = .75f;
     public int LeftTurns()
     {
         return turns.Where(s => s == TurnType.Left).Count();
@@ -451,4 +469,3 @@ public class MainExperimentSetting
         return turns.Where(s => s == TurnType.Right).Count();
     }
 }
-

@@ -66,10 +66,10 @@ public class CrossComponents : MonoBehaviour
     {
 		isCurrentCrossing = _isCurrentCrossing;
 
-		StartCoroutine(SetBuildingBlocks());
+		//StartCoroutine(SetBuildingBlocks());
 	}
 	public void SetUpCrossing(WaypointStruct[] _waypoints, MainExperimentSetting settings, bool _isCurrentCrossing,
-							bool _isFirstCrossing = false, Vector3 nextPosition=new Vector3(), Transform currentCrossing = null,
+							bool _isFirstCrossing = false, Vector3 nextPosition=new Vector3(), Transform otherCrossing = null,
 							float rotationAngleY = 0f)
     {
 		if(experimentManager == null) { experimentManager = MyUtils.GetExperimentManager(); }
@@ -86,19 +86,11 @@ public class CrossComponents : MonoBehaviour
 
         SetWaypoints();
 
-		StartCoroutine(SetBuildingBlocks());
+		StartCoroutine(SetBuildingBlocks(otherCrossing, nextPosition, rotationAngleY));
 
 		RemoveTargets();
 
 		SpawnTargets(settings);
-
-		//Put crossing in place
-		if (!isFirstCrossing)
-		{
-			transform.position = nextPosition;
-			transform.rotation = currentCrossing.rotation;
-			transform.Rotate(transform.up, rotationAngleY);
-		}
 	}
 	public void RemoveTargets()
     {
@@ -106,7 +98,7 @@ public class CrossComponents : MonoBehaviour
 		foreach (Transform child in TargetParent) { Destroy(child.gameObject); }
 		targetList = new List<Target>();
 	}
-	IEnumerator SetBuildingBlocks()
+	IEnumerator SetBuildingBlocks(Transform otherCrossing = null, Vector3 nextPosition = new Vector3(), float rotationAngleY= 0)
     {
         //Deactivates the building block which corresponds to correct path
 		//Also the next crossing on the map will have all these varibles blocks turned off as they may coincide (spacially) with the first (current) crossing
@@ -119,9 +111,37 @@ public class CrossComponents : MonoBehaviour
 		{
 			string blockNameToDeactivate = waypoints[0].turn.ToString() + waypoints[1].turn.ToString();
 
-			foreach (Transform child in variableBlocks) { child.gameObject.SetActive(child.name != blockNameToDeactivate); yield return new WaitForEndOfFrame(); }
+			foreach (Transform child in variableBlocks)
+			{
+
+				foreach (Transform childsChild in child) { childsChild.gameObject.SetActive(child.name != blockNameToDeactivate); yield return new WaitForEndOfFrame(); }
+
+				child.gameObject.SetActive(child.name != blockNameToDeactivate); yield return new WaitForEndOfFrame();
+			}	
 		}
+
+		//Put crossing in place
+		if (!isFirstCrossing)
+		{
+			transform.position = nextPosition;
+			transform.rotation = otherCrossing.rotation;
+			transform.Rotate(transform.up, rotationAngleY);
+		}
+
+	}
+	public void DisableVariableBlocks()
+    {
+		StartCoroutine(DisableVariableBlocksSlowly());
     }
+	private IEnumerator DisableVariableBlocksSlowly()
+	{
+		foreach (Transform child in variableBlocks)
+		{
+			foreach (Transform childsChild in child) { childsChild.gameObject.SetActive(false); yield return new WaitForEndOfFrame(); }
+
+			child.gameObject.SetActive(false); yield return new WaitForEndOfFrame();
+		}
+	}
 	public void SpawnTargets(MainExperimentSetting settings) 
 	{
 		if(settings.targetsPerCrossing == 0) { return; }
@@ -166,17 +186,6 @@ public class CrossComponents : MonoBehaviour
 			Vector3 positionTarget = point.position + forwardVariation + sideVariation;
 
 			TargetDifficulty targetDifficulty = settings.targetDifficulty;
-			
-			//Not needed anymore as we now have 1 target difficulty
-
-			//During the practise drive we have easy targets for the first half of the track and hard targets for the second half.
-			/*if(settings.targetDifficulty == TargetDifficulty.EasyAndMedium) 
-			{
-				int NTurns = experimentManager.experimentSettings.turns.Count();
-				if (waypoint.waypointID < (int)Mathf.Floor(NTurns / 2)) { targetDifficulty = TargetDifficulty.easy; }
-				else { targetDifficulty = TargetDifficulty.hard; }
-			}
-            else { targetDifficulty = settings.targetDifficulty; }*/
 
 			target = Instantiate(TargetPrefab);
 			target.transform.position = positionTarget;

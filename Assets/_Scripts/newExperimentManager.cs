@@ -44,14 +44,11 @@ public class newExperimentManager : MonoBehaviour
     public MainExperimentSetting experimentSettings;
 
     private int targetCount = 0;
-    UnityEngine.UI.Image blackOutScreen;
-    UnityEngine.TextMesh carUI;
+    private Image blackOutScreen;
+    private TMPro.TextMeshPro carUI;
     public  bool setCarAtTarget = false;
     private int lastWaypointIndex = 0;
-    private bool informedOnHardTargets = false;
-    private bool informedOnEasyTargets = false;
     private bool startedDriving = false;
-
 
     private int targetCountCalibration=0;
     private float transparencyTargets = 0.1f;
@@ -64,7 +61,7 @@ public class newExperimentManager : MonoBehaviour
     private int sizeIndex = 0;
 
     //Transparencies and sizes for the target calibration experiment
-    private float[] transparencies = { .1f, .05f, .02f, .01f, .005f};
+    private float[] transparencies = { .1f, .05f, .02f, .01f, .005f}; //== { 25, 12, 5, 3, 1} in alpha
     private float[] sizes = { 1f, 0.75f, .5f }; //
 
     public int leftTargets = 0;
@@ -73,6 +70,8 @@ public class newExperimentManager : MonoBehaviour
     private int navigationTypeIndex = 1;
     private void Start()
     {
+        UnityEngine.Random.InitState(42);
+
         player = MyUtils.GetPlayer().transform;
         blackOutScreen = MyUtils.GetBlackOutScreen();
         mainManager = MyUtils.GetMainManager();
@@ -146,18 +145,18 @@ public class newExperimentManager : MonoBehaviour
 
         //When I am doing some TESTING
         //if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W)) { car.GetComponent<SpeedController>().StartDriving(true); }
-        if (Input.GetKeyDown(KeyCode.Space)) { car.GetComponent<SpeedController>().ToggleDriving(); }
+        if (Input.GetKeyDown(mainManager.ToggleDriving)) { car.GetComponent<SpeedController>().ToggleDriving(); }
         if (Input.GetKeyDown(mainManager.CalibrateGaze)) { RequestGazeCalibration(); }
         if (Input.GetKeyDown(mainManager.ResetHeadPosition)) { Varjo.VarjoPlugin.ResetPose(true, Varjo.VarjoPlugin.ResetRotation.ALL); }
-        if (Input.GetKeyDown(KeyCode.LeftControl)) { StartCoroutine(PlaceAtTargetWaypoint()); }
         //Researcher inputs
         //if (Input.GetKeyDown(mainManager.ToggleSymbology)) {ToggleSymbology(); }
         if (Input.GetKeyDown(mainManager.MyPermission)) { car.navigationFinished = true; } //Finish navigation early
         //if (Input.GetKeyDown(mainManager.setToLastWaypoint)) { SetCarToLastWaypoint(); }
         //if (Input.GetKeyDown(experimentInput.resetHeadPosition)) { SetCameraPosition(driverView.position, driverView.rotation); }
         if (Input.GetKeyDown(mainManager.ResetExperiment)) { StartCoroutine(ResetExperiment()); }
-        if (Input.GetKeyDown(KeyCode.LeftShift)) { TeleportToNextWaypoint(); }
-        if (Input.GetKeyDown(KeyCode.Return)) { EndOfCalibrationTrial(); }
+        if (Input.GetKeyDown(mainManager.TeleportToNextWaypoint)) { TeleportToNextWaypoint(); }
+        
+
         if (car.navigationFinished)
         {
             //Log the last targets (targets of last cross point are automatically logged when leaving the crossing)
@@ -702,11 +701,7 @@ public class newExperimentManager : MonoBehaviour
             if (Physics.Raycast(CameraTransform().position, currentDirection, out hit, 10000f, ~layerToIgnoreForTargetDetection))
             {
                 Debug.DrawRay(CameraTransform().position, currentDirection, Color.green);
-                if (hit.collider.CompareTag("Target"))
-                {
-                    Debug.DrawLine(CameraTransform().position, CameraTransform().position + currentDirection * 500, Color.cyan, Time.deltaTime, false);
-                    return true;
-                }
+                if (hit.collider.CompareTag("Target")) { return true; }
                 else { return false; }
             }
         }
