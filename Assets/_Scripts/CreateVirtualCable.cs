@@ -117,8 +117,22 @@ public class CreateVirtualCable : MonoBehaviour
     public void MakeVirtualCable(Crossings _crossings)
     {
 		crossings = _crossings;
-		//Debug.Log("Making new Virtual Cable...");
+
+		StartCoroutine(MakeVirtualCalbleIENumerator());
+		
+    }
+
+	IEnumerator MakeVirtualCalbleIENumerator()
+    {
 		List<Vector3> points = GetPointsCrossing(crossings.CurrentCrossing());
+
+		while (true)
+		{
+			if (crossings.crossing1.components.finishedMoving && crossings.crossing2.components.finishedMoving) { break; }
+			else { yield return new WaitForEndOfFrame(); }
+		}
+
+		Debug.Log($"Making vritual cable since: {crossings.crossing1.components.finishedMoving } and {crossings.crossing2.components.finishedMoving }.... ");
 
 		experimentManager.dataManager.AddCurrentNavigationLine(points.ToArray());
 
@@ -128,8 +142,9 @@ public class CreateVirtualCable : MonoBehaviour
 
 
 		if (experimentManager.MakeVirtualCable()) { CreateNavigationPart(navigationLine); CreateColliders(); }
-    }
+		
 
+	}
     /*private void OnDrawGizmos()
     {
         if(navigationLine.Count() != 0)

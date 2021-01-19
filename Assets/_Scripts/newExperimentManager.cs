@@ -410,6 +410,8 @@ public class newExperimentManager : MonoBehaviour
         //If very close to target waypoint we teleport to the next waypoint
         if (Vector3.Magnitude(car.transform.position - car.waypoint.waypoint.transform.position) < 20f) { targetWaypoint = car.GetNextWaypoint(); }
         else { targetWaypoint = car.waypoint; }
+        
+        if(targetWaypoint.waypoint == null) { return; }
 
         targetPos = targetWaypoint.waypoint.transform.position + car.transform.forward * 7.5f;
 

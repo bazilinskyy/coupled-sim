@@ -444,7 +444,7 @@ public class DataLogger : MonoBehaviour
         //(1) Checks if current line segment is still the closest one 
         //(2)Then calculates the distance to the line they span
         
-        if(currentNavigationLine.Length < 4) { Debug.Log($"NavigationLine consisting of only {currentNavigationLine.Length} points..."); return 1000f; }
+        if(currentNavigationLine.Length < 4) { return 1000f; }
         if(indexClosestPoint >= currentNavigationLine.Length || indexClosestPoint < 0) { Debug.Log($"Got invalid index {indexClosestPoint}, size currentNavigationLine:{currentNavigationLine.Length}.... "); return 1000f; }
 
         float current_distance, forward_distance, backward_distance;

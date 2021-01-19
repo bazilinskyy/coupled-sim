@@ -54,8 +54,8 @@ public class CrossingSpawner : MonoBehaviour
             
             //Add new waypoints to the navigator
             GetComponent<newNavigator>().AddWaypoints(crossings.GetWaypoints("Next"));
-            
-            //Make virtual cable if nescesrry here.
+
+            //Make virtual cable if necessary here.
             GetComponent<CreateVirtualCable>().MakeVirtualCable(crossings);
 
             turnIndex += 2;

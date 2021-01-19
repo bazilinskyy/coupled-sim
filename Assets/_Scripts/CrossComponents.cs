@@ -48,6 +48,7 @@ public class CrossComponents : MonoBehaviour
 
 	public bool isFirstCrossing;
 
+	public bool finishedMoving = false;
 	public WaypointsObjects waypointObjects = new WaypointsObjects();
 	public List<Target> targetList = new List<Target>();
 
@@ -66,28 +67,33 @@ public class CrossComponents : MonoBehaviour
 	public void SetCurrentCrossing (bool _isCurrentCrossing, Transform otherCrossing)
     {
 		isCurrentCrossing = _isCurrentCrossing;
-		StartCoroutine(SetBuildingBlocks());
+
+		if (isCurrentCrossing) { StartCoroutine(SetBuildingBlocksCurrentCrossing()); }
 	}
 
 	public void SetUpCrossing(WaypointStruct[] _waypoints, MainExperimentSetting settings, bool _isCurrentCrossing,
-							bool _isFirstCrossing = false, Vector3 nextPosition=new Vector3(), Transform otherCrossing = null,
+							bool _isFirstCrossing = false, Vector3 nextPosition = new Vector3(), Transform otherCrossing = null,
 							float rotationAngleY = 0f)
-    {
-		if(experimentManager == null) { experimentManager = MyUtils.GetExperimentManager(); }
-		
+	{
+		if (experimentManager == null) { experimentManager = MyUtils.GetExperimentManager(); }
+
 		waypoints = _waypoints;
 		turn1 = waypoints[0].turn; turn2 = waypoints[1].turn;
 
 		isCurrentCrossing = _isCurrentCrossing; isFirstCrossing = _isFirstCrossing;
 
+		//This boolean is used by the CreateVirtualCablke script to ensure it only makes the virtual cable when the block is movedd
+		finishedMoving = false;
+		//Debug.Log($"{transform.name}.finished moving = false...");
 		//Removes/adds buildings for first crossing
 		blockFirstCrossing.gameObject.SetActive(isFirstCrossing);
 
 		SetTriggers();
 
-        SetWaypoints();
+		SetWaypoints();
 
-		StartCoroutine(SetBuildingBlocks(otherCrossing, nextPosition, rotationAngleY));
+		if (isCurrentCrossing) { StartCoroutine(SetBuildingBlocksCurrentCrossing()); }
+		else { StartCoroutine(SetBuildingBlocksNextCrossing(otherCrossing, nextPosition, rotationAngleY)); }
 
 		RemoveTargets();
 
@@ -99,50 +105,14 @@ public class CrossComponents : MonoBehaviour
 		foreach (Transform child in TargetParent) { Destroy(child.gameObject); }
 		targetList = new List<Target>();
 	}
-	IEnumerator SetBuildingBlocks(Transform otherCrossing = null, Vector3 nextPosition = new Vector3(), float rotationAngleY= 0)
+
+	IEnumerator SetBuildingBlocksCurrentCrossing()
     {
-        //Deactivates the building block which corresponds to correct path
-		//Also the next crossing on the map will have all these varibles blocks turned off as they may coincide (spacially) with the first (current) crossing
-		//Done in corourtine as these activation operations are expensive
-        if (!isCurrentCrossing)
-        {
-			//We need to deactivate leftleft and right right as they can interfere with the current corssing
-			string[] blocksToDeactivate = { "LeftLeft", "LeftRight", "RightLeft", "RightRight", "Left", "Right" };
-			foreach (Transform child in variableBlocks) {
+		finishedMoving = false;
 
-				bool deactivateBlock = blocksToDeactivate.Contains(child.name);
-                if (deactivateBlock)
-                {
-					//Debug.Log($"{transform.name} should deactivate {child.name}...");
-					//foreach (Transform childsChild in child) { childsChild.gameObject.SetActive(false); yield return new WaitForSeconds(0.05f); }
-					child.gameObject.SetActive(false); yield return new WaitForSeconds(0.05f); 
-				}
-				
-			}
-		}
+		if (isFirstCrossing) { StartCoroutine(SetStaticAllChildren(transform, true, true)); }
 
-		//Put crossing in place
-		if (!isFirstCrossing && otherCrossing != null)
-		{
-	
-			StartCoroutine(SetStaticAllChildren(transform, false, true));
-
-			//Wait till all children are set to nonstatic
-			while(SetAllStatic == false) { yield return new WaitForEndOfFrame(); }
-			
-			transform.position = nextPosition; yield return new WaitForSeconds(0.05f);
-
-			transform.rotation = otherCrossing.rotation; yield return new WaitForSeconds(0.05f);
-			transform.Rotate(transform.up, rotationAngleY); yield return new WaitForSeconds(0.05f);
-
-			StartCoroutine(SetStaticAllChildren(transform, true, true));
-			//Wait till all children are set to static
-			while (SetAllStatic == false) { yield return new WaitForEndOfFrame(); }
-		}
-       
-
-		//If this is the next crossing and we will get there (e.g., both next operations are turns we have to deactivate/activate the needed block as well
-		if (isCurrentCrossing && waypoints[0].turn.IsOperation() && waypoints[1].turn.IsOperation()) 
+		if (waypoints[0].turn.IsOperation() && waypoints[1].turn.IsOperation())
 		{
 
 			string blockNameToDeactivate = waypoints[0].turn.ToString() + waypoints[1].turn.ToString();
@@ -155,21 +125,103 @@ public class CrossComponents : MonoBehaviour
 			foreach (Transform child in variableBlocks)
 			{
 				//Continue to next child if this is not one of the childs we are looking for
-				if(child.name == blockNameToDeactivate && blockNamesToActivate.Contains(child.name)) { continue; }
+				if (child.name == blockNameToDeactivate && blockNamesToActivate.Contains(child.name)) { continue; }
 
 				bool activateBlock = (child.name != blockNameToDeactivate || blockNamesToActivate.Contains(child.name));
 
-				//Debug.Log($"{transform.name} setting {child.name} to {activateBlock}...");
-
-				//foreach (Transform childsChild in child) { childsChild.gameObject.SetActiveRecursively(activateBlock); yield return new WaitForSeconds(0.05f); }
-
-				child.gameObject.SetActive(activateBlock); yield return new WaitForSeconds(0.05f); 
-			}	
+				child.gameObject.SetActive(activateBlock); yield return new WaitForEndOfFrame();
+			}
 		}
 
-        if (isFirstCrossing) { StartCoroutine(SetStaticAllChildren(transform, true, true)); }
-	}
+		finishedMoving = true;
+		Debug.Log($"{transform.name}.finished moving = true...");
 
+	}
+	IEnumerator SetBuildingBlocksNextCrossing(Transform otherCrossing = null, Vector3 nextPosition = new Vector3(), float rotationAngleY= 0)
+    {
+		//Deactivates the building block which corresponds to correct path
+		//Also the next crossing on the map will have all these varibles blocks turned off as they may coincide (spacially) with the first (current) crossing
+		//Done in corourtine as these activation operations are expensive
+		/*    if (!isCurrentCrossing)
+			{
+				//We need to deactivate leftleft and right right as they can interfere with the current corssing
+				string[] blocksToDeactivate = { "LeftLeft", "LeftRight", "RightLeft", "RightRight", "Left", "Right" };
+				foreach (Transform child in variableBlocks) {
+
+					bool deactivateBlock = blocksToDeactivate.Contains(child.name);
+					if (deactivateBlock)
+					{
+						//Debug.Log($"{transform.name} should deactivate {child.name}...");
+						//foreach (Transform childsChild in child) { childsChild.gameObject.SetActive(false); yield return new WaitForSeconds(0.05f); }
+						child.gameObject.SetActive(false); yield return new WaitForEndOfFrame();
+					}
+
+				}
+			}
+
+			//Put crossing in place
+			if (!isFirstCrossing && otherCrossing != null)
+			{
+	*/
+		finishedMoving = false;
+		//We need to deactivate leftleft and right right as they can interfere with the current corssing
+		string[] blocksToDeactivate = { "LeftLeft", "LeftRight", "RightLeft", "RightRight", "Left", "Right" };
+		foreach (Transform child in variableBlocks)
+		{
+
+			bool deactivateBlock = blocksToDeactivate.Contains(child.name);
+			if (deactivateBlock)
+			{
+				//Debug.Log($"{transform.name} should deactivate {child.name}...");
+				//foreach (Transform childsChild in child) { childsChild.gameObject.SetActive(false); yield return new WaitForSeconds(0.05f); }
+				child.gameObject.SetActive(false); yield return new WaitForEndOfFrame();
+			}
+		}
+
+		StartCoroutine(SetStaticAllChildren(transform, false, true));
+
+		//Wait till all children are set to nonstatic
+		while (SetAllStatic == false) { yield return new WaitForEndOfFrame(); }
+
+		transform.position = nextPosition; yield return new WaitForEndOfFrame();
+
+		transform.rotation = otherCrossing.rotation; yield return new WaitForEndOfFrame();
+		transform.Rotate(transform.up, rotationAngleY); yield return new WaitForEndOfFrame();
+
+		Debug.Log($"{transform.name} has been moved...");
+		StartCoroutine(SetStaticAllChildren(transform, true, true));
+		//Wait till all children are set to static
+		while (SetAllStatic == false) { yield return new WaitForEndOfFrame(); }
+
+		finishedMoving = true;
+		//Debug.Log($"{transform.name}.finished moving = true...");
+
+
+		/*
+				//If this is the next crossing and we will get there (e.g., both next operations are turns we have to deactivate/activate the needed block as well
+				if (isCurrentCrossing && waypoints[0].turn.IsOperation() && waypoints[1].turn.IsOperation()) 
+				{
+
+					string blockNameToDeactivate = waypoints[0].turn.ToString() + waypoints[1].turn.ToString();
+
+					string otherTurn = waypoints[1].turn.IsRightTurn() ? "Left" : "Right"; //if right turn -> ;left, otherise wright
+
+					string[] blockNamesToActivate = { waypoints[0].turn.ToString() + otherTurn, "Left", "Right" };
+					//Debug.Log($"{transform.name} should active {blockNamesToActivate[0]}, {blockNamesToActivate[1]}, {blockNamesToActivate[2]} and  deactivate {blockNameToDeactivate}...");
+
+					foreach (Transform child in variableBlocks)
+					{
+						//Continue to next child if this is not one of the childs we are looking for
+						if(child.name == blockNameToDeactivate && blockNamesToActivate.Contains(child.name)) { continue; }
+
+						bool activateBlock = (child.name != blockNameToDeactivate || blockNamesToActivate.Contains(child.name));
+
+						child.gameObject.SetActive(activateBlock); yield return new WaitForEndOfFrame();
+					}	
+				}*/
+
+
+	}
 	IEnumerator SetStaticAllChildren(Transform parent, bool makeStatic, bool firstCall = false)
     {
 		SetAllStatic = false;
@@ -294,7 +346,6 @@ public class CrossComponents : MonoBehaviour
 
 		return selectedSpawnPoints;
 	}
-
 	private int ChooseTargetSpawnPoint(int sign, List<Transform> spawnPoints, List<Transform> selectedSpawnPoints, List<int> leftTargetsIndices, List<int> rightTargetsIndices, bool tryingOtherSide=false)
 	{
 		//Chooses a target on either the left or right side
@@ -326,7 +377,6 @@ public class CrossComponents : MonoBehaviour
 
 		return spawnPointIndex;
     }
-
     public void SetTriggers()
     {
 		rightTrigger.tag = waypoints[0].turn == TurnType.Right ? "CorrectTurn" : "WrongTurn";
