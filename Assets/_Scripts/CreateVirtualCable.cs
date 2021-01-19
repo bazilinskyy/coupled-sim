@@ -132,7 +132,7 @@ public class CreateVirtualCable : MonoBehaviour
 			else { yield return new WaitForEndOfFrame(); }
 		}
 
-		Debug.Log($"Making vritual cable since: {crossings.crossing1.components.finishedMoving } and {crossings.crossing2.components.finishedMoving }.... ");
+		//Debug.Log($"Making vritual cable since: {crossings.crossing1.components.finishedMoving } and {crossings.crossing2.components.finishedMoving }.... ");
 
 		experimentManager.dataManager.AddCurrentNavigationLine(points.ToArray());
 

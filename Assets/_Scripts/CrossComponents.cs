@@ -134,7 +134,7 @@ public class CrossComponents : MonoBehaviour
 		}
 
 		finishedMoving = true;
-		Debug.Log($"{transform.name}.finished moving = true...");
+		//Debug.Log($"{transform.name}.finished moving = true...");
 
 	}
 	IEnumerator SetBuildingBlocksNextCrossing(Transform otherCrossing = null, Vector3 nextPosition = new Vector3(), float rotationAngleY= 0)
