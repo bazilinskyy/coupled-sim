@@ -57,7 +57,7 @@ public class MainManager : MonoBehaviour
     public string SteerWithKeyboard = "SteerKeyBoard";
     public string BrakeWithKeyboard = "BrakeKeyBoard";
 
-    public string Gas = "GasKeyBoardas";
+    public string Gas = "GasKeyBoard";
     public string Steer = "Steer";
     public string Brake = "BrakeKeyBoard";
 
@@ -435,7 +435,23 @@ public class MainManager : MonoBehaviour
 
     public List<int> GetSubjectScore()
     {
-        return new List<int> { subjectScore[scoreIndex - 1, 0], subjectScore[scoreIndex - 1, 1] };
+        int index = scoreIndex - 1;
+
+        if(index < 0) { index = 0; }
+
+        return new List<int> { subjectScore[index, 0], subjectScore[index, 1] };
+    }
+    public List<int> GetTotalSubjectScore()
+    {
+        List<int> totalScore = new List<int>{ 0, 0 };
+
+        for (int i = 1; i <= subjectScore.Length; i++)
+        {
+            totalScore[0] += subjectScore[i, 0];
+            totalScore[1] += subjectScore[i, 1];
+        }
+
+        return totalScore;
     }
 }
 

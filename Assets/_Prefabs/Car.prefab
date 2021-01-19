@@ -1920,7 +1920,7 @@ Camera:
   m_CullingMask:
     serializedVersion: 2
     m_Bits: 1843
-  m_RenderingPath: 0
+  m_RenderingPath: 1
   m_TargetTexture: {fileID: 8400000, guid: 1d400ce4b80fddb48be81f231c77d965, type: 2}
   m_TargetDisplay: 0
   m_TargetEye: 3
@@ -4643,7 +4643,7 @@ Camera:
   m_CullingMask:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_RenderingPath: 0
+  m_RenderingPath: 1
   m_TargetTexture: {fileID: 8400000, guid: de43c91feb75ad54ca751044af0fcea0, type: 2}
   m_TargetDisplay: 0
   m_TargetEye: 3
@@ -5916,7 +5916,7 @@ Camera:
   m_CullingMask:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_RenderingPath: 0
+  m_RenderingPath: 1
   m_TargetTexture: {fileID: 8400000, guid: fbe6ec33d9bce76498fb832d3fa75f51, type: 2}
   m_TargetDisplay: 0
   m_TargetEye: 3
@@ -6526,7 +6526,6 @@ GameObject:
   - component: {fileID: 6109170175517165884}
   - component: {fileID: 6109170175517165880}
   - component: {fileID: 6109170175517165883}
-  - component: {fileID: 6109170175517165882}
   - component: {fileID: 6109170175517165881}
   - component: {fileID: 6109170175517165879}
   - component: {fileID: 6109170175517165877}
@@ -6680,7 +6679,7 @@ MonoBehaviour:
     preload: 0
     stiffness: 0.5
   steering:
-    maxSteerAngle: 20
+    maxSteerAngle: 15
     toeAngle: 0
     ackerman: 1
     ackermanReference: {fileID: 6109170176178462894}
@@ -6857,29 +6856,6 @@ MonoBehaviour:
   externalClutch: 0
   externalIgnition: 1
   lockBrakesOnEnable: 0
---- !u!114 &6109170175517165882
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6109170175517165887}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: -1603333029, guid: b8873f7cd5fec6f49a4b37228b9b23ac, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  lookAtPoint: {fileID: 6109170176110553774}
-  attachToPoint: {fileID: 0}
-  viewDistance: 6
-  viewHeight: 2
-  viewDamping: 3
-  viewMinDistance: 3
-  viewMinAngle: 0
-  targetRadius: 5
-  useCustomCameras: 0
-  currentCustomCamera: 0
-  customCameras: []
 --- !u!114 &6109170175517165881
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7630,6 +7606,12 @@ PrefabInstance:
     - {fileID: 3300002, guid: bf6fcf9cc4c0c1f40968e78cb1e81829, type: 3}
     - {fileID: 3300000, guid: bf6fcf9cc4c0c1f40968e78cb1e81829, type: 3}
   m_SourcePrefab: {fileID: 100100000, guid: bf6fcf9cc4c0c1f40968e78cb1e81829, type: 3}
+--- !u!1 &6109170175408495643 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 100000, guid: bf6fcf9cc4c0c1f40968e78cb1e81829,
+    type: 3}
+  m_PrefabInstance: {fileID: 6109170175408593595}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &6109170175408717887 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 400004, guid: bf6fcf9cc4c0c1f40968e78cb1e81829,
@@ -7639,12 +7621,6 @@ Transform:
 --- !u!1 &6109170175408495641 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 100002, guid: bf6fcf9cc4c0c1f40968e78cb1e81829,
-    type: 3}
-  m_PrefabInstance: {fileID: 6109170175408593595}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &6109170175408495643 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 100000, guid: bf6fcf9cc4c0c1f40968e78cb1e81829,
     type: 3}
   m_PrefabInstance: {fileID: 6109170175408593595}
   m_PrefabAsset: {fileID: 0}
@@ -7661,7 +7637,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1606757270840104, guid: 0ba239054da355345bc3be88be60af08, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4275731641937160, guid: 0ba239054da355345bc3be88be60af08, type: 3}
       propertyPath: m_LocalPosition.z

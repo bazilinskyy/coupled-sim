@@ -147,6 +147,13 @@ public class WaitingRoomManager : MonoBehaviour
         List<int> score = mainManager.GetSubjectScore();
         text.text = $"You got {score[1]}/{score[0]} targets!";
 
+        if (!mainManager.IsNextExperiment()) 
+        {
+            score = mainManager.GetTotalSubjectScore();
+            text.text += $"\n\nYour total score is: { score[1]}/{ score[0]}!\nThanks for participating <3"; 
+        }
+
+
     }
 
     List<Target> ActiveTargets()

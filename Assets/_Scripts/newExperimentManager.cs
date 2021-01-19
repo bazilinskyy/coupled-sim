@@ -759,6 +759,11 @@ public class newExperimentManager : MonoBehaviour
         rightMirror.enabled = true; rightMirror.cullingMask = -1;// -1 == everything
 
         leftMirror.enabled = true; leftMirror.cullingMask = -1;
+
+        leftMirror.clearFlags = CameraClearFlags.Skybox;
+        rightMirror.clearFlags = CameraClearFlags.Skybox;
+        rearViewMirror.clearFlags = CameraClearFlags.Skybox;
+
     }
     /*private void SetColors()
     {

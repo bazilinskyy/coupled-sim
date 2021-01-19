@@ -127,9 +127,9 @@ public class Crossing
         waypoints = components.waypoints;
     }
 
-    public void SwitchStatus() { 
+    public void SwitchStatus(Transform otherCrossing) { 
         isCurrentCrossing = !isCurrentCrossing;
-        components.SetCurrentCrossing(isCurrentCrossing);
+        components.SetCurrentCrossing(isCurrentCrossing, otherCrossing);
     }
 }
 [System.Serializable]
@@ -155,7 +155,8 @@ public class Crossings
         if (crossing1.isCurrentCrossing) { crossToConfigure = crossing1; }
         else { crossToConfigure = crossing2; }
 
-        crossing1.SwitchStatus(); crossing2.SwitchStatus();
+        crossing1.SwitchStatus(crossing2.components.transform); 
+        crossing2.SwitchStatus(crossing1.components.transform);
 
         ConfigureNextCrossing(crossToConfigure.obj, CurrentCrossing().waypoints, nextWaypoints, settings);
         
