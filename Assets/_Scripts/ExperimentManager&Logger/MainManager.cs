@@ -509,8 +509,8 @@ public class MainExperimentSetting
     public NavigationType navigationType;
     public float transparency = 0.0075f;
     public TargetDifficulty targetDifficulty = TargetDifficulty.easy;
-    public int targetsPerCrossing = 7;
-    public int minTargetsPerTurn = 2;//min and max should add up tot the total at minimum
+    public int targetsPerCrossing = 6;
+    public int minTargetsPerTurn = 1;//min and max should add up tot the total at minimum
     public int maxTargetsPerTurn = 5;
 
     public float experimentTime = 0f;

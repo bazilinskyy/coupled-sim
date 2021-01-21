@@ -37,7 +37,8 @@ public class CrossComponents : MonoBehaviour
 	public GameObject straightRightTrigger;
 	public GameObject straightLeftTrigger;
 	public GameObject straightEndTrigger;
-
+	
+	public Transform FirstTurnNoStraightTargetSpawnPoints;
 	public Transform FirstTurnTargetSpawnPoints;
 	public Transform RightTargetSpawnPoints;
 	public Transform LeftTargetSpawnPoints;
@@ -277,7 +278,9 @@ public class CrossComponents : MonoBehaviour
 
 		if ((!isFirstCrossing || settings.experimentType.IsTargetCalibration()) && waypoints[0].turn.IsOperation()) 
 		{
-			parentSpawPoints = FirstTurnTargetSpawnPoints;
+            if (!waypoints[0].turn.IsStraight()) { parentSpawPoints = FirstTurnNoStraightTargetSpawnPoints; }
+            else { parentSpawPoints = FirstTurnTargetSpawnPoints; }
+			
 			spawnPoints = SelectRandomSpawnPoints(parentSpawPoints, numberOfTargetsTurn1);
 
 			InstantiateTargets(spawnPoints, waypoints[0], settings);
@@ -310,6 +313,15 @@ public class CrossComponents : MonoBehaviour
 			Vector3 positionTarget = point.position + forwardVariation + sideVariation;
 
 			TargetDifficulty targetDifficulty = settings.targetDifficulty;
+			
+			//Side is determined by spawnpoint index i.e., name EXCEPT when it is 10th spawnpoint for odd indexed waypoints
+			Side side = int.Parse(point.name) % 2 == 0 ? Side.Left : Side.Right;
+
+			if(waypoint.waypointID % 2 != 0 && int.Parse(point.name) == 10) { side = Side.Undetermined; }
+
+			//Add the targets to the experiment manager 
+			experimentManager.leftTargets += side == Side.Left ? 1 : 0;
+			experimentManager.rightTargets += side == Side.Right ? 1 : 0;
 
 			target = Instantiate(TargetPrefab);
 			target.transform.position = positionTarget;
@@ -318,7 +330,7 @@ public class CrossComponents : MonoBehaviour
 			target.GetComponent<Target>().SetDifficulty(targetDifficulty);
 			target.GetComponent<Target>().waypoint = waypoint;
 			target.GetComponent<Target>().ID = ID;
-			target.GetComponent<Target>().side = int.Parse(point.name)  < 6 ? Side.Left : Side.Right;
+			target.GetComponent<Target>().side = side;
 			target.GetComponent<Target>().positionNumber = int.Parse(point.name);
 			target.GetComponent<Target>().transparency = target.GetComponent<MeshRenderer>().material.color.a;
 			target.transform.localScale = new Vector3(settings.targetSize, settings.targetSize, settings.targetSize);
@@ -334,22 +346,27 @@ public class CrossComponents : MonoBehaviour
 		List<Transform> selectedSpawnPoints = new List<Transform>();
 		bool selectionFinished = false;
 
-		List<int> leftTargetsIndices = new List<int> { 0, 2, 4, 6, 8 };
-		List<int> rightTargetsIndices = new List<int> { 1, 3, 5, 7, 9 };
+		List<int> leftTargetsIndices = new List<int>(); 
+		List<int> rightTargetsIndices = new List<int>();
+
+		foreach(Transform spawnPoint in spawnPoints) 
+		{
+			int index = int.Parse(spawnPoint.name);
+			if ( index % 2 == 0) { leftTargetsIndices.Add(index); }
+            else { rightTargetsIndices.Add(index); }
+		}
 
 		foreach (Transform child in parent) { spawnPoints.Add(child);  }
 
 		while (!selectionFinished)
 		{
+			Debug.Log("While loop SelectRandomSpawnPoints()...");
 			//Choose left or right target -> higher probability with less targets chosen on that side
 			// NEGATIVE = LEFT (= EVEN INDEXED SPAWN POINT), POSITIVE = RIGHT (= ODD INDEXED SPAWN POINT)
 			float randomNegativeOrPositive = Random.Range(-1f / (2f*experimentManager.leftTargets + 1f), 1f / (2f*experimentManager.rightTargets + 1f));
 			float sign = Mathf.Sign(randomNegativeOrPositive);
-			
-			//Add the targets to the experiment manager 
-			experimentManager.leftTargets += sign < 0 ? 1 : 0;
-			experimentManager.rightTargets += sign > 0 ? 1 : 0;
-			
+
+
 			int spawnPointIndex = ChooseTargetSpawnPoint((int)sign, spawnPoints, selectedSpawnPoints, leftTargetsIndices, rightTargetsIndices);
 
 			Transform spawnPointToAdd = spawnPoints.Where(t => t.name == spawnPointIndex.ToString()).First();
@@ -375,6 +392,7 @@ public class CrossComponents : MonoBehaviour
 
 		while (indicesToChooseFrom.Count > 0)
         {
+			Debug.Log("While loop ChooseTargetSpawnPoint()...");
 			int randomListIndex = (int)Random.Range(0, indicesToChooseFrom.Count);
 			spawnPointIndex = indicesToChooseFrom[randomListIndex];
 
@@ -384,7 +402,7 @@ public class CrossComponents : MonoBehaviour
 
 		}
 
-		//If somehow we are unable to choose any on this side (if we have more than 5 targets...) we chooe the other side
+		//If somehow we are unable to choose any on this side (if we have more than 5 targets...) we choose the other side
 		if(indicesToChooseFrom.Count == 0) 
 		{ 
 			Debug.Log("CrossComponents.cs -> ChooseTargetSpawnPoint: Could not choose spawnPointIndex for this side!!\nTrying other side"); 
