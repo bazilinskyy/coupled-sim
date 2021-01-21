@@ -16,9 +16,6 @@ for j = 1:length(fields_ED)
             for i = 1:length(fields_trials)
                 % Filter gapAcceptance
                 AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}).pe.gapAcceptance(AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}).pe.gapAcceptance<0) = 0;
-            
-                % Set startpoint
-                % Function
             end
         end
     end

@@ -22,8 +22,8 @@ for i=1:length(FileList)
     path        = FileList(i).folder;
     name        = FileList(i).name;
     filename    = join([path,'\',name]);
-%     Data        = CSVtoStruct(filename);
-    Data        = CSVtoStruct_simple(filename);
+    Data        = CSVtoStruct(filename);
+%     Data        = CSVtoStruct_simple(filename);
     
     %% Add to DataList
     ED_name = join(['Data_ED_',num2str(Data.expdefNr)]);
