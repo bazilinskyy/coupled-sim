@@ -195,13 +195,14 @@ X = [Acceptance_pa.satisfying_score0, Acceptance_pa.satisfying_score1, Acceptanc
 Y = [Acceptance_pa.usefulness_score0, Acceptance_pa.usefulness_score1, Acceptance_pa.usefulness_score2, Acceptance_pe.usefulness_score0, Acceptance_pe.usefulness_score1, Acceptance_pe.usefulness_score2];
 labels = {'Passenger - baseline','Passenger - mapping 1','Passenger - mapping 2','Pedestrian - baseline','Pedestrian - mapping 1','Pedestrian - mapping 2'};
 for i=1:length(X)
-    p = plot(X(i),Y(i),'o','MarkerSize',8);
+    p = plot(X(i),Y(i),'o','MarkerSize',10);
     c = get(p,'Color');
     p.MarkerFaceColor = c;
 end
-text(X,Y,labels,'VerticalAlignment','bottom','HorizontalAlignment','right')
-xlabel('Satisfying'); xlim([-2 2]); xline(0,'--');
-ylabel('Usefulness'); ylim([-2 2]); yline(0,'--');
+text(X,Y,labels,'FontSize',14,'VerticalAlignment','bottom','HorizontalAlignment','right')
+xlabel('Satisfying','FontSize',15,'FontWeight','bold'); xlim([-2 2]); xline(0,'--');
+ylabel('Usefulness','FontSize',15,'FontWeight','bold'); ylim([-2 2]); yline(0,'--');
+ax=gca; ax.FontSize = 20;
 grid on;
 
 figure
