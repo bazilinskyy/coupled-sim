@@ -203,7 +203,6 @@ public class MainManager : MonoBehaviour
         setting.nTurns = numberTurnsPractiseDrive;
         setting.navigationType = NavigationType.HUD_low;
         setting.experimentType = ExperimentType.Practise;
-        setting.targetsPerCrossing = 8;
         setting.turns = GetShuffledTurns(setting.nTurns, setting.nStraights);
         experiments.Add(setting);
      }
@@ -510,7 +509,7 @@ public class MainExperimentSetting
     public float transparency = 0.0075f;
     public TargetDifficulty targetDifficulty = TargetDifficulty.easy;
     public int targetsPerCrossing = 6;
-    public int minTargetsPerTurn = 1;//min and max should add up tot the total at minimum
+    public int minTargetsPerTurn = 2;//min and max should add up tot the at least the total targets per cross total
     public int maxTargetsPerTurn = 5;
 
     public float experimentTime = 0f;

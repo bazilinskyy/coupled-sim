@@ -54,7 +54,7 @@ public class newExperimentManager : MonoBehaviour
     private float transparencyTargets = 0.1f;
 
     private float angleTreshold = 1.5f;
-    private float maxAngle = 2f;
+    private float maxAngle = 1.5f;
 
     private bool firstStraight = true;
     private int transparencyIndex = 0;
