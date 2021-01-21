@@ -197,12 +197,14 @@ public class MainManager : MonoBehaviour
     {
         MainExperimentSetting setting = new MainExperimentSetting();
         //Make settings for practise drive
-   
+        
         setting.name = "PractiseDrive";
+        setting.nStraights = 2;
+        setting.nTurns = numberTurnsPractiseDrive;
         setting.navigationType = NavigationType.HUD_low;
         setting.experimentType = ExperimentType.Practise;
         setting.targetsPerCrossing = 8;
-        setting.turns = GetShuffledTurns(numberTurnsPractiseDrive);
+        setting.turns = GetShuffledTurns(setting.nTurns, setting.nStraights);
         experiments.Add(setting);
      }
     Condition MakeCondition(NavigationType navType, TargetDifficulty difficulty) 
@@ -237,37 +239,55 @@ public class MainManager : MonoBehaviour
             setting.conditionNumber = conditionNumber;
             setting.navigationType = condition.navigationType;
             setting.targetDifficulty = condition.targetDifficulty;
-
+            setting.nTurns = numberTurns;
+            setting.nStraights = 3;
             //Add turns
-            List<TurnType> turns = GetShuffledTurns(numberTurns);
+            List<TurnType> turns = GetShuffledTurns(setting.nTurns, setting.nStraights);
             setting.turns = turns;
 
             experiments.Add(setting);
         }
     }
-    List<TurnType> GetShuffledTurns(int number)
+    List<TurnType> GetShuffledTurns(int numberTurns, int numberStraights)
     {
         //Gives equal amount of turns left and right in random order
         List<TurnType> turns = new List<TurnType>();
         TurnType turn;
 
-        //Make a list of equal left and right turns
-        for (int i = 1; i <= number; i++)
+        //Make a list of equal left and right
+        for (int i = 1; i <= numberTurns; i++)
         {
-            if(i <= number / 2) { turn = TurnType.Left; }
+            if(i <= numberTurns / 2) { turn = TurnType.Left; }
             else { turn = TurnType.Right; }
             turns.Add(turn);
         }
-        
-        //Shuffle the turns:
-        int randomIndex; 
+        //Add straights
+        for (int i = 1; i <= numberStraights; i++){ turns.Add(TurnType.Straight); }
+
+        int randomIndex = 0; 
         for (int i = 0; i < turns.Count(); i++)
         {
             randomIndex = UnityEngine.Random.Range(0, turns.Count());
-            turn = turns[randomIndex];
-            turns[randomIndex] = turns[i];
-            turns[i] = turn;
+            turn = turns[i];
+            //Interchange index i and randomIndex
+            turns[randomIndex] = turn;
+            turns[i] = turns[randomIndex];
         }
+
+        //Get array of EVEN indices in each part of the drive
+        int[] even_indices = new int[numberStraights];
+        int equalPart = (int)(numberTurns + numberStraights) / numberStraights;
+        for (int i = 0; i < numberStraights; i++)
+        {
+            randomIndex = UnityEngine.Random.Range((i) * equalPart + 1 , (i+1)*equalPart);
+            //Get new index if we dont get an even one
+            while (randomIndex % 2 != 0) { randomIndex = UnityEngine.Random.Range((i) * equalPart + 1, (i + 1) * equalPart); }
+            
+            even_indices[i] = randomIndex;
+        }
+
+        foreach(int index in even_indices) { turns.Insert(index, TurnType.Straight); }
+
         turns.Add(TurnType.EndPoint);
        
         return turns;
@@ -357,8 +377,8 @@ public class MainManager : MonoBehaviour
         {
             MainExperimentSetting setting = experiments[experimentIndex];
 
-            if (setting.experimentType.IsPractise()) { Debug.Log($"Loading {experiments[experimentIndex].name}...\nTurns: {setting.turns.Count()}, Navigation: All, Targets/Crossing: [{setting.targetsPerCrossing}], Difficutly: All "); }
-            else { Debug.Log($"Loading {experiments[experimentIndex].name}...\nTurns: {setting.turns.Count()}, Navigation:{setting.navigationType}, Targets/Crossing: [{setting.targetsPerCrossing}], Difficutly: {setting.targetDifficulty}"); }
+            if (setting.experimentType.IsPractise()) { Debug.Log($"Loading {experiments[experimentIndex].name}...\nTurns: {setting.nTurns}, Straights: {setting.nStraights}, Navigation: All, Targets/Crossing: [{setting.targetsPerCrossing}], Difficutly: All "); }
+            else { Debug.Log($"Loading {experiments[experimentIndex].name}...\nTurns: {setting.nTurns}, Straights: {setting.nStraights}, Targets/Crossing: [{setting.targetsPerCrossing}], Difficutly: {setting.targetDifficulty}"); }
 
             loading = true;
             StartCoroutine(LoadSceneAsync(experimentScene));          
@@ -386,9 +406,8 @@ public class MainManager : MonoBehaviour
         {
             MainExperimentSetting setting = experiments[experimentIndex];
 
-            if (setting.experimentType.IsPractise()) { Debug.Log($"Reloading {experiments[experimentIndex].name}...\nTurns: {setting.turns.Count()}, Navigation: All, Targets/Crossing: [{setting.targetsPerCrossing}], Difficutly: All "); }
-            else { Debug.Log($"Reloading {experiments[experimentIndex].name}...\nTurns: {setting.turns.Count()}, Navigation:{setting.navigationType}, Targets/Crossing: [{setting.targetsPerCrossing}], Difficutly: {setting.targetDifficulty}"); }
-
+            if (setting.experimentType.IsPractise()) { Debug.Log($"Reloading {experiments[experimentIndex].name}...\nTurns: {setting.nTurns}, Straights: {setting.nStraights}, Navigation: All, Targets/Crossing: [{setting.targetsPerCrossing}], Difficutly: All "); }
+            else { Debug.Log($"Reloading {experiments[experimentIndex].name}...\nTurns: {setting.nTurns}, Straights: {setting.nStraights}, Targets/Crossing: [{setting.targetsPerCrossing}], Difficutly: {setting.targetDifficulty}"); }
             loading = true;
             StartCoroutine(LoadSceneAsync(experimentScene));
         }
@@ -484,6 +503,8 @@ public class MainExperimentSetting
 {
     public string name = "-";
     public int conditionNumber = 0;
+    public int nTurns = 0;
+    public int nStraights = 0;
     public List<TurnType> turns;
     public NavigationType navigationType;
     public float transparency = 0.0075f;
