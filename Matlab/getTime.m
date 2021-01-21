@@ -1,58 +1,84 @@
-function output = getTime(distance, dt, display)
-disp('Start calculating durations...');
-
+%% Get time
+% This script calculates all the gazing times.
+% Author: Johnson Mok
+% Last Updated: 19-01-2020
+% function output = getTime(distance, vel, dt, display)
+function t = getTime(data, data_unp)
+%% PASSENGER
+% Assign variables
+distance_unp = data_unp.pa.distance;
+distance     = data.pa.distance;
+pos          = data.pa.pos.z;
+vel          = data.pa.world.rb_v.z;
+dt           = data.dt;
+display      = 0;
 % Time stamps
-t.timeStamps.start_tracking = find(distance==0, 1, 'first');
-t.timeStamps.end_tracking = find(distance==0, 1, 'last');
-t.timeStamps.start_gazing = find(distance>0, 1, 'first');
-t.timeStamps.end_gazing = find(distance>0, 1, 'last');
+t.TS_pa.startTrack_unp = find(distance_unp==0, 1, 'first');
+t.TS_pa.startTrack     = find(distance==0, 1, 'first');
+t.TS_pa.endTrack       = find(distance==0, 1, 'last');
+t.TS_pa.startYield     = find(abs(vel)<0.1, 1, 'first');
+t.TS_pa.endYield       = find(abs(vel)<0.1, 1, 'last');
+if(isempty(t.TS_pa.startYield))
+    t.TS_pa.startYield     = find(pos <= 23.43, 1, 'first');
+    t.TS_pa.endYield       = find(pos <= 23.43, 1, 'first');
+end
+% Total run
 t.time_total = length(distance)*dt;
-
-% Variables for time stamps
-t_st = t.timeStamps.start_tracking;
-t_et = t.timeStamps.end_tracking;
-t_sg = t.timeStamps.start_gazing;
-t_eg = t.timeStamps.end_gazing;
-t_tt = t.time_total;
-
-% Phase 1: Eye-calibration
-t.time1.phase = "Eye-calibration";
-t.time1.total = dt*t_st;
-
+t.pa.full = calcGazeTime(distance, dt, t.TS_pa.startTrack, t.TS_pa.endTrack);
+% Phase 1: Eye-calibration time, useful in showing ease of use of
+% eye-tracking. (Need unprocessed data)
+t.pa.time1 = calcGazeTime(distance_unp, dt, 1, t.TS_pa.startTrack_unp);
 % Phase 2: Tracking till AV stop
-t.time2.phase = "Tracking till pedestrian";
-t.time2.distance = distance(t_st:t_eg);
-idx_2_0 = (t.time2.distance == 0);
-idx_2_1 = (t.time2.distance == -1);
-t.time2.nowatch = sum(idx_2_0(:))*dt;
-t.time2.invalid = sum(idx_2_1(:))*dt;
-t.time2.total = length(t.time2.distance)*dt;
-t.time2.watch = t.time2.total - t.time2.nowatch - t.time2.invalid;
-
-
-% Phase 3: After reset
-t.time3.phase = "Tracking after pedestrian";
-t.time3.distance = distance(t_eg:t_et);
-idx_3_0 = (t.time3.distance == 0);
-idx_3_1 = (t.time3.distance == -1);
-t.time3.nowatch = sum(idx_3_0(:))*dt;
-t.time3.invalid = sum(idx_3_1(:))*dt;
-t.time3.total = length(t.time3.distance)*dt;
-t.time3.watch = t.time3.total - t.time3.nowatch - t.time3.invalid;
-
+t.pa.time2 = calcGazeTime(distance, dt, t.TS_pa.startTrack, t.TS_pa.startYield);
+% Phase 3: During yield
+t.pa.time3 = calcGazeTime(distance, dt, t.TS_pa.startYield, t.TS_pa.endYield);
+% Phase 4: After reset
+t.pa.time4 = calcGazeTime(distance, dt, t.TS_pa.endYield, t.TS_pa.endTrack);
 % Table
 if(display==1)
-    Phase = {'Total'; 'Eye-calibration'; 'Tracking till pedestrian'; 'Tracking after pedestrian'};
-    Duration_total = [t.time_total; t.time1.total; t.time2.total; t.time3.total];
-    Duration_invalid = [nan; nan; t.time2.invalid; t.time3.invalid];
-    Duration_nowatch = [nan; nan; t.time2.nowatch; t.time3.nowatch];
-    Duration_watch = [nan; nan; t.time2.watch; t.time3.watch];
-    T = table(Phase, Duration_total, Duration_invalid, Duration_nowatch, Duration_watch);
-
-    % Display table
+    Phase_pa         = ["Total";   "Eye-calibration";   "Tracking till pedestrian";   "During yield";   "Tracking after pedestrian"];
+    Duration_total   = [t.pa.full.total;   t.pa.time1.total;   t.pa.time2.total;   t.pa.time3.total;   t.pa.time4.total];
+    Duration_invalid = [t.pa.full.invalid; t.pa.time1.invalid; t.pa.time2.invalid; t.pa.time3.invalid; t.pa.time4.invalid];
+    Duration_nowatch = [t.pa.full.nowatch; t.pa.time1.nowatch; t.pa.time2.nowatch; t.pa.time3.nowatch; t.pa.time4.nowatch];
+    Duration_watch   = [t.pa.full.watch;   t.pa.time1.watch;   t.pa.time2.watch;   t.pa.time3.watch;   t.pa.time4.watch ];
+    T = table(Phase_pa, Duration_total, Duration_invalid, Duration_nowatch, Duration_watch);
     disp(T);
 end
 
-disp('Finished calculating durations');
-output = t;
+%% PASSENGER
+% Assign variables
+distance_unp2 = data_unp.pe.distance;
+distance2     = data.pe.distance;
+% Time stamps
+t.TS_pe.startTrack_unp = find(distance_unp2<=0 & distance_unp2>=-1, 1, 'first');
+t.TS_pe.startTrack     = find(distance2<=0 & distance2>=-1, 1, 'first');
+t.TS_pe.endTrack       = find(distance2<=0 & distance2>=-1, 1, 'last');
+% Total run
+t.pe.full = calcGazeTime(distance2, dt, t.TS_pe.startTrack, t.TS_pe.endTrack);
+% Phase 1: Eye-calibration time, useful in showing ease of use of
+% eye-tracking. (Need unprocessed data)
+t.pe.time1 = calcGazeTime(distance_unp2, dt, 1, t.TS_pe.startTrack_unp);
+% Phase 2: Tracking till AV stop
+t.pe.time2 = calcGazeTime(distance2, dt, t.TS_pe.startTrack, t.TS_pa.startYield);
+% Phase 3: During yield
+t.pe.time3 = calcGazeTime(distance2, dt, t.TS_pa.startYield, t.TS_pa.endYield);
+% Phase 4: After reset
+t.pe.time4 = calcGazeTime(distance2, dt, t.TS_pa.endYield, t.TS_pe.endTrack);
+% Table
+if(display==1)
+    Phase_pe         = ["Total";   "Eye-calibration";   "Tracking till pedestrian";   "During yield";   "Tracking after pedestrian"];
+    Duration_total   = [t.pe.full.total;   t.pe.time1.total;   t.pe.time2.total;   t.pe.time3.total;   t.pe.time4.total];
+    Duration_invalid = [t.pe.full.invalid; t.pe.time1.invalid; t.pe.time2.invalid; t.pe.time3.invalid; t.pe.time4.invalid];
+    Duration_nowatch = [t.pe.full.nowatch; t.pe.time1.nowatch; t.pe.time2.nowatch; t.pe.time3.nowatch; t.pe.time4.nowatch];
+    Duration_watch   = [t.pe.full.watch;   t.pe.time1.watch;   t.pe.time2.watch;   t.pe.time3.watch;   t.pe.time4.watch ];
+    T = table(Phase_pe, Duration_total, Duration_invalid, Duration_nowatch, Duration_watch);
+    disp(T);
+end
+
+%% Passenger and Pedstrian
+pa_watch = distance>0;
+pe_watch = distance2>0;
+t_eyeContact = pa_watch+pe_watch;
+t.eyeContact = sum(t_eyeContact==2)*dt;
 return
+
