@@ -173,6 +173,8 @@ public class CreateVirtualCable : MonoBehaviour
 		mesh.vertices = vertices = GetVerticesVirtualCable(points);
 		mesh.triangles = triangles = GetTrianglesVirtualCable(mesh.vertices);
 
+		navigationSymbology.isStatic = true;
+
 		//navigationSymbology.GetComponent<MeshCollider>().sharedMesh = mesh;
 	}
 	private Vector3[] GetPointsCorner(Transform waypoint, TurnType turn)

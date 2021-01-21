@@ -35,6 +35,8 @@ public class WaitingRoomManager : MonoBehaviour
         if (Input.GetKeyDown(mainManager.ResetHeadPosition)) { Varjo.VarjoPlugin.ResetPose(true, Varjo.VarjoPlugin.ResetRotation.ALL); }
         if (Input.GetKeyDown(mainManager.ToggleReCalibrateHands)) { reCalibrateHands = !reCalibrateHands; Debug.Log($"Recalbirating hands = {reCalibrateHands}..."); }
 
+        if(Input.GetKeyDown(mainManager.ReRunPractiseDrive)) { mainManager.LoadPractiseDrive(); }
+
         bool userInput = UserInput();
         //Looks for targets to appear in field of view and sets their visibility timer accordingly
         if (userInput && !reCalibrateHands) { ProcessUserInputTargetDetection(); }

@@ -42,6 +42,7 @@ public class MainManager : MonoBehaviour
     private KeyCode teleportToNextWaypoint = KeyCode.LeftShift;
     private KeyCode toggleDriving = KeyCode.Space;
     private KeyCode toggleReCalibrateHands = KeyCode.R;
+    private KeyCode reRunPractiseDrive = KeyCode.F5;
 
     private string waitingRoomScene = "WaitingScene";
     private string targetScene = "Targets";
@@ -93,6 +94,7 @@ public class MainManager : MonoBehaviour
     
     private bool loading = false; 
     private bool readyToSaveData = false;
+    private bool realExperiment;
     private bool isInExperiment = false;
     public KeyCode MyPermission { get => myPermission; set => myPermission = value; }
     public KeyCode ResetHeadPosition { get => resetHeadPosition; set => resetHeadPosition = value; }
@@ -118,7 +120,7 @@ public class MainManager : MonoBehaviour
     public float DriverViewXToSteeringWheel { get => driverViewXToSteeringWheel; set => driverViewXToSteeringWheel = value; }
     public bool IsInExperiment { get => isInExperiment; set => isInExperiment = value; }
     public string SubjectID { get => subjectID; set => subjectID = value; }
-  
+    public KeyCode ReRunPractiseDrive { get => reRunPractiseDrive; set => reRunPractiseDrive = value; }
 
     private void Awake()
     {
@@ -141,8 +143,11 @@ public class MainManager : MonoBehaviour
         //Read general settings file
         ReadCSVSettingsFile();
 
+        string folderName;
+        if (realExperiment) { folderName = "RealData"; }
+        else { folderName = "Data"; }
         //Set input of data log folder:
-        subjectDataFolder = string.Join("/", System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop).Replace("\\", "/"), "Data", "ID-" + SubjectID + "_" + DateTime.Now.ToString("MM-dd_HH-mm"));
+        subjectDataFolder = string.Join("/", System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop).Replace("\\", "/"), folderName, "ID-" + SubjectID + "_" + DateTime.Now.ToString("MM-dd_HH-mm"));
         System.IO.Directory.CreateDirectory(subjectDataFolder);
         //Save settings file in the subject data folder
         SaveSettingsFile();
@@ -273,6 +278,7 @@ public class MainManager : MonoBehaviour
     }
     public bool IsNextExperiment()
     {
+        Debug.Log(experimentIndex);
         if (experimentIndex < experiments.Count()) { return true; }
         else { return false; }
     }
@@ -307,8 +313,11 @@ public class MainManager : MonoBehaviour
 
             //Data: [0] = Name, [1] = order
             string[] lineData;
-            lineData = lines[0].Trim().Split(';'); SubjectID = lineData[1];
-            lineData = lines[1].Trim().Split(';'); experimentType = int.Parse(lineData[1]) == 0 ? ExperimentType.Real : ExperimentType.TargetCalibration;
+            lineData = lines[0].Trim().Split(';'); 
+            SubjectID = lineData[1];
+
+            lineData = lines[1].Trim().Split(';'); 
+            experimentType = int.Parse(lineData[1]) == 0 ? ExperimentType.Real : ExperimentType.TargetCalibration;
 
             //Order of experiment is based on subject number
             int orderIndex = (int.Parse(SubjectID) - 1) % 6;
@@ -317,9 +326,14 @@ public class MainManager : MonoBehaviour
             experimentOrder[1] = orders[orderIndex, 1];
             experimentOrder[2] = orders[orderIndex, 2];
 
-            lineData = lines[2].Trim().Split(';'); numberTurns = int.Parse(lineData[1]);
+            lineData = lines[2].Trim().Split(';'); 
+            numberTurns = int.Parse(lineData[1]);
 
-            lineData = lines[3].Trim().Split(';'); numberTurnsPractiseDrive = int.Parse(lineData[1]);
+            lineData = lines[3].Trim().Split(';'); 
+            numberTurnsPractiseDrive = int.Parse(lineData[1]);
+
+            lineData = lines[4].Trim().Split(';');
+            realExperiment = int.Parse(lineData[1]) == 1 ? true : false;
 
             return true;
     }
@@ -348,6 +362,22 @@ public class MainManager : MonoBehaviour
 
             loading = true;
             StartCoroutine(LoadSceneAsync(experimentScene));          
+        }
+    }
+
+    public void LoadPractiseDrive()
+    {
+        if (!loading)
+        {
+            experimentIndex = 0;
+
+            MainExperimentSetting setting = experiments[experimentIndex];
+
+            if (setting.experimentType.IsPractise()) { Debug.Log($"Loading {experiments[experimentIndex].name}...\nTurns: {setting.turns.Count()}, Navigation: All, Targets/Crossing: [{setting.targetsPerCrossing}], Difficutly: All "); }
+            else { Debug.Log($"Loading {experiments[experimentIndex].name}...\nTurns: {setting.turns.Count()}, Navigation:{setting.navigationType}, Targets/Crossing: [{setting.targetsPerCrossing}], Difficutly: {setting.targetDifficulty}"); }
+
+            loading = true;
+            StartCoroutine(LoadSceneAsync(experimentScene));
         }
     }
     public void ReloadCurrentExperiment()
@@ -383,18 +413,7 @@ public class MainManager : MonoBehaviour
         DontDestroyOnLoad(player);
 
         AsyncOperation operation = SceneManager.LoadSceneAsync(scene, LoadSceneMode.Single);
-/*        operation.allowSceneActivation = false;
 
-        while (!operation.isDone)
-        {
-            // Check if the load has finished
-            if (operation.progress >= 0.9f)
-            {
-                operation.allowSceneActivation = true;
-                break;
-            }
-            yield return new WaitForEndOfFrame();
-        }*/
         while (!operation.isDone) { yield return new WaitForEndOfFrame(); }
 
         blackOutScreen.CrossFadeAlpha(0, animationTime, false);
@@ -445,7 +464,7 @@ public class MainManager : MonoBehaviour
     {
         List<int> totalScore = new List<int>{ 0, 0 };
 
-        for (int i = 1; i <= subjectScore.Length; i++)
+        for (int i = 1; i < experiments.Count(); i++)
         {
             totalScore[0] += subjectScore[i, 0];
             totalScore[1] += subjectScore[i, 1];

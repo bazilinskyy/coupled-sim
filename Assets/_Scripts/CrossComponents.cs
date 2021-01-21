@@ -60,6 +60,8 @@ public class CrossComponents : MonoBehaviour
 	private bool SetAllStatic = false;
 	private newExperimentManager experimentManager;
 	public bool isCurrentCrossing = true;
+
+	private int totalObjects = 0;
     private void Awake()
     {
 		experimentManager = MyUtils.GetExperimentManager();
@@ -110,7 +112,9 @@ public class CrossComponents : MonoBehaviour
     {
 		finishedMoving = false;
 
-		if (isFirstCrossing) { StartCoroutine(SetStaticAllChildren(transform, true, true)); }
+		StartCoroutine(SetStaticAllChildren(transform, true, true));
+		
+		while (SetAllStatic == false) { yield return new WaitForEndOfFrame(); }
 
 		if (waypoints[0].turn.IsOperation() && waypoints[1].turn.IsOperation())
 		{
@@ -188,7 +192,7 @@ public class CrossComponents : MonoBehaviour
 		transform.rotation = otherCrossing.rotation; yield return new WaitForEndOfFrame();
 		transform.Rotate(transform.up, rotationAngleY); yield return new WaitForEndOfFrame();
 
-		Debug.Log($"{transform.name} has been moved...");
+		//Debug.Log($"{transform.name} has been moved...");
 		StartCoroutine(SetStaticAllChildren(transform, true, true));
 		//Wait till all children are set to static
 		while (SetAllStatic == false) { yield return new WaitForEndOfFrame(); }
@@ -224,16 +228,30 @@ public class CrossComponents : MonoBehaviour
 	}
 	IEnumerator SetStaticAllChildren(Transform parent, bool makeStatic, bool firstCall = false)
     {
-		SetAllStatic = false;
+        if (firstCall)
+        {
+			totalObjects = 0;
+			SetAllStatic = false;
+		}
+
+		
+		parent.gameObject.isStatic = true;
+
 		foreach ( Transform child in parent) 
 		{
+			//Skip targets
+			if(child.name == "Targets") { continue; }
+
+			//We do 1000 objects per frame ~taking around 6 frames to complete
+			if (totalObjects % 1000 == 0) { yield return new WaitForEndOfFrame(); }
+
 			child.gameObject.isStatic = makeStatic;
-			if (child.childCount != 0) { SetStaticAllChildren(child, makeStatic); }
+			totalObjects++;
 
-            if (firstCall){ yield return new WaitForEndOfFrame(); }
+			if (child.childCount != 0) { StartCoroutine(SetStaticAllChildren(child, makeStatic)); }
 		}
-		SetAllStatic = true;
 
+		if (firstCall) { SetAllStatic = true; }
 	}
 	public void DisableVariableBlocks()
     {
