@@ -176,33 +176,6 @@ public class CrossComponents : MonoBehaviour
 		while (SetAllStatic == false) { yield return new WaitForEndOfFrame(); }
 
 		finishedMoving = true;
-		//Debug.Log($"{transform.name}.finished moving = true...");
-
-
-		/*
-				//If this is the next crossing and we will get there (e.g., both next operations are turns we have to deactivate/activate the needed block as well
-				if (isCurrentCrossing && waypoints[0].turn.IsOperation() && waypoints[1].turn.IsOperation()) 
-				{
-
-					string blockNameToDeactivate = waypoints[0].turn.ToString() + waypoints[1].turn.ToString();
-
-					string otherTurn = waypoints[1].turn.IsRightTurn() ? "Left" : "Right"; //if right turn -> ;left, otherise wright
-
-					string[] blockNamesToActivate = { waypoints[0].turn.ToString() + otherTurn, "Left", "Right" };
-					//Debug.Log($"{transform.name} should active {blockNamesToActivate[0]}, {blockNamesToActivate[1]}, {blockNamesToActivate[2]} and  deactivate {blockNameToDeactivate}...");
-
-					foreach (Transform child in variableBlocks)
-					{
-						//Continue to next child if this is not one of the childs we are looking for
-						if(child.name == blockNameToDeactivate && blockNamesToActivate.Contains(child.name)) { continue; }
-
-						bool activateBlock = (child.name != blockNameToDeactivate || blockNamesToActivate.Contains(child.name));
-
-						child.gameObject.SetActive(activateBlock); yield return new WaitForEndOfFrame();
-					}	
-				}*/
-
-
 	}
 	IEnumerator SetStaticAllChildren(Transform parent, bool makeStatic, bool firstCall = false)
     {
@@ -291,7 +264,7 @@ public class CrossComponents : MonoBehaviour
             //Varies position of target number: odd = right side, even -> left side...
             Vector3 sideVariation = waypoint.waypoint.right * Random.Range(-2f, 2f);
             Vector3 forwardVariation = waypoint.waypoint.forward * Random.Range(-6f, 6f);
-            Vector3 upVariation = point.up * Random.Range(-1f, 3f);
+            Vector3 upVariation = point.up * Random.Range(-.5f, 2.5f);
 
 /*			max positions
 			Vector3 sideVariation = point.forward * Random.Range(-1, 2) * 2f;

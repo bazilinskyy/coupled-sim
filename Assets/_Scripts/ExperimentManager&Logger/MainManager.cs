@@ -199,6 +199,7 @@ public class MainManager : MonoBehaviour
         //Make settings for practise drive
         
         setting.name = "PractiseDrive";
+        setting.targetsPerCrossing = 7;
         setting.nStraights = 2;
         setting.nTurns = numberTurnsPractiseDrive;
         setting.navigationType = NavigationType.HUD_low;
@@ -239,7 +240,7 @@ public class MainManager : MonoBehaviour
             setting.navigationType = condition.navigationType;
             setting.targetDifficulty = condition.targetDifficulty;
             setting.nTurns = numberTurns;
-            setting.nStraights = 3;
+            setting.nStraights = 2;
             //Add turns
             List<TurnType> turns = GetShuffledTurns(setting.nTurns, setting.nStraights);
             setting.turns = turns;
@@ -260,9 +261,7 @@ public class MainManager : MonoBehaviour
             else { turn = TurnType.Right; }
             turns.Add(turn);
         }
-        //Add straights
-        for (int i = 1; i <= numberStraights; i++){ turns.Add(TurnType.Straight); }
-
+      
         int randomIndex = 0; 
         for (int i = 0; i < turns.Count(); i++)
         {

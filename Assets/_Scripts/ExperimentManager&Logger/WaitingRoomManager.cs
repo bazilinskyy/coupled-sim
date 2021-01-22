@@ -147,8 +147,8 @@ public class WaitingRoomManager : MonoBehaviour
         }*/
 
         List<int> score = mainManager.GetSubjectScore();
-        text.text = $"You got {score[1]}/{score[0]} targets!";
-
+        text.text = $"You can take off your headset :)";
+        Debug.Log($"SCORE: {score[1]} / {score[0]}");
         if (!mainManager.IsNextExperiment()) 
         {
             score = mainManager.GetTotalSubjectScore();

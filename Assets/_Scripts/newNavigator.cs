@@ -108,7 +108,7 @@ public class newNavigator : MonoBehaviour
 
         if (waypointIndex < waypointList.Count()) { waypoint = waypointList[waypointIndex]; }
         //else { Debug.Log("Finished waypoint List..."); }
-
+        Debug.Log($"At waypoint {waypointIndex}");
         //Debug.Log($"Next target = {waypoint.turn}...");
     }
     public void AddWaypoints(WaypointStruct[] waypoints)
