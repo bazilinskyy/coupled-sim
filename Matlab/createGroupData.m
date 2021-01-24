@@ -17,7 +17,12 @@ for j = 1:length(fields_ED)
             output.(fields_ED{j}).(fields_time{k}).eyeContact = []; %
         elseif(strcmp(var,'gap'))
             output.(fields_ED{j}).(fields_time{k}).gapAcceptance = {}; %
+        elseif(strcmp(var,'rb_v'))
+            output.(fields_ED{j}).(fields_time{k}).rb_v_z = {}; %
+        elseif(strcmp(var,'pa_pos'))
+            output.(fields_ED{j}).(fields_time{k}).pa_pos = {}; %
         end
+        
         for idx = 1:length(fields_participants)
             fields_trials = fieldnames(AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}));
             for i = 1:length(fields_trials)
@@ -52,6 +57,14 @@ for j = 1:length(fields_ED)
                 % Part for gapAcceptance
                 if(strcmp(var,'gap'))
                     output.(fields_ED{j}).(fields_time{k}).gapAcceptance(end+1,:) = {AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}).pe.gapAcceptance};
+                end
+                % Part for AV velocity
+                if(strcmp(var,'rb_v'))
+                    output.(fields_ED{j}).(fields_time{k}).rb_v_z(end+1,:) = {AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}).pa.world.rb_v.z};
+                end
+                % Part for AV position
+                if(strcmp(var,'pa_pos'))
+                    output.(fields_ED{j}).(fields_time{k}).pa_pos(end+1,:) = {AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}).pa.pos.z};
                 end
             end
         end
