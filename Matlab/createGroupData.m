@@ -6,7 +6,6 @@
 % Last Updated: 18-01-2020
 
 function output = createGroupData(AllData, var)
-disp('Start grouping time data.');
 %% create struct to input the data
 fields_ED = fieldnames(AllData);
 for j = 1:length(fields_ED)
@@ -21,6 +20,10 @@ for j = 1:length(fields_ED)
             output.(fields_ED{j}).(fields_time{k}).rb_v_z = {}; %
         elseif(strcmp(var,'pa_pos'))
             output.(fields_ED{j}).(fields_time{k}).pa_pos = {}; %
+        elseif(strcmp(var,'pa_distance'))
+            output.(fields_ED{j}).(fields_time{k}).pa_distance = {}; %
+        elseif(strcmp(var,'pe_distance'))
+            output.(fields_ED{j}).(fields_time{k}).pe_distance = {}; %
         end
         
         for idx = 1:length(fields_participants)
@@ -66,11 +69,16 @@ for j = 1:length(fields_ED)
                 if(strcmp(var,'pa_pos'))
                     output.(fields_ED{j}).(fields_time{k}).pa_pos(end+1,:) = {AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}).pa.pos.z};
                 end
+                % Part for passenger distance
+                if(strcmp(var,'pa_distance'))
+                    output.(fields_ED{j}).(fields_time{k}).pa_distance(end+1,:) = {AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}).pa.distance};
+                end
+                % Part for pedestrian distance
+                if(strcmp(var,'pe_distance'))
+                    output.(fields_ED{j}).(fields_time{k}).pe_distance(end+1,:) = {AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}).pe.distance};
+                end
             end
         end
     end
 end
-
-
-disp('Finish grouping time data.');
 end

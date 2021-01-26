@@ -27,32 +27,22 @@ if(exist('PreDataV2.mat'))
 end
 
 %% What do we want to do with the data?
-% execute calculation functions here
+% Create grouped data
 times = CalcTime(PreDataV2, PreData);
 timesgroup = createGroupData(times, 'time');
 gapgroup = createGroupData(PreDataV2, 'gap');
+rbvgroup = createGroupData(PreDataV2, 'rb_v');
+pasposgroup = createGroupData(PreDataV2, 'pa_pos');
+pa_distancegroup = createGroupData(PreDataV2, 'pa_distance');
+pe_distancegroup = createGroupData(PreDataV2, 'pe_distance');
 
 
 
-
-%% Visualize data 
+%% Visualize data (needs reorganization, for now the calculations and visualization is done in the same script/function) 
 % execute plot data functions here
 % Function to plot gaze times
-gazeTimePlotter(timesgroup);
+close all
+gazeTimePlotter(timesgroup, pa_distancegroup, pe_distancegroup);
 
-%% test
-visualizeGapAcceptance(gapgroup);
-
-
-% dataPlotter_V2(PreData.Data_ED_0.HostFixedTimeLog.participant_1.trial_14,'pedestrian');
-% PlotAll(PreData);
-
-    % gap acceptance vs time
-%     figure;
-%     grid on;
-%     hold on;
-%     plot(PreDataV2.Data_ED_0.HostFixedTimeLog.participant_1.trial_8.Time, PreDataV2.Data_ED_0.HostFixedTimeLog.participant_1.trial_8.pa.world.rb_v.z, 'g');
-%     plot(PreDataV2.Data_ED_0.HostFixedTimeLog.participant_1.trial_8.Time, PreDataV2.Data_ED_0.HostFixedTimeLog.participant_1.trial_8.pa.pos.z, 'r');
-%     yline(23.19);
-%     ylabel('Gap acceptance');
-%     title('Gap acceptance vs Time');
+%%
+visualizeGapAcceptance(gapgroup, rbvgroup, pasposgroup);

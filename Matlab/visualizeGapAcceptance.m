@@ -60,7 +60,7 @@ D_Y(:,3) = data.Data_ED_10.HostFixedTimeLog.(field{:});
 D_NY(:,1) = data.Data_ED_3.HostFixedTimeLog.(field{:});
 D_NY(:,2) = data.Data_ED_7.HostFixedTimeLog.(field{:});
 D_NY(:,3) = data.Data_ED_11.HostFixedTimeLog.(field{:});
-end
+end      
 function out = calcSumGapAcceptance(data)
 [max_size, ~] = max(cellfun('size', data, 1));
 x = ceil((max(max_size))/50)*50;
@@ -185,6 +185,7 @@ for i = 1:2
     xv = (1:length(v{i}))*dt;
     plot(xv,v{i},'LineWidth',2);
     grid on; xlabel('time in [s]'), ylabel('AV z-position in [m]');
+    yline(17.19, '-.b','Pedestrian pos','LineWidth',2);
 %     ylim([-0.5 30.5]);
     legend(strMap); title(join([velstr,titlestr{i}]));
     
@@ -192,6 +193,7 @@ for i = 1:2
     xv = (1:length(v{i+2}))*dt;
     plot(xv,v{i+2},'LineWidth',2);
     grid on; xlabel('time in [s]'), ylabel('AV z-position in [m]');
+    yline(17.19, '-.b','Pedestrian pos','LineWidth',2);
 %     ylim([-0.5 30.5]);
     legend(strMap); title(join([velstr,titlestr{i+2}]));
 end
