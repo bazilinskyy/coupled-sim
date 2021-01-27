@@ -71,9 +71,7 @@ public class MyGazeLogger : MonoBehaviour
         if (highlightGaze) { StartHighlight(); }
 
         StartLogging();
-
-        
-    }
+        }
 
    
     void Update()
@@ -247,7 +245,7 @@ public class MyGazeLogger : MonoBehaviour
         Directory.CreateDirectory(logPath);
 
         DateTime now = DateTime.Now;
-        string fileName = string.Format("{0}-{1:00}-{2:00}-{3:00}-{4:00}", now.Year, now.Month, now.Day, now.Hour, now.Minute);
+        string fileName = "gazeData.csv";
 
         string path = logPath + fileName + ".csv";
         writer = new StreamWriter(path);
