@@ -34,8 +34,8 @@ Data_block_pe  = convertDataBlock_Pe(Matrix_block_pe);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Calulations - MISC
-[MISC_pa, MISC_name_pa] = calcMisc(Data_block_pa.MISC);
-[MISC_pe, MISC_name_pe] = calcMisc(Data_block_pe.MISC);
+misc_pa = MISC(Data_block_pa.mapping, Data_block_pa.MISC);
+misc_pe = MISC(Data_block_pa.mapping, Data_block_pe.MISC);
 
 %% Calulations - Passenger
 % Easy to direct the eye-gaze visualization
@@ -84,13 +84,8 @@ comments_pe = matchWithMapping(Data_block_pa.mapping, Data_block_pe.otherRemark)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if(ShowPlots==true)
 %% Plots Post-Block questionnaire - MISC
-figure
-% MISC score
-X = categorical(MISC_name_pa);
-X = reordercats(X,MISC_name_pa);
-h = bar(X,[MISC_pa; MISC_pe]);
-set(h, {'DisplayName'},{'passenger','pedestrian',}')
-title('MISC Score'); ylabel('Number of participants'); legend();
+visualizeMISC(misc_pa, misc_pe);
+
 
 %% Plots Post-Block questionnaire - Passenger
 figure
@@ -214,26 +209,6 @@ for j=1:size(data,2)
         end
     end
     outVal(j,:) = val;
-end
-end
-function [val, name] = calcMisc(data)
-[GC,GR] = groupcounts(data); 
-name = {'0 - No problems'; '1 - Uneasiness (no typical symptoms)';...
-    '2 - Vague dizziness, warmth, headache, stomach awareness, sweating..';...
-    '3 - Slight dizziness, warmth, headache, stomach awareness, sweating..';...
-    '4 - Fairly dizziness, warmth, headache, stomach awareness, sweating..';...
-    '5 - Severe dizziness, warmth, headache, stomach awareness, sweating..';...
-    '6 - Slight naussea';...
-    '7 - Fairly naussea';...
-    '8 - Severe naussea';...
-    '9 - (near) retching naussea';...
-    '10 - Vomiting'};
-val = zeros(1,length(name));
-for i=1:length(name)
-    index = find(strcmp(GR,name(i)));
-    if(~isempty(index))
-        val(i) = GC(index);
-    end
 end
 end
 function output = matchWithMapping(dataMap, data)

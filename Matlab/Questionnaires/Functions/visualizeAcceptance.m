@@ -1,8 +1,8 @@
 %% Visualization Acceptance Van Der Laan
 % Author: Johnson Mok
-% Last Updated: 27-01-2020
+% Last Updated: 27-01-2021
 
-% This script visualizes the Acceptance data in the form of tables an
+% This script visualizes the Acceptance data in the form of tables and
 % figures. 
 % - Statistical significance using repeated measures ANOVA
 % - Reliability analysis using Cronbach's alpha
