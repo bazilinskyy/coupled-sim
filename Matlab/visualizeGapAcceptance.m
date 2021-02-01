@@ -31,11 +31,16 @@ paszND_NY = calcMeanGroup(paszND_NY);
 paszD_Y = calcMeanGroup(paszD_Y);
 paszD_NY = calcMeanGroup(paszD_NY);
 
-% Visualization
-visSumGapAcceptance(smooth_ND_Y,smooth_ND_NY,smooth_D_Y,smooth_D_NY);
-visGapAcceptVSrbv(sum_ND_Y,sum_ND_NY,sum_D_Y,sum_D_NY,SvND_Y, SvND_NY, SvD_Y, SvD_NY);
-visGapAcceptVSpasz(sum_ND_Y,sum_ND_NY,sum_D_Y,sum_D_NY,paszND_Y, paszND_NY, paszD_Y, paszD_NY);
+% Pedestrian distance from the vehicle
 
+% Decision certainty
+[DC_ND_Y, DC_ND_NY, DC_D_Y, DC_D_NY, totalMeanChange] = calcDecisionCertainty(ND_Y, ND_NY, D_Y, D_NY);
+
+% Visualization
+% visSumGapAcceptance(smooth_ND_Y,smooth_ND_NY,smooth_D_Y,smooth_D_NY);
+% visGapAcceptVSrbv(sum_ND_Y,sum_ND_NY,sum_D_Y,sum_D_NY,SvND_Y, SvND_NY, SvD_Y, SvD_NY);
+% visGapAcceptVSpasz(sum_ND_Y,sum_ND_NY,sum_D_Y,sum_D_NY,paszND_Y, paszND_NY, paszD_Y, paszD_NY);
+% visGapAcceptVSposped(sum_ND_Y,sum_ND_NY,sum_D_Y,sum_D_NY,paszND_Y, paszND_NY, paszD_Y, paszD_NY)
 end
 
 %% Helper functions
@@ -97,6 +102,25 @@ for j=1:size(data,2)
 end
 out = out./length(data);
 end
+function [DC_ND_Y, DC_ND_NY, DC_D_Y, DC_D_NY, totalMeanChange] = calcDecisionCertainty(ND_Y, ND_NY, D_Y, D_NY)
+Input = {ND_Y, ND_NY, D_Y, D_NY};
+out = zeros(1,3);
+for i = 1:length(Input)
+    data = Input{i};
+    changes = zeros(size(data));
+    for col = 1:size(data,2)
+        for row = 1:size(data,1)
+            changes(row, col) = sum(diff(data{row,col})~=0);
+        end
+    end
+    out(i,:) = mean(changes);
+end
+DC_ND_Y  = out(1,:);
+DC_ND_NY = out(2,:);
+DC_D_Y   = out(3,:);
+DC_D_NY  = out(4,:);
+totalMeanChange = mean(out);
+end
 
 function visSumGapAcceptance(sum_ND_Y,sum_ND_NY,sum_D_Y,sum_D_NY)
 strMap = {'Baseline','Mapping 1','Mapping 2'};
@@ -155,12 +179,11 @@ for i = 1:2
     legend(strMap); title(join([velstr,titlestr{i+2}]));
 end
 end
-
-function visGapAcceptVSpasz(sum_ND_Y,sum_ND_NY,sum_D_Y,sum_D_NY, paszND_Y, paszND_NY, paszvD_Y, paszD_NY)
+function visGapAcceptVSpasz(sum_ND_Y,sum_ND_NY,sum_D_Y,sum_D_NY, paszND_Y, paszND_NY, paszD_Y, paszD_NY)
 strMap = {'Baseline','Mapping 1','Mapping 2'};
 dt = 0.0167;
 data = {sum_ND_Y,sum_ND_NY,sum_D_Y,sum_D_NY}; 
-v = {paszND_Y, paszND_NY, paszvD_Y, paszD_NY};
+v = {paszND_Y, paszND_NY, paszD_Y, paszD_NY};
 gapstr = 'Gap Acceptance ';
 velstr = 'AV z-position ';
 titlestr = {'- No Distraction - Yielding';'- No Distraction - No yielding';...
@@ -196,5 +219,25 @@ for i = 1:2
     yline(17.19, '-.b','Pedestrian pos','LineWidth',2);
 %     ylim([-0.5 30.5]);
     legend(strMap); title(join([velstr,titlestr{i+2}]));
+end
+end
+function visGapAcceptVSposped(sum_ND_Y,sum_ND_NY,sum_D_Y,sum_D_NY,paszND_Y, paszND_NY, paszD_Y, paszD_NY)
+strMap = {'Baseline','Mapping 1','Mapping 2'};
+gapstr = 'Gap Acceptance ';
+titlestr = {'- No Distraction - Yielding';'- No Distraction - No yielding';...
+    '- Distraction - Yielding'; '- Distraction - No yielding'};
+data = {sum_ND_Y,sum_ND_NY,sum_D_Y,sum_D_NY}; 
+v = {paszND_Y, paszND_NY, paszD_Y, paszD_NY};
+posped = 17.19;
+
+figure;
+for i = 1:length(data)
+    subplot(2,2,i);
+    x = v{i}-posped;
+    plot(x,data{i},'LineWidth',2);
+    set(gca, 'XDir','reverse');
+    xlabel('Distance till pedestrian in [m]'); ylabel('gap acceptance in [%]');
+    title(join([gapstr,titlestr{i}]));
+    legend(strMap); grid on;
 end
 end

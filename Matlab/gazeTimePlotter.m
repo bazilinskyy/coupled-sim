@@ -2,7 +2,7 @@
 % This script vizualizes the gaze data from the pedestrian and the
 % passenger
 % Author: Johnson Mok
-% Last Updated: 18-01-2021
+% Last Updated: 26-01-2021
 
 function gazeTimePlotter(data, pa_dis, pe_dis)
 %% EyeContact 

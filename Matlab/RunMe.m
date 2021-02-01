@@ -41,8 +41,9 @@ pe_distancegroup = createGroupData(PreDataV2, 'pe_distance');
 %% Visualize data (needs reorganization, for now the calculations and visualization is done in the same script/function) 
 % execute plot data functions here
 % Function to plot gaze times
-close all
 gazeTimePlotter(timesgroup, pa_distancegroup, pe_distancegroup);
 
 %%
+close all;
 visualizeGapAcceptance(gapgroup, rbvgroup, pasposgroup);
+
