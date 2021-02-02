@@ -164,21 +164,18 @@ public class PlayerSystem : MonoBehaviour
     //displays controler selection GUI
     public void SelectModeGUI()
     {
-
-        PlayerMode = Mode.Flat;
-
-        //    GUILayout.Label($"Mode: {PlayerMode}");
-        //    if (GUILayout.Button("Suite mode"))
-        //    {
-        //        PlayerMode = Mode.Suite;
-        //    }
-        //    if (GUILayout.Button("Oculus mode"))
-        //    {
-        //        PlayerMode = Mode.VR;
-        //    }
-        //    if (GUILayout.Button("Keyboard mode"))
-        //    {
-        //        PlayerMode = Mode.Flat;
-        //    }
+        GUILayout.Label($"Mode: {PlayerMode}");
+        if (GUILayout.Button("Suite mode"))
+        {
+            PlayerMode = Mode.Suite;
+        }
+        if (GUILayout.Button("Oculus mode"))
+        {
+            PlayerMode = Mode.VR;
+        }
+        if (GUILayout.Button("Keyboard mode"))
+        {
+            PlayerMode = Mode.Flat;
+        }
     }
 }
