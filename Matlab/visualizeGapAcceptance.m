@@ -37,10 +37,10 @@ paszD_NY = calcMeanGroup(paszD_NY);
 [DC_ND_Y, DC_ND_NY, DC_D_Y, DC_D_NY, totalMeanChange] = calcDecisionCertainty(ND_Y, ND_NY, D_Y, D_NY);
 
 % Visualization
-% visSumGapAcceptance(smooth_ND_Y,smooth_ND_NY,smooth_D_Y,smooth_D_NY);
-% visGapAcceptVSrbv(sum_ND_Y,sum_ND_NY,sum_D_Y,sum_D_NY,SvND_Y, SvND_NY, SvD_Y, SvD_NY);
-% visGapAcceptVSpasz(sum_ND_Y,sum_ND_NY,sum_D_Y,sum_D_NY,paszND_Y, paszND_NY, paszD_Y, paszD_NY);
-% visGapAcceptVSposped(sum_ND_Y,sum_ND_NY,sum_D_Y,sum_D_NY,paszND_Y, paszND_NY, paszD_Y, paszD_NY)
+visSumGapAcceptance(smooth_ND_Y,smooth_ND_NY,smooth_D_Y,smooth_D_NY);
+visGapAcceptVSrbv(sum_ND_Y,sum_ND_NY,sum_D_Y,sum_D_NY,SvND_Y, SvND_NY, SvD_Y, SvD_NY);
+visGapAcceptVSpasz(sum_ND_Y,sum_ND_NY,sum_D_Y,sum_D_NY,paszND_Y, paszND_NY, paszD_Y, paszD_NY);
+visGapAcceptVSposped(sum_ND_Y,sum_ND_NY,sum_D_Y,sum_D_NY,paszND_Y, paszND_NY, paszD_Y, paszD_NY)
 end
 
 %% Helper functions

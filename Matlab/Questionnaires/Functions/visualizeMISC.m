@@ -6,6 +6,7 @@
 
 function visualizeMISC(misc_pa, misc_pe)
 plotMISCbar(misc_pa.name, misc_pa.val, misc_pe.val);
+
 figure
 subplot(1,2,1)
 plotMISCMeanError(misc_pa.map0.mean, misc_pa.map1.mean, misc_pa.map2.mean, misc_pa.map0.std, misc_pa.map1.std, misc_pa.map2.std, 'Passenger')

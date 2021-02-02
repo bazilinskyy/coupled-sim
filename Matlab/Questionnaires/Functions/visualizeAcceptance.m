@@ -11,15 +11,21 @@
 
 function visualizeAcceptance(acpt_pe, acpt_pa)
 %% Plots
-plotAcceptance(acpt_pe, acpt_pa);
+% plotAcceptance(acpt_pe, acpt_pa);
 % plotAcceptanceBoxpot(acpt_pe, acpt_pa);
 % plotSubAcceptanceBar(acpt_pe, acpt_pa);
 % plotUsefulnessVSsatisfying(acpt_pe, acpt_pa);
-plotUsefulnessVSsatisfyingErrorbar(acpt_pe, acpt_pa);
+% plotUsefulnessVSsatisfyingErrorbar(acpt_pe, acpt_pa);
+
+figure;
+subplot(1,2,1);
+plotUsefulnessVSsatisfyingErrorbarSingle(acpt_pa,'Passenger');
+subplot(1,2,2);
+plotUsefulnessVSsatisfyingErrorbarSingle(acpt_pe,'Pedestrian');
 
 %% Tables
 tableCron(acpt_pe, acpt_pa);
-% tableMeanAllScoresAcceptance(acpt_pe, acpt_pa)
+tableMeanAllScoresAcceptance(acpt_pe, acpt_pa)
 tableTestStatistic(acpt_pa, 'Passenger');
 tableTestStatistic(acpt_pe, 'Pedestrian');
 tableFvalues(acpt_pe, acpt_pa, 5.849, 0.001); % input: critical F value, alpha
@@ -134,7 +140,6 @@ ax=gca; ax.FontSize = 20;
 grid on;
 end
 function plotUsefulnessVSsatisfyingErrorbar(acpt_pe, acpt_pa)
-% Plot with usefulness against satisfying with error bars
 figure;
 hold on;
 X = [acpt_pa.all.S0, acpt_pa.all.S1, acpt_pa.all.S2, acpt_pe.all.S0, acpt_pe.all.S1, acpt_pe.all.S2];
@@ -153,7 +158,6 @@ for i=1:length(X)
     p3.Color = c;
     set(get(get(p3,'Annotation'),'LegendInformation'),'IconDisplayStyle','off');
 end
-% text(X,Y,labels,'FontSize',14,'VerticalAlignment','bottom','HorizontalAlignment','right')
 legend(labels,'Location','southeast');
 xlabel('Satisfying','FontSize',15,'FontWeight','bold'); xlim([-2 2]); xL = xline(0,'--');
 ylabel('Usefulness','FontSize',15,'FontWeight','bold'); ylim([-2 2]); yL = yline(0,'--');
@@ -162,9 +166,37 @@ set(get(get(xL,'Annotation'),'LegendInformation'),'IconDisplayStyle','off');
 set(get(get(yL,'Annotation'),'LegendInformation'),'IconDisplayStyle','off');
 ax=gca; ax.FontSize = 20;
 grid on;
-
 end
-
+function plotUsefulnessVSsatisfyingErrorbarSingle(acpt,role)
+strmap = {'baseline';'mapping 1';'mapping 2'};
+strRole = join(['[',role,'] - ']);
+% figure;
+hold on;
+X = [acpt.all.S0, acpt.all.S1, acpt.all.S2];
+Y = [acpt.all.U0, acpt.all.U1, acpt.all.U2];
+xstd = [acpt.all.stdS0, acpt.all.stdS1, acpt.all.stdS2];
+ystd = [acpt.all.stdU0, acpt.all.stdU1, acpt.all.stdU2];
+labels = strmap;
+for i=1:length(X)
+    p = errorbar(X(i),Y(i),ystd(i),ystd(i),xstd(i),xstd(i),'o','MarkerSize',10,'CapSize',28);
+    c = get(p,'Color');
+    p.MarkerFaceColor = c;
+    p2 = plot([X(i)-xstd(i), X(i)+xstd(i)], [Y(i), Y(i)],'LineWidth',2);
+    p2.Color = c;
+    set(get(get(p2,'Annotation'),'LegendInformation'),'IconDisplayStyle','off');
+    p3 = plot([X(i), X(i)], [Y(i)-ystd(i), Y(i)+ystd(i)],'LineWidth',2);
+    p3.Color = c;
+    set(get(get(p3,'Annotation'),'LegendInformation'),'IconDisplayStyle','off');
+end
+legend(labels,'Location','southeast');
+xlabel('Satisfying','FontSize',15,'FontWeight','bold'); xlim([-2 2]); xL = xline(0,'--');
+ylabel('Usefulness','FontSize',15,'FontWeight','bold'); ylim([-2 2]); yL = yline(0,'--');
+title(join([strRole,'Acceptance subscale scores']),'FontSize',15,'FontWeight','bold')
+set(get(get(xL,'Annotation'),'LegendInformation'),'IconDisplayStyle','off');
+set(get(get(yL,'Annotation'),'LegendInformation'),'IconDisplayStyle','off');
+ax=gca; ax.FontSize = 20;
+grid on;
+end
 %% Helper functions - Tables
 function tableCron(acpt_pe, acpt_pa)
 T_Cron = table(round([acpt_pa.cron.U0; acpt_pa.cron.S0; acpt_pe.cron.U0; acpt_pe.cron.S0],2),... 

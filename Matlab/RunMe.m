@@ -44,6 +44,6 @@ pe_distancegroup = createGroupData(PreDataV2, 'pe_distance');
 gazeTimePlotter(timesgroup, pa_distancegroup, pe_distancegroup);
 
 %%
-close all;
+% close all;
 visualizeGapAcceptance(gapgroup, rbvgroup, pasposgroup);
 
