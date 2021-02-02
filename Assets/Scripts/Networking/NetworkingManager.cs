@@ -58,18 +58,14 @@ public class NetworkingManager : MonoBehaviour
         }
         if (_netSystem == null)
         {
-
-            _netSystem = new Host(_levelManager, _playerSystem, _aiCarSystem, _logger, _fixedLogger);
-
-            //if (GUILayout.Button("Start Host"))
-            //{
-            //    _netSystem = new Host(_levelManager, _playerSystem, _aiCarSystem, _logger, _fixedLogger);
-            //}
-            //if (GUILayout.Button("Start Client"))
-            //{
-            //    _netSystem = new Client(_levelManager, _playerSystem, _aiCarSystem, _logger, _fixedLogger);
-            //}
-
+            if (GUILayout.Button("Start Host"))
+            {
+                _netSystem = new Host(_levelManager, _playerSystem, _aiCarSystem, _logger, _fixedLogger);
+            }
+            if (GUILayout.Button("Start Client"))
+            {
+                _netSystem = new Client(_levelManager, _playerSystem, _aiCarSystem, _logger, _fixedLogger);
+            }
             _logConverter.OnGUI();
         }
         else
