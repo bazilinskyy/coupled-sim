@@ -21,7 +21,7 @@ public class Host : NetworkSystem
     bool[] _playerReadyStatus = new bool[UNetConfig.MaxPlayers];
     float _lastPoseUpdateSent;
     int _selectedExperiment;
-    int x = 1;
+    int _gameStartFlag = 1;
     const float PoseUpdateInterval = 0.01f;
 
     TrafficLightsSystem _lights;
@@ -271,10 +271,10 @@ public class Host : NetworkSystem
                 //    StartGame();
                 //}
 
-                if (x == 1)
+                if (_gameStartFlag == 1)
                 {
                     StartGame();
-                    x = 0;
+                    _gameStartFlag = 0;
                 }
 
                 GUI.enabled = true;
