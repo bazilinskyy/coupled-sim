@@ -21,6 +21,7 @@ public class Host : NetworkSystem
     bool[] _playerReadyStatus = new bool[UNetConfig.MaxPlayers];
     float _lastPoseUpdateSent;
     int _selectedExperiment;
+    int x = 1;
     const float PoseUpdateInterval = 0.01f;
 
     TrafficLightsSystem _lights;
@@ -162,17 +163,20 @@ public class Host : NetworkSystem
     //displays role selection GUI for a single player
     static void SelectRoleGUI(int player, Host host, ExperimentRoleDefinition[] roles)
     {
-        GUILayout.BeginHorizontal();
-        string playerName = player == Host.PlayerId ? "Host" : $"Player {player}";
-        GUILayout.Label($"{playerName} role: {host._playerRoles[player]}");
-        for (int i = 0; i < roles.Length; i++)
-        {
-            if (GUILayout.Button(roles[i].Name))
-            {
-                host._playerRoles[player] = i;
-            }
-        }
-        GUILayout.EndHorizontal();
+        //GUILayout.BeginHorizontal();
+        //string playerName = player == Host.PlayerId ? "Host" : $"Player {player}";
+        //GUILayout.Label($"{playerName} role: {host._playerRoles[player]}");
+        //for (int i = 0; i < roles.Length; i++)
+        //{
+        //    if (GUILayout.Button(roles[i].Name))
+        //    {
+        //        host._playerRoles[player] = i;
+        //    }
+        //}
+
+        host._playerRoles[player] = 0;
+
+        //GUILayout.EndHorizontal();
     }
 
     //displays role selection GUI
@@ -255,26 +259,37 @@ public class Host : NetworkSystem
     //displays host GUI
     public override void OnGUI()
     {
-        GUILayout.Label($"Host mode: {_currentState}");
-        GUILayout.Label("Connected: " + _host.NumRemotePlayers);
+        //GUILayout.Label($"Host mode: {_currentState}");
+        //GUILayout.Label("Connected: " + _host.NumRemotePlayers);
         switch (_currentState)
         {
             case NetState.Lobby:
             {
                 GUI.enabled = AllRolesSelected();
-                if (GUILayout.Button("Start Game"))
+                //if (GUILayout.Button("Start Game"))
+                //{
+                //    StartGame();
+                //}
+
+                if (x == 1)
                 {
                     StartGame();
+                    x = 0;
                 }
+
                 GUI.enabled = true;
-                GUILayout.Label("Experiment:");
-                for (int i = 0; i < _lvlManager.Experiments.Length; i++)
-                {
-                    if (GUILayout.Button(_lvlManager.Experiments[i].Name + (i == _selectedExperiment ? " <--" : "")))
-                    {
-                        _selectedExperiment = i;
-                    }
-                }
+                //GUILayout.Label("Experiment:");
+
+                //for (int i = 0; i < _lvlManager.Experiments.Length; i++)
+                //{
+                //    if (GUILayout.Button(_lvlManager.Experiments[i].Name + (i == _selectedExperiment ? " <--" : "")))
+                //    {
+                //        _selectedExperiment = i;
+                //    }
+                //}
+
+                _selectedExperiment = 0;
+
                 PlayerRolesGUI();
                 _playerSys.SelectModeGUI();
                 break;
