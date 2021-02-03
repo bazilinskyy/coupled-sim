@@ -245,7 +245,7 @@ public class MyGazeLogger : MonoBehaviour
         Directory.CreateDirectory(logPath);
 
         DateTime now = DateTime.Now;
-        string fileName = "gazeData.csv";
+        string fileName = "gazeData";
 
         string path = logPath + fileName + ".csv";
         writer = new StreamWriter(path);
