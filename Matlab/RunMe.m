@@ -1,7 +1,7 @@
 %% Run Me
 % This is the main script to perform analysis on the data.
 % Author: Johnson Mok
-% Last Updated: 03-01-2020
+% Last Updated: 04-02-2021
 clc;
 clear;
 close all;
@@ -43,8 +43,9 @@ pa_distancegroup = createGroupData(PreDataV2, 'pa_distance');
 pe_distancegroup = createGroupData(PreDataV2, 'pe_distance');
 %
 gazeTime = analyzeGazeTime(timesgroup, pa_distancegroup, pe_distancegroup);
+gapAcpt = analyzeGapAcceptance(gapgroup, rbvgroup, pasposgroup);
 
 %% Visualize data (needs reorganization, for now the calculations and visualization is done in the same script/function) 
 gazeTimePlotter(gazeTime); 
-visualizeGapAcceptance(gapgroup, rbvgroup, pasposgroup);
+visualizeGapAcceptance(gapAcpt);
 
