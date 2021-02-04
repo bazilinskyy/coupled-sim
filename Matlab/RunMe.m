@@ -6,6 +6,11 @@ clc;
 clear;
 close all;
 
+%% Add path to functions
+addpath(genpath('Functions'));
+addpath(genpath('Mats'));
+
+
 %% Load Data 
 if(~exist('AllData.mat'))
 % Notice: depending on the number and size of the logfiles, it will take multiple hours to create the datastructure. 
@@ -27,23 +32,19 @@ if(exist('PreDataV2.mat'))
 end
 
 %% What do we want to do with the data?
-% Create grouped data
+%
 times = CalcTime(PreDataV2, PreData);
+% Create grouped data
 timesgroup = createGroupData(times, 'time');
 gapgroup = createGroupData(PreDataV2, 'gap');
 rbvgroup = createGroupData(PreDataV2, 'rb_v');
 pasposgroup = createGroupData(PreDataV2, 'pa_pos');
 pa_distancegroup = createGroupData(PreDataV2, 'pa_distance');
 pe_distancegroup = createGroupData(PreDataV2, 'pe_distance');
-
-
+%
+gazeTime = analyzeGazeTime(timesgroup, pa_distancegroup, pe_distancegroup);
 
 %% Visualize data (needs reorganization, for now the calculations and visualization is done in the same script/function) 
-% execute plot data functions here
-% Function to plot gaze times
-gazeTimePlotter(timesgroup, pa_distancegroup, pe_distancegroup);
-
-%%
-% close all;
+gazeTimePlotter(gazeTime); 
 visualizeGapAcceptance(gapgroup, rbvgroup, pasposgroup);
 
