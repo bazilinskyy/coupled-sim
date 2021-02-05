@@ -17,6 +17,10 @@ FileList = dir(fullfile(Folder, '**', '*.csv'));
 
 % Find witmer table
 path_witmer = join([cd,'\','Witmer_presence']);
+
+%% Add path to functions
+addpath(genpath('Functions_postexp'));
+
 %% Pre-experiment Questionnaire (nr 5 in FileList)
 filename_pa     = join([FileList(3).folder,'\',FileList(3).name]);
 filename_pe     = join([FileList(4).folder,'\',FileList(4).name]);
@@ -177,7 +181,7 @@ ylim([0.5 7.5]); grid on;
 ylabel('7-Likert scale score'); title('sub score - pedestrian');
 
 
-%% Help functions Post-experiment Questionnaire
+%% Helper functions Post-experiment Questionnaire
 function data = convertDataPostExp(input,role)
 i = 0;
 data.title = input(1,:);

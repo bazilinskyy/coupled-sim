@@ -46,18 +46,18 @@ out.mean_nwP3 = meanStruct(out.nwP3);
 out.mean_nwP4 = meanStruct(out.nwP4);
 
 %% Number of people watching at distance z. Divided by phases
-pa_dis_org = getOrganisedData(pa_dis,'distance');
-pe_dis_org = getOrganisedData(pe_dis,'distance');
+out.pa_dis_org = getOrganisedData(pa_dis,'distance');
+out.pe_dis_org = getOrganisedData(pe_dis,'distance');
 
-[out.pa_val.ND_Y, out.pa_name.ND_Y] = sumDis(pa_dis_org.ND_Y);
-[out.pa_val.ND_NY, out.pa_name.ND_NY] = sumDis(pa_dis_org.ND_NY);
-[out.pa_val.D_Y, out.pa_name.D_Y] = sumDis(pa_dis_org.D_Y);
-[out.pa_val.D_NY, out.pa_name.D_NY] = sumDis(pa_dis_org.D_NY);
+[out.pa_val.ND_Y, out.pa_name.ND_Y] = sumDis(out.pa_dis_org.ND_Y);
+[out.pa_val.ND_NY, out.pa_name.ND_NY] = sumDis(out.pa_dis_org.ND_NY);
+[out.pa_val.D_Y, out.pa_name.D_Y] = sumDis(out.pa_dis_org.D_Y);
+[out.pa_val.D_NY, out.pa_name.D_NY] = sumDis(out.pa_dis_org.D_NY);
 
-[out.pe_val.ND_Y, out.pe_name.ND_Y] = sumDis(pe_dis_org.ND_Y);
-[out.pe_val.ND_NY, out.pe_name.ND_NY] = sumDis(pe_dis_org.ND_NY);
-[out.pe_val.D_Y, out.pe_name.D_Y] = sumDis(pe_dis_org.D_Y);
-[out.pe_val.D_NY, out.pe_name.D_NY] = sumDis(pe_dis_org.D_NY);
+[out.pe_val.ND_Y, out.pe_name.ND_Y] = sumDis(out.pe_dis_org.ND_Y);
+[out.pe_val.ND_NY, out.pe_name.ND_NY] = sumDis(out.pe_dis_org.ND_NY);
+[out.pe_val.D_Y, out.pe_name.D_Y] = sumDis(out.pe_dis_org.D_Y);
+[out.pe_val.D_NY, out.pe_name.D_NY] = sumDis(out.pe_dis_org.D_NY);
 
 end
 

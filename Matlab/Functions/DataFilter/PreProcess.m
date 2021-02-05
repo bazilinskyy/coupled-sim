@@ -4,7 +4,7 @@
 % Last Updated: 18-12-2020
 
 function PostData = PreProcess(AllData)
-disp('Start removing faulty data from gap acceptance.');
+disp('Start removing faulty data.');
 %% Gap acceptance
 fields_ED = fieldnames(AllData);
 for j = 1:length(fields_ED)
@@ -21,5 +21,5 @@ for j = 1:length(fields_ED)
     end
 end
 PostData = AllData;
-disp('Finished removing faulty data from gap acceptance.');
+disp('Finished removing faulty data.');
 end

@@ -8,7 +8,8 @@ close all;
 
 %% Add path to functions
 addpath(genpath('Functions'));
-addpath(genpath('Mats'));
+addpath('Mats');
+% addpath(genpath('Mats'));
 
 
 %% Load Data 
@@ -26,21 +27,33 @@ if(~exist('PreDataV2.mat'))
     load('PreData.mat');
     run('SetStartAndEnd.m');            % Remove data before and after sound signals
 end
-if(exist('PreDataV2.mat'))
-    load('PreData.mat');
-    load('PreDataV2.mat');          
+if(~exist('WrongData.mat'))
+    load('PreDataV2.mat');
+    [PreDataV3, WrongData] = FilterWrongExecutions(PreDataV2);
+	save('PreDataV3.mat','PreDataV3');
+    save('WrongData.mat','WrongData');
 end
+if(exist('PreDataV3.mat'))
+    load('PreData.mat');
+    load('PreDataV3.mat');   
+    load('WrongData.mat');
+end
+
+%% Test
+% test = getPhase(PreDataV2.Data_ED_6.HostFixedTimeLog.participant_1.trial_5);
 
 %% What do we want to do with the data?
 %
-times = CalcTime(PreDataV2, PreData);
+times = CalcTime(PreDataV3, PreData);
+% out = calcPhases(PreDataV2);
+
 % Create grouped data
 timesgroup = createGroupData(times, 'time');
-gapgroup = createGroupData(PreDataV2, 'gap');
-rbvgroup = createGroupData(PreDataV2, 'rb_v');
-pasposgroup = createGroupData(PreDataV2, 'pa_pos');
-pa_distancegroup = createGroupData(PreDataV2, 'pa_distance');
-pe_distancegroup = createGroupData(PreDataV2, 'pe_distance');
+gapgroup = createGroupData(PreDataV3, 'gap');
+rbvgroup = createGroupData(PreDataV3, 'rb_v');
+pasposgroup = createGroupData(PreDataV3, 'pa_pos');
+pa_distancegroup = createGroupData(PreDataV3, 'pa_distance');
+pe_distancegroup = createGroupData(PreDataV3, 'pe_distance');
 %
 gazeTime = analyzeGazeTime(timesgroup, pa_distancegroup, pe_distancegroup);
 gapAcpt = analyzeGapAcceptance(gapgroup, rbvgroup, pasposgroup);

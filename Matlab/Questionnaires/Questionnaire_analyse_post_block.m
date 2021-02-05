@@ -15,7 +15,7 @@ Folder   = join([cd,'\Questionnaire_Data']); %cd
 FileList = dir(fullfile(Folder, '**', '*.csv'));
 
 %% Add path to functions
-addpath(genpath('Functions'));
+addpath(genpath('Functions_postblock'));
 
 %% Pre-experiment Questionnaire (nr 5 in FileList)
 filename_pa     = join([FileList(1).folder,'\',FileList(1).name]);
