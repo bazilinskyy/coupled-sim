@@ -14,9 +14,10 @@ public class SpeedSettings : MonoBehaviour
     public float jerk = 0;              //m/s^3
     //public bool resetSpeedAfterStop = false;
     //Yielding
-    public bool lookAtPlayerAfterYielding;
     public bool causeToYield;
     public bool lookAtPlayerWhileYielding;
+    public bool lookAtPlayerAfterYielding;
+
     public float yieldTime;
     public float brakingAcceleration; //must be negative
     public float lookAtPedFromSeconds;
@@ -37,7 +38,9 @@ public class SpeedSettings : MonoBehaviour
         {
             yield return null;
         }
-        driver.EnableTracking = lookAtPlayerAfterYielding;
+        if (causeToYield) {
+            driver.EnableTracking = lookAtPlayerAfterYielding;
+        }
         if (lookAtPlayerWhileYielding) {
             driver.trackingEnabledWhenYielding = false;
             yield return new WaitForSeconds(lookAtPedFromSeconds);
