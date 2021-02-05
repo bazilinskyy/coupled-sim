@@ -14,13 +14,12 @@ public class SpeedSettings : MonoBehaviour
     public float jerk = 0;              //m/s^3
     //public bool resetSpeedAfterStop = false;
     //Yielding
-    public bool overrideTrackingAfterContinuing;
     public bool causeToYield;
     public bool lookAtPlayerWhileYielding;
+    public bool lookAtPlayerAfterYielding;
+
     public float yieldTime;
     public float brakingAcceleration; //must be negative
-    public float lookAtPedFromSeconds;
-    public float lookAtPedToSeconds;
     //Dynamics
 
     private void OnTriggerEnter(Collider other)
@@ -38,16 +37,14 @@ public class SpeedSettings : MonoBehaviour
             yield return null;
         }
         if (lookAtPlayerWhileYielding) {
-            driver.trackingEnabledWhenYielding = false;
-            yield return new WaitForSeconds(lookAtPedFromSeconds);
             driver.trackingEnabledWhenYielding = true;
-            yield return new WaitForSeconds(lookAtPedToSeconds - lookAtPedFromSeconds);
+        }
+        yield return new WaitForSeconds(yieldTime);
+        if (lookAtPlayerWhileYielding)
+        {
             driver.trackingEnabledWhenYielding = false;
         }
-        if (overrideTrackingAfterContinuing)
-        {
-            driver.EnableTracking = (yieldTime > lookAtPedFromSeconds && yieldTime <= lookAtPedToSeconds && lookAtPlayerWhileYielding);
-        }
+        driver.EnableTracking = lookAtPlayerAfterYielding;
     }
 
 }
