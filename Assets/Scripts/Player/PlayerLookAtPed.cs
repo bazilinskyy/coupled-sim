@@ -69,6 +69,7 @@ public class PlayerLookAtPed : MonoBehaviour
     {
         var diffVector = pos1 - pos2;
         diffVector.y = 0;
+        diffVector.z = 0;
         var distance = diffVector.magnitude;
         return distance;
     }
