@@ -27,10 +27,11 @@ titlestr = {'Gap Acceptance - No Distraction - Yielding';'Gap Acceptance - No Di
     'Gap Acceptance - Distraction - Yielding'; 'Gap Acceptance - Distraction - No yielding'};
 figure;
 for i = 1:length(data)
+    fld = fieldnames(data{i});
     subplot(2,2,i)
     hold on;
-    x = (1:length(data{i}))*dt;
-    plot(x,data{i},'LineWidth',2);
+    x = (1:length(data{i}.(fld{1})))*dt;
+    plot(x,[data{i}.(fld{1}), data{i}.(fld{2}), data{i}.(fld{3})],'LineWidth',2);
     grid on; xlabel('time in [s]'), ylabel('gap acceptance in [%]'); 
     ylim([-0.5 105]);
     legend(strMap); title(titlestr{i});
@@ -46,31 +47,32 @@ velstr = 'AV velocity ';
 titlestr = {'- No Distraction - Yielding';'- No Distraction - No yielding';...
     '- Distraction - Yielding'; '- Distraction - No yielding'};
 for i = 1:2
+    fld = fieldnames(data{i});
     figure
     subplot(2,2,1)
-    x = (1:length(data{i}))*dt;
-    plot(x,data{i},'LineWidth',2);
+    x = (1:length(data{i}.(fld{1})))*dt;
+    plot(x,[data{i}.(fld{1}), data{i}.(fld{2}), data{i}.(fld{3})],'LineWidth',2);
     grid on; xlabel('time in [s]'), ylabel('gap acceptance in [%]'); 
     ylim([-0.5 105]);
     legend(strMap); title(join([gapstr,titlestr{i}]));
     
     subplot(2,2,2)
-    x = (1:length(data{i+2}))*dt;
-    plot(x,data{i+2},'LineWidth',2);
+    x = (1:length(data{i+2}.(fld{1})))*dt;
+    plot(x,[data{i+2}.(fld{1}), data{i+2}.(fld{2}), data{i+2}.(fld{3})],'LineWidth',2);
     grid on; xlabel('time in [s]'), ylabel('gap acceptance in [%]'); 
     ylim([-0.5 105]);
     legend(strMap); title(join([gapstr,titlestr{i+2}]));
     
     subplot(2,2,3)
-    xv = (1:length(v{i}))*dt;
-    plot(xv,v{i},'LineWidth',2);
+    xv = (1:length(v{i}.(fld{1})))*dt;
+    plot(xv,[v{i}.(fld{1}), v{i}.(fld{2}), v{i}.(fld{3})],'LineWidth',2);
     grid on; xlabel('time in [s]'), ylabel('AV velocity in [m/s]');
     ylim([-0.5 30.5]);
     legend(strMap); title(join([velstr,titlestr{i}]));
     
     subplot(2,2,4)
-    xv = (1:length(v{i+2}))*dt;
-    plot(xv,v{i+2},'LineWidth',2);
+    xv = (1:length(v{i+2}.(fld{1})))*dt;
+    plot(xv,[v{i+2}.(fld{1}), v{i+2}.(fld{2}), v{i+2}.(fld{3})],'LineWidth',2);
     grid on; xlabel('time in [s]'), ylabel('AV velocity in [m/s]');
     ylim([-0.5 30.5]);
     legend(strMap); title(join([velstr,titlestr{i+2}]));
@@ -86,32 +88,33 @@ velstr = 'AV z-position ';
 titlestr = {'- No Distraction - Yielding';'- No Distraction - No yielding';...
     '- Distraction - Yielding'; '- Distraction - No yielding'};
 for i = 1:2
+    fld = fieldnames(data{i});
     figure
     subplot(2,2,1)
-    x = (1:length(data{i}))*dt;
-    plot(x,data{i},'LineWidth',2);
+    x = (1:length(data{i}.(fld{1})))*dt;
+    plot(x,[data{i}.(fld{1}), data{i}.(fld{2}), data{i}.(fld{3})],'LineWidth',2);
     grid on; xlabel('time in [s]'), ylabel('gap acceptance in [%]'); 
     ylim([-0.5 105]);
     legend(strMap); title(join([gapstr,titlestr{i}]));
     
     subplot(2,2,2)
-    x = (1:length(data{i+2}))*dt;
-    plot(x,data{i+2},'LineWidth',2);
+    x = (1:length(data{i+2}.(fld{1})))*dt;
+    plot(x,[data{i+2}.(fld{1}), data{i+2}.(fld{2}), data{i+2}.(fld{3})],'LineWidth',2);
     grid on; xlabel('time in [s]'), ylabel('gap acceptance in [%]'); 
     ylim([-0.5 105]);
     legend(strMap); title(join([gapstr,titlestr{i+2}]));
     
     subplot(2,2,3)
-    xv = (1:length(v{i}))*dt;
-    plot(xv,v{i},'LineWidth',2);
+    xv = (1:length(v{i}.(fld{1})))*dt;
+    plot(xv,[v{i}.(fld{1}), v{i}.(fld{2}), v{i}.(fld{3})],'LineWidth',2);
     grid on; xlabel('time in [s]'), ylabel('AV z-position in [m]');
     yline(17.19, '-.b','Pedestrian pos','LineWidth',2);
 %     ylim([-0.5 30.5]);
     legend(strMap); title(join([velstr,titlestr{i}]));
     
     subplot(2,2,4)
-    xv = (1:length(v{i+2}))*dt;
-    plot(xv,v{i+2},'LineWidth',2);
+    xv = (1:length(v{i+2}.(fld{1})))*dt;
+    plot(xv,[v{i+2}.(fld{1}), v{i+2}.(fld{2}), v{i+2}.(fld{3})],'LineWidth',2);
     grid on; xlabel('time in [s]'), ylabel('AV z-position in [m]');
     yline(17.19, '-.b','Pedestrian pos','LineWidth',2);
 %     ylim([-0.5 30.5]);
@@ -126,15 +129,19 @@ titlestr = {'- No Distraction - Yielding';'- No Distraction - No yielding';...
 data = {sum_ND_Y,sum_ND_NY,sum_D_Y,sum_D_NY}; 
 v = {paszND_Y, paszND_NY, paszD_Y, paszD_NY};
 posped = 17.19;
+fld = fieldnames(data{1,1});
 
 figure;
 for i = 1:length(data)
     subplot(2,2,i);
-    x = v{i}-posped;
-    plot(x,data{i},'LineWidth',2);
-    set(gca, 'XDir','reverse');
+    hold on;
+    for j=1:length(fld)
+        x = v{i}.(fld{j})-posped;
+        plot(x,data{i}.(fld{j}),'LineWidth',2);
+    end
+    set(gca, 'XDir','reverse'); ylim([0 100]);
     xlabel('Distance till pedestrian in [m]'); ylabel('gap acceptance in [%]');
     title(join([gapstr,titlestr{i}]));
-    legend(strMap); grid on;
+    legend(strMap); grid on; 
 end
 end

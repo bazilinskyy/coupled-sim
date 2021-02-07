@@ -27,10 +27,15 @@ out.smoothgap.D_Y   = smoothData(out.sumGap.D_Y,smoothfactor);
 out.smoothgap.D_NY  = smoothData(out.sumGap.D_NY,smoothfactor);
 
 % mean sum AV velocity
-out.sumAVvel.ND_Y = abs(calcMeanGroup(AVvel.ND_Y));
-out.sumAVvel.ND_NY = abs(calcMeanGroup(AVvel.ND_NY));
-out.sumAVvel.D_Y = abs(calcMeanGroup(AVvel.D_Y));
-out.sumAVvel.D_NY = abs(calcMeanGroup(AVvel.D_NY));
+out.sumAVvel.ND_Y = calcMeanGroup(AVvel.ND_Y);
+out.sumAVvel.ND_NY = calcMeanGroup(AVvel.ND_NY);
+out.sumAVvel.D_Y = calcMeanGroup(AVvel.D_Y);
+out.sumAVvel.D_NY = calcMeanGroup(AVvel.D_NY);
+
+out.sumAVvel.ND_Y = absStruct(out.sumAVvel.ND_Y);
+out.sumAVvel.ND_NY = absStruct(out.sumAVvel.ND_NY);
+out.sumAVvel.D_Y = absStruct(out.sumAVvel.D_Y);
+out.sumAVvel.D_NY = absStruct(out.sumAVvel.D_NY);
 
 % mean sum AV Posz
 out.sumAVposz.ND_Y = calcMeanGroup(AVposz.ND_Y);
@@ -46,21 +51,21 @@ end
 function out = getOrganizedDY(data)
 field = fieldnames(data.Data_ED_0.HostFixedTimeLog);
 % ND_Y: ED 0, 4, 8
-ND_Y(:,1) = data.Data_ED_0.HostFixedTimeLog.(field{:});
-ND_Y(:,2) = data.Data_ED_4.HostFixedTimeLog.(field{:});
-ND_Y(:,3) = data.Data_ED_8.HostFixedTimeLog.(field{:});
+ND_Y.map0 = data.Data_ED_0.HostFixedTimeLog.(field{:});
+ND_Y.map1 = data.Data_ED_4.HostFixedTimeLog.(field{:});
+ND_Y.map2 = data.Data_ED_8.HostFixedTimeLog.(field{:});
 % ND_NY: ED 1, 5, 9
-ND_NY(:,1) = data.Data_ED_1.HostFixedTimeLog.(field{:});
-ND_NY(:,2) = data.Data_ED_5.HostFixedTimeLog.(field{:});
-ND_NY(:,3) = data.Data_ED_9.HostFixedTimeLog.(field{:});
+ND_NY.map0 = data.Data_ED_1.HostFixedTimeLog.(field{:});
+ND_NY.map1 = data.Data_ED_5.HostFixedTimeLog.(field{:});
+ND_NY.map2 = data.Data_ED_9.HostFixedTimeLog.(field{:});
 % D_Y: ED 2, 6, 10
-D_Y(:,1) = data.Data_ED_2.HostFixedTimeLog.(field{:});
-D_Y(:,2) = data.Data_ED_6.HostFixedTimeLog.(field{:});
-D_Y(:,3) = data.Data_ED_10.HostFixedTimeLog.(field{:});
+D_Y.map0 = data.Data_ED_2.HostFixedTimeLog.(field{:});
+D_Y.map1 = data.Data_ED_6.HostFixedTimeLog.(field{:});
+D_Y.map2 = data.Data_ED_10.HostFixedTimeLog.(field{:});
 % D_NY: ED 1, 5, 9
-D_NY(:,1) = data.Data_ED_3.HostFixedTimeLog.(field{:});
-D_NY(:,2) = data.Data_ED_7.HostFixedTimeLog.(field{:});
-D_NY(:,3) = data.Data_ED_11.HostFixedTimeLog.(field{:});
+D_NY.map0 = data.Data_ED_3.HostFixedTimeLog.(field{:});
+D_NY.map1 = data.Data_ED_7.HostFixedTimeLog.(field{:});
+D_NY.map2 = data.Data_ED_11.HostFixedTimeLog.(field{:});
 
 out.ND_Y = ND_Y;
 out.ND_NY = ND_NY;
@@ -69,41 +74,77 @@ out.D_NY = D_NY;
 end      
 
 function out = calcSumGapAcceptance(data)
-[max_size, ~] = max(cellfun('size', data, 1));
-x = ceil((max(max_size))/50)*50;
-out = zeros(x,3);
-for j=1:size(data,2)
-    for i=1:length(data)
-        temp = data{i,j};
-        out(1:length(temp),j) = out(1:length(temp),j) + temp;
+fld = fieldnames(data);
+max_size = 0;
+for i = 1:length(fld)
+    [max_temp, ~] = max(cellfun('size', data.(fld{i}), 1));
+    if max_temp>max_size
+        max_size = max_temp;
     end
 end
-out = out*100/length(data);
+x = ceil((max(max_size))/50)*50;
+%out = zeros(x,3);
+out.map0 = zeros(x,1); 
+out.map1 = zeros(x,1); 
+out.map2 = zeros(x,1); 
+for j=1:length(fld)
+    for i=1:length(data.(fld{j}))
+        temp = data.(fld{j}){i};
+        out.(fld{j})(1:length(temp)) = out.(fld{j})(1:length(temp)) + temp;
+    end
+    out.(fld{j}) = out.(fld{j})*100/length(data.(fld{j}));
+end
 end
 function out = smoothData(data,factor) 
 % factor = Number of data points for calculating the smoothed value|Default = 5
-out = zeros(size(data));
-for i = 1:size(data,2)
-    out(:,i) = smooth(data(:,i),factor);
+fld = fieldnames(data);
+out.map0 = zeros(size(data.map0));
+out.map1 = zeros(size(data.map1));
+out.map2 = zeros(size(data.map2));
+for i = 1:length(fld)
+    out.(fld{i}) = smooth(data.(fld{i}),factor);
 end
 end
 
 function out = calcMeanGroup(data)
 % fill up the smaller arrays with the last known velocity, such that all
 % arrrays have the same length.
-[max_size, ~] = max(cellfun('size', data, 1));
-x = ceil((max(max_size))/50)*50;
-out = zeros(x,3);
-for j=1:size(data,2)
-    for i=1:length(data)
-        temp = data{i,j};
-        out(1:length(temp),j) = out(1:length(temp),j) + temp;
-        for di = length(temp)+1:x
-            out(di,j) = out(di,j) + temp(end);
-        end
+fld = fieldnames(data);
+max_size = 0;
+for i = 1:length(fld)
+    [max_temp, ~] = max(cellfun('size', data.(fld{i}), 1));
+    if max_temp>max_size
+        max_size = max_temp;
     end
 end
-out = out./length(data);
+% [max_size, ~] = max(cellfun('size', data, 1));
+x = ceil((max(max_size))/50)*50;
+% out = zeros(x,3);
+out.map0 = zeros(x,1); 
+out.map1 = zeros(x,1); 
+out.map2 = zeros(x,1); 
+for j=1:length(fld)
+    for i=1:length(data.(fld{j}))
+        temp = data.(fld{j}){i};
+        out.(fld{j})(1:length(temp)) = out.(fld{j})(1:length(temp)) + temp;
+%         out(1:length(temp),j) = out(1:length(temp),j) + temp;
+        for di = length(temp)+1:x
+%             out(di,j) = out(di,j) + temp(end);
+            out.(fld{j})(di) = out.(fld{j})(di) + temp(end);
+        end
+    end
+    out.(fld{j}) = out.(fld{j})/length(data.(fld{j}));
+end
+% out = out./length(data);
+end
+function out = absStruct(data)
+fld = fieldnames(data);
+% out.map0 = zeros(size(data.map0));
+% out.map1 = zeros(size(data.map1));
+% out.map2 = zeros(size(data.map2));
+for i=1:length(fld)
+    out.(fld{i})=abs(data.(fld{i}));
+end
 end
 
 function [DC_ND_Y, DC_ND_NY, DC_D_Y, DC_D_NY, totalMeanChange] = calcDecisionCertainty(ND_Y, ND_NY, D_Y, D_NY)
