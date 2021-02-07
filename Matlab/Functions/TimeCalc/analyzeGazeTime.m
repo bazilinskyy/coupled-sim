@@ -75,54 +75,54 @@ if (nargin>2)
 end
 if (nargin==2 && strcmp(lvl1,'eyeContact'))
 % ND_Y: ED 0, 4, 8
-ND_Y(:,1) = data.Data_ED_0.HostFixedTimeLog.(LVL1{idx1})';
-ND_Y(:,2) = data.Data_ED_4.HostFixedTimeLog.(LVL1{idx1})';
-ND_Y(:,3) = data.Data_ED_8.HostFixedTimeLog.(LVL1{idx1})';
+ND_Y.map0 = data.Data_ED_0.HostFixedTimeLog.(LVL1{idx1})';
+ND_Y.map1 = data.Data_ED_4.HostFixedTimeLog.(LVL1{idx1})';
+ND_Y.map2 = data.Data_ED_8.HostFixedTimeLog.(LVL1{idx1})';
 % ND_NY: ED 1, 5, 9
-ND_NY(:,1) = data.Data_ED_1.HostFixedTimeLog.(LVL1{idx1})';
-ND_NY(:,2) = data.Data_ED_5.HostFixedTimeLog.(LVL1{idx1})';
-ND_NY(:,3) = data.Data_ED_9.HostFixedTimeLog.(LVL1{idx1})';
+ND_NY.map0 = data.Data_ED_1.HostFixedTimeLog.(LVL1{idx1})';
+ND_NY.map1 = data.Data_ED_5.HostFixedTimeLog.(LVL1{idx1})';
+ND_NY.map2 = data.Data_ED_9.HostFixedTimeLog.(LVL1{idx1})';
 % D_Y: ED 2, 6, 10
-D_Y(:,1) = data.Data_ED_2.HostFixedTimeLog.(LVL1{idx1})';
-D_Y(:,2) = data.Data_ED_6.HostFixedTimeLog.(LVL1{idx1})';
-D_Y(:,3) = data.Data_ED_10.HostFixedTimeLog.(LVL1{idx1})';
+D_Y.map0 = data.Data_ED_2.HostFixedTimeLog.(LVL1{idx1})';
+D_Y.map1 = data.Data_ED_6.HostFixedTimeLog.(LVL1{idx1})';
+D_Y.map2 = data.Data_ED_10.HostFixedTimeLog.(LVL1{idx1})';
 % D_NY: ED 1, 5, 9
-D_NY(:,1) = data.Data_ED_3.HostFixedTimeLog.(LVL1{idx1})';
-D_NY(:,2) = data.Data_ED_7.HostFixedTimeLog.(LVL1{idx1})';
-D_NY(:,3) = data.Data_ED_11.HostFixedTimeLog.(LVL1{idx1})';
+D_NY.map0 = data.Data_ED_3.HostFixedTimeLog.(LVL1{idx1})';
+D_NY.map1 = data.Data_ED_7.HostFixedTimeLog.(LVL1{idx1})';
+D_NY.map2 = data.Data_ED_11.HostFixedTimeLog.(LVL1{idx1})';
 elseif (nargin>2)
-    ND_Y(:,1) = data.Data_ED_0.HostFixedTimeLog.(LVL1{idx1}).(LVL2{idx2}).(LVL3{idx3})';
-    ND_Y(:,2) = data.Data_ED_4.HostFixedTimeLog.(LVL1{idx1}).(LVL2{idx2}).(LVL3{idx3})';
-    ND_Y(:,3) = data.Data_ED_8.HostFixedTimeLog.(LVL1{idx1}).(LVL2{idx2}).(LVL3{idx3})';
+    ND_Y.map0 = data.Data_ED_0.HostFixedTimeLog.(LVL1{idx1}).(LVL2{idx2}).(LVL3{idx3})';
+    ND_Y.map1 = data.Data_ED_4.HostFixedTimeLog.(LVL1{idx1}).(LVL2{idx2}).(LVL3{idx3})';
+    ND_Y.map2 = data.Data_ED_8.HostFixedTimeLog.(LVL1{idx1}).(LVL2{idx2}).(LVL3{idx3})';
     % ND_NY: ED 1, 5, 9
-    ND_NY(:,1) = data.Data_ED_1.HostFixedTimeLog.(LVL1{idx1}).(LVL2{idx2}).(LVL3{idx3})';
-    ND_NY(:,2) = data.Data_ED_5.HostFixedTimeLog.(LVL1{idx1}).(LVL2{idx2}).(LVL3{idx3})';
-    ND_NY(:,3) = data.Data_ED_9.HostFixedTimeLog.(LVL1{idx1}).(LVL2{idx2}).(LVL3{idx3})';
+    ND_NY.map0 = data.Data_ED_1.HostFixedTimeLog.(LVL1{idx1}).(LVL2{idx2}).(LVL3{idx3})';
+    ND_NY.map1 = data.Data_ED_5.HostFixedTimeLog.(LVL1{idx1}).(LVL2{idx2}).(LVL3{idx3})';
+    ND_NY.map2 = data.Data_ED_9.HostFixedTimeLog.(LVL1{idx1}).(LVL2{idx2}).(LVL3{idx3})';
     % D_Y: ED 2, 6, 10
-    D_Y(:,1) = data.Data_ED_2.HostFixedTimeLog.(LVL1{idx1}).(LVL2{idx2}).(LVL3{idx3})';
-    D_Y(:,2) = data.Data_ED_6.HostFixedTimeLog.(LVL1{idx1}).(LVL2{idx2}).(LVL3{idx3})';
-    D_Y(:,3) = data.Data_ED_10.HostFixedTimeLog.(LVL1{idx1}).(LVL2{idx2}).(LVL3{idx3})';
+    D_Y.map0 = data.Data_ED_2.HostFixedTimeLog.(LVL1{idx1}).(LVL2{idx2}).(LVL3{idx3})';
+    D_Y.map1 = data.Data_ED_6.HostFixedTimeLog.(LVL1{idx1}).(LVL2{idx2}).(LVL3{idx3})';
+    D_Y.map2 = data.Data_ED_10.HostFixedTimeLog.(LVL1{idx1}).(LVL2{idx2}).(LVL3{idx3})';
     % D_NY: ED 1, 5, 9
-    D_NY(:,1) = data.Data_ED_3.HostFixedTimeLog.(LVL1{idx1}).(LVL2{idx2}).(LVL3{idx3})';
-    D_NY(:,2) = data.Data_ED_7.HostFixedTimeLog.(LVL1{idx1}).(LVL2{idx2}).(LVL3{idx3})';
-    D_NY(:,3) = data.Data_ED_11.HostFixedTimeLog.(LVL1{idx1}).(LVL2{idx2}).(LVL3{idx3})';
+    D_NY.map0 = data.Data_ED_3.HostFixedTimeLog.(LVL1{idx1}).(LVL2{idx2}).(LVL3{idx3})';
+    D_NY.map1 = data.Data_ED_7.HostFixedTimeLog.(LVL1{idx1}).(LVL2{idx2}).(LVL3{idx3})';
+    D_NY.map2 = data.Data_ED_11.HostFixedTimeLog.(LVL1{idx1}).(LVL2{idx2}).(LVL3{idx3})';
 elseif(nargin==2 && strcmp(lvl1,'distance'))
     % ND_Y: ED 0, 4, 8
-    ND_Y(:,1) = data.Data_ED_0.HostFixedTimeLog.(LVL1{:});
-    ND_Y(:,2) = data.Data_ED_4.HostFixedTimeLog.(LVL1{:});
-    ND_Y(:,3) = data.Data_ED_8.HostFixedTimeLog.(LVL1{:});
+    ND_Y.map0 = data.Data_ED_0.HostFixedTimeLog.(LVL1{:});
+    ND_Y.map1 = data.Data_ED_4.HostFixedTimeLog.(LVL1{:});
+    ND_Y.map2 = data.Data_ED_8.HostFixedTimeLog.(LVL1{:});
     % ND_NY: ED 1, 5, 9
-    ND_NY(:,1) = data.Data_ED_1.HostFixedTimeLog.(LVL1{:});
-    ND_NY(:,2) = data.Data_ED_5.HostFixedTimeLog.(LVL1{:});
-    ND_NY(:,3) = data.Data_ED_9.HostFixedTimeLog.(LVL1{:});
+    ND_NY.map0 = data.Data_ED_1.HostFixedTimeLog.(LVL1{:});
+    ND_NY.map1 = data.Data_ED_5.HostFixedTimeLog.(LVL1{:});
+    ND_NY.map2 = data.Data_ED_9.HostFixedTimeLog.(LVL1{:});
     % D_Y: ED 2, 6, 10
-    D_Y(:,1) = data.Data_ED_2.HostFixedTimeLog.(LVL1{:});
-    D_Y(:,2) = data.Data_ED_6.HostFixedTimeLog.(LVL1{:});
-    D_Y(:,3) = data.Data_ED_10.HostFixedTimeLog.(LVL1{:});
+    D_Y.map0 = data.Data_ED_2.HostFixedTimeLog.(LVL1{:});
+    D_Y.map1 = data.Data_ED_6.HostFixedTimeLog.(LVL1{:});
+    D_Y.map2 = data.Data_ED_10.HostFixedTimeLog.(LVL1{:});
     % D_NY: ED 1, 5, 9
-    D_NY(:,1) = data.Data_ED_3.HostFixedTimeLog.(LVL1{:});
-    D_NY(:,2) = data.Data_ED_7.HostFixedTimeLog.(LVL1{:});
-    D_NY(:,3) = data.Data_ED_11.HostFixedTimeLog.(LVL1{:});
+    D_NY.map0 = data.Data_ED_3.HostFixedTimeLog.(LVL1{:});
+    D_NY.map1 = data.Data_ED_7.HostFixedTimeLog.(LVL1{:});
+    D_NY.map2 = data.Data_ED_11.HostFixedTimeLog.(LVL1{:});
 end
 out.ND_Y = ND_Y;
 out.ND_NY = ND_NY;
@@ -132,18 +132,36 @@ end
 
 function out = meanStruct(in)
 fld = fieldnames(in);
+fld2 = fieldnames(in.(fld{1}));
 out = [];
 for i = 1:length(fld)
-    out(1,end+1:end+length(mean(in.(fld{i})))) = mean(in.(fld{i}));
+    for j = 1:length(fld2)
+%         out(1,end+1:end+length(mean(in.(fld{i})))) = mean(in.(fld{i}));
+        out(1,end+1) = mean(in.(fld{i}).(fld2{j}));
+    end
 end
 end
 
 function [val, dis] = sumDis(in) 
 part = 10; % group by 1/part
-rnd = roundDis(in,part);
-fill = fillUpArray(rnd);
-[val, dis] = countDis(fill,part);
-val = 100*(val/length(in));
+fld = fieldnames(in);
+for i = 1:length(fld)
+    rnd = roundDis(in.(fld{i}),part);
+    fill = fillUpArray(rnd);
+    [val.(fld{i}), dis.(fld{i})] = countDis(fill,part);
+    val.(fld{i}) = 100*(val.(fld{i})/length(in.(fld{i})));
+end
+val = [val.(fld{1}), val.(fld{2}), val.(fld{3})];
+dis = [dis.(fld{1}), dis.(fld{2}), dis.(fld{3})];
+end
+function out = roundDis(in,part)
+out = cell(size(in));
+for j = 1:size(in,2)
+	for k = 1:size(in,1)
+%         out{k,j} = round(in{k,j},decimals);
+        out{k,j} = fun_round(in{k,j},part);
+	end
+end
 end
 function out = fun_round(in,part)
 up = in<round(in);
@@ -154,15 +172,6 @@ for i =1:length(up)
     elseif(up(i) == false)
         out(i) = floor(in(i)*part)/part;
     end
-end
-end
-function out = roundDis(in,part)
-out = cell(size(in));
-for j = 1:size(in,2)
-	for k = 1:size(in,1)
-%         out{k,j} = round(in{k,j},decimals);
-        out{k,j} = fun_round(in{k,j},part);
-	end
 end
 end
 function out = fillUpArray(in)

@@ -54,7 +54,7 @@ rbvgroup = createGroupData(PreDataV3, 'rb_v');
 pasposgroup = createGroupData(PreDataV3, 'pa_pos');
 pa_distancegroup = createGroupData(PreDataV3, 'pa_distance');
 pe_distancegroup = createGroupData(PreDataV3, 'pe_distance');
-%
+%%
 gazeTime = analyzeGazeTime(timesgroup, pa_distancegroup, pe_distancegroup);
 gapAcpt = analyzeGapAcceptance(gapgroup, rbvgroup, pasposgroup);
 

@@ -32,10 +32,20 @@ function out = ceilHalf(in)
  out = floor(in) + ceil((in-floor(in))/0.5)*0.5;
 end
 function out = calcYlim(in1, in2)
-max1 = max(in1,[],'all');
-max2 = max(in2,[],'all');
+fld = fieldnames(in1);
+max1 = zeros(1,3);
+max2 = zeros(1,3);
+for i = 1:length(fld)
+    max1(i) = max(in1.(fld{i}),[],'all');
+    max2(i) = max(in2.(fld{i}),[],'all');
+end
 largest = max([max1, max2]);
 out = ceilHalf(largest);
+end
+function [C, grp] = adjustForBox(data)
+fld = fieldnames(data);
+C = [data.(fld{1});data.(fld{2});data.(fld{3})];
+grp = [ones(size(data.(fld{1}))); 2*ones(size(data.(fld{2}))); 3*ones(size(data.(fld{3})))];
 end
 
 function visEyeContact(EC)
@@ -43,23 +53,28 @@ strMap = {'Baseline','Mapping 1','Mapping 2'};
 lim1 = calcYlim(EC.ND_Y, EC.D_Y);
 lim2 = calcYlim(EC.ND_NY, EC.D_NY);
 figure;
+hold on;
 subplot(2,2,1)
-boxplot(EC.ND_Y,'Labels',strMap);
+[C,grp] = adjustForBox(EC.ND_Y);
+boxplot(C,grp,'Labels',strMap);
 grid on; ylim([-0.5 lim1]);
 ylabel('Eye Contact in [s]'); title('Eye contact - No distraction - Yielding');
 
 subplot(2,2,3)
-boxplot(EC.ND_NY,'Labels',strMap);
+[C,grp] = adjustForBox(EC.ND_NY);
+boxplot(C,grp,'Labels',strMap);
 grid on; ylim([-0.5 lim2]);
 ylabel('Eye Contact in [s]'); title('Eye contact - No distraction - No yielding');
 
 subplot(2,2,2)
-boxplot(EC.D_Y,'Labels',strMap);
+[C,grp] = adjustForBox(EC.D_Y);
+boxplot(C,grp,'Labels',strMap);
 grid on; ylim([-0.5 lim1]);
 ylabel('Eye Contact in [s]'); title('Eye contact - Distraction - Yielding');
 
 subplot(2,2,4)
-boxplot(EC.D_NY,'Labels',strMap);
+[C,grp] = adjustForBox(EC.D_NY);
+boxplot(C,grp,'Labels',strMap);
 grid on; ylim([-0.5 lim2]);
 ylabel('Eye Contact in [s]'); title('Eye contact - Distraction - No yielding');
 end
@@ -73,22 +88,26 @@ lim2 = calcYlim(pa_full_watch.ND_NY, pa_full_watch.D_NY);
 
 figure;
 subplot(2,2,1)
-boxplot(pa_full_watch.ND_Y,'Labels',strMap);
+[C,grp] = adjustForBox(pa_full_watch.ND_Y);
+boxplot(C,grp,'Labels',strMap);
 grid on; ylim([-0.5 lim1]); 
 ylabel('Gaze time in [s]'); title(join([titlestr,' Passenger gazing pedestrian - No distraction - Yielding']));
 
 subplot(2,2,3)
-boxplot(pa_full_watch.ND_NY,'Labels',strMap);
+[C,grp] = adjustForBox(pa_full_watch.ND_NY);
+boxplot(C,grp,'Labels',strMap);
 grid on; ylim([-0.5 lim2]);
 ylabel('Gaze time in [s]'); title(join([titlestr,' Passenger gazing pedestrian - No distraction - No yielding']));
 
 subplot(2,2,2)
-boxplot(pa_full_watch.D_Y,'Labels',strMap);
+[C,grp] = adjustForBox(pa_full_watch.D_Y);
+boxplot(C,grp,'Labels',strMap);
 grid on; ylim([-0.5 lim1]);
 ylabel('Gaze time in [s]'); title(join([titlestr,' Passenger gazing pedestrian - Distraction - Yielding']));
 
 subplot(2,2,4)
-boxplot(pa_full_watch.D_NY,'Labels',strMap);
+[C,grp] = adjustForBox(pa_full_watch.D_NY);
+boxplot(C,grp,'Labels',strMap);
 grid on; ylim([-0.5 lim2]);
 ylabel('Gaze time in [s]'); title(join([titlestr,' Passenger gazing pedestrian - Distraction - No yielding']));
 end
@@ -104,15 +123,16 @@ end
 tstr1 = join(['Passenger gazing pedestrian', titlestr(idx(1))]);
 tstr2 = join(['Passenger gazing pedestrian', titlestr(idx(2))]);
 i = [1,3,5];
+fld = fieldnames(p2);
 figure;
 for m1 = 1:length(strMap)
     subplot(3,2,i(m1));
-    boxplot([p2(:,m1); p3(:,m1); p4(:,m1)],[ones(size(p2(:,m1))); 2*ones(size(p3(:,m1))); 3*ones(size(p4(:,m1)))], ...
+    boxplot([p2.(fld{m1}); p3.(fld{m1}); p4.(fld{m1})],[ones(size(p2.(fld{m1}))); 2*ones(size(p3.(fld{m1}))); 3*ones(size(p4.(fld{m1})))], ...
         'Labels',{'Tracking till AV yield','During yield','After reset'});
     ylabel('Passenger gazing pedestrian time in [s]'); title(join([strMap(m1),tstr1]));
 
     subplot(3,2,i(m1)+1);
-    boxplot([p22(:,m1); p33(:,m1); p44(:,m1)],[ones(size(p22(:,m1))); 2*ones(size(p33(:,m1))); 3*ones(size(p44(:,m1)))], ...
+    boxplot([p22.(fld{m1}); p33.(fld{m1}); p44.(fld{m1})],[ones(size(p22.(fld{m1}))); 2*ones(size(p33.(fld{m1}))); 3*ones(size(p44.(fld{m1})))], ...
         'Labels',{'Tracking till AV yield','During yield','After reset'});
     ylabel('Passenger gazing pedestrian time in [s]'); title(join([strMap(m1),tstr2]));
 end
@@ -173,8 +193,8 @@ j=0;
 for i = 1:2:5
     j = j+1;
     subplot(3,2,i)
-    idstart = find(name==0)+1;
-    plot(name(idstart:end), val(idstart:end,j));
+    idstart = find(name==0,1)+1;
+    plot(name(idstart:end,j), val(idstart:end,j));
     grid on; set(gca, 'XDir','reverse');
     title(join([strMap(j), titp(p), titlestr(m)])); 
     xlabel(xlab(p));
@@ -185,8 +205,8 @@ for i = 1:2:5
     end
     
     subplot(3,2,i+1)
-    idstart = find(name2==0)+1;
-    plot(name2(idstart:end), val2(idstart:end,j));
+    idstart = find(name2==0,1)+1;
+    plot(name2(idstart:end,j), val2(idstart:end,j));
     grid on; set(gca, 'XDir','reverse');
     title(join([strMap(j), titp(p2), titlestr(m2)])); 
     xlabel(xlab(p2));
