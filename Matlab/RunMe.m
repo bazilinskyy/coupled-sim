@@ -11,7 +11,6 @@ addpath(genpath('Functions'));
 addpath('Mats');
 % addpath(genpath('Mats'));
 
-
 %% Load Data 
 if(~exist('AllData.mat'))
 % Notice: depending on the number and size of the logfiles, it will take multiple hours to create the datastructure. 
