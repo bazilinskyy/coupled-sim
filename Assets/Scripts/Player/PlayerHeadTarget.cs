@@ -34,12 +34,12 @@ public class PlayerHeadTarget : MonoBehaviour
         if(playerLookAtPed.TargetPed != null)
         {
             target.transform.parent = null;
-            target.transform.position = Vector3.Slerp(target.transform.position, playerLookAtPed.TargetPed.position, LookAtPlayerSpeed * Time.deltaTime);
+            target.transform.position = Vector3.Lerp(target.transform.position, playerLookAtPed.TargetPed.position, LookAtPlayerSpeed * Time.deltaTime);
         } 
         else
         {
             target.transform.parent = CenterAnchor;
-            target.transform.position = Vector3.Slerp(target.transform.position, CenterAnchor.position, LookAtPlayerSpeed * Time.deltaTime);
+            target.transform.position = Vector3.Lerp(target.transform.position, CenterAnchor.position, LookAtPlayerSpeed * Time.deltaTime);
         }
     }
 
