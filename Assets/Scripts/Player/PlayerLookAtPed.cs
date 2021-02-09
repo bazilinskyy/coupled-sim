@@ -43,6 +43,7 @@ public class PlayerLookAtPed : MonoBehaviour
                     minDist = distance;
                     targetPed = ped.transform;
                 }
+                Debug.Log(distance);
             }
         } else
         {
