@@ -11,7 +11,6 @@
 % Last Updated: 05-02-2021
 
 function T = calcPhases(AllData)
-disp('Start calculating eye-tracking times.');
 fields_ED = fieldnames(AllData);
 for j = 1:length(fields_ED)
     fields_time = fieldnames(AllData.(fields_ED{j}));
@@ -21,11 +20,10 @@ for j = 1:length(fields_ED)
             fields_trials = fieldnames(AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}));
             for i = 1:length(fields_trials)
                 % Perform task here
-                T.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}) = getTime(...
+                T.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}) = getPhase(...
                     AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}));
             end
         end
     end
 end
-disp('Finished calculating eye-tracking times.');
 end

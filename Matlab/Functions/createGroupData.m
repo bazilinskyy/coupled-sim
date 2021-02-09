@@ -24,6 +24,8 @@ for j = 1:length(fields_ED)
             output.(fields_ED{j}).(fields_time{k}).pa_distance = {}; %
         elseif(strcmp(var,'pe_distance'))
             output.(fields_ED{j}).(fields_time{k}).pe_distance = {}; %
+        elseif(strcmp(var,'phases'))
+            output.(fields_ED{j}).(fields_time{k}) = {}; %
         end
         
         for idx = 1:length(fields_participants)
@@ -76,6 +78,26 @@ for j = 1:length(fields_ED)
                 % Part for pedestrian distance
                 if(strcmp(var,'pe_distance'))
                     output.(fields_ED{j}).(fields_time{k}).pe_distance(end+1,:) = {AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}).pe.distance};
+                end
+                % Part for phases
+                if(strcmp(var,'phases'))
+                    fld = fieldnames(AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}));
+                    for i_ph = 1:3 %%%%% wip
+                        if(~isfield(output.(fields_ED{j}).(fields_time{k}),(fld{i_ph})))
+                            output.(fields_ED{j}).(fields_time{k}).(fld{i_ph}) = [];
+                        end
+                    end
+                    for i_ph = 1:2
+                        output.(fields_ED{j}).(fields_time{k}).(fld{i_ph}) = [output.(fields_ED{j}).(fields_time{k}).(fld{i_ph}), {AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}).(fld{i_ph})}];
+                        fldpos = fieldnames(AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}).pos);
+                        for i_pos = 1:length(fldpos)
+                            if(~isfield(output.(fields_ED{j}).(fields_time{k}).(fld{3}),(fldpos{i_pos})))
+                                output.(fields_ED{j}).(fields_time{k}).(fld{3}).(fldpos{i_pos}) = [];
+                            end
+                            output.(fields_ED{j}).(fields_time{k}).(fld{3}).(fldpos{i_pos}) = [output.(fields_ED{j}).(fields_time{k}).(fld{3}).(fldpos{i_pos}),...
+                                {AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}).(fld{3}).(fldpos{i_pos})}];
+                        end
+                    end
                 end
             end
         end

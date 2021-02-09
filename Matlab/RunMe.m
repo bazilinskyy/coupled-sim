@@ -39,12 +39,16 @@ if(exist('PreDataV3.mat'))
 end
 
 %% Test
-% test = getPhase(PreDataV2.Data_ED_6.HostFixedTimeLog.participant_1.trial_5);
+% test = getPhase(PreDataV3.Data_ED_0.HostFixedTimeLog.participant_1.trial_14);
+% test = getPhase(PreDataV3.Data_ED_1.HostFixedTimeLog.participant_1.trial_10);
+% test1 = getPhase(PreDataV3.Data_ED_6.HostFixedTimeLog.participant_1.trial_1);
+% test12 = getPhase(PreDataV3.Data_ED_6.HostFixedTimeLog.participant_1.trial_12);
+
 
 %% What do we want to do with the data?
 %
 times = CalcTime(PreDataV3, PreData);
-% out = calcPhases(PreDataV2);
+phases = calcPhases(PreDataV3);
 
 % Create grouped data
 timesgroup = createGroupData(times, 'time');
@@ -53,6 +57,8 @@ rbvgroup = createGroupData(PreDataV3, 'rb_v');
 pasposgroup = createGroupData(PreDataV3, 'pa_pos');
 pa_distancegroup = createGroupData(PreDataV3, 'pa_distance');
 pe_distancegroup = createGroupData(PreDataV3, 'pe_distance');
+phasesgroup = createGroupData(phases, 'phases');
+
 %%
 gazeTime = analyzeGazeTime(timesgroup, pa_distancegroup, pe_distancegroup);
 gapAcpt = analyzeGapAcceptance(gapgroup, rbvgroup, pasposgroup);
