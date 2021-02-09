@@ -37,7 +37,7 @@ public class PlayerLookAtPed : MonoBehaviour
         {
             foreach (GameObject ped in Peds)
             {
-                float distance = FlatDistance(transform.position, ped.transform.position);
+                float distance = FlatDistance(CarRigidbody.transform.position, ped.transform.position);
                 if (minDist > distance)
                 {
                     minDist = distance;
@@ -56,7 +56,12 @@ public class PlayerLookAtPed : MonoBehaviour
 
         if (targetPed != null)
         {
-            Ray targetRay = new Ray(PlayerHead.position, (targetPed.position - PlayerHead.position) + (new Vector3(0.0f,PlayerHead.position.y,0.0f) - new Vector3(0.0f, targetPed.position.y,0.0f)));
+            Vector3 sourcePos = CarRigidbody.transform.position;
+            Vector3 targetPos = targetPed.transform.position;
+            Vector3 direction = (targetPos - sourcePos);
+            direction = new Vector3(direction.x, 0.0f, direction.z);
+
+            Ray targetRay = new Ray(sourcePos, direction);
             targetAngle = Vector3.Angle(transform.forward, targetRay.direction);
             if (targetAngle > MaxHeadRotation)
             {
