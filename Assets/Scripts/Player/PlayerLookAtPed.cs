@@ -37,13 +37,13 @@ public class PlayerLookAtPed : MonoBehaviour
         {
             foreach (GameObject ped in Peds)
             {
-                float distance = FlatDistance(CarRigidbody.transform.position, ped.transform.position);
+                float distance = FlatDistance(PlayerHead.position, ped.transform.position);
                 if (minDist > distance)
                 {
                     minDist = distance;
                     targetPed = ped.transform;
                 }
-                Debug.Log(distance);
+                Debug.Log("Car to pedestrian flat distance " + FlatDistance(CarRigidbody.transform.position, ped.transform.position));
             }
         } else
         {
