@@ -558,7 +558,7 @@ public class LogConverter
         new SerializedPOI()
         {
             Name = "spawn point",
-            Position = new Vector3(0, 0.2224625f, 0),
+            Position = new Vector3(0, 0.2224625f, 2),
             Rotation = Quaternion.Euler(new Vector3())
         },
 
