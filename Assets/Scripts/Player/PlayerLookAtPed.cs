@@ -57,7 +57,7 @@ public class PlayerLookAtPed : MonoBehaviour
 
         if (targetPed != null)
         {
-            Vector3 sourcePos = CarRigidbody.transform.position;
+            Vector3 sourcePos = PlayerHead.position;
             Vector3 targetPos = targetPed.transform.position;
             Vector3 direction = (targetPos - sourcePos);
             direction = new Vector3(direction.x, 0.0f, direction.z);
