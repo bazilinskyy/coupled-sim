@@ -10,9 +10,12 @@ public class PlayerLookAtPed : MonoBehaviour
 
     public Rigidbody CarRigidbody;
     public Transform PlayerHead;
-    public float MaxTrackingDistance;
-    public float MinTrackingDistance;
-    public float MaxHeadRotation;
+    public float MaxTrackingDistance;//this distance is wrt to car
+    public float MinTrackingDistance;//this distance is wrt to car
+    float headPosition => CarRigidbody.transform.InverseTransformPoint(PlayerHead.position).z;
+    float maxTrackingDistanceHead => MaxTrackingDistance - headPosition;//this distance is wrt to drivers head
+    float minTrackingDistanceHead => MinTrackingDistance - headPosition;//this distance is wrt to drivers head
+    public float MaxHeadRotation;//this is wrt drivers head
     public bool EnableTracking;
     [HideInInspector]
     public bool trackingEnabledWhenYielding;
@@ -50,7 +53,7 @@ public class PlayerLookAtPed : MonoBehaviour
             targetPed = null;
         }
 
-        if ((minDist > MaxTrackingDistance || minDist < MinTrackingDistance) && !yielding)
+        if ((minDist > maxTrackingDistanceHead || minDist < minTrackingDistanceHead) && !yielding)
         {
             targetPed = null;
         }
