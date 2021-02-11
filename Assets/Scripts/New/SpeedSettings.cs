@@ -34,9 +34,10 @@ public class SpeedSettings : MonoBehaviour
 
     private IEnumerator LookAtPlayerAfterCarStops(AICar car, PlayerLookAtPed driver)
     {
-        while (car.speed > 0.0f)
+        var CarRigidbody = car.GetComponent<Rigidbody>();
+        while (!(CarRigidbody.velocity.magnitude < 0.1f && CarRigidbody.velocity.magnitude > -0.1f))
         {
-            yield return null;
+            yield return new WaitForFixedUpdate();
         }
         if (causeToYield) {
             driver.EnableTracking = lookAtPlayerAfterYielding;
@@ -44,8 +45,10 @@ public class SpeedSettings : MonoBehaviour
         if (lookAtPlayerWhileYielding) {
             driver.trackingEnabledWhenYielding = false;
             yield return new WaitForSeconds(lookAtPedFromSeconds);
+            yield return new WaitForFixedUpdate();
             driver.trackingEnabledWhenYielding = true;
             yield return new WaitForSeconds(lookAtPedToSeconds - lookAtPedFromSeconds);
+            yield return new WaitForFixedUpdate();
             driver.trackingEnabledWhenYielding = false;
         }
     }

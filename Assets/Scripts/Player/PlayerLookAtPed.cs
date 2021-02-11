@@ -30,7 +30,7 @@ public class PlayerLookAtPed : MonoBehaviour
         Peds = GameObject.FindGameObjectsWithTag("Pedestrian");
     }
 
-    private void Update()
+    private void FixedUpdate()
     {
         bool yielding = CarRigidbody.velocity.magnitude < 0.1f && CarRigidbody.velocity.magnitude > -0.1f;
         bool trackingEnabled = (yielding ? trackingEnabledWhenYielding : EnableTracking);
