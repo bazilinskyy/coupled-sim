@@ -29,17 +29,14 @@ ph3 = [find(pos_rel<14.4, 1,'first'); find(dx<0.01, 1,'first')];    % Phase 3, e
 ph4 = [];
 ph5 = [];
 if(find(dx<0.001, 1,'last')<find(pos_rel<-4.69, 1,'first'))
-    disp('one');
     ph4 = [find(dx<0.001, 1,'first'); find(dx<0.001, 1,'last')];          % Phase 4, AV standstill
     ph5 = [find(dx<0.001, 1,'last'); find(pos_rel<-4.69, 1,'first')];    % Phase 5, AV start driving again till the AV is completely past the zebra crossing
 end
 if(find(dx<0.001, 1,'last')>find(pos_rel<-4.69, 1,'first'))
-    disp('two');
     ph4 = [find(dx<0.01, 1,'first'); find(dx<0.0001, 1,'last')];          
     ph5 = [find(dx<0.0001, 1,'last'); find(pos_rel<-4.69, 1,'first')];
 end
 if(find(dx<0.0001, 1,'last')>find(pos_rel<-4.69, 1,'first'))
-    disp('three');
     ph4 = [find(dx<0.01, 1,'first'); find(dx<0.00001, 1,'last')];          
     ph5 = [find(dx<0.00001, 1,'last'); find(pos_rel<-4.69, 1,'first')];
 end

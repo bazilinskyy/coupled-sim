@@ -9,7 +9,6 @@ close all;
 %% Add path to functions
 addpath(genpath('Functions'));
 addpath('Mats');
-% addpath(genpath('Mats'));
 
 %% Load Data 
 if(~exist('AllData.mat'))
@@ -38,11 +37,7 @@ if(exist('PreDataV3.mat'))
     load('WrongData.mat');
 end
 
-%% Test
-% test = getPhase(PreDataV3.Data_ED_0.HostFixedTimeLog.participant_1.trial_14);
-% test = getPhase(PreDataV3.Data_ED_1.HostFixedTimeLog.participant_1.trial_10);
-% test1 = getPhase(PreDataV3.Data_ED_6.HostFixedTimeLog.participant_1.trial_1);
-% test12 = getPhase(PreDataV3.Data_ED_6.HostFixedTimeLog.participant_1.trial_12);
+%% TESTING:
 
 
 %% What do we want to do with the data?
@@ -58,6 +53,7 @@ pasposgroup = createGroupData(PreDataV3, 'pa_pos');
 pa_distancegroup = createGroupData(PreDataV3, 'pa_distance');
 pe_distancegroup = createGroupData(PreDataV3, 'pe_distance');
 phasesgroup = createGroupData(phases, 'phases');
+
 %% TESTING: Check for empty phase arrays
 clc
 fld_ED = fieldnames(phases);
@@ -84,27 +80,16 @@ for m=1:length(fld_ED)
 end
 disp('done');
 
-%% Testing the ones that are empty
-% test12 = getPhase(PreDataV3.Data_ED_2.HostFixedTimeLog.participant_7.trial_1);
-% test12 = getPhase(PreDataV3.Data_ED_4.HostFixedTimeLog.participant_10.trial_6);
-% test12 = getPhase(PreDataV3.Data_ED_4.HostFixedTimeLog.participant_11.trial_5);
-% test12 = getPhase(PreDataV3.Data_ED_8.HostFixedTimeLog.participant_4.trial_4);
-% test12 = getPhase(PreDataV3.Data_ED_8.HostFixedTimeLog.participant_9.trial_4);
-% test12 = getPhase(PreDataV3.Data_ED_1.HostFixedTimeLog.participant_1.trial_10);
+%% TESTING: the ones that are empty
 
 
-%%
-% gazeTime = analyzeGazeTime(timesgroup, pa_distancegroup, pe_distancegroup);
-% gapAcpt = analyzeGapAcceptance(gapgroup, rbvgroup, pasposgroup);
-%% Testing
-clc
+
+%% Analyze data
+gazeTime = analyzeGazeTime(timesgroup, pa_distancegroup, pe_distancegroup);
+gapAcpt = analyzeGapAcceptance(gapgroup, rbvgroup, pasposgroup);
 posGroup = analyzePhasesGroup(phasesgroup);
 
 %% Visualize data (needs reorganization, for now the calculations and visualization is done in the same script/function) 
-% gazeTimePlotter(gazeTime); 
-% visualizeGapAcceptance(gapAcpt);
-
-%% testing
-clc
-close all 
+gazeTimePlotter(gazeTime); 
+visualizeGapAcceptance(gapAcpt);
 visulizePhasesGroup(posGroup);
