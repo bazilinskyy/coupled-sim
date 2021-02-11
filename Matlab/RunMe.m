@@ -58,12 +58,53 @@ pasposgroup = createGroupData(PreDataV3, 'pa_pos');
 pa_distancegroup = createGroupData(PreDataV3, 'pa_distance');
 pe_distancegroup = createGroupData(PreDataV3, 'pe_distance');
 phasesgroup = createGroupData(phases, 'phases');
+%% TESTING: Check for empty phase arrays
+clc
+fld_ED = fieldnames(phases);
+for m=1:length(fld_ED)
+    fld_par = fieldnames(phases.(fld_ED{m}).HostFixedTimeLog);
+    for i=1:length(fld_par)
+        fld2_trial = fieldnames(phases.(fld_ED{m}).HostFixedTimeLog.(fld_par{i}));
+    %     disp(fld_par(i));
+        for j=1:length(fld2_trial)
+            fld3_group = fieldnames(phases.(fld_ED{m}).HostFixedTimeLog.(fld_par{i}).(fld2_trial{j}));
+    %         disp(fld2_trial(j));
+            for k=3%1:length(fld3_group)
+                fld4_phase = fieldnames(phases.(fld_ED{m}).HostFixedTimeLog.(fld_par{i}).(fld2_trial{j}).(fld3_group{k}));
+    %             disp(fld3_group(k));
+                for l=1:length(fld4_phase)
+    %                 disp(fld4_phase(l));
+                    if(isempty(phases.(fld_ED{m}).HostFixedTimeLog.(fld_par{i}).(fld2_trial{j}).(fld3_group{k}).(fld4_phase{l})))
+                        disp([fld_ED(m),fld_par(i),fld2_trial(j),fld3_group(k),fld4_phase(l)])
+                    end
+                end
+            end
+        end
+    end
+end
+disp('done');
+
+%% Testing the ones that are empty
+% test12 = getPhase(PreDataV3.Data_ED_2.HostFixedTimeLog.participant_7.trial_1);
+% test12 = getPhase(PreDataV3.Data_ED_4.HostFixedTimeLog.participant_10.trial_6);
+% test12 = getPhase(PreDataV3.Data_ED_4.HostFixedTimeLog.participant_11.trial_5);
+% test12 = getPhase(PreDataV3.Data_ED_8.HostFixedTimeLog.participant_4.trial_4);
+% test12 = getPhase(PreDataV3.Data_ED_8.HostFixedTimeLog.participant_9.trial_4);
+% test12 = getPhase(PreDataV3.Data_ED_1.HostFixedTimeLog.participant_1.trial_10);
+
 
 %%
-gazeTime = analyzeGazeTime(timesgroup, pa_distancegroup, pe_distancegroup);
-gapAcpt = analyzeGapAcceptance(gapgroup, rbvgroup, pasposgroup);
+% gazeTime = analyzeGazeTime(timesgroup, pa_distancegroup, pe_distancegroup);
+% gapAcpt = analyzeGapAcceptance(gapgroup, rbvgroup, pasposgroup);
+%% Testing
+clc
+posGroup = analyzePhasesGroup(phasesgroup);
 
 %% Visualize data (needs reorganization, for now the calculations and visualization is done in the same script/function) 
-gazeTimePlotter(gazeTime); 
-visualizeGapAcceptance(gapAcpt);
+% gazeTimePlotter(gazeTime); 
+% visualizeGapAcceptance(gapAcpt);
 
+%% testing
+clc
+close all 
+visulizePhasesGroup(posGroup);

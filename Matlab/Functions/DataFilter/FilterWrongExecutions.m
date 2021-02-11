@@ -7,7 +7,6 @@
 
 function [PostData, WrongData] = FilterWrongExecutions(AllData)
 disp('Start removing wrongly executed trials.');
-%% Gap acceptance
 fields_ED = fieldnames(AllData);
 for j = 1:length(fields_ED)
     fields_time = fieldnames(AllData.(fields_ED{j}));
