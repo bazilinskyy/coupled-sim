@@ -9,39 +9,27 @@
 % Output
 %
 
-function out = analyzeGapAcceptance(data,v,pasz)
+function out = analyzeGapAcceptance(data,v,pasz,phase)
 gapac  = getOrganizedDY(data);
 AVvel  = getOrganizedDY(v);
 AVposz = getOrganizedDY(pasz);
+phaseorg = getOrganizedDY(phase);
 
-% Summing and smoothing gap acceptance values per variable combination
-out.sumGap.ND_Y  = calcSumGapAcceptance(gapac.ND_Y);
-out.sumGap.ND_NY = calcSumGapAcceptance(gapac.ND_NY);
-out.sumGap.D_Y   = calcSumGapAcceptance(gapac.D_Y);
-out.sumGap.D_NY  = calcSumGapAcceptance(gapac.D_NY);
+% Gap Acceptance in phases
+out.phases = getAllPhases(gapac, phaseorg);
+
+%% Summing and smoothing gap acceptance values per variable combination
+out.sumGap = calcAllSumGapAcceptance(gapac);
 
 smoothfactor        = 11; % default 5
-out.smoothgap.ND_Y  = smoothData(out.sumGap.ND_Y,smoothfactor);
-out.smoothgap.ND_NY = smoothData(out.sumGap.ND_NY,smoothfactor);
-out.smoothgap.D_Y   = smoothData(out.sumGap.D_Y,smoothfactor);
-out.smoothgap.D_NY  = smoothData(out.sumGap.D_NY,smoothfactor);
+out.smoothgap = calcAllSmoothData(out.sumGap,smoothfactor);
 
 % mean sum AV velocity
-out.sumAVvel.ND_Y = calcMeanGroup(AVvel.ND_Y);
-out.sumAVvel.ND_NY = calcMeanGroup(AVvel.ND_NY);
-out.sumAVvel.D_Y = calcMeanGroup(AVvel.D_Y);
-out.sumAVvel.D_NY = calcMeanGroup(AVvel.D_NY);
-
-out.sumAVvel.ND_Y = absStruct(out.sumAVvel.ND_Y);
-out.sumAVvel.ND_NY = absStruct(out.sumAVvel.ND_NY);
-out.sumAVvel.D_Y = absStruct(out.sumAVvel.D_Y);
-out.sumAVvel.D_NY = absStruct(out.sumAVvel.D_NY);
+out.sumAVvel = calcAllMeanGroup(AVvel);
+out.sumAVvel = calcAllAbsStruct(out.sumAVvel);
 
 % mean sum AV Posz
-out.sumAVposz.ND_Y = calcMeanGroup(AVposz.ND_Y);
-out.sumAVposz.ND_NY = calcMeanGroup(AVposz.ND_NY);
-out.sumAVposz.D_Y = calcMeanGroup(AVposz.D_Y);
-out.sumAVposz.D_NY = calcMeanGroup(AVposz.D_NY);
+out.sumAVposz = calcAllMeanGroup(AVposz);
 
 % Decision certainty
 % [DC_ND_Y, DC_ND_NY, DC_D_Y, DC_D_NY, totalMeanChange] = calcDecisionCertainty(gapac.ND_Y, gapac.ND_NY, gapac.D_Y, gapac.D_NY);
@@ -49,101 +37,164 @@ end
 
 %% Helper functions
 function out = getOrganizedDY(data)
-field = fieldnames(data.Data_ED_0.HostFixedTimeLog);
-% ND_Y: ED 0, 4, 8
-ND_Y.map0 = data.Data_ED_0.HostFixedTimeLog.(field{:});
-ND_Y.map1 = data.Data_ED_4.HostFixedTimeLog.(field{:});
-ND_Y.map2 = data.Data_ED_8.HostFixedTimeLog.(field{:});
-% ND_NY: ED 1, 5, 9
-ND_NY.map0 = data.Data_ED_1.HostFixedTimeLog.(field{:});
-ND_NY.map1 = data.Data_ED_5.HostFixedTimeLog.(field{:});
-ND_NY.map2 = data.Data_ED_9.HostFixedTimeLog.(field{:});
-% D_Y: ED 2, 6, 10
-D_Y.map0 = data.Data_ED_2.HostFixedTimeLog.(field{:});
-D_Y.map1 = data.Data_ED_6.HostFixedTimeLog.(field{:});
-D_Y.map2 = data.Data_ED_10.HostFixedTimeLog.(field{:});
-% D_NY: ED 1, 5, 9
-D_NY.map0 = data.Data_ED_3.HostFixedTimeLog.(field{:});
-D_NY.map1 = data.Data_ED_7.HostFixedTimeLog.(field{:});
-D_NY.map2 = data.Data_ED_11.HostFixedTimeLog.(field{:});
-
+fld = fieldnames(data.Data_ED_0.HostFixedTimeLog);
+for i=1:length(fld)
+    % ND_Y: ED 0, 4, 8
+    ND_Y.map0.(fld{i}) = data.Data_ED_0.HostFixedTimeLog.(fld{i});
+    ND_Y.map1.(fld{i}) = data.Data_ED_4.HostFixedTimeLog.(fld{i});
+    ND_Y.map2.(fld{i}) = data.Data_ED_8.HostFixedTimeLog.(fld{i});
+    % ND_NY: ED 1, 5, 9
+    ND_NY.map0.(fld{i}) = data.Data_ED_1.HostFixedTimeLog.(fld{i});
+    ND_NY.map1.(fld{i}) = data.Data_ED_5.HostFixedTimeLog.(fld{i});
+    ND_NY.map2.(fld{i}) = data.Data_ED_9.HostFixedTimeLog.(fld{i});
+    % D_Y: ED 2, 6, 10
+    D_Y.map0.(fld{i}) = data.Data_ED_2.HostFixedTimeLog.(fld{i});
+    D_Y.map1.(fld{i}) = data.Data_ED_6.HostFixedTimeLog.(fld{i});
+    D_Y.map2.(fld{i}) = data.Data_ED_10.HostFixedTimeLog.(fld{i});
+    % D_NY: ED 1, 5, 9
+    D_NY.map0.(fld{i}) = data.Data_ED_3.HostFixedTimeLog.(fld{i});
+    D_NY.map1.(fld{i}) = data.Data_ED_7.HostFixedTimeLog.(fld{i});
+    D_NY.map2.(fld{i}) = data.Data_ED_11.HostFixedTimeLog.(fld{i});
+end
 out.ND_Y = ND_Y;
 out.ND_NY = ND_NY;
 out.D_Y = D_Y;
 out.D_NY = D_NY;
 end      
 
+function out = getPhases(data, phase)
+% Create out struct
+phasestr = {'phase1', 'phase2', 'phase3', 'phase4', 'phase5'};
+mapstr = {'map0','map1','map2'};
+out = [];
+for m=1:length(mapstr)
+    for p=1:length(phasestr)
+        if (~isfield(out, phasestr{p}))
+            out.(mapstr{m}).(phasestr{p}) = [];
+        end
+    end
+end
+% Categorize gapacceptance by mapping and phase
+fld_map = fieldnames(data);
+for i=1:length(fld_map)
+    fld_phase = fieldnames(out.(fld_map{i}));
+    for j=1:length(data.(fld_map{i}).gapAcceptance)
+        indgap = data.(fld_map{i}).gapAcceptance{j};
+        idx = phase.(fld_map{i}).idx{j};
+        for k=1:length(idx)
+            out.(fld_map{i}).(fld_phase{k}){j} = indgap(idx(1,i):idx(2,i));
+        end
+    end
+end
+end
+function out = getAllPhases(data, phase)
+fld_con = fieldnames(data);
+for c=1:length(fld_con)
+    out.(fld_con{c}) = getPhases(data.(fld_con{c}), phase.(fld_con{c}));
+end
+end
+
 function out = calcSumGapAcceptance(data)
 fld = fieldnames(data);
+% Predefine array to largest size
 max_size = 0;
 for i = 1:length(fld)
-    [max_temp, ~] = max(cellfun('size', data.(fld{i}), 1));
-    if max_temp>max_size
-        max_size = max_temp;
+    fld2 = fieldnames(data.(fld{i}));
+    for j=1:length(fld2)
+        [max_temp, ~] = max(cellfun('size', data.(fld{i}).(fld2{j}), 1));
+        if max_temp>max_size
+            max_size = max_temp;
+        end
     end
 end
 x = ceil((max(max_size))/50)*50;
-%out = zeros(x,3);
-out.map0 = zeros(x,1); 
-out.map1 = zeros(x,1); 
-out.map2 = zeros(x,1); 
+% Fill in the output array 
 for j=1:length(fld)
-    for i=1:length(data.(fld{j}))
-        temp = data.(fld{j}){i};
-        out.(fld{j})(1:length(temp)) = out.(fld{j})(1:length(temp)) + temp;
+    for k=1:length(fld2)
+        out.(fld{j}).(fld2{k}) = zeros(x,1); 
+        for i=1:length(data.(fld{j}).(fld2{k}))
+            temp = data.(fld{j}).(fld2{k}){i};
+            out.(fld{j}).(fld2{k})(1:length(temp)) = out.(fld{j}).(fld2{k})(1:length(temp)) + temp;
+        end
+        % Calculate as percentage
+        out.(fld{j}).(fld2{k}) = out.(fld{j}).(fld2{k})*100/length(data.(fld{j}).(fld2{k}));
     end
-    out.(fld{j}) = out.(fld{j})*100/length(data.(fld{j}));
 end
 end
+function out = calcAllSumGapAcceptance(data)
+fld_con = fieldnames(data);
+for c=1:length(fld_con)
+    out.(fld_con{c}) = calcSumGapAcceptance(data.(fld_con{c}));
+end
+end
+
 function out = smoothData(data,factor) 
 % factor = Number of data points for calculating the smoothed value|Default = 5
-fld = fieldnames(data);
-out.map0 = zeros(size(data.map0));
-out.map1 = zeros(size(data.map1));
-out.map2 = zeros(size(data.map2));
-for i = 1:length(fld)
-    out.(fld{i}) = smooth(data.(fld{i}),factor);
+fld_map = fieldnames(data);
+for m = 1:length(fld_map)
+    fld = fieldnames(data.(fld_map{m}));
+    for i=1:length(fld)
+        out.(fld_map{m}).(fld{i}) = smooth(data.(fld_map{m}).(fld{i}),factor);
+    end
+end
+end
+function out = calcAllSmoothData(data,factor)
+fld_con = fieldnames(data);
+for c=1:length(fld_con)
+    out.(fld_con{c}) = smoothData(data.(fld_con{c}),factor);
 end
 end
 
 function out = calcMeanGroup(data)
-% fill up the smaller arrays with the last known velocity, such that all
+% fill up the smaller arrays with the last known value such that all
 % arrrays have the same length.
-fld = fieldnames(data);
+fld_map = fieldnames(data);
 max_size = 0;
-for i = 1:length(fld)
-    [max_temp, ~] = max(cellfun('size', data.(fld{i}), 1));
+for m = 1:length(fld_map)
+    fld = fieldnames(data.(fld_map{m}));
+    for i=1:length(fld)
+    [max_temp, ~] = max(cellfun('size', data.(fld_map{m}).(fld{i}), 1));
     if max_temp>max_size
         max_size = max_temp;
     end
-end
-% [max_size, ~] = max(cellfun('size', data, 1));
-x = ceil((max(max_size))/50)*50;
-% out = zeros(x,3);
-out.map0 = zeros(x,1); 
-out.map1 = zeros(x,1); 
-out.map2 = zeros(x,1); 
-for j=1:length(fld)
-    for i=1:length(data.(fld{j}))
-        temp = data.(fld{j}){i};
-        out.(fld{j})(1:length(temp)) = out.(fld{j})(1:length(temp)) + temp;
-%         out(1:length(temp),j) = out(1:length(temp),j) + temp;
-        for di = length(temp)+1:x
-%             out(di,j) = out(di,j) + temp(end);
-            out.(fld{j})(di) = out.(fld{j})(di) + temp(end);
-        end
     end
-    out.(fld{j}) = out.(fld{j})/length(data.(fld{j}));
 end
-% out = out./length(data);
+% Calc mean percentage
+x = ceil((max(max_size))/50)*50;
+for j=1:length(fld_map)
+    for k=1:length(fld)
+        out.(fld_map{j}).(fld{k}) = zeros(x,1); 
+        for m=1:length(data.(fld_map{j}).(fld{k}))
+            temp = data.(fld_map{j}).(fld{k}){m};
+            out.(fld_map{j}).(fld{k})(1:length(temp)) = out.(fld_map{j}).(fld{k})(1:length(temp)) + temp;
+            for di = length(temp)+1:x
+                out.(fld_map{j}).(fld{k})(di) = out.(fld_map{j}).(fld{k})(di) + temp(end);
+            end
+        end
+        out.(fld_map{j}).(fld{k}) = out.(fld_map{j}).(fld{k})/length(data.(fld_map{j}).(fld{k}));
+    end
 end
+end
+function out = calcAllMeanGroup(data)
+fld_con = fieldnames(data);
+for c=1:length(fld_con)
+    out.(fld_con{c}) = calcMeanGroup(data.(fld_con{c}));
+end
+end
+
 function out = absStruct(data)
-fld = fieldnames(data);
-% out.map0 = zeros(size(data.map0));
-% out.map1 = zeros(size(data.map1));
-% out.map2 = zeros(size(data.map2));
-for i=1:length(fld)
-    out.(fld{i})=abs(data.(fld{i}));
+fld_map = fieldnames(data);
+for m=1:length(fld_map)
+    fld = fieldnames(data.(fld_map{m}));
+    for i=1:length(fld)
+        out.(fld_map{m}).(fld{i}) = abs(data.(fld_map{m}).(fld{i}));
+    end
+end
+end
+function out = calcAllAbsStruct(data)
+fld_con = fieldnames(data);
+for c=1:length(fld_con)
+    out.(fld_con{c}) = absStruct(data.(fld_con{c}));
 end
 end
 

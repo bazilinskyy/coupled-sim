@@ -83,13 +83,13 @@ disp('done');
 %% TESTING: the ones that are empty
 
 
-
 %% Analyze data
-gazeTime = analyzeGazeTime(timesgroup, pa_distancegroup, pe_distancegroup);
-gapAcpt = analyzeGapAcceptance(gapgroup, rbvgroup, pasposgroup);
-posGroup = analyzePhasesGroup(phasesgroup);
+% gazeTime = analyzeGazeTime(timesgroup, pa_distancegroup, pe_distancegroup);
+gapAcpt = analyzeGapAcceptance(gapgroup, rbvgroup, pasposgroup, phasesgroup);
+% posGroup = analyzePhasesGroup(phasesgroup);
 
 %% Visualize data (needs reorganization, for now the calculations and visualization is done in the same script/function) 
-gazeTimePlotter(gazeTime); 
+% gazeTimePlotter(gazeTime); 
+clc; close all;
 visualizeGapAcceptance(gapAcpt);
-visulizePhasesGroup(posGroup);
+% visulizePhasesGroup(posGroup);

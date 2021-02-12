@@ -1,6 +1,6 @@
 %% Calc phases
-% This script splits up all data into the 4 phases.
-% Hierarchy: calcPhases -> getPhases -> calcPhaseIdx
+% This script splits up all data into the 5 phases.
+% Hierarchy: calcPhases -> getPhases 
 
 % 1)start sound till start trigger range
 % 2)start trigger range till end trigger range
