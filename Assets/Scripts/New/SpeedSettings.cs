@@ -26,7 +26,7 @@ public class SpeedSettings : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.gameObject.CompareTag("ManualCar"))
+        if (other.gameObject.CompareTag("ManualCar") && causeToYield)
         {
             StartCoroutine(LookAtPlayerAfterCarStops(other.gameObject.GetComponent<AICar>(), other.gameObject.GetComponentInChildren<PlayerLookAtPed>()));
         }
@@ -39,16 +39,19 @@ public class SpeedSettings : MonoBehaviour
         {
             yield return new WaitForFixedUpdate();
         }
-        if (causeToYield) {
-            driver.EnableTracking = lookAtPlayerAfterYielding;
-        }
+        driver.EnableTracking = lookAtPlayerAfterYielding;
         if (lookAtPlayerWhileYielding) {
             driver.trackingEnabledWhenYielding = false;
-            yield return new WaitForSeconds(lookAtPedFromSeconds);
-            yield return new WaitForFixedUpdate();
+            if (lookAtPedFromSeconds > 0) {
+                yield return new WaitForSeconds(lookAtPedFromSeconds);
+                yield return new WaitForFixedUpdate();
+            }
             driver.trackingEnabledWhenYielding = true;
-            yield return new WaitForSeconds(lookAtPedToSeconds - lookAtPedFromSeconds);
-            yield return new WaitForFixedUpdate();
+            if (lookAtPedToSeconds - lookAtPedFromSeconds > 0)
+            {
+                yield return new WaitForSeconds(lookAtPedToSeconds - lookAtPedFromSeconds);
+                yield return new WaitForFixedUpdate();
+            }
             driver.trackingEnabledWhenYielding = false;
         }
     }
