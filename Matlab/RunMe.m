@@ -85,11 +85,12 @@ disp('done');
 
 %% Analyze data
 % gazeTime = analyzeGazeTime(timesgroup, pa_distancegroup, pe_distancegroup);
+clc
 gapAcpt = analyzeGapAcceptance(gapgroup, rbvgroup, pasposgroup, phasesgroup);
-% posGroup = analyzePhasesGroup(phasesgroup);
+phaseData = analyzePhasesGroup(phasesgroup);
 
 %% Visualize data (needs reorganization, for now the calculations and visualization is done in the same script/function) 
 % gazeTimePlotter(gazeTime); 
 clc; close all;
-visualizeGapAcceptance(gapAcpt);
-% visulizePhasesGroup(posGroup);
+visualizeGapAcceptance(gapAcpt, phaseData);
+% visulizePhasesGroup(phaseData);

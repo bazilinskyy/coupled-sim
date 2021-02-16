@@ -1,5 +1,5 @@
 %% Analyze gap acceptance
-% This script ...
+% This script analyzes the 'safe to cross' button press.
 % Author: Johnson Mok
 % Last Updated: 04-02-2021
 
@@ -7,7 +7,8 @@
 %
 
 % Output
-%
+% Crossing performance metric
+% Decision certainty
 
 function out = analyzeGapAcceptance(data,v,pasz,phase)
 gapac  = getOrganizedDY(data);
@@ -16,7 +17,25 @@ AVposz = getOrganizedDY(pasz);
 phaseorg = getOrganizedDY(phase);
 
 % Gap Acceptance in phases
-out.phases = getAllPhases(gapac, phaseorg);
+out.phases = getAllPhases(gapac, phaseorg); % Individual
+out.phasesSum = calcAllSumPhases(out.phases);
+out.phasesPer = calcAllSumPercentage(out.phasesSum);
+
+%% Decision certainty
+% out.DC = calcDecisionCertainty(out.phases, 'ND_Y', 'map0');
+out.DC = calcAllDecisionCertainty(out.phases);
+
+% Statistical analysis
+SPSS = getDecisionCertaintySPSSMatrix(out.DC);
+%     writematrix(SPSS.ND_Y,'SPSS_DecisionCertainty_ND_Y.csv'); 
+%     writematrix(SPSS.ND_NY,'SPSS_DecisionCertainty_ND_NY.csv'); 
+%     writematrix(SPSS.D_Y,'SPSS_DecisionCertainty_D_Y.csv'); 
+%     writematrix(SPSS.D_NY,'SPSS_DecisionCertainty_D_NY.csv'); 
+    
+SPSS_ANOVA = getDecisionCertaintySPSS_ANOVAMatrix(out.DC);
+    writematrix(SPSS_ANOVA.yield,'SPSS_DCANOVA_Y.csv'); 
+    writematrix(SPSS_ANOVA.noyield,'SPSS_DCANOVA_NY.csv'); 
+
 
 %% Summing and smoothing gap acceptance values per variable combination
 out.sumGap = calcAllSumGapAcceptance(gapac);
@@ -31,11 +50,9 @@ out.sumAVvel = calcAllAbsStruct(out.sumAVvel);
 % mean sum AV Posz
 out.sumAVposz = calcAllMeanGroup(AVposz);
 
-% Decision certainty
-% [DC_ND_Y, DC_ND_NY, DC_D_Y, DC_D_NY, totalMeanChange] = calcDecisionCertainty(gapac.ND_Y, gapac.ND_NY, gapac.D_Y, gapac.D_NY);
 end
 
-%% Helper functions
+%% Helper functions - phases
 function out = getOrganizedDY(data)
 fld = fieldnames(data.Data_ED_0.HostFixedTimeLog);
 for i=1:length(fld)
@@ -67,22 +84,20 @@ function out = getPhases(data, phase)
 phasestr = {'phase1', 'phase2', 'phase3', 'phase4', 'phase5'};
 mapstr = {'map0','map1','map2'};
 out = [];
-for m=1:length(mapstr)
-    for p=1:length(phasestr)
-        if (~isfield(out, phasestr{p}))
-            out.(mapstr{m}).(phasestr{p}) = [];
-        end
+fld_map = fieldnames(data);
+for m=1:length(fld_map)
+    for p=1:length(phase.(fld_map{m}).idx{1})
+        out.(mapstr{m}).(phasestr{p}) = [];
     end
 end
 % Categorize gapacceptance by mapping and phase
-fld_map = fieldnames(data);
-for i=1:length(fld_map)
-    fld_phase = fieldnames(out.(fld_map{i}));
-    for j=1:length(data.(fld_map{i}).gapAcceptance)
-        indgap = data.(fld_map{i}).gapAcceptance{j};
-        idx = phase.(fld_map{i}).idx{j};
+for m=1:length(fld_map)
+    fld_phase = fieldnames(out.(fld_map{m}));
+    for i=1:length(data.(fld_map{m}).gapAcceptance)
+        indgap = data.(fld_map{m}).gapAcceptance{i};
+        idx = phase.(fld_map{m}).idx{i};
         for k=1:length(idx)
-            out.(fld_map{i}).(fld_phase{k}){j} = indgap(idx(1,i):idx(2,i));
+            out.(fld_map{m}).(fld_phase{k}){i} = indgap(idx(1,k):idx(2,k));
         end
     end
 end
@@ -94,6 +109,161 @@ for c=1:length(fld_con)
 end
 end
 
+function out = calcSumPhases(data, con, mapping)
+fld_con = fieldnames(data);
+c = find(strcmp(fld_con,con));
+fld_map = fieldnames(data.(fld_con{c}));
+m = find(strcmp(fld_map,mapping));
+fld_phase = fieldnames(data.(fld_con{c}).(fld_map{m}));
+% Find largest array size (per phase)
+max_size = zeros(5,1);
+for p=1:length(fld_phase)
+	[max_size(p), ~] = max(cellfun('size', data.(fld_con{c}).(fld_map{m}).(fld_phase{p}), 1));
+end
+% Fill in the output array 
+for p=1:length(fld_phase)
+%     out.(fld_con{c}).(fld_map{m}).(fld_phase{p}) = zeros(max_size(p),1);
+    out.(fld_phase{p}) = zeros(max_size(p),1);
+    for i=1:length(data.(fld_con{c}).(fld_map{m}).(fld_phase{p}))
+        temp = data.(fld_con{c}).(fld_map{m}).(fld_phase{p}){i};
+%         out.(fld_con{c}).(fld_map{m}).(fld_phase{p})(1:length(temp)) = out.(fld_con{c}).(fld_map{m}).(fld_phase{p})(1:length(temp)) + temp;
+        out.(fld_phase{p})(1:length(temp)) = out.(fld_phase{p})(1:length(temp)) + temp;
+        if(length(temp)<max_size(p))
+            for e = length(temp)+1:max_size(p) 
+                out.(fld_phase{p})(e) = out.(fld_phase{p})(e) + temp(end);
+            end
+        end
+    end
+%     out.(fld_con{c}).(fld_map{m}).(fld_phase{p}) = out.(fld_con{c}).(fld_map{m}).(fld_phase{p})*100/length(data.(fld_con{c}).(fld_map{m}).(fld_phase{p}));
+    out.(fld_phase{p}) = out.(fld_phase{p})*100/length(data.(fld_con{c}).(fld_map{m}).(fld_phase{p}));
+end
+end
+
+function out = calcAllSumPhases(data)
+fld_con = fieldnames(data);
+for c=1:length(fld_con)
+    fld_map = fieldnames(data.(fld_con{c}));
+    for m=1:length(fld_map)
+        temp = calcSumPhases(data, (fld_con{c}), (fld_map{m}));
+        out.(fld_con{c}).(fld_map{m}) = temp;
+    end
+end
+end
+
+function out = calcAllSumPercentage(data)
+fld_con = fieldnames(data);
+for c=1:length(fld_con)
+    fld_map = fieldnames(data.(fld_con{c}));
+    for m=1:length(fld_map)
+        fld_phase = fieldnames(data.(fld_con{c}).(fld_map{m}));
+        for p=1:length(fld_phase)
+        temp = data.(fld_con{c}).(fld_map{m}).(fld_phase{p});
+        out.(fld_con{c}).(fld_map{m})(p) = sum(temp)/length(temp);
+        end
+    end
+end
+end
+
+%% Helper functions- DC
+function out = calcDecisionCertainty(data, con, mapping)
+% Calculate number reversal per trial, sum up number reversal of per phase
+fld_con = fieldnames(data);
+c = find(strcmp(fld_con,con));
+fld_map = fieldnames(data.(fld_con{c}));
+m = find(strcmp(fld_map,mapping));
+fld_phase = fieldnames(data.(fld_con{c}).(fld_map{m}));
+
+% Calc reversal rate
+dat = data.(fld_con{c}).(fld_map{m});
+for p = 1:length(fld_phase)
+    for i =1:length(dat.(fld_phase{p}))
+        temp.(fld_con{c}).(fld_map{m}).(fld_phase{p}){i} = sum(abs(diff(dat.(fld_phase{p}){i})));
+    end
+end
+
+% Sum up for phase 1 till 4 
+upToPhase = 4;
+if length(fld_phase)<upToPhase
+    for i =1:length(dat.(fld_phase{1}))
+	temp2.(fld_con{c}).(fld_map{m})(i) = temp.(fld_con{c}).(fld_map{m}).(fld_phase{1}){i} + temp.(fld_con{c}).(fld_map{m}).(fld_phase{2}){i} +...
+	temp.(fld_con{c}).(fld_map{m}).(fld_phase{3}){i};
+    end
+else
+    for i =1:length(dat.(fld_phase{1}))
+        temp2.(fld_con{c}).(fld_map{m})(i) = temp.(fld_con{c}).(fld_map{m}).(fld_phase{1}){i} + temp.(fld_con{c}).(fld_map{m}).(fld_phase{2}){i} +...
+        temp.(fld_con{c}).(fld_map{m}).(fld_phase{3}){i} + temp.(fld_con{c}).(fld_map{m}).(fld_phase{4}){i};
+    end
+end
+
+% Mean of reversal rates
+out.rate = temp2.(fld_con{c}).(fld_map{m});
+out.mean = mean(temp2.(fld_con{c}).(fld_map{m}));
+out.std = std(temp2.(fld_con{c}).(fld_map{m}));
+end
+function out = calcAllDecisionCertainty(data)
+fld_con = fieldnames(data);
+for c=1:length(fld_con)
+    fld_map = fieldnames(data.(fld_con{c}));
+    for m=1:length(fld_map)
+        out.(fld_con{c}).(fld_map{m}) = calcDecisionCertainty(data, fld_con{c}, fld_map{m});
+    end
+end
+end
+
+function out = getDecisionCertaintySPSSMatrix(data)
+fld_con = fieldnames(data);
+for c=1:length(fld_con)
+    fld_map = fieldnames(data.(fld_con{c}));
+    maxsize = 0;
+    for m=1:length(fld_map)
+        if length(data.(fld_con{c}).(fld_map{m}).rate)>maxsize
+            maxsize = length(data.(fld_con{c}).(fld_map{m}).rate);
+        end
+    end
+    out.(fld_con{c}) = nan(maxsize,3);
+    for m=1:length(fld_map)
+        out.(fld_con{c})(1:length(data.(fld_con{c}).(fld_map{m}).rate),m) = data.(fld_con{c}).(fld_map{m}).rate;
+    end
+end
+end
+
+function [yield, distraction] = getDistractionYielding(con)
+if(strcmp(con,'ND_Y'))
+    yield = 1;
+    distraction = 0;
+elseif(strcmp(con,'D_Y'))
+    yield = 1;
+    distraction = 1;
+elseif(strcmp(con,'D_NY'))
+    yield = 2;
+    distraction = 1;
+elseif(strcmp(con,'ND_NY'))
+    yield = 2;
+    distraction = 0;
+end
+end
+function out = getDecisionCertaintySPSS_ANOVAMatrix(data)
+% output [mapping, distraction, decision certainty]
+fld_con = fieldnames(data);
+out.yield = [];
+out.noyield = [];
+fld_yield = fieldnames(out);
+for c=1:length(fld_con)
+    [yld, dist] = getDistractionYielding(fld_con{c});
+    fld_map = fieldnames(data.(fld_con{c}));
+    temp = [];
+    map = [];
+    distr = [];
+    for m=1:length(fld_map)
+        temp = [temp, data.(fld_con{c}).(fld_map{m}).rate];
+        map = [map, (m-1)*ones(size(data.(fld_con{c}).(fld_map{m}).rate))];
+        distr = [distr, dist*ones(size(data.(fld_con{c}).(fld_map{m}).rate))];
+    end
+    tempdata = [map', distr', temp'];
+    out.(fld_yield{yld}) = [out.(fld_yield{yld}); tempdata];
+end
+end
+%% - old
 function out = calcSumGapAcceptance(data)
 fld = fieldnames(data);
 % Predefine array to largest size
@@ -198,22 +368,3 @@ for c=1:length(fld_con)
 end
 end
 
-function [DC_ND_Y, DC_ND_NY, DC_D_Y, DC_D_NY, totalMeanChange] = calcDecisionCertainty(ND_Y, ND_NY, D_Y, D_NY)
-Input = {ND_Y, ND_NY, D_Y, D_NY};
-out = zeros(1,3);
-for i = 1:length(Input)
-    data = Input{i};
-    changes = zeros(size(data));
-    for col = 1:size(data,2)
-        for row = 1:size(data,1)
-            changes(row, col) = sum(diff(data{row,col})~=0);
-        end
-    end
-    out(i,:) = mean(changes);
-end
-DC_ND_Y  = out(1,:);
-DC_ND_NY = out(2,:);
-DC_D_Y   = out(3,:);
-DC_D_NY  = out(4,:);
-totalMeanChange = mean(out);
-end
