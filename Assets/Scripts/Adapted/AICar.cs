@@ -10,6 +10,16 @@ using UnityStandardAssets.Utility;
 
 public class AICar : MonoBehaviour, IVehicle
 {
+    public enum CarState
+    {
+        DRIVING,
+        BREAKING,
+        STOPPED,
+        TAKEOFF,
+    }
+
+    public CarState state = CarState.DRIVING;
+
     // Motion related variables
     private float set_speed = 0;                                           // Velocity of cars in simulation
     private float set_acceleration = 0;                                     // Acceleration of cars in simulation
@@ -297,6 +307,7 @@ public class AICar : MonoBehaviour, IVehicle
                     yieldingTime = other.GetComponent<SpeedSettings>().yieldTime;
                     //PlayerLookAtPed.EnableTrackingWhileYielding = other.GetComponent<SpeedSettings>().lookAtPlayerWhileYielding;
                     shouldYield = true;
+                    state = CarState.BREAKING;
                 }
                 else
                 {
@@ -348,9 +359,12 @@ public class AICar : MonoBehaviour, IVehicle
 
     private IEnumerator Yield(float yieldTime)
     {
+        state = CarState.STOPPED;
         yield return new WaitForSeconds(yieldTime);
         set_speed = speedAfterYield;
         set_acceleration = accAfterYield;
         shouldYield = false;
+        state = CarState.TAKEOFF;
+
     }
 }
