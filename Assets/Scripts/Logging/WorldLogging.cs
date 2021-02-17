@@ -118,7 +118,7 @@ public class WorldLogger
                 var ai = driver.GetComponent<AICar>();
                 Assert.IsNotNull(ai);
                 _fileWriter.Write(ai.speed);
-                _fileWriter.Write(ai.state == AICar.CarState.BREAKING);
+                _fileWriter.Write(ai.state == AICar.CarState.BRAKING);
                 _fileWriter.Write(ai.state == AICar.CarState.STOPPED);
                 _fileWriter.Write(ai.state == AICar.CarState.TAKEOFF);
                 var plap = driver.GetComponentInChildren<PlayerLookAtPed>();
@@ -229,7 +229,7 @@ public class LogConverter
         public List<LightState> PedestrianLightStates = new List<LightState>();
         public List<Vector3> LocalDriverRbVelocities = new List<Vector3>();
         public List<float> AICarSpeeds = new List<float>();
-        public List<bool> breaking = new List<bool>();
+        public List<bool> braking = new List<bool>();
         public List<bool> stopped = new List<bool>();
         public List<bool> takeoff = new List<bool>();
         public List<bool> eyecontact = new List<bool>();
@@ -247,7 +247,7 @@ public class LogConverter
         System.Threading.Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
         const string separator = ";";
         const int columnsPerDriver = 3 /*pos x,y,z*/ + 3 /*rot x,y,z */ + 1 /*blinkers*/ + 3 /* local velocity */ + 3 /* local smooth velocity */ + 3 /* world velocity */ + 3 /* world velocity smooth */;
-        const int columnsForLocalDriver = columnsPerDriver + 3 /* rb velocity x,y,z */ + 3 /* rb velocity local x,y,z */ + 1 /* aicar.speed */ + 4 /* breaking, stopped, takeoff, eyecontact */;
+        const int columnsForLocalDriver = columnsPerDriver + 3 /* rb velocity x,y,z */ + 3 /* rb velocity local x,y,z */ + 1 /* aicar.speed */ + 4 /* braking, stopped, takeoff, eyecontact */;
         const int columnsPerBone = 6;
         int columnsPerPedestrian = pedestrianSkeletonNames.Length * columnsPerBone + columnsPerBone; // + columnsPerBone is for the root transform;
         var toRefRot = Quaternion.Inverse(referenceRot);
@@ -301,7 +301,7 @@ public class LogConverter
                     frame.BlinkerStates.Add((BlinkerState)reader.ReadInt32());
                     frame.LocalDriverRbVelocities.Add(reader.ReadVector3() * SpeedConvertion.Mps2Kmph);
                     frame.AICarSpeeds.Add(reader.ReadSingle());
-                    frame.breaking.Add(reader.ReadBoolean());
+                    frame.braking.Add(reader.ReadBoolean());
                     frame.stopped.Add(reader.ReadBoolean());
                     frame.takeoff.Add(reader.ReadBoolean());
                     frame.eyecontact.Add(reader.ReadBoolean());
@@ -416,7 +416,7 @@ public class LogConverter
             writer.Write(separator); // for the Ping column
 
             const string driverTransformHeader = "pos_x;pos_y;pos_z;rot_x;rot_y;rot_z;blinkers;vel_local_x;vel_local_y;vel_local_z;vel_local_smooth_x;vel_local_smooth_y;vel_local_smooth_z;vel_x;vel_y;vel_z;vel_smooth_x;vel_smooth_y;vel_smooth_z";
-            const string localDriverTransformHeader = driverTransformHeader + ";rb_vel_x;rb_vel_y;rb_vel_z;rb_vel_local_x;rb_vel_local_y;rb_vel_local_z;aicar_speed;breaking;stopped;takeoff;eyecontact";
+            const string localDriverTransformHeader = driverTransformHeader + ";rb_vel_x;rb_vel_y;rb_vel_z;rb_vel_local_x;rb_vel_local_y;rb_vel_local_z;aicar_speed;braking;stopped;takeoff;eyecontact";
             List<string> headers = new List<string>();
             for (int i = 0; i < numDrivers; i++)
             {
@@ -482,12 +482,12 @@ public class LogConverter
                         {
                             var rbVel = frame.LocalDriverRbVelocities[i];
                             var aiCarSpeed = frame.AICarSpeeds[i];
-                            var breaking = frame.breaking[i];
+                            var braking = frame.braking[i];
                             var stopped = frame.stopped[i];
                             var takeoff = frame.takeoff[i];
                             var eyecontact = frame.eyecontact[i];
                             var rbVelLocal = inverseRotation * rbVel;
-                            line.Add($"{pos.x};{pos.y};{pos.z};{euler.x};{euler.y};{euler.z};{(BlinkerState)blinkers};{speed.x};{speed.y};{speed.z};{localSmooth.x};{localSmooth.y};{localSmooth.z};{vel.x};{vel.y};{vel.z};{velSmooth.x};{velSmooth.y};{velSmooth.z};{rbVel.x};{rbVel.y};{rbVel.z};{rbVelLocal.x};{rbVelLocal.y};{rbVelLocal.z};{aiCarSpeed};{(breaking ? 1:0)};{(stopped ? 1:0)};{(takeoff ? 1:0)};{(eyecontact ? 1:0)}");
+                            line.Add($"{pos.x};{pos.y};{pos.z};{euler.x};{euler.y};{euler.z};{(BlinkerState)blinkers};{speed.x};{speed.y};{speed.z};{localSmooth.x};{localSmooth.y};{localSmooth.z};{vel.x};{vel.y};{vel.z};{velSmooth.x};{velSmooth.y};{velSmooth.z};{rbVel.x};{rbVel.y};{rbVel.z};{rbVelLocal.x};{rbVelLocal.y};{rbVelLocal.z};{aiCarSpeed};{(braking ? 1:0)};{(stopped ? 1:0)};{(takeoff ? 1:0)};{(eyecontact ? 1:0)}");
 
                         }
                     }
