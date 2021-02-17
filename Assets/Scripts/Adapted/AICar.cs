@@ -13,7 +13,7 @@ public class AICar : MonoBehaviour, IVehicle
     public enum CarState
     {
         DRIVING,
-        BREAKING,
+        BRAKING,
         STOPPED,
         TAKEOFF,
     }
@@ -307,7 +307,7 @@ public class AICar : MonoBehaviour, IVehicle
                     yieldingTime = other.GetComponent<SpeedSettings>().yieldTime;
                     //PlayerLookAtPed.EnableTrackingWhileYielding = other.GetComponent<SpeedSettings>().lookAtPlayerWhileYielding;
                     shouldYield = true;
-                    state = CarState.BREAKING;
+                    state = CarState.BRAKING;
                 }
                 else
                 {
