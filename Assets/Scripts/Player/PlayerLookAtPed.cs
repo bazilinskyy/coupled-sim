@@ -9,6 +9,7 @@ public class PlayerLookAtPed : MonoBehaviour
     public GameObject[] Peds;
 
     public Rigidbody CarRigidbody;
+    public AICar aiCar;
     public Transform PlayerHead;
     public float MaxTrackingDistance;//this distance is wrt to car
     public float MinTrackingDistance;//this distance is wrt to car
@@ -28,11 +29,12 @@ public class PlayerLookAtPed : MonoBehaviour
     private void Start()
     {
         Peds = GameObject.FindGameObjectsWithTag("Pedestrian");
+        aiCar = CarRigidbody.GetComponent<AICar>();
     }
 
     private void FixedUpdate()
     {
-        bool yielding = CarRigidbody.velocity.magnitude < 0.1f && CarRigidbody.velocity.magnitude > -0.1f;
+        bool yielding = aiCar.state == AICar.CarState.STOPPED;
         bool trackingEnabled = (yielding ? trackingEnabledWhenYielding : EnableTracking);
 
         float minDist = float.MaxValue;
