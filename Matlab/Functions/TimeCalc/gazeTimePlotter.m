@@ -6,18 +6,18 @@
 
 function gazeTimePlotter(in)
 %% EyeContact 
-visEyeContact(in.EC);
+% visEyeContact(in.EC);
 
 %% Passenger gaze time - Full trial
-visFullWatch(in.pa_full_watch); 
+% visFullWatch(in.pa_full_watch); 
 
 %% Passenger gazing at pedestrian during phases 
 % Visualization of passenger gazing at pedestrian during phases 
-visPhaseWatch(in.wP2.ND_Y,  in.wP3.ND_Y,    in.wP4.ND_Y,    in.wP2.D_Y, in.wP3.D_Y, in.wP4.D_Y, "yield");
-visPhaseWatch(in.wP2.ND_NY, in.wP3.ND_NY,   in.wP4.ND_NY,   in.wP2.D_NY,in.wP3.D_NY,in.wP4.D_NY,"no");
+% visPhaseWatch(in.wP2.ND_Y,  in.wP3.ND_Y,    in.wP4.ND_Y,    in.wP2.D_Y, in.wP3.D_Y, in.wP4.D_Y, "yield");
+% visPhaseWatch(in.wP2.ND_NY, in.wP3.ND_NY,   in.wP4.ND_NY,   in.wP2.D_NY,in.wP3.D_NY,in.wP4.D_NY,"no");
 
 % Bar visualization of mean
-visMeanWatchtype(in.mean_wP2, in.mean_wP3, in.mean_wP4, in.mean_invP2, in.mean_invP3, in.mean_invP4, in.mean_nwP2, in.mean_nwP3, in.mean_nwP4);
+% visMeanWatchtype(in.mean_wP2, in.mean_wP3, in.mean_wP4, in.mean_invP2, in.mean_invP3, in.mean_invP4, in.mean_nwP2, in.mean_nwP3, in.mean_nwP4);
 
 %% Number of people watching at distance z. Divided by phases
 visPasGazePed(in.pa_val.ND_Y,  in.pa_name.ND_Y,  'pa', 'ND_Y',  in.pa_val.D_Y,  in.pa_name.D_Y,  'pa', 'D_Y');

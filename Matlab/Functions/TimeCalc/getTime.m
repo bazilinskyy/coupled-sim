@@ -4,7 +4,7 @@
 % Author: Johnson Mok
 % Last Updated: 19-01-2020
 % function output = getTime(distance, vel, dt, display)
-function t = getTime(data, data_unp)
+function t = getTime(data, data_unp, phase)
 %% PASSENGER
 % Assign variables
 distance_unp = data_unp.pa.distance;
@@ -13,7 +13,8 @@ pos          = data.pa.pos.z;
 vel          = data.pa.world.rb_v.z;
 dt           = data.dt;
 display      = 0;
-% Time stamps
+
+% Passenger - Time stamps
 t.TS_pa.startTrack_unp = find(distance_unp==0, 1, 'first');
 t.TS_pa.startTrack     = find(distance==0, 1, 'first');
 t.TS_pa.endTrack       = find(distance==0, 1, 'last');
@@ -23,6 +24,7 @@ if(isempty(t.TS_pa.startYield))
     t.TS_pa.startYield     = find(pos <= 23.43, 1, 'first');
     t.TS_pa.endYield       = find(pos <= 23.43, 1, 'first');
 end
+
 % Total run
 t.time_total = length(distance)*dt;
 t.pa.full = calcGazeTime(distance, dt, t.TS_pa.startTrack, t.TS_pa.endTrack);
@@ -35,6 +37,8 @@ t.pa.time2 = calcGazeTime(distance, dt, t.TS_pa.startTrack, t.TS_pa.startYield);
 t.pa.time3 = calcGazeTime(distance, dt, t.TS_pa.startYield, t.TS_pa.endYield);
 % Phase 4: After reset
 t.pa.time4 = calcGazeTime(distance, dt, t.TS_pa.endYield, t.TS_pa.endTrack);
+%% Phases
+
 % Table
 if(display==1)
     Phase_pa         = ["Total";   "Eye-calibration";   "Tracking till pedestrian";   "During yield";   "Tracking after pedestrian"];
@@ -46,7 +50,10 @@ if(display==1)
     disp(T);
 end
 
-%% PASSENGER
+
+
+
+%% PEDESTRIAN
 % Assign variables
 distance_unp2 = data_unp.pe.distance;
 distance2     = data.pe.distance;

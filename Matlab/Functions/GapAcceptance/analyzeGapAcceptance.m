@@ -33,8 +33,8 @@ SPSS = getDecisionCertaintySPSSMatrix(out.DC);
 %     writematrix(SPSS.D_NY,'SPSS_DecisionCertainty_D_NY.csv'); 
     
 SPSS_ANOVA = getDecisionCertaintySPSS_ANOVAMatrix(out.DC);
-    writematrix(SPSS_ANOVA.yield,'SPSS_DCANOVA_Y.csv'); 
-    writematrix(SPSS_ANOVA.noyield,'SPSS_DCANOVA_NY.csv'); 
+%     writematrix(SPSS_ANOVA.yield,'SPSS_DCANOVA_Y.csv'); 
+%     writematrix(SPSS_ANOVA.noyield,'SPSS_DCANOVA_NY.csv'); 
 
 
 %% Summing and smoothing gap acceptance values per variable combination

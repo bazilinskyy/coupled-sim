@@ -47,13 +47,19 @@ elseif(isempty(ph4)) % Case: Non yielding
     idx = [ph1, ph2, phNY];
 end
 % Testing
+%     figure
 %     hold on;
 %     plot(ph1(1):ph1(2),pos_rel(ph1(1):ph1(2)));
+%         plot(ph1(1):ph1(2),data.pe.distance(ph1(1):ph1(2)));
 %     plot(ph2(1):ph2(2),pos_rel(ph2(1):ph2(2)));
+%         plot(ph2(1):ph2(2),data.pe.distance(ph2(1):ph2(2)));
 %     plot(ph3(1):ph3(2),pos_rel(ph3(1):ph3(2)));
+%             plot(ph3(1):ph3(2),data.pe.distance(ph3(1):ph3(2)));
 %     if(~isempty(ph4))
 %         plot(ph4(1):ph4(2),pos_rel(ph4(1):ph4(2)));
+%         	plot(ph4(1):ph4(2),data.pe.distance(ph4(1):ph4(2)));
 %         plot(ph5(1):ph5(2),pos_rel(ph5(1):ph5(2)));
+%         	plot(ph5(1):ph5(2),data.pe.distance(ph5(1):ph5(2)));
 %     end
 end
 

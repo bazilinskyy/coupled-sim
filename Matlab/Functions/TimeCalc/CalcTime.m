@@ -4,7 +4,7 @@
 % Author: Johnson Mok
 % Last Updated: 18-01-2021
 
-function T = CalcTime(AllData,AllData_unp)
+function T = CalcTime(AllData,AllData_unp,phases)
 disp('Start calculating eye-tracking times.');
 fields_ED = fieldnames(AllData);
 for j = 1:length(fields_ED)
@@ -15,9 +15,12 @@ for j = 1:length(fields_ED)
             fields_trials = fieldnames(AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}));
             for i = 1:length(fields_trials)
                 % Perform task here
-                T.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}) = getTime(...
+%                 T.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}) = getTime(...
+%                     AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}),...
+%                     AllData_unp.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}));
+                T.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}) = getTimeV2(...
                     AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}),...
-                    AllData_unp.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}));
+                    phases.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}));
             end
         end
     end

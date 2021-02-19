@@ -5,11 +5,10 @@
 
 function visualizeGapAcceptance(in, phase)
 %% Phases
-% visAllGapAcceptancePhases(in.phasesSum, phase.borders);
-% visAllPerGapAcceptancePhases(in.phasesPer);
-% visNumberOfGapAcceptancePhasesAll(in.phasesSum, phase.borders);
+visAllGapAcceptancePhases(in.phasesSum, phase.borders);
+visAllPerGapAcceptancePhases(in.phasesPer);
+visNumberOfGapAcceptancePhasesAll(in.phasesSum, phase.borders);
 
-% visDecisionCertainty(in.DC,'ND_Y');
 visAllDecisionCertainty(in.DC)
 %% OLD
 % visSumGapAcceptance(in.smoothgap);

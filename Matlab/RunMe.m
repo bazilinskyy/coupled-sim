@@ -37,13 +37,9 @@ if(exist('PreDataV3.mat'))
     load('WrongData.mat');
 end
 
-%% TESTING:
-
-
-%% What do we want to do with the data?
-%
-times = CalcTime(PreDataV3, PreData);
+%% Calculations
 phases = calcPhases(PreDataV3);
+times = CalcTime(PreDataV3, PreData, phases);
 
 % Create grouped data
 timesgroup = createGroupData(times, 'time');
@@ -53,44 +49,17 @@ pasposgroup = createGroupData(PreDataV3, 'pa_pos');
 pa_distancegroup = createGroupData(PreDataV3, 'pa_distance');
 pe_distancegroup = createGroupData(PreDataV3, 'pe_distance');
 phasesgroup = createGroupData(phases, 'phases');
-
-%% TESTING: Check for empty phase arrays
-clc
-fld_ED = fieldnames(phases);
-for m=1:length(fld_ED)
-    fld_par = fieldnames(phases.(fld_ED{m}).HostFixedTimeLog);
-    for i=1:length(fld_par)
-        fld2_trial = fieldnames(phases.(fld_ED{m}).HostFixedTimeLog.(fld_par{i}));
-    %     disp(fld_par(i));
-        for j=1:length(fld2_trial)
-            fld3_group = fieldnames(phases.(fld_ED{m}).HostFixedTimeLog.(fld_par{i}).(fld2_trial{j}));
-    %         disp(fld2_trial(j));
-            for k=3%1:length(fld3_group)
-                fld4_phase = fieldnames(phases.(fld_ED{m}).HostFixedTimeLog.(fld_par{i}).(fld2_trial{j}).(fld3_group{k}));
-    %             disp(fld3_group(k));
-                for l=1:length(fld4_phase)
-    %                 disp(fld4_phase(l));
-                    if(isempty(phases.(fld_ED{m}).HostFixedTimeLog.(fld_par{i}).(fld2_trial{j}).(fld3_group{k}).(fld4_phase{l})))
-                        disp([fld_ED(m),fld_par(i),fld2_trial(j),fld3_group(k),fld4_phase(l)])
-                    end
-                end
-            end
-        end
-    end
-end
-disp('done');
-
-%% TESTING: the ones that are empty
+pe_rotationgroup = createGroupData(PreDataV3, 'pe_rotation');
+pe_gazeDir = createGroupData(PreDataV3, 'HMDgaze_dir');
 
 
 %% Analyze data
-% gazeTime = analyzeGazeTime(timesgroup, pa_distancegroup, pe_distancegroup);
-clc
+gazeTime = analyzeGazeTimeV2(timesgroup); % gazeTime = analyzeGazeTime(timesgroup, pa_distancegroup, pe_distancegroup);
 gapAcpt = analyzeGapAcceptance(gapgroup, rbvgroup, pasposgroup, phasesgroup);
 phaseData = analyzePhasesGroup(phasesgroup);
+pedGazeDirData = analyzePedestrianGazeDirection(pe_rotationgroup, pe_gazeDir);
 
 %% Visualize data (needs reorganization, for now the calculations and visualization is done in the same script/function) 
-% gazeTimePlotter(gazeTime); 
-clc; close all;
+visualizeGazeTime(gazeTime); % gazeTimePlotter(gazeTime); 
 visualizeGapAcceptance(gapAcpt, phaseData);
-% visulizePhasesGroup(phaseData);
+visulizePhasesGroup(phaseData);
