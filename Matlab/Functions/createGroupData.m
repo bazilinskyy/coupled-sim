@@ -26,6 +26,18 @@ for j = 1:length(fields_ED)
             output.(fields_ED{j}).(fields_time{k}).pe_distance = {}; %
         elseif(strcmp(var,'phases'))
             output.(fields_ED{j}).(fields_time{k}) = {}; %
+        elseif(strcmp(var,'pe_rotation'))
+            output.(fields_ED{j}).(fields_time{k}).x = {}; %
+            output.(fields_ED{j}).(fields_time{k}).y = {}; %
+            output.(fields_ED{j}).(fields_time{k}).z = {}; %
+        elseif(strcmp(var,'HMDgaze_dir'))
+            output.(fields_ED{j}).(fields_time{k}).x = {}; %
+            output.(fields_ED{j}).(fields_time{k}).y = {}; %
+            output.(fields_ED{j}).(fields_time{k}).z = {}; %
+        elseif(strcmp(var,'HMDgaze_org'))
+            output.(fields_ED{j}).(fields_time{k}).x = {}; %
+            output.(fields_ED{j}).(fields_time{k}).y = {}; %
+            output.(fields_ED{j}).(fields_time{k}).z = {}; %
         end
         
         for idx = 1:length(fields_participants)
@@ -54,6 +66,12 @@ for j = 1:length(fields_ED)
                                         output.(fields_ED{j}).(fields_time{k}).(fields_T{l}).(fields_phase{m}).(fields_var{n}) = [];
                                     end
                                     output.(fields_ED{j}).(fields_time{k}).(fields_T{l}).(fields_phase{m}).(fields_var{n}) = [output.(fields_ED{j}).(fields_time{k}).(fields_T{l}).(fields_phase{m}).(fields_var{n}), AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}).(fields_T{l}).(fields_phase{m}).(fields_var{n})];
+                                end
+                                if(n==idx_dis)
+                                	if(~isfield(output.(fields_ED{j}).(fields_time{k}).(fields_T{l}).(fields_phase{m}),(fields_var{n})))
+                                        output.(fields_ED{j}).(fields_time{k}).(fields_T{l}).(fields_phase{m}).(fields_var{n}) = [];
+                                    end  
+                                    output.(fields_ED{j}).(fields_time{k}).(fields_T{l}).(fields_phase{m}).(fields_var{n}) = [output.(fields_ED{j}).(fields_time{k}).(fields_T{l}).(fields_phase{m}).(fields_var{n}), {AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}).(fields_T{l}).(fields_phase{m}).(fields_var{n})}];
                                 end
                             end
                         end
@@ -97,6 +115,25 @@ for j = 1:length(fields_ED)
                             output.(fields_ED{j}).(fields_time{k}).(fld{3}).(fldpos{i_pos}) = [output.(fields_ED{j}).(fields_time{k}).(fld{3}).(fldpos{i_pos}),...
                                 {AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}).(fld{3}).(fldpos{i_pos})}];
                         end
+                    end
+                end
+                % Part for pedestrian rotation
+                if(strcmp(var,'pe_rotation'))
+                    fld_dir = fieldnames(AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}).pe.rot);
+                    for d=1:length(fld_dir)
+                        output.(fields_ED{j}).(fields_time{k}).(fld_dir{d})(end+1,:) = {AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}).pe.rot.(fld_dir{d})};
+                    end
+                end
+                if(strcmp(var,'HMDgaze_dir'))
+                    fld_dir = fieldnames(AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}).pe.HMD.gaze_dir);
+                    for d=1:length(fld_dir)
+                        output.(fields_ED{j}).(fields_time{k}).(fld_dir{d})(end+1,:) = {AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}).pe.HMD.gaze_dir.(fld_dir{d})};
+                    end
+                end
+                if(strcmp(var,'HMDgaze_org'))
+                    fld_dir = fieldnames(AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}).pe.HMD.gaze_origin);
+                    for d=1:length(fld_dir)
+                        output.(fields_ED{j}).(fields_time{k}).(fld_dir{d})(end+1,:) = {AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}).pe.HMD.gaze_origin.(fld_dir{d})};
                     end
                 end
             end

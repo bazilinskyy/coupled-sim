@@ -51,13 +51,27 @@ pe_distancegroup = createGroupData(PreDataV3, 'pe_distance');
 phasesgroup = createGroupData(phases, 'phases');
 pe_rotationgroup = createGroupData(PreDataV3, 'pe_rotation');
 pe_gazeDir = createGroupData(PreDataV3, 'HMDgaze_dir');
+pe_gazeOrg = createGroupData(PreDataV3, 'HMDgaze_org');
+
 
 
 %% Analyze data
 gazeTime = analyzeGazeTimeV2(timesgroup); % gazeTime = analyzeGazeTime(timesgroup, pa_distancegroup, pe_distancegroup);
 gapAcpt = analyzeGapAcceptance(gapgroup, rbvgroup, pasposgroup, phasesgroup);
 phaseData = analyzePhasesGroup(phasesgroup);
-pedGazeDirData = analyzePedestrianGazeDirection(pe_rotationgroup, pe_gazeDir);
+%%
+clc
+close all;
+% pedGazeDirData = analyzePedestrianGazeDirection(pe_gazeOrg, pe_gazeDir);
+trialAnimate = PreDataV3.Data_ED_4.HostFixedTimeLog.participant_1.trial_0;
+pedestrianGaze = trialAnimate.pe.world;
+pedestrianGAP = trialAnimate.pe.gapAcceptance;
+passengerGaze = trialAnimate.pa.world;
+passengerLook = trialAnimate.pa.distance;
+animateTrial(pedestrianGaze.gaze_origin, pedestrianGaze.gaze_dir, pedestrianGAP,...
+    passengerGaze.gaze_origin, passengerGaze.gaze_dir,...
+    passengerLook);
+
 
 %% Visualize data (needs reorganization, for now the calculations and visualization is done in the same script/function) 
 visualizeGazeTime(gazeTime); % gazeTimePlotter(gazeTime); 
