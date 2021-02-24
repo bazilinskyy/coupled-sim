@@ -6,6 +6,10 @@ clc;
 clear;
 close all;
 
+%% Inputs
+createAnimation = false;
+showPlot = false;
+
 %% Add path to functions
 addpath(genpath('Functions'));
 addpath('Mats');
@@ -37,6 +41,10 @@ if(exist('PreDataV3.mat'))
     load('WrongData.mat');
 end
 
+%% test
+% clc
+% out = OrderByTrial(PreDataV3, 'Data_ED_1', 'participant_1');
+
 %% Calculations
 phases = calcPhases(PreDataV3);
 times = CalcTime(PreDataV3, PreData, phases);
@@ -53,27 +61,33 @@ pe_rotationgroup = createGroupData(PreDataV3, 'pe_rotation');
 pe_gazeDir = createGroupData(PreDataV3, 'HMDgaze_dir');
 pe_gazeOrg = createGroupData(PreDataV3, 'HMDgaze_org');
 
-
+gapOrderGroup = OrderByTrialAll(PreDataV3);
 
 %% Analyze data
-gazeTime = analyzeGazeTimeV2(timesgroup); % gazeTime = analyzeGazeTime(timesgroup, pa_distancegroup, pe_distancegroup);
-gapAcpt = analyzeGapAcceptance(gapgroup, rbvgroup, pasposgroup, phasesgroup);
-phaseData = analyzePhasesGroup(phasesgroup);
-%%
-clc
-close all;
-% pedGazeDirData = analyzePedestrianGazeDirection(pe_gazeOrg, pe_gazeDir);
-trialAnimate = PreDataV3.Data_ED_4.HostFixedTimeLog.participant_1.trial_0;
-pedestrianGaze = trialAnimate.pe.world;
-pedestrianGAP = trialAnimate.pe.gapAcceptance;
-passengerGaze = trialAnimate.pa.world;
-passengerLook = trialAnimate.pa.distance;
-animateTrial(pedestrianGaze.gaze_origin, pedestrianGaze.gaze_dir, pedestrianGAP,...
-    passengerGaze.gaze_origin, passengerGaze.gaze_dir,...
-    passengerLook);
+% gazeTime = analyzeGazeTimeV2(timesgroup); % gazeTime = analyzeGazeTime(timesgroup, pa_distancegroup, pe_distancegroup);
+% gapAcpt = analyzeGapAcceptance(gapgroup, rbvgroup, pasposgroup, phasesgroup);
+% phaseData = analyzePhasesGroup(phasesgroup);
+learnEffect = analyzeLearningEffect(gapOrderGroup);
 
+
+%% Animation
+if createAnimation == true
+    videoname = 'ED_8_participant_1_trial_6';
+    titlestr = 'ED\_8\_participant\_1\_trial\_6';
+    trialAnimate = PreDataV3.Data_ED_8.HostFixedTimeLog.participant_1.trial_6;
+    pedestrianGaze = trialAnimate.pe.world;
+    pedestrianGAP = trialAnimate.pe.gapAcceptance;
+    passengerGaze = trialAnimate.pa.world;
+    passengerLook = trialAnimate.pa.distance;
+    animateTrial(pedestrianGaze.gaze_origin, pedestrianGaze.gaze_dir, pedestrianGAP,...
+        passengerGaze.gaze_origin, passengerGaze.gaze_dir,...
+        passengerLook, videoname, titlestr);
+end
 
 %% Visualize data (needs reorganization, for now the calculations and visualization is done in the same script/function) 
-visualizeGazeTime(gazeTime); % gazeTimePlotter(gazeTime); 
-visualizeGapAcceptance(gapAcpt, phaseData);
-visulizePhasesGroup(phaseData);
+if showPlot == true
+    visualizeGazeTime(gazeTime);  
+    visualizeGapAcceptance(gapAcpt, phaseData);
+    visulizePhasesGroup(phaseData);
+    visualizeLearnEffect(learnEffect);
+end
