@@ -41,10 +41,6 @@ if(exist('PreDataV3.mat'))
     load('WrongData.mat');
 end
 
-%% test
-% clc
-% out = OrderByTrial(PreDataV3, 'Data_ED_1', 'participant_1');
-
 %% Calculations
 phases = calcPhases(PreDataV3);
 times = CalcTime(PreDataV3, PreData, phases);
@@ -67,8 +63,10 @@ gapOrderGroup = OrderByTrialAll(PreDataV3);
 % gazeTime = analyzeGazeTimeV2(timesgroup); % gazeTime = analyzeGazeTime(timesgroup, pa_distancegroup, pe_distancegroup);
 % gapAcpt = analyzeGapAcceptance(gapgroup, rbvgroup, pasposgroup, phasesgroup);
 % phaseData = analyzePhasesGroup(phasesgroup);
-learnEffect = analyzeLearningEffect(gapOrderGroup);
+% learnEffect = analyzeLearningEffect(gapOrderGroup);
 
+clc; close all;
+peHeadAngle = analyzePedestrianGazeAngle(pe_gazeOrg, pe_gazeDir, phasesgroup);
 
 %% Animation
 if createAnimation == true
@@ -86,8 +84,12 @@ end
 
 %% Visualize data (needs reorganization, for now the calculations and visualization is done in the same script/function) 
 if showPlot == true
-    visualizeGazeTime(gazeTime);  
     visualizeGapAcceptance(gapAcpt, phaseData);
     visulizePhasesGroup(phaseData);
     visualizeLearnEffect(learnEffect);
+    visualizeGazeTime(gazeTime);  
 end
+clc
+close all
+    visualizeHeadAngle(peHeadAngle);
+

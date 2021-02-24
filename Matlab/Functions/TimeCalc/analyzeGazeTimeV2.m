@@ -104,6 +104,7 @@ data_cell = reshape(val_,[length(val_),1]);
 data_mat = cell2mat(data_cell);
 [freq,val] = groupcounts(data_mat);
 freq = 100*freq/length(in);
+freq = smooth(freq);
 % data_cell = reshape(in,[length(in),1]);
 % data_mat = cell2mat(data_cell);
 % data_round = round(data_mat,2);
