@@ -9,7 +9,7 @@
 % Last Updated: 19-02-2020
 
 
-function animateTrial(gazeorg, gazedir ,gap, pagazeorg, pagazedir, paLook)
+function animateTrial(gazeorg, gazedir ,gap, pagazeorg, pagazedir, paLook, videoname, titlestr)
 %% Prepare data
 dt = 0.0167;
 % Animation trial - pedestrian
@@ -38,7 +38,7 @@ customColor = [0, 0.4470, 0.7410;...
 time = (1:length(gap))*dt;
 
 %% Initialize video
-myVideo = VideoWriter('myVideoFile'); %open video file
+myVideo = VideoWriter(videoname); %open video file
 myVideo.FrameRate = 59;  %can adjust this, 5 - 10 works well for me
 open(myVideo)
 
@@ -53,7 +53,7 @@ h4 = plot3(NaN, NaN, NaN, 's','MarkerSize',6,'MarkerFaceColor',customColor(2,:),
 axis([-120 -100 -5 5 -40 80]);
 view(0,0) % XZ
 set(gca,'xticklabel',[],'yticklabel',[],'zticklabel',[])
-title('Trial animation','FontSize',15,'FontWeight','bold');
+title(titlestr,'FontSize',15,'FontWeight','bold');
 grid on;
 axis manual %// this line freezes the axes
 for i=1:length(PatchAni)
@@ -145,11 +145,14 @@ for c = 1:length(fld_coor)
 end
 end
 
-function [startstop, endstop] = findStandstill(data)
+function [startsmooth, endsmooth] = findStandstill(data)
 a = round(4/0.0167)+40;
 v = abs(gradient(data.z));
 startstop = find(v(450:end)<0.001, 1, 'first')+450;
 endstop = find(v(1:startstop+a)<0.001, 1, 'last');
+v_smooth = abs(smooth(v,8));
+startsmooth = find(v_smooth<0.001, 1, 'first');
+endsmooth = find(v_smooth<0.001, 1, 'last');
 % Debug
 figure
 subplot(2,1,1)
@@ -162,6 +165,18 @@ hold on;
 plot(v);
 xline(startstop);
 xline(endstop);
+
+figure
+subplot(2,1,1)
+plot(data.z);
+hold on;
+xline(startsmooth);
+xline(endsmooth);
+subplot(2,1,2);
+hold on;
+plot(v_smooth);
+xline(startsmooth);
+xline(endsmooth);
 end
 
 function out = getRect(pos, startstop, endstop, height)
