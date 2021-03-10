@@ -48,6 +48,8 @@ for m=1:length(fld_map)
     fld_phase = fieldnames(data.(fld_map{m}).pos);
     for k=1:length(fld_phase) 
         [max_size, ~] = max(cellfun('size', data.(fld_map{m}).pos.(fld_phase{k}), 1));
+%         test = cellfun('size', data.(fld_map{m}).pos.(fld_phase{k}), 1);
+%         [GC, GR] = groupcounts(test')
         pos_arr = zeros(max_size,length(data.(fld_map{m}).pos.(fld_phase{k})));
         for i =1:length(data.(fld_map{m}).pos.(fld_phase{k}))
             % fill up array

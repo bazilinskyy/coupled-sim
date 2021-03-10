@@ -41,7 +41,16 @@ if(exist('PreDataV3.mat'))
     load('WrongData.mat');
 end
 
+%% test
+% close all; clc;
+% trajectoryDiAV(PreDataV3);
+%% test
+% close all; clc;
+% analyzeTriggerYield(PreDataV3);
+
+
 %% Calculations
+clc
 phases = calcPhases(PreDataV3);
 times = CalcTime(PreDataV3, PreData, phases);
 
@@ -62,11 +71,11 @@ gapOrderGroup = OrderByTrialAll(PreDataV3);
 %% Analyze data
 % gazeTime = analyzeGazeTimeV2(timesgroup); % gazeTime = analyzeGazeTime(timesgroup, pa_distancegroup, pe_distancegroup);
 % gapAcpt = analyzeGapAcceptance(gapgroup, rbvgroup, pasposgroup, phasesgroup);
-% phaseData = analyzePhasesGroup(phasesgroup);
+phaseData = analyzePhasesGroup(phasesgroup);
 % learnEffect = analyzeLearningEffect(gapOrderGroup);
+% peHeadAngle = analyzePedestrianGazeAngle(pe_gazeOrg, pe_gazeDir, phasesgroup);
+% DC = calcDecisionCertainty(PreDataV3, phases);
 
-clc; close all;
-peHeadAngle = analyzePedestrianGazeAngle(pe_gazeOrg, pe_gazeDir, phasesgroup);
 
 %% Animation
 if createAnimation == true
@@ -85,11 +94,14 @@ end
 %% Visualize data (needs reorganization, for now the calculations and visualization is done in the same script/function) 
 if showPlot == true
     visualizeGapAcceptance(gapAcpt, phaseData);
-    visulizePhasesGroup(phaseData);
     visualizeLearnEffect(learnEffect);
     visualizeGazeTime(gazeTime);  
-end
-clc
-close all
     visualizeHeadAngle(peHeadAngle);
+    visulizePhasesGroup(phaseData);
+end
+close all; clc;
+        visulizePhasesGroup(phaseData);
+
+
+    
 

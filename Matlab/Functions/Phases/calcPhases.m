@@ -21,7 +21,8 @@ for j = 1:length(fields_ED)
             for i = 1:length(fields_trials)
                 % Perform task here
                 T.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}) = getPhase(...
-                    AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}));
+                    AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}),...
+                    fields_ED{j});
             end
         end
     end

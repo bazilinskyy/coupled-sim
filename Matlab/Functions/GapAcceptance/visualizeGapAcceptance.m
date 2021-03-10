@@ -162,7 +162,7 @@ line = join([lineprop,marker]);
 end
 function lab = visNumberOfGapAcceptancePhases(data, border, con, mapping)
 nrPhases = 4;
-strMap = {'Baseline','Mapping 1','Mapping 2'};
+strMap = {'Baseline','Gaze to yield','Look away to yield'};
 fld_con = fieldnames(data);
 c = find(strcmp(fld_con,con));
 fld_map = fieldnames(data.(fld_con{c}));
@@ -203,7 +203,7 @@ grid on
 ax=gca; ax.FontSize = 15;
 title(join([titlestring,'Distance from pedestrian vs Time']),'FontSize',18,'FontWeight','bold');
 xlabel('Time in [s]','FontSize',15,'FontWeight','bold');
-ylabel({'Gap acceptance'; 'in [%]'},'FontSize',15,'FontWeight','bold');
+ylabel({'Crossing performance'; 'in [%]'},'FontSize',15,'FontWeight','bold');
 ylim([-5 105]);
 xlim([0, border.(fld_con{1}).(fld_map{2}).rect(border_lim,1)+border.(fld_con{1}).(fld_map{2}).rect(border_lim,3)]);
 end

@@ -11,14 +11,17 @@ angles = calcAllAngle(origin_p, dir_p);
 meanAngles = calcAllMeanAngle(angles);
 
 org = getOrganizedDY(meanAngles);
-out = calcGroupCounts(org);
+org_ind = getOrganizedDY(angles);
+
+out.ind = calcGroupCountsInd(org_ind);
+out.mean = calcGroupCounts(org);
 end
 
 %% Helper functions
 function out = getPhase(data,idx)
 fld_xyz = fieldnames(data);
 if length(idx{1})>3
-    st = 4;
+    st = 3;
 else
     st = 3;
 end
@@ -99,6 +102,18 @@ out.ND_NY = ND_NY;
 out.D_Y = D_Y;
 out.D_NY = D_NY;
 end  
+
+function out = calcGroupCountsInd(data)
+fld_con = fieldnames(data);
+for c=1:length(fld_con)
+    fld_map = fieldnames(data.(fld_con{c}));
+    for m=1:length(fld_map)
+        temp = cell2mat(data.(fld_con{c}).(fld_map{m}));
+        [freq, out.(fld_con{c}).(fld_map{m}).val] = groupcounts(round(temp,0));
+        out.(fld_con{c}).(fld_map{m}).freq = 100*freq/length(temp);
+    end
+end
+end
 
 function out = calcGroupCounts(data)
 fld_con = fieldnames(data);

@@ -8,8 +8,10 @@ function visulizePhasesGroup(data)
 % visAllIndividualV2(data.borders, data.orgdata); 
 
 %% data grouped (Time matched)
-% visAllIndividual(data.borders, data.grouped); 
-visAllMean(data.borders, data.grouped);
+visAllIndividual(data.borders, data.grouped); 
+% visAllMean(data.borders, data.grouped); %--
+% visAllMeanV2(data.borders, data.grouped);
+
 
 end
 
@@ -36,7 +38,7 @@ end
 
 % Separate
 function labstr = visIndividualV2(border, data, con, mapping)
-strMap = {'Baseline','Mapping 1','Mapping 2'};
+strMap = {'Baseline','Gaze to yield','Look away to yield'};
 fld_con = fieldnames(data);
 c = find(strcmp(fld_con,con));
 fld_map = fieldnames(data.(fld_con{c}));
@@ -56,19 +58,20 @@ for i=1:length(fld_phase)
     end
     % Rectangle
     if(drawPline==true)
-        rectangle('Position',border.(fld_con{c}).(fld_map{m}).rect(i,:),...
-            'FaceColor',[0.9-i/10 0.9-i/10 0.9-i/10 0.4],'EdgeColor',[0 0 0]);
-        text(border.(fld_con{c}).(fld_map{m}).midx(i), 60,['(',num2str(i),')'],'HorizontalAlignment','center','VerticalAlignment', 'top');
+%         rectangle('Position',border.(fld_con{c}).(fld_map{m}).rect(i,:),...
+%             'FaceColor',[0.9-i/10 0.9-i/10 0.9-i/10 0.4],'EdgeColor',[0 0 0]);
+%         text(border.(fld_con{c}).(fld_map{m}).midx(i), 60,['(',num2str(i),')'],'HorizontalAlignment','center','VerticalAlignment', 'top');
     end
 
 end
 yl = yline(0,'--'); set(get(get(yl,'Annotation'),'LegendInformation'),'IconDisplayStyle','off');
 grid on
-title(join(['[',strMap(m),'] - ','Distance from pedestrian vs Time']));
-xlabel('Time in [s]');
-ylabel('Distance from pedestrian in [m]');
+title(join(['[',strMap(m),'] - ','Distance from pedestrian vs Time']),'FontSize',15,'FontWeight','bold');
+xlabel('Time in [s]','FontSize',10,'FontWeight','bold');
+ylabel({'Distance from'; 'pedestrian in [m]'},'FontSize',4,'FontWeight','bold');
 ylim([border.(fld_con{1}).(fld_map{1}).rect(1,2), border.(fld_con{1}).(fld_map{1}).rect(1,2)+border.(fld_con{1}).(fld_map{1}).rect(1,4)]);
 xlim([0, border.(fld_con{1}).(fld_map{1}).rect(end,1)+border.(fld_con{1}).(fld_map{1}).rect(end,3)]);
+ax=gca; ax.FontSize = 15;
 end
 function visAllIndividualV2(borders, data)
 fld_con = fieldnames(data);
@@ -86,7 +89,7 @@ end
 
 % Grouped
 function labstr = visIndividual(border, data, con, mapping)
-strMap = {'Baseline','Mapping 1','Mapping 2'};
+strMap = {'Baseline','Gaze to yield','Look away to yield'};
 fld_con = fieldnames(data);
 c = find(strcmp(fld_con,con));
 fld_map = fieldnames(data.(fld_con{c}).stdData);
@@ -118,11 +121,12 @@ for i = 1:length(fld_phase)
 end
 yl = yline(0,'--'); set(get(get(yl,'Annotation'),'LegendInformation'),'IconDisplayStyle','off');
 grid on;
-title(join(['[',strMap(m),'] - ','Distance from pedestrian vs Time']));
-xlabel('Time in [s]');
-ylabel('Distance from pedestrian in [m]');
+title(join(['[',strMap(m),'] - ','Distance from pedestrian vs Time']),'FontSize',15,'FontWeight','bold');
+xlabel('Time in [s]','FontSize',10,'FontWeight','bold');
+ylabel({'Distance from'; 'pedestrian in [m]'},'FontSize',4,'FontWeight','bold');
 ylim([border.(fld_con{1}).(fld_map{1}).rect(1,2), border.(fld_con{1}).(fld_map{1}).rect(1,2)+border.(fld_con{1}).(fld_map{1}).rect(1,4)]);
 xlim([0, border.(fld_con{1}).(fld_map{1}).rect(end,1)+border.(fld_con{1}).(fld_map{1}).rect(end,3)]);
+ax=gca; ax.FontSize = 15;
 end
 function visAllIndividual(borders, data)
 fld_con = fieldnames(data);
@@ -139,7 +143,7 @@ end
 end
 
 function labstr = visMean(border, data, con, mapping)
-strMap = {'Baseline','Mapping 1','Mapping 2'};
+strMap = {'Baseline','Gaze to yield','Look away to yield'};
 fld_con = fieldnames(data);
 c = find(strcmp(fld_con,con));
 fld_map = fieldnames(data.(fld_con{c}).meanData);
@@ -149,7 +153,12 @@ fld_phase = fieldnames(data.(fld_con{c}).meanData.(fld_map{m}));
 
 hold on;
 temp = 1;
-for i = 1:length(fld_phase)
+if length(fld_phase)==5
+    till = 4;
+else
+    till = 3;
+end
+for i = 1:till
     if(drawPline==true)
         rectangle('Position',border.(fld_con{c}).(fld_map{m}).rect(i,:),...
             'FaceColor',[0.9-i/10 0.9-i/10 0.9-i/10 0.4],'EdgeColor',[0 0 0]);
@@ -158,8 +167,14 @@ for i = 1:length(fld_phase)
     end
     err = data.(fld_con{c}).stdData.(fld_map{m}).(fld_phase{i});
     y = data.(fld_con{c}).meanData.(fld_map{m}).(fld_phase{i});
+    yplus = y+err;
+    ymin = y-err;
     x = (temp:temp+length(y)-1)*0.0167;
-    a = errorbar(x, y, err, 'Color', colour,'LineWidth',2);
+    a = plot(x, y, 'Color', colour,'LineWidth',2);
+    hold on;
+    b = plot(x, yplus, 'Color', colour,'LineWidth',2);
+    d = plot(x, ymin, 'Color', colour,'LineWidth',2);
+%     a = errorbar(x, y, err, 'Color', colour,'LineWidth',2);
         % testing adjusted err
 %         t=1:60:length(err);
 %         erradj = err(t);
@@ -170,6 +185,8 @@ for i = 1:length(fld_phase)
 %         set(get(get(b,'Annotation'),'LegendInformation'),'IconDisplayStyle','off');
     temp = temp+length(y);
     % Label settings
+        set(get(get(b,'Annotation'),'LegendInformation'),'IconDisplayStyle','off');
+        set(get(get(d,'Annotation'),'LegendInformation'),'IconDisplayStyle','off');
     if(i==1); start = 2;
     else; start = 1;
     end
@@ -182,7 +199,7 @@ title(join(['[',strMap(m),'] - ','Distance from pedestrian vs Time']),'FontSize'
 xlabel('Time in [s]','FontSize',10,'FontWeight','bold');
 ylabel({'Distance from'; 'pedestrian in [m]'},'FontSize',4,'FontWeight','bold');
 ylim([border.(fld_con{1}).(fld_map{1}).rect(1,2), border.(fld_con{1}).(fld_map{1}).rect(1,2)+border.(fld_con{1}).(fld_map{1}).rect(1,4)]);
-xlim([0, border.(fld_con{1}).(fld_map{1}).rect(end,1)+border.(fld_con{1}).(fld_map{1}).rect(end,3)]);
+xlim([0, border.(fld_con{1}).(fld_map{2}).rect(end,1)]);%+border.(fld_con{1}).(fld_map{1}).rect(end,3)]);
 ax=gca; ax.FontSize = 15;
 end
 function visAllMean(borders, data)
@@ -195,6 +212,21 @@ for c=[1,3]
         a = visMean(borders, data, (fld_con{c}), (fld_map{m}));
         b = visMean(borders, data, (fld_con{c+1}), (fld_map{m}));
         legend(a,b,'Location','southwest','FontSize',15,'FontWeight','bold');
+    end
+end
+end
+function visAllMeanV2(borders, data)
+fld_con = fieldnames(data);
+for c=1
+    fld_map = fieldnames(data.(fld_con{c}).meanData);
+    figure;
+    for m=1:length(fld_map)
+        subplot(3,1,m)
+        a = visMean(borders, data, (fld_con{c}), (fld_map{m}));
+        b = visMean(borders, data, (fld_con{c+1}), (fld_map{m}));
+        d = visMean(borders, data, (fld_con{c+2}), (fld_map{m}));
+        e = visMean(borders, data, (fld_con{c+3}), (fld_map{m}));
+        legend(a,b,d,e,'Location','southwest','FontSize',15,'FontWeight','bold');
     end
 end
 end
