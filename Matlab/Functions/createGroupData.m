@@ -107,14 +107,14 @@ for j = 1:length(fields_ED)
                     end
                     for i_ph = 1:2
                         output.(fields_ED{j}).(fields_time{k}).(fld{i_ph}) = [output.(fields_ED{j}).(fields_time{k}).(fld{i_ph}), {AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}).(fld{i_ph})}];
-                        fldpos = fieldnames(AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}).pos);
-                        for i_pos = 1:length(fldpos)
-                            if(~isfield(output.(fields_ED{j}).(fields_time{k}).(fld{3}),(fldpos{i_pos})))
-                                output.(fields_ED{j}).(fields_time{k}).(fld{3}).(fldpos{i_pos}) = [];
-                            end
-                            output.(fields_ED{j}).(fields_time{k}).(fld{3}).(fldpos{i_pos}) = [output.(fields_ED{j}).(fields_time{k}).(fld{3}).(fldpos{i_pos}),...
-                                {AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}).(fld{3}).(fldpos{i_pos})}];
+                    end
+                    fldpos = fieldnames(AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}).pos);
+                    for i_pos = 1:length(fldpos)
+                    	if(~isfield(output.(fields_ED{j}).(fields_time{k}).(fld{3}),(fldpos{i_pos})))
+                            output.(fields_ED{j}).(fields_time{k}).(fld{3}).(fldpos{i_pos}) = [];
                         end
+                        output.(fields_ED{j}).(fields_time{k}).(fld{3}).(fldpos{i_pos}) = [output.(fields_ED{j}).(fields_time{k}).(fld{3}).(fldpos{i_pos}),...
+                    	{AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}).(fld{3}).(fldpos{i_pos})}];
                     end
                 end
                 % Part for pedestrian rotation
