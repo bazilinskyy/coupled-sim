@@ -3,9 +3,9 @@
 % Author: Johnson Mok
 % Last Updated: 10-02-2021
 
-function visulizePhasesGroup(data)
+function visualizePhasesGroupV2(data)
 %% data separate (Time not matched)
-% visAllIndividualV2(data.borders, data.orgdata); 
+% visAllIndividualV2(data.borders, data.orgdata); % works
 
 %% data grouped (Time matched)
 % visAllIndividual(data.borders, data.grouped); 
@@ -153,12 +153,7 @@ fld_phase = fieldnames(data.(fld_con{c}).meanData.(fld_map{m}));
 
 hold on;
 temp = 1;
-if length(fld_phase)==5
-    till = 4;
-else
-    till = 3;
-end
-for i = 1:till
+for i = 1:length(fld_phase)
     if(drawPline==true)
         rectangle('Position',border.(fld_con{c}).(fld_map{m}).rect(i,:),...
             'FaceColor',[0.9-i/10 0.9-i/10 0.9-i/10 0.4],'EdgeColor',[0 0 0]);
@@ -174,15 +169,6 @@ for i = 1:till
     hold on;
     b = plot(x, yplus, 'Color', colour,'LineWidth',2);
     d = plot(x, ymin, 'Color', colour,'LineWidth',2);
-%     a = errorbar(x, y, err, 'Color', colour,'LineWidth',2);
-        % testing adjusted err
-%         t=1:60:length(err);
-%         erradj = err(t);
-%         xadj = x(t);
-%         yadj = y(t);
-%         a = plot(x, y, 'Color', colour);
-%         b = errorbar(xadj, yadj, erradj, 'Color', colour, 'CapSize', 50);
-%         set(get(get(b,'Annotation'),'LegendInformation'),'IconDisplayStyle','off');
     temp = temp+length(y);
     % Label settings
         set(get(get(b,'Annotation'),'LegendInformation'),'IconDisplayStyle','off');
