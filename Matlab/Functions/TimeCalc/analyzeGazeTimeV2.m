@@ -19,6 +19,9 @@ out.groupcounts = sumDisAll(out.orgTimes);
 
 % Matrix for SPSS
 getSPSSMatrix(out.groupcounts);
+
+% Check whether the passenger followed the instructions
+checkGaze = checkGazeLATY(out.orgTimes);
 end
 
 %% Helper functions
@@ -208,5 +211,38 @@ for per=1:length(fld_per)
 end
 end
 
+function out = checkGazeLATY(data)
+fld_con = fieldnames(data);
+for c=1:length(fld_con)
+    fld_phase = fieldnames(data.(fld_con{c}).map2.pa);
+    if length(fld_phase)>1
+        for i=1:length(data.(fld_con{c}).map2.pa.full.distance)
+            dis = data.(fld_con{c}).map2.pa.full.distance{i};
+            gazeDist.(fld_con{c}){i} = dis(find(dis>0));
+        end
+    else
+        for i=1:length(data.(fld_con{c}).map2.pa.phase1.distance)
+            dis = data.(fld_con{c}).map2.pa.phase1.distance{i};
+            gazeDist.(fld_con{c}){i} = dis(find(dis>0));
+        end
+    end
+end
+
+for j=1:length(gazeDist.ND_Y)
+    out.ND_Y{j} = gazeDist.ND_Y{j}(find( (gazeDist.ND_Y{j}> 14.4) & (gazeDist.ND_Y{j}< 25) ));
+end
+for j=1:length(gazeDist.D_Y)
+    out.D_Y{j} = gazeDist.D_Y{j}(find( (gazeDist.D_Y{j}> 14.4) & (gazeDist.D_Y{j}< 25) ));
+end
+for j=1:length(gazeDist.ND_NY)
+    out.ND_NY{j} = gazeDist.ND_NY{j}(find( (gazeDist.ND_NY{j}> 0) & (gazeDist.ND_NY{j}< 25) ));
+end
+for j=1:length(gazeDist.D_NY)
+    out.D_NY{j} = gazeDist.D_NY{j}(find( (gazeDist.D_NY{j}> 0) & (gazeDist.D_NY{j}< 25) ));
+end
+
+
+
+end
 
 
