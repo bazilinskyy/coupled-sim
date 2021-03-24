@@ -168,7 +168,8 @@ ax=gca; ax.FontSize = 20;
 grid on;
 end
 function plotUsefulnessVSsatisfyingErrorbarSingle(acpt,role)
-strmap = {'baseline';'mapping 1';'mapping 2'};
+strmap = {'Baseline';'Gaze to Yield';'Look Away to Yield'};
+colours = [0, 0.4470, 0.7410; 0.8500, 0.3250, 0.0980; 0.9290, 0.6940, 0.1250];
 strRole = join(['[',role,'] - ']);
 % figure;
 hold on;
@@ -178,7 +179,7 @@ xstd = [acpt.all.stdS0, acpt.all.stdS1, acpt.all.stdS2];
 ystd = [acpt.all.stdU0, acpt.all.stdU1, acpt.all.stdU2];
 labels = strmap;
 for i=1:length(X)
-    p = errorbar(X(i),Y(i),ystd(i),ystd(i),xstd(i),xstd(i),'o','MarkerSize',10,'CapSize',28);
+    p = errorbar(X(i),Y(i),ystd(i),ystd(i),xstd(i),xstd(i),'o','Color',colours(i,:),'MarkerSize',10,'CapSize',28);
     c = get(p,'Color');
     p.MarkerFaceColor = c;
     p2 = plot([X(i)-xstd(i), X(i)+xstd(i)], [Y(i), Y(i)],'LineWidth',2);

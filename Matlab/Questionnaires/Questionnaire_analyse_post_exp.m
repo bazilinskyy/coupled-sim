@@ -34,7 +34,7 @@ Witmer      = readcell(path_witmer);
 Witmer(1,:) = [];
 
 % Variables
-mapNames = {'Baseline';'Mapping 1';'Mapping 2'};
+mapNames = {'Baseline';'Gaze to Yield';'Look Away to Yield'};
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Calculations %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -50,6 +50,8 @@ mapNames = {'Baseline';'Mapping 1';'Mapping 2'};
 [prefM_pe, ~]          = calcPreferenceMapping(Data_pexp_pe.prefMapAll);
 [prefMIRL_pe, ~]       = calcPreferenceMapping(Data_pexp_pe.prefMapAll_IRL);
 
+rankMapping_pe = rankPreferenceMapping(Data_pexp_pe.prefMapAll);
+rankMapping_pa = rankPreferenceMapping(Data_pexp_pa.prefMapAll);
 
 %% Calculations presence Witmer
 [pres_main_pa, pres_sub_pa, pres_name_pa] = calcPresence(Data_pexp_pa.Presence, Witmer);
@@ -249,6 +251,16 @@ for j=1:size(data,2)
     end
     outVal(j,:) = val*100/length(data);
 end
+end
+function out = rankPreferenceMapping(data)
+name = {'Most preferred','Second preferred','Least preferred'};
+rank = zeros(size(data));
+for i =1:length(name)
+    rank(strcmp(data,name(i))) = i;
+end
+MeanRank = mean(rank);
+StdRank = std(rank);
+out = [MeanRank', StdRank'];
 end
 function output = replaceFaultyTitle(data)
 idx = strcmp(data,'Kolom 1');

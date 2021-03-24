@@ -31,6 +31,11 @@ acpt.acc_0(:,[1,2,4,5,7,9]) = acpt.acc_0(:,[1,2,4,5,7,9])*-1;
 acpt.acc_1(:,[1,2,4,5,7,9]) = acpt.acc_1(:,[1,2,4,5,7,9])*-1;
 acpt.acc_2(:,[1,2,4,5,7,9]) = acpt.acc_2(:,[1,2,4,5,7,9])*-1;
 
+%% Acceptance score
+acpt.MeanStd_0 = calcMeanStd(acpt.acc_0);
+acpt.MeanStd_1 = calcMeanStd(acpt.acc_1);
+acpt.MeanStd_2 = calcMeanStd(acpt.acc_2);
+
 %% Reliability analyses
 [acpt.Laan0, acpt.all.U0, acpt.all.S0, acpt.all.stdU0, acpt.all.stdS0, acpt.U0, acpt.S0, acpt.par.U0, acpt.par.S0] = calcVanDerLaanScore(acpt.acc_0);
 [acpt.Laan1, acpt.all.U1, acpt.all.S1, acpt.all.stdU1, acpt.all.stdS1, acpt.U1, acpt.S1, acpt.par.U1, acpt.par.S1] = calcVanDerLaanScore(acpt.acc_1);
@@ -145,4 +150,9 @@ T.MS_b = T.SS_b/T.df_b;
 T.MS_e = T.SS_e/T.df_e;
 % result
 F = T.MS_b/T.MS_e;
+end
+
+function out = calcMeanStd(data)
+stddata = std(data,0,2);
+out = [mean(data,'All'), mean(stddata)];
 end

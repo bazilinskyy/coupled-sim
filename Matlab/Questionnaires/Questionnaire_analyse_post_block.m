@@ -38,6 +38,9 @@ NoCat = NoCategoryPostBlock(Data_block_pa, Data_block_pe);
 % Acceptance
 Acceptance_pa = AcceptanceVanDerLaan(Data_block_pa.mapping, Data_block_pa.acceptance);
 Acceptance_pe = AcceptanceVanDerLaan(Data_block_pe.mapping, Data_block_pe.acceptance);
+    save('Acceptance_pa.mat','Acceptance_pa');
+    save('Acceptance_pe.mat','Acceptance_pe');
+
     % Create csv for statistical analysis in SPSS
     SPSS_pa_U = [Acceptance_pa.par.U0,Acceptance_pa.par.U1,Acceptance_pa.par.U2];
     SPSS_pa_S = [Acceptance_pa.par.S0,Acceptance_pa.par.S1,Acceptance_pa.par.S2];
