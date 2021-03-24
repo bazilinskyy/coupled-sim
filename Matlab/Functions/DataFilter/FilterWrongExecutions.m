@@ -17,7 +17,11 @@ for j = 1:length(fields_ED)
             for i = 1:length(fields_trials)
                 % Filter wrongly executed trials
                 correct = filterWronglyExecuted(AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}), fields_ED{j});
-                if(correct == false)
+                correct2 = filterLATY(AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}), fields_ED{j});
+                if(correct == false || correct2 == false)
+                    if correct2 == false
+                        disp(['Wrongly executed correct2: ', (fields_ED{j}),'_',(fields_time{k}),'_',(fields_participants{idx}),'_',(fields_trials{i})]);
+                    end
                     disp(['Wrongly executed: ', (fields_ED{j}),'_',(fields_time{k}),'_',(fields_participants{idx}),'_',(fields_trials{i})]);
                     WrongData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}) = AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i});
                     AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}) = rmfield(AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}),(fields_trials{i}));

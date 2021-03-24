@@ -38,6 +38,8 @@ for j = 1:length(fields_ED)
             output.(fields_ED{j}).(fields_time{k}).x = {}; %
             output.(fields_ED{j}).(fields_time{k}).y = {}; %
             output.(fields_ED{j}).(fields_time{k}).z = {}; %
+        elseif(strcmp(var,'trialorder'))
+            output.(fields_ED{j}) = {}; %
         end
         
         for idx = 1:length(fields_participants)
@@ -135,6 +137,9 @@ for j = 1:length(fields_ED)
                     for d=1:length(fld_dir)
                         output.(fields_ED{j}).(fields_time{k}).(fld_dir{d})(end+1,:) = {AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}).pe.HMD.gaze_origin.(fld_dir{d})};
                     end
+                end
+                if(strcmp(var,'trialorder'))
+                    output.(fields_ED{j}){end+1} = [fields_participants{idx},'_',fields_trials{i}];
                 end
             end
         end
