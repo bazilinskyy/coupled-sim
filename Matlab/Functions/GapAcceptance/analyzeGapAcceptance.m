@@ -10,7 +10,7 @@
 % Crossing performance metric
 % Decision certainty
 
-function out = analyzeGapAcceptance(data,v,pasz,phase)
+function out = analyzeGapAcceptance(data,v,pasz,phase,order)
 gapac  = getOrganizedDY(data);
 AVvel  = getOrganizedDY(v);
 AVposz = getOrganizedDY(pasz);
@@ -26,16 +26,26 @@ out.phasesPer = calcAllSumPercentage(out.phasesSum);
 out.DC = calcAllDecisionCertainty(out.phases);
 
 % Statistical analysis
-SPSS = getDecisionCertaintySPSSMatrix(out.DC);
+DCpp = DCPerParticipant(out.DC, order);
+SPSS = getDecisionCertaintySPSSMatrix(DCpp);
+t_D_NY = pairedSamplesttest(SPSS.D_NY);
+t_D_Y = pairedSamplesttest(SPSS.D_Y);
+t_ND_NY = pairedSamplesttest(SPSS.ND_NY);
+t_ND_Y = pairedSamplesttest(SPSS.ND_Y);
+
+D_D_NY = CohensD(SPSS.D_NY);
+D_D_Y = CohensD(SPSS.D_Y);
+D_ND_NY = CohensD(SPSS.ND_NY);
+D_ND_Y = CohensD(SPSS.ND_Y);
+
 %     writematrix(SPSS.ND_Y,'SPSS_DecisionCertainty_ND_Y.csv'); 
 %     writematrix(SPSS.ND_NY,'SPSS_DecisionCertainty_ND_NY.csv'); 
 %     writematrix(SPSS.D_Y,'SPSS_DecisionCertainty_D_Y.csv'); 
 %     writematrix(SPSS.D_NY,'SPSS_DecisionCertainty_D_NY.csv'); 
     
-SPSS_ANOVA = getDecisionCertaintySPSS_ANOVAMatrix(out.DC);
+% SPSS_ANOVA = getDecisionCertaintySPSS_ANOVAMatrix(out.DC);
 %     writematrix(SPSS_ANOVA.yield,'SPSS_DCANOVA_Y.csv'); 
 %     writematrix(SPSS_ANOVA.noyield,'SPSS_DCANOVA_NY.csv'); 
-
 
 %% Summing and smoothing gap acceptance values per variable combination
 out.sumGap = calcAllSumGapAcceptance(gapac);
@@ -187,9 +197,9 @@ if length(fld_phase) == 3
 	temp2.(fld_con{c}).(fld_map{m})(i) = temp.(fld_con{c}).(fld_map{m}).(fld_phase{1}){i} + temp.(fld_con{c}).(fld_map{m}).(fld_phase{2}){i} +...
 	temp.(fld_con{c}).(fld_map{m}).(fld_phase{3}){i};
     end
-elseif length(fld_phase) == 1
+elseif length(fld_phase) == 2
     for i =1:length(dat.(fld_phase{1}))
-	temp2.(fld_con{c}).(fld_map{m})(i) = temp.(fld_con{c}).(fld_map{m}).(fld_phase{1}){i};
+	temp2.(fld_con{c}).(fld_map{m})(i) = temp.(fld_con{c}).(fld_map{m}).(fld_phase{1}){i}+ + temp.(fld_con{c}).(fld_map{m}).(fld_phase{2}){i};
     end 
 end
 
@@ -208,19 +218,32 @@ for c=1:length(fld_con)
 end
 end
 
+function out = DCPerParticipant(data, order)
+fld_con = fieldnames(data);
+for c=1:length(fld_con)
+    fld_map = fieldnames(data.(fld_con{c}));
+    for m=1:length(fld_map)
+        A = data.(fld_con{c}).(fld_map{m}).rate;
+        B = order.(fld_con{c}).(fld_map{m}).Pnr;
+        for i=1:max(B)
+            out.(fld_con{c}).(fld_map{m})(i) = mean(A(find(B==i)));
+        end
+    end
+end
+end
 function out = getDecisionCertaintySPSSMatrix(data)
 fld_con = fieldnames(data);
 for c=1:length(fld_con)
     fld_map = fieldnames(data.(fld_con{c}));
     maxsize = 0;
     for m=1:length(fld_map)
-        if length(data.(fld_con{c}).(fld_map{m}).rate)>maxsize
-            maxsize = length(data.(fld_con{c}).(fld_map{m}).rate);
+        if length(data.(fld_con{c}).(fld_map{m}))>maxsize
+            maxsize = length(data.(fld_con{c}).(fld_map{m}));
         end
     end
     out.(fld_con{c}) = nan(maxsize,3);
     for m=1:length(fld_map)
-        out.(fld_con{c})(1:length(data.(fld_con{c}).(fld_map{m}).rate),m) = data.(fld_con{c}).(fld_map{m}).rate;
+        out.(fld_con{c})(1:length(data.(fld_con{c}).(fld_map{m})),m) = data.(fld_con{c}).(fld_map{m});
     end
 end
 end
@@ -261,6 +284,34 @@ for c=1:length(fld_con)
     out.(fld_yield{yld}) = [out.(fld_yield{yld}); tempdata];
 end
 end
+
+%% Statistical analysis functions
+function out = pairedSamplesttest(data)
+[~,p1,~,stats1] = ttest(data(:,1), data(:,2));
+[~,p2,~,stats2] = ttest(data(:,2), data(:,3));
+[~,p3,~,stats3] = ttest(data(:,1), data(:,3));
+out = zeros(3,3);
+out(1,:) = [stats1.tstat, stats1.df, p1];
+out(2,:) = [stats2.tstat, stats2.df, p2];
+out(3,:) = [stats3.tstat, stats3.df, p3];
+end
+function out = CohensD(data)
+pair12 = data(:,1)-data(:,2); % baseline - mapping 1
+pair23 = data(:,2)-data(:,3); % mapping 1 - mapping 2
+pair13 = data(:,1)-data(:,3); % baseline - mapping 2
+
+out = zeros(3,3);
+out(1,:) = calcCohen(pair12);
+out(2,:) = calcCohen(pair23);
+out(3,:) = calcCohen(pair13);
+end
+function out = calcCohen(data)
+m = mean(data);
+s = std(data);
+D = m/s;
+out = [m, s, D];
+end
+
 %% - old
 function out = calcSumGapAcceptance(data)
 fld = fieldnames(data);
