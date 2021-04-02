@@ -42,7 +42,7 @@ out = distance;
 % plot(posz)
 end
 function t = calcPhaseGazeTimes(distance, idx, dt)
-if(size(idx,2)>1)
+if(size(idx,2)>2)
 % 1. start sound till start trigger
 t.phase1 = calcGazeTime(distance, dt, idx(1,1), idx(2,1));
 % 2. start deceleration till end deceleration
@@ -52,6 +52,11 @@ t.phase3 = calcGazeTime(distance, dt, idx(1,3), idx(2,3));
 % 0. Full run
 t.full = calcGazeTime(distance, dt, idx(1,1), idx(2,3));
 else
+    % 1. start sound till start trigger
     t.phase1 = calcGazeTime(distance, dt, idx(1,1), idx(2,1));
+    % 2. start deceleration till end deceleration
+    t.phase2 = calcGazeTime(distance, dt, idx(1,2), idx(2,2));
+    % 0. Full run
+    t.full = calcGazeTime(distance, dt, idx(1,1), idx(2,2));
 end
 end

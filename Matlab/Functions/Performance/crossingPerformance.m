@@ -18,9 +18,18 @@ out.score.ND_NY = pressIsNegative(data.phasesPer.ND_NY, buttonPerTrial.ND_NY);
 out.score.D_Y = pressIsNegative(data.phasesPer.D_Y, buttonPerTrial.D_Y);
 out.score.D_NY = pressIsNegative(data.phasesPer.D_NY, buttonPerTrial.D_NY);
 
-out.acpt.map0 = acpt_pe.Laan0.meanmean;
-out.acpt.map1 = acpt_pe.Laan1.meanmean;
-out.acpt.map2 = acpt_pe.Laan2.meanmean;
+buttonPerTrialWithoutStart = sumButtonPressPerTrialWithoutStart(data);
+buttonPerPersonWithoutStart = meanButtonPerPerson(buttonPerTrialWithoutStart, trialorder);
+
+out.score2.ND_Y = pressIsPositiveWithoutStart(data.phasesPer.ND_Y, buttonPerTrialWithoutStart.ND_Y);
+out.score2.ND_NY = pressIsNegativeWithoutStart(data.phasesPer.ND_NY, buttonPerTrialWithoutStart.ND_NY);
+out.score2.D_Y = pressIsNegativeWithoutStart(data.phasesPer.D_Y, buttonPerTrialWithoutStart.D_Y);
+out.score2.D_NY = pressIsNegativeWithoutStart(data.phasesPer.D_NY, buttonPerTrialWithoutStart.D_NY);
+
+out.acpt.map0 = acpt_pe.MeanStd_0;
+out.acpt.map1 = acpt_pe.MeanStd_1;
+out.acpt.map2 = acpt_pe.MeanStd_2;
+
 
 out.usefulness.map0 = acpt_pe.all.U0;
 out.usefulness.map1 = acpt_pe.all.U1;
@@ -34,7 +43,17 @@ out.r_acpt = pearsonsRAll(out.score, out.acpt);
 out.r_U = pearsonsRAll(out.score, out.usefulness);
 out.r_S = pearsonsRAll(out.score, out.satisfying);
 
-SPSS = SPSSmatrix(buttonPerPerson);
+% SPSS = SPSSmatrix(buttonPerPerson);
+SPSS = SPSSmatrix(buttonPerPersonWithoutStart);
+D_D_NY = CohensD(SPSS.D_NY);
+D_D_Y = CohensD(SPSS.D_Y);
+D_ND_NY = CohensD(SPSS.ND_NY);
+D_ND_Y = CohensD(SPSS.ND_Y);
+
+t_D_NY = pairedSamplesttest(SPSS.D_NY);
+t_D_Y = pairedSamplesttest(SPSS.D_Y);
+t_ND_NY = pairedSamplesttest(SPSS.ND_NY);
+t_ND_Y = pairedSamplesttest(SPSS.ND_Y);
 
 
 end
@@ -80,7 +99,6 @@ for m = 1:length(fld_map)
     out.(fld_map{m}).std = std(button.(fld_map{m})); 
 end
 end
-
 function out = pressIsNegative(data,button)
 fld_map = fieldnames(data);
 for m = 1:length(fld_map)
@@ -89,9 +107,44 @@ for m = 1:length(fld_map)
 end
 end
 
+function out = sumButtonPressPerTrialWithoutStart(data)
+fld_con = fieldnames(data.phases);
+for c=1:length(fld_con)
+    fld_map = fieldnames(data.phases.(fld_con{c}));
+    for m=1:length(fld_map)
+        fld_phase = fieldnames(data.phases.(fld_con{c}).(fld_map{m}));
+        for p=2:length(fld_phase)
+            [nrows.(fld_con{c}).(fld_map{m}).(fld_phase{p}),ncols.(fld_con{c}).(fld_map{m}).(fld_phase{p})] = cellfun(@size,data.phases.(fld_con{c}).(fld_map{m}).(fld_phase{p}));
+            val.(fld_con{c}).(fld_map{m}).(fld_phase{p}) = cellfun(@sum, data.phases.(fld_con{c}).(fld_map{m}).(fld_phase{p}));
+            temp.(fld_con{c}).(fld_map{m})(p,:) = 100*val.(fld_con{c}).(fld_map{m}).(fld_phase{p})./nrows.(fld_con{c}).(fld_map{m}).(fld_phase{p});
+        end
+        if size(fld_phase,1) == 1 && size(fld_phase,2) == 1
+            out.(fld_con{c}).(fld_map{m})= temp.(fld_con{c}).(fld_map{m});
+        else
+            out.(fld_con{c}).(fld_map{m}) = mean(temp.(fld_con{c}).(fld_map{m})); 
+        end
+    end
+end
+end
+function out = pressIsPositiveWithoutStart(data, button)
+fld_map = fieldnames(data);
+for m = 1:length(fld_map)
+    out.(fld_map{m}).mean = mean(data.(fld_map{m})(2:end));
+    out.(fld_map{m}).std = std(button.(fld_map{m})); 
+end
+end
+function out = pressIsNegativeWithoutStart(data,button)
+fld_map = fieldnames(data);
+for m = 1:length(fld_map)
+	out.(fld_map{m}).mean = 100 - mean(data.(fld_map{m})(2:end));
+	out.(fld_map{m}).std = std(100-button.(fld_map{m}));     
+end
+end
+
+
 function r = pearsonsR(performance, acceptance)
 x = [performance.map0.mean; performance.map1.mean; performance.map2.mean];
-y = [acceptance.map0; acceptance.map1; acceptance.map2];
+y = [acceptance.map0(1); acceptance.map1(1); acceptance.map2(1)];
 
 n = length(x);
 num_1 = sum(x.*y);
@@ -115,8 +168,14 @@ fld_con = fieldnames(data);
 for c=1:length(fld_con)
     fld_map = fieldnames(data.(fld_con{c}));
     temp.(fld_con{c}) = NaN(length(data.ND_Y.map0),3);
-    for m=1:length(fld_map)
-        temp.(fld_con{c})(1:length(data.(fld_con{c}).(fld_map{m})),m) = data.(fld_con{c}).(fld_map{m});
+    if strcmp(fld_con{c},'ND_Y')
+        for m=1:length(fld_map)
+            temp.(fld_con{c})(1:length(data.(fld_con{c}).(fld_map{m})),m) = data.(fld_con{c}).(fld_map{m});
+        end
+    else
+        for m=1:length(fld_map)
+            temp.(fld_con{c})(1:length(data.(fld_con{c}).(fld_map{m})),m) = 100-data.(fld_con{c}).(fld_map{m});
+        end 
     end
     M = temp.(fld_con{c});
     T = array2table(M);
@@ -126,5 +185,29 @@ end
 out = temp;
 end
 
+function out = pairedSamplesttest(data)
+[~,p1,~,stats1] = ttest(data(:,1), data(:,2));
+[~,p2,~,stats2] = ttest(data(:,2), data(:,3));
+[~,p3,~,stats3] = ttest(data(:,1), data(:,3));
+out = zeros(3,3);
+out(1,:) = [stats1.tstat, stats1.df, p1];
+out(2,:) = [stats2.tstat, stats2.df, p2];
+out(3,:) = [stats3.tstat, stats3.df, p3];
+end
+function out = CohensD(data)
+pair12 = data(:,1)-data(:,2); % baseline - mapping 1
+pair23 = data(:,2)-data(:,3); % mapping 1 - mapping 2
+pair13 = data(:,1)-data(:,3); % baseline - mapping 2
 
+out = zeros(3,3);
+out(1,:) = calcCohen(pair12);
+out(2,:) = calcCohen(pair23);
+out(3,:) = calcCohen(pair13);
+end
+function out = calcCohen(data)
+m = mean(data);
+s = std(data);
+D = m/s;
+out = [m, s, D];
+end
 

@@ -5,11 +5,11 @@
 
 function visualizePhasesGroupV2(data)
 %% data separate (Time not matched)
-% visAllIndividualV2(data.borders, data.orgdata); % works
+visAllIndividualV2(data.borders, data.orgdata); % works
 
 %% data grouped (Time matched)
-% visAllIndividual(data.borders, data.grouped); 
-visAllMean(data.borders, data.grouped); %--
+visAllIndividual(data.borders, data.grouped); 
+% visAllMean(data.borders, data.grouped); %--
 % visAllMeanV2(data.borders, data.grouped);
 
 
@@ -48,6 +48,12 @@ fld_phase = fieldnames(data.(fld_con{c}).(fld_map{m}).pos);
 % Draw
 hold on
 for i=1:length(fld_phase)
+    if(drawPline==true)
+        rectangle('Position',border.(fld_con{c}).(fld_map{m}).rect(i,:),...
+            'FaceColor',[0.9-i/10 0.9-i/10 0.9-i/10 0.4],'EdgeColor',[0 0 0]);
+        text(border.(fld_con{c}).(fld_map{m}).midx(i), 60,['(',num2str(i),')'],...
+            'HorizontalAlignment','center','VerticalAlignment', 'top','FontSize',15,'FontWeight','bold');
+    end
     plotdata = data.(fld_con{c}).(fld_map{m}).pos.(fld_phase{i});
     for j=1:length(plotdata)
         a = plot(plotdata{j}(:,1),plotdata{j}(:,2),'Color', colour,'LineWidth',1);
@@ -64,13 +70,14 @@ for i=1:length(fld_phase)
     end
 
 end
-yl = yline(0,'--'); set(get(get(yl,'Annotation'),'LegendInformation'),'IconDisplayStyle','off');
+yl = yline(0,'--','pedestrian','LabelVerticalAlignment','bottom'); set(get(get(yl,'Annotation'),'LegendInformation'),'IconDisplayStyle','off');
 grid on
 title(join(['[',strMap(m),'] - ','Distance from pedestrian vs Time']),'FontSize',15,'FontWeight','bold');
 xlabel('Time in [s]','FontSize',10,'FontWeight','bold');
 ylabel({'Distance from'; 'pedestrian in [m]'},'FontSize',4,'FontWeight','bold');
 ylim([border.(fld_con{1}).(fld_map{1}).rect(1,2), border.(fld_con{1}).(fld_map{1}).rect(1,2)+border.(fld_con{1}).(fld_map{1}).rect(1,4)]);
 xlim([0, border.(fld_con{1}).(fld_map{1}).rect(end,1)+border.(fld_con{1}).(fld_map{1}).rect(end,3)]);
+xticks([0:11]);
 ax=gca; ax.FontSize = 15;
 end
 function visAllIndividualV2(borders, data)
@@ -119,13 +126,14 @@ for i = 1:length(fld_phase)
     for j=start:size(y,2); set(get(get(a(j),'Annotation'),'LegendInformation'),'IconDisplayStyle','off');
     end
 end
-yl = yline(0,'--'); set(get(get(yl,'Annotation'),'LegendInformation'),'IconDisplayStyle','off');
+yl = yline(0,'--','pedestrian','LabelVerticalAlignment','bottom'); set(get(get(yl,'Annotation'),'LegendInformation'),'IconDisplayStyle','off');
 grid on;
 title(join(['[',strMap(m),'] - ','Distance from pedestrian vs Time']),'FontSize',15,'FontWeight','bold');
 xlabel('Time in [s]','FontSize',10,'FontWeight','bold');
 ylabel({'Distance from'; 'pedestrian in [m]'},'FontSize',4,'FontWeight','bold');
 ylim([border.(fld_con{1}).(fld_map{1}).rect(1,2), border.(fld_con{1}).(fld_map{1}).rect(1,2)+border.(fld_con{1}).(fld_map{1}).rect(1,4)]);
 xlim([0, border.(fld_con{1}).(fld_map{1}).rect(end,1)+border.(fld_con{1}).(fld_map{1}).rect(end,3)]);
+xticks([0:11]);
 ax=gca; ax.FontSize = 15;
 end
 function visAllIndividual(borders, data)

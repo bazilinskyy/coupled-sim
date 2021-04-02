@@ -198,7 +198,7 @@ for i=1:nrPhases %length(fld_phase)
     end
 grid on
 ax=gca; ax.FontSize = 15;
-title(join([titlestring,'Distance from pedestrian vs Time']),'FontSize',18,'FontWeight','bold');
+% title(join([titlestring,'Distance from pedestrian vs Time']),'FontSize',18,'FontWeight','bold');
 xlabel('Time in [s]','FontSize',15,'FontWeight','bold');
 ylabel({'Crossing button press'; 'in [%]'},'FontSize',15,'FontWeight','bold');
 ylim([-5 105]);
@@ -218,12 +218,12 @@ for c=[1,3]
     for m=1:length(fld_map)
         b{m,:} = visNumberOfGapAcceptancePhases(data, border, fld_con{c+1}, fld_map{m}); 
     end
-    legend([a;b],'Location','southwest');
+    legend([a;b],'Location','southeast');
 end
 end
 
 function visDecisionCertainty(data, con)
-strmap = {'Baseline','Mapping 1','Mapping 2'};
+strmap = {'Baseline','Gaze to Yield','Look Away to Yield'};
 fld_con = fieldnames(data);
 c = find(strcmp(fld_con,con));
 fld_map = fieldnames(data.(fld_con{c}));
@@ -238,15 +238,15 @@ end
 [labstr, ~, ~] = getLabel(con);
 x = categorical(strmap);
 x = reordercats(x,strmap);
-titstr = join(['[',labstr,'] - Crossing decision reversals']);
+titstr = labstr; %join(['[',labstr,'] - Crossing decision reversals']);
 colourcodes = [0, 0.4470, 0.7410; 0.8500, 0.3250, 0.0980; 0.9290, 0.6940, 0.1250];
 % Bar graph
 for i = 1:length(x)
 h = bar(x(i),meandata(i));
 set(h, 'FaceColor', colourcodes(i,:));
 a = get(gca,'XTickLabel');
-set(gca,'XTickLabel',a,'FontSize',18,'FontWeight','bold');
-ylabel('Crossing decision reversals','FontSize',18,'FontWeight','bold');
+set(gca,'XTickLabel',a,'FontSize',15,'FontWeight','bold');
+ylabel('Crossing decision reversals','FontSize',15,'FontWeight','bold');
 title(titstr,'FontSize',18,'FontWeight','bold');
 hold on;
 grid on;
@@ -262,12 +262,17 @@ ylim([0 5]);
 end
 function visAllDecisionCertainty(data)
 fld_con = fieldnames(data);
-for c=[1,3]%length(fld_con)
-    figure;
-    subplot(1,2,1);
+% for c=[1,3]%length(fld_con)
+%     figure;
+%     subplot(1,2,1);
+%     visDecisionCertainty(data,fld_con{c});
+%     subplot(1,2,2);
+%     visDecisionCertainty(data,fld_con{c+1});
+% end
+figure;
+for c=1:length(fld_con)
+    subplot(2,2,c);
     visDecisionCertainty(data,fld_con{c});
-    subplot(1,2,2);
-    visDecisionCertainty(data,fld_con{c+1});
 end
 end
 %% Helper functions - OLD

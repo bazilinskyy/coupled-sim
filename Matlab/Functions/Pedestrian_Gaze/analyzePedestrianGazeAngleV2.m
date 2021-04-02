@@ -3,7 +3,7 @@
 % 90-180 is left side of the pedestrian
 % Author: Johnson Mok
 % Last Updated: 24-02-2021
-function out = analyzePedestrianGazeAngleV2(origin, dir, phases)
+function out = analyzePedestrianGazeAngleV2(origin, dir, phases, trialorder)
 origin_p = getAllPhase(origin,phases);
 dir_p = getAllPhase(dir,phases);
     
@@ -15,6 +15,18 @@ org_ind = getOrganizedDY(angles);
 
 out.ind = calcGroupCountsInd(org_ind);
 out.mean = calcGroupCounts(org);
+
+anglePP = meanAnglePerPerson(org_ind, trialorder);
+SPSS = SPSSmatrix(anglePP);
+D_D_NY = CohensD(SPSS.D_NY);
+D_D_Y = CohensD(SPSS.D_Y);
+D_ND_NY = CohensD(SPSS.ND_NY);
+D_ND_Y = CohensD(SPSS.ND_Y);
+
+t_D_NY = pairedSamplesttest(SPSS.D_NY);
+t_D_Y = pairedSamplesttest(SPSS.D_Y);
+t_ND_NY = pairedSamplesttest(SPSS.ND_NY);
+t_ND_Y = pairedSamplesttest(SPSS.ND_Y);
 end
 
 %% Helper functions
@@ -119,4 +131,75 @@ for c=1:length(fld_con)
         out.(fld_con{c}).(fld_map{m}).freq = 100*freq/length(data.(fld_con{c}).(fld_map{m}));
     end
 end
+end
+
+function out = meanAnglePerPerson(data, order)
+fld_con = fieldnames(data);
+for c=1:length(fld_con)
+    fld_map = fieldnames(data.(fld_con{c}));
+    for m=1:length(fld_map)
+        A = data.(fld_con{c}).(fld_map{m});
+        B = order.(fld_con{c}).(fld_map{m}).Pnr;
+        for i=1:max(B)
+            temp = A(find(B==i))';
+            sizes = cellfun(@length, temp);
+            if (min(sizes) ~= max(sizes))
+                for k = 1:length(sizes)
+                    if size(temp(k)) < max(sizes)
+                        temp{k}(end+1:max(sizes)) = NaN;
+                    end
+                end
+            end
+            out.(fld_con{c}).(fld_map{m})(i) =  mean(mean(cell2mat(temp),2,'omitnan'),'omitnan');
+        end
+    end
+end
+end
+function out = SPSSmatrix(data)
+% tablename = {'SPSS_Perf_ND_Y.csv','SPSS_Perf_ND_NY.csv','SPSS_Perf_D_Y.csv','SPSS_Perf_D_NY.csv'};
+fld_con = fieldnames(data);
+for c=1:length(fld_con)
+    fld_map = fieldnames(data.(fld_con{c}));
+    temp.(fld_con{c}) = NaN(length(data.ND_Y.map0),3);
+    if strcmp(fld_con{c},'ND_Y')
+        for m=1:length(fld_map)
+            temp.(fld_con{c})(1:length(data.(fld_con{c}).(fld_map{m})),m) = data.(fld_con{c}).(fld_map{m});
+        end
+    else
+        for m=1:length(fld_map)
+            temp.(fld_con{c})(1:length(data.(fld_con{c}).(fld_map{m})),m) = 100-data.(fld_con{c}).(fld_map{m});
+        end 
+    end
+    M = temp.(fld_con{c});
+    T = array2table(M);
+    T.Properties.VariableNames(1:3) = {'Baseline','Gaze_to_Yield','Look_Away_to_Yield'};
+%     writetable(T,tablename{c})
+end
+out = temp;
+end
+
+function out = pairedSamplesttest(data)
+[~,p1,~,stats1] = ttest(data(:,1), data(:,2));
+[~,p2,~,stats2] = ttest(data(:,2), data(:,3));
+[~,p3,~,stats3] = ttest(data(:,1), data(:,3));
+out = zeros(3,3);
+out(1,:) = [stats1.tstat, stats1.df, p1];
+out(2,:) = [stats2.tstat, stats2.df, p2];
+out(3,:) = [stats3.tstat, stats3.df, p3];
+end
+function out = CohensD(data)
+pair12 = data(:,1)-data(:,2); % baseline - mapping 1
+pair23 = data(:,2)-data(:,3); % mapping 1 - mapping 2
+pair13 = data(:,1)-data(:,3); % baseline - mapping 2
+
+out = zeros(3,3);
+out(1,:) = calcCohen(pair12);
+out(2,:) = calcCohen(pair23);
+out(3,:) = calcCohen(pair13);
+end
+function out = calcCohen(data)
+m = mean(data,'omitnan');
+s = std(data,'omitnan');
+D = m/s;
+out = [m, s, D];
 end
