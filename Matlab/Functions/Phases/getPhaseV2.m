@@ -20,18 +20,26 @@ end
 
 %% Helper functions
 function out = getIdxYield(data,EDnr)
+% method = 1; % phase 2 is based on start deceleration.
+method = 2; % phase 2 is based on AV position = 25+17.19 = 42.19
+
 pos = data.pa.pos.z;
 pos_rel = pos - 17.19;
 dx = abs(gradient(pos_rel));
 
 % indices yield
 idx_start = 1;
-% if not mapping gaze to yield
-if(EDnr ~= 4 || EDnr ~= 6)
-    idx_decel_start = find(pos<40.44,1,'first');
-elseif (EDnr == 4 || EDnr == 6)
-    idx_decel_start = find(data.pa.distance<25,1,'first');
+if method == 1
+    % if not mapping gaze to yield
+    if(EDnr ~= 4 || EDnr ~= 6)
+        idx_decel_start = find(pos<40.44,1,'first');
+    elseif (EDnr == 4 || EDnr == 6)
+        idx_decel_start = find(data.pa.distance<25,1,'first');
+    end
+elseif method == 2 
+    idx_decel_start = find(pos<42.19,1,'first');
 end
+
 idx_standstill_start = find(dx<0.01, 1,'first');
 idx_standstill_end = idx_standstill_start + round(2.6/0.0167);
 
@@ -69,14 +77,15 @@ pos_rel = pos - 17.19;
 
 % indices yield
 idx_start = 1;
+idx_25 = find(pos_rel< 25, 1, 'first');
 idx_past_zebra = find(pos_rel< - 4.69, 1, 'first');
 
 % Set up phases
-ph1 = [idx_start; idx_past_zebra];
+ph1 = [idx_start; idx_25];
+ph2 = [idx_25; idx_past_zebra];
 
 % Set up idx array
-out = ph1;
-
+out = [ph1, ph2];
 %% Test 
 if (false)
     figure
@@ -111,9 +120,9 @@ pos = data.pa.pos.z;
 pos_rel = pos - 17.19;
 i1 = idx(1,1):idx(2,1);
 out.ph1 = [i1'*data.dt, pos_rel(i1)];
+i2 = idx(1,2):idx(2,2);
+out.ph2 = [i2'*data.dt, pos_rel(i2)];
 if(length(idx)>2) 
-    i2 = idx(1,2):idx(2,2);
-    out.ph2 = [i2'*data.dt, pos_rel(i2)];
     i3 = idx(1,3):idx(2,3);
     out.ph3 = [i3'*data.dt, pos_rel(i3)];
 end
