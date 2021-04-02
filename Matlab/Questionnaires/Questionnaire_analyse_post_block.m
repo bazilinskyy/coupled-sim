@@ -50,6 +50,13 @@ Acceptance_pe = AcceptanceVanDerLaan(Data_block_pe.mapping, Data_block_pe.accept
     writematrix(SPSS_pa_S,'SPSS_pa_S.csv'); 
     writematrix(SPSS_pe_U,'SPSS_pe_U.csv'); 
     writematrix(SPSS_pe_S,'SPSS_pe_S.csv'); 
+    
+%% Cohen's D
+D_pa_U = CohensD(SPSS_pa_U);
+D_pa_S = CohensD(SPSS_pa_S);
+D_pe_U = CohensD(SPSS_pe_U);
+D_pe_S = CohensD(SPSS_pe_S);
+
 
 %% Comments
 comments_pa = matchWithMapping(Data_block_pa.mapping, Data_block_pa.otherRemark);
