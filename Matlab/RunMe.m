@@ -7,7 +7,7 @@ clear;
 close all;
 
 %% Inputs
-createAnimation = false;
+createAnimation = true;
 showPlot = false;
 
 %% Add path to functions
@@ -51,7 +51,7 @@ load('Acceptance_pe.mat');
 % close all; clc;
 % analyzeTriggerYield(PreDataV3);
 %% Number of data filtered
-VisualizeDataFiltered(WrongData);
+% VisualizeDataFiltered(WrongData);
 
 %% Calculations
 phases = calcPhases(PreDataV3);
@@ -82,22 +82,24 @@ trialorder = analyzeTrialOrder(participantTrialGroup);
 % gazeTime = analyzeGazeTimeV2(timesgroup); % gazeTime = analyzeGazeTime(timesgroup, pa_distancegroup, pe_distancegroup);
 gazeTimeV2 = analyzeGazeTimeV2(timesgroupV2); 
 % gapAcpt = analyzeGapAcceptance(gapgroup, rbvgroup, pasposgroup, phasesgroup);
-gapAcptV2 = analyzeGapAcceptance(gapgroup, rbvgroup, pasposgroup, phasesgroupV2);
+gapAcptV2 = analyzeGapAcceptance(gapgroup, rbvgroup, pasposgroup, phasesgroupV2, trialorder);
 phaseData = analyzePhasesGroup(phasesgroup);
 phaseDataV2 = analyzePhasesGroup(phasesgroupV2);
 learnEffect = analyzeLearningEffect(gapOrderGroup);
 
 peHeadAngle = analyzePedestrianGazeAngle(pe_gazeOrg, pe_gazeDir, phasesgroup);
-peHeadAngleV2 = analyzePedestrianGazeAngleV2(pe_gazeOrg, pe_gazeDir, phasesgroupV2);
+peHeadAngleV2 = analyzePedestrianGazeAngleV2(pe_gazeOrg, pe_gazeDir, phasesgroupV2, trialorder);
 
 DC = calcDecisionCertainty(PreDataV3, phases);
 crossPerformance = crossingPerformance(gapAcptV2, Acceptance_pa, Acceptance_pe, trialorder);
 
 
 %% Animation
+clc
+close all
 if createAnimation == true
-    videoname = 'ED_8_participant_1_trial_6';
-    titlestr = 'ED\_8\_participant\_1\_trial\_6';
+    videoname = 'ED_8_participant_1_trial_6_V4.avi';
+    titlestr = 'LATY - Yielding';
     trialAnimate = PreDataV3.Data_ED_8.HostFixedTimeLog.participant_1.trial_6;
     pedestrianGaze = trialAnimate.pe.world;
     pedestrianGAP = trialAnimate.pe.gapAcceptance;
@@ -107,7 +109,6 @@ if createAnimation == true
         passengerGaze.gaze_origin, passengerGaze.gaze_dir,...
         passengerLook, videoname, titlestr);
 end
-
 %% Visualize data (needs reorganization, for now the calculations and visualization is done in the same script/function) 
 if showPlot == true
     visualizeGapAcceptance(gapAcpt, phaseData);
@@ -125,8 +126,5 @@ if showPlot == true
     
     visualizeCrossingPerformance(crossPerformance);
 end
-close all; clc;
-    visualizeGapAcceptanceV2(gapAcptV2, phaseDataV2);
-    visualizeCrossingPerformance(crossPerformance);
 
 
