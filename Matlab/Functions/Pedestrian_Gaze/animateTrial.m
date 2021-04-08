@@ -47,10 +47,15 @@ open(myVideo)
 %% Pedestrian gaze animation
 figure
 subplot(2,2,[1 3])
+% Image
+cdata = flipdim( imread('VE.jpg'), 1 );
+cdatar = flipdim( cdata, 2 );
+surface([-120 -100; -120 -100], [-1 -1; -1 -1], [-40 -40; 80 80], ...
+    'FaceColor', 'texturemap', 'CData', cdata );
 % road
 hold on
-plot3([-115.1, -115.1], [0,0], [-100, 100],'--', 'LineWidth', 1, 'Color', 'k');
-plot3([-105.1, -105.1], [0,0], [-100, 100],'--', 'LineWidth', 1, 'Color', 'k');
+% plot3([-115.1, -115.1], [0,0], [-100, 100],'--', 'LineWidth', 1, 'Color', 'k');
+% plot3([-105.1, -105.1], [0,0], [-100, 100],'--', 'LineWidth', 1, 'Color', 'k');
 % zebra
 % plot3([-115.1, -105.1],[0, 0],[20.1, 20.1],'--' ,'LineWidth', 1, 'Color', 'k');
 % plot3([-115.1, -105.1],[0, 0],[15.35, 15.35],'--', 'LineWidth', 1, 'Color', 'k');
@@ -61,6 +66,7 @@ h3 = plot3(NaN, NaN, NaN, '-','Color',customColor(2,:));                        
 h4 = plot3(NaN, NaN, NaN, 's','MarkerSize',6,'MarkerFaceColor',customColor(2,:),'MarkerEdgeColor',customColor(2,:)); % passenger position
 axis([-120 -100 -5 5 -40 80]);
 view(0,0) % XZ
+
 % set(gca,'xticklabel',[],'yticklabel',[],'zticklabel',[])
 set(gca,'xticklabel',[])
 % zticks([(-40:10:60)+17.19]);
@@ -185,6 +191,7 @@ if standstilltwosix > endsmooth
     standstilltwosix = endsmooth;
 end
 % Debug
+if(false)
 figure
 subplot(2,1,1)
 plot(data.z);
@@ -208,6 +215,7 @@ hold on;
 plot(v_smooth);
 xline(startsmooth);
 xline(endsmooth);
+end
 end
 
 function out = getRect(pos, startstop, endstop, standstilltwosix, height)

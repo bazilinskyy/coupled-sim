@@ -190,7 +190,7 @@ for i=1:length(X)
     set(get(get(p3,'Annotation'),'LegendInformation'),'IconDisplayStyle','off');
 end
 legend(labels,'Location','southeast');
-xlabel('Satisfying','FontSize',15,'FontWeight','bold'); xlim([-2 2]); xL = xline(0,'--');
+xlabel('Satisfaction','FontSize',15,'FontWeight','bold'); xlim([-2 2]); xL = xline(0,'--');
 ylabel('Usefulness','FontSize',15,'FontWeight','bold'); ylim([-2 2]); yL = yline(0,'--');
 title(join([strRole,'Acceptance subscale scores']),'FontSize',15,'FontWeight','bold')
 set(get(get(xL,'Annotation'),'LegendInformation'),'IconDisplayStyle','off');

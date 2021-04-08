@@ -16,6 +16,7 @@ FileList = dir(fullfile(Folder, '**', '*.csv'));
 
 %% Add path to functions
 addpath(genpath('Functions_postblock'));
+addpath(genpath('Functions_visualisation'));
 
 %% Pre-experiment Questionnaire (nr 5 in FileList)
 filename_pa     = join([FileList(1).folder,'\',FileList(1).name]);

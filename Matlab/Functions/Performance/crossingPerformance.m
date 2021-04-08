@@ -44,16 +44,16 @@ out.r_U = pearsonsRAll(out.score, out.usefulness);
 out.r_S = pearsonsRAll(out.score, out.satisfying);
 
 % SPSS = SPSSmatrix(buttonPerPerson);
-SPSS = SPSSmatrix(buttonPerPersonWithoutStart);
-D_D_NY = CohensD(SPSS.D_NY);
-D_D_Y = CohensD(SPSS.D_Y);
-D_ND_NY = CohensD(SPSS.ND_NY);
-D_ND_Y = CohensD(SPSS.ND_Y);
+out.SPSS = SPSSmatrix(buttonPerPersonWithoutStart);
+D_D_NY = CohensD(out.SPSS.D_NY);
+D_D_Y = CohensD(out.SPSS.D_Y);
+D_ND_NY = CohensD(out.SPSS.ND_NY);
+D_ND_Y = CohensD(out.SPSS.ND_Y);
 
-t_D_NY = pairedSamplesttest(SPSS.D_NY);
-t_D_Y = pairedSamplesttest(SPSS.D_Y);
-t_ND_NY = pairedSamplesttest(SPSS.ND_NY);
-t_ND_Y = pairedSamplesttest(SPSS.ND_Y);
+t_D_NY = pairedSamplesttest(out.SPSS.D_NY);
+t_D_Y = pairedSamplesttest(out.SPSS.D_Y);
+t_ND_NY = pairedSamplesttest(out.SPSS.ND_NY);
+t_ND_Y = pairedSamplesttest(out.SPSS.ND_Y);
 
 
 end

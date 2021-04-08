@@ -9,7 +9,7 @@ function visualizeGapAcceptanceV2(in, phase)
 % visAllPerGapAcceptancePhases(in.phasesPer);
 visNumberOfGapAcceptancePhasesAll(in.phasesSum, phase.borders);
 
-visAllDecisionCertainty(in.DC)
+visAllDecisionCertainty(in.DC, in.DC_STD)
 %% OLD
 % visSumGapAcceptance(in.smoothgap);
 % 
@@ -222,8 +222,8 @@ for c=[1,3]
 end
 end
 
-function visDecisionCertainty(data, con)
-strmap = {'Baseline','Gaze to Yield','Look Away to Yield'};
+function visDecisionCertainty(data, con, STD)
+strmap = {'Baseline','GTY','LATY'};
 fld_con = fieldnames(data);
 c = find(strcmp(fld_con,con));
 fld_map = fieldnames(data.(fld_con{c}));
@@ -232,7 +232,7 @@ meandata = zeros(length(fld_map),1);
 err = zeros(length(fld_map),1);
 for m=1:length(fld_map)
     meandata(m) = data.(fld_con{c}).(fld_map{m}).mean;
-    err(m) = data.(fld_con{c}).(fld_map{m}).std;
+    err(m) = STD.(fld_con{c}).(fld_map{m}); %data.(fld_con{c}).(fld_map{m}).std;
 end
 
 [labstr, ~, ~] = getLabel(con);
@@ -260,7 +260,7 @@ er.LineStyle = 'none';
 hold off;
 ylim([0 5]);
 end
-function visAllDecisionCertainty(data)
+function visAllDecisionCertainty(data, STD)
 fld_con = fieldnames(data);
 % for c=[1,3]%length(fld_con)
 %     figure;
@@ -272,7 +272,7 @@ fld_con = fieldnames(data);
 figure;
 for c=1:length(fld_con)
     subplot(2,2,c);
-    visDecisionCertainty(data,fld_con{c});
+    visDecisionCertainty(data,fld_con{c},STD);
 end
 end
 %% Helper functions - OLD

@@ -75,7 +75,7 @@ function out = getIdxNonYield(data)
 pos = data.pa.pos.z;
 pos_rel = pos - 17.19;
 
-% indices yield
+% indices nonyield
 idx_start = 1;
 idx_25 = find(pos_rel< 25, 1, 'first');
 idx_past_zebra = find(pos_rel< - 4.69, 1, 'first');

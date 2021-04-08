@@ -9,38 +9,63 @@ function visualizeNoCategoryPostBlock(NoCat)
 % visualizeLaserDistracting(NoCat);
 % visualizeVehicleActAsPredicted(NoCat);
 
-figure
-subplot(1,2,1);
-plotMeanError(NoCat.directLaser_pa,'direct laser','easy to direct',true);
-subplot(1,2,2);
-plotBar(NoCat.directLaser_val_pa ,NoCat.directLaser_name_pa, NoCat.N, 'Easy to direct laser',true);
+% figure
+% subplot(1,2,1);
+% plotMeanError(NoCat.directLaser_pa,'direct laser','easy to direct',true);
+% subplot(1,2,2);
+% plotBar(NoCat.directLaser_val_pa ,NoCat.directLaser_name_pa, NoCat.N, 'Easy to direct laser',true);
+% 
+% figure
+% subplot(1,2,1);
+% plotMeanError(NoCat.laserDistract_pa,'laser distracting','laser distracting',true);
+% subplot(1,2,2);
+% plotBar(NoCat.laserDistract_val_pa ,NoCat.laserDistract_name_pa, NoCat.N, 'Laser distracting',true);
+% 
+% figure
+% subplot(1,2,1);
+% plotMeanError(NoCat.VAP_pa,'VAP','vehicle act as predicted',true);
+% subplot(1,2,2);
+% plotBar(NoCat.VAP_val_pa ,NoCat.VAP_name_pa, NoCat.N, 'Vehicle act as predicted',true);
 
 figure
-subplot(1,2,1);
-plotMeanError(NoCat.laserDistract_pa,'laser distracting','laser distracting',true);
-subplot(1,2,2);
-plotBar(NoCat.laserDistract_val_pa ,NoCat.laserDistract_name_pa, NoCat.N, 'Laser distracting',true);
+subplot(1,3,1)
+VisBarError(NoCat.directLaser_pa.mean(2:3), NoCat.directLaser_pa.std(2:3), {'GTY','LATY'},'', {'It was easy to direct the eye-gaze';'visualisation to where you wanted it to be'})
+yticks(1:7)
+yticklabels({'strongly disagree','disagree,','slightly disagree','neutral','slightly agree','agree','extremely agree'});
 
-figure
-subplot(1,2,1);
-plotMeanError(NoCat.VAP_pa,'VAP','vehicle act as predicted',true);
-subplot(1,2,2);
-plotBar(NoCat.VAP_val_pa ,NoCat.VAP_name_pa, NoCat.N, 'Vehicle act as predicted',true);
+subplot(1,3,2)
+VisBarError(NoCat.laserDistract_pa.mean(2:3), NoCat.laserDistract_pa.std(2:3), {'GTY','LATY'},'', {'The eye-gaze';'visualisation was distracting'})
+yticks(1:7)
+yticklabels({'strongly disagree','disagree,','slightly disagree','neutral','slightly agree','agree','extremely agree'});
+
+subplot(1,3,3)
+VisBarError(NoCat.VAP_pa.mean(2:3), NoCat.VAP_pa.std(2:3), {'GTY','LATY'},'', {'The vehicle';'acted as predicted'})
+yticks(1:7)
+yticklabels({'strongly disagree','disagree,','slightly disagree','neutral','slightly agree','agree','extremely agree'});
 
 %% Pedestrian
-% visualizeNoCatPedestrian(NoCat)
-figure
-subplot(1,2,1);
-plotMeanError(NoCat.prefMapping,'Mappping preference','prefer mapping over the baseline',true);
-subplot(1,2,2);
-plotBar(NoCat.prefMapping_val ,NoCat.prefMapping_name, NoCat.N, 'Prefer mapping over the baseline',true);
+% figure
+% subplot(1,2,1);
+% plotMeanError(NoCat.prefMapping,'Mappping preference','prefer mapping over the baseline',true);
+% subplot(1,2,2);
+% plotBar(NoCat.prefMapping_val ,NoCat.prefMapping_name, NoCat.N, 'Prefer mapping over the baseline',true);
+% 
+% figure
+% subplot(1,2,1);
+% plotMeanError(NoCat.clearVehicleYield,'clear vehicle yield','clear when the vehicle yields',false);
+% subplot(1,2,2);
+% plotBar(NoCat.clearVehicleYield_val ,NoCat.clearVehicleYield_name, NoCat.N, 'Clear when the vehicle yields',false);
 
 figure
-subplot(1,2,1);
-plotMeanError(NoCat.clearVehicleYield,'clear vehicle yield','clear when the vehicle yields',false);
-subplot(1,2,2);
-plotBar(NoCat.clearVehicleYield_val ,NoCat.clearVehicleYield_name, NoCat.N, 'Clear when the vehicle yields',false);
+subplot(1,2,1)
+VisBarError(NoCat.prefMapping.mean, NoCat.prefMapping.std, {'baseline','GTY','LATY'},'', {'You prefer this';'mapping over the baseline'})
+yticks(1:7)
+yticklabels({'strongly disagree','disagree,','slightly disagree','neutral','slightly agree','agree','extremely agree'});
 
+subplot(1,2,2)
+VisBarError(NoCat.clearVehicleYield.mean, NoCat.clearVehicleYield.std, {'baseline','GTY','LATY'},'', {'It was clear to you when';'the vehicle was going to yield'})
+yticks(1:7)
+yticklabels({'strongly disagree','disagree,','slightly disagree','neutral','slightly agree','agree','extremely agree'});
 
 end
 

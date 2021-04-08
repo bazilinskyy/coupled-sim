@@ -15,6 +15,10 @@ ShowPlots  = true;
 Folder   = join([cd,'\Questionnaire_Data']); %cd
 FileList = dir(fullfile(Folder, '**', '*.csv'));
 
+%% Add path to functions
+addpath(genpath('Functions_preexp'));
+addpath(genpath('Functions_visualisation'));
+
 %% Pre-experiment Questionnaire (nr 5 in FileList)
 filename    = join([FileList(5).folder,'\',FileList(5).name]);
 opts        = delimitedTextImportOptions('Delimiter',',','DataLines', 2);
@@ -129,14 +133,27 @@ std_accidents_pe    = std(Data_preexp_pe.Driving_accidents);
 % Driver eye contact - unsignalised
 [driverUnsig_pa, driverUnsig_name_pa] = calcSevenLikertScale(Data_preexp_pa.Driver_EyeContact_unsignalised);
 [driverUnsig_pe, driverUnsig_name_pe] = calcSevenLikertScale(Data_preexp_pe.Driver_EyeContact_unsignalised);
+mean_EC_unsig_pa = mean(Data_preexp_pa.Driver_EyeContact_unsignalised);
+std_EC_unsig_pa = std(Data_preexp_pa.Driver_EyeContact_unsignalised);
+mean_EC_unsig_pe = mean(Data_preexp_pe.Driver_EyeContact_unsignalised);
+std_EC_unsig_pe = std(Data_preexp_pe.Driver_EyeContact_unsignalised);
 
 % Driver eye contact - zebra
 [driverZebra_pa, driverZebra_name_pa] = calcSevenLikertScale(Data_preexp_pa.Driver_EyeContact_zebra);
 [driverZebra_pe, driverZebra_name_pe] = calcSevenLikertScale(Data_preexp_pe.Driver_EyeContact_zebra);
+mean_EC_zebra_pa = mean(Data_preexp_pa.Driver_EyeContact_zebra);
+std_EC_zebra_pa = std(Data_preexp_pa.Driver_EyeContact_zebra);
+mean_EC_zebra_pe = mean(Data_preexp_pe.Driver_EyeContact_zebra);
+std_EC_zebra_pe = std(Data_preexp_pe.Driver_EyeContact_zebra);
 
 % Driver eye contact - signalised
 [driverSig_pa, driverSig_name_pa] = calcSevenLikertScale(Data_preexp_pa.Driver_EyeContact_signalised);
 [driverSig_pe, driverSig_name_pe] = calcSevenLikertScale(Data_preexp_pe.Driver_EyeContact_signalised);
+mean_EC_sig_pa = mean(Data_preexp_pa.Driver_EyeContact_signalised);
+std_EC_sig_pa = std(Data_preexp_pa.Driver_EyeContact_signalised);
+mean_EC_sig_pe = mean(Data_preexp_pe.Driver_EyeContact_signalised);
+std_EC_sig_pe = std(Data_preexp_pe.Driver_EyeContact_signalised);
+
 
 %% Calulations Pre-experiment questionnaire - Crossing Behaviour
 % Frequency walking
@@ -146,14 +163,26 @@ std_accidents_pe    = std(Data_preexp_pe.Driving_accidents);
 % Pedestrian eye contact - unsignalised
 [pedestrianUnsig_pa, pedestrianUnsig_name_pa] = calcSevenLikertScale(Data_preexp_pa.Pedestrian_EyeContact_unsignalised);
 [pedestrianUnsig_pe, pedestrianUnsig_name_pe] = calcSevenLikertScale(Data_preexp_pe.Pedestrian_EyeContact_unsignalised);
+mean_EC_ped_unsig_pa = mean(Data_preexp_pa.Pedestrian_EyeContact_unsignalised);
+std_EC_ped_unsig_pa = std(Data_preexp_pa.Pedestrian_EyeContact_unsignalised);
+mean_EC_ped_unsig_pe = mean(Data_preexp_pe.Pedestrian_EyeContact_unsignalised);
+std_EC_ped_unsig_pe = std(Data_preexp_pe.Pedestrian_EyeContact_unsignalised);
 
 % Pedestrian eye contact - zebra
 [pedestrianZebra_pa, pedestrianZebra_name_pa] = calcSevenLikertScale(Data_preexp_pa.Pedestrian_EyeContact_zebra);
 [pedestrianZebra_pe, pedestrianZebra_name_pe] = calcSevenLikertScale(Data_preexp_pe.Pedestrian_EyeContact_zebra);
+mean_EC_ped_zebra_pa = mean(Data_preexp_pa.Pedestrian_EyeContact_zebra);
+std_EC_ped_zebra_pa = std(Data_preexp_pa.Pedestrian_EyeContact_zebra);
+mean_EC_ped_zebra_pe = mean(Data_preexp_pe.Pedestrian_EyeContact_zebra);
+std_EC_ped_zebra_pe = std(Data_preexp_pe.Pedestrian_EyeContact_zebra);
 
 % Pedestrian eye contact - signalised
 [pedestrianSig_pa, pedestrianSig_name_pa] = calcSevenLikertScale(Data_preexp_pa.Pedestrian_EyeContact_signalised);
 [pedestrianSig_pe, pedestrianSig_name_pe] = calcSevenLikertScale(Data_preexp_pe.Pedestrian_EyeContact_signalised);
+mean_EC_ped_sig_pa = mean(Data_preexp_pa.Pedestrian_EyeContact_signalised);
+std_EC_ped_sig_pa = std(Data_preexp_pa.Pedestrian_EyeContact_signalised);
+mean_EC_ped_sig_pe = mean(Data_preexp_pe.Pedestrian_EyeContact_signalised);
+std_EC_ped_sig_pe = std(Data_preexp_pe.Pedestrian_EyeContact_signalised);
 
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -161,34 +190,43 @@ std_accidents_pe    = std(Data_preexp_pe.Driving_accidents);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Plots Pre-experiment questionnaire - Demographics
+colourcodes = [0, 0.4470, 0.7410; 0.8500, 0.3250, 0.0980; 0.9290, 0.6940, 0.1250];
 if(ShowPlots==true)
 figure;
 % Nationality
-subplot(2,2,1);
+subplot(1,2,1);
 X = categorical({'Passenger','Pedestrian'});
 Y = [Nat_val_pa; Nat_val_pe];
 h = bar(X,Y);
 set(h, {'DisplayName'},{'Chinese','Dutch','Indian'}')
 ylabel('Number of participants'); title('Nationalities'); legend();
+grid on;
+ax=gca; ax.FontSize = 15;
+
 % Age
-subplot(2,2,2);
-boxplot([Data_preexp_pa.Age; Data_preexp_pe.Age],[ones(size(Data_preexp_pa.Age)); 2*ones(size(Data_preexp_pe.Age))], ...
-    'Labels',{'Passenger','Pedestrian'});
-ylabel('Age'); title('Age of pedestrian and passenger');
+subplot(1,2,2);
+VisBarError([mean_age_pa, mean_age_pe], [std_age_pa, std_age_pe], {'Passenger','Pedestrian'}, 'Age', 'Age of pedestrian and passenger')
+
+figure
 % Gender
-subplot(2,2,3);
+subplot(1,2,1);
 X = categorical({'Passenger','Pedestrian'});
 Y = [male_pa female_pa; male_pe female_pe];
 h = bar(X,Y);
 set(h, {'DisplayName'},{'Male','Female'}')
 title('Gender'); ylabel('Number of participants'); legend();
+grid on;
+ax=gca; ax.FontSize = 15;
+
 % Seeing aid
-subplot(2,2,4);
+subplot(1,2,2);
 X = categorical({'Passenger','Pedestrian'});
 Y = [No_pa Glasses_pa Contacts_pa; No_pe Glasses_pe Contacts_pe];
 h = bar(X,Y);
 set(h, {'DisplayName'},{'No seeing aid','Glasses','Contacts'}')
 title('Seeing aids'); ylabel('Number of participants'); legend();
+grid on;
+ax=gca; ax.FontSize = 15;
 
 %% Plots Pre-experiment questionnaire - Experience
 figure;
@@ -199,6 +237,8 @@ Y = [val_videoGameExp_pa; val_videoGameExp_pe];
 h = bar(X,Y);
 set(h, {'DisplayName'},{'No experience','Rarely','Weekly','Monthly'}')
 title('Video game experience'); ylabel('Number of participants'); legend();
+grid on;
+ax=gca; ax.FontSize = 15;
 % VR experience
 subplot(1,3,2);
 X = categorical({'Passenger','Pedestrian'});
@@ -206,6 +246,8 @@ Y = [val_VRExp_pa; val_VRExp_pe];
 h = bar(X,Y);
 set(h, {'DisplayName'},{'No experience','Few','Often'}')
 title('Virtual Reality experience'); ylabel('Number of participants'); legend();
+grid on;
+ax=gca; ax.FontSize = 15;
 % Crossing experiment experience
 subplot(1,3,3);
 X = categorical({'Passenger','Pedestrian'});
@@ -213,6 +255,8 @@ Y = [val_CEExp_pa; val_CEExp_pe];
 h = bar(X,Y);
 set(h, {'DisplayName'},{'No','Yes',}')
 title('Crossing experiment experience'); ylabel('Number of participants'); legend();
+grid on;
+ax=gca; ax.FontSize = 15;
 
 %% Plots Pre-experiment questionnaire - Driving behaviour
 figure
@@ -221,17 +265,25 @@ subplot(1,2,1);
 h       = bar(GR_pa,GC_pa);
 xtips1  = GR_pa(1); ytips1 = GC_pa(1);
 labels1 = "No License";
-text(xtips1,ytips1,labels1,'HorizontalAlignment','center','VerticalAlignment','bottom')
+t = text(xtips1,ytips1,labels1,'HorizontalAlignment','right','VerticalAlignment','middle','Fontsize',15,'Fontweight','bold','color','w');
+set(t,'Rotation',90);
 h.FaceColor = 'flat'; h.CData(1,:) = [1 0 0];
 title('Year driver license obtained - passenger'); ylabel('Number of participants');
+grid on;
+ax=gca; ax.FontSize = 15;
+
 subplot(1,2,2);
 i = bar(GR_pe,GC_pe);
 xtips2  = GR_pe(1); ytips2 = GC_pe(1);
 labels2 = "No License";
-text(xtips2,ytips2,labels2,'HorizontalAlignment','center','VerticalAlignment','bottom')
+t = text(xtips2,ytips2,labels2,'HorizontalAlignment','right','VerticalAlignment','middle','Fontsize',15,'Fontweight','bold','color','w');
+set(t,'Rotation',90);
 i.FaceColor = 'flat'; i.CData(1,:) = [1 0 0];
 title('Year driver license obtained - pedestrian'); ylabel('Number of participants');
+grid on;
+ax=gca; ax.FontSize = 15;
 
+%%
 figure
 % Driving frequency
 subplot(1,3,1);
@@ -240,6 +292,9 @@ X = reordercats(X,driveFreq_name_pa);
 h = bar(X,[driveFreq_pa; driveFreq_pe]);
 set(h, {'DisplayName'},{'passenger','pedestrian',}')
 title('Driving frequency'); ylabel('Number of participants'); legend();
+grid on;
+ax=gca; ax.FontSize = 15;
+
 % Driving distance
 subplot(1,3,2);
 X = categorical(driveDis_name_pa);
@@ -247,50 +302,61 @@ X = reordercats(X,driveDis_name_pa);
 h = bar(X,[driveDis_pa; driveDis_pe]);
 set(h, {'DisplayName'},{'passenger','pedestrian',}')
 title('Driving distance'); ylabel('Number of participants'); legend();
+grid on;
+ax=gca; ax.FontSize = 15;
+
 % Driving accidents
 subplot(1,3,3);
-boxplot([Data_preexp_pa.Driving_accidents; Data_preexp_pe.Driving_accidents],[ones(size(Data_preexp_pa.Driving_accidents)); 2*ones(size(Data_preexp_pe.Driving_accidents))], ...
-    'Labels',{'Passenger','Pedestrian'});
-ylabel('Driving_accidents'); title('Driving accidents');
+VisBarError([mean_accidents_pa, mean_accidents_pe], [std_accidents_pa, std_accidents_pe], {'Passenger','Pedestrian'}, 'Mean number of driving accidents', 'Driving accidents')
 
+%%
 figure
-% BOXPLOT - driver eyecontact - unsignalised
-subplot(2,3,1);
-boxplot([Data_preexp_pa.Driver_EyeContact_unsignalised; Data_preexp_pe.Driver_EyeContact_unsignalised],[ones(size(Data_preexp_pa.Driver_EyeContact_unsignalised)); 2*ones(size(Data_preexp_pe.Driver_EyeContact_unsignalised))], ...
-    'Labels',{'Passenger','Pedestrian'});
-ylabel('[Driver] eye-contact - Unsignalised'); title('Eye-contact searching as a driver at unsignalised crossings');
-% BOXPLOT - driver eyecontact - zebra
-subplot(2,3,2);
-boxplot([Data_preexp_pa.Driver_EyeContact_zebra; Data_preexp_pe.Driver_EyeContact_zebra],[ones(size(Data_preexp_pa.Driver_EyeContact_zebra)); 2*ones(size(Data_preexp_pe.Driver_EyeContact_zebra))], ...
-    'Labels',{'Passenger','Pedestrian'});
-ylabel('[Driver] eye-contact - Zebra'); title('Eye-contact searching as a driver at zebra crossings');
-% BOXPLOT - driver eyecontact - signalised
-subplot(2,3,3);
-boxplot([Data_preexp_pa.Driver_EyeContact_signalised; Data_preexp_pe.Driver_EyeContact_signalised],[ones(size(Data_preexp_pa.Driver_EyeContact_signalised)); 2*ones(size(Data_preexp_pe.Driver_EyeContact_signalised))], ...
-    'Labels',{'Passenger','Pedestrian'});
-ylabel('[Driver] eye-contact - Signalised'); title('Eye-contact searching as a driver at signalised crossings');
 % driver eyecontact - unsignalised
-subplot(2,3,4);
+subplot(1,3,1);
+VisBarError([mean_EC_unsig_pa, mean_EC_unsig_pe], [std_EC_unsig_pa, std_EC_unsig_pe], {'Passenger','Pedestrian'},'', {'[Driver]','eye-contact - Unsignalised'})
+yticks(1:7)
+yticklabels({'extremely unlikely','unlikely,','slightly unlikely','neutral','slightly likely','likely','extremely likely'});
+ylim([0 8]);
+
+% driver eyecontact - zebra
+subplot(1,3,2);
+VisBarError([mean_EC_zebra_pa, mean_EC_zebra_pe], [std_EC_zebra_pa, std_EC_zebra_pe], {'Passenger','Pedestrian'}, '', {'[Driver]', 'eye-contact - Zebra'})
+yticks(1:7)
+yticklabels({'extremely unlikely','unlikely,','slightly unlikely','neutral','slightly likely','likely','extremely likely'});
+ylim([0 8]);
+
+% driver eyecontact - signalised
+subplot(1,3,3);
+VisBarError([mean_EC_sig_pa, mean_EC_sig_pe], [std_EC_sig_pa, std_EC_sig_pe], {'Passenger','Pedestrian'}, '', {'[Driver]'; 'eye-contact - Signalised'}); %'[Driver] eye-contact - Signalised'
+yticks(1:7)
+yticklabels({'extremely unlikely','unlikely,','slightly unlikely','neutral','slightly likely','likely','extremely likely'});
+ylim([0 8]);
+
+%% shows number of choices 
+if (false)
+figure;
+% driver eyecontact - unsignalised
+subplot(1,3,1);
 X = categorical(driverUnsig_name_pa);
 X = reordercats(X,driverUnsig_name_pa);
 h = bar(X,[driverUnsig_pa; driverUnsig_pe]);
 set(h, {'DisplayName'},{'passenger','pedestrian',}')
 title('[Driver] eye-contact - Unsignalised'); ylabel('Number of participants'); legend();
 % driver eyecontact - zebra
-subplot(2,3,5);
+subplot(1,3,2);
 X = categorical(driverZebra_name_pa);
 X = reordercats(X,driverZebra_name_pa);
 h = bar(X,[driverZebra_pa; driverZebra_pe]);
 set(h, {'DisplayName'},{'passenger','pedestrian',}')
 title('[Driver] eye-contact - Zebra'); ylabel('Number of participants'); legend();
 % driver eyecontact - signalised
-subplot(2,3,6);
+subplot(1,3,3);
 X = categorical(driverSig_name_pa);
 X = reordercats(X,driverSig_name_pa);
 h = bar(X,[driverSig_pa; driverSig_pe]);
 set(h, {'DisplayName'},{'passenger','pedestrian',}')
 title('[Driver] eye-contact - Signalised'); ylabel('Number of participants'); legend();
-
+end
 %% Plots Pre-experiment questionnaire - Crossing behaviour
 figure
 % Walking frequency
@@ -299,39 +365,51 @@ X = reordercats(X,footFreq_name_pa);
 h = bar(X,[footFreq_pa; footFreq_pe]);
 set(h, {'DisplayName'},{'passenger','pedestrian',}')
 title('Walking frequency'); ylabel('Number of participants'); legend();
+grid on;
+ax=gca; ax.FontSize = 15;
 
+%%
 figure
-% BOXPLOT - pedestrian eyecontact - unsignalised
-subplot(2,3,1);
-boxplot([Data_preexp_pa.Pedestrian_EyeContact_unsignalised; Data_preexp_pe.Pedestrian_EyeContact_unsignalised],[ones(size(Data_preexp_pa.Pedestrian_EyeContact_unsignalised)); 2*ones(size(Data_preexp_pe.Pedestrian_EyeContact_unsignalised))], ...
-    'Labels',{'Passenger','Pedestrian'});
-ylabel('[Pedestrian] eye-contact - Unsignalised'); title('Eye-contact searching as a Pedestrian at unsignalised crossings');
-% BOXPLOT - pedestrian eyecontact - zebra
-subplot(2,3,2);
-boxplot([Data_preexp_pa.Pedestrian_EyeContact_zebra; Data_preexp_pe.Pedestrian_EyeContact_zebra],[ones(size(Data_preexp_pa.Pedestrian_EyeContact_zebra)); 2*ones(size(Data_preexp_pe.Pedestrian_EyeContact_zebra))], ...
-    'Labels',{'Passenger','Pedestrian'});
-ylabel('[Pedestrian] eye-contact - Zebra'); title('Eye-contact searching as a Pedestrian at zebra crossings');
-% BOXPLOT - pedestrian eyecontact - signalised
-subplot(2,3,3);
-boxplot([Data_preexp_pa.Pedestrian_EyeContact_signalised; Data_preexp_pe.Pedestrian_EyeContact_signalised],[ones(size(Data_preexp_pa.Pedestrian_EyeContact_signalised)); 2*ones(size(Data_preexp_pe.Pedestrian_EyeContact_signalised))], ...
-    'Labels',{'Passenger','Pedestrian'});
-ylabel('[Pedestrian] eye-contact - Signalised'); title('Eye-contact searching as a Pedestrian at signalised crossings');
+% Pedestrian eyecontact - unsignalised
+subplot(1,3,1);
+VisBarError([mean_EC_ped_unsig_pa, mean_EC_ped_unsig_pe], [std_EC_ped_unsig_pa, std_EC_ped_unsig_pe], {'Passenger','Pedestrian'},'', {'[Pedestrian]','eye-contact - Unsignalised'})
+yticks(1:7)
+yticklabels({'extremely unlikely','unlikely,','slightly unlikely','neutral','slightly likely','likely','extremely likely'});
+ylim([0 8]);
+
+% Pedestrian eyecontact - zebra
+subplot(1,3,2);
+VisBarError([mean_EC_ped_zebra_pa, mean_EC_ped_zebra_pe], [std_EC_ped_zebra_pa, std_EC_ped_zebra_pe], {'Passenger','Pedestrian'},'', {'[Pedestrian]','eye-contact - Zebra'})
+yticks(1:7)
+yticklabels({'extremely unlikely','unlikely,','slightly unlikely','neutral','slightly likely','likely','extremely likely'});
+ylim([0 8]);
+
+% Pedestrian eyecontact - signalised
+subplot(1,3,3);
+VisBarError([mean_EC_ped_sig_pa, mean_EC_ped_sig_pe], [std_EC_ped_sig_pa, std_EC_ped_sig_pe], {'Passenger','Pedestrian'},'', {'[Pedestrian]','eye-contact - Signalised'})
+yticks(1:7)
+yticklabels({'extremely unlikely','unlikely,','slightly unlikely','neutral','slightly likely','likely','extremely likely'});
+ylim([0 8]);
+
+
+%%
+figure;
 % pedestrian eyecontact - unsignalised
-subplot(2,3,4);
+subplot(1,3,1);
 X = categorical(pedestrianUnsig_name_pa);
 X = reordercats(X,pedestrianUnsig_name_pa);
 h = bar(X,[pedestrianUnsig_pa; pedestrianUnsig_pe]);
 set(h, {'DisplayName'},{'passenger','pedestrian',}')
 title('[Pedestrian] eye-contact - Unsignalised'); ylabel('Number of participants'); legend();
 % pedestrian eyecontact - zebra
-subplot(2,3,5);
+subplot(1,3,2);
 X = categorical(pedestrianZebra_name_pa);
 X = reordercats(X,pedestrianZebra_name_pa);
 h = bar(X,[pedestrianZebra_pa; pedestrianZebra_pe]);
 set(h, {'DisplayName'},{'passenger','pedestrian',}')
 title('[Pedestrian] eye-contact - Zebra'); ylabel('Number of participants'); legend();
 % pedestrian eyecontact - signalised
-subplot(2,3,6);
+subplot(1,3,3);
 X = categorical(pedestrianSig_name_pa);
 X = reordercats(X,pedestrianSig_name_pa);
 h = bar(X,[pedestrianSig_pa; pedestrianSig_pe]);

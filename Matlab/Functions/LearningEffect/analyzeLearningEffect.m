@@ -30,10 +30,15 @@ out.D_Y = D_Y;
 out.D_NY = D_NY;
 end      
 
-function out = calcMeanScore(data)
+function out = calcMeanScore(data,con)
 som = zeros(size(data));
 for i=1:length(data)
-    som(i) = 100*sum(data{i})/length(data{i});
+    if sum(strcmp(con,{'D_Y','D_NY','ND_NY'}))
+        temp = 1- data{i};
+    else
+        temp = data{i};
+    end
+    som(i) = 100*sum(temp)/length(temp);
 end
 out = mean(som);
 end
@@ -44,7 +49,7 @@ for c=1:length(fld_con)
     for m=1:length(fld_map)
         fld_trial = fieldnames(data.(fld_con{c}).(fld_map{m}));
         for tr=1:length(fld_trial)
-            out.(fld_con{c}).(fld_map{m})(tr) = calcMeanScore(data.(fld_con{c}).(fld_map{m}).(fld_trial{tr}));
+            out.(fld_con{c}).(fld_map{m})(tr) = calcMeanScore(data.(fld_con{c}).(fld_map{m}).(fld_trial{tr}),fld_con{c});
         end
     end
 end

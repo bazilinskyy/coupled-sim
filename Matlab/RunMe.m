@@ -7,7 +7,7 @@ clear;
 close all;
 
 %% Inputs
-createAnimation = true;
+createAnimation = false;
 showPlot = false;
 
 %% Add path to functions
@@ -92,15 +92,16 @@ peHeadAngleV2 = analyzePedestrianGazeAngleV2(pe_gazeOrg, pe_gazeDir, phasesgroup
 
 DC = calcDecisionCertainty(PreDataV3, phases);
 crossPerformance = crossingPerformance(gapAcptV2, Acceptance_pa, Acceptance_pe, trialorder);
-
+%%
+r = correlationPerformance(crossPerformance.SPSS, gapAcptV2.SPSS);
 
 %% Animation
 clc
 close all
 if createAnimation == true
-    videoname = 'ED_8_participant_1_trial_6_V4.avi';
-    titlestr = 'LATY - Yielding';
-    trialAnimate = PreDataV3.Data_ED_8.HostFixedTimeLog.participant_1.trial_6;
+    videoname = 'ED_4_participant_1_trial_0_VE1.avi';
+    titlestr = 'GTY - Yielding';
+    trialAnimate = PreDataV3.Data_ED_4.HostFixedTimeLog.participant_1.trial_0;
     pedestrianGaze = trialAnimate.pe.world;
     pedestrianGAP = trialAnimate.pe.gapAcceptance;
     passengerGaze = trialAnimate.pa.world;
@@ -126,5 +127,4 @@ if showPlot == true
     
     visualizeCrossingPerformance(crossPerformance);
 end
-
 
