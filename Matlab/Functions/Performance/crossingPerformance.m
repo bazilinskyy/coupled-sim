@@ -19,7 +19,7 @@ out.score.D_Y = pressIsNegative(data.phasesPer.D_Y, buttonPerTrial.D_Y);
 out.score.D_NY = pressIsNegative(data.phasesPer.D_NY, buttonPerTrial.D_NY);
 
 buttonPerTrialWithoutStart = sumButtonPressPerTrialWithoutStart(data);
-buttonPerPersonWithoutStart = meanButtonPerPerson(buttonPerTrialWithoutStart, trialorder);
+out.buttonPerPersonWithoutStart = meanButtonPerPerson(buttonPerTrialWithoutStart, trialorder);
 
 out.score2.ND_Y = pressIsPositiveWithoutStart(data.phasesPer.ND_Y, buttonPerTrialWithoutStart.ND_Y);
 out.score2.ND_NY = pressIsNegativeWithoutStart(data.phasesPer.ND_NY, buttonPerTrialWithoutStart.ND_NY);
@@ -44,7 +44,7 @@ out.r_U = pearsonsRAll(out.score, out.usefulness);
 out.r_S = pearsonsRAll(out.score, out.satisfying);
 
 % SPSS = SPSSmatrix(buttonPerPerson);
-out.SPSS = SPSSmatrix(buttonPerPersonWithoutStart);
+out.SPSS = SPSSmatrix(out.buttonPerPersonWithoutStart);
 D_D_NY = CohensD(out.SPSS.D_NY);
 D_D_Y = CohensD(out.SPSS.D_Y);
 D_ND_NY = CohensD(out.SPSS.ND_NY);

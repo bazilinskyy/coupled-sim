@@ -22,8 +22,15 @@ t.pa = calcPhaseGazeTimes(corr_dis_pa, phase.idx, data.dt);
 t.pe = calcPhaseGazeTimes(corr_dis_pe, phase.idx, data.dt);
 
 % Passenger and Pedstrian
-pa_watch = corr_dis_pa>0;
-pe_watch = corr_dis_pe>0;
+if(size(phase.idx,2)>2)
+    corr_dis_pa2 = correctEyeGazeDistance(data.pa.distance(phase.idx(1,2):phase.idx(2,3)), data.pa.pos.z(phase.idx(1,2):phase.idx(2,3)));
+    corr_dis_pe2 = correctEyeGazeDistance(data.pe.distance(phase.idx(1,2):phase.idx(2,3)), data.pa.pos.z(phase.idx(1,2):phase.idx(2,3)));
+else
+    corr_dis_pa2 = correctEyeGazeDistance(data.pa.distance(phase.idx(1,2):phase.idx(2,2)), data.pa.pos.z(phase.idx(1,2):phase.idx(2,2)));
+    corr_dis_pe2 = correctEyeGazeDistance(data.pe.distance(phase.idx(1,2):phase.idx(2,2)), data.pa.pos.z(phase.idx(1,2):phase.idx(2,2)));
+end
+pa_watch = corr_dis_pa2>0;
+pe_watch = corr_dis_pe2>0;
 t_eyeContact = pa_watch+pe_watch;
 % t.eyeContact.arr = t_eyeContact==2;
 t.eyeContact = sum(t_eyeContact==2)*data.dt;

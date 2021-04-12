@@ -10,8 +10,10 @@
 % Output
 %
 
-function out = analyzeGazeTimeV2(timesgroup)
+function out = analyzeGazeTimeV2(timesgroup, order)
 out.orgTimes = getOrganisedData(timesgroup);
+out.eyeContactPerPerson = meanPerPerson(out.orgTimes, order);
+out.MeanStdEyeContact = meanPerCondition(out.eyeContactPerPerson);
 out.mean = meanAllStruct(out.orgTimes);
 
 % Number of people watching at distance z. Divided by phases
@@ -80,7 +82,9 @@ if(~strcmp(person,'eyeContact'))
         end
     end
 else
-    out(1,end+1) = mean(data.(fld_con{c}).(fld_map{m}).(fld_person{p}));
+    meandata = mean(data.(fld_con{c}).(fld_map{m}).(fld_person{p}));
+    stddata = std(data.(fld_con{c}).(fld_map{m}).(fld_person{p}));
+    out = [meandata, stddata];
 end
 
 end
@@ -90,9 +94,9 @@ for c=1:length(fld_con)
     fld_map = fieldnames(data.(fld_con{c}));
     for m=1:length(fld_map)
         fld_person = fieldnames(data.(fld_con{c}).(fld_map{m}));
-        for p=1:length(fld_person)
-        out.(fld_con{c}).(fld_map{m}).(fld_person{p}) = meanStruct(data, fld_con{c}, fld_map{m}, fld_person{p});
-        end
+%         for p=1:length(fld_person)
+        out.(fld_con{c}).(fld_map{m}) = meanStruct(data, fld_con{c}, fld_map{m}, fld_person{1}); %out.(fld_con{c}).(fld_map{m}).(fld_person{p}) = meanStruct(data, fld_con{c}, fld_map{m}, fld_person{p})
+%         end
     end
 end
 end
@@ -245,4 +249,23 @@ end
 
 end
 
-
+function out = meanPerPerson(data, order)
+fld_con = fieldnames(order);
+for c = 1:length(fld_con)
+    fld_map = fieldnames(order.(fld_con{c}));
+    for m = 1:length(fld_map)
+        A = data.(fld_con{c}).(fld_map{m}).eyeContact;
+        B = order.(fld_con{c}).(fld_map{m}).Pnr;
+        for i = min(order.(fld_con{c}).(fld_map{m}).Pnr):max(order.(fld_con{c}).(fld_map{m}).Pnr)
+            out.(fld_con{c})(i,m) = mean(A(find(B==i)));   
+        end
+    end
+end
+end
+function out = meanPerCondition(data)
+fld_con = fieldnames(data);
+for c=1:length(fld_con)
+    out.(fld_con{c}).mean = mean(data.(fld_con{c}),1);
+    out.(fld_con{c}).std = std(data.(fld_con{c}),1);
+end
+end

@@ -80,7 +80,7 @@ gapOrderGroup = OrderByTrialAll(PreDataV3);
 %% Analyze data
 trialorder = analyzeTrialOrder(participantTrialGroup);
 % gazeTime = analyzeGazeTimeV2(timesgroup); % gazeTime = analyzeGazeTime(timesgroup, pa_distancegroup, pe_distancegroup);
-gazeTimeV2 = analyzeGazeTimeV2(timesgroupV2); 
+gazeTimeV2 = analyzeGazeTimeV2(timesgroupV2, trialorder); 
 % gapAcpt = analyzeGapAcceptance(gapgroup, rbvgroup, pasposgroup, phasesgroup);
 gapAcptV2 = analyzeGapAcceptance(gapgroup, rbvgroup, pasposgroup, phasesgroupV2, trialorder);
 phaseData = analyzePhasesGroup(phasesgroup);
@@ -127,4 +127,6 @@ if showPlot == true
     
     visualizeCrossingPerformance(crossPerformance);
 end
-
+clc; close all;
+    visualizeEyeContact(gazeTimeV2, crossPerformance)
+    
