@@ -67,6 +67,11 @@ VisBarError(NoCat.clearVehicleYield.mean, NoCat.clearVehicleYield.std, {'baselin
 yticks(1:7)
 yticklabels({'strongly disagree','disagree,','slightly disagree','neutral','slightly agree','agree','extremely agree'});
 
+figure
+VisBarError(NoCat.clearVehicleYield.mean, NoCat.clearVehicleYield.std, {'baseline','GTY','LATY'},'', {'It was clear to you when';'the vehicle was going to yield'})
+yticks(1:7)
+yticklabels({'strongly disagree','disagree,','slightly disagree','neutral','slightly agree','agree','extremely agree'});
+
 end
 
 %% Helper functions

@@ -8,7 +8,7 @@ close all
 clear
 
 %% Settings before running this script
-ShowTables = true;
+ShowTables = false;
 ShowPlots  = true;
 
 %% Find questionnaire csv files
@@ -24,8 +24,8 @@ filename    = join([FileList(5).folder,'\',FileList(5).name]);
 opts        = delimitedTextImportOptions('Delimiter',',','DataLines', 2);
 Preexp_Data = readmatrix(filename,opts);
 % Split pedestrian and passenger
-passenger_id    = [2,4,5,7,10,11,14,15,17,20,22];
-pedestrian_id   = [1,3,6,8,9,12,13,16,18,19,21];
+passenger_id    = [2,4,5,7,10,11,14,15,17,20,22,23,26,27,30,32,33];
+pedestrian_id   = [1,3,6,8,9,12,13,16,18,19,21,24,25,28,29,31,34];
 Preexp_pa       = Preexp_Data(passenger_id,:);
 Preexp_pe       = Preexp_Data(pedestrian_id,:);
 Data_preexp_pa  = convertDataPreexp(Preexp_pa);
@@ -454,7 +454,7 @@ percentageMale = 100*male/Total;
 percentageFemale = 100*female/Total; 
 end
 function rightNames = replaceWrongNames(data)
-wrong_name  = ["Nederlandse","Nederlands","the Netherlands","nederalnds"];
+wrong_name  = ["Nederlandse","Nederlands","the Netherlands","nederalnds","dutch"];
 wn_idx      = contains(data, wrong_name);
 for i=1:length(data)
     if(wn_idx(i)==1)

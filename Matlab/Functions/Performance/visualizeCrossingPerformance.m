@@ -39,16 +39,19 @@ for m=1:length(fld_map)
     X = data.acpt.(fld_map{m})(1);
     Y = data.score2.ND_Y.(fld_map{m}).mean;
     ystd = data.score2.ND_Y.(fld_map{m}).std;
+    ystdmin = Y-data.score2.ND_Y.(fld_map{m}).p25;
+    ystdplus = data.score2.ND_Y.(fld_map{m}).p75-Y;
     xstd = 0; %data.acpt.(fld_map{m})(2);
     
-    p = errorbar(X,Y,ystd,ystd,xstd,xstd,'o','MarkerSize',10,'CapSize',28);
+%     p = errorbar(X,Y,ystd,ystd,xstd,xstd,'o','MarkerSize',10,'CapSize',28);
+    p = errorbar(X,Y,ystdmin,ystdplus,xstd,xstd,'o','MarkerSize',10,'CapSize',28);
     c = colour(m,:); %get(p,'Color');
     p.Color = colour(m,:);
     p.MarkerFaceColor = c;
     p2 = plot([X-xstd, X+xstd], [Y, Y],'LineWidth',2);
     p2.Color = c;
     set(get(get(p2,'Annotation'),'LegendInformation'),'IconDisplayStyle','off');
-    p3 = plot([X, X], [Y-ystd, Y+ystd],'LineWidth',2);
+    p3 = plot([X, X], [Y-ystdmin, Y+ystdplus],'LineWidth',2);
     p3.Color = c;
     set(get(get(p3,'Annotation'),'LegendInformation'),'IconDisplayStyle','off');
 end
@@ -83,16 +86,18 @@ for m=1:length(fld_map)
     X = data.acpt.(fld_map{m})(1);
     Y = data.score2.(fld_con{con}).(fld_map{m}).mean;
     ystd = data.score2.(fld_con{con}).(fld_map{m}).std;
+    ystdmin = Y-data.score2.(fld_con{con}).(fld_map{m}).p25;
+    ystdplus = data.score2.(fld_con{con}).(fld_map{m}).p75-Y;
     xstd = 0; %data.acpt.(fld_map{m})(2);
     
-    p = errorbar(X,Y,ystd,ystd,xstd,xstd,'o','MarkerSize',10,'CapSize',28);
+    p = errorbar(X,Y,ystdmin,ystdplus,xstd,xstd,'o','MarkerSize',10,'CapSize',28);
     c = colour(m,:); %get(p,'Color');
     p.Color = colour(m,:);
     p.MarkerFaceColor = c;
     p2 = plot([X-xstd, X+xstd], [Y, Y],'LineWidth',2);
     p2.Color = c;
     set(get(get(p2,'Annotation'),'LegendInformation'),'IconDisplayStyle','off');
-    p3 = plot([X, X], [Y-ystd, Y+ystd],'LineWidth',2);
+    p3 = plot([X, X], [Y-ystdmin, Y+ystdplus],'LineWidth',2);
     p3.Color = c;
     set(get(get(p3,'Annotation'),'LegendInformation'),'IconDisplayStyle','off');
 end

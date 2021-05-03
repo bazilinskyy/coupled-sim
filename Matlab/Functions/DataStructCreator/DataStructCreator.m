@@ -36,5 +36,5 @@ disp('Finished creating data structure.');
 
 %% Folder with data saved
 disp('Saving data...');
-save('AllData.mat','ParentData');
+save('AllData.mat','ParentData', '-v7.3');
 disp('... finished saving data.');

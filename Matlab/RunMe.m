@@ -13,6 +13,7 @@ showPlot = false;
 %% Add path to functions
 addpath(genpath('Functions'));
 addpath('Mats');
+addpath('Questionnaires');
 
 %% Load Data 
 if(~exist('AllData.mat'))
@@ -23,7 +24,7 @@ end
 if(~exist('PreData.mat'))
     load('AllData.mat');                % Load pre-converted data
     PreData = PreProcess(ParentData);   % Remove faulty data
-	save('PreData.mat','PreData');
+	save('PreData.mat','PreData', '-v7.3');
 end
 if(~exist('PreDataV2.mat'))
     load('PreData.mat');
@@ -32,8 +33,8 @@ end
 if(~exist('WrongData.mat'))
     load('PreDataV2.mat');
     [PreDataV3, WrongData] = FilterWrongExecutions(PreDataV2);
-	save('PreDataV3.mat','PreDataV3');
-    save('WrongData.mat','WrongData');
+	save('PreDataV3.mat','PreDataV3', '-v7.3');
+    save('WrongData.mat','WrongData', '-v7.3');
 end
 if(exist('PreDataV3.mat'))
     load('PreData.mat');
@@ -44,12 +45,11 @@ end
 load('Acceptance_pa.mat');
 load('Acceptance_pe.mat');
 
-%% test
+%% distraction vehicle
 % close all; clc;
 % trajectoryDiAV(PreDataV3);
-%% test
-% close all; clc;
-% analyzeTriggerYield(PreDataV3);
+% dipasses = DiAVPasses(PreDataV3);
+
 %% Number of data filtered
 % VisualizeDataFiltered(WrongData);
 
@@ -90,7 +90,7 @@ learnEffect = analyzeLearningEffect(gapOrderGroup);
 peHeadAngle = analyzePedestrianGazeAngle(pe_gazeOrg, pe_gazeDir, phasesgroup);
 peHeadAngleV2 = analyzePedestrianGazeAngleV2(pe_gazeOrg, pe_gazeDir, phasesgroupV2, trialorder);
 
-DC = calcDecisionCertainty(PreDataV3, phases);
+% DC = calcDecisionCertainty(PreDataV3, phases);
 crossPerformance = crossingPerformance(gapAcptV2, Acceptance_pa, Acceptance_pe, trialorder);
 %%
 r = correlationPerformance(crossPerformance.SPSS, gapAcptV2.SPSS);
@@ -126,7 +126,9 @@ if showPlot == true
     visualizePhasesGroupV2(phaseDataV2);
     
     visualizeCrossingPerformance(crossPerformance);
+    
+    visualizeEyeContact(gazeTimeV2, crossPerformance)
 end
 clc; close all;
-    visualizeEyeContact(gazeTimeV2, crossPerformance)
-    
+    visualizeLearnEffect(learnEffect);
+

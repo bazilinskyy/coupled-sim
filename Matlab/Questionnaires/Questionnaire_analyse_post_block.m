@@ -52,6 +52,13 @@ Acceptance_pe = AcceptanceVanDerLaan(Data_block_pe.mapping, Data_block_pe.accept
     writematrix(SPSS_pe_U,'SPSS_pe_U.csv'); 
     writematrix(SPSS_pe_S,'SPSS_pe_S.csv'); 
     
+%% t-test
+t_pe_U = pairedSamplesttest(SPSS_pe_U);
+t_pe_S = pairedSamplesttest(SPSS_pe_S);
+t_pa_U = pairedSamplesttest(SPSS_pa_U);
+t_pa_S = pairedSamplesttest(SPSS_pa_S);
+
+
 %% Cohen's D
 D_pa_U = CohensD(SPSS_pa_U);
 D_pa_S = CohensD(SPSS_pa_S);
@@ -120,4 +127,13 @@ Data_baseline = data(Idx0,:);
 Data_map1     = data(Idx1,:);
 Data_map2     = data(Idx2,:);
 output = [Data_baseline, Data_map1, Data_map2];
+end
+function out = pairedSamplesttest(data)
+[~,p1,~,stats1] = ttest(data(:,1), data(:,2));
+[~,p2,~,stats2] = ttest(data(:,2), data(:,3));
+[~,p3,~,stats3] = ttest(data(:,1), data(:,3));
+out = zeros(3,3);
+out(1,:) = [stats1.tstat, stats1.df, p1];
+out(2,:) = [stats2.tstat, stats2.df, p2];
+out(3,:) = [stats3.tstat, stats3.df, p3];
 end

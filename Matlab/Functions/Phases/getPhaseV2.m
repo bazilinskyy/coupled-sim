@@ -51,6 +51,16 @@ ph3 = [idx_standstill_start; idx_standstill_end];
 % Set up idx array
 out = [ph1, ph2, ph3];
 
+% With distraction
+% if(EDnr == 2 || EDnr == 6 || EDnr == 10)
+%     idx_diAV_passes = find(data.diAV.pos.z > data.pe.pos.z(1)+4.69,1,'first'); % diav passes the zebra = 17.19+4.69
+%     ph3 = [idx_standstill_start; idx_diAV_passes]; 
+%     ph4 = [idx_diAV_passes; idx_standstill_end]; 
+%     % Set up idx array
+%     out = [ph1, ph2, ph3, ph4];
+% end
+
+
 %% Test 
 if (false)
     figure
@@ -107,10 +117,9 @@ function idx = getPhaseIdx(data,ED)
 ED_split = split(ED,'_');
 EDnr = str2double(ED_split{3}); % ED 4 and 6 use velocity to determine restart, the other yielding ED use 2.6 seconds since standstill
 NY = [1, 3, 5, 7, 9, 11];
-
-if(isempty(find(NY==EDnr)))
+if(isempty(find(NY==EDnr))) % For the yielding conditions 
     idx = getIdxYield(data,EDnr);
-elseif (~isempty(find(NY==EDnr)))
+elseif (~isempty(find(NY==EDnr))) % For the non yielding conditions
     idx = getIdxNonYield(data);
 end
 end

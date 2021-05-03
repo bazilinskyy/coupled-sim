@@ -144,24 +144,24 @@ yticklabels({'extremely unclear','unclear,','slightly unclear','neutral','slight
 
 figure
 subplot(1,2,1)
-VisBarError(rankMapping_pa(:,1), rankMapping_pa(:,2), {'baseline','gaze to yield','look away to yield'},'Ranking', {'[Driver] ranking preference';'in experiment'})
+VisBarError(3-(rankMapping_pa(:,1)-1), rankMapping_pa(:,2), {'baseline','gaze to yield','look away to yield'},'Ranking', {'[Driver] ranking preference';'in experiment'})
 yticks(1:3)
 yticklabels({'3','2','1'});
 ylim([0 3])
 subplot(1,2,2)
-VisBarError(rankMapping_pe(:,1), rankMapping_pe(:,2), {'baseline','gaze to yield','look away to yield'},'Ranking', {'[Pedestrian] ranking preference';'in experiment'})
+VisBarError(3-(rankMapping_pe(:,1)-1), rankMapping_pe(:,2), {'baseline','gaze to yield','look away to yield'},'Ranking', {'[Pedestrian] ranking preference';'in experiment'})
 yticks(1:3)
 yticklabels({'3','2','1'});
 ylim([0 3])
 
 figure
 subplot(1,2,1)
-VisBarError(rankMapping_pa_IRL(:,1), rankMapping_pa_IRL(:,2), {'baseline','gaze to yield','look away to yield'},'Ranking', {'[Driver] ranking preference';'in real-life'})
+VisBarError(3-(rankMapping_pa_IRL(:,1)-1), rankMapping_pa_IRL(:,2), {'baseline','gaze to yield','look away to yield'},'Ranking', {'[Driver] ranking preference';'in real-life'})
 yticks(1:3)
 yticklabels({'3','2','1'});
 ylim([0 3])
 subplot(1,2,2)
-VisBarError(rankMapping_pe_IRL(:,1), rankMapping_pe_IRL(:,2), {'baseline','gaze to yield','look away to yield'},'Ranking', {'[Pedestrian] ranking preference';'in real-life'})
+VisBarError(3-(rankMapping_pe_IRL(:,1)-1), rankMapping_pe_IRL(:,2), {'baseline','gaze to yield','look away to yield'},'Ranking', {'[Pedestrian] ranking preference';'in real-life'})
 yticks(1:3)
 yticklabels({'3','2','1'});
 ylim([0 3])
@@ -319,7 +319,7 @@ rank = zeros(size(data));
 for i =1:length(name)
     rank(strcmp(data,name(i))) = i;
 end
-MeanRank = 3-mean(rank);
+MeanRank = mean(rank);
 StdRank = std(rank);
 out = [MeanRank', StdRank'];
 end

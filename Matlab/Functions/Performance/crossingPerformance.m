@@ -11,7 +11,7 @@
 
 function out = crossingPerformance(data, acpt_pa, acpt_pe, trialorder)
 buttonPerTrial = sumButtonPressPerTrial(data);
-buttonPerPerson = meanButtonPerPerson(buttonPerTrial, trialorder);
+% buttonPerPerson = meanButtonPerPerson(buttonPerTrial, trialorder);
 
 out.score.ND_Y = pressIsPositive(data.phasesPer.ND_Y, buttonPerTrial.ND_Y);
 out.score.ND_NY = pressIsNegative(data.phasesPer.ND_NY, buttonPerTrial.ND_NY);
@@ -23,7 +23,8 @@ out.buttonPerPersonWithoutStart = meanButtonPerPerson(buttonPerTrialWithoutStart
 
 out.score2.ND_Y = pressIsPositiveWithoutStart(data.phasesPer.ND_Y, buttonPerTrialWithoutStart.ND_Y);
 out.score2.ND_NY = pressIsNegativeWithoutStart(data.phasesPer.ND_NY, buttonPerTrialWithoutStart.ND_NY);
-out.score2.D_Y = pressIsNegativeWithoutStart(data.phasesPer.D_Y, buttonPerTrialWithoutStart.D_Y);
+% out.score2.D_Y = pressIsNegativeWithoutStart(data.phasesPer.D_Y, buttonPerTrialWithoutStart.D_Y);
+out.score2.D_Y = pressIsDYWithoutStart(data.phasesPer.D_Y, buttonPerTrialWithoutStart.D_Y);
 out.score2.D_NY = pressIsNegativeWithoutStart(data.phasesPer.D_NY, buttonPerTrialWithoutStart.D_NY);
 
 out.acpt.map0 = acpt_pe.MeanStd_0;
@@ -106,6 +107,16 @@ for m = 1:length(fld_map)
     out.(fld_map{m}).std = std(100-button.(fld_map{m})); 
 end
 end
+function out = pressIsDYWithoutStart(data,button)
+fld_map = fieldnames(data);
+for m = 1:length(fld_map)
+    dat = [100-data.(fld_map{m})(2), data.(fld_map{m})(3)];
+	out.(fld_map{m}).mean = mean(dat);
+	out.(fld_map{m}).std = std(button.(fld_map{m}));  
+    out.(fld_map{m}).p25 = prctile(button.(fld_map{m}),25);
+    out.(fld_map{m}).p75 = prctile(button.(fld_map{m}),75);
+end
+end
 
 function out = sumButtonPressPerTrialWithoutStart(data)
 fld_con = fieldnames(data.phases);
@@ -116,9 +127,12 @@ for c=1:length(fld_con)
         for p=2:length(fld_phase)
             [nrows.(fld_con{c}).(fld_map{m}).(fld_phase{p}),ncols.(fld_con{c}).(fld_map{m}).(fld_phase{p})] = cellfun(@size,data.phases.(fld_con{c}).(fld_map{m}).(fld_phase{p}));
             val.(fld_con{c}).(fld_map{m}).(fld_phase{p}) = cellfun(@sum, data.phases.(fld_con{c}).(fld_map{m}).(fld_phase{p}));
-            temp.(fld_con{c}).(fld_map{m})(p,:) = 100*val.(fld_con{c}).(fld_map{m}).(fld_phase{p})./nrows.(fld_con{c}).(fld_map{m}).(fld_phase{p});
+            temp.(fld_con{c}).(fld_map{m})(p-1,:) = 100*val.(fld_con{c}).(fld_map{m}).(fld_phase{p})./nrows.(fld_con{c}).(fld_map{m}).(fld_phase{p});
         end
-        if size(fld_phase,1) == 1 && size(fld_phase,2) == 1
+        if (c==3)
+            temp.(fld_con{c}).(fld_map{m})(1,:) = 100 - temp.(fld_con{c}).(fld_map{m})(1,:);
+        end
+        if size(temp.(fld_con{c}).(fld_map{m}),1) == 1
             out.(fld_con{c}).(fld_map{m})= temp.(fld_con{c}).(fld_map{m});
         else
             out.(fld_con{c}).(fld_map{m}) = mean(temp.(fld_con{c}).(fld_map{m})); 
@@ -131,13 +145,17 @@ fld_map = fieldnames(data);
 for m = 1:length(fld_map)
     out.(fld_map{m}).mean = mean(data.(fld_map{m})(2:end));
     out.(fld_map{m}).std = std(button.(fld_map{m})); 
+    out.(fld_map{m}).p25 = prctile(button.(fld_map{m}),25);
+    out.(fld_map{m}).p75 = prctile(button.(fld_map{m}),75);
 end
 end
 function out = pressIsNegativeWithoutStart(data,button)
 fld_map = fieldnames(data);
 for m = 1:length(fld_map)
 	out.(fld_map{m}).mean = 100 - mean(data.(fld_map{m})(2:end));
-	out.(fld_map{m}).std = std(100-button.(fld_map{m}));     
+	out.(fld_map{m}).std = std(100-button.(fld_map{m}));  
+    out.(fld_map{m}).p25 = prctile(100-button.(fld_map{m}),25);
+    out.(fld_map{m}).p75 = prctile(100-button.(fld_map{m}),75);
 end
 end
 

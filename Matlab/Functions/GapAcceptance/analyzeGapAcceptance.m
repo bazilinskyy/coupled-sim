@@ -21,14 +21,16 @@ out.phases = getAllPhases(gapac, phaseorg); % Individual
 out.phasesSum = calcAllSumPhases(out.phases);
 out.phasesPer = calcAllSumPercentage(out.phasesSum);
 
+
+
 %% Decision certainty
 % out.DC = calcDecisionCertainty(out.phases, 'ND_Y', 'map0');
 out.DC = calcAllDecisionCertainty(out.phases); 
 
 % Statistical analysis
-DCpp = DCPerParticipant(out.DC, order);
-out.DC_STD = calcAllDCSTD(DCpp);
-out.SPSS = getDecisionCertaintySPSSMatrix(DCpp);
+out.DCpp = DCPerParticipant(out.DC, order);
+out.DC_STD = calcAllDCSTD(out.DCpp);
+out.SPSS = getDecisionCertaintySPSSMatrix(out.DCpp);
 t_D_NY = pairedSamplesttest(out.SPSS.D_NY);
 t_D_Y = pairedSamplesttest(out.SPSS.D_Y);
 t_ND_NY = pairedSamplesttest(out.SPSS.ND_NY);
@@ -97,10 +99,11 @@ mapstr = {'map0','map1','map2'};
 out = [];
 fld_map = fieldnames(data);
 for m=1:length(fld_map)
-    for p=1:size(phase.(fld_map{m}).idx{1},2)
+	for p=1:size(phase.(fld_map{m}).idx{1},2)
         out.(mapstr{m}).(phasestr{p}) = [];
-    end
+	end
 end
+
 % Categorize gapacceptance by mapping and phase
 for m=1:length(fld_map)
     fld_phase = fieldnames(out.(fld_map{m}));
@@ -109,10 +112,14 @@ for m=1:length(fld_map)
         idx = phase.(fld_map{m}).idx{i};
         for k=1:size(idx,2)
             out.(fld_map{m}).(fld_phase{k}){i} = indgap(idx(1,k):idx(2,k));
+            if(isempty(out.(fld_map{m}).(fld_phase{k}){i})) 
+                idx
+            end
         end
     end
 end
 end
+
 function out = getAllPhases(data, phase)
 fld_con = fieldnames(data);
 for c=1:length(fld_con)
@@ -141,6 +148,9 @@ for p=1:length(fld_phase)
         out.(fld_phase{p})(1:length(temp)) = out.(fld_phase{p})(1:length(temp)) + temp;
         if(length(temp)<max_size(p))
             for e = length(temp)+1:max_size(p) 
+                if(isempty(temp))
+                    temp = 0;
+                end
                 out.(fld_phase{p})(e) = out.(fld_phase{p})(e) + temp(end);
             end
         end
@@ -188,12 +198,21 @@ fld_phase = fieldnames(data.(fld_con{c}).(fld_map{m}));
 dat = data.(fld_con{c}).(fld_map{m});
 for p = 1:length(fld_phase)
     for i =1:length(dat.(fld_phase{p}))
+%         wholeTrial{i} = [dat.(fld_phase{1}){i}; dat.(fld_phase{2}){i}; dat.(fld_phase{3}){i}];
         temp.(fld_con{c}).(fld_map{m}).(fld_phase{p}){i} = sum(abs(diff(dat.(fld_phase{p}){i})));
     end
 end
+% for i = 1:length(wholeTrial)
+%     temp3.(fld_con{c}).(fld_map{m})(i) = sum(abs(diff(wholeTrial{i})));
+% end
 
 % Sum up for all phases
-if length(fld_phase) == 3
+if length(fld_phase) == 4
+    for i =1:length(dat.(fld_phase{1}))
+	temp2.(fld_con{c}).(fld_map{m})(i) = temp.(fld_con{c}).(fld_map{m}).(fld_phase{1}){i} + temp.(fld_con{c}).(fld_map{m}).(fld_phase{2}){i} +...
+	temp.(fld_con{c}).(fld_map{m}).(fld_phase{3}){i} + temp.(fld_con{c}).(fld_map{m}).(fld_phase{4}){i} ;
+    end
+elseif length(fld_phase) == 3
     for i =1:length(dat.(fld_phase{1}))
 	temp2.(fld_con{c}).(fld_map{m})(i) = temp.(fld_con{c}).(fld_map{m}).(fld_phase{1}){i} + temp.(fld_con{c}).(fld_map{m}).(fld_phase{2}){i} +...
 	temp.(fld_con{c}).(fld_map{m}).(fld_phase{3}){i};
@@ -208,6 +227,13 @@ end
 out.rate = temp2.(fld_con{c}).(fld_map{m});
 out.mean = mean(temp2.(fld_con{c}).(fld_map{m}));
 out.std = std(temp2.(fld_con{c}).(fld_map{m}));
+
+%% debug
+% figure; 
+% plot(temp2.ND_Y.map0); 
+% hold on; 
+% plot(temp3.ND_Y.map0);
+
 end
 function out = calcAllDecisionCertainty(data)
 fld_con = fieldnames(data);

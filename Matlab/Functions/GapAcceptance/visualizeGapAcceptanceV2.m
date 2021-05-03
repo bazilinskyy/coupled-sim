@@ -10,6 +10,8 @@ function visualizeGapAcceptanceV2(in, phase)
 visNumberOfGapAcceptancePhasesAll(in.phasesSum, phase.borders);
 
 visAllDecisionCertainty(in.DC, in.DC_STD)
+
+visDCppAll(in.DCpp)
 %% OLD
 % visSumGapAcceptance(in.smoothgap);
 % 
@@ -173,6 +175,9 @@ nrPhases = length(fld_phase);
 lab = join(['[',strMap{m},'] - ',labstr]);
 % Phase sizes
 border_lim = nrPhases;
+if border_lim >3
+    border_lim = 3;
+end
 t = zeros(nrPhases+1,1);
 for i=1:nrPhases %length(fld_phase)
     if i == 1
@@ -191,7 +196,7 @@ for i=1:nrPhases %length(fld_phase)
             set(get(get(a,'Annotation'),'LegendInformation'),'IconDisplayStyle','off');
         end
     % Rectangle
-    if((strcmp(con,'ND_Y')||strcmp(con,'D_Y')) && strcmp(mapping,'map1'))
+    if((strcmp(con,'ND_Y')||strcmp(con,'D_Y')) && strcmp(mapping,'map1')&&i<4)
         rectpos = [border.(fld_con{c}).(fld_map{m}).rect(i,1), -5, border.(fld_con{c}).(fld_map{m}).rect(i,3), 110];
         rectangle('Position',rectpos,'FaceColor',[0.9-i/10 0.9-i/10 0.9-i/10 0.4],'EdgeColor',[0 0 0]);
         text(border.(fld_con{c}).(fld_map{m}).midx(i), 105,['(',num2str(i),')'],'HorizontalAlignment','center','VerticalAlignment', 'top');
@@ -273,6 +278,46 @@ figure;
 for c=1:length(fld_con)
     subplot(2,2,c);
     visDecisionCertainty(data,fld_con{c},STD);
+end
+end
+
+function visDCpp(data, con)
+strmap = {'Baseline','GTY','LATY'};
+fld_con = fieldnames(data);
+c = find(strcmp(fld_con,con));
+fld_map = fieldnames(data.(fld_con{c}));
+
+Y = zeros(length(data.(fld_con{c}).(fld_map{1})),length(fld_map));
+for m=1:length(fld_map)
+    Y(:,m) = data.(fld_con{c}).(fld_map{m});
+end
+
+[labstr, ~, ~] = getLabel(con);
+x = categorical(strmap);
+x = reordercats(x,strmap);
+titstr = labstr;
+colourcodes = [0, 0.4470, 0.7410; 0.8500, 0.3250, 0.0980; 0.9290, 0.6940, 0.1250];
+% Bar graph
+hold on;
+grid on;
+for i = 1:length(x)
+    plot(1:length(Y),Y(:,i),'-o','MarkerFaceColor',colourcodes(i,:))
+end
+xlabel('Participant number','FontSize',15,'FontWeight','bold')
+ylabel({'Mean crossing decision';'reversals per pedestrian'},'FontSize',12,'FontWeight','bold');
+title(titstr,'FontSize',18,'FontWeight','bold');
+ylim([0 max(Y,[],'all')+1])
+yticks(0:1:max(Y,[],'all')+1)
+xticks(0:1:length(Y))
+legend(strmap,'Location','southeast')
+ax=gca; ax.FontSize = 15;
+end
+function visDCppAll(data)
+fld_con = fieldnames(data);
+figure;
+for c=1:length(fld_con)
+    subplot(2,2,c);
+    visDCpp(data,fld_con{c});
 end
 end
 %% Helper functions - OLD

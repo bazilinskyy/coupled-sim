@@ -73,7 +73,7 @@ for j = 1:length(fields_ED)
 end
 
 PreDataV2 = PreData;
-save('PreDataV2.mat', 'PreDataV2');
+save('PreDataV2.mat', 'PreDataV2', '-v7.3');
 disp('Finished removing data before start sign and after stop sign.');
 
 function output = fun(input, trial_start, trial_end)

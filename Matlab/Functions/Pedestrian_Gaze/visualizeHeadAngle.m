@@ -4,7 +4,7 @@
 
 function visualizeHeadAngle(data)
 visAllAngle(data.mean);
-visAllAngleV2(data.ind);
+% visAllAngleV2(data.ind);
 end
 
 %% Helper function
