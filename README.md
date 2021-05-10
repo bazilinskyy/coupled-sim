@@ -264,8 +264,8 @@ In this section, the additions made by Johnson Mok during his Master Thesis are 
 
 # Logging
 ## Add variable to the worldlogger
-The logger makes use of a byte stream, thus the order is of importance. The location of where to add the variable depends on your own preference. In this chapter, I describe how to add data from the varjo HMD to the logger.
-I added the distance between the start (passenger) and end the point (pedestrian) of the eye-gaze ray as the variable *distance*. The *distance* variable is defined in the *VarjoGazeRay_CS.cs* script. 
+The logger makes use of a byte stream, thus the order is of importance. The location of where to add the variable depends on your preference. In this chapter, I describe how to add data from the Varjo HMD to the logger.
+I added the distance between the start (passenger) and endpoint (pedestrian) of the eye-gaze ray as the variable *distance*. The *distance* variable is defined in the *VarjoGazeRay_CS.cs* script. 
 This script is attached to a GameObject called *Gaze*, which is a child of the vehicle prefab. 
 
 **The first step is to make the data usable in other script**, which is done as follows:
@@ -287,12 +287,12 @@ public DataType getVariable()
 ```
 **The second step is to log the data.** The data logging is done in the *WorldLogging.cs* script in the *LogFrame* function. 
 
-**3.** The *distance* variable is part of the vehicle prefab, thus within the *LogFrame* function we move to the part where data from the avatar prefabs are logged.
+**3.** The *distance* variable is part of the vehicle prefab, thus within the *LogFrame* function, we move to the part where data from the avatar prefabs are logged.
 ```
 foreach (var driver in _driverBuffer)
 ```
-**4.** Right under the foreach statement there are 3 lines of code which log the position, the rotation and the car blinker stater of the vehicle. I want to log the distance variable right after the car blinker state. Thus, right under the car blinker state line is where I put the code to log the distance data.
-Code to check varjo gaze status. To only log the gaze data when the eye-calibration has been done. Log arbitrary value when the gaze status is INVALID.
+**4.** Right under 'foreach' statement there are 3 lines of code that log the position, the rotation and the car blinker stater of the vehicle. I want to log the distance variable right after the car blinker state. Thus, right under the car blinker state line is where I put the code to log the distance data.
+Code to check Varjo gaze status. To only log the gaze data when the eye calibration has been done. Log arbitrary value when the gaze status is INVALID.
 ```
 float distance;
 if (VarjoPlugin.GetGaze().status == VarjoPlugin.GazeStatus.VALID)
@@ -307,7 +307,7 @@ _fileWriter.Write(distance);
 ```
 **5.** All variables which are logged in the *LogFrame* function need to be declared in the class *SerializedFrame* publicly so that the *TranslateBinaryLogToCsv* function can access the variable.
 
-**The third step is to translate from binary to csv.**
+**The third step is to translate from binary to CSV.**
 
 **6.** In the *TranslateBinaryLogToCsv* function, add a column header for your variable at the appropriate position. Since the distance data is written after the blinker state, the *columnsPerDriver* will be as follows:
 ```
@@ -331,7 +331,7 @@ for (int i = 0; i < numDriversThisFrame; i++)
 const string driverTransformHeader = "pos_x;pos_y;pos_z;rot_x;rot_y;rot_z;blinkers;*distance*;vel_local_x;vel_local_y;vel_local_z;vel_local_smooth_x;vel_local_smooth_y;vel_local_smooth_z;vel_x;vel_y;vel_z;vel_smooth_x;vel_smooth_y;vel_smooth_z"; 
 ```
 
-**9.** Lastly, in the *TranslateBinaryLogToCsv* function under the ACTUAL DATA section. You need to add the distance variable again in the for-statement of the *numDriversThisFrame to retrieve the data, which in a few lines later is then added to the *line*.
+**9.** Lastly, in the *TranslateBinaryLogToCsv* function under the ACTUAL DATA section. You need to add the distance variable again in the for-statement of the *numDriversThisFrame to retrieve the data, which is a few lines later is then added to the *line*.
 ```
 for (int i = 0; i < numDriversThisFrame; i++)
 {
@@ -355,8 +355,8 @@ if (prevFrame == null || prevFrame.DriverPositions.Count <= i)
 ```
 
 ## Logging varjo eye-tracking data
-To add varjo eye-tracking data, you need to follow the same steps as described above. Additionally, you need to add a check beforehand.
-The varjo eye-tracking data is only available after the eye-tracking calibration. Thus the following if-statements are added:
+To add Varjo eye-tracking data, you need to follow the same steps as described above. Additionally, you need to add a check beforehand.
+The Varjo eye-tracking data is only available after the eye-tracking calibration. Thus the following if-statements are added:
 ```
 if (VarjoPlugin.GetGaze().status == VarjoPlugin.GazeStatus.VALID && driver.transform.Find("Gaze"))
 {
@@ -369,7 +369,7 @@ else if(VarjoPlugin.GetGaze().status != VarjoPlugin.GazeStatus.VALID)
 ```
 
 ## Logging bodysuit bool
-In the worldlogger the bodysuit data would automatically be logged for a pedestrian. However, in my experiments no bodysuits are used. 
+In the worldlogger the bodysuit data would automatically be logged for a pedestrian. However, in my experiment no bodysuits are used. 
 Resulting in a large number of empty columns in the logged data file. Thus, I created a bool to turn off/on the logging of the bodysuit data.
 In the *WorldLogging.cs* script:
 
@@ -436,8 +436,8 @@ writer.Write("\n");
 ```
 
 ## Byte to csv converter
-The coupled-sim has a GUI which allows one to manually select the file to convert from byte to csv. However, if one wants to 
-convert all the files in one go, the *worldlogging* script needs to be adapted. The actual code to convert from byte to csv
+The coupled-sim has a GUI which allows one to manually select the file to convert from byte to CSV. However, if one wants to 
+convert all the files in one go, the *worldlogging* script needs to be adapted. The actual code to convert from byte to CSV
 is already there. So all we need to do is to implement an option to not use the GUI and convert all the files from the folder
 *ExperimentLogs*.
 
@@ -448,7 +448,7 @@ the *OnGui* function from *WorldLogging*.
 convertAll = GUILayout.Toggle(convertAll, "Convert all log files");
 ```
 
-After toggling the *convertAll* boolean to true and pressing the "Convert log to csv" button, the script should convert all scripts.
+After toggling the *convertAll* boolean to true and pressing the "Convert log to CSV" button, the script should convert all scripts.
 This is done in the "if(_open)" statement of the *OnGui* function. Here we skip the whole GUI and directly go into the conversion.
 ```
 if (_open)
@@ -472,7 +472,7 @@ if (_open)
 
 
 ## Varjo's own logger
-The varjo plugin provides it's own logger. However, it does not seem to work with the coupled-sim without some modifications. 
+The Varjo plugin provides a logger. However, it does not seem to work with the coupled-sim without some modifications. 
 This script is not used, since it is desired to log all data into one file. Synchronizing data requires a lot of manual work.
 
 This logger logs the following:
@@ -480,7 +480,7 @@ This logger logs the following:
 - Time, starting after eye-calibration
 - Eye gaze ray distance between the passenger and the pedestrian.
 - Direction of the eye gaze ray in both the coordinate system of the world and the HMD.
-- Origin of the eye gaze ray in both  the coordinate system of the world and the HMD.
+- Origin of the eye gaze ray in both the coordinate system of the world and the HMD.
 - HMD position.
 - HMD rotation.
 
@@ -550,9 +550,9 @@ float time = 0.0f;
 static readonly string[] ColumnNames = { Role, "Time", "Distance", "HMDPosition", "HMDRotation", "Gaze Forward (HMD)", "Gaze Position (HMD)", "Gaze Direction (world)", "Gaze Origin (world)" };
 ```
 
-**4.** Update the time vaiable inside the *Update* function:
+**4.** Update the time variable inside the *Update* function:
 
-**5.** In the *LogGazeData* function, get the varjo HMD datat using the previously created get functions.
+**5.** In the *LogGazeData* function, get the Varjo HMD data using the previously created get functions.
 ```
 gazeRayHit = this.GetComponent<VarjoGazeRay_CS>().getGazeRayHit();
 distance = gazeRayHit.distance;
@@ -566,7 +566,7 @@ hmdPosition = VarjoManager.Instance.HeadTransform.position;
 hmdRotation = VarjoManager.Instance.HeadTransform.rotation.eulerAngles;
 ```
 
-**6.** Convert the data to type string and add to the logdata matrix.
+**6.** Convert the data to type string and add to the log data matrix.
 ```
 string[] logData = new string[9]; 
 
@@ -578,7 +578,7 @@ etc...
 
 # eHMI
 ## Fixed eHMI message
-I copied and adapted the *ClientHMIController.cs* script to show a fixed eHMI message on the autonomous car. This newly adapted script is renamed into *eHMIShowJohn.cs*. 
+I copied and adapted the *ClientHMIController.cs* script to show a fixed eHMI message on the autonomous car. This newly adapted script is renamed *eHMIShowJohn.cs*. 
 
 First, I changed the *update* function, such that the eHMI is only dependent on public variables which can be set in the inspector as opposed to being dependent on key input.
 ```
@@ -602,7 +602,7 @@ else if (ShowWalk == true)
 
 Next, you need to attach the *eHMIShowJohn.cs* script to the car prefab that you want to use it on. Select in the inspector the desired message to show.
 
-Lastly, you need to tell the playersystem when to use the fixed eHMI. This is done in the *PlayerSystem.cs* script. For this you need a public variable to turn on the fixed eHMI in the inspector.
+Lastly, you need to tell the player system when to use the fixed eHMI. This is done in the *PlayerSystem.cs* script. For this, you need a public variable to turn on the fixed eHMI in the inspector.
 ```
 public bool eHMIFixed = false;
 ```
@@ -661,8 +661,8 @@ The overall overview has now become as follows:
 
 
 # Brake on input
-The AV was only able to brake on collision with brake triggers. To brake the AV using input adaptations are made to the *AICar.cs* script. 
-The adaptations are made such that the input will activate the same sequence of code as would have happend in a collision with a brake trigger.
+The AV was only able to brake on collision with brake triggers. To brake, the AV using input adaptations are made to the *AICar.cs* script. 
+The adaptations are made such that the input will activate the same sequence of code as would have happened in a collision with a brake trigger.
 
 **1.** First, a new bool is needed to determine the state of activation of the braking. 
 
@@ -688,7 +688,7 @@ void Brake_Spacebar()
 ```
 
 **3.** Now that we have set the variables to the right values and triggered the SpaceBar bool. The next step is to change the braking conditions in the helper functions found in the *FixedUpdate* function.
-The first one is the *Decelerate_Car* function. The braking is direction dependend, the braking condition is adapted in the z-direction, since in my experiment the AV drives in the z-direction.
+The first one is the *Decelerate_Car* function. The braking is direction-dependent, the braking condition is adapted in the z-direction since in my experiment the AV drives in the z-direction.
 ```
 else if (WaitTrialZ == true || BrakeZ == true || SpaceBar == true)
 {
@@ -697,7 +697,7 @@ else if (WaitTrialZ == true || BrakeZ == true || SpaceBar == true)
 ```
 
 **4.** Next, in my experiment, the AV needs to drive again after standing still for a certain amount of time. Thus changes are made in the *Reset_Speed_After_Stopping* function.
-Similarily to step 4, the resetting condition is adapted.
+Similar to step 4, the resetting condition is adapted.
 ```
 if (WaitTrialZ == true || SpaceBar)
 {
@@ -706,9 +706,9 @@ if (WaitTrialZ == true || SpaceBar)
 ```
 
 ## AI Driving initiation
-A manual start of the AV driving initiation is added to give the passenger enough time to perform the eye-calibration. Otherwise the AV would start driving as soon as the experiment starts. 
-Leaving no time for the participant to perform the eye-calibration.
-For the implementation of the manual initiation, adaptations needs to be made in the *AICar.cs* script.
+A manual start of the AV driving initiation is added to give the passenger enough time to perform the eye calibration. Otherwise, the AV would start driving as soon as the experiment starts. 
+Leaving no time for the participant to perform the eye calibration.
+For the implementation of the manual initiation, adaptations need to be made in the *AICar.cs* script.
 **1.** First, a new bool is needed to determine the state of activation of the braking. 
 
 **2.** Second, in the *Update* function, write the condition to start the AV when a button is pressed. Here is an example using the up arrow key.
@@ -728,10 +728,14 @@ Car_Driving_Behaviour();
 ```
 
 ## Driving behaviour Update
-Whenever the vehicle started driving again after having stopped for a while, the vehicle would translate stuttered. This was 
+Whenever the vehicle started driving again after having stopped for a while, the vehicle would translate stuttered. This was
 due to the driving and resetting behaviour being put into the FixedUpdate. Generally, the FixedUpdate is used for physics calculations
 and nonlinear movements. Update is more suitable for linear movements such as driving. Moving the *Car_Driving_Behaviour* and the *Reset_Speed_After_Stopping* 
 function to the Update function solved the stuttering problem.
+
+There are currently two problems that need to be addressed in the vehicle behaviour:
+- Restart acceleration in the Gaze  To Yield mapping. The AV restarts with very high acceleration. The acceleration should be low.
+- The waiting time at the standstill needs to be modified. The counter in Unity counts faster than the actual time. Resulting in the AV restarting earlier than inputted. 
 
 ## Adaptive deceleration
 To make sure that the vehicle always stops at the same position, adaptive deceleration is added. The adaptive deceleration is a function of the 
@@ -748,9 +752,9 @@ as the only variable left. Meaning that the acceleration is a function of the di
 Filling in these values into the formula above results in the following equation:
 ![acceleration equation simple](https://latex.codecogs.com/gif.latex?a%20%3D%20%5Cfrac%7B-625%7D%7B18%20%5Ccdot%20s%7D)
 
-The available distance to break is calculated by taking the first trigger point, the point where the passenger looks at the pedestrian 
-when the distance between the two is less than 25 [m], substract the position of the pedestrian, and substract the desired
-stand still distance between the two. The deceleration can then be calculated with the resulting braking distance. 
+The available distance to brake is calculated by taking the first trigger point, the point where the passenger looks at the pedestrian 
+when the distance between the two is less than 25 [m], subtract the position of the pedestrian, and subtract the desired
+standstill distance between the two. The deceleration can then be calculated with the resulting braking distance. 
 Inside the *AICar* script in the *Decelerate_Car* function:
 ```
 // Compute adaptive deceleration needed to stop the AV at a fixed distance from the pedestrian
@@ -760,7 +764,7 @@ distance_stop = first_triggerlocation - 17 - 6;
 adaptive_acceleration = (0 - 900) / (2 * Mathf.Pow(conversion, 2) * distance_stop);
 ```
 
-Next step is to replace the *set_acceleration* with the newly calculated *adaptive_acceleration*:
+The next step is to replace the *set_acceleration* with the newly calculated *adaptive_acceleration*:
 ```
 speed = Mathf.Sqrt(900 + 2 * adaptive_acceleration * Mathf.Pow(conversion, 2) * delta_distance);
 ```
@@ -784,7 +788,7 @@ if (gazeRayHit.collider.gameObject.CompareTag(target) && target == "Pedestrian")
 # Sequencing
 ## Persistent Manager
 A persistent manager is needed to keep track of variables when switching experiments. During the switch of experiments, variables get deleted.
-However, for some applications you will want to be able to access certain variables at all times. 
+However, for some applications, you will want to be able to access certain variables at all times. 
 ```
 public class PersistentManager : MonoBehaviour
 {
@@ -806,7 +810,7 @@ public class PersistentManager : MonoBehaviour
 }
 ```
 
-To access the variables created in the persistentmanager, one can simply call the instance of the persistent manager.
+To access the variables created in the persistent manager, one can simply call the instance of the persistent manager.
 ```
 PersistentManager.Instance.variables_that_you_want_to_use;
 ```
@@ -911,7 +915,7 @@ private void Awake()
 ```
 
 ### Stopping with gaze
-Braking the AV using gaze is only desired during the experiments on one of the mappings. In the other mappings the AV 
+Braking the AV using gaze is only desired during the experiments on one of the mappings. In the other mappings, the AV 
 should not stop when the passenger gazes at the pedestrian. Thus a function is created to deactivate the 
 eye-gaze braking according to the experiment definition number. 
 ```
@@ -930,7 +934,7 @@ public void GazeEffectOnAV()
 ```
 
 ### Trigger to switch scenes
-In the experiment definitions an invisible trigger is set at the end of the trial. When the AV hits this trigger
+In the experiment definitions, an invisible trigger is set at the end of the trial. When the AV hits this trigger
 the next scene has to be loaded. This is also done in the *SceneSelector* script.
 ```
 void OnTriggerEnter(Collider other)
@@ -965,9 +969,9 @@ void OnTriggerEnter(Collider other)
 ```
 
 When the trigger is hit, it will first check on the tag. If the tag is called "NEXT" it will move one to the code to switch scenes.
-In the case of automatic sequencing the useManualSelection boolean will be false. The Invoke function is 
+In the case of automatic sequencing, the useManualSelection boolean will be false. The Invoke function is 
 used to delay the execution of the function inside, "nextExperiment". The code underneath that is used to go
-to the next number in the experiment order list. These are all part of the persistent manager,
+to the next number in the experiment order list. These are all part of the persistent manager
 since the list needs to remain the same throughout the whole experiment. At last, when the last experiment is finished,
 the game closes itself.
 
@@ -986,7 +990,7 @@ function is only able to call other functions.
 
 ## Game start
 To make sure that the next experiment starts immediately, the *Host* scripts need to be adapted. 
-At first you need to establish the connection between the host and the client. After establishing the connection,
+At first, you need to establish the connection between the host and the client. After establishing the connection,
 you can press the start game button. For the following experiments, one does not need to press the start button anymore.
 
 To achieve this, two booleans are needed. The first one is a persistent boolean, *clientConnectedToHost*, which exists throughout all the trials.
@@ -1005,7 +1009,7 @@ if(PersistentManager.Instance.clientConnectedToHost == false)
 }
 ```
 
-Next piece of code manages the starting of the game after the first start.
+The next piece of code manages the starting of the game after the first start.
 ```
 if(gameStarted == false && AllRolesSelected() && PersistentManager.Instance.clientConnectedToHost == true)
 {
@@ -1014,7 +1018,7 @@ if(gameStarted == false && AllRolesSelected() && PersistentManager.Instance.clie
 }
 ```
 
-Inside the case of *NetState.InGame* part, the *gameStarted* is reset, so that the game can enter the previous piece of code again 
+Inside the case of *NetState.InGame* part, the *gameStarted* is reset so that the game can enter the previous piece of code again 
 when the netstate is in lobby.
 ```
 if(PersistentManager.Instance.nextScene == true)
@@ -1026,7 +1030,7 @@ if(PersistentManager.Instance.nextScene == true)
 ```
 
 ## Role selection
-Another part of the lobby is the role selection. To automate this part we again need the *Host.cs* script.
+Another part of the lobby is role selection. To automate this part we again need the *Host.cs* script.
 The roles are defined as integers, so two new int variables are made. One for the host and one for the client.
 Furthermore, the *SelectRoleGUI* function is modified such that it does not show a GUI anymore, and in which the roles are selected beforehand.
 
@@ -1035,7 +1039,7 @@ First, add an extra input argument to the *SelectRoleGUI* function:
 static void SelectRoleGUI(int player, Host host, ExperimentRoleDefinition[] roles, int Role)
 ``` 
 
-Next, remove the GUI selection part. (In this case I commented it out)
+Next, remove the GUI selection part. (In this case, I commented it out)
 ```
 // For manual selection of roles per host and client
 /*for (int i = 0; i < roles.Length; i++)
@@ -1066,8 +1070,8 @@ void PlayerRolesGUI()
 
 ## Stoplogging inbetween the experiments
 To stop the logger from logging in the lobby inbetween the experiments a persistent boolean is needed.
-The stoplogging boolean is activated when the AV reaches the end point in the experiment. When the stoplogging boolean
-is set to true, it destroys all the items in the player and car lists, so that the new players and cars can be added to the list.
+The stoplogging boolean is activated when the AV reaches the endpoint in the experiment. When the stoplogging boolean
+is set to true, it destroys all the items in the player and car lists so that the new players and cars can be added to the list.
 
 To achieve this, the following piece of code is added to the *NetworkingManager* script inside the *Update* function.
 ```
@@ -1114,7 +1118,7 @@ void OnTriggerEnter(Collider other)
 
 
 ## Network system state
-To make sure that the game returns back to the right NetState a new persisten variable is created called *nextScene*.
+To make sure that the game returns to the right NetState a new persistent variable is created called *nextScene*.
 Same as with the *stopLogging* boolean, the *nextScene* boolean is set to true when the AV hits the trigger to switch scenes.
 
 ```
@@ -1135,10 +1139,10 @@ if(PersistentManager.Instance.nextScene == true)
 ```
 
 ## Network load next scene
-With the code above, the Host is able to load the next scene automatically. Network messages are needed to allow the Client to load the next scene too.
-The code to load the next scene is already defined, so only a message has to be send to the client, telling it to load the next scene.
+With the code above, the Host can load the next scene automatically. Network messages are needed to allow the Client to load the next scene too.
+The code to load the next scene is already defined, so only a message has to be sent to the client, telling it to load the next scene.
 For this, four pieces of code are needed (see visualSyncManager for reference).
-For this we need to create a manager which handles triggers, defines the broadcast message from the host and defines the action to be taken by the client upon receiving the message.
+For this, we need to create a manager which handles triggers, defines the broadcast message from the host and defines the action to be taken by the client upon receiving the message.
 The manager is called: 'SceneNetworkManager'
 ```
 // Function to broadcast the message from host to client
@@ -1166,7 +1170,7 @@ enum MsgId
 }
 ```
 
-As structure, the code is as follows:
+The code structure is as follows:
 ```
 public struct LoadSceneMessage : INetMessage
 {
@@ -1205,7 +1209,7 @@ if(asyncOperation.progress >= 0.9f)
 }
 ```
 
-And in the host script, inside the InGame Netstate the code below is used. The setSendLoadMsgToClient function
+And in the host script, inside the InGame Netstate, the code below is used. The setSendLoadMsgToClient function
 is used to reset the SendLoadMsgToClient variable in the 'SceneSelector' script.
 ```
 if (_SceneSelector.SendLoadMsgToClient == true)
@@ -1215,8 +1219,8 @@ if (_SceneSelector.SendLoadMsgToClient == true)
 }
 ```
 
-This same persistent variable 'SendEndGameToClient' is used in the Host script as the conditino to broadcast the end game message.
-Which is done inside the InGame NetState of the host:
+This same persistent variable 'SendEndGameToClient' is used in the Host script as the condition to broadcast the end game message.
+This is done inside the InGame NetState of the host:
 ```
 if(PersistentManager.Instance.SendEndGameToClient == true)
 {
@@ -1238,7 +1242,7 @@ if (PersistentManager.Instance.ClientClosed == true && PersistentManager.Instanc
 
 The Persistent variable 'ClientClosed' is needed for the networking of the close game message to the clients. The host is only allowed to closes the game 
 once the client has closed its game. To send a message to the client we first need to create the message.
-For this we need to create a manager which handles triggers, defines the broadcast message from the host and defines the action to be taken by the client upon receiving the message.
+For this, we need to create a manager which handles triggers, defines the broadcast message from the host and defines the action to be taken by the client upon receiving the message.
 The manager is called: 'SceneNetworkManager'
 ```
 // Function to broadcast the message from host to client
@@ -1275,7 +1279,7 @@ public struct EndGameMessage : INetMessage
 ```
 
 Now that the required functions are created. We need to add the reader to the client and determine when the host sends the message.
-In the client, simply set up the message handler and define the callback function for the game ending message.
+In the client, simply set up the message handler and define the callback function for the game-ending message.
 ```
 // Message handler
 _msgDispatcher.AddStaticHandler((int)MsgId.S_EndGame, OnEndMessage);
@@ -1287,7 +1291,7 @@ private void OnEndMessage(ISynchronizer sync, int srcPlayerId)
 }
 ```
 
-To set up the message for the host, we first need to determine when the game has ended, which is done in the sceneselector as defined above.
+To set up the message for the host, we first need to determine when the game has ended, which is done in the scene selector as defined above.
 ```
 else if (PersistentManager.Instance.listNr >= PersistentManager.Instance.ExpOrder.Count-1)
 {
@@ -1295,8 +1299,8 @@ else if (PersistentManager.Instance.listNr >= PersistentManager.Instance.ExpOrde
 }
 ```
 
-This same persistent variable 'SendEndGameToClient' is used in the Host script as the conditino to broadcast the end game message.
-Which is done inside the InGame NetState of the host:
+This same persistent variable 'SendEndGameToClient' is used in the Host script as the condition to broadcast the end game message.
+This is done inside the InGame NetState of the host:
 ```
 if(PersistentManager.Instance.SendEndGameToClient == true)
 {
@@ -1310,7 +1314,7 @@ To allow the host to shut down the game too after sending the end game message t
 
 
 # Varjo
-The varjo headset requires varjobase and SteamVR to work. To implement the varjo into unity, one needs the varjo plugin.
+The Varjo headset requires Varjobase and SteamVR to work. To implement the Varjo into Unity, one needs the Varjo plugin.
 
 These can all be found in the list below:
 - VarjoBase: [https://varjo.com/downloads/#varjo-base](https://varjo.com/downloads/#varjo-base)
@@ -1320,16 +1324,18 @@ These can all be found in the list below:
 
 
 ## Varjo camera on prefab
-To make use of the varjo headset in the coupled-sim, one needs to adapt the existing player avatar prefabs. This holds for both the pedestrian (participant) and the AV's.
+To make use of the Varjo headset in the coupled-sim, one needs to adapt the existing player avatar prefabs. This holds for both the pedestrian (participant) and the AV's.
 For this purpose, I duplicated the existing participant prefab and created a new "Participant_varjo" prefab.
 
 **1.** Add the VarjoCameraRig prefab on the same level as the CameraPositionSet. Make sure to set the same transform values for the VarjoCameraRig as the CameraPositionSet
 
-**2.** Add the *Position Setter* script to the VarjoCameraRig and set as the target "CameraPosition".
+**2.** Add the *Position Setter* script to the VarjoCameraRig and set it as the target "CameraPosition".
 
-With these two steps you should be able to see the world from the perspective of the pedestrian.
+With these two steps, you should be able to see the world from the perspective of the pedestrian.
 
 ## Visualize eye-gaze vector
+Problem to solve: Due to the sequencing of trials, sometimes the eye gaze is visualised in the baseline too. Right now the problem is solved by informing the participants that the trial belongs to the baseline mapping, thus the eye gaze visualisation provides no information regarding the AV's intent.
+
 The visualization of the eye=gaze vector is done by adapting the provided *VarjoGazeRay* script. 
 The visualization is done by drawing a line between the origin (the eyes) and the end (the gaze point).
 
@@ -1341,7 +1347,7 @@ public struct LineDrawer
 ...
 ```
 
-**2.** The init function adds the [LineRenderer](https://docs.unity3d.com/Manual/class-LineRenderer.html) to the gameobject which this script is attached to.
+**2.** The init function adds the [LineRenderer](https://docs.unity3d.com/Manual/class-LineRenderer.html) to the game object which this script is attached to.
 ```  
 private void init(GameObject gameObject)
 {
@@ -1354,7 +1360,7 @@ private void init(GameObject gameObject)
 }
 ```
 
-**3.** Adds the linerenderer to the gameobject if it has not been done yet and set the properties of the linerenderer.
+**3.** Adds the line renderer to the game object if it has not been done yet and set the properties of the line renderer.
 ```
 public void DrawLineInGameView(GameObject gameObject, Vector3 start, Vector3 end, Color color)
 {
@@ -1380,7 +1386,7 @@ public void DrawLineInGameView(GameObject gameObject, Vector3 start, Vector3 end
 }
 ```
 
-**4.** Destroy the gameobject after use.
+**4.** Destroy the game object after use.
 ```
 public void Destroy()
 {
@@ -1400,7 +1406,7 @@ lineDrawer.DrawLineInGameView(gameObject, gazeRayOrigin, gazeRayOrigin + gazeRay
 Note: this option is not turned on right now due to the added information a laser provides to the participant. If you do want to use the
 crosshair instead of the laser, you can replace the current code with the code below.
 
-Having to look at a laser which comes out of your eyes can be distracting. Thus, the laser is only made visible to the 
+Having to look at a laser that comes out of your eyes can be distracting. Thus, the laser is only made visible to the 
 pedestrian. The passenger sees a crosshair instead. 
 
 The crosshair is another laser, which is cut off at an arbitrary distance. Thus, the crosshair is the cross-section of a second laser.
@@ -1413,8 +1419,8 @@ lineDrawer.DrawLineInGameView(gameObject, gazeRayOrigin, gazeRayOrigin + gazeRay
 crossHair.DrawLineInGameView(gameObject, gazeRayOrigin + gazeRayDirection * 5.0f, gazeRayOrigin + gazeRayDirection * 10.0f, Color.green, 0.07f, false);
 ```
 
-To hide the laser for the passenger, an *IgnoreForPassenger* layer is added. Linerenderers do not have layers by themselves. Thus a new gameobject is created
-with the layer set to *IgnoreForPassenger*. Next, on the varjocamera in the prefab, one needs to cull the mask by ignoring the *IgnoreForPassenger* layer.
+To hide the laser for the passenger, an *IgnoreForPassenger* layer is added. Linerenderers do not have layers by themselves. Thus a new game object is created
+with the layer set to *IgnoreForPassenger*. Next, on the Varjocamera in the prefab, one needs to cull the mask by ignoring the *IgnoreForPassenger* layer.
 
 ```
 // Create empty game object for the linerenderer to add layer. Laser
@@ -1425,11 +1431,11 @@ lineRenderer = LaserObject.AddComponent<LineRenderer>();
 ```
 
 ## Positionsetter for varjo.
-With the old positionsetter you would appear floating on top of the prefab. This is due the headtracking of the HMD. 
+With the old position setter, you would appear floating on top of the prefab. This is due to the head tracking of the HMD. 
 To solve this problem I adjusted the *PositionSetter* script. This snippet of code removes the effect of the HMD position as compared to the passenger position. 
 Resetting you back to the position of the prefab.
 
-Firstly, we get the HMD position from the varjomanager, the head (target) position of the passenger and apply the changes by substracting the effect of the HMD.
+Firstly, we get the HMD position from the Varjomanager, the head (target) position of the passenger and apply the changes by subtracting the effect of the HMD.
 
 ```
 // Get HMD pos
@@ -1524,22 +1530,22 @@ private void effectHMD(enumRot rot_)
 ```
 
 ## Adding eye-tracking to the prefab
-Additional scripts need to be added to initialize the eye-tracking calibration and visualize the eye-gaze vector in the coupled-sim.
+Additional scripts need to be added to initialize the eye-tracking calibration and visualize the eye-gaze vector in the coupled sim.
 
 **1.** Create an empty on the particpant_varjo prefab. Put it on the same level as the VarjoCameraRig prefab and name the empty "Gaze".
 
 **2.** Add the "Varjo Gaze Calibration Request" and "Varjo Gaze Ray" script to the "Gaze".
 
-One should be able to see their eye-gaze visualized after performing the eye-calibration.
+One should be able to see their eye-gaze visualized after performing the eye calibration.
 
-## Gaze ray hit pedestran
+## Gaze ray hit pedestrian
 The next part of the eye gaze ray interaction is to register the "hits" ONLY with the pedestrian. 
 For this purpose, a new layer is created.
-**1.** Create new layer. I called this layer "target".
+**1.** Create a new layer. I called this layer "target".
 
 **2.** Assign the pedestrian prefab with the layer "target".
 
-**3.** Assign the pedetrian with the tag "Pedestrian".
+**3.** Assign the pedestrian with the tag "Pedestrian".
 
 **4.** In the *VarjoGazeRay.cs* script, adapt the raycast physics condition such that it only sees objects in the "target" layer.
 ```
@@ -1553,10 +1559,10 @@ if (gazeRayHit.collider.gameObject.CompareTag(target) && target == "Pedestrian")
 
 ## Brake AV based on eye-gaze
 To brake the AV based on eye-gaze, both the *AICar* script and the *VarjoGazeRay* script need to be modified. 
-In the previous section I already set up the condition for target hits. The first step is to send a message from the *VarjoGazeRay* script to the *AICar* script when the passenger gazes at the pedestrian.
+In the previous section, I already set up the condition for target hits. The first step is to send a message from the *VarjoGazeRay* script to the *AICar* script when the passenger gazes at the pedestrian.
 
 **1.** In the *AICar* script, create a bool and a function to change the bool from another script. 
-In the code snippet below, a counter "n" is added. This is because we want the message to be send only once. 
+In the code snippet below, a counter "n" is added. This is because we want the message to be sent only once. 
 ```
 private bool boolVarjoSaysStop;
 public void VarjoSaysStop()
@@ -1584,7 +1590,7 @@ Inside the *AICar* script, in the *Update* function.
 if ((Input.GetKeyDown("space") == true || (StopWithEyeGaze == true && boolVarjoSaysStop == true && n == 1)) && startCar == true)
 ```
 
-**4.** A new public bool is introduced to activate/deactivate the eye-gaze stopping, since it's not always desired to use the eye-gaze to stop the car.
+**4.** A new public bool is introduced to activate/deactivate the eye-gaze stopping since it's not always desired to use the eye-gaze to stop the car.
 This bool is set in the inspector of the vehicle prefab. **Note: this bool is also set in the condition in the previous code snippet**.
 ```
 public bool StopWithEyeGaze = false;
@@ -1596,8 +1602,8 @@ if (other.gameObject.CompareTag("StartTrial_Z") && StopWithEyeGaze == false)
 ```
 
 ## Networking
-To be able to use two Varjo HMD's in one networked game. One need to only activate one HMD and keep the other HMD deactivated.
-This is done by setting the VarjoManager on inactive by default. The VarjoManager of the LOCAL player is then set on active at the start 
+To be able to use two Varjo HMD's in one networked game. One needs to only activate one HMD and keep the other HMD deactivated.
+This is done by setting the VarjoManager inactive by default. The VarjoManager of the LOCAL player is then set on active at the start 
 of the game.
 
 Inside the *PlayerAvatar* script, at the mode element case of Flat (which is for the LOCAL player):
@@ -1609,16 +1615,16 @@ go_VarjoManager.SetActive(true);
 go_Gaze.SetActive(true);
 ```
 
-Furthermore, the position of the HMD needs to be shared over the network. This is also done in the *PlayerAvatar* scipt.
+Furthermore, the position of the HMD needs to be shared over the network. This is also done in the *PlayerAvatar* script.
 To network the position of the HMD, one can simply drag the transform of the VarjoCameraRig into the SyncTransform list of the 
 PlayerAvatar.
 
 Besides the HMD position, the eye-gaze visualization needs to be networked too. Since the existing networking method only networks 
 transforms, new objects need to be created. This is done by creating two invisible objects which take the position of the 
 "GazeOrigin" and the "GazeDirection". Furthermore, since we are using two Varjo HMDs which both use the Varjo API, an
-additional constraint has to be added too the position tracking. Otherwise the synced laser can take the HMD data from the 
+additional constraint has to be added to the position tracking. Otherwise, the synced laser can take the HMD data from the 
 pedestrian too, which is undesired. To prevent this from happening the serial number of the HMDs are used to distinguish the HMDs.
-This can be done using the Valve.VR API. 
+This can be done using Valve.VR API. 
 
 The position setting of the two invisible objects is done as follows: 
 ```
@@ -1663,14 +1669,14 @@ if (PersistentManager.Instance._visualizeGaze == true)
 
 # Vive controller
 ## Trigger input
-Rather than copy pasting the guide I followed to set up the vive controller, I put some links down referring to the guides I follwed. 
+Rather than copy-pasting the guide, I followed to set up the VIVE controller, I put some links down referring to the guides I followed. 
 
 -[A Complete Guide to the SteamVR 2.0 Input System in Unity](https://medium.com/@sarthakghosh/a-complete-guide-to-the-steamvr-2-0-input-system-in-unity-380e3b1b3311)
 
 -[Video: Unity SteamVR 2.0 Input using actions](https://www.youtube.com/watch?v=bn8eMxBcI70)
 
 In this section, I will briefly explain the *ViveInput* script.
-In the start function one needs to define the actions to be used. Here we take the GapAcceptance button defined in the UI button layout called viveController. 
+In the start function, one needs to define the actions to be used. Here we take the GapAcceptance button defined in the UI button layout called viveController. 
 Two lines are added to define the actions to be taken for trigger pressed and trigger released.
 ```
 private void Start()
