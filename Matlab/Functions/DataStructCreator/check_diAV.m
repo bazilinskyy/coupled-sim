@@ -1,11 +1,12 @@
-%% This script returns a bool to indicate whether a distraction vehicle is present based on the experiment definition number
+%% Check_diAV
+% This script returns a bool to indicate whether a distraction vehicle is 
+% present based on the experiment definition number
 % Author: Johnson Mok
-% Last updated: 17-12-2020
 
+function extracar = check_diAV(filename)
 % The presence of a distraction vehicle is hardcoded in unity.
 % The following experiment definitions contain a distraction vehicle:
 % 2, 3, 6, 7, 10, and 11
-function extracar = check_diAV(filename)
 extracar    = false;
 name_split  = split(filename,'_');
 idx         = find(contains(name_split,'expdef'));

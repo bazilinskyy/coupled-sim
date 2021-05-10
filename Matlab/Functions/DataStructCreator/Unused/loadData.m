@@ -2,7 +2,6 @@ function [Data, pa, pe, diAV, M] = loadData(filename, extracar)
 %% Load data
 % This script turns the csv logging file into data structures.
 % Author: Johnson Mok
-% Last Updated: 16-12-2020
 
 disp('Start loading data...');
 tic;

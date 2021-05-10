@@ -1,13 +1,15 @@
 %% Calibrate start and end point
 % This script sets the position of the 'press now' button as the start (0)
-% and 'release now' sound as the end position.
+% and the point where AV is at standstill for 2.6 s as the end point for
+% the yielding conditions. For the non-yielding conditions, the point where
+% the AV passes the zebra crossing is the end point.
 % Author: Johnson Mok
-% Last Updated: 03-01-2021
+
 clc
 clear
 close all
 
-disp('Start removing data before start sign and after stop sign.');
+disp('Start removing data before start and end point.');
 %% Load pre-processed data
 load('PreData.mat');        
 

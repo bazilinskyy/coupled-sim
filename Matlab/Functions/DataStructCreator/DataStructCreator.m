@@ -1,12 +1,11 @@
-%% This script creates one big data structure containing all the data from the logfiles
+%% This script creates one data structure containing all the data from the logfiles
 % Ordened as follows:
 % - Experiment definition
 % - Timescale (Host fixed time/time)
 % - Participant
 % - Trial
-
+% NOTE: must run FileOrdener.m before running DataStructCreator.m
 % Author: Johnson Mok
-% Last updated: 17-12-2020
 clear
 clc
 close all
@@ -23,7 +22,6 @@ for i=1:length(FileList)
     name        = FileList(i).name;
     filename    = join([path,'\',name]);
     Data        = CSVtoStruct(filename);
-%     Data        = CSVtoStruct_simple(filename);
     
     %% Add to DataList
     ED_name = join(['Data_ED_',num2str(Data.expdefNr)]);

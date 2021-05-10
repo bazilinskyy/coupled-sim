@@ -3,7 +3,6 @@ function [Data] = CSVtoStruct_simple(filename)
 % This script turns the csv logging file into data structures.
 % SIMPLE VERSION: without nested structures
 % Author: Johnson Mok
-% Last Updated: 28-12-2020
 
 % disp('Start loading data...');
 tic;

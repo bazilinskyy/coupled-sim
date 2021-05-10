@@ -1,8 +1,8 @@
 %% Analyze Learning Effect
 % Author: Johnson Mok
-% Last Updated: 24-02-2021
+
 function learnEffect = analyzeLearningEffect(data)
-org = getOrganizedDY(data);
+org         = getOrganizedDY(data);
 learnEffect = meanScore(org);
 end
 

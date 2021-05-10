@@ -1,12 +1,11 @@
 %% analyzePedestrianGazeDirection
-% This script ...
+% This script creates an animation from the trial
 % From the pedestrians POV:
 % positive z is right, negative z is left
 % positive x is in front, negative x is in back
 % positive y is up, negative y is down
 % rot is in degrees
 % Author: Johnson Mok
-% Last Updated: 19-02-2020
 
 
 function animateTrial(gazeorg, gazedir ,gap, pagazeorg, pagazedir, paLook, videoname, titlestr)
@@ -23,7 +22,6 @@ paorg = RemoveNoTracking(pagazeorg);
 padirP = DirectionViewPoint(paorg,padir,50);
 [startstop, endstop, endPhase3] = findStandstill(paorg);
 [PatchAni,xp] = getPatchAni(paorg.z, startstop, endstop, endPhase3);
-% midxAni = getMidxAni(paorg.z, startstop, endstop);
 % Gap acceptance
 rectgap = getRect(paorg.z, startstop, endstop, endPhase3, 1);
 midxgap = getMidx(paorg.z, startstop, endstop, endPhase3);
@@ -41,7 +39,7 @@ time = (1:length(gap))*dt;
 %% Initialize video
 myVideo = VideoWriter(videoname, 'Uncompressed AVI'); %open video file
 % myVideo.Quality = 100;
-myVideo.FrameRate = 59;  %can adjust this, 5 - 10 works well for me
+myVideo.FrameRate = 59;  
 open(myVideo)
 
 %% Pedestrian gaze animation
@@ -54,11 +52,6 @@ surface([-120 -100; -120 -100], [-1 -1; -1 -1], [-40 -40; 80 80], ...
     'FaceColor', 'texturemap', 'CData', cdata );
 % road
 hold on
-% plot3([-115.1, -115.1], [0,0], [-100, 100],'--', 'LineWidth', 1, 'Color', 'k');
-% plot3([-105.1, -105.1], [0,0], [-100, 100],'--', 'LineWidth', 1, 'Color', 'k');
-% zebra
-% plot3([-115.1, -105.1],[0, 0],[20.1, 20.1],'--' ,'LineWidth', 1, 'Color', 'k');
-% plot3([-115.1, -105.1],[0, 0],[15.35, 15.35],'--', 'LineWidth', 1, 'Color', 'k');
 h1 = plot3(NaN, NaN, NaN, '-','Color',customColor(1,:));                                              % pedestrian gaze line
 % hold on
 h2 = plot3(NaN, NaN, NaN, 'o','MarkerFaceColor',customColor(1,:),'MarkerEdgeColor',customColor(1,:));   % pedestrian position
@@ -67,10 +60,7 @@ h4 = plot3(NaN, NaN, NaN, 's','MarkerSize',6,'MarkerFaceColor',customColor(2,:),
 axis([-120 -100 -5 5 -40 80]);
 view(0,0) % XZ
 
-% set(gca,'xticklabel',[],'yticklabel',[],'zticklabel',[])
 set(gca,'xticklabel',[])
-% zticks([(-40:10:60)+17.19]);
-% zticklabels({'-40','-30','-20','-10','0','10','20','30','40','50','60'});
 zticks([(-40:20:60)+17.19]);
 zticklabels({'-40','-20','0','20','40','60'});
 title(titlestr,'FontSize',15,'FontWeight','bold');
@@ -84,21 +74,9 @@ for i=1:size(PatchAni,1)
 end
 
 %% Phases
-% line([-120 -100],[0 0],[76.94 76.94],'LineStyle','--','Color','k'); 
 text(-100,0,76.94,'(phase 1)','HorizontalAlignment','right','VerticalAlignment','top');
-
-% line([-120 -100],[0 0],[42.19 42.19],'LineStyle','--','Color','k'); 
 text(-100,0,42.19,'(phase 2)','HorizontalAlignment','right','VerticalAlignment','top');
-
-% line([-120 -100],[0 0],[31.59 31.59],'LineStyle','--','Color','k'); 
-% text(-100,0,31.59,'(phase 3)','HorizontalAlignment','right','VerticalAlignment','top');
 text(-100,0,paorg.z(startstop),'(phase 3)','HorizontalAlignment','right','VerticalAlignment','top');
-
-% line([-120 -100],[0 0],[paorg.z(startstop) paorg.z(startstop)],'LineStyle','--','Color','k'); 
-% text(-100,0,paorg.z(startstop),{'(line = phase 4';'phase 5)'},'HorizontalAlignment','right','VerticalAlignment','top');
-
-% line([-120 -100],[0 0],[12.5 12.5],'LineStyle','--','Color','k'); 
-% text(-100,0,12.5,'(end of phases)','HorizontalAlignment','right','VerticalAlignment','top');
 
 %% Gap acceptance
 subplot(2,2,2) 
@@ -153,13 +131,6 @@ end
 
 close(myVideo)
 
-%% convert AVI to MP4
-% pathVideoMP4 = regexprep(videoname,'\.avi','.mp4'); % generate mp4 filename
-% if isunix % for linux
-%     [~,~] = system(sprintf('ffmpeg -i %s -y -an -c:v libx264 -crf 0 -preset slow %s',videoname,pathVideoMP4)); % for this to work, you should have installed ffmpeg and have it available on PATH
-% elseif ispc % for windows
-%     [~,~] = system(sprintf('ffmpeg.exe -i %s -y -an -c:v libx264 -crf 0 -preset slow %s',videoname,pathVideoMP4)); % for this to work, you should have installed ffmpeg and have it available on PATH
-% end
 end
 
 %% Helper function

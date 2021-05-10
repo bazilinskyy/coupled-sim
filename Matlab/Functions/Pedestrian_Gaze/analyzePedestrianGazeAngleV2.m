@@ -2,7 +2,7 @@
 % Angle 0-90 degree is right side of pedestrian
 % 90-180 is left side of the pedestrian
 % Author: Johnson Mok
-% Last Updated: 24-02-2021
+
 function out = analyzePedestrianGazeAngleV2(origin, dir, phases, trialorder)
 origin_p = getAllPhase(origin,phases);
 dir_p = getAllPhase(dir,phases);
@@ -16,6 +16,7 @@ org_ind = getOrganizedDY(angles);
 out.ind = calcGroupCountsInd(org_ind);
 out.mean = calcGroupCounts(org);
 
+%% Statistical analysis
 anglePP = meanAnglePerPerson(org_ind, trialorder);
 SPSS = SPSSmatrix(anglePP);
 D_D_NY = CohensD(SPSS.D_NY);
@@ -27,6 +28,7 @@ t_D_NY = pairedSamplesttest(SPSS.D_NY);
 t_D_Y = pairedSamplesttest(SPSS.D_Y);
 t_ND_NY = pairedSamplesttest(SPSS.ND_NY);
 t_ND_Y = pairedSamplesttest(SPSS.ND_Y);
+
 end
 
 %% Helper functions

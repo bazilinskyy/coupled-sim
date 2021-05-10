@@ -1,14 +1,17 @@
 %% Calc phases
-% This script splits up all data into the 5 phases.
-% Hierarchy: calcPhases -> getPhases 
+% This script splits up all data into phases.
+% Hierarchy: calcPhasesV2 -> getPhasesV2 
 
+% Yielding
 % 1)start sound till start trigger range
-% 2)start trigger range till end trigger range
-% 3)end trigger range till standstill location AV
-% 4)standstill location AV till past the zebra crossing
+% 2)start trigger range till standstill location AV
+% 3)standstill location AV till at standstill for 2.6 s
+
+% Non-Yielding
+% 1)start sound till start trigger range
+% 2)start trigger range till AV past zebra crossing
 
 % Author: Johnson Mok
-% Last Updated: 05-02-2021
 
 function T = calcPhasesV2(AllData)
 fields_ED = fieldnames(AllData);

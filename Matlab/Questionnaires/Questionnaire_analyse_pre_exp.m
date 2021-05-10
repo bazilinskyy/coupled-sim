@@ -2,7 +2,6 @@
 % This script reads in the questionnaire answers as a csv file and analyses 
 % the data
 % Author: Johnson Mok
-% Last Updated: 05-01-2020
 clc
 close all
 clear
@@ -32,9 +31,7 @@ Data_preexp_pa  = convertDataPreexp(Preexp_pa);
 Data_preexp_pe  = convertDataPreexp(Preexp_pe);
 
 %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Calculations %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Calulations Pre-experiment questionnaire - Demographics
 % Nationality
@@ -185,9 +182,7 @@ mean_EC_ped_sig_pe = mean(Data_preexp_pe.Pedestrian_EyeContact_signalised);
 std_EC_ped_sig_pe = std(Data_preexp_pe.Pedestrian_EyeContact_signalised);
 
 %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Plots %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Plots Pre-experiment questionnaire - Demographics
 colourcodes = [0, 0.4470, 0.7410; 0.8500, 0.3250, 0.0980; 0.9290, 0.6940, 0.1250];

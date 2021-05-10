@@ -1,8 +1,5 @@
 %% AnalyzePhasesGroup
-%
-%
 % Author: Johnson Mok
-% Last Updated: 09-02-2021
 
 function out = analyzePhasesGroup(data)
 % Group data based on conditions.
@@ -11,7 +8,7 @@ out.orgdata = getOrganizedDY(data);
 % Calculate each respective means and std
 out.grouped = calcPosData(out.orgdata);
 
-% Borders
+% Calculate phase borders
 out.borders = calcAllBorders(out.grouped);
 end
 

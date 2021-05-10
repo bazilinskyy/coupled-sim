@@ -1,6 +1,5 @@
 %% Order by trial
 % Author: Johnson Mok
-% Last Updated: 24-02-2021
 
 function out = OrderByTrial(data, ED, PARTI)
 %% fieldnames

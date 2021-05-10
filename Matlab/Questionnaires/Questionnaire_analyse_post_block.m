@@ -2,7 +2,6 @@
 % This script reads in the questionnaire answers as a csv file and analyses 
 % the data
 % Author: Johnson Mok
-% Last Updated: 02-02-2021
 clc
 close all
 clear

@@ -24,8 +24,8 @@ function visAngle(dat, con)
 fld_con = fieldnames(dat);
 c = find(strcmp(fld_con,con));
 data = dat.(fld_con{c});
-titlestr = {'No distraction - Yielding', 'No distraction - No yielding',...
-    'Distraction - Yielding', 'Distraction - No yielding'};
+titlestr = {'No Distraction - Yielding', 'No Distraction - No Yielding',...
+    'Distraction - Yielding', 'Distraction - No Yielding'};
 fld_map = fieldnames(data);
 hold on
 for m=1:length(fld_map)

@@ -1,9 +1,8 @@
 %% Filter wrongly executed trials 
 % This script checks whether the participants followed the instructions
-% correctly.
+% correctly in the GTY mapping.
 % Hierarchy: FilterWrongExecutions -> filterWronglyExecuted
 % Author: Johnson Mok
-% Last Updated: 05-02-2021
 
 function correct = filterWronglyExecuted(data, ED)
 % Define (non)yielding experiment definition numbers

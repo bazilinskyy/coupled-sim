@@ -1,13 +1,11 @@
 %% Visualize Learning Effect
 % Author: Johnson Mok
-% Last Updated: 24-02-2021
 
 function visualizeLearnEffect(data)
 fld_con = fieldnames(data);
-titlestr = {'No distraction - Yielding', 'No distraction - No yielding',...
-    'Distraction - Yielding', 'Distraction - No yielding'};
+titlestr = {'No Distraction - Yielding', 'No Distraction - No Yielding',...
+    'Distraction - Yielding', 'Distraction - No Yielding'};
 visAll(data, fld_con, titlestr);
-% visOne(data, fld_con, titlestr, 1);
 end
 
 %% Helper function

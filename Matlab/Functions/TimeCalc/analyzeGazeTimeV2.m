@@ -2,13 +2,6 @@
 % This script takes in the gazing times from both the pedestrian and
 % pedestrian and analyses the data.
 % Author: Johnson Mok
-% Last Updated: 17-02-2021
-
-% Input
-%
-
-% Output
-%
 
 function out = analyzeGazeTimeV2(timesgroup, order)
 out.orgTimes = getOrganisedData(timesgroup);
@@ -20,10 +13,7 @@ out.mean = meanAllStruct(out.orgTimes);
 out.groupcounts = sumDisAll(out.orgTimes);
 
 % Matrix for SPSS
-getSPSSMatrix(out.groupcounts);
-
-% Check whether the passenger followed the instructions
-checkGaze = checkGazeLATY(out.orgTimes);
+% getSPSSMatrix(out.groupcounts);
 end
 
 %% Helper functions

@@ -3,7 +3,6 @@
 % follow the instructions
 % Hierarchy: FilterWrongExecutions -> filterWronglyExecuted
 % Author: Johnson Mok
-% Last Updated: 05-02-2021
 
 function [PostData, WrongData] = FilterWrongExecutions(AllData)
 disp('Start removing wrongly executed trials.');

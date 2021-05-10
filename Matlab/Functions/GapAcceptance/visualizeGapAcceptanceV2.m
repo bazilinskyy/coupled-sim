@@ -143,11 +143,11 @@ elseif(strcmp(con,'D_Y'))
 elseif(strcmp(con,'D_NY'))
     lineprop = '--';
     title = '[Distraction] - ';
-    label = 'No yielding';
+    label = 'No Yielding';
 elseif(strcmp(con,'ND_NY'))
     lineprop = '--';
     title = '[No distraction] - ';
-    label = 'No yielding';
+    label = 'No Yielding';
 end
 % Mapping
 if(strcmp(map,'map0'))
@@ -163,7 +163,7 @@ end
 line = join([lineprop,marker]);
 end
 function lab = visNumberOfGapAcceptancePhases(data, border, con, mapping)
-strMap = {'Baseline','Gaze to yield','Look away to yield'};
+strMap = {'Baseline','GTY','LATY'};
 fld_con = fieldnames(data);
 c = find(strcmp(fld_con,con));
 fld_map = fieldnames(data.(fld_con{c}));
@@ -199,13 +199,13 @@ for i=1:nrPhases %length(fld_phase)
     if((strcmp(con,'ND_Y')||strcmp(con,'D_Y')) && strcmp(mapping,'map1')&&i<4)
         rectpos = [border.(fld_con{c}).(fld_map{m}).rect(i,1), -5, border.(fld_con{c}).(fld_map{m}).rect(i,3), 110];
         rectangle('Position',rectpos,'FaceColor',[0.9-i/10 0.9-i/10 0.9-i/10 0.4],'EdgeColor',[0 0 0]);
-        text(border.(fld_con{c}).(fld_map{m}).midx(i), 105,['(',num2str(i),')'],'HorizontalAlignment','center','VerticalAlignment', 'top');
+        text(border.(fld_con{c}).(fld_map{m}).midx(i), 105,['(',num2str(i),')'],'HorizontalAlignment','center','VerticalAlignment', 'top','FontSize',25);
     end
 grid on
-ax=gca; ax.FontSize = 15;
+ax=gca; ax.FontSize = 25;
 % title(join([titlestring,'Distance from pedestrian vs Time']),'FontSize',18,'FontWeight','bold');
-xlabel('Time in [s]','FontSize',15,'FontWeight','bold');
-ylabel({'Crossing button press'; 'in [%]'},'FontSize',15,'FontWeight','bold');
+xlabel('Time in [s]','FontSize',25,'FontWeight','bold');
+ylabel({'Crossing button press in [%]'},'FontSize',25,'FontWeight','bold');
 ylim([-5 105]);
 xlim([0, border.(fld_con{1}).(fld_map{2}).rect(border_lim,1)+border.(fld_con{1}).(fld_map{2}).rect(border_lim,3)]);
 end
@@ -223,7 +223,7 @@ for c=[1,3]
     for m=1:length(fld_map)
         b{m,:} = visNumberOfGapAcceptancePhases(data, border, fld_con{c+1}, fld_map{m}); 
     end
-    legend([a;b],'Location','southeast');
+    legend([a;b],'Location','southeast','FontSize',20);
 end
 end
 

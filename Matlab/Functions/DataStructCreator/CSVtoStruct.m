@@ -1,10 +1,9 @@
-function [Data] = CSVtoStruct(filename)
-%% Load data
+%% CSVtoStruct
 % This script turns the csv logging file into data structures.
+% NOTE: this file needs to be modified if the logfiles undergo changes.
 % Author: Johnson Mok
-% Last Updated: 17-12-2020
 
-% disp('Start loading data...');
+function [Data] = CSVtoStruct(filename)
 tic;
 
 %% Info from logfile name
@@ -20,7 +19,7 @@ timescale_str       = name_split{idx_exp+2};
 timescale_str_split = split(timescale_str,'-');
 Data.timescale      = timescale_str_split{1};
 
-%%
+%% Read logfile
 opts = delimitedTextImportOptions('Delimiter',';',...
                                   'DataLines', 10);
 Loaded_Data = readmatrix(filename,opts);

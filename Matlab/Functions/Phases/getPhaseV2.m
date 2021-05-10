@@ -2,15 +2,16 @@
 % This script calculates all the gazing times.
 % Hierarchy: calcPhasesV2 -> getPhasesV2
 
-% For yielding
-% 1)start sound till start trigger (deceleration
-% 2)start deceleration till end deceleration
-% 3)standstill (up to 2.6 seconds).
-% No phases needed for non-yielding
-% 1) start sound till past zebra crossing
+% Yielding
+% 1)start sound till start trigger range
+% 2)start trigger range till standstill location AV
+% 3)standstill location AV till at standstill for 2.6 s
+
+% Non-Yielding
+% 1)start sound till start trigger range
+% 2)start trigger range till AV past zebra crossing
 
 % Author: Johnson Mok
-% Last Updated: 11-03-2021
 
 function out = getPhaseV2(data, ED)
 out.idx = getPhaseIdx(data,ED);

@@ -1,6 +1,5 @@
 %% Filter trials in which the distraction vehicle did not drive 
 % Author: Johnson Mok
-% Last Updated: 03-05-2021
 
 function correct = filterdiAV(data, ED)
 EDnr = split(ED,'_');

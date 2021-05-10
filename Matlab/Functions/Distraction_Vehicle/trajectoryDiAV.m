@@ -1,6 +1,5 @@
 %% Visualize trajectory distraction AV
 % Author: Johnson Mok
-% Last Updated: 01-03-2020
 
 function trajectoryDiAV(PreDataV3)
 %% Baseline

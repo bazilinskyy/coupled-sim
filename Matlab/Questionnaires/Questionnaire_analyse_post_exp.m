@@ -2,7 +2,6 @@
 % This script reads in the questionnaire answers as a csv file and analyses 
 % the data
 % Author: Johnson Mok
-% Last Updated: 07-01-2020
 clc
 close all
 clear
@@ -22,7 +21,6 @@ path_witmer = join([cd,'\','Witmer_presence']);
 addpath(genpath('Functions_postexp'));
 addpath(genpath('Functions_visualisation'));
 
-
 %% Pre-experiment Questionnaire (nr 5 in FileList)
 filename_pa     = join([FileList(3).folder,'\',FileList(3).name]);
 filename_pe     = join([FileList(4).folder,'\',FileList(4).name]);
@@ -37,10 +35,11 @@ Witmer(1,:) = [];
 
 % Variables
 mapNames = {'Baseline';'Gaze to Yield';'Look Away to Yield'};
+
+
+
 %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Calculations %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Calculations - Passenger
 % Instructions clear
@@ -64,84 +63,17 @@ rankMapping_pa_IRL = rankPreferenceMapping(Data_pexp_pa.prefMapAll_IRL);
 [pres_main_pe, pres_sub_pe, pres_name_pe, pres_mainStd_pe, pres_subStd_pe] = calcPresence(Data_pexp_pe.Presence, Witmer);
 
 
+
 %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Plots %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Plots - Passenger
-% figure
-% % Instructions clear
-% subplot(1,2,1);
-% X = categorical(instrClear_name);
-% X = reordercats(X,instrClear_name);
-% bar(X,instrClear);
-% title('Instructions clear'); ylabel('Percentage of answers');
-% subplot(1,2,2);
-% boxplot(Data_pexp_pa.instructionsClear);
-% ylim([0.5 7.5]); 
-% ylabel('7-Likert scale score'); title('Were the instructions clear?');
-
 figure
 VisBarError(instClearMean, instClearStd, {'all mappings'},'', {'Were the instructions clear?'})
 yticks(1:7)
 yticklabels({'extremely unclear','unclear,','slightly unclear','neutral','slightly clear','clear','extremely clear'});
 
 %% Plots - Preference mapping
-% figure
-% % VR 
-% subplot(2,2,1);
-% X = categorical(prefM_name);
-% X = reordercats(X,prefM_name);
-% h = bar(X,prefM_pa');
-% set(h, {'DisplayName'},mapNames);
-% title('(VR) Preference mapping - Passenger'); ylabel('Percentage of choices'); legend();
-% subplot(2,2,2);
-% X = categorical(prefM_name);
-% X = reordercats(X,prefM_name);
-% h = bar(X,prefM_pa','stacked');
-% set(h, {'DisplayName'},mapNames);
-% title('(VR) Preference mapping - Passenger'); ylabel('Percentage of choices'); legend();
-% subplot(2,2,3);
-% X = categorical(prefM_name);
-% X = reordercats(X,prefM_name);
-% h = bar(X,prefM_pe');
-% set(h, {'DisplayName'},mapNames);
-% title('(VR) Preference mapping - Pedestrian'); ylabel('Percentage of choices'); legend();
-% subplot(2,2,4);
-% X = categorical(prefM_name);
-% X = reordercats(X,prefM_name);
-% h = bar(X,prefM_pe','stacked');
-% set(h, {'DisplayName'},mapNames);
-% title('(VR) Preference mapping - Pedestrian'); ylabel('Percentage of choices'); legend();
-% 
-% figure
-% % IRL 
-% subplot(2,2,1);
-% X = categorical(prefM_name);
-% X = reordercats(X,prefM_name);
-% h = bar(X,prefMIRL_pa');
-% set(h, {'DisplayName'},mapNames);
-% title('(IRL) Preference mapping - Passenger'); ylabel('Percentage of choices'); legend();
-% subplot(2,2,2);
-% X = categorical(prefM_name);
-% X = reordercats(X,prefM_name);
-% h = bar(X,prefMIRL_pa','stacked');
-% set(h, {'DisplayName'},mapNames);
-% title('(IRL) Preference mapping - Passenger'); ylabel('Percentage of choices'); legend();
-% subplot(2,2,3);
-% X = categorical(prefM_name);
-% X = reordercats(X,prefM_name);
-% h = bar(X,prefMIRL_pe');
-% set(h, {'DisplayName'},mapNames);
-% title('(IRL) Preference mapping - Pedestrian'); ylabel('Percentage of choices'); legend();
-% subplot(2,2,4);
-% X = categorical(prefM_name);
-% X = reordercats(X,prefM_name);
-% h = bar(X,prefMIRL_pe','stacked');
-% set(h, {'DisplayName'},mapNames);
-% title('(IRL) Preference mapping - Pedestrian'); ylabel('Percentage of choices'); legend();
-
 figure
 subplot(1,2,1)
 VisBarError(3-(rankMapping_pa(:,1)-1), rankMapping_pa(:,2), {'baseline','gaze to yield','look away to yield'},'Ranking', {'[Driver] ranking preference';'in experiment'})
@@ -168,15 +100,6 @@ ylim([0 3])
 
 
 %% Plots - Presence
-% figure
-% % Main Scores
-% X = categorical({'Passenger','Pedstrian'});
-% X = reordercats(X,{'Passenger','Pedstrian'});
-% h = bar(X, [pres_main_pa.all,pres_main_pa.Total;pres_main_pe.all,pres_main_pe.Total]);
-% set(h, {'DisplayName'}, [pres_main_pa.name,'Total']');
-% ylim([0.5 7.5]); grid on;
-% title('Presence - main factors'); ylabel('7-Likert scale score'); legend();
-
 figure
 subplot(1,2,1)
 VisBarError([pres_main_pa.all,pres_main_pa.Total],...
@@ -188,7 +111,6 @@ VisBarError([pres_main_pe.all,pres_main_pe.Total],...
     [pres_mainStd_pe.all,pres_mainStd_pe.Total],{'CF','SF','DF','RF','NONE','Total'},...
     '7-Likert scale score',{'[Pedestrian]','Presence - main factors'})
 ylim([0 7]);
-
 
 figure
 % Sub Scores
@@ -210,39 +132,6 @@ VisBarError([pres_sub_pe.all,pres_main_pe.Total],...
     [pres_subStd_pe.all,pres_mainStd_pe.Total],{'INVC','NAT','AUD','HAPTIC','RES','IFQUAL','NONE','Total'},...
     '7-Likert scale score',{'[Pedestrian]','Presence - sub factors'})
 ylim([0 7]);
-
-% figure;
-% % Boxplot main score - passenger
-% subplot(1,2,1);
-% boxplot([pres_main_pa.CFval, pres_main_pa.SFval, pres_main_pa.DFval, pres_main_pa.RFval, pres_main_pa.NONEval],...
-%     [ones(size(pres_main_pa.CFval)), 2*ones(size(pres_main_pa.SFval)), 3*ones(size(pres_main_pa.DFval)), 4*ones(size(pres_main_pa.RFval)), 5*ones(size(pres_main_pa.NONEval))], ...
-%     'Labels',{'CF','SF','DF','RF','NONE'});
-% ylim([0.5 7.5]); grid on;
-% ylabel('7-Likert scale score'); title('main score - passenger');
-% % Boxplot main score - pedestrian
-% subplot(1,2,2);
-% boxplot([pres_main_pe.CFval, pres_main_pe.SFval, pres_main_pe.DFval, pres_main_pe.RFval, pres_main_pe.NONEval],...
-%     [ones(size(pres_main_pe.CFval)), 2*ones(size(pres_main_pe.SFval)), 3*ones(size(pres_main_pe.DFval)), 4*ones(size(pres_main_pe.RFval)), 5*ones(size(pres_main_pe.NONEval))], ...
-%     'Labels',{'CF','SF','DF','RF','NONE'});
-% ylim([0.5 7.5]); grid on;
-% ylabel('7-Likert scale score'); title('main score - pedestrian');
-% 
-% figure;
-% % Boxplot sub score - passenger
-% subplot(1,2,1);
-% boxplot([pres_sub_pa.INVCval, pres_sub_pa.NATval, pres_sub_pa.AUDval, pres_sub_pa.HAPTICval, pres_sub_pa.RESval, pres_sub_pa.IFQUALval, pres_sub_pa.NONEval],...
-%     [ones(size(pres_sub_pa.INVCval)), 2*ones(size(pres_sub_pa.NATval)), 3*ones(size(pres_sub_pa.AUDval)), 4*ones(size(pres_sub_pa.HAPTICval)), 5*ones(size(pres_sub_pa.RESval)), 6*ones(size(pres_sub_pa.IFQUALval)), 7*ones(size(pres_sub_pa.NONEval)),], ...
-%     'Labels',{'INVC','NAT','AUD','HAPTIC','RES','IFQUAL','NONE'});
-% ylim([0.5 7.5]); grid on; 
-% ylabel('7-Likert scale score'); title('sub score - passenger');
-% % Boxplot sub score - passenger
-% subplot(1,2,2);
-% boxplot([pres_sub_pe.INVCval, pres_sub_pe.NATval, pres_sub_pe.AUDval, pres_sub_pe.HAPTICval, pres_sub_pe.RESval, pres_sub_pe.IFQUALval, pres_sub_pe.NONEval],...
-%     [ones(size(pres_sub_pe.INVCval)), 2*ones(size(pres_sub_pe.NATval)), 3*ones(size(pres_sub_pe.AUDval)), 4*ones(size(pres_sub_pe.HAPTICval)), 5*ones(size(pres_sub_pe.RESval)), 6*ones(size(pres_sub_pe.IFQUALval)), 7*ones(size(pres_sub_pe.NONEval)),], ...
-%     'Labels',{'INVC','NAT','AUD','HAPTIC','RES','IFQUAL','NONE'});
-% ylim([0.5 7.5]); grid on; 
-% ylabel('7-Likert scale score'); title('sub score - pedestrian');
-
 
 %% Helper functions Post-experiment Questionnaire
 function data = convertDataPostExp(input,role)

@@ -1,14 +1,11 @@
 %% Analyze gap acceptance
 % This script analyzes the 'safe to cross' button press.
 % Author: Johnson Mok
-% Last Updated: 04-02-2021
-
-% Input
-%
 
 % Output
 % Crossing performance metric
 % Decision certainty
+% Statistical analysis of Decision Certainty
 
 function out = analyzeGapAcceptance(data,v,pasz,phase,order)
 gapac  = getOrganizedDY(data);
@@ -17,17 +14,14 @@ AVposz = getOrganizedDY(pasz);
 phaseorg = getOrganizedDY(phase);
 
 % Gap Acceptance in phases
-out.phases = getAllPhases(gapac, phaseorg); % Individual
+out.phases    = getAllPhases(gapac, phaseorg); % Individual
 out.phasesSum = calcAllSumPhases(out.phases);
 out.phasesPer = calcAllSumPercentage(out.phasesSum);
 
-
-
 %% Decision certainty
-% out.DC = calcDecisionCertainty(out.phases, 'ND_Y', 'map0');
 out.DC = calcAllDecisionCertainty(out.phases); 
 
-% Statistical analysis
+% ======== Statistical analysis ========
 out.DCpp = DCPerParticipant(out.DC, order);
 out.DC_STD = calcAllDCSTD(out.DCpp);
 out.SPSS = getDecisionCertaintySPSSMatrix(out.DCpp);
@@ -53,7 +47,7 @@ D_ND_Y = CohensD(out.SPSS.ND_Y);
 %% Summing and smoothing gap acceptance values per variable combination
 out.sumGap = calcAllSumGapAcceptance(gapac);
 
-smoothfactor        = 11; % default 5
+smoothfactor  = 11; % default 5
 out.smoothgap = calcAllSmoothData(out.sumGap,smoothfactor);
 
 % mean sum AV velocity

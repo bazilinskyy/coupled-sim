@@ -1,9 +1,7 @@
 %% CreateGroupData
 % This script takes variables from individuals and puts those values in a long
 % array, effectively creating an array of that variable.
-% INPUT: result from CalcTime.m
 % Author: Johnson Mok
-% Last Updated: 18-01-2020
 
 function output = createGroupData(AllData, var)
 %% create struct to input the data

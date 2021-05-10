@@ -6,8 +6,12 @@
 % cases is defined as 100 - the percentage of button presses over the total
 % phase period
 
+% For the D_Y condition, crossing performance over phase 2 is defined as
+% the percentage of button presses over the total phase period. Crossing
+% performance over phase 3 is defined as 100 - the percentage of button presses over the total
+% phase period
+
 % Author: Johnson Mok
-% Last Updated: 13-03-2021
 
 function out = crossingPerformance(data, acpt_pa, acpt_pe, trialorder)
 buttonPerTrial = sumButtonPressPerTrial(data);

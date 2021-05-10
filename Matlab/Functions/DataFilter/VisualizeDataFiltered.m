@@ -1,13 +1,10 @@
 %% Visualize filtered data
 % Author: Johnson Mok
-% Last Updated: 24-03-2021
 
 
 function VisualizeDataFiltered(data)
 [T,M] = countNumberTrialsPerMapping(data);
 disp(T);
-
-
 end
 
 %% Helperfunction 

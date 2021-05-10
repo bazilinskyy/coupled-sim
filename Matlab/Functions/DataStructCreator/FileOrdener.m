@@ -1,7 +1,9 @@
 %% File ordener.
-% This script reads the title of the file and categorizes it according to the experiment definition; 
+% This script reads the title of the file and categorizes it according to
+% the experiment definition. The logdata must be in a folder called
+% 'Logdata'. The new ordened data will be put into a folder called
+% 'LOG_ordened'.
 % Author: Johnson Mok
-% Last Updated: 17-12-2020
 clc
 clear
 disp('Start ordening data...');

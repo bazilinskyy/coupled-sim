@@ -1,7 +1,5 @@
 %% Correlation between performance score and decision reversals
-% 
 % Author: Johnson Mok
-% Last Updated: 05-04-2021
 
 function out = correlationPerformance(score,dc)
 fld_map = {'map0';'map1';'map2'};

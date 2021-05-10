@@ -1,16 +1,16 @@
 %% Get time
 % This script calculates all the gazing times.
-% Hierarchy: CalcTime -> getTime -> calcGazeTime
+% Hierarchy: CalcTimeV2 -> getTimeV3 -> calcGazeTime
 % Author: Johnson Mok
-% Last Updated: 19-01-2020
 
-% For yielding
-% 1)start sound till start trigger (deceleration
-% 2)start deceleration till end deceleration
-% 3)standstill (up to 2.6 seconds).
-% No phases needed for non-yielding
-% 1) start sound till past zebra crossing
+% Yielding
+% 1)start sound till start trigger range
+% 2)start trigger range till standstill location AV
+% 3)standstill location AV till at standstill for 2.6 s
 
+% Non-Yielding
+% 1)start sound till start trigger range
+% 2)start trigger range till AV past zebra crossing
 
 function t = getTimeV3(data, phase)
 % Correct distance eye-gaze
@@ -32,38 +32,26 @@ end
 pa_watch = corr_dis_pa2>0;
 pe_watch = corr_dis_pe2>0;
 t_eyeContact = pa_watch+pe_watch;
-% t.eyeContact.arr = t_eyeContact==2;
 t.eyeContact = sum(t_eyeContact==2)*data.dt;
 end
 
 %% Helper function
 function out = correctEyeGazeDistance(distance, posz)
-posz = posz-17.19;
-idxdis = find(distance>0);
-diff = distance(idxdis)-posz(idxdis);
+posz    = posz-17.19;
+idxdis  = find(distance>0);
+diff    = distance(idxdis)-posz(idxdis);
 distance(idxdis) = distance(idxdis) - diff;
-out = distance;
-% figure
-% hold on
-% plot(out)
-% plot(posz)
+out     = distance;
 end
 function t = calcPhaseGazeTimes(distance, idx, dt)
 if(size(idx,2)>2)
-% 1. start sound till start trigger
 t.phase1 = calcGazeTime(distance, dt, idx(1,1), idx(2,1));
-% 2. start deceleration till end deceleration
 t.phase2 = calcGazeTime(distance, dt, idx(1,2), idx(2,2));
-% 3. standstill (up to 2.6 seconds).
 t.phase3 = calcGazeTime(distance, dt, idx(1,3), idx(2,3));
-% 0. Full run
-t.full = calcGazeTime(distance, dt, idx(1,1), idx(2,3));
+t.full   = calcGazeTime(distance, dt, idx(1,1), idx(2,3));
 else
-    % 1. start sound till start trigger
     t.phase1 = calcGazeTime(distance, dt, idx(1,1), idx(2,1));
-    % 2. start deceleration till end deceleration
     t.phase2 = calcGazeTime(distance, dt, idx(1,2), idx(2,2));
-    % 0. Full run
-    t.full = calcGazeTime(distance, dt, idx(1,1), idx(2,2));
+    t.full   = calcGazeTime(distance, dt, idx(1,1), idx(2,2));
 end
 end

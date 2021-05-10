@@ -1,24 +1,23 @@
 %% Visualizee Pos Group
 % This script vizualizes the AV position separated by phases
 % Author: Johnson Mok
-% Last Updated: 10-02-2021
 
 function visualizePhasesGroupV2(data)
 %% data separate (Time not matched)
-visAllIndividualV2(data.borders, data.orgdata); % works
+visAllIndividualV2(data.borders, data.orgdata); 
 
-%% data grouped (Time matched)
-visAllIndividual(data.borders, data.grouped); 
-% visAllMean(data.borders, data.grouped); %--
+%% UNUSED: data grouped (Time matched)
+% visAllMean(data.borders, data.grouped); 
+
+% visAllIndividual(data.borders, data.grouped); 
 % visAllMeanV2(data.borders, data.grouped);
-
 
 end
 
 %% Helper functions
 function [labstr, drawPline, colour] = getLabel(con)
 if(strcmp(con,'ND_Y'))
-    labstr = 'No distraction - Yielding';
+    labstr = 'No Distraction - Yielding';
     drawPline = true;
     colour = [0, 0.4470, 0.7410];
 elseif(strcmp(con,'D_Y'))
@@ -26,11 +25,11 @@ elseif(strcmp(con,'D_Y'))
     drawPline = true;
     colour = [0.9290, 0.6940, 0.1250];
 elseif(strcmp(con,'D_NY'))
-    labstr = 'Distraction - No yielding';
+    labstr = 'Distraction - No Yielding';
     drawPline = false;
     colour = [0.4940, 0.1840, 0.5560];
 elseif(strcmp(con,'ND_NY'))
-    labstr = 'No distraction - No yielding';
+    labstr = 'No Distraction - No Yielding';
     drawPline = false;
     colour = [0.8500, 0.3250, 0.0980];
 end
@@ -89,7 +88,7 @@ for c=[1,3]
         subplot(3,1,m)
         a = visIndividualV2(borders, data, (fld_con{c}), (fld_map{m}));
         b = visIndividualV2(borders, data, (fld_con{c+1}), (fld_map{m}));
-        legend(a,b,'Location','southwest');
+        legend(a,b,'Location','southeast');
     end
 end
 end

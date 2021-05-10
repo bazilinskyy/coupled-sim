@@ -1,7 +1,6 @@
 %% Pre-processing
-% This script removes faulty data.
+% This script corrects faulty data.
 % Author: Johnson Mok
-% Last Updated: 18-12-2020
 
 function PostData = PreProcess(AllData)
 disp('Start removing faulty data.');
@@ -14,7 +13,7 @@ for j = 1:length(fields_ED)
         for idx = 1:length(fields_participants)
             fields_trials = fieldnames(AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}));
             for i = 1:length(fields_trials)
-                % Filter gapAcceptance
+                % Correct gapAcceptance
                 AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}).pe.gapAcceptance(AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}).pe.gapAcceptance<0) = 0;
             end
         end

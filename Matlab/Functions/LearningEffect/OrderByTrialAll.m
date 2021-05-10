@@ -1,7 +1,6 @@
 %% Order by trial all
 % Hierarchy: OrderByTrialAll -> OrderByTrial
 % Author: Johnson Mok
-% Last Updated: 24-02-2021
 
 function out = OrderByTrialAll(data)
 % Fill array

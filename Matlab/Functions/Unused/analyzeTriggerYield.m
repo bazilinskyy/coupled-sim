@@ -3,7 +3,6 @@
 % deceleration distance and standstill duration
 
 % Author: Johnson Mok
-% Last Updated: 03-03-2021
 
 function analyzeTriggerYield(data)
 data_yield = getGazeToYield(data);

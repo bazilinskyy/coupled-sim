@@ -1,9 +1,8 @@
-%% Filter wrongly executed trials 
+%% FilterLATY
 % This script checks whether the participants followed the instructions
-% correctly.
-% Hierarchy: FilterWrongExecutions -> filterWronglyExecuted
+% correctly in the LATY mapping.
+% Hierarchy: FilterWrongExecutions -> filterLATY
 % Author: Johnson Mok
-% Last Updated: 22-03-2021
 
 function correct = filterLATY(data, ED)
 % Define (non)yielding experiment definition numbers
