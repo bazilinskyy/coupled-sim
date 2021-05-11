@@ -24,11 +24,11 @@ subplot(1,2,2);
 plotUsefulnessVSsatisfyingErrorbarSingle(acpt_pe,'Pedestrian');
 
 %% Tables
-tableCron(acpt_pe, acpt_pa);
-tableMeanAllScoresAcceptance(acpt_pe, acpt_pa)
-tableTestStatistic(acpt_pa, 'Passenger');
-tableTestStatistic(acpt_pe, 'Pedestrian');
-tableFvalues(acpt_pe, acpt_pa, 5.849, 0.001); % input: critical F value, alpha
+% tableCron(acpt_pe, acpt_pa);
+% tableMeanAllScoresAcceptance(acpt_pe, acpt_pa)
+% tableTestStatistic(acpt_pa, 'Passenger');
+% tableTestStatistic(acpt_pe, 'Pedestrian');
+% tableFvalues(acpt_pe, acpt_pa, 5.849, 0.001); % input: critical F value, alpha
 
 end
 

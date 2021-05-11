@@ -35,14 +35,13 @@ D_D_Y = CohensD(out.SPSS.D_Y);
 D_ND_NY = CohensD(out.SPSS.ND_NY);
 D_ND_Y = CohensD(out.SPSS.ND_Y);
 
-%     writematrix(SPSS.ND_Y,'SPSS_DecisionCertainty_ND_Y.csv'); 
-%     writematrix(SPSS.ND_NY,'SPSS_DecisionCertainty_ND_NY.csv'); 
-%     writematrix(SPSS.D_Y,'SPSS_DecisionCertainty_D_Y.csv'); 
-%     writematrix(SPSS.D_NY,'SPSS_DecisionCertainty_D_NY.csv'); 
-    
-% SPSS_ANOVA = getDecisionCertaintySPSS_ANOVAMatrix(out.DC);
-%     writematrix(SPSS_ANOVA.yield,'SPSS_DCANOVA_Y.csv'); 
-%     writematrix(SPSS_ANOVA.noyield,'SPSS_DCANOVA_NY.csv'); 
+% Table
+out.StatisticalAnalysis_DC_D_NY = getTableTtest(t_D_NY);
+out.StatisticalAnalysis_DC_D_Y = getTableTtest(t_D_Y);
+out.StatisticalAnalysis_DC_ND_NY = getTableTtest(t_ND_NY);
+out.StatisticalAnalysis_DC_ND_Y = getTableTtest(t_ND_Y);
+
+out.StatisticalAnalysis_DC_Cohen = getTableCohen(D_D_NY, D_D_Y, D_ND_NY, D_ND_Y);
 
 %% Summing and smoothing gap acceptance values per variable combination
 out.sumGap = calcAllSumGapAcceptance(gapac);
@@ -351,7 +350,29 @@ s = std(data);
 D = m/s;
 out = [m, s, D];
 end
-
+function T = getTableTtest(data)
+% Get data
+GTY_base = ['t(',num2str(data(1,2)),') = ',num2str(data(1,1)),' p = ',num2str(num2str(data(1,3)))];
+LATY_base = ['t(',num2str(data(3,2)),') = ',num2str(data(3,1)),' p = ',num2str(num2str(data(3,3)))];
+GTY_LATY = ['t(',num2str(data(2,2)),') = ',num2str(data(2,1)),' p = ',num2str(num2str(data(2,3)))];
+% Create column data
+Mapping = {'Baseline';'GTY';'LATY'};
+Baseline = {'X';GTY_base;LATY_base};
+GTY = {'X';'X';GTY_LATY};
+LATY = {'X';'X';'X'};
+% Create Table
+T = table(Mapping, Baseline, GTY, LATY);
+end
+function T = getTableCohen(D_D_NY, D_D_Y, D_ND_NY, D_ND_Y)
+% Create column data
+Mapping = {'Baseline - GTY';'GTY - LATY';'Baseline - LATY'};
+D_NY = D_D_NY(:,3);
+D_Y = D_D_Y(:,3);
+ND_NY = D_ND_NY(:,3);
+ND_Y = D_ND_Y(:,3);
+% Create Table
+T = table(Mapping, D_NY, D_Y, ND_NY, ND_Y);
+end
 %% - old
 function out = calcSumGapAcceptance(data)
 fld = fieldnames(data);

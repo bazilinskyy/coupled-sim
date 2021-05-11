@@ -8,6 +8,7 @@ clear
 
 %% Settings before running this script
 ShowPlots  = true;
+showSA = true;
 
 %% Find questionnaire csv files
 Folder   = join([cd,'\Questionnaire_Data']); %cd
@@ -46,24 +47,27 @@ Acceptance_pe = AcceptanceVanDerLaan(Data_block_pe.mapping, Data_block_pe.accept
     SPSS_pa_S = [Acceptance_pa.par.S0,Acceptance_pa.par.S1,Acceptance_pa.par.S2];
     SPSS_pe_U = [Acceptance_pe.par.U0,Acceptance_pe.par.U1,Acceptance_pe.par.U2];
     SPSS_pe_S = [Acceptance_pe.par.S0,Acceptance_pe.par.S1,Acceptance_pe.par.S2];
-    writematrix(SPSS_pa_U,'SPSS_pa_U.csv'); 
-    writematrix(SPSS_pa_S,'SPSS_pa_S.csv'); 
-    writematrix(SPSS_pe_U,'SPSS_pe_U.csv'); 
-    writematrix(SPSS_pe_S,'SPSS_pe_S.csv'); 
     
-%% t-test
+%% Statistical analysis 
+% t-test
 t_pe_U = pairedSamplesttest(SPSS_pe_U);
 t_pe_S = pairedSamplesttest(SPSS_pe_S);
 t_pa_U = pairedSamplesttest(SPSS_pa_U);
 t_pa_S = pairedSamplesttest(SPSS_pa_S);
 
-
-%% Cohen's D
+% Cohen's D
 D_pa_U = CohensD(SPSS_pa_U);
 D_pa_S = CohensD(SPSS_pa_S);
 D_pe_U = CohensD(SPSS_pe_U);
 D_pe_S = CohensD(SPSS_pe_S);
 
+% Table
+StatisticalAnalysis_pe_U = getTableTtest(t_pe_U);
+StatisticalAnalysis_pe_S = getTableTtest(t_pe_S);
+StatisticalAnalysis_pa_U = getTableTtest(t_pa_U);
+StatisticalAnalysis_pa_S = getTableTtest(t_pa_S);
+
+StatisticalAnalysis_Cohen = getTableCohen(D_pe_U, D_pe_S, D_pa_U, D_pa_S);
 
 %% Comments
 comments_pa = matchWithMapping(Data_block_pa.mapping, Data_block_pa.otherRemark);
@@ -76,6 +80,15 @@ visualizeNoCategoryPostBlock(NoCat);
 visualizeAcceptance(Acceptance_pe, Acceptance_pa);
 end
 
+%% Display statistical analysis
+if showSA == true
+    % Pedestrian acceptance
+    disp("StatisticalAnalysis_pe_U:"); disp(StatisticalAnalysis_pe_U);
+    disp("StatisticalAnalysis_pe_S:"); disp(StatisticalAnalysis_pe_S);
+    disp("StatisticalAnalysis_pa_U:"); disp(StatisticalAnalysis_pa_U);
+    disp("StatisticalAnalysis_pa_S:"); disp(StatisticalAnalysis_pa_S);
+    disp("StatisticalAnalysis_Cohen:"); disp(StatisticalAnalysis_Cohen);
+end
 %% Help functions Post-block Questionnaire
 function data = convertDataBlock_Pa(input)
 data.Date                = input(:,1);
@@ -135,4 +148,27 @@ out = zeros(3,3);
 out(1,:) = [stats1.tstat, stats1.df, p1];
 out(2,:) = [stats2.tstat, stats2.df, p2];
 out(3,:) = [stats3.tstat, stats3.df, p3];
+end
+function T = getTableTtest(data)
+% Get data
+GTY_base = ['t(',num2str(data(1,2)),') = ',num2str(data(1,1)),' p = ',num2str(num2str(data(1,3)))];
+LATY_base = ['t(',num2str(data(3,2)),') = ',num2str(data(3,1)),' p = ',num2str(num2str(data(3,3)))];
+GTY_LATY = ['t(',num2str(data(2,2)),') = ',num2str(data(2,1)),' p = ',num2str(num2str(data(2,3)))];
+% Create column data
+Mapping = {'Baseline';'GTY';'LATY'};
+Baseline = {'X';GTY_base;LATY_base};
+GTY = {'X';'X';GTY_LATY};
+LATY = {'X';'X';'X'};
+% Create Table
+T = table(Mapping, Baseline, GTY, LATY);
+end
+function T = getTableCohen(D_D_NY, D_D_Y, D_ND_NY, D_ND_Y)
+% Create column data
+Mapping = {'Baseline - GTY';'GTY - LATY';'Baseline - LATY'};
+pe_U = D_D_NY(:,3);
+pe_S = D_D_Y(:,3);
+pa_U = D_ND_NY(:,3);
+pa_S = D_ND_Y(:,3);
+% Create Table
+T = table(Mapping, pe_U, pe_S, pa_U, pa_S);
 end

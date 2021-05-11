@@ -7,8 +7,9 @@ close all;
 
 %% Inputs
 createAnimation = false;
-showPlot = false;
-showWrong = false;
+showPlot = true;
+showWrong = true;
+showSA = true;
 
 %% Add path to functions
 addpath(genpath('Functions'));
@@ -102,3 +103,31 @@ if showPlot == true
     visualizeCrossingPerformance(crossPerformance);
     visualizeEyeContact(gazeTimeV2, crossPerformance)
 end
+
+%% Display statistical analysis
+if showSA == true
+    % Crossing performance
+    disp("StatisticalAnalysis_CrossingPerformance_D_NY:"); disp(crossPerformance.StatisticalAnalysis_CrossingPerformance_D_NY);
+    disp("StatisticalAnalysis_CrossingPerformance_D_Y:"); disp(crossPerformance.StatisticalAnalysis_CrossingPerformance_D_Y);
+    disp("StatisticalAnalysis_CrossingPerformance_ND_NY:"); disp(crossPerformance.StatisticalAnalysis_CrossingPerformance_ND_NY);
+    disp("StatisticalAnalysis_CrossingPerformance_ND_Y:"); disp(crossPerformance.StatisticalAnalysis_CrossingPerformance_ND_Y);
+    disp("StatisticalAnalysis_CrossingPerformance_Cohen:"); disp(crossPerformance.StatisticalAnalysis_CrossingPerformance_Cohen);
+
+    % Gaze yaw
+    disp("StatisticalAnalysis_yaw_D_NY:"); disp(peHeadAngleV2.StatisticalAnalysis_yaw_D_NY);
+    disp("StatisticalAnalysis_yaw_D_Y:"); disp(peHeadAngleV2.StatisticalAnalysis_yaw_D_Y);
+    disp("StatisticalAnalysis_yaw_ND_NY:"); disp(peHeadAngleV2.StatisticalAnalysis_yaw_ND_NY);
+    disp("StatisticalAnalysis_yaw_ND_Y:"); disp(peHeadAngleV2.StatisticalAnalysis_yaw_ND_Y);
+    disp("StatisticalAnalysis_yaw_Cohen:"); disp(peHeadAngleV2.StatisticalAnalysis_yaw_Cohen);
+    
+    % Decision certainty
+    disp("StatisticalAnalysis_DC_D_NY:"); disp(gapAcptV2.StatisticalAnalysis_DC_D_NY);
+    disp("StatisticalAnalysis_DC_D_Y:"); disp(gapAcptV2.StatisticalAnalysis_DC_D_Y);
+    disp("StatisticalAnalysis_DC_ND_NY:"); disp(gapAcptV2.StatisticalAnalysis_DC_ND_NY);
+    disp("StatisticalAnalysis_DC_ND_Y:"); disp(gapAcptV2.StatisticalAnalysis_DC_ND_Y);
+    disp("StatisticalAnalysis_DC_Cohen:"); disp(gapAcptV2.StatisticalAnalysis_DC_Cohen);
+    
+    disp("StatisticalAnalysis_Correlation_CrossingPerformance_DC"); disp(r.Correlation_crossPerformance_DC);
+end
+
+

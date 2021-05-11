@@ -60,7 +60,13 @@ t_D_Y = pairedSamplesttest(out.SPSS.D_Y);
 t_ND_NY = pairedSamplesttest(out.SPSS.ND_NY);
 t_ND_Y = pairedSamplesttest(out.SPSS.ND_Y);
 
+% Table
+out.StatisticalAnalysis_CrossingPerformance_D_NY = getTableTtest(t_D_NY);
+out.StatisticalAnalysis_CrossingPerformance_D_Y = getTableTtest(t_D_Y);
+out.StatisticalAnalysis_CrossingPerformance_ND_NY = getTableTtest(t_ND_NY);
+out.StatisticalAnalysis_CrossingPerformance_ND_Y = getTableTtest(t_ND_Y);
 
+out.StatisticalAnalysis_CrossingPerformance_Cohen = getTableCohen(D_D_NY, D_D_Y, D_ND_NY, D_ND_Y);
 end
 
 %% Helper function
@@ -163,7 +169,7 @@ for m = 1:length(fld_map)
 end
 end
 
-
+%% Statistical analysis functions
 function r = pearsonsR(performance, acceptance)
 x = [performance.map0.mean; performance.map1.mean; performance.map2.mean];
 y = [acceptance.map0(1); acceptance.map1(1); acceptance.map2(1)];
@@ -233,3 +239,26 @@ D = m/s;
 out = [m, s, D];
 end
 
+function T = getTableTtest(data)
+% Get data
+GTY_base = ['t(',num2str(data(1,2)),') = ',num2str(data(1,1)),' p = ',num2str(num2str(data(1,3)))];
+LATY_base = ['t(',num2str(data(3,2)),') = ',num2str(data(3,1)),' p = ',num2str(num2str(data(3,3)))];
+GTY_LATY = ['t(',num2str(data(2,2)),') = ',num2str(data(2,1)),' p = ',num2str(num2str(data(2,3)))];
+% Create column data
+Mapping = {'Baseline';'GTY';'LATY'};
+Baseline = {'X';GTY_base;LATY_base};
+GTY = {'X';'X';GTY_LATY};
+LATY = {'X';'X';'X'};
+% Create Table
+T = table(Mapping, Baseline, GTY, LATY);
+end
+function T = getTableCohen(D_D_NY, D_D_Y, D_ND_NY, D_ND_Y)
+% Create column data
+Mapping = {'Baseline - GTY';'GTY - LATY';'Baseline - LATY'};
+D_NY = D_D_NY(:,3);
+D_Y = D_D_Y(:,3);
+ND_NY = D_ND_NY(:,3);
+ND_Y = D_ND_Y(:,3);
+% Create Table
+T = table(Mapping, D_NY, D_Y, ND_NY, ND_Y);
+end
