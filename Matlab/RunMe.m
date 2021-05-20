@@ -7,9 +7,10 @@ close all;
 
 %% Inputs
 createAnimation = false;
+createAnimationLaserCheck = true;
 showPlot = false;
 showWrong = false;
-showSA = true;
+showSA = false;
 
 %% Add path to functions
 addpath(genpath('Functions'));
@@ -78,33 +79,34 @@ gazeTimeV2  = analyzeGazeTimeV2(timesgroupV2, trialorder);
 gapAcptV2   = analyzeGapAcceptance(gapgroup, rbvgroup, pasposgroup, phasesgroupV2, trialorder);
 phaseDataV2 = analyzePhasesGroup(phasesgroupV2);
 learnEffect = analyzeLearningEffect(gapOrderGroup);
-% peHeadAngleV2 = analyzePedestrianGazeAngleV2(pe_gazeOrg, pe_gazeDir, phasesgroupV2, trialorder);
 peHeadAngleV2 = analyzePedestrianGazeAngleV2(pe_world_gazeOrg, pe_world_gazeDir, phasesgroupV2, trialorder);
-% paHeadAngle = analyzeDriverGazeAngle(pa_gazeOrg, pa_gazeDir, phasesgroupV2, trialorder);
 paHeadAngle = analyzeDriverGazeAngle(pa_world_gazeOrg, pa_world_gazeDir, phasesgroupV2, trialorder);
 
 crossPerformance = crossingPerformance(gapAcptV2, Acceptance_pa, Acceptance_pe, trialorder);
 r = correlationPerformance(crossPerformance.SPSS, gapAcptV2.SPSS);
-%%
+%% 3D line intersection
 PeGazeAtAV = GazeAtAVAll(pe_dis_group);
 [GazeLaser_dis,GazeLaser_ind] = GazeAtLaserAll(pe_world_gazeOrg, pe_world_gazeDir, pa_world_gazeOrg, pa_world_gazeDir, pasposgroup);
 
+%% 2D line intersection
+clc; close all;
+intersect2D = GazeAtLaser2D(PreDataV3);
+
 %% Animation
+% Note: Must be in rootfolder
 % Modify 'trialAnimate' to change the trial to animate
 % Modify the 'videoname' AND 'titlestr' accordingly.
-clc
-close all
+
 if createAnimation == true
-    videoname = 'ED_4_participant_1_trial_0_VE1.avi';
-    titlestr = 'GTY - Yielding';
-    trialAnimate = PreDataV3.Data_ED_4.HostFixedTimeLog.participant_1.trial_0;
-    pedestrianGaze = trialAnimate.pe.world;
-    pedestrianGAP = trialAnimate.pe.gapAcceptance;
-    passengerGaze = trialAnimate.pa.world;
-    passengerLook = trialAnimate.pa.distance;
-    animateTrial(pedestrianGaze.gaze_origin, pedestrianGaze.gaze_dir, pedestrianGAP,...
-        passengerGaze.gaze_origin, passengerGaze.gaze_dir,...
-        passengerLook, videoname, titlestr);
+    clc
+    close all
+    InputTrial(PreDataV3.Data_ED_4.HostFixedTimeLog.participant_1.trial_0, 'ED_4_participant_1_trial_0_VE1.avi', 'GTY - Yielding');
+end
+
+if createAnimationLaserCheck == true
+    clc
+    close all
+    AnimateAllTrials(PreDataV3,intersect2D);
 end
 
 %% Visualize data
@@ -118,9 +120,6 @@ if showPlot == true
     visualizeCrossingPerformance(crossPerformance);
     visualizeEyeContact(gazeTimeV2, crossPerformance);
 end
-clc; close all;
-    visualizeHeadAngle(peHeadAngleV2);
-    visualizeHeadAngle_Driver(paHeadAngle);
 %% Display statistical analysis
 if showSA == true
     % Crossing performance
