@@ -32,9 +32,11 @@ h = barh(X,[MISC_pa; MISC_pe]);
 set(h, {'DisplayName'},{'passenger','pedestrian',}')
 a = get(gca,'YTickLabel');
 set(gca,'YTickLabel',a,'FontSize',18,'FontWeight','bold');
+xticks(0:1:25);
 title('MISC Score Frequency','FontSize',18,'FontWeight','bold'); 
 xlabel('Number of participants','FontSize',18,'FontWeight','bold'); 
 legend(); grid on;
+
 end
 function plotMISCMeanError(mean0, mean1, mean2, std0, std1, std2, role)
 % Data prep

@@ -285,8 +285,9 @@ subplot(1,3,1);
 X = categorical(driveFreq_name_pa);
 X = reordercats(X,driveFreq_name_pa);
 h = bar(X,[driveFreq_pa; driveFreq_pe]);
+yticks(0:1:5);
 set(h, {'DisplayName'},{'passenger','pedestrian',}')
-title('Driving frequency'); ylabel('Number of participants'); legend();
+title('Driving frequency'); ylabel('Number of participants'); legend('location','northwest');
 grid on;
 ax=gca; ax.FontSize = 15;
 
