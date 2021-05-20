@@ -7,8 +7,8 @@ close all;
 
 %% Inputs
 createAnimation = false;
-showPlot = true;
-showWrong = true;
+showPlot = false;
+showWrong = false;
 showSA = true;
 
 %% Add path to functions
@@ -57,12 +57,17 @@ timesV2     = CalcTimeV2(PreDataV3, PreData, phasesV2);
 %% Create grouped data
 timesgroupV2	= createGroupData(timesV2, 'time');
 gapgroup        = createGroupData(PreDataV3, 'gap');
+pe_dis_group    = createGroupData(PreDataV3, 'pe_distance');
 rbvgroup        = createGroupData(PreDataV3, 'rb_v');
 pasposgroup     = createGroupData(PreDataV3, 'pa_pos');
 phasesgroupV2	= createGroupData(phasesV2, 'phases');
 pe_gazeDir      = createGroupData(PreDataV3, 'HMDgaze_dir');
 pe_gazeOrg      = createGroupData(PreDataV3, 'HMDgaze_org');
 participantTrialGroup = createGroupData(PreDataV3, 'trialorder');
+pa_world_gazeDir	= createGroupData(PreDataV3, 'pa_world_gaze_dir');
+pa_world_gazeOrg	= createGroupData(PreDataV3, 'pa_world_gaze_org');
+pe_world_gazeDir	= createGroupData(PreDataV3, 'pe_world_gaze_dir');
+pe_world_gazeOrg	= createGroupData(PreDataV3, 'pe_world_gaze_org');
 gapOrderGroup	= OrderByTrialAll(PreDataV3);
 
 %% Analyze data
@@ -74,6 +79,9 @@ learnEffect = analyzeLearningEffect(gapOrderGroup);
 peHeadAngleV2 = analyzePedestrianGazeAngleV2(pe_gazeOrg, pe_gazeDir, phasesgroupV2, trialorder);
 crossPerformance = crossingPerformance(gapAcptV2, Acceptance_pa, Acceptance_pe, trialorder);
 r = correlationPerformance(crossPerformance.SPSS, gapAcptV2.SPSS);
+%%
+PeGazeAtAV = GazeAtAVAll(pe_dis_group);
+[GazeLaser_dis,GazeLaser_ind] = GazeAtLaserAll(pe_world_gazeOrg, pe_world_gazeDir, pa_world_gazeOrg, pa_world_gazeDir, pasposgroup);
 
 %% Animation
 % Modify 'trialAnimate' to change the trial to animate
@@ -101,8 +109,10 @@ if showPlot == true
     visualizeHeadAngle(peHeadAngleV2);
     visualizePhasesGroupV2(phaseDataV2);
     visualizeCrossingPerformance(crossPerformance);
-    visualizeEyeContact(gazeTimeV2, crossPerformance)
+    visualizeEyeContact(gazeTimeV2, crossPerformance);
 end
+clc; close all;
+    visualizeCrossingPerformance(crossPerformance);
 
 %% Display statistical analysis
 if showSA == true
