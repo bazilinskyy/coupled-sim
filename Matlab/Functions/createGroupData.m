@@ -36,6 +36,14 @@ for j = 1:length(fields_ED)
             output.(fields_ED{j}).(fields_time{k}).x = {}; %
             output.(fields_ED{j}).(fields_time{k}).y = {}; %
             output.(fields_ED{j}).(fields_time{k}).z = {}; %
+        elseif(strcmp(var,'HMDgaze_dir_pa'))
+            output.(fields_ED{j}).(fields_time{k}).x = {}; %
+            output.(fields_ED{j}).(fields_time{k}).y = {}; %
+            output.(fields_ED{j}).(fields_time{k}).z = {}; %
+        elseif(strcmp(var,'HMDgaze_org_pa'))
+            output.(fields_ED{j}).(fields_time{k}).x = {}; %
+            output.(fields_ED{j}).(fields_time{k}).y = {}; %
+            output.(fields_ED{j}).(fields_time{k}).z = {}; %
         elseif(strcmp(var,'trialorder'))
             output.(fields_ED{j}) = {}; %
         elseif(strcmp(var,'pa_world_gaze_dir'))
@@ -150,6 +158,18 @@ for j = 1:length(fields_ED)
                     fld_dir = fieldnames(AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}).pe.HMD.gaze_origin);
                     for d=1:length(fld_dir)
                         output.(fields_ED{j}).(fields_time{k}).(fld_dir{d})(end+1,:) = {AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}).pe.HMD.gaze_origin.(fld_dir{d})};
+                    end
+                end
+                if(strcmp(var,'HMDgaze_dir_pa'))
+                    fld_dir = fieldnames(AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}).pa.HMD.gaze_dir);
+                    for d=1:length(fld_dir)
+                        output.(fields_ED{j}).(fields_time{k}).(fld_dir{d})(end+1,:) = {AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}).pa.HMD.gaze_dir.(fld_dir{d})};
+                    end
+                end
+                if(strcmp(var,'HMDgaze_org_pa'))
+                    fld_dir = fieldnames(AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}).pa.HMD.gaze_origin);
+                    for d=1:length(fld_dir)
+                        output.(fields_ED{j}).(fields_time{k}).(fld_dir{d})(end+1,:) = {AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}).pa.HMD.gaze_origin.(fld_dir{d})};
                     end
                 end
                 if(strcmp(var,'trialorder'))

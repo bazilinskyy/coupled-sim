@@ -3,7 +3,7 @@
 % 90-180 is left side of the pedestrian
 % Author: Johnson Mok
 
-function out = analyzePedestrianGazeAngleV2(origin, dir, phases, trialorder)
+function out = analyzeDriverGazeAngle(origin, dir, phases, trialorder)
 origin_p = getAllPhase(origin,phases);
 dir_p = getAllPhase(dir,phases);
     
@@ -26,7 +26,7 @@ out.ind = calcGroupCountsInd(org_ind);
 
 
 %% Statistical analysis
-anglePP = meanAnglePerPerson(org_ind, trialorder); 
+anglePP = meanAnglePerPerson(org_ind, trialorder);
 SPSS = SPSSmatrix(anglePP);
 D_D_NY = CohensD(SPSS.D_NY);
 D_D_Y = CohensD(SPSS.D_Y);
@@ -53,7 +53,7 @@ function out = getPhase(data,idx)
 fld_xyz = fieldnames(data);
 for a=1:length(fld_xyz)
     for i=1:length(idx)
-        data.(fld_xyz{a}){i} = data.(fld_xyz{a}){i}(idx{i}(1,1):idx{i}(2,size(idx{1},2)));
+        data.(fld_xyz{a}){i} = data.(fld_xyz{a}){i}(idx{i}(1,2):idx{i}(2,size(idx{1},2))); %data.(fld_xyz{a}){i}(idx{i}(1,2):idx{i}(2,2));
         data.(fld_xyz{a}){i}(data.(fld_xyz{a}){i} == -1) = NaN;
     end
 end
@@ -75,8 +75,7 @@ for i=1:length(origin.x)
     z1 = origin.z{i};
     x2 = x1+dir.x{i};
     z2 = z1+dir.z{i};
-    angle{i} = atan2d(z2-z1,x2-x1)+90;
-end
+    angle{i} = atan2d(z2-z1,x2-x1)+180;
     %% debug
     if(false)
     figure
@@ -91,6 +90,7 @@ end
     plot(angle{i});
     yline(mean(angle{i},'omitnan'));
     end
+end
 out=angle;
 end
 function out = calcAllAngle(origin, dir)

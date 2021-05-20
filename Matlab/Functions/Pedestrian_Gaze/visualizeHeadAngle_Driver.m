@@ -2,10 +2,11 @@
 % Author: Johnson Mok
 % Last Updated: 24-02-2020
 
-function visualizeHeadAngle(data)
-% visAllAngle(data.all);
-visAllAngle(data.mean);
-% visAllAngle(data.index);
+function visualizeHeadAngle_Driver(data)
+% visAllAngle(data.all); % Visualisation of all the angles
+visAllAngle(data.mean); % Visualisation of the mean angles
+% visAllAngle(data.index); % Visualisation of the mean angles
+
 % visAllAngleV2(data.ind);
 end
 
@@ -42,7 +43,7 @@ title(titlestr{c},'FontSize',15,'FontWeight','bold');
 xlim(set90InMid(data.(fld_map{1}).val,data.(fld_map{2}).val,data.(fld_map{3}).val));
 % ylim([0 30]);
 grid on;
-legend('baseline','Gaze to yield', 'Look away to yield');
+legend('baseline','Gaze to yield', 'Look away to yield','location','northwest');
 end
 
 function visAllAngle(data)

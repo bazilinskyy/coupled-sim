@@ -63,6 +63,8 @@ pasposgroup     = createGroupData(PreDataV3, 'pa_pos');
 phasesgroupV2	= createGroupData(phasesV2, 'phases');
 pe_gazeDir      = createGroupData(PreDataV3, 'HMDgaze_dir');
 pe_gazeOrg      = createGroupData(PreDataV3, 'HMDgaze_org');
+pa_gazeDir      = createGroupData(PreDataV3, 'HMDgaze_dir_pa');
+pa_gazeOrg      = createGroupData(PreDataV3, 'HMDgaze_org_pa');
 participantTrialGroup = createGroupData(PreDataV3, 'trialorder');
 pa_world_gazeDir	= createGroupData(PreDataV3, 'pa_world_gaze_dir');
 pa_world_gazeOrg	= createGroupData(PreDataV3, 'pa_world_gaze_org');
@@ -76,7 +78,11 @@ gazeTimeV2  = analyzeGazeTimeV2(timesgroupV2, trialorder);
 gapAcptV2   = analyzeGapAcceptance(gapgroup, rbvgroup, pasposgroup, phasesgroupV2, trialorder);
 phaseDataV2 = analyzePhasesGroup(phasesgroupV2);
 learnEffect = analyzeLearningEffect(gapOrderGroup);
-peHeadAngleV2 = analyzePedestrianGazeAngleV2(pe_gazeOrg, pe_gazeDir, phasesgroupV2, trialorder);
+% peHeadAngleV2 = analyzePedestrianGazeAngleV2(pe_gazeOrg, pe_gazeDir, phasesgroupV2, trialorder);
+peHeadAngleV2 = analyzePedestrianGazeAngleV2(pe_world_gazeOrg, pe_world_gazeDir, phasesgroupV2, trialorder);
+% paHeadAngle = analyzeDriverGazeAngle(pa_gazeOrg, pa_gazeDir, phasesgroupV2, trialorder);
+paHeadAngle = analyzeDriverGazeAngle(pa_world_gazeOrg, pa_world_gazeDir, phasesgroupV2, trialorder);
+
 crossPerformance = crossingPerformance(gapAcptV2, Acceptance_pa, Acceptance_pe, trialorder);
 r = correlationPerformance(crossPerformance.SPSS, gapAcptV2.SPSS);
 %%
@@ -107,13 +113,14 @@ if showPlot == true
     visualizeGapAcceptanceV2(gapAcptV2, phaseDataV2);
     visualizeLearnEffect(learnEffect);
     visualizeHeadAngle(peHeadAngleV2);
+    visualizeHeadAngle_Driver(paHeadAngle);
     visualizePhasesGroupV2(phaseDataV2);
     visualizeCrossingPerformance(crossPerformance);
     visualizeEyeContact(gazeTimeV2, crossPerformance);
 end
 clc; close all;
-    visualizeCrossingPerformance(crossPerformance);
-
+    visualizeHeadAngle(peHeadAngleV2);
+    visualizeHeadAngle_Driver(paHeadAngle);
 %% Display statistical analysis
 if showSA == true
     % Crossing performance
