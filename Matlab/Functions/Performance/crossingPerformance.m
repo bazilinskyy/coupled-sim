@@ -25,11 +25,12 @@ out.score.D_NY = pressIsNegative(data.phasesPer.D_NY, buttonPerTrial.D_NY);
 buttonPerTrialWithoutStart = sumButtonPressPerTrialWithoutStart(data);
 out.buttonPerPersonWithoutStart = meanButtonPerPerson(buttonPerTrialWithoutStart, trialorder);
 
-out.score2.ND_Y = pressIsPositiveWithoutStart(data.phasesPer.ND_Y, buttonPerTrialWithoutStart.ND_Y);
-out.score2.ND_NY = pressIsNegativeWithoutStart(data.phasesPer.ND_NY, buttonPerTrialWithoutStart.ND_NY);
+out.score2.ND_Y = pressIsPositiveWithoutStart(data.phasesPer.ND_Y, out.buttonPerPersonWithoutStart.ND_Y);
+out.score2.ND_NY = pressIsNegativeWithoutStart(data.phasesPer.ND_NY, out.buttonPerPersonWithoutStart.ND_NY);
 % out.score2.D_Y = pressIsNegativeWithoutStart(data.phasesPer.D_Y, buttonPerTrialWithoutStart.D_Y);
-out.score2.D_Y = pressIsDYWithoutStart(data.phasesPer.D_Y, buttonPerTrialWithoutStart.D_Y);
-out.score2.D_NY = pressIsNegativeWithoutStart(data.phasesPer.D_NY, buttonPerTrialWithoutStart.D_NY);
+out.score2.D_Y = pressIsDYWithoutStart(data.phasesPer.D_Y, out.buttonPerPersonWithoutStart.D_Y);
+out.score2.D_NY = pressIsNegativeWithoutStart(data.phasesPer.D_NY, out.buttonPerPersonWithoutStart.D_NY);
+out.Mean_score2 = meanAllPerMapping(out.score2);
 
 out.acpt.map0 = acpt_pe.MeanStd_0;
 out.acpt.map1 = acpt_pe.MeanStd_1;
@@ -169,6 +170,12 @@ for m = 1:length(fld_map)
 end
 end
 
+function out = meanAllPerMapping(data)
+data_map0 = mean([data.D_NY.map0.mean, data.D_Y.map0.mean, data.ND_NY.map0.mean, data.ND_Y.map0.mean]);
+data_map1 = mean([data.D_NY.map1.mean, data.D_Y.map1.mean, data.ND_NY.map1.mean, data.ND_Y.map1.mean]);
+data_map2 = mean([data.D_NY.map2.mean, data.D_Y.map2.mean, data.ND_NY.map2.mean, data.ND_Y.map2.mean]);
+out = [data_map0; data_map1; data_map2];
+end
 %% Statistical analysis functions
 function r = pearsonsR(performance, acceptance)
 x = [performance.map0.mean; performance.map1.mean; performance.map2.mean];
