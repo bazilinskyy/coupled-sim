@@ -417,7 +417,7 @@ namespace UnityStandardAssets.Utility.Inspector
                 {
                     bool res = false;
                     f = defaultValue;
-                    if (line.Length > lineCursor && !string.IsNullOrWhiteSpace(line[lineCursor])
+                    if (line.Length > lineCursor && !string.IsNullOrWhiteSpace(line[lineCursor]))
                     {
                         res = float.TryParse(line[lineCursor], out f);
                     }
@@ -429,7 +429,7 @@ namespace UnityStandardAssets.Utility.Inspector
                 {
                     bool res = false;
                     b = defaultValue;
-                    if (line.Length > lineCursor && !string.IsNullOrWhiteSpace(line[lineCursor])
+                    if (line.Length > lineCursor && !string.IsNullOrWhiteSpace(line[lineCursor]))
                     {
                         res = bool.TryParse(line[lineCursor], out b);
                     }
@@ -441,7 +441,7 @@ namespace UnityStandardAssets.Utility.Inspector
                 {
                     bool res = false;
                     b = defaultValue;
-                    if (line.Length > lineCursor && !string.IsNullOrWhiteSpace(line[lineCursor])
+                    if (line.Length > lineCursor && !string.IsNullOrWhiteSpace(line[lineCursor]))
                     {
                         res = int.TryParse(line[lineCursor], out b);
                     }
