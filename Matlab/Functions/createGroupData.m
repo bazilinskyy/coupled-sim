@@ -62,6 +62,10 @@ for j = 1:length(fields_ED)
             output.(fields_ED{j}).(fields_time{k}).x = {}; %
             output.(fields_ED{j}).(fields_time{k}).y = {}; %
             output.(fields_ED{j}).(fields_time{k}).z = {}; %
+        elseif(strcmp(var,'di_pas'))
+            output.(fields_ED{j}).(fields_time{k}).x = {}; %
+            output.(fields_ED{j}).(fields_time{k}).y = {}; %
+            output.(fields_ED{j}).(fields_time{k}).z = {}; %
         end
         
         for idx = 1:length(fields_participants)
@@ -197,6 +201,18 @@ for j = 1:length(fields_ED)
                     fld_dir = fieldnames(AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}).pe.HMD.gaze_origin);
                     for d=1:length(fld_dir)
                         output.(fields_ED{j}).(fields_time{k}).(fld_dir{d})(end+1,:) = {AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}).pe.world.gaze_origin.(fld_dir{d})};
+                    end
+                end
+                if(strcmp(var,'di_pas'))
+                    if(~isstruct(AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}).diAV))
+                        output.(fields_ED{j}).(fields_time{k}).x = NaN;
+                        output.(fields_ED{j}).(fields_time{k}).y = NaN;
+                        output.(fields_ED{j}).(fields_time{k}).z = NaN;
+                    else
+                        fld_dir = fieldnames(AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}).diAV.pos);
+                        for d=1:length(fld_dir)
+                            output.(fields_ED{j}).(fields_time{k}).(fld_dir{d})(end+1,:) = {AllData.(fields_ED{j}).(fields_time{k}).(fields_participants{idx}).(fields_trials{i}).diAV.pos.(fld_dir{d})};
+                        end
                     end
                 end
             end

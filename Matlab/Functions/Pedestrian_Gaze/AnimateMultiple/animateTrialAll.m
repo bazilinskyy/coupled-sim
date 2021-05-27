@@ -20,8 +20,8 @@ dirP = DirectionViewPoint(org,dir,50);
 padir = RemoveNoTracking(pagazedir);
 paorg = RemoveNoTracking(pagazeorg);
 padirP = DirectionViewPoint(paorg,padir,50);
-[startstop, endstop, endPhase3] = findStandstill(paorg);
-[PatchAni,xp] = getPatchAni(paorg.z, startstop, endstop, endPhase3);
+% [startstop, endstop, endPhase3] = findStandstill(paorg);
+% [PatchAni,xp] = getPatchAni(paorg.z, startstop, endstop, endPhase3);
 % Passenger gaze distance
 paLook(paLook == -1) = NaN;
 % Other
@@ -61,17 +61,7 @@ title(titlestr,'FontSize',15,'FontWeight','bold');
 grid on;
 zlabel('Distance from pedestrian in [m]','FontSize',12,'FontWeight','bold');
 axis manual %// this line freezes the axes
-for i=1:size(PatchAni,1)
-     patch('XData', xp, 'YData', zeros(4,1), 'ZData', PatchAni(i,:),...
-         'FaceColor',[0.9-i/10 0.9-i/10 0.9-i/10]);
-     alpha(0.4);
-end
-
-%% Phases
-text(-100,0,76.94,'(phase 1)','HorizontalAlignment','right','VerticalAlignment','top');
-text(-100,0,42.19,'(phase 2)','HorizontalAlignment','right','VerticalAlignment','top');
-text(-100,0,paorg.z(startstop),'(phase 3)','HorizontalAlignment','right','VerticalAlignment','top');
-
+alpha(0.4);
 
 %% Pedestrian looking at laser
 subplot(2,2,[2 4]) 

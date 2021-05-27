@@ -185,7 +185,7 @@ fld_con = fieldnames(data);
 for c=1:length(fld_con)
     fld_map = fieldnames(data.(fld_con{c}));
     for m=1:length(fld_map)
-        [freq, out.(fld_con{c}).(fld_map{m}).val] = groupcounts(round(data.(fld_con{c}).(fld_map{m})/5)*5); %groupcounts(round(data.(fld_con{c}).(fld_map{m}),0));
+        [freq, out.(fld_con{c}).(fld_map{m}).val] = groupcounts(round(data.(fld_con{c}).(fld_map{m})/1)*1); %groupcounts(round(data.(fld_con{c}).(fld_map{m}),0));
         out.(fld_con{c}).(fld_map{m}).freq = 100*freq/length(data.(fld_con{c}).(fld_map{m}));
     end
 end

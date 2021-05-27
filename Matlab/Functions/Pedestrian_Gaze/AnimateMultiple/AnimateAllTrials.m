@@ -7,10 +7,10 @@ function AnimateAllTrials(data,intersect)
 fld_ED = fieldnames(data);
 for ed=1:length(fld_ED)
     fld_part = fieldnames(data.(fld_ED{ed}).HostFixedTimeLog);
-    part_chosen = round(rand(1,2)*length(fld_part)); % randomly select 2 participants
+    part_chosen = ceil(rand(1,2)*(length(fld_part)-1)); % randomly select 2 participants
     for p=part_chosen %1:length(fld_part)
         fld_trial = fieldnames(data.(fld_ED{ed}).HostFixedTimeLog.(fld_part{p}));
-        trial_chosen = round(rand(1,1)*length(fld_trial)); % randomly select 1 trial
+        trial_chosen = ceil(rand(1,1)*(length(fld_trial)-1)); % randomly select 1 trial
         for tr= trial_chosen %1:length(fld_trial)
             input = data.(fld_ED{ed}).HostFixedTimeLog.(fld_part{p}).(fld_trial{tr});
             int2D = intersect.(fld_ED{ed}).HostFixedTimeLog.(fld_part{p}).(fld_trial{tr});

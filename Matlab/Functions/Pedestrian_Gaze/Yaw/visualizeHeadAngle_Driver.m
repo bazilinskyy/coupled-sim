@@ -3,8 +3,8 @@
 % Last Updated: 24-02-2020
 
 function visualizeHeadAngle_Driver(data)
-% visAllAngle(data.all); % Visualisation of all the angles
-visAllAngle(data.mean); % Visualisation of the mean angles
+visAllAngle(data.all); % Visualisation of all the angles
+% visAllAngle(data.mean); % Visualisation of the mean angles
 % visAllAngle(data.index); % Visualisation of the mean angles
 
 % visAllAngleV2(data.ind);
@@ -30,20 +30,27 @@ data = dat.(fld_con{c});
 titlestr = {'No Distraction - Yielding', 'No Distraction - No Yielding',...
     'Distraction - Yielding', 'Distraction - No Yielding'};
 fld_map = fieldnames(data);
+
+% Largest value
+maxvals = max([max(data.(fld_map{1}).freq); max(data.(fld_map{2}).freq); max(data.(fld_map{3}).freq)]);
+
 hold on
 for m=1:length(fld_map)
     plot(data.(fld_map{m}).val, data.(fld_map{m}).freq,'LineWidth',2);
 end
 xline(90,'--');
 xlabel('Degrees','FontSize',15,'FontWeight','bold');
-ylabel({'Percentage of time';'looking in [%]'},'FontSize',15,'FontWeight','bold');
+ylabel({'Percentage of yaw';'occurence [%]'},'FontSize',15,'FontWeight','bold');
 set(gca, 'XDir','reverse')
 set(gca,'FontSize',15);
 title(titlestr{c},'FontSize',15,'FontWeight','bold');
-xlim(set90InMid(data.(fld_map{1}).val,data.(fld_map{2}).val,data.(fld_map{3}).val));
-% ylim([0 30]);
+% xlim(set90InMid(data.(fld_map{1}).val,data.(fld_map{2}).val,data.(fld_map{3}).val));
+xticks([-180:45:180])
+xlim([-10 190]);
+yticks(0:1:ceil(maxvals));
+ylim([0 ceil(maxvals)]);
 grid on;
-legend('baseline','Gaze to yield', 'Look away to yield','location','northwest');
+legend('baseline','GTY', 'LATY','location','northwest');
 end
 
 function visAllAngle(data)

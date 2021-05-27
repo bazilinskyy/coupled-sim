@@ -7,7 +7,8 @@ close all;
 
 %% Inputs
 createAnimation = false;
-createAnimationLaserCheck = true;
+createAnimationLaserCheck = false;
+createAnimationCombined = true;
 showPlot = false;
 showWrong = false;
 showSA = false;
@@ -72,6 +73,7 @@ pa_world_gazeOrg	= createGroupData(PreDataV3, 'pa_world_gaze_org');
 pe_world_gazeDir	= createGroupData(PreDataV3, 'pe_world_gaze_dir');
 pe_world_gazeOrg	= createGroupData(PreDataV3, 'pe_world_gaze_org');
 gapOrderGroup	= OrderByTrialAll(PreDataV3);
+di_pos = createGroupData(PreDataV3, 'di_pas');
 
 %% Analyze data
 trialorder  = analyzeTrialOrder(participantTrialGroup);
@@ -84,6 +86,7 @@ paHeadAngle = analyzeDriverGazeAngle(pa_world_gazeOrg, pa_world_gazeDir, phasesg
 
 crossPerformance = crossingPerformance(gapAcptV2, Acceptance_pa, Acceptance_pe, trialorder);
 r = correlationPerformance(crossPerformance.SPSS, gapAcptV2.SPSS);
+
 %% 3D line intersection
 PeGazeAtAV = GazeAtAVAll(pe_dis_group);
 [GazeLaser_dis,GazeLaser_ind] = GazeAtLaserAll(pe_world_gazeOrg, pe_world_gazeDir, pa_world_gazeOrg, pa_world_gazeDir, pasposgroup);
@@ -97,16 +100,22 @@ intersect2D = GazeAtLaser2D(PreDataV3);
 % Modify 'trialAnimate' to change the trial to animate
 % Modify the 'videoname' AND 'titlestr' accordingly.
 
-if createAnimation == true
+if createAnimation == true % Animation for one trial
     clc
     close all
     InputTrial(PreDataV3.Data_ED_4.HostFixedTimeLog.participant_1.trial_0, 'ED_4_participant_1_trial_0_VE1.avi', 'GTY - Yielding');
 end
 
-if createAnimationLaserCheck == true
+if createAnimationLaserCheck == true % Animation for randomly selected trials
     clc
     close all
     AnimateAllTrials(PreDataV3,intersect2D);
+end
+
+if createAnimationCombined == true % Animation for all trials (per condition and mapping) in one figure.
+   clc
+   close all
+   AnimateCombined(pa_world_gazeDir, pa_world_gazeOrg, pe_world_gazeDir, pe_world_gazeOrg, di_pos);
 end
 
 %% Visualize data
@@ -120,6 +129,9 @@ if showPlot == true
     visualizeCrossingPerformance(crossPerformance);
     visualizeEyeContact(gazeTimeV2, crossPerformance);
 end
+% close all; clc;
+%     visualizeHeadAngle(peHeadAngleV2);
+
 %% Display statistical analysis
 if showSA == true
     % Crossing performance

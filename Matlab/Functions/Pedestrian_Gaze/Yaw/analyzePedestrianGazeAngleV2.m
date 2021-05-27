@@ -6,11 +6,12 @@
 function out = analyzePedestrianGazeAngleV2(origin, dir, phases, trialorder)
 origin_p = getAllPhase(origin,phases);
 dir_p = getAllPhase(dir,phases);
-    
+
 angles = calcAllAngle(origin_p, dir_p);             % calc angle
 meanAngles = calcAllMeanAngle(angles);              % calc mean angle per trial
 meanAnglesIndex = calcAllMeanAngleIndex(angles);    % calc the mean angle corresponding to the index
 angles_all = combineAngles(angles);                 % put all angles per ED into one array
+anglePerPhase = getPerPhase(angles,phases);
 
 org_angles_all = getOrganizedDY(angles_all);
 out.all = calcGroupCounts(org_angles_all);
@@ -24,6 +25,8 @@ out.index = calcGroupCountsIndex(org_index);
 org_ind = getOrganizedDY(angles);
 out.ind = calcGroupCountsInd(org_ind);
 
+org_anglePerPhase = getOrganizedDY(anglePerPhase);
+out.anglePerPhaseMat = combineCellsToMatrix(org_anglePerPhase);
 
 %% Statistical analysis
 anglePP = meanAnglePerPerson(org_ind, trialorder); 
@@ -65,6 +68,41 @@ for ed=1:length(fld_ED)
     out.(fld_ED{ed}) = getPhase(data.(fld_ED{ed}).HostFixedTimeLog, phase.(fld_ED{ed}).HostFixedTimeLog.idx);
 end
 
+end
+
+function out = getPerPhase(angle,phases)
+% phase.ed.time.idx{i}
+% angle.ed{i}
+fld_ed = fieldnames(angle);
+for ed=1:length(fld_ed)
+    for i =1:length(angle.(fld_ed{ed}))
+        ID = phases.(fld_ed{ed}).HostFixedTimeLog.idx{i};
+        out.(fld_ed{ed}).ph1{i} = angle.(fld_ed{ed}){i}(ID(1,1):ID(2,1));
+        out.(fld_ed{ed}).ph2{i} = angle.(fld_ed{ed}){i}(ID(1,2):ID(2,2));
+        if (size(phases.(fld_ed{ed}).HostFixedTimeLog.idx{i},2)>2)
+            out.(fld_ed{ed}).ph3{i} = angle.(fld_ed{ed}){i}(ID(1,3):ID(2,3));
+        end
+    end
+end
+
+end
+function out = combineCellsToMatrix(data)
+fld_con = fieldnames(data);
+for c=1:length(fld_con)
+    fld_map = fieldnames(data.(fld_con{c}));
+    for m=1:length(fld_map)
+        fld_coor = fieldnames(data.(fld_con{c}).(fld_map{m}));
+        for coor = 1:length(fld_coor)
+            if(iscell(data.(fld_con{c}).(fld_map{m}).(fld_coor{coor})))
+                mat = data.(fld_con{c}).(fld_map{m}).(fld_coor{coor})';
+%                 out.(fld_con{c}).(fld_map{m}).(fld_coor{coor}) = padcat(mat{:});
+                out.(fld_con{c}).(fld_map{m}).(fld_coor{coor}) = cat(1, mat{:});
+            else
+                out.(fld_con{c}).(fld_map{m}).(fld_coor{coor}) = nan;
+            end
+        end
+    end
+end
 end
 
 function out = calcAngle(origin, dir)
@@ -185,7 +223,7 @@ fld_con = fieldnames(data);
 for c=1:length(fld_con)
     fld_map = fieldnames(data.(fld_con{c}));
     for m=1:length(fld_map)
-        [freq, out.(fld_con{c}).(fld_map{m}).val] = groupcounts(round(data.(fld_con{c}).(fld_map{m})/5)*5); %groupcounts(round(data.(fld_con{c}).(fld_map{m}),0));
+        [freq, out.(fld_con{c}).(fld_map{m}).val] = groupcounts(round(data.(fld_con{c}).(fld_map{m})/1)*1); %groupcounts(round(data.(fld_con{c}).(fld_map{m}),0));
         out.(fld_con{c}).(fld_map{m}).freq = 100*freq/length(data.(fld_con{c}).(fld_map{m}));
     end
 end
