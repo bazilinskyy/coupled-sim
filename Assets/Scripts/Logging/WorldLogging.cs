@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -23,6 +25,8 @@ public class WorldLogger
     BinaryWriter _fileWriter;
     float _startTime;
 
+    LiveLogger _liveLogger;
+
     public WorldLogger(PlayerSystem playerSys, AICarSyncSystem aiCarSystem)
     {
         _playerSystem = playerSys;
@@ -32,7 +36,7 @@ public class WorldLogger
     List<PlayerAvatar> _driverBuffer = new List<PlayerAvatar>();
 
     //writes metadata header in binary log file
-    public void BeginLog(string fileName, ExperimentDefinition experiment, TrafficLightsSystem lights, float time)
+    public void BeginLog(string fileName, ExperimentDefinition experiment, TrafficLightsSystem lights, float time, bool sendLiveLog)
     {
         _lights = lights;
         if (!Directory.Exists("ExperimentLogs"))
@@ -73,6 +77,12 @@ public class WorldLogger
             _fileWriter.Write(0);
             _fileWriter.Write(0);
         }
+        Debug.LogError("Logger on");
+        if (sendLiveLog)
+        {
+            _liveLogger = new LiveLogger();
+            _liveLogger.Init();
+        }
     }
 
     string GetHierarchyString(Transform trans)
@@ -91,6 +101,7 @@ public class WorldLogger
     //adds a single entry to the logfile
     public void LogFrame(float ping, float time)
     {
+        _liveLogger?.Log(_aiCarSystem, _playerSystem);
         var aiCars = _aiCarSystem.Cars;
         while (aiCars.Count > _lastFrameAICarCount)
         {
@@ -152,6 +163,10 @@ public class WorldLogger
         if (_fileWriter != null)
         {
             _fileWriter.Dispose();
+        }
+        if (_liveLogger != null)
+        {
+            _liveLogger.Dispose();
         }
     }
 }
