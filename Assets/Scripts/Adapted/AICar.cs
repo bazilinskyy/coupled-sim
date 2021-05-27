@@ -296,7 +296,7 @@ public class AICar : MonoBehaviour, IVehicle
         else if (other.gameObject.CompareTag("WP"))
         {
             // If WaypointNumber is one, take over settings
-            if (other.GetComponent<SpeedSettings>().WaypointNumber == 1)
+            if (other.GetComponent<SpeedSettings>().WaypointType == 1)
             {
                 if (other.GetComponent<SpeedSettings>().causeToYield)
                 {
@@ -316,7 +316,7 @@ public class AICar : MonoBehaviour, IVehicle
                 }
             }
             // If WaypointNumber is two, destroy gameobject.
-            else if (other.GetComponent<SpeedSettings>().WaypointNumber == 2)
+            else if (other.GetComponent<SpeedSettings>().WaypointType == 2)
             {
                 gameObject.SetActive(false);
                 Destroy(gameObject);

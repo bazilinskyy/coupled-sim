@@ -378,11 +378,11 @@ namespace UnityStandardAssets.Utility.Inspector
             var circuit = circuitObject.targetObject as WaypointCircuit;
             StringBuilder sb = new StringBuilder();
             sb.Append($"Smooth: {circuit.smoothRoute}\n");
-            sb.Append($"x,y,z,waypointNumber,speed,acceleration,jerk,causeToYield,lookAtPlayerWhileYielding,lookAtPlayerAfterYielding,yieldTime,brakingAcceleration,lookAtPedFromSeconds,lookAtPedToSeconds\n");
+            sb.Append($"x,y,z,waypointType,speed,acceleration,jerk,causeToYield,lookAtPlayerWhileYielding,lookAtPlayerAfterYielding,yieldTime,brakingAcceleration,lookAtPedFromSeconds,lookAtPedToSeconds\n");
             foreach (var wp in circuit.Waypoints)
             {
                 var s = wp.GetComponent<SpeedSettings>();
-                sb.Append($"{wp.position.x},{wp.position.y},{wp.position.z},{s.WaypointNumber},{s.speed},{s.acceleration},{s.jerk},{s.causeToYield},{s.lookAtPlayerWhileYielding},{s.lookAtPlayerAfterYielding},{s.yieldTime},{s.brakingAcceleration},{s.lookAtPedFromSeconds},{s.lookAtPedToSeconds}\n");
+                sb.Append($"{wp.position.x},{wp.position.y},{wp.position.z},{s.WaypointType},{s.speed},{s.acceleration},{s.jerk},{s.causeToYield},{s.lookAtPlayerWhileYielding},{s.lookAtPlayerAfterYielding},{s.yieldTime},{s.brakingAcceleration},{s.lookAtPedFromSeconds},{s.lookAtPedToSeconds}\n");
             }
             File.WriteAllText(path, sb.ToString());
         }
@@ -392,7 +392,7 @@ namespace UnityStandardAssets.Utility.Inspector
             var path = EditorUtility.OpenFilePanel("Import from", "./", "csv");
             if (string.IsNullOrWhiteSpace(path)) return;
             var lines = File.ReadAllLines(path);
-            circuitObject.FindProperty(nameof(WaypointCircuit.smoothRoute)).boolValue = lines[0].Contains("true");
+            circuitObject.FindProperty(nameof(WaypointCircuit.smoothRoute)).boolValue = lines[0].Contains("True");
 
             var wpList = circuitObject.FindProperty(nameof(WaypointCircuit.waypointList));
             var wpts = wpList.FindPropertyRelative(nameof(WaypointCircuit.WaypointList.items));
@@ -417,7 +417,7 @@ namespace UnityStandardAssets.Utility.Inspector
                 {
                     bool res = false;
                     f = defaultValue;
-                    if (line.Length > lineCursor)
+                    if (line.Length > lineCursor && !string.IsNullOrWhiteSpace(line[lineCursor])
                     {
                         res = float.TryParse(line[lineCursor], out f);
                     }
@@ -429,7 +429,7 @@ namespace UnityStandardAssets.Utility.Inspector
                 {
                     bool res = false;
                     b = defaultValue;
-                    if (line.Length > lineCursor)
+                    if (line.Length > lineCursor && !string.IsNullOrWhiteSpace(line[lineCursor])
                     {
                         res = bool.TryParse(line[lineCursor], out b);
                     }
@@ -441,7 +441,7 @@ namespace UnityStandardAssets.Utility.Inspector
                 {
                     bool res = false;
                     b = defaultValue;
-                    if (line.Length > lineCursor)
+                    if (line.Length > lineCursor && !string.IsNullOrWhiteSpace(line[lineCursor])
                     {
                         res = int.TryParse(line[lineCursor], out b);
                     }
@@ -459,7 +459,7 @@ namespace UnityStandardAssets.Utility.Inspector
 
                 var speedSettings = wp.GetComponent<SpeedSettings>();
 
-                DeserializeInt(out speedSettings.WaypointNumber, SpeedSettings.Defaults.WaypointNumber);
+                DeserializeInt(out speedSettings.WaypointType, SpeedSettings.Defaults.WaypointType);
                 DeserializeFloat(out speedSettings.speed, SpeedSettings.Defaults.Speed);
                 DeserializeFloat(out speedSettings.acceleration, SpeedSettings.Defaults.Acceleration);
                 DeserializeFloat(out speedSettings.jerk, SpeedSettings.Defaults.Jerk);

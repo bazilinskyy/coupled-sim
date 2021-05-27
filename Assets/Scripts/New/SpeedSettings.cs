@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 // This script was originally used by De Clercq. It has been omitted from the experiment of Kooijman.
 
@@ -8,14 +9,15 @@ public class SpeedSettings : MonoBehaviour
 {
     public static class Defaults
     {
-        public const int WaypointNumber = 1;
+        public const int WaypointType = 1;
         public const float Speed = 5;
         public const float Acceleration = 5;
         public const float Jerk = 0;
     }
 
     //Simple Kinematics
-    public int WaypointNumber = Defaults.WaypointNumber;
+    [FormerlySerializedAs("WaypointNumber")]
+    public int WaypointType = Defaults.WaypointType;
     public float speed = Defaults.Speed;                    //km/h
     public float acceleration = Defaults.Acceleration;      //m/s^2
     //Advanced Kinematics
