@@ -74,8 +74,8 @@ public class Client : NetworkSystem
         }
         _currentState = NetState.InGame;
         var roleName = experimentRoleDefinition.Name;
-        _logger.BeginLog($"ClientLog-{roleName}-", _lvlManager.ActiveExperiment, lights, Time.realtimeSinceStartup);
-        _fixedTimeLogger.BeginLog($"ClientFixedTimeLog-{roleName}-", _lvlManager.ActiveExperiment, lights, Time.fixedTime);
+        _logger.BeginLog($"ClientLog-{roleName}-", _lvlManager.ActiveExperiment, lights, Time.realtimeSinceStartup, true);
+        _fixedTimeLogger.BeginLog($"ClientFixedTimeLog-{roleName}-", _lvlManager.ActiveExperiment, lights, Time.fixedTime, false);
     }
     //handles game configuration message - spawns level and players
     void OnGameStart(ISynchronizer sync, int _)
