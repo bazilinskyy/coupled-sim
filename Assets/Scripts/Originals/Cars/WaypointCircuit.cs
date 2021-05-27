@@ -1,6 +1,8 @@
 using System;
 using System.Collections;
 using UnityEngine;
+using System.Text;
+using System.IO;
 #if UNITY_EDITOR
 using UnityEditor;
 
@@ -11,7 +13,7 @@ namespace UnityStandardAssets.Utility
     public class WaypointCircuit : MonoBehaviour
     {
         public WaypointList waypointList = new WaypointList();
-        [SerializeField] private bool smoothRoute = true;
+        public bool smoothRoute = true;
         private int numPoints;
         private Vector3[] points;
         private float[] distances;
@@ -23,18 +25,6 @@ namespace UnityStandardAssets.Utility
         {
             get { return waypointList.items; }
         }
-
-        //this being here will save GC allocs
-        private int p0n;
-        private int p1n;
-        private int p2n;
-        private int p3n;
-
-        private float i;
-        private Vector3 P0;
-        private Vector3 P1;
-        private Vector3 P2;
-        private Vector3 P3;
 
         // Use this for initialization
         private void Awake()
@@ -75,12 +65,11 @@ namespace UnityStandardAssets.Utility
 
 
             // get nearest two points, ensuring points wrap-around start & end of circuit
-            p1n = ((point - 1) + numPoints)%numPoints;
-            p2n = point;
+            var p1n = ((point - 1) + numPoints)%numPoints;
 
             // found point numbers, now find interpolation value between the two middle points
 
-            i = Mathf.InverseLerp(distances[p1n], distances[p2n], dist);
+            var i = Mathf.InverseLerp(distances[p1n], distances[point], dist);
 
             if (smoothRoute)
             {
@@ -89,29 +78,26 @@ namespace UnityStandardAssets.Utility
 
                 // get indices for the surrounding 2 points, because
                 // four points are required by the catmull-rom function
-                p0n = ((point - 2) + numPoints)%numPoints;
-                p3n = (point + 1)%numPoints;
+                var p0n = ((point - 2) + numPoints)%numPoints;
 
                 // 2nd point may have been the 'last' point - a dupe of the first,
                 // (to give a value of max track distance instead of zero)
                 // but now it must be wrapped back to zero if that was the case.
-                p2n = p2n%numPoints;
+                var p2n = point%numPoints;
 
-                P0 = points[p0n];
-                P1 = points[p1n];
-                P2 = points[p2n];
-                P3 = points[p3n];
+                var p3n = (point + 1)%numPoints;
+
+                var P0 = points[p0n];
+                var P1 = points[p1n];
+                var P2 = points[p2n];
+                var P3 = points[p3n];
 
                 return CatmullRom(P0, P1, P2, P3, i);
             }
             else
             {
                 // simple linear lerp between the two points:
-
-                p1n = ((point - 1) + numPoints)%numPoints;
-                p2n = point;
-
-                return Vector3.Lerp(points[p1n], points[p2n], i);
+                return Vector3.Lerp(points[p1n], points[point], i);
             }
         }
 
@@ -229,6 +215,7 @@ namespace UnityStandardAssets.Utility.Inspector
         private float lineHeight = 18;
         private float spacing = 4;
 
+        public object FileDialog { get; private set; }
 
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
@@ -357,6 +344,20 @@ namespace UnityStandardAssets.Utility.Inspector
             }
             y += lineHeight + spacing;
 
+            var importButtonRect = new Rect(x, y, inspectorWidth, lineHeight);
+            if (GUI.Button(importButtonRect, "Import from file"))
+            {
+                ImportFromFile(items.serializedObject);
+            }
+            y += lineHeight + spacing;
+
+            var exportButtonRect = new Rect(x, y, inspectorWidth, lineHeight);
+            if (GUI.Button(exportButtonRect, "Export to file"))
+            {
+                ExportToFile(items.serializedObject);
+            }
+            y += lineHeight + spacing;
+
             // Set indent back to what it was
             EditorGUI.indentLevel = indent;
             EditorGUI.EndProperty();
@@ -367,9 +368,111 @@ namespace UnityStandardAssets.Utility.Inspector
         {
             SerializedProperty items = property.FindPropertyRelative("items");
             float lineAndSpace = lineHeight + spacing;
-            return 40 + (items.arraySize*lineAndSpace) + lineAndSpace;
+            return 40 + (items.arraySize*lineAndSpace) + lineAndSpace * 3;
         }
 
+        void ExportToFile(SerializedObject circuitObject)
+        {
+            var path = EditorUtility.SaveFilePanel("Export to", "./", "waypoints", "csv");
+            if (string.IsNullOrWhiteSpace(path)) return;
+            var circuit = circuitObject.targetObject as WaypointCircuit;
+            StringBuilder sb = new StringBuilder();
+            sb.Append($"Smooth: {circuit.smoothRoute}\n");
+            sb.Append($"x,y,z,waypointNumber,speed,acceleration,jerk,causeToYield,lookAtPlayerWhileYielding,lookAtPlayerAfterYielding,yieldTime,brakingAcceleration,lookAtPedFromSeconds,lookAtPedToSeconds\n");
+            foreach (var wp in circuit.Waypoints)
+            {
+                var s = wp.GetComponent<SpeedSettings>();
+                sb.Append($"{wp.position.x},{wp.position.y},{wp.position.z},{s.WaypointNumber},{s.speed},{s.acceleration},{s.jerk},{s.causeToYield},{s.lookAtPlayerWhileYielding},{s.lookAtPlayerAfterYielding},{s.yieldTime},{s.brakingAcceleration},{s.lookAtPedFromSeconds},{s.lookAtPedToSeconds}\n");
+            }
+            File.WriteAllText(path, sb.ToString());
+        }
+
+        void ImportFromFile(SerializedObject circuitObject)
+        {
+            var path = EditorUtility.OpenFilePanel("Import from", "./", "csv");
+            if (string.IsNullOrWhiteSpace(path)) return;
+            var lines = File.ReadAllLines(path);
+            circuitObject.FindProperty(nameof(WaypointCircuit.smoothRoute)).boolValue = lines[0].Contains("true");
+
+            var wpList = circuitObject.FindProperty(nameof(WaypointCircuit.waypointList));
+            var wpts = wpList.FindPropertyRelative(nameof(WaypointCircuit.WaypointList.items));
+            for (int i = 0; i < wpts.arraySize; i++)
+            {
+                var obj = wpts.GetArrayElementAtIndex(i);
+                GameObject.DestroyImmediate((obj.objectReferenceValue as Transform).gameObject);
+            }
+            wpts.ClearArray();
+
+            for (int i = 2; i < lines.Length; i++)
+            {
+                var line = lines[i].Split(',');
+                var idx = i - 2;
+                wpts.InsertArrayElementAtIndex(idx);
+                var wp = new GameObject($"Waypoint {idx}", typeof(SpeedSettings));
+                wpts.GetArrayElementAtIndex(idx).objectReferenceValue = wp.transform;
+                wp.transform.SetParent((circuitObject.targetObject as WaypointCircuit).transform);
+                int lineCursor = 0;
+
+                bool DeserializeFloat(out float f, float defaultValue = 0)
+                {
+                    bool res = false;
+                    f = defaultValue;
+                    if (line.Length > lineCursor)
+                    {
+                        res = float.TryParse(line[lineCursor], out f);
+                    }
+                    lineCursor++;
+                    return res;
+                }
+
+                bool DeserializeBool(out bool b, bool defaultValue = false)
+                {
+                    bool res = false;
+                    b = defaultValue;
+                    if (line.Length > lineCursor)
+                    {
+                        res = bool.TryParse(line[lineCursor], out b);
+                    }
+                    lineCursor++;
+                    return res;
+                }
+
+                bool DeserializeInt(out int b, int defaultValue = 0)
+                {
+                    bool res = false;
+                    b = defaultValue;
+                    if (line.Length > lineCursor)
+                    {
+                        res = int.TryParse(line[lineCursor], out b);
+                    }
+                    lineCursor++;
+                    return res;
+                }
+
+                // position
+                Vector3 position = default;
+
+                if (DeserializeFloat(out position.x) && DeserializeFloat(out position.y) && DeserializeFloat(out position.z))
+                {
+                    wp.transform.position = position;
+                }
+
+                var speedSettings = wp.GetComponent<SpeedSettings>();
+
+                DeserializeInt(out speedSettings.WaypointNumber, SpeedSettings.Defaults.WaypointNumber);
+                DeserializeFloat(out speedSettings.speed, SpeedSettings.Defaults.Speed);
+                DeserializeFloat(out speedSettings.acceleration, SpeedSettings.Defaults.Acceleration);
+                DeserializeFloat(out speedSettings.jerk, SpeedSettings.Defaults.Jerk);
+                DeserializeBool(out speedSettings.causeToYield);
+                DeserializeBool(out speedSettings.lookAtPlayerWhileYielding);
+                DeserializeBool(out speedSettings.lookAtPlayerAfterYielding);
+                DeserializeFloat(out speedSettings.yieldTime);
+                DeserializeFloat(out speedSettings.brakingAcceleration);
+                DeserializeFloat(out speedSettings.lookAtPedFromSeconds);
+                DeserializeFloat(out speedSettings.lookAtPedToSeconds);
+            }
+        }
+        
 
         // comparer for check distances in ray cast hits
         public class TransformNameComparer : IComparer

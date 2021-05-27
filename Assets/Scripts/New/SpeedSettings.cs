@@ -6,12 +6,20 @@ using UnityEngine;
 
 public class SpeedSettings : MonoBehaviour
 {
+    public static class Defaults
+    {
+        public const int WaypointNumber = 1;
+        public const float Speed = 5;
+        public const float Acceleration = 5;
+        public const float Jerk = 0;
+    }
+
     //Simple Kinematics
-    public int WaypointNumber = 1;
-    public float speed = 5;            //km/h
-    public float acceleration = 5;      //m/s^2
+    public int WaypointNumber = Defaults.WaypointNumber;
+    public float speed = Defaults.Speed;                    //km/h
+    public float acceleration = Defaults.Acceleration;      //m/s^2
     //Advanced Kinematics
-    public float jerk = 0;              //m/s^3
+    public float jerk = Defaults.Jerk;                      //m/s^3
     //public bool resetSpeedAfterStop = false;
     //Yielding
     public bool causeToYield;
