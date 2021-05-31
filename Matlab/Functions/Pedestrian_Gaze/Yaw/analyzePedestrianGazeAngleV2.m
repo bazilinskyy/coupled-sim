@@ -7,11 +7,11 @@ function out = analyzePedestrianGazeAngleV2(origin, dir, phases, trialorder)
 origin_p = getAllPhase(origin,phases);
 dir_p = getAllPhase(dir,phases);
 
-angles = calcAllAngle(origin_p, dir_p);             % calc angle
-meanAngles = calcAllMeanAngle(angles);              % calc mean angle per trial
-meanAnglesIndex = calcAllMeanAngleIndex(angles);    % calc the mean angle corresponding to the index
-angles_all = combineAngles(angles);                 % put all angles per ED into one array
-anglePerPhase = getPerPhase(angles,phases);
+out.angles = calcAllAngle(origin_p, dir_p);             % calc angle
+meanAngles = calcAllMeanAngle(out.angles);              % calc mean angle per trial
+meanAnglesIndex = calcAllMeanAngleIndex(out.angles);    % calc the mean angle corresponding to the index
+angles_all = combineAngles(out.angles);                 % put all angles per ED into one array
+anglePerPhase = getPerPhase(out.angles,phases);
 
 org_angles_all = getOrganizedDY(angles_all);
 out.all = calcGroupCounts(org_angles_all);
@@ -22,11 +22,11 @@ out.mean = calcGroupCounts(org);
 org_index = getOrganizedDY(meanAnglesIndex);
 out.index = calcGroupCountsIndex(org_index);
 
-org_ind = getOrganizedDY(angles);
+org_ind = getOrganizedDY(out.angles);
 out.ind = calcGroupCountsInd(org_ind);
 
-org_anglePerPhase = getOrganizedDY(anglePerPhase);
-out.anglePerPhaseMat = combineCellsToMatrix(org_anglePerPhase);
+out.org_anglePerPhase = getOrganizedDY(anglePerPhase);
+out.anglePerPhaseMat = combineCellsToMatrix(out.org_anglePerPhase);
 
 %% Statistical analysis
 anglePP = meanAnglePerPerson(org_ind, trialorder); 
@@ -67,7 +67,6 @@ fld_ED = fieldnames(data);
 for ed=1:length(fld_ED)
     out.(fld_ED{ed}) = getPhase(data.(fld_ED{ed}).HostFixedTimeLog, phase.(fld_ED{ed}).HostFixedTimeLog.idx);
 end
-
 end
 
 function out = getPerPhase(angle,phases)

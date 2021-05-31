@@ -8,7 +8,7 @@ close all;
 %% Inputs
 createAnimation = false;
 createAnimationLaserCheck = false;
-createAnimationCombined = true;
+createAnimationCombined = false;
 showPlot = false;
 showWrong = false;
 showSA = false;
@@ -83,6 +83,7 @@ phaseDataV2 = analyzePhasesGroup(phasesgroupV2);
 learnEffect = analyzeLearningEffect(gapOrderGroup);
 peHeadAngleV2 = analyzePedestrianGazeAngleV2(pe_world_gazeOrg, pe_world_gazeDir, phasesgroupV2, trialorder);
 paHeadAngle = analyzeDriverGazeAngle(pa_world_gazeOrg, pa_world_gazeDir, phasesgroupV2, trialorder);
+relativeYaw = calcRelativeYaw(peHeadAngleV2.org_anglePerPhase, pe_world_gazeOrg, pa_world_gazeOrg, phasesgroupV2);
 
 crossPerformance = crossingPerformance(gapAcptV2, Acceptance_pa, Acceptance_pe, trialorder);
 r = correlationPerformance(crossPerformance.SPSS, gapAcptV2.SPSS);
@@ -123,14 +124,15 @@ if showPlot == true
     trajectoryDiAV(PreDataV3);
     visualizeGapAcceptanceV2(gapAcptV2, phaseDataV2);
     visualizeLearnEffect(learnEffect);
-    visualizeHeadAngle(peHeadAngleV2);
+    visualizeHeadAngle(peHeadAngleV2, relativeYaw);
     visualizeHeadAngle_Driver(paHeadAngle);
     visualizePhasesGroupV2(phaseDataV2);
     visualizeCrossingPerformance(crossPerformance);
     visualizeEyeContact(gazeTimeV2, crossPerformance);
 end
-% close all; clc;
-%     visualizeHeadAngle(peHeadAngleV2);
+close all; clc;
+    visualizeHeadAngle(peHeadAngleV2, relativeYaw);
+
 
 %% Display statistical analysis
 if showSA == true
