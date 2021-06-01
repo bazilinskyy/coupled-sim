@@ -266,6 +266,7 @@ linesty = {'-','--','-.'};
 titlestr = {'ND - Y', 'ND - NY',...
     'D - Y', 'D - NY'};
 mapstr = {'baseline','GTY', 'LATY'};
+colorstr = {[0 0.4470 0.7410]; [0.8500 0.3250 0.0980]; [0.9290 0.6940 0.1250]};
 if length(fld_phase) == 2
     phasestr = {'[25 m - 59.76 m]', '[past zebra - 25 m]'};
 else
@@ -278,7 +279,9 @@ end
         max(data.(fld_map{2}).(fld_phase{p}).freq(1:end-1)); max(data.(fld_map{3}).(fld_phase{p}).freq(1:end-1))]);
     for m=1:length(fld_map)
         plot(data.(fld_map{m}).(fld_phase{p}).val, data.(fld_map{m}).(fld_phase{p}).freq, linesty{m},'LineWidth',2);
-        yl = yline(max(data.(fld_map{m}).(fld_phase{p}).freq(1:end-1)),'--',mapstr{m},'LabelHorizontalAlignment','left','LabelVerticalAlignment','middle');
+        yl = yline(max(data.(fld_map{m}).(fld_phase{p}).freq(1:end-1)),'--',mapstr{m},...
+            'LabelHorizontalAlignment','right','LabelVerticalAlignment','middle',...
+            'FontWeight','bold','FontSize',15,'Color',colorstr{m},'LineWidth',3);
         yl.Annotation.LegendInformation.IconDisplayStyle = 'off';
     end
     xlabel('Degrees','FontSize',15,'FontWeight','bold');
@@ -289,11 +292,11 @@ end
 %     xticks([-180:45:180])
     % xlim(set90InMid(data.(fld_map{1}).val,data.(fld_map{2}).val,data.(fld_map{3}).val));
     % xlim([-10 190])
-%     xlim([135 190])
+    xlim([-200 50])
     yticks(0:2:ceil(maxvals));
     ylim([0 ceil(maxvals)]);
     grid on;
-    legend('baseline','GTY', 'LATY');
+    legend('baseline','GTY', 'LATY','Location','southeast');
 end
 
 function visAllAnglePhase(data)

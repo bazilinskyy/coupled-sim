@@ -8,11 +8,12 @@
 % Author: Johnson Mok
 
 
-function animateTrialsCombined(pa_Dir, pa_Org, pe_Dir, pe_Org, pa_DirMean, pa_OrgMean, pe_DirMean, pe_OrgMean, diMat, titlestr, videoname) 
+function animateTrialsCombined(gap, pa_Dir, pa_Org, pe_Dir, pe_Org, pa_DirMean, pa_OrgMean, pe_DirMean, pe_OrgMean, diMat, titlestr, videoname) 
 opengl hardware
 debug = false;
 %% Prepare data
 dt = 0.0167;
+time = (1:length(gap))*dt;
 % Other
 customColor = [0, 0.4470, 0.7410;...
     0.4660, 0.6740, 0.1880];
@@ -22,14 +23,15 @@ customColorStd = [0.65, 0.20, 0.65;...
     0.8, 0.1, 0.1];
 customColorDI = 'k';
 %% Initialize video
-myVideo = VideoWriter(videoname, 'Uncompressed AVI'); %open video file
+myVideo = VideoWriter(videoname, 'Motion JPEG AVI'); %open video file
 % myVideo.FrameRate = 59;  
 myVideo.FrameRate = 30;  
+myVideo.Quality = 100;
 open(myVideo)
 
 %% Pedestrian gaze animation
-figure;
-% subplot(2,2,[1,3])
+figure('WindowState','fullscreen');
+subplot(2,2,[1,3])
 % Image
 cdata = flipdim( imread('VE.jpg'), 1 );
 cdatar = flipdim( cdata, 2 );
@@ -49,6 +51,7 @@ h{size(pa_Dir.x,2)+1} = setUpLine(customColorMean,4); % Mean
 if (length(diMat.x)>1)
 h{size(pa_Dir.x,2)+6} = setUpLineDI(customColorDI,4); % Distraction vehicle position
 end
+h{size(pa_Dir.x,2)+1} = setUpLine(customColorMean,4); % Buttonpress
 
 axis([-120 -100 -5 5 -40 80]);
 view(0,0) % XZ
@@ -69,6 +72,19 @@ ylim([0 4]);
 end
 axis manual %// this line freezes the axes
 alpha(0.4);
+set(gca,'FontSize',25);
+
+%% Gap acceptance
+subplot(2,2,[2, 4]) 
+g1 = animatedline('LineWidth', 4,'Color',customColor(1,:)); % Gap acceptance
+hold on
+g2 = plot(NaN, NaN, 'o','MarkerSize',8,'MarkerEdgeColor','k','MarkerFaceColor','k');  
+xlabel('time in [s]','FontSize',12,'FontWeight','bold');
+ylabel('Crossing button press in [%]','FontSize',12,'FontWeight','bold');
+grid on;
+ylim([0 100])
+xlim([0 max(time)])
+set(gca,'FontSize',25);
 
 %% Animation
 for n = 1:length(pe_Dir.x) % number of data points
@@ -86,6 +102,8 @@ for n = 1:length(pe_Dir.x) % number of data points
 %     setLineStdToMean(n, pe_DirMean, pa_DirMean, h{size(pa_Dir.x,2)+4},2);
 %     setLineStdToMean(n, pe_DirMean, pa_DirMean, h{size(pa_Dir.x,2)+5},3);
     
+    addpoints(g1, time(n), gap(n)); % button press
+    set(g2, 'XData', time(n), 'YData', gap(n));
     drawnow
 %     pause(dt)
     

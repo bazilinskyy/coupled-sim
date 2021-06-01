@@ -165,6 +165,7 @@ for c=1:length(fld_con)
         for p=1:length(fld_phase)
             [freq, out.(fld_con{c}).(fld_map{m}).(fld_phase{p}).val] = groupcounts(round(data.(fld_con{c}).(fld_map{m}).(fld_phase{p})/1)*1); %groupcounts(round(data.(fld_con{c}).(fld_map{m}),0));
             out.(fld_con{c}).(fld_map{m}).(fld_phase{p}).freq = 100*freq/length(data.(fld_con{c}).(fld_map{m}).(fld_phase{p}));
+            disp(join([(fld_con{c}),' ',(fld_map{m}),' ',(fld_phase{p}),': ',num2str(length(data.(fld_con{c}).(fld_map{m}).(fld_phase{p})))]));
         end
     end
 end

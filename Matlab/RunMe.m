@@ -116,7 +116,7 @@ end
 if createAnimationCombined == true % Animation for all trials (per condition and mapping) in one figure.
    clc
    close all
-   AnimateCombined(pa_world_gazeDir, pa_world_gazeOrg, pe_world_gazeDir, pe_world_gazeOrg, di_pos);
+   AnimateCombined(gapAcptV2, pa_world_gazeDir, pa_world_gazeOrg, pe_world_gazeDir, pe_world_gazeOrg, di_pos);
 end
 
 %% Visualize data
@@ -130,7 +130,7 @@ if showPlot == true
     visualizeCrossingPerformance(crossPerformance);
     visualizeEyeContact(gazeTimeV2, crossPerformance);
 end
-close all; clc;
+clc; close all;
     visualizeHeadAngle(peHeadAngleV2, relativeYaw);
 
 
