@@ -77,7 +77,6 @@ public class WorldLogger
             _fileWriter.Write(0);
             _fileWriter.Write(0);
         }
-        Debug.LogError("Logger on");
         if (sendLiveLog)
         {
             _liveLogger = new LiveLogger();
