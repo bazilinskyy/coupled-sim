@@ -38,7 +38,6 @@ public class LiveLogger : IDisposable
         {
             _writer.Write(pedestrian.transform.position);
         }
-        Debug.LogError(_stream.Position);
         _socket.Send(_buffer, (int)_stream.Position);
         _stream.Position = 0;
     }
