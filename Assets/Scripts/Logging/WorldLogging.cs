@@ -120,6 +120,14 @@ public class WorldLogger
             _fileWriter.Write(driver.transform.position);
             _fileWriter.Write(driver.transform.rotation);
             _fileWriter.Write((int)driver._carBlinkers.State);
+            if ( driver == _playerSystem.LocalPlayer)
+            {
+                var rb = driver.GetComponent<Rigidbody>();
+                Assert.IsNotNull(rb);
+                Assert.IsFalse(rb.isKinematic);
+                _fileWriter.Write(rb.velocity);
+            } else
+            if (_aiCarSystem.Cars.Contains(driver))
             {
                 var rb = driver.GetComponent<Rigidbody>();
                 Assert.IsNotNull(rb);
@@ -134,7 +142,6 @@ public class WorldLogger
                 var plap = driver.GetComponentInChildren<PlayerLookAtPed>();
                 Assert.IsNotNull(plap);
                 _fileWriter.Write(plap.TargetPed != null);
-
             }
         }
         foreach (var pedestrian in _playerSystem.Pedestrians)
@@ -241,13 +248,17 @@ public class LogConverter
         public List<List<Quaternion>> PedestrianRotations = new List<List<Quaternion>>();
         public List<LightState> CarLightStates = new List<LightState>();
         public List<LightState> PedestrianLightStates = new List<LightState>();
-        public List<Vector3> LocalDriverRbVelocities = new List<Vector3>();
-        public List<float> AICarSpeeds = new List<float>();
-        public List<bool> braking = new List<bool>();
-        public List<bool> stopped = new List<bool>();
-        public List<bool> takeoff = new List<bool>();
-        public List<bool> eyecontact = new List<bool>();
+        public Vector3 LocalDriverRbVelocity;
+        public Dictionary<int, Vector3> AICarRbVelocities = new Dictionary<int, Vector3>();
+        public Dictionary<int, float> AICarSpeeds = new Dictionary<int, float>();
+        public Dictionary<int, bool> braking = new Dictionary<int, bool>();
+        public Dictionary<int, bool> stopped = new Dictionary<int, bool>();
+        public Dictionary<int, bool> takeoff = new Dictionary<int, bool>();
+        public Dictionary<int, bool> eyecontact = new Dictionary<int, bool>();
     }
+
+    List<int> aiCarIndexes = new List<int>();
+    bool IsAICar(int i) => aiCarIndexes.Contains(i);
 
     List<Vector3> _driverPositions;
     List<RunningAverage> _driverVels;
@@ -261,7 +272,9 @@ public class LogConverter
         System.Threading.Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
         const string separator = ";";
         const int columnsPerDriver = 3 /*pos x,y,z*/ + 3 /*rot x,y,z */ + 1 /*blinkers*/ + 3 /* local velocity */ + 3 /* local smooth velocity */ + 3 /* world velocity */ + 3 /* world velocity smooth */;
-        const int columnsForLocalDriver = columnsPerDriver + 3 /* rb velocity x,y,z */ + 3 /* rb velocity local x,y,z */ + 1 /* aicar.speed */ + 4 /* braking, stopped, takeoff, eyecontact */;
+        const int columnsForLocalDriver = columnsPerDriver + 3 /* rb velocity x,y,z */ + 3 /* rb velocity local x,y,z */;
+        const int columnsForAICar = columnsPerDriver + 3 /* rb velocity x,y,z */ + 3 /* rb velocity local x,y,z */ + 1 /* aicar.speed */ + 4 /* braking, stopped, takeoff, eyecontact */;
+
         const int columnsPerBone = 6;
         int columnsPerPedestrian = pedestrianSkeletonNames.Length * columnsPerBone + columnsPerBone; // + columnsPerBone is for the root transform;
         var toRefRot = Quaternion.Inverse(referenceRot);
@@ -298,6 +311,7 @@ public class LogConverter
                 var eventType = (LogFrameType)reader.ReadInt32();
                 if (eventType == LogFrameType.AICarSpawn)
                 {
+                    aiCarIndexes.Add(numAICars + numPersistentDrivers);
                     numAICars++;
                     continue;
                 }
@@ -313,12 +327,18 @@ public class LogConverter
                     frame.DriverPositions.Add(reader.ReadVector3());
                     frame.DriverRotations.Add(reader.ReadQuaternion());
                     frame.BlinkerStates.Add((BlinkerState)reader.ReadInt32());
-                    frame.LocalDriverRbVelocities.Add(reader.ReadVector3() * SpeedConvertion.Mps2Kmph);
-                    frame.AICarSpeeds.Add(reader.ReadSingle());
-                    frame.braking.Add(reader.ReadBoolean());
-                    frame.stopped.Add(reader.ReadBoolean());
-                    frame.takeoff.Add(reader.ReadBoolean());
-                    frame.eyecontact.Add(reader.ReadBoolean());
+                    if (i == log.LocalDriver)
+                    {
+                        frame.LocalDriverRbVelocity = reader.ReadVector3() * SpeedConvertion.Mps2Kmph;
+                    } else if (IsAICar(i))
+                    {
+                        frame.AICarRbVelocities.Add(i, reader.ReadVector3() * SpeedConvertion.Mps2Kmph);
+                        frame.AICarSpeeds.Add(i, reader.ReadSingle());
+                        frame.braking.Add(i, reader.ReadBoolean());
+                        frame.stopped.Add(i, reader.ReadBoolean());
+                        frame.takeoff.Add(i, reader.ReadBoolean());
+                        frame.eyecontact.Add(i, reader.ReadBoolean());
+                    }
                 }
 
                 for (int i = 0; i < numPedestrians; i++)
@@ -372,10 +392,18 @@ public class LogConverter
             // Drivers header
             for (int i = 0; i < numDrivers; i++)
             {
+                if (i == localDriver)
                 {
-                    writer.Write(string.Join(separator, Enumerable.Repeat($"Driver{i}", columnsForLocalDriver)));
+                    writer.Write(string.Join(separator, Enumerable.Repeat($"Local driver{i}", columnsForLocalDriver)));
                 }
-
+                else if (IsAICar(i))
+                {
+                    writer.Write(string.Join(separator, Enumerable.Repeat($"AI driver{i}", columnsForAICar)));
+                }
+                else
+                {
+                    writer.Write(string.Join(separator, Enumerable.Repeat($"Driver{i}", columnsPerDriver)));
+                }
                 if (i < numDrivers - 1)
                 {
                     writer.Write(separator);
@@ -405,9 +433,10 @@ public class LogConverter
             // No bone names for drivers
             writer.Write(separator); // for the Timestamp column
             writer.Write(separator); // for the Ping column
-            {
-                writer.Write(string.Join(separator, new string(';', (numDrivers - 1) * columnsPerDriver + columnsForLocalDriver)));
-            }
+            var localDriversCount = localDriver == -1 ? 0 : 1;
+            var aiCarsCount = aiCarIndexes.Count;
+            var otherDriversCount = numDrivers - aiCarsCount - localDriversCount;
+            writer.Write(string.Join(separator, new string(';', otherDriversCount * columnsPerDriver + localDriversCount * columnsForLocalDriver + aiCarsCount * columnsForAICar)));
             var sb = new StringBuilder();
             sb.Append(string.Join(separator, Enumerable.Repeat("Root", columnsPerBone)));
             sb.Append(";");
@@ -430,12 +459,22 @@ public class LogConverter
             writer.Write(separator); // for the Ping column
 
             const string driverTransformHeader = "pos_x;pos_y;pos_z;rot_x;rot_y;rot_z;blinkers;vel_local_x;vel_local_y;vel_local_z;vel_local_smooth_x;vel_local_smooth_y;vel_local_smooth_z;vel_x;vel_y;vel_z;vel_smooth_x;vel_smooth_y;vel_smooth_z";
-            const string localDriverTransformHeader = driverTransformHeader + ";rb_vel_x;rb_vel_y;rb_vel_z;rb_vel_local_x;rb_vel_local_y;rb_vel_local_z;aicar_speed;braking;stopped;takeoff;eyecontact";
+            const string localDriverTransformHeader = driverTransformHeader + ";rb_vel_x;rb_vel_y;rb_vel_z;rb_vel_local_x;rb_vel_local_y;rb_vel_local_z";
+            const string aiCarTransformHeader = driverTransformHeader + ";rb_vel_x;rb_vel_y;rb_vel_z;rb_vel_local_x;rb_vel_local_y;rb_vel_local_z;aicar_speed;braking;stopped;takeoff;eyecontact";
+
             List<string> headers = new List<string>();
             for (int i = 0; i < numDrivers; i++)
             {
+                if (i == localDriver)
                 {
                     headers.Add(localDriverTransformHeader);
+                } else if (IsAICar(i))
+                {
+                    headers.Add(aiCarTransformHeader);
+                }
+                else
+                {
+                    headers.Add(driverTransformHeader);
                 }
             }
             writer.Write(string.Join(separator, headers));
@@ -480,8 +519,16 @@ public class LogConverter
                     var inverseRotation = Quaternion.Inverse(rot);
                     if (prevFrame == null || prevFrame.DriverPositions.Count <= i)
                     {
+                        if (i == localDriver)
+                        {
+                            line.Add($"{pos.x};{pos.y};{pos.z};{euler.x};{euler.y};{euler.z};{(BlinkerState)blinkers};0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0");
+                        } else if (IsAICar(i))
                         {
                             line.Add($"{pos.x};{pos.y};{pos.z};{euler.x};{euler.y};{euler.z};{(BlinkerState)blinkers};0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0");
+                        }
+                        else
+                        {
+                            line.Add($"{pos.x};{pos.y};{pos.z};{euler.x};{euler.y};{euler.z};{(BlinkerState)blinkers};0;0;0;0;0;0;0;0;0;0;0;0");
                         }
                     }
                     else
@@ -493,22 +540,39 @@ public class LogConverter
                         _driverVels[i] = runningAvg;
                         var velSmooth = runningAvg.Get();
                         var localSmooth = rot * velSmooth;
+                        if (i == localDriver)
                         {
-                            var rbVel = frame.LocalDriverRbVelocities[i];
+                            var rbVel = frame.LocalDriverRbVelocity;
+                            var rbVelLocal = inverseRotation * rbVel;
+                            line.Add($"{pos.x};{pos.y};{pos.z};{euler.x};{euler.y};{euler.z};{(BlinkerState)blinkers};{speed.x};{speed.y};{speed.z};{localSmooth.x};{localSmooth.y};{localSmooth.z};{vel.x};{vel.y};{vel.z};{velSmooth.x};{velSmooth.y};{velSmooth.z};{rbVel.x};{rbVel.y};{rbVel.z};{rbVelLocal.x};{rbVelLocal.y};{rbVelLocal.z}");
+
+                        }
+                        else if (IsAICar(i))
+                        {
+                            var rbVel = frame.AICarRbVelocities[i];
                             var aiCarSpeed = frame.AICarSpeeds[i];
                             var braking = frame.braking[i];
                             var stopped = frame.stopped[i];
                             var takeoff = frame.takeoff[i];
                             var eyecontact = frame.eyecontact[i];
                             var rbVelLocal = inverseRotation * rbVel;
-                            line.Add($"{pos.x};{pos.y};{pos.z};{euler.x};{euler.y};{euler.z};{(BlinkerState)blinkers};{speed.x};{speed.y};{speed.z};{localSmooth.x};{localSmooth.y};{localSmooth.z};{vel.x};{vel.y};{vel.z};{velSmooth.x};{velSmooth.y};{velSmooth.z};{rbVel.x};{rbVel.y};{rbVel.z};{rbVelLocal.x};{rbVelLocal.y};{rbVelLocal.z};{aiCarSpeed};{(braking ? 1:0)};{(stopped ? 1:0)};{(takeoff ? 1:0)};{(eyecontact ? 1:0)}");
-
+                            line.Add($"{pos.x};{pos.y};{pos.z};{euler.x};{euler.y};{euler.z};{(BlinkerState)blinkers};{speed.x};{speed.y};{speed.z};{localSmooth.x};{localSmooth.y};{localSmooth.z};{vel.x};{vel.y};{vel.z};{velSmooth.x};{velSmooth.y};{velSmooth.z};{rbVel.x};{rbVel.y};{rbVel.z};{rbVelLocal.x};{rbVelLocal.y};{rbVelLocal.z};{aiCarSpeed};{(braking ? 1 : 0)};{(stopped ? 1 : 0)};{(takeoff ? 1 : 0)};{(eyecontact ? 1 : 0)}");
+                        }
+                        else
+                        {
+                            line.Add($"{pos.x};{pos.y};{pos.z};{euler.x};{euler.y};{euler.z};{(BlinkerState)blinkers};{speed.x};{speed.y};{speed.z};{localSmooth.x};{localSmooth.y};{localSmooth.z};{vel.x};{vel.y};{vel.z};{velSmooth.x};{velSmooth.y};{velSmooth.z}");
                         }
                     }
                 }
                 for (int i = numDriversThisFrame; i < numDrivers; i++)
                 {
-                    line.Add(";;;;;;;;;;;;;;;;;;;;;;;;;;;;;");
+                    if (IsAICar(i))
+                    {
+                        line.Add(";;;;;;;;;;;;;;;;;;;;;;;;;;;;;");
+                    }
+                    else {
+                        line.Add(";;;;;;;;;;;;;;;;;;");
+                    }
                 }
                 for (int i = 0; i < frame.PedestrianPositions.Count; i++)
                 {
@@ -569,7 +633,7 @@ public class LogConverter
         new SerializedPOI()
         {
             Name = "spawn point",
-            Position = new Vector3(0, 0.2224625f, 2),
+            Position = new Vector3(0, 0.2224625f, 0),
             Rotation = Quaternion.Euler(new Vector3())
         },
 
