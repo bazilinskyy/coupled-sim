@@ -1,5 +1,13 @@
 ﻿using UnityEngine;
 
+[System.Serializable]
+public struct InstantStartHostParameters
+{
+    public bool instantStart;
+    public int instantStartRole;
+    public int instantStartExperiment;
+}
+
 //logic entry point 
 // - presents main menu
 // - updates client/host logic
@@ -50,6 +58,8 @@ public class NetworkingManager : MonoBehaviour
         }
     }
 
+    public InstantStartHostParameters instantStartParams;
+
     void OnGUI()
     {
         if (hideGui)
@@ -58,14 +68,15 @@ public class NetworkingManager : MonoBehaviour
         }
         if (_netSystem == null)
         {
-            if (GUILayout.Button("Start Host"))
+            if (instantStartParams.instantStart || GUILayout.Button("Start Host"))
             {
-                _netSystem = new Host(_levelManager, _playerSystem, _aiCarSystem, _logger, _fixedLogger);
+                _netSystem = new Host(_levelManager, _playerSystem, _aiCarSystem, _logger, _fixedLogger, instantStartParams);
             }
-            if (GUILayout.Button("Start Client"))
+            if (!instantStartParams.instantStart && GUILayout.Button("Start Client"))
             {
                 _netSystem = new Client(_levelManager, _playerSystem, _aiCarSystem, _logger, _fixedLogger);
             }
+
             _logConverter.OnGUI();
         }
         else

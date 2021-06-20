@@ -24,9 +24,11 @@ public class Host : NetworkSystem
     const float PoseUpdateInterval = 0.01f;
 
     TrafficLightsSystem _lights;
+    InstantStartHostParameters _instantStartParams;
 
-    public Host(LevelManager levelManager, PlayerSystem playerSys, AICarSyncSystem aiCarSystem, WorldLogger logger, WorldLogger fixedLogger)
+    public Host(LevelManager levelManager, PlayerSystem playerSys, AICarSyncSystem aiCarSystem, WorldLogger logger, WorldLogger fixedLogger, InstantStartHostParameters instantStartParams)
     {
+        _instantStartParams = instantStartParams;
         _playerSys = playerSys;
         _lvlManager = levelManager;
         _aiCarSystem = aiCarSystem;
@@ -114,13 +116,16 @@ public class Host : NetworkSystem
                             {
                                 carSpawner.Init(_aiCarSystem);
                             }
-                            _playerSys.ActivatePlayerAICar();
+                            ExperimentRoleDefinition experimentRoleDefinition = _lvlManager.ActiveExperiment.Roles[_playerRoles[Host.PlayerId]];
+                            if (experimentRoleDefinition.AutonomousPath != null) {
+                                _playerSys.ActivatePlayerAICar();
+                            }
                             _host.BroadcastReliable(new AllReadyMsg());
                             _transitionPhase = TransitionPhase.None;
                             _currentState = NetState.InGame;
-                            var roleName = _lvlManager.ActiveExperiment.Roles[_playerRoles[Host.PlayerId]].Name;
-                            _logger.BeginLog($"HostLog-{roleName}-", _lvlManager.ActiveExperiment, _lights, Time.realtimeSinceStartup);
-                            _fixedTimeLogger.BeginLog($"HostFixedTimeLog-{roleName}-", _lvlManager.ActiveExperiment, _lights, Time.fixedTime);
+                            var roleName = experimentRoleDefinition.Name;
+                            _logger.BeginLog($"HostLog-{roleName}-", _lvlManager.ActiveExperiment, _lights, Time.realtimeSinceStartup, true);
+                            _fixedTimeLogger.BeginLog($"HostFixedTimeLog-{roleName}-", _lvlManager.ActiveExperiment, _lights, Time.fixedTime, false);
                         }
                         break;
                 }
@@ -159,17 +164,23 @@ public class Host : NetworkSystem
     //displays role selection GUI for a single player
     static void SelectRoleGUI(int player, Host host, ExperimentRoleDefinition[] roles)
     {
-        GUILayout.BeginHorizontal();
-        string playerName = player == Host.PlayerId ? "Host" : $"Player {player}";
-        GUILayout.Label($"{playerName} role: {host._playerRoles[player]}");
-        for (int i = 0; i < roles.Length; i++)
+        if (host._instantStartParams.instantStart)
         {
-            if (GUILayout.Button(roles[i].Name))
-            {
-                host._playerRoles[player] = i;
-            }
+            host._playerRoles[player] = host._instantStartParams.instantStartRole;
         }
-        GUILayout.EndHorizontal();
+        else {
+            GUILayout.BeginHorizontal();
+            string playerName = player == Host.PlayerId ? "Host" : $"Player {player}";
+            GUILayout.Label($"{playerName} role: {host._playerRoles[player]}");
+            for (int i = 0; i < roles.Length; i++)
+            {
+                if (GUILayout.Button(roles[i].Name))
+                {
+                    host._playerRoles[player] = i;
+                }
+            }
+            GUILayout.EndHorizontal();
+        }
     }
 
     //displays role selection GUI
@@ -180,9 +191,17 @@ public class Host : NetworkSystem
         ForEachConnectedPlayer((player, host) => SelectRoleGUI(player, host, roles));
     }
 
+    bool started;
     //initializes experiment - sets it up locally and broadcasts experiment configuration message
     void StartGame()
     {
+        if (started)
+        {
+            return;
+        } else
+        {
+            started = true;
+        }
         _msgDispatcher.ClearLevelMessageHandlers();
         _host.BroadcastReliable(new StartGameMsg
         {
@@ -252,24 +271,32 @@ public class Host : NetworkSystem
     //displays host GUI
     public override void OnGUI()
     {
-        GUILayout.Label($"Host mode: {_currentState}");
-        GUILayout.Label("Connected: " + _host.NumRemotePlayers);
+        if (!_instantStartParams.instantStart)
+        {
+            GUILayout.Label($"Host mode: {_currentState}");
+            GUILayout.Label("Connected: " + _host.NumRemotePlayers);
+        } else
+        {
+            _selectedExperiment = _instantStartParams.instantStartExperiment;
+        }
         switch (_currentState)
         {
             case NetState.Lobby:
             {
                 GUI.enabled = AllRolesSelected();
-                if (GUILayout.Button("Start Game"))
+                if (_instantStartParams.instantStart || GUILayout.Button("Start Game"))
                 {
                     StartGame();
                 }
                 GUI.enabled = true;
-                GUILayout.Label("Experiment:");
-                for (int i = 0; i < _lvlManager.Experiments.Length; i++)
-                {
-                    if (GUILayout.Button(_lvlManager.Experiments[i].Name + (i == _selectedExperiment ? " <--" : "")))
+                if (!_instantStartParams.instantStart) {
+                    GUILayout.Label("Experiment:");
+                    for (int i = 0; i < _lvlManager.Experiments.Length; i++)
                     {
-                        _selectedExperiment = i;
+                        if (GUILayout.Button(_lvlManager.Experiments[i].Name + (i == _selectedExperiment ? " <--" : "")))
+                        {
+                            _selectedExperiment = i;
+                        }
                     }
                 }
                 PlayerRolesGUI();
