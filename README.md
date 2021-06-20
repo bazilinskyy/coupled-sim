@@ -127,7 +127,8 @@ To reorder waypoint click up/down signs next to a waypoint.
 To change the position of a waypoint select waypoint transform and move it do the desired position.
 
 #### Configuration of the movement of the non-playable vehicles
-Additionally, for vehicles, SpeedSetting along with Collider component might be used to further configure tracked path. 
+Additionally, for vehicles, SpeedSetting along with Collider component might be used to further configure tracked path.
+
 ![](ReadmeFiles/speed_settings.png)
 
 #### Configuration of daylight conditions
