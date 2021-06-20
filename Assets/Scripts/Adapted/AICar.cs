@@ -8,11 +8,21 @@ using UnityStandardAssets.Utility;
 
 // This script was adapted from the study of De Clercq.
 
-public class AICar : MonoBehaviour
+public class AICar : MonoBehaviour, IVehicle
 {
+    public enum CarState
+    {
+        DRIVING,
+        BRAKING,
+        STOPPED,
+        TAKEOFF,
+    }
+
+    public CarState state = CarState.DRIVING;
+
     // Motion related variables
-    public float set_speed = 30;                                           // Velocity of cars in simulation
-    public float set_acceleration = 2;                                     // Acceleration of cars in simulation
+    private float set_speed = 0;                                           // Velocity of cars in simulation
+    private float set_acceleration = 0;                                     // Acceleration of cars in simulation
     public float jerk = 2;                                                 // Jerk of cars in simulation
     public float turn_rate_degree = 360;
     private float conversion = 3.6f;
@@ -25,6 +35,7 @@ public class AICar : MonoBehaviour
     private Transform rotationAxis;
     private float Timer1;
     private float Timer2;
+    public Transform model;
 
     public bool braking = false;
     public bool reset = false;
@@ -32,6 +43,11 @@ public class AICar : MonoBehaviour
     private float triggerlocation;
     private float startlocation;
     private float delta_distance;
+
+    private float speedAfterYield;
+    private float accAfterYield;
+    private float yieldingTime;
+    private bool shouldYield;
 
     public bool WaitInputX = false;
     public bool WaitTrialX = false;
@@ -46,6 +62,10 @@ public class AICar : MonoBehaviour
 
     // Animation related variables
     private int layer;
+
+    public bool Handbrake => braking;
+
+    public float Speed => speed;
 
     // Use this for initialization
     void Start()
@@ -79,6 +99,11 @@ public class AICar : MonoBehaviour
 
         //  Change of Ambient Traffic rotations based on current heading and target position
         theRigidbody.angularVelocity = new Vector3(0f, psi * turn_rate_degree * Mathf.PI / 360f, 0f);
+
+        if (shouldYield && speed == 0.0f)
+        {
+            StartCoroutine(Yield(yieldingTime));
+        }
         
         // This statement is applied when the car is just driving.
         if ((braking == false) && (reset == false))
@@ -89,14 +114,14 @@ public class AICar : MonoBehaviour
                 acceleration = set_acceleration;
                 t += Mathf.Abs(jerk) / Mathf.Abs(set_acceleration) * Time.fixedDeltaTime;
                 pitch = acceleration / 3 * HasPitch;
-                this.transform.Rotate(-pitch, 0, 0);
+                model.localRotation = Quaternion.Slerp(model.localRotation, Quaternion.Euler(-pitch, 0, 0), 0.5f);
             }
 
             if (set_acceleration > 0f && set_speed > speed || set_acceleration < 0f && set_speed < speed)
             {
                 speed = speed + set_acceleration * Time.fixedDeltaTime * conversion;
                 pitch = acceleration / 3 * HasPitch;
-                this.transform.Rotate(-pitch, 0, 0);
+                model.localRotation = Quaternion.Slerp(model.localRotation, Quaternion.Euler(-pitch, 0, 0), 0.5f);
             }
 
             if (acceleration != 0 && Mathf.Abs(speed) < Mathf.Abs(set_speed) * (1 + tolerance) + tolerance * 10 && Mathf.Abs(speed) > Mathf.Abs(set_speed) * (1 - tolerance) - tolerance * 10)
@@ -140,11 +165,11 @@ public class AICar : MonoBehaviour
                 // Pitches larger than 0.5 degrees are capped at 0.5 degrees.
                 if (pitch < 0.5f)
                 {
-                    this.transform.Rotate(pitch, 0, 0);
+                    model.localRotation = Quaternion.Slerp(model.localRotation, Quaternion.Euler(pitch, 0, 0), 0.5f);
                 }
                 else
                 {
-                    this.transform.Rotate(0.5f, 0, 0);
+                    model.localRotation = Quaternion.Slerp(model.localRotation, Quaternion.Euler(0.5f, 0, 0), 0.5f);
                 }
             }
 
@@ -155,7 +180,7 @@ public class AICar : MonoBehaviour
 
                 if (pitch >= 0)
                 {
-                    this.transform.Rotate(pitch, 0, 0);
+                    model.localRotation = Quaternion.Slerp(model.localRotation, Quaternion.Euler(pitch, 0, 0), 0.5f);
                 }
 
             }
@@ -167,7 +192,7 @@ public class AICar : MonoBehaviour
 
                 if (pitch >= 0)
                 {
-                    this.transform.Rotate(pitch, 0, 0);
+                    model.localRotation = Quaternion.Slerp(model.localRotation, Quaternion.Euler(pitch, 0, 0), 0.5f);
                 }
 
                 speed = 0f;
@@ -181,7 +206,7 @@ public class AICar : MonoBehaviour
 
                 if (pitch >= 0) // Apply pitch only when larger than 0 degrees.
                 {
-                    this.transform.Rotate(pitch, 0, 0);
+                    model.localRotation = Quaternion.Slerp(model.localRotation, Quaternion.Euler(pitch, 0, 0), 0.5f);
                 }
                 Debug.Log(Timer2);
 
@@ -271,13 +296,27 @@ public class AICar : MonoBehaviour
         else if (other.gameObject.CompareTag("WP"))
         {
             // If WaypointNumber is one, take over settings
-            if (other.GetComponent<SpeedSettings>().WaypointNumber == 1)
+            if (other.GetComponent<SpeedSettings>().WaypointType == 1)
             {
-                set_speed = other.GetComponent<SpeedSettings>().speed;
-                set_acceleration = other.GetComponent<SpeedSettings>().acceleration;
+                if (other.GetComponent<SpeedSettings>().causeToYield)
+                {
+                    set_speed = 0;
+                    set_acceleration = other.GetComponent<SpeedSettings>().brakingAcceleration;
+                    speedAfterYield = other.GetComponent<SpeedSettings>().speed;
+                    accAfterYield = other.GetComponent<SpeedSettings>().acceleration;
+                    yieldingTime = other.GetComponent<SpeedSettings>().yieldTime;
+                    //PlayerLookAtPed.EnableTrackingWhileYielding = other.GetComponent<SpeedSettings>().lookAtPlayerWhileYielding;
+                    shouldYield = true;
+                    state = CarState.BRAKING;
+                }
+                else
+                {
+                    set_speed = other.GetComponent<SpeedSettings>().speed;
+                    set_acceleration = other.GetComponent<SpeedSettings>().acceleration;
+                }
             }
             // If WaypointNumber is two, destroy gameobject.
-            else if (other.GetComponent<SpeedSettings>().WaypointNumber == 2)
+            else if (other.GetComponent<SpeedSettings>().WaypointType == 2)
             {
                 gameObject.SetActive(false);
                 Destroy(gameObject);
@@ -316,5 +355,16 @@ public class AICar : MonoBehaviour
             set_acceleration = other.GetComponent<SpeedSettings>().acceleration;
             jerk = -Mathf.Abs(other.GetComponent<SpeedSettings>().jerk);
         }
+    }
+
+    private IEnumerator Yield(float yieldTime)
+    {
+        state = CarState.STOPPED;
+        yield return new WaitForSeconds(yieldTime);
+        set_speed = speedAfterYield;
+        set_acceleration = accAfterYield;
+        shouldYield = false;
+        state = CarState.TAKEOFF;
+
     }
 }

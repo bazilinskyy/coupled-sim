@@ -53,13 +53,10 @@ public class PlayerSystem : MonoBehaviour
     public void ActivatePlayerAICar()
     {
         var aiCar = LocalPlayer.GetComponent<AICar>();
-        if (aiCar != null)
-        {
-            var tracker = LocalPlayer.GetComponent<WaypointProgressTracker>();
-            Assert.IsNotNull(tracker);
-            aiCar.enabled = true;
-            tracker.enabled = true;
-        }
+        var tracker = LocalPlayer.GetComponent<WaypointProgressTracker>();
+        Assert.IsNotNull(tracker);
+        aiCar.enabled = true;
+        tracker.enabled = true;
     }
 
     PlayerAvatar GetAvatarPrefab(SpawnPointType type, int carIdx)
@@ -116,6 +113,13 @@ public class PlayerSystem : MonoBehaviour
         var avatar = GameObject.Instantiate(prefab);
         avatar.transform.position = spawnPoint.position;
         avatar.transform.rotation = spawnPoint.rotation;
+        var cameraSetup = spawnPoint.Point.GetComponent<CameraSetup>();
+        if (cameraSetup != null)
+        {
+            var cam = avatar.GetComponentInChildren<Camera>();
+            cam.fieldOfView = cameraSetup.fieldOfView;
+            cam.transform.localRotation = Quaternion.Euler(cameraSetup.rotation);
+        }
         Avatars.Add(avatar);
         GetAvatarsOfType(avatar.Type).Add(avatar);
         Player2Avatar[player] = avatar;
@@ -160,18 +164,21 @@ public class PlayerSystem : MonoBehaviour
     //displays controler selection GUI
     public void SelectModeGUI()
     {
-        GUILayout.Label($"Mode: {PlayerMode}");
-        if (GUILayout.Button("Suite mode"))
-        {
-            PlayerMode = Mode.Suite;
-        }
-        if (GUILayout.Button("Oculus mode"))
-        {
-            PlayerMode = Mode.VR;
-        }
-        if (GUILayout.Button("Keyboard mode"))
-        {
-            PlayerMode = Mode.Flat;
-        }
+
+        PlayerMode = Mode.Flat;
+
+        //    GUILayout.Label($"Mode: {PlayerMode}");
+        //    if (GUILayout.Button("Suite mode"))
+        //    {
+        //        PlayerMode = Mode.Suite;
+        //    }
+        //    if (GUILayout.Button("Oculus mode"))
+        //    {
+        //        PlayerMode = Mode.VR;
+        //    }
+        //    if (GUILayout.Button("Keyboard mode"))
+        //    {
+        //        PlayerMode = Mode.Flat;
+        //    }
     }
 }
