@@ -164,9 +164,9 @@ public class Host : NetworkSystem
     //displays role selection GUI for a single player
     static void SelectRoleGUI(int player, Host host, ExperimentRoleDefinition[] roles)
     {
-        if (host._instantStartParams.instantStart)
+        if (host._instantStartParams.SkipSelectionScreen)
         {
-            host._playerRoles[player] = host._instantStartParams.instantStartRole;
+            host._playerRoles[player] = host._instantStartParams.SelectedRole;
         }
         else {
             GUILayout.BeginHorizontal();
@@ -271,25 +271,25 @@ public class Host : NetworkSystem
     //displays host GUI
     public override void OnGUI()
     {
-        if (!_instantStartParams.instantStart)
+        if (!_instantStartParams.SkipSelectionScreen)
         {
             GUILayout.Label($"Host mode: {_currentState}");
             GUILayout.Label("Connected: " + _host.NumRemotePlayers);
         } else
         {
-            _selectedExperiment = _instantStartParams.instantStartExperiment;
+            _selectedExperiment = _instantStartParams.SelectedExperiment;
         }
         switch (_currentState)
         {
             case NetState.Lobby:
             {
                 GUI.enabled = AllRolesSelected();
-                if (_instantStartParams.instantStart || GUILayout.Button("Start Game"))
+                if (_instantStartParams.SkipSelectionScreen || GUILayout.Button("Start Game"))
                 {
                     StartGame();
                 }
                 GUI.enabled = true;
-                if (!_instantStartParams.instantStart) {
+                if (!_instantStartParams.SkipSelectionScreen) {
                     GUILayout.Label("Experiment:");
                     for (int i = 0; i < _lvlManager.Experiments.Length; i++)
                     {

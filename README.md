@@ -58,6 +58,13 @@ To start the client press _Start Client_ button, enter the host IP address and p
 4. On both host and clients, each participant has to select control mode.
 5. Start an experiment with the _Start Game_ button.
 
+# Instant start parametets
+If the user wants to prepare a build that runs simulation instantly with a selected experiment and role, he is able to do so by setting parameters of the InstantStartHostParameters struct. It can be accessed and changed on a _StartScene_ (scene) -> _Managers_ (game object) -> _NetworkingManager_ (component) -> _InstantStartParams_ (field). The struct consists of the following fields:
+- _SelectedExperiment_: int variable which indicates a zero-based index of a selected experiment in _Experiments_ list (field in NetworkingManager component).
+- _SelectedRole_: int variable which indicates a zero-based index of a selected role in _Roles_ list (field in ExperimentDefinition component) of a selected experiment prefab.
+- _SkipSelectionScreen_: boolean variable, that if set to true makes the simulator run (as host) a selected experiment (with a selected role) right after the application is run - skipping experiment and role selection screen.
+![](ReadmeFiles/Instant.png)
+
 ## Configuration
 The central point for configuring the simulator is _Managers_ game object from the _StartScene_ scene. It has two components:
 - _PlayerSystem_: gathering references to player avatar prefabs,
@@ -104,6 +111,14 @@ To remove the agent right click on the role name and select Delete from the cont
 Add a new game object to the prefab and set its position and rotation.
 Drag the newly created object to the _SpawnPoint.Point_ in role definition.
 
+### Agent camera configuration
+Additionally to the location, camera settings can be provided for a spawned agent.
+_CameraSetup_ component allows to do that. It should be added to the game object that represents a position where the avatar will be spawned (the one defined in _ExperimentDefinition_ (component) -> _Roles_ (list field) -> role entry on the list -> _SpawnPoint_ (struct) -> _Point_ (field)).
+The component exposes two fields:
+- _FieldOfView_: value which is set at spawn-time to _Camera.fieldOfView_ property.
+- _Rotation_: value which is set at spawn-time to _Transform.localRotation_ of a game object hosting _Camera_ component.
+![](ReadmeFiles/CameraSetup.png)
+
 #### Configuration of the pedestrian agent
 No additional configuration is needed for pedestrian type agents.
 
@@ -130,6 +145,24 @@ To change the position of a waypoint select waypoint transform and move it do th
 Additionally, for vehicles, SpeedSetting along with Collider component might be used to further configure tracked path.
 
 ![](ReadmeFiles/speed_settings.png)
+
+### Configuration of driver's eye-contact behaviour
+Initial eye contact tracking state and base tracking parameters are defined with fields in the _EyeContact_ component.
+_EyeContactTracking_ defines the initial (and current at runtime) driver's eye contact behavior while the car is not fully stopped.
+- _MinTrackingDistance_ and _MaxTrackingDistance_ define (in meters) the range of distances at which eye contact tracking is possible. Distance is measured between the driver's head position and the pedestrian's root position (ignoring a distance on a vertical axis).
+- _MaxHeadRotation_ (in degrees) limits head movement on a vertical axis.
+_EyeContact_, if tracking is enabled, selects as the target the closest game object tagged with a _"Pedestrain"_ tag that is within the distance range, if it meets rotation constraint (this constrain is checked when the closest object is already selected).
+![](ReadmeFiles/Pedestrian.png)
+
+_EyeContactRigControl_ is a component that consumes tracking target provided by _EyeContact_ component and animates drivers head movement.
+![](ReadmeFiles/eye-contact.png)
+
+Eye contact behavior tracking state can be changed when car reaches waypoint. Behavior change is defined by the _SpeedSettings_ - the component embeded on waypoint objects. Following four fields control those changes:
+- _EyeContactWhileYielding_: defines how the driver will behave while the car is fully stoped
+- _EyeContactAfterYielding_: defines how the driver will behave when car resumes driving after full stop. This value simply overwrites the current value of _EyeContact.EyeContactTracking_ if car has fully stopped.
+- _YieldingEyeContactSince_: defines how many seconds need to pass before the driver will make eye contact (starting from the moment the car has fully stopped)
+- _YieldingEyeContactUntil_: defines how many seconds need to pass before the driver ceases to maintain eye contact (starting from the moment the car has fully stopped)
+![](ReadmeFiles/SpeedSettings.png)
 
 #### Configuration of daylight conditions
 ![](ReadmeFiles/day_night_control.png)
