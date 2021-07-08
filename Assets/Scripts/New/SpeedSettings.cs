@@ -42,24 +42,24 @@ public class SpeedSettings : MonoBehaviour
         }
     }
 
+    float startTime;
+
     private IEnumerator LookAtPlayerAfterCarStops(AICar car, PlayerLookAtPed driver)
     {
-        var CarRigidbody = car.GetComponent<Rigidbody>();
-        while (!(CarRigidbody.velocity.magnitude < 0.1f && CarRigidbody.velocity.magnitude > -0.1f))
+        while (car.state != AICar.CarState.STOPPED)
         {
             yield return new WaitForFixedUpdate();
         }
         driver.EnableTracking = lookAtPlayerAfterYielding;
         if (lookAtPlayerWhileYielding) {
             driver.trackingEnabledWhenYielding = false;
-            if (lookAtPedFromSeconds > 0) {
-                yield return new WaitForSeconds(lookAtPedFromSeconds);
+            startTime = Time.fixedTime;
+            while (lookAtPedFromSeconds > Time.fixedTime - startTime) {
                 yield return new WaitForFixedUpdate();
             }
             driver.trackingEnabledWhenYielding = true;
-            if (lookAtPedToSeconds - lookAtPedFromSeconds > 0)
+            while (lookAtPedToSeconds > Time.fixedTime - startTime)
             {
-                yield return new WaitForSeconds(lookAtPedToSeconds - lookAtPedFromSeconds);
                 yield return new WaitForFixedUpdate();
             }
             driver.trackingEnabledWhenYielding = false;
