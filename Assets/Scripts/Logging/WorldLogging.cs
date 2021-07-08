@@ -139,7 +139,7 @@ public class WorldLogger
                 _fileWriter.Write(ai.state == AICar.CarState.BRAKING);
                 _fileWriter.Write(ai.state == AICar.CarState.STOPPED);
                 _fileWriter.Write(ai.state == AICar.CarState.TAKEOFF);
-                var plap = driver.GetComponentInChildren<PlayerLookAtPed>();
+                var plap = driver.GetComponentInChildren<EyeContact>();
                 Assert.IsNotNull(plap);
                 _fileWriter.Write(plap.TargetPed != null);
             }
