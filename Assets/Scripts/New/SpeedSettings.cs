@@ -25,44 +25,48 @@ public class SpeedSettings : MonoBehaviour
     //public bool resetSpeedAfterStop = false;
     //Yielding
     public bool causeToYield;
-    public bool lookAtPlayerWhileYielding;
-    public bool lookAtPlayerAfterYielding;
+    [FormerlySerializedAs("lookAtPlayerWhileYielding")]
+    public bool EyeContactWhileYielding;
+    [FormerlySerializedAs("lookAtPlayerAfterYielding")]
+    public bool EyeContactAfterYielding;
 
     public float yieldTime;
     public float brakingAcceleration; //must be negative
-    public float lookAtPedFromSeconds;
-    public float lookAtPedToSeconds;
+    [FormerlySerializedAs("lookAtPedFromSeconds")]
+    public float YieldingEyeContactSince;
+    [FormerlySerializedAs("lookAtPedToSeconds")]
+    public float YieldingEyeContactUntil;
     //Dynamics
 
     private void OnTriggerEnter(Collider other)
     {
         if (other.gameObject.CompareTag("ManualCar") && causeToYield)
         {
-            StartCoroutine(LookAtPlayerAfterCarStops(other.gameObject.GetComponent<AICar>(), other.gameObject.GetComponentInChildren<PlayerLookAtPed>()));
+            StartCoroutine(LookAtPlayerAfterCarStops(other.gameObject.GetComponent<AICar>(), other.gameObject.GetComponentInChildren<EyeContact>()));
         }
     }
 
     float startTime;
 
-    private IEnumerator LookAtPlayerAfterCarStops(AICar car, PlayerLookAtPed driver)
+    private IEnumerator LookAtPlayerAfterCarStops(AICar car, EyeContact driver)
     {
         while (car.state != AICar.CarState.STOPPED)
         {
             yield return new WaitForFixedUpdate();
         }
-        driver.EnableTracking = lookAtPlayerAfterYielding;
-        if (lookAtPlayerWhileYielding) {
-            driver.trackingEnabledWhenYielding = false;
+        driver.Tracking = EyeContactAfterYielding;
+        if (EyeContactWhileYielding) {
+            driver.TrackingWhileYielding = false;
             startTime = Time.fixedTime;
-            while (lookAtPedFromSeconds > Time.fixedTime - startTime) {
+            while (YieldingEyeContactSince > Time.fixedTime - startTime) {
                 yield return new WaitForFixedUpdate();
             }
-            driver.trackingEnabledWhenYielding = true;
-            while (lookAtPedToSeconds > Time.fixedTime - startTime)
+            driver.TrackingWhileYielding = true;
+            while (YieldingEyeContactUntil > Time.fixedTime - startTime)
             {
                 yield return new WaitForFixedUpdate();
             }
-            driver.trackingEnabledWhenYielding = false;
+            driver.TrackingWhileYielding = false;
         }
     }
 

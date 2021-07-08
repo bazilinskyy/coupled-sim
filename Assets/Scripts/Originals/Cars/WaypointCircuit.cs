@@ -382,7 +382,7 @@ namespace UnityStandardAssets.Utility.Inspector
             foreach (var wp in circuit.Waypoints)
             {
                 var s = wp.GetComponent<SpeedSettings>();
-                sb.Append($"{wp.position.x},{wp.position.y},{wp.position.z},{s.WaypointType},{s.speed},{s.acceleration},{s.jerk},{s.causeToYield},{s.lookAtPlayerWhileYielding},{s.lookAtPlayerAfterYielding},{s.yieldTime},{s.brakingAcceleration},{s.lookAtPedFromSeconds},{s.lookAtPedToSeconds}\n");
+                sb.Append($"{wp.position.x},{wp.position.y},{wp.position.z},{s.WaypointType},{s.speed},{s.acceleration},{s.jerk},{s.causeToYield},{s.EyeContactWhileYielding},{s.EyeContactAfterYielding},{s.yieldTime},{s.brakingAcceleration},{s.YieldingEyeContactSince},{s.YieldingEyeContactUntil}\n");
             }
             File.WriteAllText(path, sb.ToString());
         }
@@ -464,12 +464,12 @@ namespace UnityStandardAssets.Utility.Inspector
                 DeserializeFloat(out speedSettings.acceleration, SpeedSettings.Defaults.Acceleration);
                 DeserializeFloat(out speedSettings.jerk, SpeedSettings.Defaults.Jerk);
                 DeserializeBool(out speedSettings.causeToYield);
-                DeserializeBool(out speedSettings.lookAtPlayerWhileYielding);
-                DeserializeBool(out speedSettings.lookAtPlayerAfterYielding);
+                DeserializeBool(out speedSettings.EyeContactWhileYielding);
+                DeserializeBool(out speedSettings.EyeContactAfterYielding);
                 DeserializeFloat(out speedSettings.yieldTime);
                 DeserializeFloat(out speedSettings.brakingAcceleration);
-                DeserializeFloat(out speedSettings.lookAtPedFromSeconds);
-                DeserializeFloat(out speedSettings.lookAtPedToSeconds);
+                DeserializeFloat(out speedSettings.YieldingEyeContactSince);
+                DeserializeFloat(out speedSettings.YieldingEyeContactUntil);
             }
         }
         
