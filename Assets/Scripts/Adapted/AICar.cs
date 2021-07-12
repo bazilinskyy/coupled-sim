@@ -327,7 +327,7 @@ public class AICar : MonoBehaviour, IVehicle
         // Change of tag here that causes deceleration when hitting trigger in X direction
         else if (other.gameObject.CompareTag("WaitInput_X"))
         {
-            triggerlocation = other.gameObject.transform.position.x;
+            triggerlocation = transform.position.x;
             braking = true;
             WaitInputX = true;
             set_speed = other.GetComponent<SpeedSettings>().speed;
@@ -337,7 +337,7 @@ public class AICar : MonoBehaviour, IVehicle
         // Change of tag here that causes deceleration when hitting trigger in Z direction
         else if (other.gameObject.CompareTag("StartTrial_Z"))
         {
-            triggerlocation = other.gameObject.transform.position.z; 
+            triggerlocation = transform.position.z; 
             braking = true;
             WaitTrialZ = true;
             set_speed = other.GetComponent<SpeedSettings>().speed;
@@ -348,7 +348,7 @@ public class AICar : MonoBehaviour, IVehicle
         // Change of tag here that causes deceleration when hitting trigger in Z direction
         else if (other.gameObject.CompareTag("StartTrial_X"))
         {
-            triggerlocation = other.gameObject.transform.position.x;
+            triggerlocation = transform.position.x;
             braking = true;
             WaitTrialX = true;
             set_speed = other.GetComponent<SpeedSettings>().speed;
