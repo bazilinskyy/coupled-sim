@@ -8,23 +8,26 @@ using UnityStandardAssets.Utility;
 //spawns, initializes and manages avatar at runtime
 public class PlayerSystem : MonoBehaviour
 {
-    public enum Mode
+    public enum InputMode
     {
         Flat,
         VR,
         Suite,
-        Remote,
+        None
+    }
+
+    public enum ControlMode
+    {
+        Driver,
+        Passenger,
         HostAI
     }
 
-    [SerializeField]
-    Mode PlayerMode;
+    public InputMode PlayerInputMode;
     [SerializeField]
     PlayerAvatar _AvatarPrefab;
     [SerializeField]
     PlayerAvatar[] _AvatarPrefabDriver;
-    [SerializeField]
-    PlayerAvatar[] _AvatarPrefabPassenger;
 
 
     [NonSerialized]
@@ -35,7 +38,7 @@ public class PlayerSystem : MonoBehaviour
     [NonSerialized]
     public List<PlayerAvatar> Avatars = new List<PlayerAvatar>();
     [NonSerialized]
-    public List<PlayerAvatar> Drivers = new List<PlayerAvatar>();
+    public List<PlayerAvatar> Cars = new List<PlayerAvatar>();
     [NonSerialized]
     public List<PlayerAvatar> Pedestrians = new List<PlayerAvatar>();
     [NonSerialized]
@@ -66,9 +69,8 @@ public class PlayerSystem : MonoBehaviour
             case SpawnPointType.Pedestrian:
                 return _AvatarPrefab;
             case SpawnPointType.Driver:
-                return _AvatarPrefabDriver[carIdx];
             case SpawnPointType.Passenger:
-                return _AvatarPrefabPassenger[carIdx];
+                return _AvatarPrefabDriver[carIdx];
             default:
                 Assert.IsFalse(true, $"Invalid SpawnPointType: {type}");
                 return null;
@@ -77,9 +79,10 @@ public class PlayerSystem : MonoBehaviour
 
     public void SpawnLocalPlayer(SpawnPoint spawnPoint, int player, ExperimentRoleDefinition role)
     {
+        bool isPassenger = spawnPoint.Type == SpawnPointType.Passenger;
         LocalPlayer = SpawnAvatar(spawnPoint, GetAvatarPrefab(spawnPoint.Type, role.carIdx), player, role);
-        LocalPlayer.Initialize(PlayerMode);
-        if (spawnPoint.Type == SpawnPointType.Passenger)
+        LocalPlayer.Initialize(false, PlayerInputMode, isPassenger ? ControlMode.Passenger : ControlMode.Driver);
+        if (isPassenger)
         {
             var waypointFollow = LocalPlayer.GetComponent<WaypointProgressTracker>();
             Assert.IsNotNull(waypointFollow);
@@ -94,7 +97,7 @@ public class PlayerSystem : MonoBehaviour
     public void SpawnRemotePlayer(SpawnPoint spawnPoint, int player, ExperimentRoleDefinition role)
     {
         var remotePlayer = SpawnAvatar(spawnPoint, GetAvatarPrefab(spawnPoint.Type, role.carIdx), player, role);
-        remotePlayer.Initialize(Mode.Remote);
+        remotePlayer.Initialize(true, InputMode.None, ControlMode.HostAI);
     }
 
     public List<PlayerAvatar> GetAvatarsOfType(AvatarType type)
@@ -102,8 +105,7 @@ public class PlayerSystem : MonoBehaviour
         switch (type)
         {
             case AvatarType.Pedestrian: return Pedestrians;
-            case AvatarType.Driver: return Drivers;
-            case AvatarType.Passenger: return Passengers;
+            case AvatarType.Driver: return Cars;
             default: Assert.IsFalse(true, $"No avatar collection for type {type}"); return null;
         }
     }
@@ -165,20 +167,18 @@ public class PlayerSystem : MonoBehaviour
     public void SelectModeGUI()
     {
 
-        PlayerMode = Mode.Flat;
-
-        //    GUILayout.Label($"Mode: {PlayerMode}");
-        //    if (GUILayout.Button("Suite mode"))
-        //    {
-        //        PlayerMode = Mode.Suite;
-        //    }
-        //    if (GUILayout.Button("Oculus mode"))
-        //    {
-        //        PlayerMode = Mode.VR;
-        //    }
-        //    if (GUILayout.Button("Keyboard mode"))
-        //    {
-        //        PlayerMode = Mode.Flat;
-        //    }
+            GUILayout.Label($"Mode: {PlayerInputMode}");
+            if (GUILayout.Button("Suite mode"))
+            {
+                PlayerInputMode = InputMode.Suite;
+            }
+            if (GUILayout.Button("Oculus mode"))
+            {
+                PlayerInputMode = InputMode.VR;
+            }
+            if (GUILayout.Button("Keyboard mode"))
+            {
+                PlayerInputMode = InputMode.Flat;
+            }
     }
 }

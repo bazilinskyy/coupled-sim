@@ -8,8 +8,6 @@ using VehicleBehaviour;
 
 public class EyeContactRigControl : MonoBehaviour
 {
-    [FormerlySerializedAs("Player")]
-    public GameObject Driver;
     [FormerlySerializedAs("LookAtPlayerSpeed")]
     public float HeadRotationLerpingSpeed;
     [FormerlySerializedAs("CenterAnchor")]
@@ -24,7 +22,7 @@ public class EyeContactRigControl : MonoBehaviour
 
     private void Start()
     {
-        playerLookAtPed = Driver.GetComponent<EyeContact>();
+        playerLookAtPed = GetComponent<EyeContact>();
         target = new GameObject();
         var data = HeadTrackingAnimationConstraint.data.sourceObjects;
         data.Clear();
