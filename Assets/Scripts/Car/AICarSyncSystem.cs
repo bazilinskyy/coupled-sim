@@ -20,6 +20,8 @@ public class AICarSyncSystem
         public int PrefabIdx;
         public Vector3 Position;
         public Quaternion Rotation;
+        public bool SpawnDriver;
+        public bool SpawnPassenger;
 
         public void Sync<T>(T synchronizer) where T : ISynchronizer
         {
@@ -57,19 +59,21 @@ public class AICarSyncSystem
         return -1;
     }
 
-    public AICar Spawn(AICar prefab, Vector3 position, Quaternion rotation, WaypointCircuit track, bool yielding)
+    public AICar Spawn(CarSpawnParams parameters, bool yielding)
     {
         Assert.AreEqual(Mode.Host, _mode, "Only host can spawn synced objects");
-        var prefabIdx = FindPrefabIndex(prefab);
-        Assert.AreNotEqual(-1, prefabIdx, $"The prefab {prefab} was not added to NetworkingManager -> AICarSyncSystem -> Prefabs");
-        var aiCar = GameObject.Instantiate(Prefabs[prefabIdx], position, rotation);
+        var prefabIdx = FindPrefabIndex(parameters.Car);
+        Assert.AreNotEqual(-1, prefabIdx, $"The prefab {parameters.Car} was not added to NetworkingManager -> AICarSyncSystem -> Prefabs");
+        var aiCar = GameObject.Instantiate(Prefabs[prefabIdx], parameters.SpawnPoint.position, parameters.SpawnPoint.rotation);
         aiCar.gameObject.layer = LayerMask.NameToLayer(yielding ? "Yielding" : "Car");
         aiCar.enabled = true;
         var waypointProgressTracker = aiCar.GetComponent<WaypointProgressTracker>();
         waypointProgressTracker.enabled = true;
-        waypointProgressTracker.Init(track);
+        waypointProgressTracker.Init(parameters.Track);
         var avatar = aiCar.GetComponent<PlayerAvatar>();
-        avatar.Initialize(PlayerSystem.Mode.HostAI);
+        avatar.PassengerPuppet.SetActive(parameters.SpawnPassenger);
+        avatar.DriverPuppet.SetActive(parameters.SpawnDriver);
+        avatar.Initialize(false, PlayerSystem.InputMode.None, PlayerSystem.ControlMode.HostAI);
         var rb = aiCar.GetComponent<Rigidbody>();
         rb.isKinematic = false;
         rb.GetComponent<Rigidbody>().useGravity = true;
@@ -77,8 +81,10 @@ public class AICarSyncSystem
         _host.BroadcastReliable(new SpawnAICarMsg()
         {
             PrefabIdx = prefabIdx,
-            Position = position,
-            Rotation = rotation,
+            Position = parameters.SpawnPoint.position,
+            Rotation = parameters.SpawnPoint.rotation,
+            SpawnPassenger = parameters.SpawnPassenger,
+            SpawnDriver = parameters.SpawnDriver
         });
         return aiCar;
     }
@@ -88,7 +94,9 @@ public class AICarSyncSystem
         var msg = NetMsg.Read<SpawnAICarMsg>(sync);
         var go = GameObject.Instantiate(Prefabs[msg.PrefabIdx], msg.Position, msg.Rotation);
         var avatar = go.GetComponent<PlayerAvatar>();
-        avatar.Initialize(PlayerSystem.Mode.Remote);
+        avatar.PassengerPuppet.SetActive(msg.SpawnPassenger);
+        avatar.DriverPuppet.SetActive(msg.SpawnDriver);
+        avatar.Initialize(true, PlayerSystem.InputMode.None, PlayerSystem.ControlMode.HostAI);
         Cars.Add(avatar);
     }
 
