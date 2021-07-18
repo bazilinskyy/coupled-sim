@@ -4,10 +4,9 @@ using UnityEngine;
 
 public class TestSyncedCarSpawner : CarSpawnerBase
 {
-    public AICar TestCar;
     protected override IEnumerator SpawnCoroutine()
     {
         yield return new WaitForSeconds(0);
-        Spawn(TestCar, false);
+        Spawn(spawnParams, false);
     }
 }

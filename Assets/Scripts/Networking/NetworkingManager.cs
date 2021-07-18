@@ -3,9 +3,10 @@
 [System.Serializable]
 public struct InstantStartHostParameters
 {
-    public bool instantStart;
-    public int instantStartRole;
-    public int instantStartExperiment;
+    public bool SkipSelectionScreen;
+    public int SelectedExperiment;
+    public int SelectedRole;
+    public PlayerSystem.InputMode InputMode;
 }
 
 //logic entry point 
@@ -58,7 +59,7 @@ public class NetworkingManager : MonoBehaviour
         }
     }
 
-    public InstantStartHostParameters instantStartParams;
+    public InstantStartHostParameters InstantStartParams;
 
     void OnGUI()
     {
@@ -68,11 +69,11 @@ public class NetworkingManager : MonoBehaviour
         }
         if (_netSystem == null)
         {
-            if (instantStartParams.instantStart || GUILayout.Button("Start Host"))
+            if (InstantStartParams.SkipSelectionScreen || GUILayout.Button("Start Host"))
             {
-                _netSystem = new Host(_levelManager, _playerSystem, _aiCarSystem, _logger, _fixedLogger, instantStartParams);
+                _netSystem = new Host(_levelManager, _playerSystem, _aiCarSystem, _logger, _fixedLogger, InstantStartParams);
             }
-            if (!instantStartParams.instantStart && GUILayout.Button("Start Client"))
+            if (!InstantStartParams.SkipSelectionScreen && GUILayout.Button("Start Client"))
             {
                 _netSystem = new Client(_levelManager, _playerSystem, _aiCarSystem, _logger, _fixedLogger);
             }

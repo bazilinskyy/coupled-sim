@@ -121,6 +121,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   SpawnPoint: {fileID: 5814810096925119000}
   Track: {fileID: 1564282228627260321}
+  spawnParams:
+    SpawnPoint: {fileID: 5814810096925119000}
+    Track: {fileID: 1564282228627260321}
+    SpawnDriver: 1
+    SpawnPassenger: 0
+    Car: {fileID: 7713759469045616529, guid: 1baf460ab026f1247ab4696be569ffae, type: 3}
   TestCar: {fileID: 7713759469045616529, guid: 1baf460ab026f1247ab4696be569ffae, type: 3}
 --- !u!1 &2937907642792391175
 GameObject:
@@ -179,17 +185,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointNumber: 1
+  WaypointType: 1
   speed: 15
   acceleration: 1
   jerk: 0
   causeToYield: 0
-  lookAtPlayerWhileYielding: 0
-  lookAtPlayerAfterYielding: 0
+  EyeContactWhileYielding: 0
+  EyeContactAfterYielding: 0
   yieldTime: 0
   brakingAcceleration: 0
-  lookAtPedFromSeconds: 0
-  lookAtPedToSeconds: 0
+  YieldingEyeContactSince: 0
+  YieldingEyeContactUntil: 0
 --- !u!1 &3231446614131538329
 GameObject:
   m_ObjectHideFlags: 0
@@ -247,17 +253,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointNumber: 1
+  WaypointType: 1
   speed: 15
   acceleration: 1
   jerk: 0
   causeToYield: 0
-  lookAtPlayerWhileYielding: 0
-  lookAtPlayerAfterYielding: 0
+  EyeContactWhileYielding: 0
+  EyeContactAfterYielding: 0
   yieldTime: 0
   brakingAcceleration: 0
-  lookAtPedFromSeconds: 0
-  lookAtPedToSeconds: 0
+  YieldingEyeContactSince: 0
+  YieldingEyeContactUntil: 0
 --- !u!1 &3416644290353069668
 GameObject:
   m_ObjectHideFlags: 0
@@ -315,17 +321,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointNumber: 1
+  WaypointType: 1
   speed: 15
   acceleration: 1
   jerk: 0
   causeToYield: 1
-  lookAtPlayerWhileYielding: 1
-  lookAtPlayerAfterYielding: 1
+  EyeContactWhileYielding: 1
+  EyeContactAfterYielding: 1
   yieldTime: 5
   brakingAcceleration: -1
-  lookAtPedFromSeconds: 0
-  lookAtPedToSeconds: 7
+  YieldingEyeContactSince: 0
+  YieldingEyeContactUntil: 7
 --- !u!1 &3599451005144964128
 GameObject:
   m_ObjectHideFlags: 0
@@ -383,17 +389,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointNumber: 1
+  WaypointType: 1
   speed: 15
   acceleration: 1
   jerk: 0
   causeToYield: 0
-  lookAtPlayerWhileYielding: 0
-  lookAtPlayerAfterYielding: 0
+  EyeContactWhileYielding: 0
+  EyeContactAfterYielding: 0
   yieldTime: 0
   brakingAcceleration: 0
-  lookAtPedFromSeconds: 0
-  lookAtPedToSeconds: 0
+  YieldingEyeContactSince: 0
+  YieldingEyeContactUntil: 0
 --- !u!1 &4338677873096089915
 GameObject:
   m_ObjectHideFlags: 0
@@ -451,17 +457,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointNumber: 1
+  WaypointType: 1
   speed: 15
   acceleration: 1
   jerk: 0
   causeToYield: 0
-  lookAtPlayerWhileYielding: 0
-  lookAtPlayerAfterYielding: 0
+  EyeContactWhileYielding: 0
+  EyeContactAfterYielding: 0
   yieldTime: 0
   brakingAcceleration: 0
-  lookAtPedFromSeconds: 0
-  lookAtPedToSeconds: 0
+  YieldingEyeContactSince: 0
+  YieldingEyeContactUntil: 0
 --- !u!1 &4584597583284184193
 GameObject:
   m_ObjectHideFlags: 0
@@ -519,17 +525,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointNumber: 1
+  WaypointType: 1
   speed: 15
   acceleration: 1
   jerk: 0
   causeToYield: 0
-  lookAtPlayerWhileYielding: 0
-  lookAtPlayerAfterYielding: 0
+  EyeContactWhileYielding: 0
+  EyeContactAfterYielding: 0
   yieldTime: 0
   brakingAcceleration: 0
-  lookAtPedFromSeconds: 0
-  lookAtPedToSeconds: 0
+  YieldingEyeContactSince: 0
+  YieldingEyeContactUntil: 0
 --- !u!1 &5721797977618089615
 GameObject:
   m_ObjectHideFlags: 0
@@ -665,17 +671,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointNumber: 1
+  WaypointType: 1
   speed: 15
   acceleration: 1
   jerk: 0
   causeToYield: 0
-  lookAtPlayerWhileYielding: 0
-  lookAtPlayerAfterYielding: 0
+  EyeContactWhileYielding: 0
+  EyeContactAfterYielding: 0
   yieldTime: 0
   brakingAcceleration: 0
-  lookAtPedFromSeconds: 0
-  lookAtPedToSeconds: 0
+  YieldingEyeContactSince: 0
+  YieldingEyeContactUntil: 0
 --- !u!1 &6095068103262954394
 GameObject:
   m_ObjectHideFlags: 0
@@ -733,17 +739,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointNumber: 1
+  WaypointType: 1
   speed: 15
   acceleration: 1
   jerk: 0
   causeToYield: 0
-  lookAtPlayerWhileYielding: 0
-  lookAtPlayerAfterYielding: 0
+  EyeContactWhileYielding: 0
+  EyeContactAfterYielding: 0
   yieldTime: 0
   brakingAcceleration: 0
-  lookAtPedFromSeconds: 0
-  lookAtPedToSeconds: 0
+  YieldingEyeContactSince: 0
+  YieldingEyeContactUntil: 0
 --- !u!1 &6381268607988829094
 GameObject:
   m_ObjectHideFlags: 0
@@ -801,17 +807,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointNumber: 1
+  WaypointType: 1
   speed: 15
   acceleration: 1
   jerk: 0
   causeToYield: 0
-  lookAtPlayerWhileYielding: 0
-  lookAtPlayerAfterYielding: 0
+  EyeContactWhileYielding: 0
+  EyeContactAfterYielding: 0
   yieldTime: 0
   brakingAcceleration: 0
-  lookAtPedFromSeconds: 0
-  lookAtPedToSeconds: 0
+  YieldingEyeContactSince: 0
+  YieldingEyeContactUntil: 0
 --- !u!1 &6632765927077380040
 GameObject:
   m_ObjectHideFlags: 0
@@ -869,17 +875,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointNumber: 1
+  WaypointType: 1
   speed: 15
   acceleration: 1
   jerk: 0
   causeToYield: 0
-  lookAtPlayerWhileYielding: 0
-  lookAtPlayerAfterYielding: 0
+  EyeContactWhileYielding: 0
+  EyeContactAfterYielding: 0
   yieldTime: 0
   brakingAcceleration: 0
-  lookAtPedFromSeconds: 0
-  lookAtPedToSeconds: 0
+  YieldingEyeContactSince: 0
+  YieldingEyeContactUntil: 0
 --- !u!1 &6692014269374732414
 GameObject:
   m_ObjectHideFlags: 0
@@ -999,17 +1005,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointNumber: 1
+  WaypointType: 1
   speed: 15
   acceleration: 1
   jerk: 0
   causeToYield: 0
-  lookAtPlayerWhileYielding: 0
-  lookAtPlayerAfterYielding: 0
+  EyeContactWhileYielding: 0
+  EyeContactAfterYielding: 0
   yieldTime: 0
   brakingAcceleration: 0
-  lookAtPedFromSeconds: 0
-  lookAtPedToSeconds: 0
+  YieldingEyeContactSince: 0
+  YieldingEyeContactUntil: 0
 --- !u!1 &7285468331721094828
 GameObject:
   m_ObjectHideFlags: 0
@@ -1067,17 +1073,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointNumber: 1
+  WaypointType: 1
   speed: 15
   acceleration: 1
   jerk: 0
   causeToYield: 0
-  lookAtPlayerWhileYielding: 0
-  lookAtPlayerAfterYielding: 0
+  EyeContactWhileYielding: 0
+  EyeContactAfterYielding: 0
   yieldTime: 0
   brakingAcceleration: 0
-  lookAtPedFromSeconds: 0
-  lookAtPedToSeconds: 0
+  YieldingEyeContactSince: 0
+  YieldingEyeContactUntil: 0
 --- !u!1 &8007164293010771473
 GameObject:
   m_ObjectHideFlags: 0
@@ -1135,17 +1141,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointNumber: 1
+  WaypointType: 1
   speed: 15
   acceleration: 1
   jerk: 0
   causeToYield: 0
-  lookAtPlayerWhileYielding: 0
-  lookAtPlayerAfterYielding: 0
+  EyeContactWhileYielding: 0
+  EyeContactAfterYielding: 0
   yieldTime: 0
   brakingAcceleration: 0
-  lookAtPedFromSeconds: 0
-  lookAtPedToSeconds: 0
+  YieldingEyeContactSince: 0
+  YieldingEyeContactUntil: 0
 --- !u!1 &8616071954057896392
 GameObject:
   m_ObjectHideFlags: 0
@@ -1203,17 +1209,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointNumber: 1
+  WaypointType: 1
   speed: 15
   acceleration: 1
   jerk: 0
   causeToYield: 0
-  lookAtPlayerWhileYielding: 0
-  lookAtPlayerAfterYielding: 0
+  EyeContactWhileYielding: 0
+  EyeContactAfterYielding: 0
   yieldTime: 0
   brakingAcceleration: 0
-  lookAtPedFromSeconds: 0
-  lookAtPedToSeconds: 0
+  YieldingEyeContactSince: 0
+  YieldingEyeContactUntil: 0
 --- !u!1 &8623244662689833532
 GameObject:
   m_ObjectHideFlags: 0
@@ -1271,14 +1277,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointNumber: 1
+  WaypointType: 1
   speed: 15
   acceleration: 1
   jerk: 0
   causeToYield: 0
-  lookAtPlayerWhileYielding: 0
-  lookAtPlayerAfterYielding: 0
+  EyeContactWhileYielding: 0
+  EyeContactAfterYielding: 0
   yieldTime: 0
   brakingAcceleration: 0
-  lookAtPedFromSeconds: 0
-  lookAtPedToSeconds: 0
+  YieldingEyeContactSince: 0
+  YieldingEyeContactUntil: 0
