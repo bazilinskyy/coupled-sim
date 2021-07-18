@@ -181,4 +181,9 @@ public class PlayerSystem : MonoBehaviour
                 PlayerInputMode = InputMode.Flat;
             }
     }
+
+    public void SelectMode(InputMode inputMode)
+    {
+        PlayerInputMode = inputMode;
+    }
 }
