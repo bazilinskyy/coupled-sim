@@ -1381,7 +1381,7 @@ MonoBehaviour:
       type: 3}
     carIdx: 0
     SpawnPoint:
-      Point: {fileID: 1311683245}
+      Point: {fileID: 6750191569094715530}
       Type: 2
     AutonomousPath: {fileID: 8043761391078894673}
     AutonomousIsYielding: 1
@@ -1406,8 +1406,9 @@ MonoBehaviour:
     AutonomousPath: {fileID: 0}
     AutonomousIsYielding: 0
   PointsOfInterest: []
-  CarSpawners:
-  - {fileID: 5290746757051337082}
+  CarSpawners: []
+  AIPedestrians:
+    AIPedestrians: []
 --- !u!1 &6731739411145890886
 GameObject:
   m_ObjectHideFlags: 0
@@ -1424,7 +1425,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &5091369192103512573
 Transform:
   m_ObjectHideFlags: 0
@@ -1451,15 +1452,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a981201a2cb3a744d98abf717096af49, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  SpawnPoint: {fileID: 5091369192103512573}
-  Track: {fileID: 8043761391078894673}
   spawnParams:
-    SpawnPoint: {fileID: 5091369192103512573}
+    SpawnPoint: {fileID: 6750191569094715530}
     Track: {fileID: 8043761391078894673}
     SpawnDriver: 0
     SpawnPassenger: 1
     Car: {fileID: 7713759469045616529, guid: 1baf460ab026f1247ab4696be569ffae, type: 3}
-  TestCar: {fileID: 352613617798921809, guid: 568fe77cfc898694fad6a63eff98d905, type: 3}
 --- !u!1 &7005373354728422933
 GameObject:
   m_ObjectHideFlags: 0
