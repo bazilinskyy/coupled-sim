@@ -128,6 +128,13 @@
       },
       "url": "https://packages.unity.com"
     },
+    "com.unity.subsystemregistration": {
+      "version": "1.0.6",
+      "depth": 2,
+      "source": "registry",
+      "dependencies": {},
+      "url": "https://packages.unity.com"
+    },
     "com.unity.test-framework": {
       "version": "1.1.16",
       "depth": 0,
@@ -160,23 +167,34 @@
       "depth": 0,
       "source": "builtin",
       "dependencies": {
-        "com.unity.modules.ui": "1.0.0",
-        "com.unity.modules.imgui": "1.0.0"
+        "com.unity.modules.ui": "1.0.0"
       }
     },
     "com.unity.xr.legacyinputhelpers": {
       "version": "2.1.4",
-      "depth": 0,
+      "depth": 2,
       "source": "registry",
       "dependencies": {},
       "url": "https://packages.unity.com"
     },
-    "com.unity.xr.oculus.standalone": {
-      "version": "2.38.4",
-      "depth": 0,
+    "com.unity.xr.management": {
+      "version": "3.2.13",
+      "depth": 1,
       "source": "registry",
-      "dependencies": {},
+      "dependencies": {
+        "com.unity.xr.legacyinputhelpers": "2.1.2",
+        "com.unity.subsystemregistration": "1.0.6"
+      },
       "url": "https://packages.unity.com"
+    },
+    "com.varjo.xr": {
+      "version": "https://github.com/varjocom/VarjoUnityXRPlugin.git",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {
+        "com.unity.xr.management": "3.2.13"
+      },
+      "hash": "a6efdede589385468c75bd669790f9b0e9221e18"
     },
     "nuget.mono-cecil": {
       "version": "0.1.6-preview",
