@@ -232,6 +232,7 @@ namespace UnityStandardAssets.Utility.Inspector
             var indent = EditorGUI.indentLevel;
             EditorGUI.indentLevel = 0;
 
+
             var items = property.FindPropertyRelative("items");
             var titles = new string[] { "Transform", "", "", "" };
             var props = new string[] { "transform", "^", "v", "-" };
@@ -240,7 +241,7 @@ namespace UnityStandardAssets.Utility.Inspector
             bool changedLength = false;
             if (items.arraySize > 0)
             {
-                for (int i = -1; i < items.arraySize; ++i)
+                for (int i = 0; i < items.arraySize; ++i)
                 {
                     var item = items.GetArrayElementAtIndex(i);
 
@@ -378,11 +379,34 @@ namespace UnityStandardAssets.Utility.Inspector
             var circuit = circuitObject.targetObject as WaypointCircuit;
             StringBuilder sb = new StringBuilder();
             sb.Append($"Smooth: {circuit.smoothRoute}\n");
-            sb.Append($"x,y,z,waypointType,speed,acceleration,jerk,causeToYield,lookAtPlayerWhileYielding,lookAtPlayerAfterYielding,yieldTime,brakingAcceleration,lookAtPedFromSeconds,lookAtPedToSeconds\n");
+            sb.Append($"name;tag;layer;x;y;z;rotX;rotY;rotZ;" +
+                $"waypointType;speed;acceleration;jerk;causeToYield;lookAtPlayerWhileYielding;lookAtPlayerAfterYielding;yieldTime;brakingAcceleration;lookAtPedFromSeconds;lookAtPedToSeconds;" +
+                $"collider_enabled;isTrigger;centerX;centerY;centerZ;sizeX;sizeY;sizeZ" +
+                $"\n");
             foreach (var wp in circuit.Waypoints)
             {
+                var go = wp.gameObject;
+                sb.Append($"{go.name};{go.tag};{go.layer};{wp.position.x};{wp.position.y};{wp.position.z};{wp.rotation.eulerAngles.x};{wp.rotation.eulerAngles.y};{wp.rotation.eulerAngles.z}");
                 var s = wp.GetComponent<SpeedSettings>();
-                sb.Append($"{wp.position.x},{wp.position.y},{wp.position.z},{s.WaypointType},{s.speed},{s.acceleration},{s.jerk},{s.causeToYield},{s.EyeContactWhileYielding},{s.EyeContactAfterYielding},{s.yieldTime},{s.brakingAcceleration},{s.YieldingEyeContactSince},{s.YieldingEyeContactUntil}\n");
+                if (s != null)
+                {
+                    sb.Append($";{s.WaypointType};{s.speed};{s.acceleration};{s.jerk};{s.causeToYield};{s.EyeContactWhileYielding};{s.EyeContactAfterYielding};{s.yieldTime};{s.brakingAcceleration};{s.YieldingEyeContactSince};{s.YieldingEyeContactUntil}");
+                } else
+                {
+                    sb.Append($";;;;;;;;;;;");
+                }
+
+                var b = wp.GetComponent<BoxCollider>();
+                if (b != null)
+                {
+                    sb.Append($";{b.enabled};{b.isTrigger};{b.center.x};{b.center.y};{b.center.z};{b.size.x};{b.size.y};{b.size.z}");
+                }
+                else
+                {
+                    sb.Append($";;;;;;;;");
+                }
+
+                sb.Append("\n");
             }
             File.WriteAllText(path, sb.ToString());
         }
@@ -405,10 +429,10 @@ namespace UnityStandardAssets.Utility.Inspector
 
             for (int i = 2; i < lines.Length; i++)
             {
-                var line = lines[i].Split(',');
+                var line = lines[i].Split(';');
                 var idx = i - 2;
                 wpts.InsertArrayElementAtIndex(idx);
-                var wp = new GameObject($"Waypoint {idx}", typeof(SpeedSettings));
+                var wp = new GameObject($"Waypoint {idx}", typeof(SpeedSettings), typeof(BoxCollider));
                 wpts.GetArrayElementAtIndex(idx).objectReferenceValue = wp.transform;
                 wp.transform.SetParent((circuitObject.targetObject as WaypointCircuit).transform);
                 int lineCursor = 0;
@@ -449,12 +473,36 @@ namespace UnityStandardAssets.Utility.Inspector
                     return res;
                 }
 
-                // position
-                Vector3 position = default;
+                bool DeserializeString(out string b, string defaultValue = "")
+                {
+                    bool res = false;
+                    b = defaultValue;
+                    if (line.Length > lineCursor && !string.IsNullOrWhiteSpace(line[lineCursor]))
+                    {
+                        b = line[lineCursor];
+                        res = true;
+                    }
+                    lineCursor++;
+                    return res;
+                }
 
+                // position
+                DeserializeString(out var name);
+                wp.gameObject.name = name;
+                DeserializeString(out var tag);
+                wp.gameObject.tag = tag;
+                DeserializeInt(out var layer);
+                wp.gameObject.layer = layer;
+
+                Vector3 position = default;
                 if (DeserializeFloat(out position.x) && DeserializeFloat(out position.y) && DeserializeFloat(out position.z))
                 {
                     wp.transform.position = position;
+                }
+                Vector3 rotation = default;
+                if (DeserializeFloat(out rotation.x) && DeserializeFloat(out rotation.y) && DeserializeFloat(out rotation.z))
+                {
+                    wp.transform.rotation = Quaternion.Euler(rotation);
                 }
 
                 var speedSettings = wp.GetComponent<SpeedSettings>();
@@ -470,6 +518,25 @@ namespace UnityStandardAssets.Utility.Inspector
                 DeserializeFloat(out speedSettings.brakingAcceleration);
                 DeserializeFloat(out speedSettings.YieldingEyeContactSince);
                 DeserializeFloat(out speedSettings.YieldingEyeContactUntil);
+
+                var boxCollider = wp.GetComponent<BoxCollider>();
+
+                DeserializeBool(out var enabl);
+                boxCollider.enabled = enabl;
+                DeserializeBool(out var trigg);
+                boxCollider.isTrigger = trigg;
+
+                Vector3 center = default;
+                if (DeserializeFloat(out center.x) && DeserializeFloat(out center.y) && DeserializeFloat(out center.z))
+                {
+                    boxCollider.center = center;
+                }
+
+                Vector3 size = default;
+                if (DeserializeFloat(out size.x) && DeserializeFloat(out size.y) && DeserializeFloat(out size.z))
+                {
+                    boxCollider.size = size;
+                }
             }
         }
         
