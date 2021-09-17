@@ -287,13 +287,7 @@ public class AICar : MonoBehaviour, IVehicle
 
     void OnTriggerEnter(Collider other)
     {
-        // Do nothing if trigger isn't enabled
-        if (this.enabled == false)
-        {
-            return;
-        }
-        // Take over Waypoint Data
-        else if (other.gameObject.CompareTag("WP"))
+        if (other.gameObject.CompareTag("WP"))
         {
             // If WaypointNumber is one, take over settings
             if (other.GetComponent<SpeedSettings>().WaypointType == 1)
