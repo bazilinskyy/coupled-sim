@@ -49,10 +49,10 @@ After checking out this project, launch Unity Hub to run the simulator with the 
 Select the project from the Unity Hub projects list. Wait until the project loads in. If it is not in the Unity Hub list (it is the first time you are running the project), it has to be added first - click *Add* and select a folder containing the project files.
 Once the project is loaded into the Unity editor press the Play button to run it.
 
-Steps to run an experiment:
-1. Start host and wait for clients to join if needed.
 To start host press _Start Host_ button. 
 To start the client press _Start Client_ button, enter the host IP address and press _Connect_.
+Steps to run an experiment:
+1. Start host and wait for clients to join if needed.
 2. Once all clients have joined, on the host, select one of the experiments listed under _Experiment:_.
 3. On the host, assign roles to participants.
 4. On both host and clients, each participant has to select control mode.
@@ -77,13 +77,12 @@ The central point for configuring the simulator is _Managers_ game object from t
 
 ![](ReadmeFiles/player_system.png)
 
-![](ReadmeFiles/networking_manager.png)
-
 The experiment is defined solely with prefab containing the _ExperimentDefinition_ component in the root object.
-To edit the experiment definition, double click the prefab in the _Project_ window.
 To make newly created experiment selectable you have to add its prefab to _Experiments_ list on _NetworkingManager_ component.
 
-![](ReadmeFiles/experiment_definition.png)
+![](ReadmeFiles/networking_manager.png)
+
+To edit the experiment definition, double click the prefab in the _Project_ window.
 
 ![](ReadmeFiles/project.png)
 
@@ -97,12 +96,17 @@ _ExperimentDefinition_ component defines the following fields:
 - _Roles_: list defining roles that can be taken during an experiment by participants
 - _Points of Interest_: static points that are logged in experiment logs to be used in the log processing and analysis
 - _Car Spawners_: references to game objects spawning non-player controlled cars
+- _AI Pedestrians_: defines a list of _PedestrianDesc_ structs that contain a pair of an _AIPedestrian_ (the game object that defines an AI-controlled pedestrian avatar) and _WaypointCircuit_ (defining a path of waypoints for the linked avatar) 
 
 _Points of interest_ is a list of _Transform_ references.
 _CarSpawners_ list references game objects containing component inheriting from _CarSpawnerBase_. It defines, with overridden _IEnumerator SpawnCoroutine()_  method, spawn sequence (see _TestSyncedCarSpawner_ for reference implementation). Car prefabs spawned by the coroutine with _AICar Spawn(CarSpawnParams parameters, bool yielding)_ method must be one of the referenced prefabs in _AvatarPrefabDriver_ list on _NetworkManager_ component. 
 
+_Base.prefab_ from _ExperimentDefinitions_ folder is an example experiment definition showcasing simulator features.
+
+![](ReadmeFiles/experiment_definition.png)
+
 ### Configuration of agents
-Roles field is a list of _ExperimentRoleDefinition_ struct's defining experiment roles with the following data fields:
+Roles field is a list of _ExperimentRoleDefinition_ struct's defining experiment roles with the following base data fields:
 - _Name_: short name/description of the role
 - _SpawnPoint.Point_: defines where player avatar will be spawned
 - _SpawnPoint.Type_: a type of player avatar. It may be either _Pedestrian_, _Driver_, _Passenger_ of an autonomous car.
@@ -134,13 +138,13 @@ For _Driver_ role following field has to be defined:
 #### Configuration of the passenger agent
 For _Passenger_ type of agent following additional fields has to be defined:
 - Car Idx - indicates car prefab that will be spawned for this role. Selected prefab is the one on the indicated index on _AvatarPrefabDriver_ list (field on _PlayerSystem_ component)
-- Three _DriverHMI_ fields - define which HMI prefab to spawn on indicated spots
+- _TopHMI_, _WindshieldHMI_, _HoodHMI_ fields - define which HMI prefab to spawn on indicated spots
 - _AutonomusPath_ - references game object defining waypoints for the autonomous car via _WaypointCirciut_ component
 
 ### Configuration of non-playable characters
 ![](ReadmeFiles/traffic_circuit.png)
 
-Paths for both non-playable pedestrians and vehicles are defined with WaypointCircuit component.
+Paths that can be followed both by non-playable pedestrians and vehicles are defined with the WaypointCircuit component.
 To add waypoint press plus sign and drag waypoint Transform into the newly added field.
 To remove waypoint press a minus sign next to the waypoint.
 To reorder waypoint click up/down signs next to a waypoint.

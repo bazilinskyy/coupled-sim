@@ -73,6 +73,7 @@ namespace UnityStandardAssets.Utility
         {
             progressDistance = 4;
             progressNum = 0;
+            lastPosition = transform.position;
             if (progressStyle == ProgressStyle.PointToPoint)
             {
                 target.position = circuit.Waypoints[progressNum].position;
