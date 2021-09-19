@@ -32,9 +32,13 @@ public class AICarSyncSystem
     }
 
     public AICar[] Prefabs;
+
+    // Make sure to update the way these cars are logged if we
+    // ever start supporting removal
     [NonSerialized]
     public List<PlayerAvatar> Cars = new List<PlayerAvatar>();
 
+    public int CarsSpawnedSinceLastLog = 0;
     Mode _mode;
     UNetHost _host;
     public void InitHost(UNetHost host)
@@ -52,7 +56,7 @@ public class AICarSyncSystem
 
     int FindPrefabIndex(AICar prefab)
     {
-        for (int i=0;i < Prefabs.Length; i++)
+        for (int i = 0; i < Prefabs.Length; i++)
         {
             if (Prefabs[i] == prefab) return i;
         }
