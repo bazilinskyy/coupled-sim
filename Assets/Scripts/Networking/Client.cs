@@ -125,6 +125,7 @@ public class Client : NetworkSystem
                         break;
                     case TransitionPhase.WaitingForAwakes:
                         _client.SendReliable(new ReadyMsg());
+                        _lvlManager.ActiveExperiment.AIPedestrians.InitClient(_msgDispatcher);
                         _transitionPhase = TransitionPhase.None;
                         break;
                 }

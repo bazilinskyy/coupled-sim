@@ -106,9 +106,9 @@ namespace UnityStandardAssets.Utility
         {
             // comments are no use here... it's the catmull-rom equation.
             // Un-magic this, lord vector!
-            return 0.5f*
-                   ((2*p1) + (-p0 + p2)*i + (2*p0 - 5*p1 + 4*p2 - p3)*i*i +
-                    (-p0 + 3*p1 - 3*p2 + p3)*i*i*i);
+            return 0.5f *
+                   ((2 * p1) + (-p0 + p2) * i + (2 * p0 - 5 * p1 + 4 * p2 - p3) * i * i +
+                    (-p0 + 3 * p1 - 3 * p2 + p3) * i * i * i);
         }
 
 
@@ -122,13 +122,13 @@ namespace UnityStandardAssets.Utility
             float accumulateDistance = 0;
             for (int i = 0; i < points.Length; ++i)
             {
-                var t1 = Waypoints[(i)%Waypoints.Length];
-                var t2 = Waypoints[(i + 1)%Waypoints.Length];
+                var t1 = Waypoints[(i) % Waypoints.Length];
+                var t2 = Waypoints[(i + 1) % Waypoints.Length];
                 if (t1 != null && t2 != null)
                 {
                     Vector3 p1 = t1.position;
                     Vector3 p2 = t2.position;
-                    points[i] = Waypoints[i%Waypoints.Length].position;
+                    points[i] = Waypoints[i % Waypoints.Length].position;
                     distances[i] = accumulateDistance;
                     accumulateDistance += (p1 - p2).magnitude;
                 }
@@ -163,7 +163,7 @@ namespace UnityStandardAssets.Utility
                 Vector3 prev = Waypoints[0].position;
                 if (smoothRoute)
                 {
-                    for (float dist = 0; dist < Length; dist += Length/editorVisualisationSubsteps)
+                    for (float dist = 0; dist < Length; dist += Length / editorVisualisationSubsteps)
                     {
                         Vector3 next = GetRoutePosition(dist + 1);
                         Gizmos.DrawLine(prev, next);
@@ -175,7 +175,7 @@ namespace UnityStandardAssets.Utility
                 {
                     for (int n = 0; n < Waypoints.Length; ++n)
                     {
-                        Vector3 next = Waypoints[(n + 1)%Waypoints.Length].position;
+                        Vector3 next = Waypoints[(n + 1) % Waypoints.Length].position;
                         Gizmos.DrawLine(prev, next);
                         prev = next;
                     }
@@ -209,7 +209,7 @@ namespace UnityStandardAssets.Utility
 namespace UnityStandardAssets.Utility.Inspector
 {
 #if UNITY_EDITOR
-    [CustomPropertyDrawer(typeof (WaypointCircuit.WaypointList))]
+    [CustomPropertyDrawer(typeof(WaypointCircuit.WaypointList))]
     public class WaypointListDrawer : PropertyDrawer
     {
         private float lineHeight = 18;
@@ -233,21 +233,21 @@ namespace UnityStandardAssets.Utility.Inspector
             EditorGUI.indentLevel = 0;
 
             var items = property.FindPropertyRelative("items");
-            var titles = new string[] {"Transform", "", "", ""};
-            var props = new string[] {"transform", "^", "v", "-"};
-            var widths = new float[] {.7f, .1f, .1f, .1f};
+            var titles = new string[] { "Transform", "", "", "" };
+            var props = new string[] { "transform", "^", "v", "-" };
+            var widths = new float[] { .7f, .1f, .1f, .1f };
             float lineHeight = 18;
             bool changedLength = false;
             if (items.arraySize > 0)
             {
-                for (int i = 0; i < items.arraySize; ++i)
+                for (int i = -1; i < items.arraySize; ++i)
                 {
                     var item = items.GetArrayElementAtIndex(i);
 
                     float rowX = x;
                     for (int n = 0; n < props.Length; ++n)
                     {
-                        float w = widths[n]*inspectorWidth;
+                        float w = widths[n] * inspectorWidth;
 
                         // Calculate rects
                         Rect rect = new Rect(rowX, y, w, lineHeight);
@@ -261,7 +261,7 @@ namespace UnityStandardAssets.Utility.Inspector
                         {
                             if (n == 0)
                             {
-                                EditorGUI.ObjectField(rect, item.objectReferenceValue, typeof (Transform), true);
+                                EditorGUI.ObjectField(rect, item.objectReferenceValue, typeof(Transform), true);
                             }
                             else
                             {
@@ -300,8 +300,8 @@ namespace UnityStandardAssets.Utility.Inspector
                 }
             }
             // add button
-            var addButtonRect = new Rect((x + position.width) - widths[widths.Length - 1]*inspectorWidth, y,
-                                         widths[widths.Length - 1]*inspectorWidth, lineHeight);
+            var addButtonRect = new Rect((x + position.width) - widths[widths.Length - 1] * inspectorWidth, y,
+                                         widths[widths.Length - 1] * inspectorWidth, lineHeight);
             if (GUI.Button(addButtonRect, "+"))
             {
                 items.InsertArrayElementAtIndex(items.arraySize);
@@ -479,7 +479,7 @@ namespace UnityStandardAssets.Utility.Inspector
         {
             public int Compare(object x, object y)
             {
-                return ((Transform) x).name.CompareTo(((Transform) y).name);
+                return ((Transform)x).name.CompareTo(((Transform)y).name);
             }
         }
     }
