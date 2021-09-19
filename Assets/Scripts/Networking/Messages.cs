@@ -15,6 +15,7 @@ enum MsgId
     S_ChangeLights = 5,
     S_SpawnAICar = 6,
     S_UpdateAICarPoses = 7,
+    S_UpdateAIPedestrianPoses = 8,
 
     S_VisualSync = 123,
 

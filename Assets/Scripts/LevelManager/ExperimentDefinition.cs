@@ -54,4 +54,5 @@ public class ExperimentDefinition : MonoBehaviour
     public Transform[] PointsOfInterest;
     //references to game objects spawning non-player controlled cars
     public CarSpawnerBase[] CarSpawners;
+    public AIPedestrianSyncSystem AIPedestrians;
 }

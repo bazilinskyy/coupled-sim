@@ -12,6 +12,7 @@ public class Host : NetworkSystem
     LevelManager _lvlManager;
     PlayerSystem _playerSys;
     AICarSyncSystem _aiCarSystem;
+    AIPedestrianSyncSystem _aiPedestrianSyncSystem;
     WorldLogger _logger;
     WorldLogger _fixedTimeLogger;
     HMIManager _hmiManager;
@@ -116,6 +117,8 @@ public class Host : NetworkSystem
                             {
                                 carSpawner.Init(_aiCarSystem);
                             }
+                            _aiPedestrianSyncSystem = _lvlManager.ActiveExperiment.AIPedestrians;
+                            _aiPedestrianSyncSystem.InitHost(_host);
                             ExperimentRoleDefinition experimentRoleDefinition = _lvlManager.ActiveExperiment.Roles[_playerRoles[Host.PlayerId]];
                             if (experimentRoleDefinition.AutonomousPath != null) {
                                 _playerSys.ActivatePlayerAICar();
@@ -235,6 +238,7 @@ public class Host : NetworkSystem
         }
         _lights?.UpdateHost(_host);
         _aiCarSystem.UpdateHost();
+        _aiPedestrianSyncSystem.UpdateHost();
     }
 
     bool failRoleCheck = false;
