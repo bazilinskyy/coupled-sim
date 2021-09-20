@@ -112,6 +112,7 @@ public class Host : NetworkSystem
                         _playerReadyStatus[Host.PlayerId] = true;
                         if (AllReady())
                         {
+                            //tu sa zmiany
                             _lights = GameObject.FindObjectOfType<TrafficLightsSystem>();
                             foreach (var carSpawner in _lvlManager.ActiveExperiment.CarSpawners)
                             {
@@ -119,14 +120,19 @@ public class Host : NetworkSystem
                             }
                             _aiPedestrianSyncSystem = _lvlManager.ActiveExperiment.AIPedestrians;
                             _aiPedestrianSyncSystem.InitHost(_host);
-                            ExperimentRoleDefinition experimentRoleDefinition = _lvlManager.ActiveExperiment.Roles[_playerRoles[Host.PlayerId]];
-                            if (experimentRoleDefinition.AutonomousPath != null) {
-                                _playerSys.ActivatePlayerAICar();
+                            ExperimentRoleDefinition experimentRoleDefinition;
+                            var role = _playerRoles[Host.PlayerId];
+                            var roleName = "No role";
+                            if (role != -1) {
+                                experimentRoleDefinition = _lvlManager.ActiveExperiment.Roles[role];
+                                if (experimentRoleDefinition.AutonomousPath != null) {
+                                    _playerSys.ActivatePlayerAICar();
+                                }
+                                roleName = experimentRoleDefinition.Name;
                             }
                             _host.BroadcastReliable(new AllReadyMsg());
                             _transitionPhase = TransitionPhase.None;
                             _currentState = NetState.InGame;
-                            var roleName = experimentRoleDefinition.Name;
                             _logger.BeginLog($"HostLog-{roleName}-", _lvlManager.ActiveExperiment, _lights, Time.realtimeSinceStartup, true);
                             _fixedTimeLogger.BeginLog($"HostFixedTimeLog-{roleName}-", _lvlManager.ActiveExperiment, _lights, Time.fixedTime, false);
                         }
@@ -295,7 +301,7 @@ public class Host : NetworkSystem
                 }
                 else
                 {
-                    GUI.enabled = AllRolesSelected();
+                    //GUI.enabled = AllRolesSelected();
                     if (GUILayout.Button("Start Game"))
                     {
                         StartGame();
