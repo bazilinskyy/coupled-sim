@@ -49,10 +49,10 @@ After checking out this project, launch Unity Hub to run the simulator with the 
 Select the project from the Unity Hub projects list. Wait until the project loads in. If it is not in the Unity Hub list (it is the first time you are running the project), it has to be added first - click *Add* and select a folder containing the project files.
 Once the project is loaded into the Unity editor press the Play button to run it.
 
-Steps to run an experiment:
-1. Start host and wait for clients to join if needed.
 To start host press _Start Host_ button. 
 To start the client press _Start Client_ button, enter the host IP address and press _Connect_.
+Steps to run an experiment:
+1. Start host and wait for clients to join if needed.
 2. Once all clients have joined, on the host, select one of the experiments listed under _Experiment:_.
 3. On the host, assign roles to participants.
 4. On both host and clients, each participant has to select control mode.
@@ -77,13 +77,12 @@ The central point for configuring the simulator is _Managers_ game object from t
 
 ![](ReadmeFiles/player_system.png)
 
-![](ReadmeFiles/networking_manager.png)
-
 The experiment is defined solely with prefab containing the _ExperimentDefinition_ component in the root object.
-To edit the experiment definition, double click the prefab in the _Project_ window.
 To make newly created experiment selectable you have to add its prefab to _Experiments_ list on _NetworkingManager_ component.
 
-![](ReadmeFiles/experiment_definition.png)
+![](ReadmeFiles/networking_manager.png)
+
+To edit the experiment definition, double click the prefab in the _Project_ window.
 
 ![](ReadmeFiles/project.png)
 
@@ -97,12 +96,17 @@ _ExperimentDefinition_ component defines the following fields:
 - _Roles_: list defining roles that can be taken during an experiment by participants
 - _Points of Interest_: static points that are logged in experiment logs to be used in the log processing and analysis
 - _Car Spawners_: references to game objects spawning non-player controlled cars
+- _AI Pedestrians_: defines a list of _PedestrianDesc_ structs that contain a pair of an _AIPedestrian_ (the game object that defines an AI-controlled pedestrian avatar) and _WaypointCircuit_ (defining a path of waypoints for the linked avatar) 
 
 _Points of interest_ is a list of _Transform_ references.
 _CarSpawners_ list references game objects containing component inheriting from _CarSpawnerBase_. It defines, with overridden _IEnumerator SpawnCoroutine()_  method, spawn sequence (see _TestSyncedCarSpawner_ for reference implementation). Car prefabs spawned by the coroutine with _AICar Spawn(CarSpawnParams parameters, bool yielding)_ method must be one of the referenced prefabs in _AvatarPrefabDriver_ list on _NetworkManager_ component. 
 
+_Base.prefab_ from _ExperimentDefinitions_ folder is an example experiment definition showcasing simulator features.
+
+![](ReadmeFiles/experiment_definition.png)
+
 ### Configuration of agents
-Roles field is a list of _ExperimentRoleDefinition_ struct's defining experiment roles with the following data fields:
+Roles field is a list of _ExperimentRoleDefinition_ struct's defining experiment roles with the following base data fields:
 - _Name_: short name/description of the role
 - _SpawnPoint.Point_: defines where player avatar will be spawned
 - _SpawnPoint.Type_: a type of player avatar. It may be either _Pedestrian_, _Driver_, _Passenger_ of an autonomous car.
@@ -118,7 +122,7 @@ Drag the newly created object to the _SpawnPoint.Point_ in role definition.
 
 ### Agent camera configuration
 Additionally to the location, camera settings can be provided for a spawned agent.
-_CameraSetup_ component allows to do that. It should be added to the game object that represents a position where the avatar will be spawned (the one defined in _ExperimentDefinition_ (component) -> _Roles_ (list field) -> role entry on the list -> _SpawnPoint_ (struct) -> _Point_ (field)).
+_CameraSetup_ component allows doing that. It should be added to the game object that represents a position where the avatar will be spawned (the one defined in _ExperimentDefinition_ (component) -> _Roles_ (list field) -> role entry on the list -> _SpawnPoint_ (struct) -> _Point_ (field)).
 The component exposes two fields:
 - _FieldOfView_: value which is set at spawn-time to _Camera.fieldOfView_ property.
 - _Rotation_: value which is set at spawn-time to _Transform.localRotation_ of a game object hosting _Camera_ component.
@@ -134,13 +138,13 @@ For _Driver_ role following field has to be defined:
 #### Configuration of the passenger agent
 For _Passenger_ type of agent following additional fields has to be defined:
 - Car Idx - indicates car prefab that will be spawned for this role. Selected prefab is the one on the indicated index on _AvatarPrefabDriver_ list (field on _PlayerSystem_ component)
-- Three _DriverHMI_ fields - define which HMI prefab to spawn on indicated spots
-- _AutonomusPath_ - references game object defining waypoints for the autonomous car via WaypointCirciut component
+- _TopHMI_, _WindshieldHMI_, _HoodHMI_ fields - define which HMI prefab to spawn on indicated spots
+- _AutonomusPath_ - references game object defining waypoints for the autonomous car via _WaypointCirciut_ component
 
 ### Configuration of non-playable characters
 ![](ReadmeFiles/traffic_circuit.png)
 
-Paths for both non-playable pedestrians and vehicles are defined with WaypointCircuit component.
+Paths that can be followed both by non-playable pedestrians and vehicles are defined with the WaypointCircuit component.
 To add waypoint press plus sign and drag waypoint Transform into the newly added field.
 To remove waypoint press a minus sign next to the waypoint.
 To reorder waypoint click up/down signs next to a waypoint.
@@ -148,23 +152,54 @@ To change the position of a waypoint select waypoint transform and move it do th
 
 #### Configuration of the movement of the non-playable vehicles
 Additionally, for vehicles, SpeedSetting along with Collider component might be used to further configure tracked path.
-
 ![](ReadmeFiles/speed_settings.png)
 
-### Configuration of driver's eye-contact behaviour
+#### Exporting and importing WaypointCircuit's
+_WaypointCirciut_ can be serialized into CSV format (semicolon separated) with an _Export to file_ button. The following parameters are serialized:
+Game object
+- name
+- tag
+- layer
+
+Transform
+- x; y; z - world position
+- rotX; rotY; rotZ - world rotation (euler angles)
+
+SpeedSettings
+- waypointType
+- speed
+- acceleration
+- jerk
+- causeToYield
+- lookAtPlayerWhileYielding
+- lookAtPlayerAfterYielding
+- yieldTime
+- brakingAcceleration
+- lookAtPedFromSeconds
+- lookAtPedToSeconds
+
+BoxCollider
+- collider_enabled - component enable state
+- isTrigger
+- centerX; centerY; centerZ - box collider center
+- sizeX; sizeY; sizeZ - box collider size
+
+CSV file can be modified in any external editor and then imported with an _Import from file_ button. Importing files will remove all current waypoint objects and replace them with newly created ones according to the data in the imported CSV file.
+
+### Configuration of driver's eye-contact behavior
 Initial eye contact tracking state and base tracking parameters are defined with fields in the _EyeContact_ component.
 _EyeContactTracking_ defines the initial (and current at runtime) driver's eye contact behavior while the car is not fully stopped.
 - _MinTrackingDistance_ and _MaxTrackingDistance_ define (in meters) the range of distances at which eye contact tracking is possible. Distance is measured between the driver's head position and the pedestrian's root position (ignoring a distance on a vertical axis).
 - _MaxHeadRotation_ (in degrees) limits head movement on a vertical axis.
-_EyeContact_, if tracking is enabled, selects as the target the closest game object tagged with a _"Pedestrain"_ tag that is within the distance range, if it meets rotation constraint (this constrain is checked when the closest object is already selected).
+_EyeContact_, if tracking is enabled, selects as the target the closest game object tagged with a _"Pedestrian"_ tag that is within the distance range, if it meets rotation constraint (this constrain is checked when the closest object is already selected).
 ![](ReadmeFiles/Pedestrian.png)
 
 _EyeContactRigControl_ is a component that consumes tracking target provided by _EyeContact_ component and animates drivers head movement.
 ![](ReadmeFiles/eye-contact.png)
 
-Eye contact behavior tracking state can be changed when car reaches waypoint. Behavior change is defined by the _SpeedSettings_ - the component embeded on waypoint objects. Following four fields control those changes:
-- _EyeContactWhileYielding_: defines how the driver will behave while the car is fully stoped
-- _EyeContactAfterYielding_: defines how the driver will behave when car resumes driving after full stop. This value simply overwrites the current value of _EyeContact.EyeContactTracking_ if car has fully stopped.
+Eye contact behavior tracking state can be changed when the car reaches the waypoint. Behavior change is defined by the _SpeedSettings_ - the component embedded on waypoint objects. The following four fields control those changes:
+- _EyeContactWhileYielding_: defines how the driver will behave while the car is fully stopped
+- _EyeContactAfterYielding_: defines how the driver will behave when the car resumes driving after a full stop. This value simply overwrites the current value of _EyeContact.EyeContactTracking_ if the car has fully stopped.
 - _YieldingEyeContactSince_: defines how many seconds need to pass before the driver will make eye contact (starting from the moment the car has fully stopped)
 - _YieldingEyeContactUntil_: defines how many seconds need to pass before the driver ceases to maintain eye contact (starting from the moment the car has fully stopped)
 ![](ReadmeFiles/SpeedSettings.png)
