@@ -1,14 +1,16 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
-public class PlayerLookAtPed : MonoBehaviour
+public class EyeContact : MonoBehaviour
 {
     private Transform targetPed;
 
     public GameObject[] Peds;
 
     public Rigidbody CarRigidbody;
+    public AICar aiCar;
     public Transform PlayerHead;
     public float MaxTrackingDistance;//this distance is wrt to car
     public float MinTrackingDistance;//this distance is wrt to car
@@ -16,9 +18,10 @@ public class PlayerLookAtPed : MonoBehaviour
     float maxTrackingDistanceHead => MaxTrackingDistance - headPosition;//this distance is wrt to drivers head
     float minTrackingDistanceHead => MinTrackingDistance - headPosition;//this distance is wrt to drivers head
     public float MaxHeadRotation;//this is wrt drivers head
-    public bool EnableTracking;
+    [FormerlySerializedAs("EnableTracking")]
+    public bool Tracking;
     [HideInInspector]
-    public bool trackingEnabledWhenYielding;
+    public bool TrackingWhileYielding;
 
     public Transform TargetPed { get => targetPed; }
 
@@ -28,15 +31,16 @@ public class PlayerLookAtPed : MonoBehaviour
     private void Start()
     {
         Peds = GameObject.FindGameObjectsWithTag("Pedestrian");
+        aiCar = CarRigidbody.GetComponent<AICar>();
     }
 
     private void FixedUpdate()
     {
-        bool yielding = CarRigidbody.velocity.magnitude < 0.1f && CarRigidbody.velocity.magnitude > -0.1f;
-        bool trackingEnabled = (yielding ? trackingEnabledWhenYielding : EnableTracking);
+        bool yielding = aiCar.state == AICar.CarState.STOPPED;
+        bool eyeContactTracking = (yielding ? TrackingWhileYielding : Tracking);
 
         float minDist = float.MaxValue;
-        if (trackingEnabled)
+        if (eyeContactTracking)
         {
             foreach (GameObject ped in Peds)
             {
