@@ -63,6 +63,11 @@ If the user wants to prepare a build that runs simulation instantly with a selec
 - _SelectedExperiment_: int variable which indicates a zero-based index of a selected experiment in _Experiments_ list (field in NetworkingManager component).
 - _SelectedRole_: int variable which indicates a zero-based index of a selected role in _Roles_ list (field in ExperimentDefinition component) of a selected experiment prefab.
 - _SkipSelectionScreen_: boolean variable, that if set to true makes the simulator run (as host) a selected experiment (with a selected role) right after the application is run - skipping experiment and role selection screen.
+- _InputMode_: enum variable, that selects the display and controller pair for the instant start build. 
+Available values are:
+- _Flat_: use a flat-screen to display simulation and mouse&keyboard/gamepad/steering wheel to control it.
+- _VR_: use virtual reality headset to display simulation and mouse&keyboard/gamepad/steering wheel to control it.  
+- _Suite_: use virtual reality headset to display simulation and XSense suite to control it (only pedestrian avatar).
 ![](ReadmeFiles/Instant.png)
 
 ## Configuration
@@ -94,7 +99,7 @@ _ExperimentDefinition_ component defines the following fields:
 - _Car Spawners_: references to game objects spawning non-player controlled cars
 
 _Points of interest_ is a list of _Transform_ references.
-_CarSpawners_ list references game objects containing component inheriting from _CarSpawnerBase_. It defines, with overridden _IEnumerator SpawnCoroutine()_  method, spawn sequence (see _TestSyncedCarSpawner_ for reference implementation). Car prefabs spawned by the coroutine with _AICar Spawn(AICar prefab, bool yielding)_ method must be one of the referenced prefabs in _AICarSystem_ list on _NetworkManager_ component. 
+_CarSpawners_ list references game objects containing component inheriting from _CarSpawnerBase_. It defines, with overridden _IEnumerator SpawnCoroutine()_  method, spawn sequence (see _TestSyncedCarSpawner_ for reference implementation). Car prefabs spawned by the coroutine with _AICar Spawn(CarSpawnParams parameters, bool yielding)_ method must be one of the referenced prefabs in _AvatarPrefabDriver_ list on _NetworkManager_ component. 
 
 ### Configuration of agents
 Roles field is a list of _ExperimentRoleDefinition_ struct's defining experiment roles with the following data fields:
@@ -128,7 +133,7 @@ For _Driver_ role following field has to be defined:
 
 #### Configuration of the passenger agent
 For _Passenger_ type of agent following additional fields has to be defined:
-- Car Idx - indicates car prefab that will be spawned for this role. Selected prefab is the one on the indicated index on PlayerSystem lists (for PassengerAvatarPrefabPassenger list)
+- Car Idx - indicates car prefab that will be spawned for this role. Selected prefab is the one on the indicated index on _AvatarPrefabDriver_ list (field on _PlayerSystem_ component)
 - Three _DriverHMI_ fields - define which HMI prefab to spawn on indicated spots
 - _AutonomusPath_ - references game object defining waypoints for the autonomous car via WaypointCirciut component
 
