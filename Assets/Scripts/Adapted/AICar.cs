@@ -52,7 +52,7 @@ public class AICar : MonoBehaviour, IVehicle
     public bool WaitInputX = false;
     public bool WaitTrialX = false;
     public bool WaitTrialZ = false;
-    
+
     private GameObject ManualCarTrigger;
     private bool InitiateAV;
 
@@ -76,6 +76,7 @@ public class AICar : MonoBehaviour, IVehicle
         speed = set_speed;                                                 // Sets speed of object
         acceleration = set_acceleration;                                   // Sets acceleration of object
         target = GetComponent<WaypointProgressTracker>().target;           // Sets intermediate target on the circuit
+
         ManualCarTrigger = GameObject.FindWithTag("StartAV");
     }
     void Update()
@@ -93,7 +94,7 @@ public class AICar : MonoBehaviour, IVehicle
         // Every physics calculation involves the orientation and speed of the object.
         Vector3 new_position = transform.InverseTransformPoint(target.position);
         float psi = Mathf.Asin(new_position.x / (Mathf.Pow(new_position.x * new_position.x + new_position.z * new_position.z, 0.5f) + 0.001f));
-        
+
         //  Update all required informations
         rotationAxis.rotation = Quaternion.Euler(0, rotationAxis.rotation.eulerAngles.y, 0);                     //heading
 
@@ -108,7 +109,7 @@ public class AICar : MonoBehaviour, IVehicle
         // This statement is applied when the car is just driving.
         if ((braking == false) && (reset == false))
         {
-            
+
             if (jerk != 0)
             {
                 acceleration = set_acceleration;
@@ -131,7 +132,7 @@ public class AICar : MonoBehaviour, IVehicle
             }
 
             theRigidbody.velocity = rotationAxis.forward * speed / conversion; // Application of calculated velocity to Rigidbody
-            
+
         }
 
         // This statement is applied when the car starts braking
@@ -196,7 +197,7 @@ public class AICar : MonoBehaviour, IVehicle
                 }
 
                 speed = 0f;
-                theRigidbody.velocity = new Vector3(0,0,0); // Apply zero velocity 
+                theRigidbody.velocity = new Vector3(0, 0, 0); // Apply zero velocity 
             }
 
             if (speed <= 0 && delta_distance > 16f)  // If car is standing still, change pitch back to zero.
@@ -208,7 +209,6 @@ public class AICar : MonoBehaviour, IVehicle
                 {
                     model.localRotation = Quaternion.Slerp(model.localRotation, Quaternion.Euler(pitch, 0, 0), 0.5f);
                 }
-                Debug.Log(Timer2);
 
                 if (Timer2 >= 2f) // After standing still for two seconds, passenger can initiate driving again by pressing space.
                 {
@@ -220,7 +220,7 @@ public class AICar : MonoBehaviour, IVehicle
                         set_speed = 30;
                         startlocation = this.gameObject.transform.position.x - 0.10f;
                     }
-                    
+
                     else if (WaitTrialZ == true && InitiateAV == true) //Input.GetKeyDown(KeyCode.Space))
                     {
                         braking = false;
@@ -287,13 +287,7 @@ public class AICar : MonoBehaviour, IVehicle
 
     void OnTriggerEnter(Collider other)
     {
-        // Do nothing if trigger isn't enabled
-        if (this.enabled == false)
-        {
-            return;
-        }
-        // Take over Waypoint Data
-        else if (other.gameObject.CompareTag("WP"))
+        if (other.gameObject.CompareTag("WP"))
         {
             // If WaypointNumber is one, take over settings
             if (other.GetComponent<SpeedSettings>().WaypointType == 1)
@@ -332,7 +326,7 @@ public class AICar : MonoBehaviour, IVehicle
             WaitInputX = true;
             set_speed = other.GetComponent<SpeedSettings>().speed;
             set_acceleration = other.GetComponent<SpeedSettings>().acceleration;
-            jerk = -Mathf.Abs(other.GetComponent<SpeedSettings>().jerk);             
+            jerk = -Mathf.Abs(other.GetComponent<SpeedSettings>().jerk);
         }
         // Change of tag here that causes deceleration when hitting trigger in Z direction
         else if (other.gameObject.CompareTag("StartTrial_Z"))

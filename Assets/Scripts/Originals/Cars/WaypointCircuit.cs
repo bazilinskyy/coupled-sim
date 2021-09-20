@@ -106,9 +106,9 @@ namespace UnityStandardAssets.Utility
         {
             // comments are no use here... it's the catmull-rom equation.
             // Un-magic this, lord vector!
-            return 0.5f*
-                   ((2*p1) + (-p0 + p2)*i + (2*p0 - 5*p1 + 4*p2 - p3)*i*i +
-                    (-p0 + 3*p1 - 3*p2 + p3)*i*i*i);
+            return 0.5f *
+                   ((2 * p1) + (-p0 + p2) * i + (2 * p0 - 5 * p1 + 4 * p2 - p3) * i * i +
+                    (-p0 + 3 * p1 - 3 * p2 + p3) * i * i * i);
         }
 
 
@@ -122,13 +122,13 @@ namespace UnityStandardAssets.Utility
             float accumulateDistance = 0;
             for (int i = 0; i < points.Length; ++i)
             {
-                var t1 = Waypoints[(i)%Waypoints.Length];
-                var t2 = Waypoints[(i + 1)%Waypoints.Length];
+                var t1 = Waypoints[(i) % Waypoints.Length];
+                var t2 = Waypoints[(i + 1) % Waypoints.Length];
                 if (t1 != null && t2 != null)
                 {
                     Vector3 p1 = t1.position;
                     Vector3 p2 = t2.position;
-                    points[i] = Waypoints[i%Waypoints.Length].position;
+                    points[i] = Waypoints[i % Waypoints.Length].position;
                     distances[i] = accumulateDistance;
                     accumulateDistance += (p1 - p2).magnitude;
                 }
@@ -163,7 +163,7 @@ namespace UnityStandardAssets.Utility
                 Vector3 prev = Waypoints[0].position;
                 if (smoothRoute)
                 {
-                    for (float dist = 0; dist < Length; dist += Length/editorVisualisationSubsteps)
+                    for (float dist = 0; dist < Length; dist += Length / editorVisualisationSubsteps)
                     {
                         Vector3 next = GetRoutePosition(dist + 1);
                         Gizmos.DrawLine(prev, next);
@@ -175,7 +175,7 @@ namespace UnityStandardAssets.Utility
                 {
                     for (int n = 0; n < Waypoints.Length; ++n)
                     {
-                        Vector3 next = Waypoints[(n + 1)%Waypoints.Length].position;
+                        Vector3 next = Waypoints[(n + 1) % Waypoints.Length].position;
                         Gizmos.DrawLine(prev, next);
                         prev = next;
                     }
@@ -209,7 +209,7 @@ namespace UnityStandardAssets.Utility
 namespace UnityStandardAssets.Utility.Inspector
 {
 #if UNITY_EDITOR
-    [CustomPropertyDrawer(typeof (WaypointCircuit.WaypointList))]
+    [CustomPropertyDrawer(typeof(WaypointCircuit.WaypointList))]
     public class WaypointListDrawer : PropertyDrawer
     {
         private float lineHeight = 18;
@@ -232,10 +232,11 @@ namespace UnityStandardAssets.Utility.Inspector
             var indent = EditorGUI.indentLevel;
             EditorGUI.indentLevel = 0;
 
+
             var items = property.FindPropertyRelative("items");
-            var titles = new string[] {"Transform", "", "", ""};
-            var props = new string[] {"transform", "^", "v", "-"};
-            var widths = new float[] {.7f, .1f, .1f, .1f};
+            var titles = new string[] { "Transform", "", "", "" };
+            var props = new string[] { "transform", "^", "v", "-" };
+            var widths = new float[] { .7f, .1f, .1f, .1f };
             float lineHeight = 18;
             bool changedLength = false;
             if (items.arraySize > 0)
@@ -247,7 +248,7 @@ namespace UnityStandardAssets.Utility.Inspector
                     float rowX = x;
                     for (int n = 0; n < props.Length; ++n)
                     {
-                        float w = widths[n]*inspectorWidth;
+                        float w = widths[n] * inspectorWidth;
 
                         // Calculate rects
                         Rect rect = new Rect(rowX, y, w, lineHeight);
@@ -261,7 +262,7 @@ namespace UnityStandardAssets.Utility.Inspector
                         {
                             if (n == 0)
                             {
-                                EditorGUI.ObjectField(rect, item.objectReferenceValue, typeof (Transform), true);
+                                EditorGUI.ObjectField(rect, item.objectReferenceValue, typeof(Transform), true);
                             }
                             else
                             {
@@ -300,8 +301,8 @@ namespace UnityStandardAssets.Utility.Inspector
                 }
             }
             // add button
-            var addButtonRect = new Rect((x + position.width) - widths[widths.Length - 1]*inspectorWidth, y,
-                                         widths[widths.Length - 1]*inspectorWidth, lineHeight);
+            var addButtonRect = new Rect((x + position.width) - widths[widths.Length - 1] * inspectorWidth, y,
+                                         widths[widths.Length - 1] * inspectorWidth, lineHeight);
             if (GUI.Button(addButtonRect, "+"))
             {
                 items.InsertArrayElementAtIndex(items.arraySize);
@@ -378,11 +379,34 @@ namespace UnityStandardAssets.Utility.Inspector
             var circuit = circuitObject.targetObject as WaypointCircuit;
             StringBuilder sb = new StringBuilder();
             sb.Append($"Smooth: {circuit.smoothRoute}\n");
-            sb.Append($"x,y,z,waypointType,speed,acceleration,jerk,causeToYield,lookAtPlayerWhileYielding,lookAtPlayerAfterYielding,yieldTime,brakingAcceleration,lookAtPedFromSeconds,lookAtPedToSeconds\n");
+            sb.Append($"name;tag;layer;x;y;z;rotX;rotY;rotZ;" +
+                $"waypointType;speed;acceleration;jerk;causeToYield;lookAtPlayerWhileYielding;lookAtPlayerAfterYielding;yieldTime;brakingAcceleration;lookAtPedFromSeconds;lookAtPedToSeconds;" +
+                $"collider_enabled;isTrigger;centerX;centerY;centerZ;sizeX;sizeY;sizeZ" +
+                $"\n");
             foreach (var wp in circuit.Waypoints)
             {
+                var go = wp.gameObject;
+                sb.Append($"{go.name};{go.tag};{go.layer};{wp.position.x};{wp.position.y};{wp.position.z};{wp.rotation.eulerAngles.x};{wp.rotation.eulerAngles.y};{wp.rotation.eulerAngles.z}");
                 var s = wp.GetComponent<SpeedSettings>();
-                sb.Append($"{wp.position.x},{wp.position.y},{wp.position.z},{s.WaypointType},{s.speed},{s.acceleration},{s.jerk},{s.causeToYield},{s.EyeContactWhileYielding},{s.EyeContactAfterYielding},{s.yieldTime},{s.brakingAcceleration},{s.YieldingEyeContactSince},{s.YieldingEyeContactUntil}\n");
+                if (s != null)
+                {
+                    sb.Append($";{s.WaypointType};{s.speed};{s.acceleration};{s.jerk};{s.causeToYield};{s.EyeContactWhileYielding};{s.EyeContactAfterYielding};{s.yieldTime};{s.brakingAcceleration};{s.YieldingEyeContactSince};{s.YieldingEyeContactUntil}");
+                } else
+                {
+                    sb.Append($";;;;;;;;;;;");
+                }
+
+                var b = wp.GetComponent<BoxCollider>();
+                if (b != null)
+                {
+                    sb.Append($";{b.enabled};{b.isTrigger};{b.center.x};{b.center.y};{b.center.z};{b.size.x};{b.size.y};{b.size.z}");
+                }
+                else
+                {
+                    sb.Append($";;;;;;;;");
+                }
+
+                sb.Append("\n");
             }
             File.WriteAllText(path, sb.ToString());
         }
@@ -405,10 +429,10 @@ namespace UnityStandardAssets.Utility.Inspector
 
             for (int i = 2; i < lines.Length; i++)
             {
-                var line = lines[i].Split(',');
+                var line = lines[i].Split(';');
                 var idx = i - 2;
                 wpts.InsertArrayElementAtIndex(idx);
-                var wp = new GameObject($"Waypoint {idx}", typeof(SpeedSettings));
+                var wp = new GameObject($"Waypoint {idx}", typeof(SpeedSettings), typeof(BoxCollider));
                 wpts.GetArrayElementAtIndex(idx).objectReferenceValue = wp.transform;
                 wp.transform.SetParent((circuitObject.targetObject as WaypointCircuit).transform);
                 int lineCursor = 0;
@@ -449,12 +473,36 @@ namespace UnityStandardAssets.Utility.Inspector
                     return res;
                 }
 
-                // position
-                Vector3 position = default;
+                bool DeserializeString(out string b, string defaultValue = "")
+                {
+                    bool res = false;
+                    b = defaultValue;
+                    if (line.Length > lineCursor && !string.IsNullOrWhiteSpace(line[lineCursor]))
+                    {
+                        b = line[lineCursor];
+                        res = true;
+                    }
+                    lineCursor++;
+                    return res;
+                }
 
+                // position
+                DeserializeString(out var name);
+                wp.gameObject.name = name;
+                DeserializeString(out var tag);
+                wp.gameObject.tag = tag;
+                DeserializeInt(out var layer);
+                wp.gameObject.layer = layer;
+
+                Vector3 position = default;
                 if (DeserializeFloat(out position.x) && DeserializeFloat(out position.y) && DeserializeFloat(out position.z))
                 {
                     wp.transform.position = position;
+                }
+                Vector3 rotation = default;
+                if (DeserializeFloat(out rotation.x) && DeserializeFloat(out rotation.y) && DeserializeFloat(out rotation.z))
+                {
+                    wp.transform.rotation = Quaternion.Euler(rotation);
                 }
 
                 var speedSettings = wp.GetComponent<SpeedSettings>();
@@ -470,6 +518,25 @@ namespace UnityStandardAssets.Utility.Inspector
                 DeserializeFloat(out speedSettings.brakingAcceleration);
                 DeserializeFloat(out speedSettings.YieldingEyeContactSince);
                 DeserializeFloat(out speedSettings.YieldingEyeContactUntil);
+
+                var boxCollider = wp.GetComponent<BoxCollider>();
+
+                DeserializeBool(out var enabl);
+                boxCollider.enabled = enabl;
+                DeserializeBool(out var trigg);
+                boxCollider.isTrigger = trigg;
+
+                Vector3 center = default;
+                if (DeserializeFloat(out center.x) && DeserializeFloat(out center.y) && DeserializeFloat(out center.z))
+                {
+                    boxCollider.center = center;
+                }
+
+                Vector3 size = default;
+                if (DeserializeFloat(out size.x) && DeserializeFloat(out size.y) && DeserializeFloat(out size.z))
+                {
+                    boxCollider.size = size;
+                }
             }
         }
         
@@ -479,7 +546,7 @@ namespace UnityStandardAssets.Utility.Inspector
         {
             public int Compare(object x, object y)
             {
-                return ((Transform) x).name.CompareTo(((Transform) y).name);
+                return ((Transform)x).name.CompareTo(((Transform)y).name);
             }
         }
     }
