@@ -1,13 +1,10 @@
 ﻿using System.Collections;
+using System;
 using UnityEngine;
-using UnityStandardAssets.Utility;
 
 public abstract class CarSpawnerBase : MonoBehaviour
 {
-    [SerializeField]
-    protected Transform SpawnPoint;
-    [SerializeField]
-    protected WaypointCircuit Track;
+    public CarSpawnParams spawnParams;
     protected AICarSyncSystem _syncSystem;
 
     // This should be called only on the host
@@ -18,6 +15,6 @@ public abstract class CarSpawnerBase : MonoBehaviour
     }
 
     protected abstract IEnumerator SpawnCoroutine();
-    protected AICar Spawn(AICar prefab, bool yielding) 
-        => _syncSystem.Spawn(prefab, SpawnPoint.position, SpawnPoint.rotation, Track, yielding);
+    protected AICar Spawn(CarSpawnParams parameters, bool yielding) 
+        => _syncSystem.Spawn(parameters, yielding);
 }

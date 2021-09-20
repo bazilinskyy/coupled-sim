@@ -283,13 +283,20 @@ public class Host : NetworkSystem
         {
             case NetState.Lobby:
             {
-                GUI.enabled = AllRolesSelected();
-                if (_instantStartParams.SkipSelectionScreen || GUILayout.Button("Start Game"))
+                if (_instantStartParams.SkipSelectionScreen)
                 {
                     StartGame();
+                    PlayerRolesGUI();
+                    _playerSys.SelectMode(_instantStartParams.InputMode);
                 }
-                GUI.enabled = true;
-                if (!_instantStartParams.SkipSelectionScreen) {
+                else
+                {
+                    GUI.enabled = AllRolesSelected();
+                    if (GUILayout.Button("Start Game"))
+                    {
+                        StartGame();
+                    }
+                    GUI.enabled = true;
                     GUILayout.Label("Experiment:");
                     for (int i = 0; i < _lvlManager.Experiments.Length; i++)
                     {
@@ -298,9 +305,9 @@ public class Host : NetworkSystem
                             _selectedExperiment = i;
                         }
                     }
+                    PlayerRolesGUI();
+                    _playerSys.SelectModeGUI();
                 }
-                PlayerRolesGUI();
-                _playerSys.SelectModeGUI();
                 break;
             }
             case NetState.InGame:

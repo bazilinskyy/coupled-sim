@@ -47,7 +47,7 @@ public class WorldLogger
         _startTime = time;
         _fileWriter.Write(DateTime.Now.ToBinary());
         _driverBuffer.Clear();
-        _driverBuffer.AddRange(_playerSystem.Drivers);
+        _driverBuffer.AddRange(_playerSystem.Cars);
         _driverBuffer.AddRange(_playerSystem.Passengers);
         _fileWriter.Write(_driverBuffer.IndexOf(_playerSystem.LocalPlayer));
         _fileWriter.Write(_driverBuffer.Count);
@@ -112,7 +112,7 @@ public class WorldLogger
         _fileWriter.Write(ping);
 
         _driverBuffer.Clear();
-        _driverBuffer.AddRange(_playerSystem.Drivers);
+        _driverBuffer.AddRange(_playerSystem.Cars);
         _driverBuffer.AddRange(_playerSystem.Passengers);
         _driverBuffer.AddRange(_aiCarSystem.Cars);
         foreach (var driver in _driverBuffer)

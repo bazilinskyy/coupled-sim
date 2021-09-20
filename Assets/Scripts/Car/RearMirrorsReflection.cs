@@ -23,14 +23,6 @@ public class RearMirrorsReflection : MonoBehaviour
 
     public Transform head;
 
-    public void Awake()
-    {
-        if (Application.isPlaying)
-        {
-            head = Camera.main.transform;
-        }
-    }
-
     private void Update()
     {
         GetReflectionDirection(leftMirror);
