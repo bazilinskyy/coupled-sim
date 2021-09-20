@@ -62,12 +62,25 @@ public enum AvatarType
 {
     Pedestrian,
     Driver,
-    Passenger
 }
 
 // These are used for more than Players (AI cars have these as well)
 public class PlayerAvatar : MonoBehaviour
 {
+    public GameObject DriverPuppet;
+    public GameObject PassengerPuppet;
+
+    [Header("Controls")]
+    public ModeElements VRModeElements;
+    public ModeElements FlatModeElements;
+    public ModeElements SuiteModeElements;
+
+    [Header("Player")]
+    [FormerlySerializedAs("LocalModeElements")]
+    public ModeElements HostDrivenAIElements;
+    public ModeElements PlayerAsDriver;
+    public ModeElements PlayerAsPassenger;
+
 
     [Serializable]
     public struct ModeElements
@@ -76,67 +89,22 @@ public class PlayerAvatar : MonoBehaviour
         public GameObject[] gameObjects;
         public MonoBehaviour[] monoBehaviours;
         public Collider collider;
-
+        /*
         [Header("Disabled elements")]
         public GameObject[] disabledGameObjects;
         public MonoBehaviour[] disabledMonoBehaviours;
+        */
     }
 
-    public ModeElements VRModeElements;
-    public ModeElements FlatModeElements;
-    public ModeElements RemoteModeElements;
-    public ModeElements SuiteModeElements;
-    [FormerlySerializedAs("LocalModeElements")]
-    public ModeElements HostDrivenAIElements;
+
 
     //set up an Avatar (disabling and enabling needed components) for different control methods
-    public void Initialize(PlayerSystem.Mode mode)
+    public void Initialize(bool isRemote, PlayerSystem.InputMode inputMode, PlayerSystem.ControlMode controlMode)
     {
-        ModeElements modeElements = default(ModeElements);
-        switch (mode)
-        {
-            case PlayerSystem.Mode.Suite:
-                modeElements = SuiteModeElements;
-                break;
-            case PlayerSystem.Mode.Flat:
-                modeElements = FlatModeElements;
-                break;
-            case PlayerSystem.Mode.VR:
-                modeElements = VRModeElements;
-                break;
-            case PlayerSystem.Mode.Remote:
-                modeElements = RemoteModeElements;
-                break;
-            case PlayerSystem.Mode.HostAI:
-                modeElements = HostDrivenAIElements;
-                break;
-        }
-        foreach (var go in modeElements.gameObjects) {
-            go.SetActive(true);
-        }
-        foreach (var mb in modeElements.monoBehaviours)
-        {
-            mb.enabled = true;
-        }
-        if (modeElements.collider != null)
-        {
-            modeElements.collider.enabled = true;
-        }
-
-        foreach (var go in modeElements.disabledGameObjects)
-        {
-            go.SetActive(false);
-        }
-        foreach (var mb in modeElements.disabledMonoBehaviours)
-        {
-            mb.enabled = false;
-        }
-
-        if (mode == PlayerSystem.Mode.Remote)
+        if (isRemote)
         {
             GetComponentInChildren<Rigidbody>().isKinematic = true;
             GetComponentInChildren<Rigidbody>().useGravity = false;
-            GetComponentInChildren<Camera>().gameObject.SetActive(false);
             foreach (var wc in GetComponentsInChildren<WheelCollider>())
             {
                 wc.enabled = false;
@@ -145,12 +113,80 @@ public class PlayerAvatar : MonoBehaviour
             {
                 su.enabled = false;
             }
-        }
-        if (mode == PlayerSystem.Mode.HostAI)
+        } 
+        else
         {
-            GetComponentInChildren<Camera>().gameObject.SetActive(false);
+            ModeElements modeElements = default(ModeElements);
+            switch (inputMode)
+            {
+                case PlayerSystem.InputMode.Suite:
+                    modeElements = SuiteModeElements;
+                    break;
+                case PlayerSystem.InputMode.Flat:
+                    modeElements = FlatModeElements;
+                    break;
+                case PlayerSystem.InputMode.VR:
+                    modeElements = VRModeElements;
+                    break;
+                default:
+                    break;
+            }
+
+            SetupModeElements(modeElements);
+
+            switch (controlMode)
+            {
+                case PlayerSystem.ControlMode.Driver:
+                    modeElements = PlayerAsDriver;
+                    break;
+                case PlayerSystem.ControlMode.HostAI:
+                    modeElements = HostDrivenAIElements;
+                    break;
+                case PlayerSystem.ControlMode.Passenger:
+                    modeElements = PlayerAsPassenger;
+                    break;
+            }
+
+            SetupModeElements(modeElements);
         }
 
+    }
+
+    private static void SetupModeElements(ModeElements modeElements)
+    {
+        if (modeElements.gameObjects != null) {
+            foreach (var go in modeElements.gameObjects)
+            {
+                go.SetActive(true);
+            }
+        }
+        if (modeElements.monoBehaviours != null)
+        {
+            foreach (var mb in modeElements.monoBehaviours)
+            {
+                mb.enabled = true;
+            }
+        }
+        if (modeElements.collider != null)
+        {
+            modeElements.collider.enabled = true;
+        }
+        /*
+        if (modeElements.disabledGameObjects != null)
+        {
+            foreach (var go in modeElements.disabledGameObjects)
+            {
+                go.SetActive(false);
+            }
+        }
+        if (modeElements.disabledMonoBehaviours != null)
+        {
+            foreach (var mb in modeElements.disabledMonoBehaviours)
+            {
+                mb.enabled = false;
+            }
+        }
+        */
     }
 
     // defines HMI to be spawned on the car
@@ -196,6 +232,7 @@ public class PlayerAvatar : MonoBehaviour
         }
     }
 
+    [Header("Other")]
     public HMIAnchors HMISlots;
     public AvatarType Type;
     public Transform[] SyncTransforms;

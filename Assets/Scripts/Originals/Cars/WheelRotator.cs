@@ -9,6 +9,11 @@ public class WheelRotator : MonoBehaviour {
     public Transform RearLeft;
     public Transform RearRight;
 
+    VehicleBehaviour.Suspension FrontLeftSuspension;
+    VehicleBehaviour.Suspension FrontRightSuspension;
+    VehicleBehaviour.Suspension RearLeftSuspension;
+    VehicleBehaviour.Suspension RearRightSuspension;
+
     public float WheelDiameter = 0.65f;
 
     private float RotationSpeed;  
@@ -16,15 +21,20 @@ public class WheelRotator : MonoBehaviour {
 
     private void Start()
     {
-        FrontLeft.GetComponentInParent<WheelCollider>().wheelDampingRate = 1000;
-        FrontRight.GetComponentInParent<WheelCollider>().wheelDampingRate = 1000;
-        RearLeft.GetComponentInParent<WheelCollider>().wheelDampingRate = 1000;
-        RearRight.GetComponentInParent<WheelCollider>().wheelDampingRate = 1000;
+        FrontLeft.GetComponent<WheelCollider>().wheelDampingRate = 1000;
+        FrontRight.GetComponent<WheelCollider>().wheelDampingRate = 1000;
+        RearLeft.GetComponent<WheelCollider>().wheelDampingRate = 1000;
+        RearRight.GetComponent<WheelCollider>().wheelDampingRate = 1000;
 
-        FrontLeft.GetComponentInParent<VehicleBehaviour.Suspension>().enabled = false;
-        FrontRight.GetComponentInParent<VehicleBehaviour.Suspension>().enabled = false;
-        RearLeft.GetComponentInParent<VehicleBehaviour.Suspension>().enabled = false;
-        RearRight.GetComponentInParent<VehicleBehaviour.Suspension>().enabled = false;
+        FrontLeftSuspension = FrontLeft.GetComponent<VehicleBehaviour.Suspension>();
+        FrontRightSuspension = FrontRight.GetComponent<VehicleBehaviour.Suspension>();
+        RearLeftSuspension = RearLeft.GetComponent<VehicleBehaviour.Suspension>();
+        RearRightSuspension = RearRight.GetComponent<VehicleBehaviour.Suspension>();
+
+        FrontLeftSuspension.enabled = false;
+        FrontRightSuspension.enabled = false;
+        RearLeftSuspension.enabled = false;
+        RearRightSuspension.enabled = false;
     }
 
     void Update () {
@@ -37,12 +47,12 @@ public class WheelRotator : MonoBehaviour {
         RotationSpeed = 360f * speed / 3.6f / Mathf.PI / WheelDiameter;
 
         //Front Left
-        FrontLeft.Rotate(RotationSpeed * Time.deltaTime, 0, 0);
+        FrontLeftSuspension.wheelModel.transform.Rotate(RotationSpeed * Time.deltaTime, 0, 0);
         //Front Right
-        FrontRight.Rotate(RotationSpeed * Time.deltaTime, 0, 0);
+        FrontRightSuspension.wheelModel.transform.Rotate(RotationSpeed * Time.deltaTime, 0, 0);
         //Rear Left
-        RearLeft.Rotate(RotationSpeed * Time.deltaTime, 0, 0);
+        RearLeftSuspension.wheelModel.transform.Rotate(RotationSpeed * Time.deltaTime, 0, 0);
         //Rear Right
-        RearRight.Rotate(RotationSpeed * Time.deltaTime, 0, 0);
+        RearRightSuspension.wheelModel.transform.Rotate(RotationSpeed * Time.deltaTime, 0, 0);
     }
 }

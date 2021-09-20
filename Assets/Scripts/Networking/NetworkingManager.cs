@@ -6,6 +6,7 @@ public struct InstantStartHostParameters
     public bool SkipSelectionScreen;
     public int SelectedExperiment;
     public int SelectedRole;
+    public PlayerSystem.InputMode InputMode;
 }
 
 //logic entry point 
