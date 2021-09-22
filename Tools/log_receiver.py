@@ -10,6 +10,11 @@ sock.bind((HOST, PORT))
 while True:
     received = sock.recv(1024)
     offset = 0
+    
+    numAICars = 0
+    #int numAICars = 0;
+    aiCarIndexes = []
+    #List<int> aiCarIndexes = new List<int>();
 
 #### this is almost one to one translation of relevant part of WorldLogging
     LocalDriver = struct.unpack("i", received[offset:offset+4])[0]
@@ -17,42 +22,50 @@ while True:
     #log.LocalDriver = reader.ReadInt32();
     numPersistentDrivers = struct.unpack("i", received[offset:offset+4])[0]
     offset = offset + 4
-    #int numPersistentDrivers = reader.ReadInt32();
-    numAICars = 0
-    #int numAICars = 0;
-    aiCarIndexes = []
-    #List<int> aiCarIndexes = new List<int>();
+    #int numPersistentDrivers = reader.ReadInt32();    
+    numPedestrians = struct.unpack("i", received[offset:offset+4])[0]
+    offset = offset + 4
+    #int numPedestrians = reader.ReadInt32();    
+    numCarLights = struct.unpack("i", received[offset:offset+4])[0]
+    offset = offset + 4
+    #int numCarLights = reader.ReadInt32();    
+    numPedestrianLights = struct.unpack("i", received[offset:offset+4])[0]
+    offset = offset + 4
+    #int numPedestrianLights = reader.ReadInt32();
+
 
     eventType = struct.unpack("i", received[offset:offset+4])[0]
     offset = offset + 4
     #var eventType = (LogFrameType)reader.ReadInt32();
-    if (eventType == 1) :
+    while (eventType == 1) :
     #if (eventType == LogFrameType.AICarSpawn)
     #{
         aiCarIndexes.append(numAICars + numPersistentDrivers)
         #aiCarIndexes.Add(numAICars + numPersistentDrivers);
         numAICars = numAICars + 1
         #numAICars++;
-        continue
         #continue;
+        eventType = struct.unpack("i", received[offset:offset+4])[0]
+        offset = offset + 4
     #}
     ###Assert.AreEqual(LogFrameType.PositionsUpdate, eventType);
     frame = {}
     #var frame = new SerializedFrame();
     ###log.Frames.Add(frame);
-    frame["timestamp"] = struct.unpack("i", received[offset:offset+4])[0]
+    frame["timestamp"] = struct.unpack("f", received[offset:offset+4])[0]
     offset = offset + 4
     #frame.Timestamp = reader.ReadSingle();
-    frame["roundtrip"] = struct.unpack("i", received[offset:offset+4])[0]
+    frame["roundtrip"] = struct.unpack("f", received[offset:offset+4])[0]
     offset = offset + 4
     #frame.RoundtripTime = reader.ReadSingle();
 
     numDriversThisFrame = numAICars + numPersistentDrivers
+
     #int numDriversThisFrame = numAICars + numPersistentDrivers;
     for i in range(numDriversThisFrame):
     #for (int i = 0; i < numDriversThisFrame; i++)
     #{
-        key = "Driver " + 1
+        key = "Driver " + str(i)
         frame[key] = {}
 
         frame[key]["position"] = struct.unpack("{}f".format(3), received[offset:offset+4*3])
@@ -76,19 +89,19 @@ while True:
             frame[key]["rigidbody"] = struct.unpack("{}f".format(3), received[offset:offset+4*3]) #todo SpeedConvertion.Mps2Kmph
             offset = offset + 4*3  # 3 floats, 4 bytes each
             #frame.AICarRbVelocities.Add(i, reader.ReadVector3() * SpeedConvertion.Mps2Kmph);
-            frame[key]["speed"] = struct.unpack("i", received[offset:offset+4])[0]
+            frame[key]["speed"] = struct.unpack("f", received[offset:offset+4])[0]
             offset = offset + 4
             #frame.AICarSpeeds.Add(i, reader.ReadSingle());
-            frame[key]["braking"] = struct.unpack("i", received[offset:offset+1])[0]
+            frame[key]["braking"] = struct.unpack("?", received[offset:offset+1])[0]
             offset = offset + 1
             #frame.braking.Add(i, reader.ReadBoolean());
-            frame[key]["stopped"] = struct.unpack("i", received[offset:offset+1])[0]
+            frame[key]["stopped"] = struct.unpack("?", received[offset:offset+1])[0]
             offset = offset + 1
             #frame.stopped.Add(i, reader.ReadBoolean());
-            frame[key]["takeoff"] = struct.unpack("i", received[offset:offset+1])[0]
+            frame[key]["takeoff"] = struct.unpack("?", received[offset:offset+1])[0]
             offset = offset + 1
             #frame.takeoff.Add(i, reader.ReadBoolean());
-            frame[key]["eyecontact"] = struct.unpack("i", received[offset:offset+1])[0]
+            frame[key]["eyecontact"] = struct.unpack("?", received[offset:offset+1])[0]
             offset = offset + 1
             #frame.eyecontact.Add(i, reader.ReadBoolean());
         #}
@@ -97,7 +110,7 @@ while True:
     for i in range(numPedestrians):
     #for (int i = 0; i < numPedestrians; i++)
     #{
-        key = "Pedestrian " + i
+        key = "Pedestrian " + str(i)
         frame[key] = {}
 
         frame[key]["rosition"] = struct.unpack("{}f".format(3), received[offset:offset+4*3])
@@ -112,20 +125,20 @@ while True:
     for i in range(numCarLights):
     #for (int i = 0; i < numCarLights; i++)
     #{
-        key = "CarLight " + i
+        key = "CarLight " + str(i)
         frame[i] = {}
 
-        frame[i]["state"] = struct.unpack("i", received[offset:offset+1])[0]
+        frame[i]["state"] = struct.unpack("c", received[offset:offset+1])[0]
         offset = offset + 1
         #frame.CarLightStates.Add((LightState)reader.ReadByte());
     #}
     for i in range(numPedestrianLights):
     #for (int i = 0; i < numPedestrianLights; i++)
     #{
-        key = "PedestrianLight " + i
+        key = "PedestrianLight " + str(i)
         frame[i] = {}
 
-        frame[i]["state"] = struct.unpack("i", received[offset:offset+1])[0]
+        frame[i]["state"] = struct.unpack("c", received[offset:offset+1])[0]
         offset = offset + 1
         #frame.PedestrianLightStates.Add((LightState)reader.ReadByte());
     #}
