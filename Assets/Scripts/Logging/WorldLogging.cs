@@ -27,6 +27,8 @@ public class WorldLogger
 
     LiveLogger _liveLogger;
 
+    bool active;
+
     public WorldLogger(PlayerSystem playerSys, AICarSyncSystem aiCarSystem)
     {
         _playerSystem = playerSys;
@@ -38,6 +40,7 @@ public class WorldLogger
     //writes metadata header in binary log file
     public void BeginLog(string fileName, ExperimentDefinition experiment, TrafficLightsSystem lights, float time, bool sendLiveLog)
     {
+        active = true;
         _lights = lights;
         if (!Directory.Exists("ExperimentLogs"))
         {
@@ -96,20 +99,40 @@ public class WorldLogger
         return string.Join("/", names);
     }
 
-    //main logging logic
-    //adds a single entry to the logfile
     public void LogFrame(float ping, float time)
     {
-        _liveLogger?.Log(_aiCarSystem, _playerSystem);
+        LogFrame(ping, time, _fileWriter);
+        if (_liveLogger != null)
+        {
+            _liveLogger.FrameMetadata(
+                _driverBuffer.IndexOf(_playerSystem.LocalPlayer),
+                _driverBuffer.Count,
+                _playerSystem.Pedestrians.Count,
+                _lights != null ? _lights.CarLights.Length : 0,
+                _lights != null ? _lights.PedestrianLights.Length : 0
+            );
+            LogFrame(ping, time, _liveLogger._writer);
+            _liveLogger.Log();
+        }
+    }
+
+    //main logging logic
+    //adds a single entry to the logfile
+    private void LogFrame(float ping, float time, BinaryWriter writer)
+    {
+        if (!active)
+        {
+            return;
+        }
         var aiCars = _aiCarSystem.Cars;
         while (aiCars.Count > _lastFrameAICarCount)
         {
-            _fileWriter.Write((int)LogFrameType.AICarSpawn);
+            writer.Write((int)LogFrameType.AICarSpawn);
             _lastFrameAICarCount++;
         }
-        _fileWriter.Write((int)LogFrameType.PositionsUpdate);
-        _fileWriter.Write(time - _startTime);
-        _fileWriter.Write(ping);
+        writer.Write((int)LogFrameType.PositionsUpdate);
+        writer.Write(time - _startTime);
+        writer.Write(ping);
 
         _driverBuffer.Clear();
         _driverBuffer.AddRange(_playerSystem.Cars);
@@ -117,46 +140,46 @@ public class WorldLogger
         _driverBuffer.AddRange(_aiCarSystem.Cars);
         foreach (var driver in _driverBuffer)
         {
-            _fileWriter.Write(driver.transform.position);
-            _fileWriter.Write(driver.transform.rotation);
-            _fileWriter.Write((int)driver._carBlinkers.State);
+            writer.Write(driver.transform.position);
+            writer.Write(driver.transform.rotation);
+            writer.Write((int)driver._carBlinkers.State);
             if ( driver == _playerSystem.LocalPlayer)
             {
                 var rb = driver.GetComponent<Rigidbody>();
                 Assert.IsNotNull(rb);
                 Assert.IsFalse(rb.isKinematic);
-                _fileWriter.Write(rb.velocity);
+                writer.Write(rb.velocity);
             } else
             if (_aiCarSystem.Cars.Contains(driver))
             {
                 var rb = driver.GetComponent<Rigidbody>();
                 Assert.IsNotNull(rb);
                 Assert.IsFalse(rb.isKinematic);
-                _fileWriter.Write(rb.velocity);
+                writer.Write(rb.velocity);
                 var ai = driver.GetComponent<AICar>();
                 Assert.IsNotNull(ai);
-                _fileWriter.Write(ai.speed);
-                _fileWriter.Write(ai.state == AICar.CarState.BRAKING);
-                _fileWriter.Write(ai.state == AICar.CarState.STOPPED);
-                _fileWriter.Write(ai.state == AICar.CarState.TAKEOFF);
+                writer.Write(ai.speed);
+                writer.Write(ai.state == AICar.CarState.BRAKING);
+                writer.Write(ai.state == AICar.CarState.STOPPED);
+                writer.Write(ai.state == AICar.CarState.TAKEOFF);
                 var plap = driver.GetComponentInChildren<EyeContact>();
                 Assert.IsNotNull(plap);
-                _fileWriter.Write(plap.TargetPed != null);
+                writer.Write(plap.TargetPed != null);
             }
         }
         foreach (var pedestrian in _playerSystem.Pedestrians)
         {
-            pedestrian.GetPose().SerializeTo(_fileWriter);
+            pedestrian.GetPose().SerializeTo(writer);
         }
         if (_lights != null)
         {
             foreach (var light in _lights.CarLights)
             {
-                _fileWriter.Write((byte)light.State);
+                writer.Write((byte)light.State);
             }
             foreach (var light in _lights.PedestrianLights)
             {
-                _fileWriter.Write((byte)light.State);
+                writer.Write((byte)light.State);
             }
         }
     }
