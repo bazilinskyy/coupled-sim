@@ -7,14 +7,14 @@ HOST, PORT = "localhost", 40131
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 sock.bind((HOST, PORT))
 
+numAICars = 0
+#int numAICars = 0;
+aiCarIndexes = []
+#List<int> aiCarIndexes = new List<int>();
+
 while True:
     received = sock.recv(1024)
     offset = 0
-    
-    numAICars = 0
-    #int numAICars = 0;
-    aiCarIndexes = []
-    #List<int> aiCarIndexes = new List<int>();
 
 #### this is almost one to one translation of relevant part of WorldLogging
     LocalDriver = struct.unpack("i", received[offset:offset+4])[0]
@@ -71,7 +71,7 @@ while True:
         frame[key]["position"] = struct.unpack("{}f".format(3), received[offset:offset+4*3])
         offset = offset + 4*3  # 3 floats, 4 bytes each
         #frame.DriverPositions.Add(reader.ReadVector3());
-        frame[key]["rotation"] = struct.unpack("{}f".format(3), received[offset:offset+4*3]) #todo zmien na katy eulera
+        frame[key]["rotation"] = struct.unpack("{}f".format(3), received[offset:offset+4*3])
         offset = offset + 4*3  # 3 floats, 4 bytes each
         #frame.DriverRotations.Add(reader.ReadQuaternion());
         frame[key]["blinker"] = struct.unpack("i", received[offset:offset+4])[0]
@@ -80,13 +80,13 @@ while True:
         if (i == LocalDriver) :
         #if (i == log.LocalDriver)
         #{
-            frame[key]["rigidbody"] = struct.unpack("{}f".format(3), received[offset:offset+4*3]) #todo SpeedConvertion.Mps2Kmph
+            frame[key]["rigidbody"] = struct.unpack("{}f".format(3), received[offset:offset+4*3]) # meters per second (not in Km per hour)
             offset = offset + 4*3  # 3 floats, 4 bytes each
             #frame.LocalDriverRbVelocity = reader.ReadVector3() * SpeedConvertion.Mps2Kmph;
         elif (aiCarIndexes.count(i) > 0) :
         #} else if (IsAICar(i))
         #{
-            frame[key]["rigidbody"] = struct.unpack("{}f".format(3), received[offset:offset+4*3]) #todo SpeedConvertion.Mps2Kmph
+            frame[key]["rigidbody"] = struct.unpack("{}f".format(3), received[offset:offset+4*3]) # meters per second (not in Km per hour)
             offset = offset + 4*3  # 3 floats, 4 bytes each
             #frame.AICarRbVelocities.Add(i, reader.ReadVector3() * SpeedConvertion.Mps2Kmph);
             frame[key]["speed"] = struct.unpack("f", received[offset:offset+4])[0]
@@ -116,7 +116,7 @@ while True:
         frame[key]["rosition"] = struct.unpack("{}f".format(3), received[offset:offset+4*3])
         offset = offset + 4*3  # 3 floats, 4 bytes each
         #frame.PedestrianPositions.Add(reader.ReadListVector3());
-        frame[key]["rotation"] = struct.unpack("{}f".format(3), received[offset:offset+4*3]) #todo zmien na katy eulera
+        frame[key]["rotation"] = struct.unpack("{}f".format(3), received[offset:offset+4*3])
         offset = offset + 4*3  # 3 floats, 4 bytes each
         #frame.PedestrianRotations.Add(reader.ReadListQuaternion());
         offset = offset + 4
@@ -126,9 +126,9 @@ while True:
     #for (int i = 0; i < numCarLights; i++)
     #{
         key = "CarLight " + str(i)
-        frame[i] = {}
+        frame[key] = {}
 
-        frame[i]["state"] = struct.unpack("c", received[offset:offset+1])[0]
+        frame[key]["state"] = struct.unpack("c", received[offset:offset+1])[0]
         offset = offset + 1
         #frame.CarLightStates.Add((LightState)reader.ReadByte());
     #}
@@ -136,12 +136,12 @@ while True:
     #for (int i = 0; i < numPedestrianLights; i++)
     #{
         key = "PedestrianLight " + str(i)
-        frame[i] = {}
+        frame[key] = {}
 
-        frame[i]["state"] = struct.unpack("c", received[offset:offset+1])[0]
+        frame[key]["state"] = struct.unpack("c", received[offset:offset+1])[0]
         offset = offset + 1
         #frame.PedestrianLightStates.Add((LightState)reader.ReadByte());
     #}
 #####
 
-    print(frame)
+    #print(frame)
