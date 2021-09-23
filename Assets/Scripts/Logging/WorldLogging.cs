@@ -101,34 +101,37 @@ public class WorldLogger
 
     public void LogFrame(float ping, float time)
     {
-        LogFrame(ping, time, _fileWriter);
+        var aiCars = _aiCarSystem.Cars;
+        var newAiCarsCount = aiCars.Count - _lastFrameAICarCount;
+
+        LogFrame(ping, time, newAiCarsCount, _fileWriter);
         if (_liveLogger != null)
         {
             _liveLogger.FrameMetadata(
                 _driverBuffer.IndexOf(_playerSystem.LocalPlayer),
-                _driverBuffer.Count,
+                _playerSystem.Cars.Count + _playerSystem.Passengers.Count,
                 _playerSystem.Pedestrians.Count,
                 _lights != null ? _lights.CarLights.Length : 0,
                 _lights != null ? _lights.PedestrianLights.Length : 0
             );
-            LogFrame(ping, time, _liveLogger._writer);
+            LogFrame(ping, time, newAiCarsCount, _liveLogger._writer);
             _liveLogger.Log();
         }
+
+        _lastFrameAICarCount = aiCars.Count;
     }
 
     //main logging logic
     //adds a single entry to the logfile
-    private void LogFrame(float ping, float time, BinaryWriter writer)
+    private void LogFrame(float ping, float time, int newAiCarsCount, BinaryWriter writer)
     {
         if (!active)
         {
             return;
         }
-        var aiCars = _aiCarSystem.Cars;
-        while (aiCars.Count > _lastFrameAICarCount)
+        for (int i = 0; i < newAiCarsCount; i++)
         {
             writer.Write((int)LogFrameType.AICarSpawn);
-            _lastFrameAICarCount++;
         }
         writer.Write((int)LogFrameType.PositionsUpdate);
         writer.Write(time - _startTime);
