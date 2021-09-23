@@ -10,6 +10,12 @@ public class LiveLogger : IDisposable
     MemoryStream _stream;
     byte[] _buffer;
     const int Port = 40131;
+    
+    public enum LogPacketType
+    {
+        Begin = 1,
+        Frame = 2,
+    }
 
     public void Init()
     {
@@ -20,13 +26,13 @@ public class LiveLogger : IDisposable
         _writer = new BinaryWriter(_stream);
     }
 
-    public void Log()
+    public void Flush()
     {
         _socket.Send(_buffer, (int)_stream.Position);
         _stream.Position = 0;
     }
 
-    public void FrameMetadata(
+    public void BeginLog(
         int localDriver,
         int numPersistentDrivers,
         int numPedestrians,
@@ -34,6 +40,7 @@ public class LiveLogger : IDisposable
         int numPedestrianLights
         )
     {
+        _writer.Write((int)LogPacketType.Begin);
         _writer.Write(localDriver);
         _writer.Write(numPersistentDrivers);
         _writer.Write(numPedestrians);

@@ -84,6 +84,14 @@ public class WorldLogger
         {
             _liveLogger = new LiveLogger();
             _liveLogger.Init();
+            _liveLogger.BeginLog(
+                _driverBuffer.IndexOf(_playerSystem.LocalPlayer),
+                _playerSystem.Cars.Count + _playerSystem.Passengers.Count,
+                _playerSystem.Pedestrians.Count,
+                _lights != null ? _lights.CarLights.Length : 0,
+                _lights != null ? _lights.PedestrianLights.Length : 0
+            );
+            _liveLogger.Flush();
         }
     }
 
@@ -107,15 +115,9 @@ public class WorldLogger
         LogFrame(ping, time, newAiCarsCount, _fileWriter);
         if (_liveLogger != null)
         {
-            _liveLogger.FrameMetadata(
-                _driverBuffer.IndexOf(_playerSystem.LocalPlayer),
-                _playerSystem.Cars.Count + _playerSystem.Passengers.Count,
-                _playerSystem.Pedestrians.Count,
-                _lights != null ? _lights.CarLights.Length : 0,
-                _lights != null ? _lights.PedestrianLights.Length : 0
-            );
+            _liveLogger._writer.Write((int)LiveLogger.LogPacketType.Frame);
             LogFrame(ping, time, newAiCarsCount, _liveLogger._writer);
-            _liveLogger.Log();
+            _liveLogger.Flush();
         }
 
         _lastFrameAICarCount = aiCars.Count;
@@ -152,8 +154,7 @@ public class WorldLogger
                 Assert.IsNotNull(rb);
                 Assert.IsFalse(rb.isKinematic);
                 writer.Write(rb.velocity);
-            } else
-            if (_aiCarSystem.Cars.Contains(driver))
+            } else if (_aiCarSystem.Cars.Contains(driver))
             {
                 var rb = driver.GetComponent<Rigidbody>();
                 Assert.IsNotNull(rb);
