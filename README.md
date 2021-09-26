@@ -38,7 +38,46 @@ The coupled simulator supports a keyboard and a gaming steering wheel as input s
 The supported sources of output are a head-mounted display (HMD) and computer screen for the driver, a computer screen for the passenger, and a head-mounted display for the pedestrian. At the moment, supported HDM is Oculus Rift CV1.
 
 #### Networking and data logging
-The current number of human participants supported by the coupled simulator is three. However, this number can be expanded up to the number of agents supported by the network. Synchronisation in a local network is handled by a custom-made network manager designed to support the exchange of information between agents with low latency and real-time data logging at 50 Hz for variables from the Unity environment and up to 700Hz from the motion suit. The data that are logged include the three-dimensional position and rotation of the manual car and the AV, the use of blinkers by the driver of the manual car, and 150 position and angular variables from the motion suit. The data are stored in binary format, and the coupled simulator contains a function to convert the saved data into a CSV file. The host agent initiates a red bar that is displayed across all agents for 1 s to allow for visual synchronisation in case screen capture software is used.
+The current number of human participants supported by the coupled simulator is three. However, this number can be expanded up to the number of agents supported by the network. Synchronization in a local network is handled by a custom-made network manager designed to support the exchange of information between agents with low latency and real-time data logging at 50 Hz for variables from the Unity environment and up to 700Hz from the motion suit. The data that are logged include the three-dimensional position and rotation of the manual car and the AV, the use of blinkers by the driver of the manual car, and 150 position and angular variables from the motion suit. The data are stored in binary format, and the coupled simulator contains a function to convert the saved data into a CSV file. 
+Besides logging data to the binary file, the same set of frame data (in a very similar binary format) is being sent with requested intervals (that can be set with _NetworkingManger.RealtimeLogInterval_ property) during the simulation to UDP port 40131 on localhost. The data can be used to monitor the simulation with external tools at runtime. _Tools/log_receiver.py_ file contains an example python script that consumes binary data and assembles it into a structure that is easy to interact with.
+It should be started before starting the simulation with 'python3 log_receiver.py' from within the _Tools_ folder.
+The structure of the frame object (with example data) is as follows:
+```
+{
+   "timestamp":1.711700439453125,
+   "roundtrip":0.0,
+   "Driver [car index]":{ # single integer-indexed entry for a car avatar controlled pedestrian avatar
+      "position":(-94.58521270751953, -0.056745946407318115, 64.8435287475586),
+      "rotation":(0.5252280235290527, 90.8692626953125, 359.9905700683594),
+      "blinker":0,
+      "rigidbody":(3.1246094703674316, -0.0026992361526936293, -0.046936508268117905)
+   },
+   "Driver [car index]":{ # multiple integer-indexed entries for each AI-controller pedestrian avatar
+      "position":(-112.08060455322266, -0.056995689868927, 21.383098602294922),
+      "rotation":(0.5083497762680054, 157.48184204101562, -0.0032447741832584143),
+      "blinker":0,
+      "rigidbody":(0.5082536935806274, -0.0017757670721039176, -1.2219140529632568),
+      "speed":5.904001235961914,
+      "braking":false,
+      "stopped":false,
+      "takeoff":false,
+      "eyecontact":false
+   },
+   "Pedestrian [pedestrian index]":{ # multiple integer-indexed entries for each player or AI-controller pedestrian avatar
+       "bone  [bone index]":{ # multiple integer-indexed entries for each bone of pedestrian rig
+          "position":(-94.58521270751953, -0.056745946407318115, 64.8435287475586),
+          "rotation":(0.5252280235290527, 90.8692626953125, 359.9905700683594)
+       }
+   },
+   "CarLight [car traffic light index]":{ # multiple integer-indexed entries for each cars traffic light
+      "state":"b""\\x00"
+   },
+   "PedestrianLight [pedestrian traffic light index]":{ # multiple integer-indexed entries for each pedestrains traffic light
+      "state":"b""\\x02"
+   },
+}
+```
+The host agent may use _Visual syncing_ button to display a red bar across all clients and the host for 1 s to allow for visual synchronization in case screen capture software is used.
 
 ## Installation
 The simualator was tested on Windows 10 and macOS Mojave. All functionality is supported by both platforms. However, support for input and output devices was tested only on Windows 10.
@@ -54,9 +93,10 @@ To start the client press _Start Client_ button, enter the host IP address and p
 Steps to run an experiment:
 1. Start host and wait for clients to join if needed.
 2. Once all clients have joined, on the host, select one of the experiments listed under _Experiment:_.
-3. On the host, assign roles to participants.
+3. On the host, assign roles to participants. If no role is selected, the participant will run a "headless" mode.
 4. On both host and clients, each participant has to select control mode.
-5. Start an experiment with the _Start Game_ button.
+5. Start an experiment with the _Start Game_ button - all clients will load selected experiment.
+6. Once all connected clients are ready (the experiment scene is fully loaded), _Start simulation_ button on the host machine will start the simulation.
 
 # Instant start parametets
 If the user wants to prepare a build that runs simulation instantly with a selected experiment and role, he is able to do so by setting parameters of the InstantStartHostParameters struct. It can be accessed and changed on a _StartScene_ (scene) -> _Managers_ (game object) -> _NetworkingManager_ (component) -> _InstantStartParams_ (field). The struct consists of the following fields:
