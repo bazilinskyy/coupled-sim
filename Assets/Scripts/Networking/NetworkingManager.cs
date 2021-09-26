@@ -20,6 +20,7 @@ public class NetworkingManager : MonoBehaviour
     WorldLogger _logger;
     WorldLogger _fixedLogger;
     LogConverter _logConverter;
+    public float RealtimeLogInterval = 0.2f;
 
     [SerializeField]
     AICarSyncSystem _aiCarSystem;
@@ -31,6 +32,7 @@ public class NetworkingManager : MonoBehaviour
         _playerSystem = GetComponent<PlayerSystem>();
         _levelManager = new LevelManager(_playerSystem, Experiments);
         _logger = new WorldLogger(_playerSystem, _aiCarSystem);
+        _logger.RealtimeLogInterval = RealtimeLogInterval;
         _fixedLogger = new WorldLogger(_playerSystem, _aiCarSystem);
         _logConverter = new LogConverter(_playerSystem.PedestrianPrefab);
     }
