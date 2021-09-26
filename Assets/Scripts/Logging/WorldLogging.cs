@@ -107,6 +107,8 @@ public class WorldLogger
         return string.Join("/", names);
     }
 
+    public float RealtimeLogInterval = 0;
+    float lastRealtimeLog = 0;
     public void LogFrame(float ping, float time)
     {
         var aiCars = _aiCarSystem.Cars;
@@ -115,9 +117,12 @@ public class WorldLogger
         LogFrame(ping, time, newAiCarsCount, _fileWriter);
         if (_liveLogger != null)
         {
-            _liveLogger._writer.Write((int)LiveLogger.LogPacketType.Frame);
-            LogFrame(ping, time, newAiCarsCount, _liveLogger._writer);
-            _liveLogger.Flush();
+            if (newAiCarsCount > 0 || (Time.realtimeSinceStartup - lastRealtimeLog > RealtimeLogInterval)) {
+                _liveLogger._writer.Write((int)LiveLogger.LogPacketType.Frame);
+                LogFrame(ping, time, newAiCarsCount, _liveLogger._writer);
+                _liveLogger.Flush();
+                lastRealtimeLog = Time.realtimeSinceStartup;
+            }
         }
 
         _lastFrameAICarCount = aiCars.Count;
