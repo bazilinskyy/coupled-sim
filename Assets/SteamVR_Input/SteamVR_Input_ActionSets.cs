@@ -25,7 +25,7 @@ namespace Valve.VR
         
         private static SteamVR_Input_ActionSet_mixedreality p_mixedreality;
         
-        private static SteamVR_Input_ActionSet_SafetyButton_OculusTouch p_SafetyButton_OculusTouch;
+        private static SteamVR_Input_ActionSet_SafetyButtonSet p_SafetyButtonSet;
         
         public static SteamVR_Input_ActionSet_default _default
         {
@@ -59,11 +59,11 @@ namespace Valve.VR
             }
         }
         
-        public static SteamVR_Input_ActionSet_SafetyButton_OculusTouch SafetyButton_OculusTouch
+        public static SteamVR_Input_ActionSet_SafetyButtonSet SafetyButtonSet
         {
             get
             {
-                return SteamVR_Actions.p_SafetyButton_OculusTouch.GetCopy<SteamVR_Input_ActionSet_SafetyButton_OculusTouch>();
+                return SteamVR_Actions.p_SafetyButtonSet.GetCopy<SteamVR_Input_ActionSet_SafetyButtonSet>();
             }
         }
         
@@ -73,13 +73,13 @@ namespace Valve.VR
             SteamVR_Actions.p_platformer = ((SteamVR_Input_ActionSet_platformer)(SteamVR_ActionSet.Create<SteamVR_Input_ActionSet_platformer>("/actions/platformer")));
             SteamVR_Actions.p_buggy = ((SteamVR_Input_ActionSet_buggy)(SteamVR_ActionSet.Create<SteamVR_Input_ActionSet_buggy>("/actions/buggy")));
             SteamVR_Actions.p_mixedreality = ((SteamVR_Input_ActionSet_mixedreality)(SteamVR_ActionSet.Create<SteamVR_Input_ActionSet_mixedreality>("/actions/mixedreality")));
-            SteamVR_Actions.p_SafetyButton_OculusTouch = ((SteamVR_Input_ActionSet_SafetyButton_OculusTouch)(SteamVR_ActionSet.Create<SteamVR_Input_ActionSet_SafetyButton_OculusTouch>("/actions/SafetyButton_OculusTouch")));
+            SteamVR_Actions.p_SafetyButtonSet = ((SteamVR_Input_ActionSet_SafetyButtonSet)(SteamVR_ActionSet.Create<SteamVR_Input_ActionSet_SafetyButtonSet>("/actions/SafetyButtonSet")));
             Valve.VR.SteamVR_Input.actionSets = new Valve.VR.SteamVR_ActionSet[] {
                     SteamVR_Actions._default,
                     SteamVR_Actions.platformer,
                     SteamVR_Actions.buggy,
                     SteamVR_Actions.mixedreality,
-                    SteamVR_Actions.SafetyButton_OculusTouch};
+                    SteamVR_Actions.SafetyButtonSet};
         }
     }
 }

@@ -14,14 +14,14 @@ namespace Valve.VR
     using UnityEngine;
     
     
-    public class SteamVR_Input_ActionSet_SafetyButton_OculusTouch : Valve.VR.SteamVR_ActionSet
+    public class SteamVR_Input_ActionSet_SafetyButtonSet : Valve.VR.SteamVR_ActionSet
     {
         
-        public virtual SteamVR_Action_Boolean SafetyButton
+        public virtual SteamVR_Action_Boolean SafetyButtonPressedNotPressed
         {
             get
             {
-                return SteamVR_Actions.safetyButton_OculusTouch_SafetyButton;
+                return SteamVR_Actions.safetyButtonSet_SafetyButtonPressedNotPressed;
             }
         }
     }

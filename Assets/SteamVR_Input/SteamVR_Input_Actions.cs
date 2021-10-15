@@ -51,7 +51,7 @@ namespace Valve.VR
         
         private static SteamVR_Action_Pose p_mixedreality_ExternalCamera;
         
-        private static SteamVR_Action_Boolean p_safetyButton_OculusTouch_SafetyButton;
+        private static SteamVR_Action_Boolean p_safetyButtonSet_SafetyButtonPressedNotPressed;
         
         public static SteamVR_Action_Boolean default_InteractUI
         {
@@ -189,11 +189,11 @@ namespace Valve.VR
             }
         }
         
-        public static SteamVR_Action_Boolean safetyButton_OculusTouch_SafetyButton
+        public static SteamVR_Action_Boolean safetyButtonSet_SafetyButtonPressedNotPressed
         {
             get
             {
-                return SteamVR_Actions.p_safetyButton_OculusTouch_SafetyButton.GetCopy<SteamVR_Action_Boolean>();
+                return SteamVR_Actions.p_safetyButtonSet_SafetyButtonPressedNotPressed.GetCopy<SteamVR_Action_Boolean>();
             }
         }
         
@@ -217,7 +217,7 @@ namespace Valve.VR
                     SteamVR_Actions.buggy_Brake,
                     SteamVR_Actions.buggy_Reset,
                     SteamVR_Actions.mixedreality_ExternalCamera,
-                    SteamVR_Actions.safetyButton_OculusTouch_SafetyButton};
+                    SteamVR_Actions.safetyButtonSet_SafetyButtonPressedNotPressed};
             Valve.VR.SteamVR_Input.actionsIn = new Valve.VR.ISteamVR_Action_In[] {
                     SteamVR_Actions.default_InteractUI,
                     SteamVR_Actions.default_Teleport,
@@ -235,7 +235,7 @@ namespace Valve.VR
                     SteamVR_Actions.buggy_Brake,
                     SteamVR_Actions.buggy_Reset,
                     SteamVR_Actions.mixedreality_ExternalCamera,
-                    SteamVR_Actions.safetyButton_OculusTouch_SafetyButton};
+                    SteamVR_Actions.safetyButtonSet_SafetyButtonPressedNotPressed};
             Valve.VR.SteamVR_Input.actionsOut = new Valve.VR.ISteamVR_Action_Out[] {
                     SteamVR_Actions.default_Haptic};
             Valve.VR.SteamVR_Input.actionsVibration = new Valve.VR.SteamVR_Action_Vibration[] {
@@ -252,7 +252,7 @@ namespace Valve.VR
                     SteamVR_Actions.platformer_Jump,
                     SteamVR_Actions.buggy_Brake,
                     SteamVR_Actions.buggy_Reset,
-                    SteamVR_Actions.safetyButton_OculusTouch_SafetyButton};
+                    SteamVR_Actions.safetyButtonSet_SafetyButtonPressedNotPressed};
             Valve.VR.SteamVR_Input.actionsSingle = new Valve.VR.SteamVR_Action_Single[] {
                     SteamVR_Actions.default_Squeeze,
                     SteamVR_Actions.buggy_Throttle};
@@ -276,7 +276,7 @@ namespace Valve.VR
                     SteamVR_Actions.buggy_Throttle,
                     SteamVR_Actions.buggy_Brake,
                     SteamVR_Actions.buggy_Reset,
-                    SteamVR_Actions.safetyButton_OculusTouch_SafetyButton};
+                    SteamVR_Actions.safetyButtonSet_SafetyButtonPressedNotPressed};
         }
         
         private static void PreInitActions()
@@ -298,7 +298,7 @@ namespace Valve.VR
             SteamVR_Actions.p_buggy_Brake = ((SteamVR_Action_Boolean)(SteamVR_Action.Create<SteamVR_Action_Boolean>("/actions/buggy/in/Brake")));
             SteamVR_Actions.p_buggy_Reset = ((SteamVR_Action_Boolean)(SteamVR_Action.Create<SteamVR_Action_Boolean>("/actions/buggy/in/Reset")));
             SteamVR_Actions.p_mixedreality_ExternalCamera = ((SteamVR_Action_Pose)(SteamVR_Action.Create<SteamVR_Action_Pose>("/actions/mixedreality/in/ExternalCamera")));
-            SteamVR_Actions.p_safetyButton_OculusTouch_SafetyButton = ((SteamVR_Action_Boolean)(SteamVR_Action.Create<SteamVR_Action_Boolean>("/actions/SafetyButton_OculusTouch/in/SafetyButton")));
+            SteamVR_Actions.p_safetyButtonSet_SafetyButtonPressedNotPressed = ((SteamVR_Action_Boolean)(SteamVR_Action.Create<SteamVR_Action_Boolean>("/actions/SafetyButtonSet/in/SafetyButtonPressedNotPressed")));
         }
     }
 }
