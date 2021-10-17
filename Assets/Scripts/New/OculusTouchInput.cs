@@ -39,6 +39,15 @@ public class OculusTouchInput : MonoBehaviour
 
     public float getSafetyButton()
     {
+        // Add keyboard SPACE presses for testing
+        if (Input.GetKeyDown("space"))
+        {
+            buttonPressed = 1.0f;
+        }
+        if (Input.GetKeyUp("space"))
+        {
+            buttonPressed = 0.0f;
+        }
         return buttonPressed;
     }
 }

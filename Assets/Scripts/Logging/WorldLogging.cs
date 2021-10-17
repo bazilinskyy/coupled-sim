@@ -40,7 +40,7 @@ public class WorldLogger
     double FocusDistance;
     double FocusStability;
 
-    // Data from Vive handheld controller
+    // Data from Oculus Touch handheld controller
     float SafetyButton;
 
     public WorldLogger(PlayerSystem playerSys, AICarSyncSystem aiCarSystem)
@@ -163,6 +163,13 @@ public class WorldLogger
         foreach (var pedestrian in _playerSystem.Pedestrians)
         {
             pedestrian.GetPose().SerializeTo(_fileWriter);
+
+            // Log pedestrian Safety Button presses
+            //var SafetyButtonPress = pedestrian.transform.Find("SafetyButton");
+            //SafetyButton = SafetyButtonPress.position.x;
+            //_fileWriter.Write(SafetyButton);
+            SafetyButton = pedestrian.GetComponentInChildren<OculusTouchInput>().getSafetyButton();
+            _fileWriter.Write(SafetyButton);
         }
     }
 
@@ -266,7 +273,7 @@ public class LogConverter
         public double FocusDistance;
         public double FocusStability;
 
-        // Data from Vive handheld controller
+        // Data from Oculus Touch handheld controller
         public float SafetyButton;
     }
 
@@ -291,7 +298,7 @@ public class LogConverter
         const int columnsForLocalDriver = columnsPerDriver;
         const int columnsForAICar = columnsPerDriver + 1 /* aicar.speed */ + 3 /* braking, stopped, takeoff */;
 
-        int columnsPerPedestrian = 6;
+        int columnsPerPedestrian = 3 /*pos x,y,z*/ + 3 /*rot x,y,z */ + 1 /* SafetyButton */;
         var toRefRot = Quaternion.Inverse(referenceRot);
 
         // Load binary file
@@ -358,10 +365,10 @@ public class LogConverter
                     frame.LeftEyePupilSize = reader.ReadDouble();
                     frame.RightEyePupilSize = reader.ReadDouble();
                     frame.FocusDistance = reader.ReadDouble();
-                    frame.FocusStability = reader.ReadDouble();
+                    frame.FocusStability = reader.ReadDouble();*/
 
-                    // Data from Vive handheld controller
-                    frame.SafetyButton = reader.ReadSingle();*/
+                    // Data from Oculus Touch handheld controller
+                    frame.SafetyButton = reader.ReadSingle();
                 }
             }
         }
@@ -462,7 +469,7 @@ public class LogConverter
             {
                 writer.Write(separator);
             }
-            const string pedestrianTransformHeader = "pos_x;pos_y;pos_z;rot_x;rot_y;rot_z";
+            const string pedestrianTransformHeader = "pos_x;pos_y;pos_z;rot_x;rot_y;rot_z;SafetyButton";
             writer.Write(pedestrianTransformHeader);
 
             writer.Write("\n"); // New line, actual data writing starts now.
@@ -567,10 +574,10 @@ public class LogConverter
                     var LeftEyePupilSize = frame.LeftEyePupilSize;
                     var RightEyePupilSize = frame.RightEyePupilSize;
                     var FocusDistance = frame.FocusDistance;
-                    var FocusStability = frame.FocusStability;
+                    var FocusStability = frame.FocusStability;*/
 
-                    // Data from Vive handheld controller:
-                    var SafetyButton = frame.SafetyButton;*/
+                    // Data from Oculus Touch handheld controller:
+                    var SafetyButton = frame.SafetyButton;
 
                     // Only write the position of the pedestrian here, and HMD + Vive data
                     for(int j = 0; j < 1; j++)
@@ -578,7 +585,7 @@ public class LogConverter
                     {
                         var p = PosToRefPoint(pos[j]);
                         var r = RotToRefPoint(rot[j]).eulerAngles;
-                        line.Add($"{p.x};{p.y};{p.z};{r.x};{r.y};{r.z}");
+                        line.Add($"{p.x};{p.y};{p.z};{r.x};{r.y};{r.z};{SafetyButton}");
                         //line.Add($"{p.x};{p.y};{p.z};{r.x};{r.y};{r.z};{HMD_pos_x};{HMD_pos_y};{HMD_pos_z};{HMD_rot_x};{HMD_rot_y};{HMD_rot_z};{LeftEyePupilSize};{RightEyePupilSize};{FocusDistance};{FocusStability};{SafetyButton}");
                     }
                 }
