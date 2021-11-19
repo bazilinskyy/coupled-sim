@@ -1,0 +1,22 @@
+Arrow Waypointer - Version 1.1.7
+Support: https://forum.unity.com/threads/332370/
+
+Instructions for use:
+
+1.  Select the Tools/TurnTheGameOn/Waypoint Controller Menu Item from the Unity toolbar to add the system to your scene. You can also drag the "Waypoint Controller" prefab directly into your scene, located at "Assets\TurnTheGameOn\ArrowWayPointer\Resources\" folder.
+
+2. Ensure configure mode is set to "On" to make changes to the waypoint system.
+
+3. Set the total amount of waypoints.
+
+4. Press the "Cleanup Old Waypoints" button to delete any waypoints not used by the system from the scene.
+
+Notes:
+
+-When a collider with the tag "Player" collides with a waypoint, the current target changes to the next waypoint and any configured waypoint events will be called. 
+
+-When the last waypoint is reached, the "Waypoint Arrow" and "Waypoint Controller" are destroyed.
+
+-Assign a player transform to the "Waypoint Controller" to use a radius as a check for the waypoints.
+
+-You can asjust the default radius value for waypoints on the "waypoint" prefab or individually on the waypoint objects in your scene.
