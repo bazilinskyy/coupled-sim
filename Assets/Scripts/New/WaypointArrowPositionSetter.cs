@@ -12,25 +12,19 @@ public class WaypointArrowPositionSetter : MonoBehaviour
     private Vector3 arrowLocation;
     private Vector3 iniViewPosDisplacement;
     private Vector3 currentViewPosDisplacement;
-    private Vector3 iniRotAngles;
-    private Quaternion iniViewRotDisplacement;
     private Vector3 waypointCarDistance;
 
     // Start is called before the first frame update
     void Start()
     {
         // Set Initial View Position and Rotation Displacement
-        iniViewPosDisplacement = new Vector3(-0.1f, 1.8f, 0.6f);
-        iniRotAngles = new Vector3(-5f, -12f, 0f);
-        iniViewRotDisplacement = Quaternion.Euler(iniRotAngles);
+        iniViewPosDisplacement = new Vector3(-0.1f, 1.72f, 0.6f);
 
         // Find initial Pedestrian position and rotations
         pedPos = GameObject.Find("Participant(Clone)").transform.position;
-        pedRot = GameObject.Find("Participant(Clone)").transform.rotation;
 
-        // Set initial position and rotation
+        // Set initial position
         this.GetComponent<Transform>().position = pedPos + iniViewPosDisplacement;
-        this.GetComponent<Transform>().rotation = pedRot * iniViewRotDisplacement;
     }
 
     // Update is called once per frame

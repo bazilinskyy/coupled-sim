@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class HeadLockedPositionSetter : MonoBehaviour
+public class HeadLockedPositionSetter_withWaypointArrow : MonoBehaviour
 {
-    // This script is for setting the HUD position based on head movements and rotations
+    // This script is for the HUD with the guiding Waypoint Arrow on top of it
     // Declare parameters
     private Vector3 pedPos;
     private Quaternion pedRot;
@@ -17,7 +17,7 @@ public class HeadLockedPositionSetter : MonoBehaviour
     void Start()
     {
         // Set Initial View Position and Rotation Displacement
-        iniViewPosDisplacement = new Vector3(-0.1f, 1.7f, 0.6f);
+        iniViewPosDisplacement = new Vector3(-0.1f, 1.685f, 0.6f);
         iniRotAngles = new Vector3(-5f, -12f, 0f);
         iniViewRotDisplacement = Quaternion.Euler(iniRotAngles);
 
