@@ -26,7 +26,7 @@ public class WorldLogger
     float _startTime;
     LiveLogger _liveLogger;
 
-    // Experiment data:
+    // Experiment metadata:
     int _expDefNr;
     int _trialNr;
     int _participantNr;
@@ -40,7 +40,7 @@ public class WorldLogger
     double FocusDistance;
     double FocusStability;
 
-    // Data from Oculus Touch handheld controller
+    // Data from Vive handheld controller
     float SafetyButton;
 
     public WorldLogger(PlayerSystem playerSys, AICarSyncSystem aiCarSystem)
@@ -63,27 +63,27 @@ public class WorldLogger
         }
 
         // Logfile name configuration
-        _fileWriter = new BinaryWriter(File.Create("ExperimentLogs/" + fileName + DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + ".binLog"));
-        /*_fileWriter = new BinaryWriter(File.Create("ExperimentLogs/"
+        //_fileWriter = new BinaryWriter(File.Create("ExperimentLogs/" + fileName + DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + ".binLog"));
+        _fileWriter = new BinaryWriter(File.Create("ExperimentLogs/"
             + "ParticipantNr_" + PersistentManager.Instance.ParticipantNr + "_"
-            + "TrialNr_" + PersistentManager.Instance.TrialNr + "_"
             + "ExpDefNr_" + PersistentManager.Instance.ExpDefNr + "_"
-            + fileName + DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + ".binLog"));*/
+            + "TrialNr_" + PersistentManager.Instance.TrialNr + "_"
+            + fileName + DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + ".binLog"));
 
         _startTime = time;
         _fileWriter.Write(DateTime.Now.ToBinary());
 
-        /*// Experiment Definition number:
+        // Participant number:
+        _participantNr = PersistentManager.Instance.ParticipantNr;
+        _fileWriter.Write(_participantNr);
+
+        // Experiment Definition number:
         _expDefNr = PersistentManager.Instance.ExpDefNr;
         _fileWriter.Write(_expDefNr);
 
         // Trial number:
         _trialNr = PersistentManager.Instance.TrialNr;
         _fileWriter.Write(_trialNr);
-
-        // Participant number:
-        _participantNr = PersistentManager.Instance.ParticipantNr;
-        _fileWriter.Write(_participantNr);*/
 
         // Add drivers and passengers avatars to the playeravatar list
         _driverBuffer.Clear();
@@ -165,9 +165,6 @@ public class WorldLogger
             pedestrian.GetPose().SerializeTo(_fileWriter);
 
             // Log pedestrian Safety Button presses
-            //var SafetyButtonPress = pedestrian.transform.Find("SafetyButton");
-            //SafetyButton = SafetyButtonPress.position.x;
-            //_fileWriter.Write(SafetyButton);
             SafetyButton = pedestrian.GetComponentInChildren<OculusTouchInput>().getSafetyButton();
             _fileWriter.Write(SafetyButton);
         }
@@ -238,9 +235,9 @@ public class LogConverter
     struct Log
     {
         public DateTime StartTime;
+        public int ParticipantNr;
         public int ExperimentDefinitionNr;
         public int TrialNr;
-        public int ParticipantNr;
         public int LocalDriver;
         public List<SerializedPOI> POIs;
         public List<SerializedFrame> Frames;
@@ -273,7 +270,7 @@ public class LogConverter
         public double FocusDistance;
         public double FocusStability;
 
-        // Data from Oculus Touch handheld controller
+        // Data from Vive handheld controller
         public float SafetyButton;
     }
 
@@ -284,7 +281,7 @@ public class LogConverter
     List<RunningAverage> _driverVels;
 
     // Translation logic
-    // referenceName, referencePos, referenceRot - parameters specifining new origin point, allowing transforming data into new coordinate system
+    // referenceName, referencePos, referenceRot - parameters specifying new origin point, allowing transforming data into new coordinate system
     public void TranslateBinaryLogToCsv(string sourceFile, string dstFile, string[] pedestrianSkeletonNames, string referenceName, Vector3 referencePos, Quaternion referenceRot)
     {
         _driverPositions = null;
@@ -307,9 +304,9 @@ public class LogConverter
         using (var reader = new BinaryReader(srcFile))
         {
             log.StartTime = DateTime.FromBinary(reader.ReadInt64());
-            /*log.ExperimentDefinitionNr = reader.ReadInt32();
+            log.ParticipantNr = reader.ReadInt32();
+            log.ExperimentDefinitionNr = reader.ReadInt32();
             log.TrialNr = reader.ReadInt32();
-            log.ParticipantNr = reader.ReadInt32();*/
             log.LocalDriver = reader.ReadInt32();
             int numPersistentDrivers = reader.ReadInt32();
             int numPedestrians = reader.ReadInt32();
@@ -367,7 +364,7 @@ public class LogConverter
                     frame.FocusDistance = reader.ReadDouble();
                     frame.FocusStability = reader.ReadDouble();*/
 
-                    // Data from Oculus Touch handheld controller
+                    // Data from Vive handheld controller
                     frame.SafetyButton = reader.ReadSingle();
                 }
             }
@@ -380,11 +377,11 @@ public class LogConverter
             var startString = startTime.ToString("HH:mm:ss") + ":" + startTime.Millisecond.ToString();
 
             writer.WriteLine($"Start Time;{startString}");
-
-            /*writer.WriteLine($"Exp Def Nr; {log.ExperimentDefinitionNr}");
-            writer.WriteLine($"Trial nr; {log.TrialNr}");
-            writer.WriteLine($"Participant nr; {log.ParticipantNr}");*/
-
+            
+            writer.WriteLine($"Participant Nr; {log.ParticipantNr}");
+            writer.WriteLine($"Exp Def Nr; {log.ExperimentDefinitionNr}");
+            writer.WriteLine($"Trial Nr; {log.TrialNr}");
+            
             var localDriver = log.LocalDriver;
             var lastFrame = log.Frames[log.Frames.Count - 1];
             var numDrivers = lastFrame.DriverPositions.Count;
@@ -576,7 +573,7 @@ public class LogConverter
                     var FocusDistance = frame.FocusDistance;
                     var FocusStability = frame.FocusStability;*/
 
-                    // Data from Oculus Touch handheld controller:
+                    // Data from Vive handheld controller:
                     var SafetyButton = frame.SafetyButton;
 
                     // Only write the position of the pedestrian here, and HMD + Vive data
@@ -732,7 +729,6 @@ public class LogConverter
                         OnGUI_CustomPoiButton(i, name);
                     }
                     GUILayout.Label("Stored reference Point:");
-
                     if (GUILayout.Button("Transform with " + UNITY_WORLD_ROOT))
                     {
                         var fullName = "ExperimentLogs/" + name;
