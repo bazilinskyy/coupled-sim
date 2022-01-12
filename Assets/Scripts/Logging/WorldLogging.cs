@@ -75,6 +75,7 @@ public class WorldLogger
 
         // Participant number:
         _participantNr = PersistentManager.Instance.ParticipantNr;
+        Debug.LogError("participantNr = " + _participantNr);
         _fileWriter.Write(_participantNr);
 
         // Experiment Definition number:
@@ -207,6 +208,7 @@ public class LogConverter
     static SerializedPOI[] ParsePOI(BinaryReader reader)
     {
         var count = reader.ReadInt32();
+        Debug.LogError("count = " + count);
         var pois = new SerializedPOI[count];
         for (int i = 0; i < count; i++)
         {
@@ -304,9 +306,9 @@ public class LogConverter
         using (var reader = new BinaryReader(srcFile))
         {
             log.StartTime = DateTime.FromBinary(reader.ReadInt64());
-            log.ParticipantNr = reader.ReadInt32();
+            /*log.ParticipantNr = reader.ReadInt32();
             log.ExperimentDefinitionNr = reader.ReadInt32();
-            log.TrialNr = reader.ReadInt32();
+            log.TrialNr = reader.ReadInt32();*/
             log.LocalDriver = reader.ReadInt32();
             int numPersistentDrivers = reader.ReadInt32();
             int numPedestrians = reader.ReadInt32();
@@ -378,9 +380,9 @@ public class LogConverter
 
             writer.WriteLine($"Start Time;{startString}");
             
-            writer.WriteLine($"Participant Nr; {log.ParticipantNr}");
+            /*writer.WriteLine($"Participant Nr; {log.ParticipantNr}");
             writer.WriteLine($"Exp Def Nr; {log.ExperimentDefinitionNr}");
-            writer.WriteLine($"Trial Nr; {log.TrialNr}");
+            writer.WriteLine($"Trial Nr; {log.TrialNr}");*/
             
             var localDriver = log.LocalDriver;
             var lastFrame = log.Frames[log.Frames.Count - 1];
