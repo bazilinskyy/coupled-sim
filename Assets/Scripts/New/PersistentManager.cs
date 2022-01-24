@@ -12,6 +12,10 @@ public class PersistentManager : MonoBehaviour
     public int ExpDefNr = 1;
     public int TrialNr = 1;
 
+    // Scene-change logic parameters
+    public bool switchScene;
+    public bool stopLogging;
+
     private void Awake()
     {
         if (Instance == null)

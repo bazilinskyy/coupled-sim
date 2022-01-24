@@ -44,6 +44,10 @@ public struct ExperimentRoleDefinition
 
 public class ExperimentDefinition : MonoBehaviour
 {
+    private void Awake()
+    {
+        DontDestroyOnLoad(gameObject);
+    }
     //the name of the experiment
     public string Name;
     //Unity scene name to be loaded as an experiment environment

@@ -27,9 +27,9 @@ public class WorldLogger
     LiveLogger _liveLogger;
 
     // Experiment metadata:
-    int _expDefNr;
+    /*int _expDefNr;
     int _trialNr;
-    int _participantNr;
+    int _participantNr;*/
 
     // Data from Varjo HMD:
     Vector3 HMD_pos; float HMD_pos_x; float HMD_pos_y; float HMD_pos_z; // Position data
@@ -72,9 +72,9 @@ public class WorldLogger
 
         _startTime = time;
         _fileWriter.Write(DateTime.Now.ToBinary());
-
+        
         // Participant number:
-        _participantNr = PersistentManager.Instance.ParticipantNr;
+        /*_participantNr = PersistentManager.Instance.ParticipantNr;
         Debug.LogError("participantNr = " + _participantNr);
         _fileWriter.Write(_participantNr);
 
@@ -84,7 +84,7 @@ public class WorldLogger
 
         // Trial number:
         _trialNr = PersistentManager.Instance.TrialNr;
-        _fileWriter.Write(_trialNr);
+        _fileWriter.Write(_trialNr);*/
 
         // Add drivers and passengers avatars to the playeravatar list
         _driverBuffer.Clear();
@@ -237,9 +237,9 @@ public class LogConverter
     struct Log
     {
         public DateTime StartTime;
-        public int ParticipantNr;
+        /*public int ParticipantNr;
         public int ExperimentDefinitionNr;
-        public int TrialNr;
+        public int TrialNr;*/
         public int LocalDriver;
         public List<SerializedPOI> POIs;
         public List<SerializedFrame> Frames;

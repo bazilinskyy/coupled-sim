@@ -6,6 +6,8 @@ using UnityEngine;
 
 public class QuitTrial : MonoBehaviour
 {
+    public SceneChange changerObject;
+
     // Declare parameters
     private Vector3 waypointPos;
     private Vector3 carPos;
@@ -26,7 +28,9 @@ public class QuitTrial : MonoBehaviour
         // Stop logic
         if ((carPos - waypointPos).magnitude < 0.1f)
         {
-            UnityEditor.EditorApplication.isPlaying = false;
+            Debug.Log("Stop logic triggered");
+            changerObject.StartSwitch();
+            //UnityEditor.EditorApplication.isPlaying = false;
             //Application.Quit();
         }
     }

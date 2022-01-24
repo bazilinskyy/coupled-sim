@@ -114,6 +114,7 @@ public class Host : NetworkSystem
                             _lights = GameObject.FindObjectOfType<TrafficLightsSystem>();
                             foreach (var carSpawner in _lvlManager.ActiveExperiment.CarSpawners)
                             {
+                                Debug.LogWarning("Loading carSpawner in _aiCarSystem");
                                 carSpawner.Init(_aiCarSystem);
                             }
                             ExperimentRoleDefinition experimentRoleDefinition = _lvlManager.ActiveExperiment.Roles[_playerRoles[Host.PlayerId]];
@@ -218,6 +219,7 @@ public class Host : NetworkSystem
         }
         else
         {
+            Debug.LogWarning("Loading level with local player");
             _lvlManager.LoadLevelWithLocalPlayer(_selectedExperiment, 0, _playerRoles);
         }
         _transitionPhase = TransitionPhase.LoadingLevel;

@@ -129,4 +129,9 @@ public class AICarSyncSystem
             Poses = GatherPoses(),
         });
     }
+
+    public void destroyCars()
+    {
+        Cars.Clear();
+    }
 }

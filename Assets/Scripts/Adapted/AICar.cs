@@ -68,6 +68,11 @@ public class AICar : MonoBehaviour, IVehicle
     public float Speed => speed;
 
     // Use this for initialization
+    private void Awake()
+    {
+        DontDestroyOnLoad(gameObject);
+    }
+
     void Start()
     {
         theRigidbody = GetComponent<Rigidbody>();                          // Grabs information of the rigid body this script is attached to.

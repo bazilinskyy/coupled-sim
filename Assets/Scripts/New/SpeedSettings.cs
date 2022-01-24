@@ -12,7 +12,7 @@ public class SpeedSettings : MonoBehaviour
         public const int WaypointType = 1;
         public const float Speed = 5;
         public const float Acceleration = 5;
-        public const float Jerk = 0;
+        public const float Jerk = 5;
     }
 
     //Simple Kinematics
