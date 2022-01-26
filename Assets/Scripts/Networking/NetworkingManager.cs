@@ -19,7 +19,6 @@ public class NetworkingManager : MonoBehaviour
     WorldLogger _logger;
     WorldLogger _fixedLogger;
     LogConverter _logConverter;
-    SceneChange _SceneChange;
 
     [SerializeField]
     AICarSyncSystem _aiCarSystem;

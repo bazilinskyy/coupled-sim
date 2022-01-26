@@ -161,27 +161,6 @@ public class PlayerSystem : MonoBehaviour
         }
     }
 
-    public void destroyPlayers()
-    {
-        destroyObjectsInList(Avatars);
-        destroyObjectsInList(Drivers);
-        destroyObjectsInList(Pedestrians);
-        destroyObjectsInList(Passengers);
-
-        Avatars.Clear();
-        Drivers.Clear();
-        Pedestrians.Clear();
-        Passengers.Clear();
-    }
-
-    private void destroyObjectsInList(List<PlayerAvatar> list)
-    {
-        for (int i = 0; i < list.Count; i++)
-        {
-            Destroy(list[i].gameObject);
-        }
-    }
-
     //displays controler selection GUI
     public void SelectModeGUI()
     {

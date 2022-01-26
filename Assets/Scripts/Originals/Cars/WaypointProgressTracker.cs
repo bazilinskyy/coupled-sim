@@ -66,11 +66,6 @@ namespace UnityStandardAssets.Utility
 
             this.circuit = circuit;
         }
-        private void Awake()
-        {
-            DontDestroyOnLoad(gameObject);
-        }
-
 
         // reset the object to sensible values
         public void Reset()

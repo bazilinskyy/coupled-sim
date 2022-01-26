@@ -6,7 +6,7 @@ using UnityEngine;
 
 public class QuitTrial : MonoBehaviour
 {
-    public SceneChange changerObject;
+    private float timeValue = 0;
 
     // Declare parameters
     private Vector3 waypointPos;
@@ -22,16 +22,21 @@ public class QuitTrial : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        // Grab current AICar position
-        carPos = GameObject.FindWithTag("ManualCar").transform.position;               
+        timeValue += Time.deltaTime;
 
-        // Stop logic
-        if ((carPos - waypointPos).magnitude < 0.1f)
+        // Only enter the loop after 5 seconds to avoid "GameObject not found" errors
+        if (timeValue > 5.0f)
         {
-            Debug.Log("Stop logic triggered");
-            changerObject.StartSwitch();
-            //UnityEditor.EditorApplication.isPlaying = false;
-            //Application.Quit();
+            // Grab current AICar position
+            carPos = GameObject.FindWithTag("ManualCar").transform.position;
+
+            // Stop logic
+            if ((carPos - waypointPos).magnitude < 0.1f)
+            {
+                Debug.Log("Stop logic triggered");
+                UnityEditor.EditorApplication.isPlaying = false;
+                //Application.Quit();
+            }
         }
     }
 }

@@ -34,7 +34,6 @@ namespace UnityStandardAssets.Utility
                 CachePositionsAndDistances();
             }
             numPoints = Waypoints.Length;
-            DontDestroyOnLoad(gameObject);
         }
 
 

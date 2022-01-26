@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System;
 using UnityEngine;
 using UnityEngine.Serialization;
 using UnityEngine.Assertions;
@@ -68,11 +67,6 @@ public enum AvatarType
 // These are used for more than Players (AI cars have these as well)
 public class PlayerAvatar : MonoBehaviour
 {
-    private void Awake()
-    {
-        DontDestroyOnLoad(gameObject);
-    }
-
     [Serializable]
     public struct ModeElements
     {
