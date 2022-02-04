@@ -27,9 +27,10 @@ public class WorldLogger
     LiveLogger _liveLogger;
 
     // Experiment metadata:
-    /*int _expDefNr;
-    int _trialNr;
-    int _participantNr;*/
+    /*float _expDefNr;
+    float _trialNr;
+    float _participantNr;
+    float _orderNr;*/
 
     // Data from Varjo HMD:
     Vector3 HMD_pos; float HMD_pos_x; float HMD_pos_y; float HMD_pos_z; // Position data
@@ -66,25 +67,13 @@ public class WorldLogger
         //_fileWriter = new BinaryWriter(File.Create("ExperimentLogs/" + fileName + DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + ".binLog"));
         _fileWriter = new BinaryWriter(File.Create("ExperimentLogs/"
             + "ParticipantNr_" + PersistentManager.Instance.ParticipantNr + "_"
-            + "ExpDefNr_" + PersistentManager.Instance.ExpDefNr + "_"
+            + "OrderNr_" + PersistentManager.Instance.OrderNr + "_"
             + "TrialNr_" + PersistentManager.Instance.TrialNr + "_"
+            + "ExpDefNr_" + PersistentManager.Instance.ExpDefNr + "_"
             + fileName + DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + ".binLog"));
 
         _startTime = time;
         _fileWriter.Write(DateTime.Now.ToBinary());
-        
-        // Participant number:
-        /*_participantNr = PersistentManager.Instance.ParticipantNr;
-        Debug.LogError("participantNr = " + _participantNr);
-        _fileWriter.Write(_participantNr);
-
-        // Experiment Definition number:
-        _expDefNr = PersistentManager.Instance.ExpDefNr;
-        _fileWriter.Write(_expDefNr);
-
-        // Trial number:
-        _trialNr = PersistentManager.Instance.TrialNr;
-        _fileWriter.Write(_trialNr);*/
 
         // Add drivers and passengers avatars to the playeravatar list
         _driverBuffer.Clear();
@@ -168,6 +157,16 @@ public class WorldLogger
             // Log pedestrian Safety Button presses
             SafetyButton = pedestrian.GetComponentInChildren<OculusTouchInput>().getSafetyButton();
             _fileWriter.Write(SafetyButton);
+
+            /*// Metadata: Participant Nr, Order Nr, Trial Nr and Experiment Definition Nr
+            _participantNr = PersistentManager.Instance.ParticipantNr;
+            _fileWriter.Write(_participantNr);
+            _orderNr = PersistentManager.Instance.OrderNr;
+            _fileWriter.Write(_orderNr);
+            _trialNr = PersistentManager.Instance.TrialNr;
+            _fileWriter.Write(_trialNr);
+            _expDefNr = PersistentManager.Instance.ExpDefNr;
+            _fileWriter.Write(_expDefNr);*/
         }
     }
 
@@ -237,9 +236,10 @@ public class LogConverter
     struct Log
     {
         public DateTime StartTime;
-        /*public int ParticipantNr;
-        public int ExperimentDefinitionNr;
-        public int TrialNr;*/
+        /*public float ParticipantNr;
+        public float OrderNr;
+        public float TrialNr;
+        public float ExperimentDefinitionNr;*/
         public int LocalDriver;
         public List<SerializedPOI> POIs;
         public List<SerializedFrame> Frames;
@@ -274,6 +274,12 @@ public class LogConverter
 
         // Data from Vive handheld controller
         public float SafetyButton;
+
+        /*// Metadata: Participant Nr, Order Nr, Trial Nr and Experiment Definition Nr
+        public float ParticipantNr;
+        public float OrderNr;
+        public float TrialNr;
+        public float ExpDefNr;*/
     }
 
     List<int> aiCarIndexes = new List<int>();
@@ -297,7 +303,7 @@ public class LogConverter
         const int columnsForLocalDriver = columnsPerDriver;
         const int columnsForAICar = columnsPerDriver + 1 /* aicar.speed */ + 3 /* braking, stopped, takeoff */;
 
-        int columnsPerPedestrian = 3 /*pos x,y,z*/ + 3 /*rot x,y,z */ + 1 /* SafetyButton */;
+        int columnsPerPedestrian = 3 /*pos x,y,z*/ + 3 /*rot x,y,z */ + 1 /* SafetyButton */; // + 4 /* Metadata numbers */;
         var toRefRot = Quaternion.Inverse(referenceRot);
 
         // Load binary file
@@ -306,9 +312,6 @@ public class LogConverter
         using (var reader = new BinaryReader(srcFile))
         {
             log.StartTime = DateTime.FromBinary(reader.ReadInt64());
-            /*log.ParticipantNr = reader.ReadInt32();
-            log.ExperimentDefinitionNr = reader.ReadInt32();
-            log.TrialNr = reader.ReadInt32();*/
             log.LocalDriver = reader.ReadInt32();
             int numPersistentDrivers = reader.ReadInt32();
             int numPedestrians = reader.ReadInt32();
@@ -368,6 +371,12 @@ public class LogConverter
 
                     // Data from Vive handheld controller
                     frame.SafetyButton = reader.ReadSingle();
+
+                    /*// Metadata: Participant Nr, Order Nr, Trial Nr and Experiment Definition Nr
+                    frame.ParticipantNr = reader.ReadSingle();
+                    frame.OrderNr = reader.ReadSingle();
+                    frame.TrialNr = reader.ReadSingle();
+                    frame.ExpDefNr = reader.ReadSingle();*/
                 }
             }
         }
@@ -578,13 +587,19 @@ public class LogConverter
                     // Data from Vive handheld controller:
                     var SafetyButton = frame.SafetyButton;
 
+                    /*// Metadata: Participant Nr, Order Nr, Trial Nr and Experiment Definition Nr
+                    var ParticipantNr = frame.ParticipantNr;
+                    var OrderNr = frame.OrderNr;
+                    var TrialNr = frame.TrialNr;
+                    var ExpDefNr = frame.ExpDefNr;*/
+
                     // Only write the position of the pedestrian here, and HMD + Vive data
-                    for(int j = 0; j < 1; j++)
+                    for (int j = 0; j < 1; j++)
                     //for (int j = 0; j < pos.Count; j++)
                     {
                         var p = PosToRefPoint(pos[j]);
                         var r = RotToRefPoint(rot[j]).eulerAngles;
-                        line.Add($"{p.x};{p.y};{p.z};{r.x};{r.y};{r.z};{SafetyButton}");
+                        line.Add($"{p.x};{p.y};{p.z};{r.x};{r.y};{r.z};{SafetyButton}"); //;{ParticipantNr};{OrderNr};{TrialNr};{ExpDefNr}");
                         //line.Add($"{p.x};{p.y};{p.z};{r.x};{r.y};{r.z};{HMD_pos_x};{HMD_pos_y};{HMD_pos_z};{HMD_rot_x};{HMD_rot_y};{HMD_rot_z};{LeftEyePupilSize};{RightEyePupilSize};{FocusDistance};{FocusStability};{SafetyButton}");
                     }
                 }

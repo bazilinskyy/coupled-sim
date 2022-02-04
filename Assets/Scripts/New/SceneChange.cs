@@ -1,11 +1,12 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class SceneChange : MonoBehaviour
 {
-    //SceneChange changerObject;
+    SceneChange changerObject;
     LevelManager _lvlManager;
     WorldLogger _logger;
     WorldLogger _fixedLogger;
@@ -17,32 +18,22 @@ public class SceneChange : MonoBehaviour
         PersistentManager.Instance.stopLogging = false;
         PersistentManager.Instance.switchScene = false;
     }
-    private void Update()
-    {
-        if (PersistentManager.Instance.stopLogging == true)
-        {
-            Debug.LogWarning("End Logging, destroy objects.");
-            _logger.EndLog();
-            _fixedLogger.EndLog();
-            //_playerSystem.destroyPlayers();
-            _aiCarSystem.destroyCars();
-            PersistentManager.Instance.stopLogging = false;
-            Debug.LogWarning("Logging stopped, objects destroyed.");
-        }
-    }
 
     public void StartSwitch()
     {
-        Debug.LogWarning("Preparing scene change");
-        Invoke("switchLogic", 0.5f);
-        
+        Debug.LogError("Preparing scene change");
+
+        Debug.LogError("    - Setting stopLogging to true");
+        // This triggers in NetworkingManager to stop logging and destroy players and cars
         PersistentManager.Instance.stopLogging = true;
-        
-        //PersistentManager.Instance.switchScene = true;
-        
+
+        Debug.LogError("    - Setting switchScene to true");
+        // This triggers a case in Host.cs
+        PersistentManager.Instance.switchScene = true;
+
     }
 
-    public void switchLogic()
+    /*public void switchLogic()
     {
         Debug.LogWarning("switchLogic() entered");
         // Switch logic here
@@ -50,26 +41,17 @@ public class SceneChange : MonoBehaviour
         name = "DR-3-transparent";
         nextExperiment(name);
         //Invoke("nextExperiment", 1.0f);
-    }
+    }*/
     
     /// Load next experiment
-    public void nextExperiment(string expName)
+    public void nextExperiment()
     {
-        Debug.LogWarning("Switching Scenes");
-        SceneManager.LoadScene(expName);
+        Debug.LogError("Switching Scenes");
+        //SceneManager.LoadSceneAsync("StartScene");
+        /*AsyncOperation asyncOperation = SceneManager.LoadSceneAsync("StartScene", LoadSceneMode.Single);
 
-        foreach (var carSpawner in _lvlManager.ActiveExperiment.CarSpawners)
-        {
-            Debug.LogWarning("Loading carSpawner in _aiCarSystem");
-            carSpawner.Init(_aiCarSystem);
-        }
+        Debug.Log("Scene loading progress :" + asyncOperation.progress);
 
-        //Debug.Log("LoadLevelWithLocalPlayer");
-        //_lvlManager.LoadLevelWithLocalPlayer(2, 0, new List<int> {-1});
-
-
-        /*AsyncOperation asyncOperation = SceneManager.LoadSceneAsync(expName, LoadSceneMode.Single);
-        
         // Don't let the Scene activate until you allow it to
         asyncOperation.allowSceneActivation = false;
 

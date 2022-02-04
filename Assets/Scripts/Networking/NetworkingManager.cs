@@ -49,6 +49,17 @@ public class NetworkingManager : MonoBehaviour
         {
             _netSystem.Update();
         }
+        if (PersistentManager.Instance.stopLogging == true)
+        {
+            Debug.LogWarning("End Logging, destroy objects.");
+            //_logger.EndLog();
+            //_fixedLogger.EndLog();
+            OnDestroy();
+            _playerSystem.destroyPlayers();
+            _aiCarSystem.destroyCars();
+            PersistentManager.Instance.stopLogging = false;
+            Debug.LogWarning("Logging stopped, objects destroyed.");
+        }
     }
     void FixedUpdate()
     {

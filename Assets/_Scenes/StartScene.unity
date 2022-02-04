@@ -240,6 +240,8 @@ GameObject:
   - component: {fileID: 301934534}
   - component: {fileID: 301934535}
   - component: {fileID: 301934536}
+  - component: {fileID: 301934537}
+  - component: {fileID: 301934538}
   m_Layer: 0
   m_Name: Managers
   m_TagString: Untagged
@@ -344,11 +346,39 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5a21bcadb62d05b489ad02339cd83e16, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ParticipantNr: 1
-  ExpDefNr: 1
-  TrialNr: 1
   switchScene: 0
   stopLogging: 0
+  doOnlyOnce: 0
+  TrialStarted: 0
+  hostRole: 0
+  clientRole: 0
+  ListNr: 0
+  BlockOrder: 00000000010000000200000003000000040000000500000006000000
+  QuestionnaireScene: 14
+  ExpOrder: 
+  ParticipantNr: 1
+  ExpDefNr: 0
+  TrialNr: 0
+--- !u!81 &301934537
+AudioListener:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 301934531}
+  m_Enabled: 0
+--- !u!114 &301934538
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 301934531}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4ea7b7e3018db3b44b95414ba084e16b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1256699364
 GameObject:
   m_ObjectHideFlags: 0

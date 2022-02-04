@@ -11,11 +11,14 @@ public class Host : NetworkSystem
     MessageDispatcher _msgDispatcher;
     LevelManager _lvlManager;
     PlayerSystem _playerSys;
+    PlayerSystem _playerSystem;
     AICarSyncSystem _aiCarSystem;
     WorldLogger _logger;
     WorldLogger _fixedTimeLogger;
+    WorldLogger _fixedLogger;
     HMIManager _hmiManager;
     VisualSyncManager _visualSyncManager;
+    SceneChange _SceneChange;
 
     List<int> _playerRoles = new List<int>();
     bool[] _playerReadyStatus = new bool[UNetConfig.MaxPlayers];
@@ -24,6 +27,9 @@ public class Host : NetworkSystem
     const float PoseUpdateInterval = 0.01f;
 
     TrafficLightsSystem _lights;
+
+    public bool gameStarted = false;
+
     InstantStartHostParameters _instantStartParams;
 
     public Host(LevelManager levelManager, PlayerSystem playerSys, AICarSyncSystem aiCarSystem, WorldLogger logger, WorldLogger fixedLogger, InstantStartHostParameters instantStartParams)
@@ -162,24 +168,30 @@ public class Host : NetworkSystem
     }
 
     //displays role selection GUI for a single player
-    static void SelectRoleGUI(int player, Host host, ExperimentRoleDefinition[] roles)
+    static void SelectRoleGUI(int player, Host host, ExperimentRoleDefinition[] roles, int Role)
     {
         if (host._instantStartParams.instantStart)
         {
             host._playerRoles[player] = host._instantStartParams.instantStartRole;
         }
         else {
-            GUILayout.BeginHorizontal();
+            //GUILayout.BeginHorizontal();
             string playerName = player == Host.PlayerId ? "Host" : $"Player {player}";
-            GUILayout.Label($"{playerName} role: {host._playerRoles[player]}");
-            for (int i = 0; i < roles.Length; i++)
+            //GUILayout.Label($"{playerName} role: {host._playerRoles[player]}");
+
+            // Automatic selection of roles
+            //GUILayout.Label($"{playerName} role: {roles[Role].Name}");
+            host._playerRoles[player] = Role;
+
+            // For manual selection of roles per host and client
+            /*for (int i = 0; i < roles.Length; i++)
             {
                 if (GUILayout.Button(roles[i].Name))
                 {
                     host._playerRoles[player] = i;
                 }
-            }
-            GUILayout.EndHorizontal();
+            }*/
+            //GUILayout.EndHorizontal();
         }
     }
 
@@ -187,21 +199,19 @@ public class Host : NetworkSystem
     void PlayerRolesGUI()
     {
         var roles = _lvlManager.Experiments[_selectedExperiment].Roles;
-        SelectRoleGUI(Host.PlayerId, this, roles);
-        ForEachConnectedPlayer((player, host) => SelectRoleGUI(player, host, roles));
+        SelectRoleGUI(Host.PlayerId, this, roles, PersistentManager.Instance.hostRole);
+        ForEachConnectedPlayer((player, host) => SelectRoleGUI(player, host, roles, PersistentManager.Instance.clientRole));
     }
 
-    bool started;
     //initializes experiment - sets it up locally and broadcasts experiment configuration message
     void StartGame()
     {
-        if (started)
-        {
-            return;
-        } else
-        {
-            started = true;
-        }
+        Debug.LogError("setting TrialStarted to true");
+        PersistentManager.Instance.TrialStarted = true;
+
+        Debug.LogError("setting gameStarted to true");
+        gameStarted = true;
+
         _msgDispatcher.ClearLevelMessageHandlers();
         _host.BroadcastReliable(new StartGameMsg
         {
@@ -283,13 +293,27 @@ public class Host : NetworkSystem
         {
             case NetState.Lobby:
             {
+                Debug.LogError("setting switchScene to false");
+                PersistentManager.Instance.switchScene = false;
+                    PersistentManager.Instance.doOnlyOnce = false;
+
                 GUI.enabled = AllRolesSelected();
-                if (_instantStartParams.instantStart || GUILayout.Button("Start Game"))
+                // First trial?
+                if (PersistentManager.Instance.TrialStarted == false)
                 {
-                    StartGame();
+                    if (GUILayout.Button("Start Game"))
+                    {
+                        StartGame();
+                    }
                 }
                 GUI.enabled = true;
-                if (!_instantStartParams.instantStart) {
+
+                /*if (gameStarted == true)
+                {
+                    gameStarted = false;
+                }*/
+                // Don't show all the experiments to choose from
+                /*if (!_instantStartParams.instantStart) {
                     GUILayout.Label("Experiment:");
                     for (int i = 0; i < _lvlManager.Experiments.Length; i++)
                     {
@@ -298,15 +322,46 @@ public class Host : NetworkSystem
                             _selectedExperiment = i;
                         }
                     }
-                }
+                }*/
+                //Debug.LogError("PersistentManager.Instance.ExpDefNr = " + PersistentManager.Instance.ExpDefNr);
+                PersistentManager.Instance.ExpDefNr = PersistentManager.Instance.ExpOrder[PersistentManager.Instance.ListNr];
+                PersistentManager.Instance.OrderNr = PersistentManager.Instance.ListNr;
+                _selectedExperiment = PersistentManager.Instance.ExpDefNr;
+
                 PlayerRolesGUI();
                 _playerSys.SelectModeGUI();
+                Debug.LogError("Waiting here at 1");
+                if (gameStarted == false && AllRolesSelected() == true && PersistentManager.Instance.TrialStarted == true)
+                {
+                    Debug.LogError("Waiting here at 2");
+                    StartGame();
+                }
                 break;
             }
             case NetState.InGame:
             {
-                _hmiManager.DoHostGUI(this);
-                _visualSyncManager.DoHostGUI(this);
+                if (PersistentManager.Instance.switchScene == true)
+                {
+                    Debug.LogError("Setting gameStarted to false");
+                    gameStarted = false;
+
+                    if (PersistentManager.Instance.doOnlyOnce == false)
+                    {
+                        Debug.LogError("Increment ListNr and TrialNr by 1");
+                        ++PersistentManager.Instance.ListNr;
+                        ++PersistentManager.Instance.TrialNr;
+                        if (PersistentManager.Instance.TrialNr > 5 || PersistentManager.Instance.ExpDefNr == PersistentManager.Instance.QuestionnaireScene)
+                        {
+                            PersistentManager.Instance.TrialNr = 0;
+                        }
+                        PersistentManager.Instance.doOnlyOnce = true;
+                    }
+                    
+                    Debug.LogError("Switching from InGame to Lobby");
+                    _currentState = NetState.Lobby;
+                }
+                //_hmiManager.DoHostGUI(this);
+                //_visualSyncManager.DoHostGUI(this);
             }
             break;
         }

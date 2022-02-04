@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // Shut down the running application
-
 public class QuitTrial : MonoBehaviour
 {
+    public SceneChange changerObject;
     private float timeValue = 0;
 
     // Declare parameters
@@ -31,10 +31,11 @@ public class QuitTrial : MonoBehaviour
             carPos = GameObject.FindWithTag("ManualCar").transform.position;
 
             // Stop logic
-            if ((carPos - waypointPos).magnitude < 0.1f)
+            if ((carPos - waypointPos).magnitude < 0.1f || Input.GetKeyDown(KeyCode.N))
             {
                 Debug.Log("Stop logic triggered");
-                UnityEditor.EditorApplication.isPlaying = false;
+                changerObject.StartSwitch();
+                //UnityEditor.EditorApplication.isPlaying = false;
                 //Application.Quit();
             }
         }
