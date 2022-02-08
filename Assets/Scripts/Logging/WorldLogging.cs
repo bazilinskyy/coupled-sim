@@ -155,7 +155,7 @@ public class WorldLogger
             pedestrian.GetPose().SerializeTo(_fileWriter);
 
             // Log pedestrian Safety Button presses
-            SafetyButton = pedestrian.GetComponentInChildren<OculusTouchInput>().getSafetyButton();
+            SafetyButton = pedestrian.GetComponentInChildren<ViveInput>().getSafetyButton();
             _fileWriter.Write(SafetyButton);
 
             /*// Metadata: Participant Nr, Order Nr, Trial Nr and Experiment Definition Nr

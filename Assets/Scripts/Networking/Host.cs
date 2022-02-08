@@ -293,9 +293,8 @@ public class Host : NetworkSystem
         {
             case NetState.Lobby:
             {
-                Debug.LogError("setting switchScene to false");
                 PersistentManager.Instance.switchScene = false;
-                    PersistentManager.Instance.doOnlyOnce = false;
+                PersistentManager.Instance.doOnlyOnce = false;
 
                 GUI.enabled = AllRolesSelected();
                 // First trial?
@@ -330,10 +329,8 @@ public class Host : NetworkSystem
 
                 PlayerRolesGUI();
                 _playerSys.SelectModeGUI();
-                Debug.LogError("Waiting here at 1");
                 if (gameStarted == false && AllRolesSelected() == true && PersistentManager.Instance.TrialStarted == true)
                 {
-                    Debug.LogError("Waiting here at 2");
                     StartGame();
                 }
                 break;
