@@ -322,7 +322,7 @@ public class Host : NetworkSystem
                         }
                     }
                 }*/
-                //Debug.LogError("PersistentManager.Instance.ExpDefNr = " + PersistentManager.Instance.ExpDefNr);
+                
                 PersistentManager.Instance.ExpDefNr = PersistentManager.Instance.ExpOrder[PersistentManager.Instance.ListNr];
                 PersistentManager.Instance.OrderNr = PersistentManager.Instance.ListNr;
                 _selectedExperiment = PersistentManager.Instance.ExpDefNr;
@@ -339,6 +339,10 @@ public class Host : NetworkSystem
             {
                 if (PersistentManager.Instance.switchScene == true)
                 {
+                    Debug.LogError("Setting stopLogging to true");
+                    // This triggers in NetworkingManager to stop logging and destroy players and cars
+                    PersistentManager.Instance.stopLogging = true;
+                    
                     Debug.LogError("Setting gameStarted to false");
                     gameStarted = false;
 
@@ -353,9 +357,18 @@ public class Host : NetworkSystem
                         }
                         PersistentManager.Instance.doOnlyOnce = true;
                     }
+                    // Quit game if end has been reached
+                    if (PersistentManager.Instance.ListNr > PersistentManager.Instance.ExpOrder.Count - 1)
+                    {
+                        UnityEditor.EditorApplication.isPlaying = false;
+                        //Application.Quit();
+                    }
+                    else
+                    {
+                        Debug.LogError("Switching from InGame to Lobby");
+                        _currentState = NetState.Lobby;
+                    }
                     
-                    Debug.LogError("Switching from InGame to Lobby");
-                    _currentState = NetState.Lobby;
                 }
                 //_hmiManager.DoHostGUI(this);
                 //_visualSyncManager.DoHostGUI(this);

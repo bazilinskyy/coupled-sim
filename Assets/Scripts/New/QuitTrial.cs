@@ -24,8 +24,8 @@ public class QuitTrial : MonoBehaviour
     {
         timeValue += Time.deltaTime;
 
-        // Only enter the loop after 5 seconds to avoid "GameObject not found" errors
-        if (timeValue > 5.0f)
+        // Only enter the loop after 1 seconds to avoid "GameObject not found" errors
+        if (timeValue > 1.0f)
         {
             // Grab current AICar position
             carPos = GameObject.FindWithTag("ManualCar").transform.position;

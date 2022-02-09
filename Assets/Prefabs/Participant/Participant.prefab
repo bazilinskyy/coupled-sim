@@ -172,7 +172,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1207130846115938}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5a2a9c34df4095f47b9ca8f975175f5b, type: 3}
   m_Name: 
@@ -181,7 +181,7 @@ MonoBehaviour:
   m_PoseSource: 2
   m_PoseProviderComponent: {fileID: 0}
   m_TrackingType: 1
-  m_UpdateType: 0
+  m_UpdateType: 1
   m_UseRelativeTransform: 1
 --- !u!114 &5424840913267084264
 MonoBehaviour:
@@ -335,16 +335,16 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3762709135818487514}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5a2a9c34df4095f47b9ca8f975175f5b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   m_Device: 0
-  m_PoseSource: 2
+  m_PoseSource: 0
   m_PoseProviderComponent: {fileID: 0}
   m_TrackingType: 1
-  m_UpdateType: 1
+  m_UpdateType: 0
   m_UseRelativeTransform: 1
 --- !u!1 &5338325867927314009
 GameObject:
@@ -360,7 +360,7 @@ GameObject:
   - component: {fileID: 7695059040372432281}
   m_Layer: 10
   m_Name: Camera
-  m_TagString: Untagged
+  m_TagString: ParticipantCam
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -607,7 +607,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 103594, guid: 1d3b1a1513de66247974634911345b98, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 128066, guid: 1d3b1a1513de66247974634911345b98, type: 3}
       propertyPath: m_TagString

@@ -207,7 +207,6 @@ public class LogConverter
     static SerializedPOI[] ParsePOI(BinaryReader reader)
     {
         var count = reader.ReadInt32();
-        Debug.LogError("count = " + count);
         var pois = new SerializedPOI[count];
         for (int i = 0; i < count; i++)
         {
@@ -358,7 +357,7 @@ public class LogConverter
                 {
                     frame.PedestrianPositions.Add(reader.ReadListVector3());
                     frame.PedestrianRotations.Add(reader.ReadListQuaternion());
-                    _ = reader.ReadInt32(); // Blinkers, unused
+                    //_ = reader.ReadInt32(); // Blinkers, unused
 
                     /*// Log data from Varjo HMD:
                     frame.HMD_pos_x = reader.ReadSingle(); frame.HMD_pos_y = reader.ReadSingle(); frame.HMD_pos_z = reader.ReadSingle(); // Position data

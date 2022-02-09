@@ -22,11 +22,6 @@ public class SceneChange : MonoBehaviour
     public void StartSwitch()
     {
         Debug.LogError("Preparing scene change");
-
-        Debug.LogError("    - Setting stopLogging to true");
-        // This triggers in NetworkingManager to stop logging and destroy players and cars
-        PersistentManager.Instance.stopLogging = true;
-
         Debug.LogError("    - Setting switchScene to true");
         // This triggers a case in Host.cs
         PersistentManager.Instance.switchScene = true;

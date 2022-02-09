@@ -39,6 +39,8 @@ public class PersistentManager : MonoBehaviour
             Destroy(gameObject);
         }
 
+        //ExpOrder.Add(0); ExpOrder.Add(1); ExpOrder.Add(2); ExpOrder.Add(3); ExpOrder.Add(4); ExpOrder.Add(5); ExpOrder.Add(6); ExpOrder.Add(14);
+
         // Display participant number
         string stringParticipantNr = "The participant number is: " + ParticipantNr;
         Debug.Log(stringParticipantNr);
@@ -56,6 +58,10 @@ public class PersistentManager : MonoBehaviour
         // Display the complete order of (randomized) trials based on the blocks
         string stringTrialsOrder = "The order of trials is: [ " + string.Join(", ", ExpOrder) + "]";
         Debug.Log(stringTrialsOrder);
+
+        string stringTestTrialsOrder = "The length is: " + ExpOrder.Count;
+        Debug.Log(stringTestTrialsOrder);
+
     }
 
     public void OrderOfBlocks(int ParticipantNr)
