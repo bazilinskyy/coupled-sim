@@ -11,7 +11,6 @@ public class Host : NetworkSystem
     MessageDispatcher _msgDispatcher;
     LevelManager _lvlManager;
     PlayerSystem _playerSys;
-    PlayerSystem _playerSystem;
     AICarSyncSystem _aiCarSystem;
     WorldLogger _logger;
     WorldLogger _fixedTimeLogger;

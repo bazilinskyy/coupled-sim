@@ -24,7 +24,7 @@ public class WorldLogger
     int _lastFrameAICarCount;
     BinaryWriter _fileWriter;
     float _startTime;
-    LiveLogger _liveLogger;
+    //LiveLogger _liveLogger;
 
     // Experiment metadata:
     /*float _expDefNr;
@@ -33,13 +33,13 @@ public class WorldLogger
     float _orderNr;*/
 
     // Data from Varjo HMD:
-    Vector3 HMD_pos; float HMD_pos_x; float HMD_pos_y; float HMD_pos_z; // Position data
+    /*Vector3 HMD_pos; float HMD_pos_x; float HMD_pos_y; float HMD_pos_z; // Position data
     Vector3 HMD_rot; float HMD_rot_x; float HMD_rot_y; float HMD_rot_z; // Rotation data
 
     double LeftEyePupilSize;
     double RightEyePupilSize;
     double FocusDistance;
-    double FocusStability;
+    double FocusStability;*/
 
     // Data from Vive handheld controller
     float SafetyButton;
@@ -94,11 +94,11 @@ public class WorldLogger
             _fileWriter.Write(poi.rotation);
         }
 
-        if (sendLiveLog)
+        /*if (sendLiveLog)
         {
             _liveLogger = new LiveLogger();
             _liveLogger.Init();
-        }
+        }*/
     }
 
     string GetHierarchyString(Transform trans)
@@ -118,7 +118,7 @@ public class WorldLogger
     public void LogFrame(float ping, float time)
     {
         // Log the AI cars, position, time and ping
-        _liveLogger?.Log(_aiCarSystem, _playerSystem);
+        //_liveLogger?.Log(_aiCarSystem, _playerSystem);
         var aiCars = _aiCarSystem.Cars;
         while (aiCars.Count > _lastFrameAICarCount)
         {
@@ -179,10 +179,10 @@ public class WorldLogger
         {
             _fileWriter.Dispose();
         }
-        if (_liveLogger != null)
+        /*if (_liveLogger != null)
         {
             _liveLogger.Dispose();
-        }
+        }*/
     }
 }
 
@@ -263,13 +263,13 @@ public class LogConverter
         public Dictionary<int, bool> takeoff = new Dictionary<int, bool>();
         
         // Data from Varjo HMD:
-        public float HMD_pos_x; public float HMD_pos_y; public float HMD_pos_z; // Position data
+        /*public float HMD_pos_x; public float HMD_pos_y; public float HMD_pos_z; // Position data
         public float HMD_rot_x; public float HMD_rot_y; public float HMD_rot_z; // Rotation data
 
         public double LeftEyePupilSize;
         public double RightEyePupilSize;
         public double FocusDistance;
-        public double FocusStability;
+        public double FocusStability;*/
 
         // Data from Vive handheld controller
         public float SafetyButton;

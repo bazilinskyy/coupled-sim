@@ -25,7 +25,6 @@ public class SceneChange : MonoBehaviour
         Debug.LogError("    - Setting switchScene to true");
         // This triggers a case in Host.cs
         PersistentManager.Instance.switchScene = true;
-
     }
 
     /*public void switchLogic()
@@ -36,9 +35,9 @@ public class SceneChange : MonoBehaviour
         name = "DR-3-transparent";
         nextExperiment(name);
         //Invoke("nextExperiment", 1.0f);
-    }*/
+    }
     
-    /// Load next experiment
+    // Load next experiment
     public void nextExperiment()
     {
         Debug.LogError("Switching Scenes");
@@ -55,11 +54,11 @@ public class SceneChange : MonoBehaviour
         {
             Debug.LogError("Next scene allowed to load");
             asyncOperation.allowSceneActivation = true;
-        }*/
+        }
     }
 
     public SceneChange(LevelManager levelManager) // actually selects the experiment definition
     {
         _lvlManager = levelManager;
-    }
+    }*/
 }
