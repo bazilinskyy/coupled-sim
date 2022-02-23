@@ -11,7 +11,7 @@ using UnityEngine.Assertions;
 
 enum LogFrameType
 {
-    PositionsUpdate,
+    PositionsUpdate = 0x00ABCDEF,
     AICarSpawn,
 }
 
@@ -55,6 +55,7 @@ public class WorldLogger
     // Writes metadata header in binary log file
     public void BeginLog(string fileName, ExperimentDefinition experiment, TrafficLightsSystem lights, float time, bool sendLiveLog)
     {
+        _lastFrameAICarCount = 0;
         _lights = lights;
 
         // Create logging directory if it didn't already exist
@@ -357,7 +358,7 @@ public class LogConverter
                 {
                     frame.PedestrianPositions.Add(reader.ReadListVector3());
                     frame.PedestrianRotations.Add(reader.ReadListQuaternion());
-                    //_ = reader.ReadInt32(); // Blinkers, unused
+                    _ = reader.ReadInt32(); // Blinkers, unused
 
                     /*// Log data from Varjo HMD:
                     frame.HMD_pos_x = reader.ReadSingle(); frame.HMD_pos_y = reader.ReadSingle(); frame.HMD_pos_z = reader.ReadSingle(); // Position data
