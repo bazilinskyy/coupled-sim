@@ -701,9 +701,17 @@ public class LogConverter
         }
     }
 
+    // Boolean for converting all logfiles in one go
+    private bool convertAll = false;
+
     //displays GUI and handles interactions of a log transforming logic
     public void OnGUI()
     {
+        // Variables for converting all logs in one go
+        int filecounter = 0;
+        convertAll = GUILayout.Toggle(convertAll, "Convert all log files");
+
+        // First menu button
         if (!_open && GUILayout.Button("Convert log to csv"))
         {
             var files = Directory.GetFiles("ExperimentLogs/");
@@ -717,6 +725,8 @@ public class LogConverter
             }
             _open = true;
         }
+
+        // Logic
         if (_open)
         {
             if (GUILayout.Button("Close"))
@@ -726,42 +736,59 @@ public class LogConverter
             }
             foreach (var name in _fileNames)
             {
-                if (string.IsNullOrEmpty(_selectedFileName))
+                if (convertAll == true)
                 {
-                    if (GUILayout.Button(name))
+                    filecounter++;
+                    var fullName = "ExperimentLogs/" + name;
+                    var csvName = "ExperimentLogs/" + UNITY_WORLD_ROOT + "-" + name.Replace("binLog", "csv");
+                    TranslateBinaryLogToCsv(fullName, csvName, _pedestrianSkeletonNames, UNITY_WORLD_ROOT, default, Quaternion.identity);
+                    Debug.LogError($"Converting logfile to csv ({filecounter}/{_fileNames.Count})");
+                    if (filecounter == _fileNames.Count)
                     {
-                        _selectedFileName = name;
-                        _pois = GetPOIs("ExperimentLogs/" + name);
+                        _open = false;
+                        _selectedFileName = null;
                     }
                 }
-                else if (_selectedFileName == name)
+                else
                 {
-
-                    GUILayout.BeginVertical();
-                    GUILayout.Label(_selectedFileName);
-
-                    GUILayout.Label("Custom reference points:");
-                    for (int i = 0; i < customPois.Count(); i++)
+                    // Second menu button: logfile selection
+                    if (string.IsNullOrEmpty(_selectedFileName))
                     {
-                        OnGUI_CustomPoiButton(i, name);
-                    }
-                    GUILayout.Label("Stored reference Point:");
-                    if (GUILayout.Button("Transform with " + UNITY_WORLD_ROOT))
-                    {
-                        var fullName = "ExperimentLogs/" + name;
-                        var csvName = "ExperimentLogs/" + UNITY_WORLD_ROOT + "-" + name.Replace("binLog", "csv");
-                        TranslateBinaryLogToCsv(fullName, csvName, _pedestrianSkeletonNames, UNITY_WORLD_ROOT, default, Quaternion.identity);
-                    }
-                    foreach (var poi in _pois)
-                    {
-                        if (GUILayout.Button("Transform with " + poi.Name))
+                        if (GUILayout.Button(name))
                         {
-                            var fullName = "ExperimentLogs/" + name;
-                            var csvName = "ExperimentLogs/" + poi.Name + "-" + name.Replace("binLog", "csv");
-                            TranslateBinaryLogToCsv(fullName, csvName, _pedestrianSkeletonNames, poi.Name, poi.Position, poi.Rotation);
+                            _selectedFileName = name;
+                            _pois = GetPOIs("ExperimentLogs/" + name);
                         }
                     }
-                    GUILayout.EndVertical();
+                    else if (_selectedFileName == name)
+                    {
+
+                        GUILayout.BeginVertical();
+                        GUILayout.Label(_selectedFileName);
+
+                        GUILayout.Label("Custom reference points:");
+                        for (int i = 0; i < customPois.Count(); i++)
+                        {
+                            OnGUI_CustomPoiButton(i, name);
+                        }
+                        GUILayout.Label("Stored reference Point:");
+                        if (GUILayout.Button("Transform with " + UNITY_WORLD_ROOT))
+                        {
+                            var fullName = "ExperimentLogs/" + name;
+                            var csvName = "ExperimentLogs/" + UNITY_WORLD_ROOT + "-" + name.Replace("binLog", "csv");
+                            TranslateBinaryLogToCsv(fullName, csvName, _pedestrianSkeletonNames, UNITY_WORLD_ROOT, default, Quaternion.identity);
+                        }
+                        foreach (var poi in _pois)
+                        {
+                            if (GUILayout.Button("Transform with " + poi.Name))
+                            {
+                                var fullName = "ExperimentLogs/" + name;
+                                var csvName = "ExperimentLogs/" + poi.Name + "-" + name.Replace("binLog", "csv");
+                                TranslateBinaryLogToCsv(fullName, csvName, _pedestrianSkeletonNames, poi.Name, poi.Position, poi.Rotation);
+                            }
+                        }
+                        GUILayout.EndVertical();
+                    }
                 }
             }
         }

@@ -46,5 +46,27 @@ public class KeyboardPlayerMovement : MonoBehaviour
         }
         _rb.MovePosition(_rb.position + _rb.rotation * move * Time.fixedDeltaTime);
         _rb.MoveRotation(_rb.rotation * Quaternion.Euler(0, rot * Time.fixedDeltaTime, 0));
+
+        // Extra keyboard rotation for pitch and roll rotations
+        float rot_pitch = 0;
+        float rot_roll = 0;
+        if (Input.GetKey(KeyCode.UpArrow))
+        {
+            rot_pitch -= _rotateSpeed;
+        }
+        else if (Input.GetKey(KeyCode.DownArrow))
+        {
+            rot_pitch += _rotateSpeed;
+        }
+        if (Input.GetKey(KeyCode.LeftArrow))
+        {
+            rot_roll += _rotateSpeed;
+        }
+        else if (Input.GetKey(KeyCode.RightArrow))
+        {
+            rot_roll -= _rotateSpeed;
+        }
+        _rb.MoveRotation(_rb.rotation * Quaternion.Euler(rot_pitch * Time.fixedDeltaTime, 0, 0));
+        _rb.MoveRotation(_rb.rotation * Quaternion.Euler(0, 0, rot_roll * Time.fixedDeltaTime));
     }
 }
