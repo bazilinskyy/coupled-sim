@@ -40,8 +40,8 @@ public class PersistentManager : MonoBehaviour
         }
 
         // Order of blocks for testing
-        /*ExpOrder.Add(3); ExpOrder.Add(10); ExpOrder.Add(3); ExpOrder.Add(10);
-        ExpOrder.Add(0); ExpOrder.Add(1); ExpOrder.Add(2); ExpOrder.Add(3);
+        //ExpOrder.Add(3); ExpOrder.Add(10); ExpOrder.Add(3); ExpOrder.Add(10);
+        /*ExpOrder.Add(0); ExpOrder.Add(1); ExpOrder.Add(2); ExpOrder.Add(3);
         ExpOrder.Add(4); ExpOrder.Add(5); ExpOrder.Add(6);
         ExpOrder.Add(7); ExpOrder.Add(14);*/
         //ExpOrder.Add(8); ExpOrder.Add(9); ExpOrder.Add(10); ExpOrder.Add(11);

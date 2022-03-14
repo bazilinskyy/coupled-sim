@@ -28,7 +28,7 @@ public class WaypointArrowPositionSetter : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update()
+    void LateUpdate()
     {
         // Grab current pedestrian rotations and positions:
         pedPos = GameObject.Find("Participant(Clone)").transform.position;

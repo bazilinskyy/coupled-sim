@@ -7,7 +7,7 @@ public class RotationReset : MonoBehaviour
     private float timeValue = 0;
     private Quaternion Anchor_xy;
 
-    void LateUpdate()
+    void Update()
     {
         timeValue += Time.deltaTime;
         if (timeValue > 0.0f)
