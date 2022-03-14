@@ -11,7 +11,7 @@ public class NextTrialManual : MonoBehaviour
     void Update()
     {
         // Stop logic
-        if (Input.GetKeyDown(KeyCode.N))
+        if (Input.GetKeyDown(KeyCode.Z))
         {
             Debug.Log("Stop logic triggered");
             changerObject.StartSwitch();
