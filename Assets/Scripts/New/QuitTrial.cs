@@ -31,7 +31,7 @@ public class QuitTrial : MonoBehaviour
             carPos = GameObject.FindWithTag("ManualCar").transform.position;
 
             // Stop logic
-            if ((carPos - waypointPos).magnitude < 0.1f || Input.GetKeyDown(KeyCode.N))
+            if ((carPos - waypointPos).magnitude < 0.1f || Input.GetKeyDown(KeyCode.Z))
             {
                 Debug.Log("Stop logic triggered");
                 changerObject.StartSwitch();
