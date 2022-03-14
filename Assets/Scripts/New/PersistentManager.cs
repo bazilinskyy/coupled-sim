@@ -40,7 +40,7 @@ public class PersistentManager : MonoBehaviour
         }
 
         // Order of blocks for testing
-        //ExpOrder.Add(3); ExpOrder.Add(10); ExpOrder.Add(3); ExpOrder.Add(10);
+        ExpOrder.Add(3); ExpOrder.Add(10); ExpOrder.Add(3); ExpOrder.Add(10);
         /*ExpOrder.Add(0); ExpOrder.Add(1); ExpOrder.Add(2); ExpOrder.Add(3);
         ExpOrder.Add(4); ExpOrder.Add(5); ExpOrder.Add(6);
         ExpOrder.Add(7); ExpOrder.Add(14);*/
@@ -52,14 +52,14 @@ public class PersistentManager : MonoBehaviour
         Debug.Log(stringParticipantNr);
 
         // Determine the order of experiment blocks
-        OrderOfBlocks(ParticipantNr);
+        //OrderOfBlocks(ParticipantNr);
 
         // Display the order of experiments
         string stringBlockOrder = "The experiment order is: [ " + string.Join(", ", BlockOrder) + "]";
         Debug.Log(stringBlockOrder);
 
         // Create the complete list of trials (and their corresponding ExpDefNrs)
-        CreateTrials(ExpOrder);
+        //CreateTrials(ExpOrder);
 
         // Display the complete order of (randomized) trials based on the blocks
         string stringTrialsOrder = "The order of trials is: [ " + string.Join(", ", ExpOrder) + "]";

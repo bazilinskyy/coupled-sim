@@ -12,7 +12,7 @@ public class RotationReset : MonoBehaviour
         timeValue += Time.deltaTime;
         if (timeValue > 0.0f)
         {
-            Anchor_xy = Quaternion.Euler(new Vector3(transform.rotation.eulerAngles.x, transform.rotation.eulerAngles.y, 0f));
+            Anchor_xy = Quaternion.Euler(new Vector3(0f, transform.rotation.eulerAngles.y, 0f));
             transform.rotation = Anchor_xy;
         }
     }
