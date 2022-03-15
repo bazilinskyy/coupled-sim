@@ -7,7 +7,7 @@ public class TrackRot_Yaw : MonoBehaviour
 {
     private Quaternion Anchor_xz;
 
-    void Update()
+    void LateUpdate()
     {
         Anchor_xz = Quaternion.Euler(new Vector3(0f, transform.rotation.eulerAngles.y, 0f));
         transform.rotation = Anchor_xz;

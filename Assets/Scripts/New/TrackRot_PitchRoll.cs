@@ -7,7 +7,7 @@ public class TrackRot_PitchRoll : MonoBehaviour
 {
     private Quaternion Anchor_y;
 
-    void Update()
+    void LateUpdate()
     {
         Anchor_y = Quaternion.Euler(new Vector3(transform.rotation.eulerAngles.x, 0f, transform.rotation.eulerAngles.z));
         transform.rotation = Anchor_y;
