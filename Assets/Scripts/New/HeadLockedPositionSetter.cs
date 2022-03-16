@@ -17,13 +17,13 @@ public class HeadLockedPositionSetter : MonoBehaviour
     void Start()
     {
         // Set Initial View Position and Rotation Displacement
-        iniViewPosDisplacement = new Vector3(-0.04f, 1.70f, 0.35f); //new Vector3(-0.04f, 1.73f, 0.35f);
-        iniRotAngles = new Vector3(-5f, -12f, 0f);
+        iniViewPosDisplacement = new Vector3(-0.04f, 0.02f, 0.35f); //new Vector3(-0.04f, 1.73f, 0.35f);
+        iniRotAngles = new Vector3(-2f, -10f, 0f);
         iniViewRotDisplacement = Quaternion.Euler(iniRotAngles);
 
         // Find initial Pedestrian position and rotations
-        pedPos = GameObject.Find("Participant(Clone)").transform.position;
-        pedRot = GameObject.Find("Participant(Clone)").transform.rotation;
+        pedPos = GameObject.FindWithTag("ParticipantCam").transform.position;
+        pedRot = GameObject.Find("ParticipantCam").transform.rotation;
 
         // Set initial position and rotation
         this.GetComponent<RectTransform>().position = pedPos + iniViewPosDisplacement;
@@ -34,8 +34,8 @@ public class HeadLockedPositionSetter : MonoBehaviour
     void LateUpdate()
     {
         // Grab current pedestrian rotations and positions:
-        pedPos = GameObject.Find("Participant(Clone)").transform.position;
-        pedRot = GameObject.Find("Participant(Clone)").transform.rotation;
+        pedPos = GameObject.FindWithTag("ParticipantCam").transform.position;
+        pedRot = GameObject.FindWithTag("ParticipantCam").transform.rotation;
 
         // Sets the new rotation based on head movement
         this.GetComponent<RectTransform>().rotation = pedRot * iniViewRotDisplacement;

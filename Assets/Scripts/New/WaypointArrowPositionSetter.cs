@@ -18,10 +18,10 @@ public class WaypointArrowPositionSetter : MonoBehaviour
     void Start()
     {
         // Set Initial View Position and Rotation Displacement
-        iniViewPosDisplacement = new Vector3(-0.04f, 1.73f, 0.327f); //new Vector3(-0.04f, 1.78f, 0.35f);
+        iniViewPosDisplacement = new Vector3(-0.04f, 0.04f, 0.327f); //new Vector3(-0.04f, 1.78f, 0.35f);
 
         // Find initial Pedestrian position and rotations
-        pedPos = GameObject.Find("Participant(Clone)").transform.position;
+        pedPos = GameObject.FindWithTag("ParticipantCam").transform.position;
 
         // Set initial position
         this.GetComponent<Transform>().position = pedPos + iniViewPosDisplacement;
@@ -31,8 +31,8 @@ public class WaypointArrowPositionSetter : MonoBehaviour
     void LateUpdate()
     {
         // Grab current pedestrian rotations and positions:
-        pedPos = GameObject.Find("Participant(Clone)").transform.position;
-        pedRot = GameObject.Find("Participant(Clone)").transform.rotation;
+        pedPos = GameObject.FindWithTag("ParticipantCam").transform.position;
+        pedRot = GameObject.FindWithTag("ParticipantCam").transform.rotation;
 
         // Grab current AICar position
         carPos = GameObject.FindWithTag("ManualCar").transform.position;
