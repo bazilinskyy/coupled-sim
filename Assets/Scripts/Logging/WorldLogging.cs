@@ -24,7 +24,6 @@ public class WorldLogger
     int _lastFrameAICarCount;
     BinaryWriter _fileWriter;
     float _startTime;
-    //LiveLogger _liveLogger;
 
     // Experiment metadata:
     /*float _expDefNr;
@@ -33,13 +32,8 @@ public class WorldLogger
     float _orderNr;*/
 
     // Data from Varjo HMD:
-    /*Vector3 HMD_pos; float HMD_pos_x; float HMD_pos_y; float HMD_pos_z; // Position data
+    Vector3 HMD_pos; float HMD_pos_x; float HMD_pos_y; float HMD_pos_z; // Position data
     Vector3 HMD_rot; float HMD_rot_x; float HMD_rot_y; float HMD_rot_z; // Rotation data
-
-    double LeftEyePupilSize;
-    double RightEyePupilSize;
-    double FocusDistance;
-    double FocusStability;*/
 
     // Data from Vive handheld controller
     float SafetyButton;
@@ -94,12 +88,6 @@ public class WorldLogger
             _fileWriter.Write(poi.position);
             _fileWriter.Write(poi.rotation);
         }
-
-        /*if (sendLiveLog)
-        {
-            _liveLogger = new LiveLogger();
-            _liveLogger.Init();
-        }*/
     }
 
     string GetHierarchyString(Transform trans)
@@ -154,10 +142,24 @@ public class WorldLogger
         foreach (var pedestrian in _playerSystem.Pedestrians)
         {
             pedestrian.GetPose().SerializeTo(_fileWriter);
-
+            
             // Log pedestrian Safety Button presses
             SafetyButton = pedestrian.GetComponentInChildren<ViveInput>().getSafetyButton();
             _fileWriter.Write(SafetyButton);
+
+            // Log HMD data
+            HMD_pos_x = pedestrian.GetComponentInChildren<Camera>().transform.localPosition.x;
+            _fileWriter.Write(HMD_pos_x);
+            HMD_pos_y = pedestrian.GetComponentInChildren<Camera>().transform.localPosition.y;
+            _fileWriter.Write(HMD_pos_y);
+            HMD_pos_z = pedestrian.GetComponentInChildren<Camera>().transform.localPosition.z;
+            _fileWriter.Write(HMD_pos_z);
+            HMD_rot_x = pedestrian.GetComponentInChildren<Camera>().transform.localEulerAngles.x;
+            _fileWriter.Write(HMD_rot_x);
+            HMD_rot_y = pedestrian.GetComponentInChildren<Camera>().transform.localEulerAngles.y;
+            _fileWriter.Write(HMD_rot_y);
+            HMD_rot_z = pedestrian.GetComponentInChildren<Camera>().transform.localEulerAngles.z;
+            _fileWriter.Write(HMD_rot_z);
 
             /*// Metadata: Participant Nr, Order Nr, Trial Nr and Experiment Definition Nr
             _participantNr = PersistentManager.Instance.ParticipantNr;
@@ -263,17 +265,12 @@ public class LogConverter
         public Dictionary<int, bool> stopped = new Dictionary<int, bool>();
         public Dictionary<int, bool> takeoff = new Dictionary<int, bool>();
         
-        // Data from Varjo HMD:
-        /*public float HMD_pos_x; public float HMD_pos_y; public float HMD_pos_z; // Position data
-        public float HMD_rot_x; public float HMD_rot_y; public float HMD_rot_z; // Rotation data
-
-        public double LeftEyePupilSize;
-        public double RightEyePupilSize;
-        public double FocusDistance;
-        public double FocusStability;*/
-
         // Data from Vive handheld controller
         public float SafetyButton;
+
+        // Data from Varjo HMD:
+        public float HMD_pos_x; public float HMD_pos_y; public float HMD_pos_z; // Position data
+        public float HMD_rot_x; public float HMD_rot_y; public float HMD_rot_z; // Rotation data
 
         /*// Metadata: Participant Nr, Order Nr, Trial Nr and Experiment Definition Nr
         public float ParticipantNr;
@@ -303,7 +300,7 @@ public class LogConverter
         const int columnsForLocalDriver = columnsPerDriver;
         const int columnsForAICar = columnsPerDriver + 1 /* aicar.speed */ + 3 /* braking, stopped, takeoff */;
 
-        int columnsPerPedestrian = 3 /*pos x,y,z*/ + 3 /*rot x,y,z */ + 1 /* SafetyButton */; // + 4 /* Metadata numbers */;
+        int columnsPerPedestrian = 3 /*pos x,y,z*/ + 3 /*rot x,y,z */ + 1 /* SafetyButton */ + 6 /* Varjo HMD pos + rot */ ; // + 4 /* Metadata numbers */;
         var toRefRot = Quaternion.Inverse(referenceRot);
 
         // Load binary file
@@ -360,17 +357,12 @@ public class LogConverter
                     frame.PedestrianRotations.Add(reader.ReadListQuaternion());
                     _ = reader.ReadInt32(); // Blinkers, unused
 
-                    /*// Log data from Varjo HMD:
-                    frame.HMD_pos_x = reader.ReadSingle(); frame.HMD_pos_y = reader.ReadSingle(); frame.HMD_pos_z = reader.ReadSingle(); // Position data
-                    frame.HMD_rot_x = reader.ReadSingle(); frame.HMD_rot_y = reader.ReadSingle(); frame.HMD_rot_z = reader.ReadSingle(); // Rotation data
-
-                    frame.LeftEyePupilSize = reader.ReadDouble();
-                    frame.RightEyePupilSize = reader.ReadDouble();
-                    frame.FocusDistance = reader.ReadDouble();
-                    frame.FocusStability = reader.ReadDouble();*/
-
                     // Data from Vive handheld controller
                     frame.SafetyButton = reader.ReadSingle();
+
+                    // Log data from Varjo HMD:
+                    frame.HMD_pos_x = reader.ReadSingle(); frame.HMD_pos_y = reader.ReadSingle(); frame.HMD_pos_z = reader.ReadSingle(); // Position data
+                    frame.HMD_rot_x = reader.ReadSingle(); frame.HMD_rot_y = reader.ReadSingle(); frame.HMD_rot_z = reader.ReadSingle(); // Rotation data
 
                     /*// Metadata: Participant Nr, Order Nr, Trial Nr and Experiment Definition Nr
                     frame.ParticipantNr = reader.ReadSingle();
@@ -477,7 +469,7 @@ public class LogConverter
             {
                 writer.Write(separator);
             }
-            const string pedestrianTransformHeader = "pos_x;pos_y;pos_z;rot_x;rot_y;rot_z;SafetyButton";
+            const string pedestrianTransformHeader = "pos_x;pos_y;pos_z;rot_x;rot_y;rot_z;SafetyButton;HMD_pos_x;HMD_pos_y;HMD_pos_z;HMD_rot_x;HMD_rot_y;HMD_rot_z";
             writer.Write(pedestrianTransformHeader);
 
             writer.Write("\n"); // New line, actual data writing starts now.
@@ -575,17 +567,12 @@ public class LogConverter
                     var pos = frame.PedestrianPositions[i];
                     var rot = frame.PedestrianRotations[i];
 
-                    /*// Log data from Varjo HMD:
-                    var HMD_pos_x = frame.HMD_pos_x; var HMD_pos_y = frame.HMD_pos_y; var HMD_pos_z = frame.HMD_pos_z;
-                    var HMD_rot_x = frame.HMD_rot_x; var HMD_rot_y = frame.HMD_rot_y; var HMD_rot_z = frame.HMD_rot_z;
-
-                    var LeftEyePupilSize = frame.LeftEyePupilSize;
-                    var RightEyePupilSize = frame.RightEyePupilSize;
-                    var FocusDistance = frame.FocusDistance;
-                    var FocusStability = frame.FocusStability;*/
-
                     // Data from Vive handheld controller:
                     var SafetyButton = frame.SafetyButton;
+
+                    // Log data from Varjo HMD:
+                    var HMD_pos_x = frame.HMD_pos_x; var HMD_pos_y = frame.HMD_pos_y; var HMD_pos_z = frame.HMD_pos_z;
+                    var HMD_rot_x = frame.HMD_rot_x; var HMD_rot_y = frame.HMD_rot_y; var HMD_rot_z = frame.HMD_rot_z;
 
                     /*// Metadata: Participant Nr, Order Nr, Trial Nr and Experiment Definition Nr
                     var ParticipantNr = frame.ParticipantNr;
@@ -599,7 +586,7 @@ public class LogConverter
                     {
                         var p = PosToRefPoint(pos[j]);
                         var r = RotToRefPoint(rot[j]).eulerAngles;
-                        line.Add($"{p.x};{p.y};{p.z};{r.x};{r.y};{r.z};{SafetyButton}"); //;{ParticipantNr};{OrderNr};{TrialNr};{ExpDefNr}");
+                        line.Add($"{p.x};{p.y};{p.z};{r.x};{r.y};{r.z};{SafetyButton};{HMD_pos_x};{HMD_pos_y};{HMD_pos_z};{HMD_rot_x};{HMD_rot_y};{HMD_rot_z}"); //;{ParticipantNr};{OrderNr};{TrialNr};{ExpDefNr}");
                         //line.Add($"{p.x};{p.y};{p.z};{r.x};{r.y};{r.z};{HMD_pos_x};{HMD_pos_y};{HMD_pos_z};{HMD_rot_x};{HMD_rot_y};{HMD_rot_z};{LeftEyePupilSize};{RightEyePupilSize};{FocusDistance};{FocusStability};{SafetyButton}");
                     }
                 }

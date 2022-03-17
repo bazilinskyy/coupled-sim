@@ -23,7 +23,7 @@ public class HeadLockedPositionSetter : MonoBehaviour
 
         // Find initial Pedestrian position and rotations
         pedPos = GameObject.FindWithTag("ParticipantCam").transform.position;
-        pedRot = GameObject.Find("ParticipantCam").transform.rotation;
+        pedRot = GameObject.FindWithTag("ParticipantCam").transform.rotation;
 
         // Set initial position and rotation
         this.GetComponent<RectTransform>().position = pedPos + iniViewPosDisplacement;
