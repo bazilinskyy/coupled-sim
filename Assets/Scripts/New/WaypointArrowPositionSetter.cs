@@ -18,7 +18,7 @@ public class WaypointArrowPositionSetter : MonoBehaviour
     void Start()
     {
         // Set Initial View Position and Rotation Displacement
-        iniViewPosDisplacement = new Vector3(-0.04f, 0.04f, 0.327f); //new Vector3(-0.04f, 1.78f, 0.35f);
+        iniViewPosDisplacement = new Vector3(0f, 0.10f, 0.327f); //new Vector3(-0.04f, 1.78f, 0.35f);
 
         // Find initial Pedestrian position and rotations
         pedPos = GameObject.FindWithTag("ParticipantCam").transform.position;

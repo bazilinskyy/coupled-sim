@@ -17,8 +17,8 @@ public class HeadLockedPositionSetter_withWaypointArrow : MonoBehaviour
     void Start()
     {
         // Set Initial View Position and Rotation Displacement
-        iniViewPosDisplacement = new Vector3(-0.04f, 0.02f, 0.35f); //new Vector3(-0.04f, 1.73f, 0.35f);
-        iniRotAngles = new Vector3(-2f, -10f, 0f);
+        iniViewPosDisplacement = new Vector3(0.0f, 0.07f, 0.35f); //new Vector3(-0.04f, 1.73f, 0.35f);
+        iniRotAngles = new Vector3(-2f, -6f, 0f);
         iniViewRotDisplacement = Quaternion.Euler(iniRotAngles);
 
         // Find initial Pedestrian position and rotations
