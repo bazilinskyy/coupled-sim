@@ -1,5 +1,5 @@
 # Coupled simulator for research on driver-pedestrian interactions made in Unity.
-## Usage of the simualator
+## Usage of the simulator
 The simulator is open-source and free to use. It is aimed for, but not limited to, academic research. We welcome forking of this repository, pull requests, and any contributions in the spirit of open science and open-source code :heart_eyes::smile: For enquiries about collaboration, you may contact p.bazilinskyy@tudelft.nl.
 
 ### Citation
@@ -58,7 +58,7 @@ Steps to run an experiment:
 4. On both host and clients, each participant has to select control mode.
 5. Start an experiment with the _Start Game_ button.
 
-# Instant start parametets
+# Instant start parameters
 If the user wants to prepare a build that runs simulation instantly with a selected experiment and role, he is able to do so by setting parameters of the InstantStartHostParameters struct. It can be accessed and changed on a _StartScene_ (scene) -> _Managers_ (game object) -> _NetworkingManager_ (component) -> _InstantStartParams_ (field). The struct consists of the following fields:
 - _SelectedExperiment_: int variable which indicates a zero-based index of a selected experiment in _Experiments_ list (field in NetworkingManager component).
 - _SelectedRole_: int variable which indicates a zero-based index of a selected role in _Roles_ list (field in ExperimentDefinition component) of a selected experiment prefab.
