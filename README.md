@@ -7,7 +7,7 @@ If you use coupled-sim for academic work please cite the following paper:
 
 > Bazilinskyy, P., Kooijman, L., Dodou, D., & De Winter, J. C. F. (2020). Coupled simulator for research on the interaction between pedestrians and (automated) vehicles. 19th Driving Simulation Conference (DSC). Antibes, France. 
 
-## Examples of use of the simulator
+### Examples of use of the simulator
 1. Examining eHMIs in critical driver-pedestrian encounters in a coupled simulator - [GitHub repo](https://github.com/bazilinskyy/coupled-sim-evasive)
 
 ## Description of the simulator
