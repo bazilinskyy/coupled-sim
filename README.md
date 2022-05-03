@@ -1,6 +1,6 @@
 # Coupled simulator for research on driver-pedestrian interactions made in Unity.
 ## Usage of the simulator
-The simulator is open-source and free to use. It is aimed for, but not limited to, academic research. We welcome forking of this repository, pull requests, and any contributions in the spirit of open science and open-source code :heart_eyes::smile: For enquiries about collaboration, you may contact p.bazilinskyy@tudelft.nl.
+The simulator is open-source and free to use. It is aimed for, but not limited to, academic research. We welcome forking of this repository, pull requests, and any contributions in the spirit of open science and open-source code :heart_eyes::smile: For enquiries about collaboration, you may contact p.bazilinskyy@tue.nl.
 
 ### Citation
 If you use coupled-sim for academic work please cite the following paper:
