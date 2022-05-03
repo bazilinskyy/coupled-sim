@@ -7,6 +7,9 @@ If you use coupled-sim for academic work please cite the following paper:
 
 > Bazilinskyy, P., Kooijman, L., Dodou, D., & De Winter, J. C. F. (2020). Coupled simulator for research on the interaction between pedestrians and (automated) vehicles. 19th Driving Simulation Conference (DSC). Antibes, France. 
 
+## Examples of use of the simulator
+1. Examining eHMIs in critical driver-pedestrian encounters in a coupled simulator - [GitHub repo](https://github.com/bazilinskyy/coupled-sim-evasive)
+
 ## Description of the simulator
 :tv: These days, a video is worth more than a million words. The image below points to a youtube video of the recording of a demo of the simulator with 3 agents:
 
@@ -260,7 +263,6 @@ Always run Oculus Home software when using Oculus Rift. Otherwise you will encou
 ![](ReadmeFiles/troubleshooting_rift_1.png)
 
 ![](ReadmeFiles/troubleshooting_rift_2.png)
-
 
 ### Troubleshooting connection
 The agent PCs need to be connected via a local network. If you cannot reach the host machine, try to ping it.
