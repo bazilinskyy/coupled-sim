@@ -6,10 +6,16 @@ using UnityEngine;
 public class LiveLogger : IDisposable
 {
     UdpClient _socket;
-    BinaryWriter _writer;
+    public BinaryWriter _writer;
     MemoryStream _stream;
     byte[] _buffer;
     const int Port = 40131;
+    
+    public enum LogPacketType
+    {
+        Begin = 1,
+        Frame = 2,
+    }
 
     public void Init()
     {
@@ -20,26 +26,26 @@ public class LiveLogger : IDisposable
         _writer = new BinaryWriter(_stream);
     }
 
-    public void Log(AICarSyncSystem aiCarSystem, PlayerSystem playerSystem)
+    public void Flush()
     {
-        if (_writer == null)
-        {
-            return;
-        }
-        var cars = aiCarSystem.Cars;
-        _writer.Write(cars.Count);
-        foreach (var car in aiCarSystem.Cars)
-        {
-            _writer.Write(car.transform.position);
-        }
-        var pedestrians = playerSystem.Avatars;
-        _writer.Write(pedestrians.Count);
-        foreach (var pedestrian in pedestrians)
-        {
-            _writer.Write(pedestrian.transform.position);
-        }
         _socket.Send(_buffer, (int)_stream.Position);
         _stream.Position = 0;
+    }
+
+    public void BeginLog(
+        int localDriver,
+        int numPersistentDrivers,
+        int numPedestrians,
+        int numCarLights,
+        int numPedestrianLights
+        )
+    {
+        _writer.Write((int)LogPacketType.Begin);
+        _writer.Write(localDriver);
+        _writer.Write(numPersistentDrivers);
+        _writer.Write(numPedestrians);
+        _writer.Write(numCarLights);
+        _writer.Write(numPedestrianLights);
     }
 
     public void Dispose() => _socket.Dispose();

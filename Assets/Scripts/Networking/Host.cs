@@ -119,14 +119,20 @@ public class Host : NetworkSystem
                             }
                             _aiPedestrianSyncSystem = _lvlManager.ActiveExperiment.AIPedestrians;
                             _aiPedestrianSyncSystem.InitHost(_host);
-                            ExperimentRoleDefinition experimentRoleDefinition = _lvlManager.ActiveExperiment.Roles[_playerRoles[Host.PlayerId]];
-                            if (experimentRoleDefinition.AutonomousPath != null) {
-                                _playerSys.ActivatePlayerAICar();
+                            ExperimentRoleDefinition experimentRoleDefinition;
+                            var role = _playerRoles[Host.PlayerId];
+                            var roleName = "No role";
+                            if (role != -1) {
+                                experimentRoleDefinition = _lvlManager.ActiveExperiment.Roles[role];
+                                if (experimentRoleDefinition.AutonomousPath != null) {
+                                    _playerSys.ActivatePlayerAICar();
+                                }
+                                roleName = experimentRoleDefinition.Name;
                             }
                             _host.BroadcastReliable(new AllReadyMsg());
                             _transitionPhase = TransitionPhase.None;
                             _currentState = NetState.InGame;
-                            var roleName = experimentRoleDefinition.Name;
+                            Time.timeScale = 1f;
                             _logger.BeginLog($"HostLog-{roleName}-", _lvlManager.ActiveExperiment, _lights, Time.realtimeSinceStartup, true);
                             _fixedTimeLogger.BeginLog($"HostFixedTimeLog-{roleName}-", _lvlManager.ActiveExperiment, _lights, Time.fixedTime, false);
                         }
@@ -141,16 +147,10 @@ public class Host : NetworkSystem
         }
     }
 
+    bool startSimulation = false;
     bool AllReady()
     {
-        for (int i = 0; i < UNetConfig.MaxPlayers; i++)
-        {
-            if (!_playerReadyStatus[i] && _playerRoles[i] != -1)
-            {
-                return false;
-            }
-        }
-        return true;
+        return startSimulation;
     }
 
     void ForEachConnectedPlayer(Action<int, Host> action)
@@ -196,7 +196,7 @@ public class Host : NetworkSystem
 
     bool started;
     //initializes experiment - sets it up locally and broadcasts experiment configuration message
-    void StartGame()
+    void PrepareSimulatiion()
     {
         if (started)
         {
@@ -205,6 +205,8 @@ public class Host : NetworkSystem
         {
             started = true;
         }
+        startSimulation = false;
+
         _msgDispatcher.ClearLevelMessageHandlers();
         _host.BroadcastReliable(new StartGameMsg
         {
@@ -224,8 +226,9 @@ public class Host : NetworkSystem
             _lvlManager.LoadLevelWithLocalPlayer(_selectedExperiment, 0, _playerRoles);
         }
         _transitionPhase = TransitionPhase.LoadingLevel;
+        Time.timeScale = 0;
     }
-    
+
     void UpdateGame()
     {
         if (Time.realtimeSinceStartup - _lastPoseUpdateSent > PoseUpdateInterval)
@@ -287,31 +290,50 @@ public class Host : NetworkSystem
         {
             case NetState.Lobby:
             {
-                if (_instantStartParams.SkipSelectionScreen)
-                {
-                    StartGame();
-                    PlayerRolesGUI();
-                    _playerSys.SelectMode(_instantStartParams.InputMode);
-                }
-                else
-                {
-                    GUI.enabled = AllRolesSelected();
-                    if (GUILayout.Button("Start Game"))
+                    if (_transitionPhase == TransitionPhase.WaitingForAwakes)
                     {
-                        StartGame();
-                    }
-                    GUI.enabled = true;
-                    GUILayout.Label("Experiment:");
-                    for (int i = 0; i < _lvlManager.Experiments.Length; i++)
-                    {
-                        if (GUILayout.Button(_lvlManager.Experiments[i].Name + (i == _selectedExperiment ? " <--" : "")))
+                        string playerReadyStr = "Ready:\t";
+                        string playerRolesStr = "Role :\t";
+                        for (int i = 0; i < UNetConfig.MaxPlayers; i++)
                         {
-                            _selectedExperiment = i;
+                            playerReadyStr += (_playerReadyStatus[i]?"1":"0") + "\t";
+                            playerRolesStr += _playerRoles[i] + "\t";
+                        }
+                        GUILayout.Label(playerReadyStr);
+                        GUILayout.Label(playerRolesStr);
+                        if (GUILayout.Button("Start simulation"))
+                        {
+                            startSimulation = true;
                         }
                     }
-                    PlayerRolesGUI();
-                    _playerSys.SelectModeGUI();
-                }
+                    else
+                    {
+                        if (_instantStartParams.SkipSelectionScreen)
+                        {
+                            PrepareSimulatiion();
+                            PlayerRolesGUI();
+                            _playerSys.SelectMode(_instantStartParams.InputMode);
+                        }
+                        else
+                        {
+                            //GUI.enabled = AllRolesSelected();
+                            if (GUILayout.Button("Start Game"))
+                            {
+                                PrepareSimulatiion();
+                            }
+                            GUI.enabled = true;
+                            GUILayout.Label("Experiment:");
+                            for (int i = 0; i < _lvlManager.Experiments.Length; i++)
+                            {
+                                if (GUILayout.Button(_lvlManager.Experiments[i].Name + (i == _selectedExperiment ? " <--" : "")))
+                                {
+                                    _selectedExperiment = i;
+                                }
+                            }
+                            PlayerRolesGUI();
+                            _playerSys.SelectModeGUI();
+                        }
+                    }
                 break;
             }
             case NetState.InGame:
