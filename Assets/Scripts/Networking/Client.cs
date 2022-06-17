@@ -73,6 +73,7 @@ public class Client : NetworkSystem
             _playerSys.ActivatePlayerAICar();
         }
         _currentState = NetState.InGame;
+        Time.timeScale = 1f;
         var roleName = experimentRoleDefinition.Name;
         _logger.BeginLog($"ClientLog-{roleName}-", _lvlManager.ActiveExperiment, lights, Time.realtimeSinceStartup, true);
         _fixedTimeLogger.BeginLog($"ClientFixedTimeLog-{roleName}-", _lvlManager.ActiveExperiment, lights, Time.fixedTime, false);
@@ -85,6 +86,7 @@ public class Client : NetworkSystem
         _lvlManager.LoadLevelWithLocalPlayer(msg.Experiment, _client.MyPlayerId, msg.Roles);
         _roles = msg.Roles;
         _transitionPhase = TransitionPhase.LoadingLevel;
+        Time.timeScale = 0;
     }
     //handles player position updates
     void OnUpdatePoses(ISynchronizer sync, int _)
