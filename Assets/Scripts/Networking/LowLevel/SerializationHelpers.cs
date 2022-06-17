@@ -124,20 +124,15 @@ public static class SerializationHelpers
 
     public static void Write(this BinaryWriter writer, Quaternion quaternion)
     {
-        writer.Write(quaternion.w);
-        writer.Write(quaternion.x);
-        writer.Write(quaternion.y);
-        writer.Write(quaternion.z);
+        var euler = quaternion.eulerAngles;
+        writer.Write(euler.x);
+        writer.Write(euler.y);
+        writer.Write(euler.z);
     }
 
     public static Quaternion ReadQuaternion(this BinaryReader reader)
     {
-        Quaternion q;
-        if (reader.BaseStream.Position == reader.BaseStream.Length)
-        {
-            Debug.Log("Test");
-        }
-        q.w = reader.ReadSingle();
+        Vector3 q;
         if (reader.BaseStream.Position == reader.BaseStream.Length)
         {
             Debug.Log("Test");
@@ -157,7 +152,7 @@ public static class SerializationHelpers
         {
             Debug.Log("Test");
         }
-        return q;
+        return Quaternion.Euler(q);
     }
 
     public static void Write(this BinaryWriter writer, List<int> ints)
