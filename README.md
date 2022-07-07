@@ -8,8 +8,8 @@ If you use coupled-sim for academic work please cite the following paper:
 > Bazilinskyy, P., Kooijman, L., Dodou, D., & De Winter, J. C. F. (2020). Coupled simulator for research on the interaction between pedestrians and (automated) vehicles. 19th Driving Simulation Conference (DSC). Antibes, France. 
 
 ### Examples of use of the simulator
-1. Examining eHMIs in critical driver-pedestrian encounters in a coupled simulator - [GitHub repo](https://github.com/bazilinskyy/coupled-sim-evasive), [paper](https://doi.org/10.1145/3543174.3546849).
-1. Examining eHMIs in critical driver-pedestrian encounters in a coupled simulator - [paper](http://doi.org/10.1016/j.apergo.2022.103825).
+1. Get out of the way! Examining eHMIs in critical driver-pedestrian encounters in a coupled simulator - [GitHub repo](https://github.com/bazilinskyy/coupled-sim-evasive), [paper](https://doi.org/10.1145/3543174.3546849).
+1. Stopping by looking: A driver-pedestrian interaction study in a coupled simulator using head-mounted displays with eye-tracking - [paper](http://doi.org/10.1016/j.apergo.2022.103825).
 
 ## Description of the simulator
 :tv: These days, a video is worth more than a million words. The image below points to a youtube video of the recording of a demo of the simulator with 3 agents:
