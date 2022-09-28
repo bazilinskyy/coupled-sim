@@ -196,6 +196,7 @@ To change the position of a waypoint select waypoint transform and move it do th
 
 #### Configuration of the movement of the non-playable vehicles
 Additionally, for vehicles, SpeedSetting along with Collider component might be used to further configure tracked path.
+
 ![](ReadmeFiles/speed_settings.png)
 
 #### Exporting and importing WaypointCircuit's
@@ -239,6 +240,7 @@ _EyeContact_, if tracking is enabled, selects as the target the closest game obj
 ![](ReadmeFiles/Pedestrian.png)
 
 _EyeContactRigControl_ is a component that consumes tracking target provided by _EyeContact_ component and animates drivers head movement.
+
 ![](ReadmeFiles/eye-contact.png)
 
 Eye contact behavior tracking state can be changed when the car reaches the waypoint. Behavior change is defined by the _SpeedSettings_ - the component embedded on waypoint objects. The following four fields control those changes:
@@ -246,6 +248,7 @@ Eye contact behavior tracking state can be changed when the car reaches the wayp
 - _EyeContactAfterYielding_: defines how the driver will behave when the car resumes driving after a full stop. This value simply overwrites the current value of _EyeContact.EyeContactTracking_ if the car has fully stopped.
 - _YieldingEyeContactSince_: defines how many seconds need to pass before the driver will make eye contact (starting from the moment the car has fully stopped)
 - _YieldingEyeContactUntil_: defines how many seconds need to pass before the driver ceases to maintain eye contact (starting from the moment the car has fully stopped)
+
 ![](ReadmeFiles/SpeedSettings.png)
 
 #### Configuration of daylight conditions
