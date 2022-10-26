@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using UnityEngine.VR;
 using System.Collections;
 
 // Script obtained from MVN to reset the camera of the Oculus onto the head of the MVN Avatar.
@@ -16,6 +15,7 @@ public class CameraController : MonoBehaviour
         childCamera = transform.parent;
     }
 
+    [System.Obsolete]
     private void Update()
     {
         if (Input.GetKeyDown(KeyCode.R))

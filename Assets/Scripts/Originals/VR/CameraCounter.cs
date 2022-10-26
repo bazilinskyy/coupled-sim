@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using UnityEngine.VR;
 using System.Collections;
 
 public class CameraCounter : MonoBehaviour {
@@ -12,6 +11,7 @@ public class CameraCounter : MonoBehaviour {
         childCamera = transform.GetChild(0);
 	}
 
+    [System.Obsolete]
     private void Update()
     {
         if (Input.GetKeyDown(KeyCode.R))
