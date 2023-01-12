@@ -1,5 +1,5 @@
 ﻿using UnityEngine;
-using UnityEngine.VR;
+using UnityEngine.XR;
 using System.Collections;
 
 // Script obtained from MVN to reset the camera of the Oculus onto the head of the MVN Avatar.

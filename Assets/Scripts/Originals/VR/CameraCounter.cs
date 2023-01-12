@@ -1,5 +1,5 @@
 ﻿using UnityEngine;
-using UnityEngine.VR;
+using UnityEngine.XR;
 using System.Collections;
 
 public class CameraCounter : MonoBehaviour {
