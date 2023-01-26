@@ -96,6 +96,7 @@ namespace Barmetler.RoadSystem
 			}
 		}
 
+		public const string settingsFolderPath = "Assets/Settings/Editor";
 		public const string settingsPath = "Assets/Settings/Editor/RoadSystemSettings.asset";
 
 		internal static RoadSystemSettings instance = null;
@@ -108,7 +109,7 @@ namespace Barmetler.RoadSystem
 				if (instance == null)
 				{
 					instance = CreateInstance<RoadSystemSettings>();
-					Directory.CreateDirectory(settingsPath);
+					Directory.CreateDirectory(settingsFolderPath);
 					AssetDatabase.CreateAsset(instance, settingsPath);
 					AssetDatabase.SaveAssets();
 				}
