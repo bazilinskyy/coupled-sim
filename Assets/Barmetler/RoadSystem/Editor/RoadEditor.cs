@@ -243,7 +243,7 @@ namespace Barmetler.RoadSystem
 								}
 								else
 								{
-									var nPos = Handles.FreeMoveHandle(hPos, Quaternion.identity,
+									var fmh_246_50_638092194452167027 = Quaternion.identity; var nPos = Handles.FreeMoveHandle(hPos,
 										0.3f * HandleUtility.GetHandleSize(pos), Vector3.zero, Handles.SphereHandleCap);
 
 									if (hPos != nPos)
@@ -295,7 +295,7 @@ namespace Barmetler.RoadSystem
 							}
 							else
 							{
-								var newPos = Handles.FreeMoveHandle($"Handle-{p.index}".GetHashCode(), p.pos, Quaternion.identity,
+								var fmh_298_87_638092194452208448 = Quaternion.identity; var newPos = Handles.FreeMoveHandle($"Handle-{p.index}".GetHashCode(), p.pos,
 									 (p.index % 3 == 0 ? 0.3f : 0.25f) * HandleUtility.GetHandleSize(p.pos),
 									Vector3.zero, Handles.SphereHandleCap);
 
