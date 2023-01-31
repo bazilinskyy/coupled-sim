@@ -38,7 +38,6 @@ public class AICarSyncSystem
     [NonSerialized]
     public List<PlayerAvatar> Cars = new List<PlayerAvatar>();
 
-    public int CarsSpawnedSinceLastLog = 0;
     Mode _mode;
     UNetHost _host;
     public void InitHost(UNetHost host)
