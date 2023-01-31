@@ -287,30 +287,42 @@ public class AICar : MonoBehaviour, IVehicle
 
     void OnTriggerEnter(Collider other)
     {
+        SpeedSettings speedSettings = other.GetComponent<SpeedSettings>();
+        if (speedSettings == null)
+        {
+            return;
+        }
         if (other.gameObject.CompareTag("WP"))
         {
             // If WaypointNumber is one, take over settings
-            if (other.GetComponent<SpeedSettings>().WaypointType == 1)
+            if (speedSettings.Type == SpeedSettings.WaypointType.InitialSetSpeed)
             {
-                if (other.GetComponent<SpeedSettings>().causeToYield)
+                set_speed = speedSettings.speed;
+                set_acceleration = speedSettings.acceleration;
+                speed = speedSettings.speed;
+            }
+            // If WaypointNumber is one, take over settings
+            else if (speedSettings.Type == SpeedSettings.WaypointType.SetSpeedTarget)
+            {
+                if (speedSettings.causeToYield)
                 {
                     set_speed = 0;
-                    set_acceleration = other.GetComponent<SpeedSettings>().brakingAcceleration;
-                    speedAfterYield = other.GetComponent<SpeedSettings>().speed;
-                    accAfterYield = other.GetComponent<SpeedSettings>().acceleration;
-                    yieldingTime = other.GetComponent<SpeedSettings>().yieldTime;
-                    //PlayerLookAtPed.EnableTrackingWhileYielding = other.GetComponent<SpeedSettings>().lookAtPlayerWhileYielding;
+                    set_acceleration = speedSettings.brakingAcceleration;
+                    speedAfterYield = speedSettings.speed;
+                    accAfterYield = speedSettings.acceleration;
+                    yieldingTime = speedSettings.yieldTime;
+                    //PlayerLookAtPed.EnableTrackingWhileYielding = speedSettings.lookAtPlayerWhileYielding;
                     shouldYield = true;
                     state = CarState.BRAKING;
                 }
                 else
                 {
-                    set_speed = other.GetComponent<SpeedSettings>().speed;
-                    set_acceleration = other.GetComponent<SpeedSettings>().acceleration;
+                    set_speed = speedSettings.speed;
+                    set_acceleration = speedSettings.acceleration;
                 }
             }
             // If WaypointNumber is two, destroy gameobject.
-            else if (other.GetComponent<SpeedSettings>().WaypointType == 2)
+            else if (speedSettings.Type == SpeedSettings.WaypointType.Delete)
             {
                 gameObject.SetActive(false);
                 Destroy(gameObject);
@@ -324,9 +336,9 @@ public class AICar : MonoBehaviour, IVehicle
             triggerlocation = transform.position.x;
             braking = true;
             WaitInputX = true;
-            set_speed = other.GetComponent<SpeedSettings>().speed;
-            set_acceleration = other.GetComponent<SpeedSettings>().acceleration;
-            jerk = -Mathf.Abs(other.GetComponent<SpeedSettings>().jerk);
+            set_speed = speedSettings.speed;
+            set_acceleration = speedSettings.acceleration;
+            jerk = -Mathf.Abs(speedSettings.jerk);
         }
         // Change of tag here that causes deceleration when hitting trigger in Z direction
         else if (other.gameObject.CompareTag("StartTrial_Z"))
@@ -334,9 +346,9 @@ public class AICar : MonoBehaviour, IVehicle
             triggerlocation = transform.position.z; 
             braking = true;
             WaitTrialZ = true;
-            set_speed = other.GetComponent<SpeedSettings>().speed;
-            set_acceleration = other.GetComponent<SpeedSettings>().acceleration;
-            jerk = -Mathf.Abs(other.GetComponent<SpeedSettings>().jerk);
+            set_speed = speedSettings.speed;
+            set_acceleration = speedSettings.acceleration;
+            jerk = -Mathf.Abs(speedSettings.jerk);
         }
 
         // Change of tag here that causes deceleration when hitting trigger in Z direction
@@ -345,9 +357,9 @@ public class AICar : MonoBehaviour, IVehicle
             triggerlocation = transform.position.x;
             braking = true;
             WaitTrialX = true;
-            set_speed = other.GetComponent<SpeedSettings>().speed;
-            set_acceleration = other.GetComponent<SpeedSettings>().acceleration;
-            jerk = -Mathf.Abs(other.GetComponent<SpeedSettings>().jerk);
+            set_speed = speedSettings.speed;
+            set_acceleration = speedSettings.acceleration;
+            jerk = -Mathf.Abs(speedSettings.jerk);
         }
     }
 

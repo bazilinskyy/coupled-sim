@@ -390,7 +390,7 @@ namespace UnityStandardAssets.Utility.Inspector
                 var s = wp.GetComponent<SpeedSettings>();
                 if (s != null)
                 {
-                    sb.Append($";{s.WaypointType};{s.speed};{s.acceleration};{s.jerk};{s.causeToYield};{s.EyeContactWhileYielding};{s.EyeContactAfterYielding};{s.yieldTime};{s.brakingAcceleration};{s.YieldingEyeContactSince};{s.YieldingEyeContactUntil}");
+                    sb.Append($";{s.Type};{s.speed};{s.acceleration};{s.jerk};{s.causeToYield};{s.EyeContactWhileYielding};{s.EyeContactAfterYielding};{s.yieldTime};{s.brakingAcceleration};{s.YieldingEyeContactSince};{s.YieldingEyeContactUntil}");
                 } else
                 {
                     sb.Append($";;;;;;;;;;;");
@@ -507,7 +507,8 @@ namespace UnityStandardAssets.Utility.Inspector
 
                 var speedSettings = wp.GetComponent<SpeedSettings>();
 
-                DeserializeInt(out speedSettings.WaypointType, SpeedSettings.Defaults.WaypointType);
+                DeserializeInt(out int type, SpeedSettings.Defaults.WaypointType);
+                speedSettings.Type = (SpeedSettings.WaypointType)type;
                 DeserializeFloat(out speedSettings.speed, SpeedSettings.Defaults.Speed);
                 DeserializeFloat(out speedSettings.acceleration, SpeedSettings.Defaults.Acceleration);
                 DeserializeFloat(out speedSettings.jerk, SpeedSettings.Defaults.Jerk);

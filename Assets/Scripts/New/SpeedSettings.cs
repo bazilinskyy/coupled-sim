@@ -15,9 +15,16 @@ public class SpeedSettings : MonoBehaviour
         public const float Jerk = 0;
     }
 
+    public enum WaypointType
+    {
+        InitialSetSpeed,
+        SetSpeedTarget,
+        Delete,
+    }
+
     //Simple Kinematics
     [FormerlySerializedAs("WaypointNumber")]
-    public int WaypointType = Defaults.WaypointType;
+    public WaypointType Type = WaypointType.SetSpeedTarget;
     public float speed = Defaults.Speed;                    //km/h
     public float acceleration = Defaults.Acceleration;      //m/s^2
     //Advanced Kinematics
@@ -47,6 +54,7 @@ public class SpeedSettings : MonoBehaviour
     }
 
     float startTime;
+
 
     private IEnumerator LookAtPlayerAfterCarStops(AICar car, EyeContact driver)
     {
