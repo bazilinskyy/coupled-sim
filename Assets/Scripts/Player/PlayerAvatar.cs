@@ -81,6 +81,9 @@ public class PlayerAvatar : MonoBehaviour
     public ModeElements PlayerAsDriver;
     public ModeElements PlayerAsPassenger;
 
+    [Header("Driver")]
+    public ModeElements AV;
+    public ModeElements MDV;
 
     [Serializable]
     public struct ModeElements
@@ -99,7 +102,7 @@ public class PlayerAvatar : MonoBehaviour
 
 
     //set up an Avatar (disabling and enabling needed components) for different control methods
-    public void Initialize(bool isRemote, PlayerSystem.InputMode inputMode, PlayerSystem.ControlMode controlMode)
+    public void Initialize(bool isRemote, PlayerSystem.InputMode inputMode, PlayerSystem.ControlMode controlMode, PlayerSystem.VehicleType vehicleType, int cameraIndex = -1)
     {
         if (isRemote)
         {
@@ -116,6 +119,10 @@ public class PlayerAvatar : MonoBehaviour
         } 
         else
         {
+            if (cameraIndex >= 0) {
+                cameras[cameraIndex].gameObject.SetActive(true);
+            }
+
             ModeElements modeElements = default(ModeElements);
             switch (inputMode)
             {
@@ -144,6 +151,18 @@ public class PlayerAvatar : MonoBehaviour
                     break;
                 case PlayerSystem.ControlMode.Passenger:
                     modeElements = PlayerAsPassenger;
+                    break;
+            }
+
+            SetupModeElements(modeElements); 
+            
+            switch (vehicleType)
+            {
+                case PlayerSystem.VehicleType.AV:
+                    modeElements = AV;
+                    break;
+                case PlayerSystem.VehicleType.MDV:
+                    modeElements = MDV;
                     break;
             }
 
@@ -233,6 +252,7 @@ public class PlayerAvatar : MonoBehaviour
     }
 
     [Header("Other")]
+    public Camera[] cameras;
     public HMIAnchors HMISlots;
     public AvatarType Type;
     public Transform[] SyncTransforms;

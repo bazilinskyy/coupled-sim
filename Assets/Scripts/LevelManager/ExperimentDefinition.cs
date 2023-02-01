@@ -17,6 +17,8 @@ public struct SpawnPoint
     public Quaternion rotation => Point.rotation;
     //a type of player avatar
     public SpawnPointType Type;
+    public int CameraIndex;
+    public PlayerSystem.VehicleType VehicleType;
 }
 
 [Serializable]

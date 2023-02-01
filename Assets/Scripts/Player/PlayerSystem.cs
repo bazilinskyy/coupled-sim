@@ -23,6 +23,12 @@ public class PlayerSystem : MonoBehaviour
         HostAI
     }
 
+    public enum VehicleType
+    {
+        MDV,
+        AV
+    }
+
     public InputMode PlayerInputMode;
     [SerializeField]
     PlayerAvatar _AvatarPrefab;
@@ -81,7 +87,7 @@ public class PlayerSystem : MonoBehaviour
     {
         bool isPassenger = spawnPoint.Type == SpawnPointType.Passenger;
         LocalPlayer = SpawnAvatar(spawnPoint, GetAvatarPrefab(spawnPoint.Type, role.carIdx), player, role);
-        LocalPlayer.Initialize(false, PlayerInputMode, isPassenger ? ControlMode.Passenger : ControlMode.Driver);
+        LocalPlayer.Initialize(false, PlayerInputMode, isPassenger ? ControlMode.Passenger : ControlMode.Driver, spawnPoint.VehicleType, spawnPoint.CameraIndex);
         if (isPassenger)
         {
             var waypointFollow = LocalPlayer.GetComponent<WaypointProgressTracker>();
@@ -97,7 +103,7 @@ public class PlayerSystem : MonoBehaviour
     public void SpawnRemotePlayer(SpawnPoint spawnPoint, int player, ExperimentRoleDefinition role)
     {
         var remotePlayer = SpawnAvatar(spawnPoint, GetAvatarPrefab(spawnPoint.Type, role.carIdx), player, role);
-        remotePlayer.Initialize(true, InputMode.None, ControlMode.HostAI);
+        remotePlayer.Initialize(true, InputMode.None, ControlMode.HostAI, spawnPoint.VehicleType);
     }
 
     public List<PlayerAvatar> GetAvatarsOfType(AvatarType type)

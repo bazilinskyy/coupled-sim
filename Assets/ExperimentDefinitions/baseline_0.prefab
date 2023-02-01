@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 935614564}
   m_Layer: 0
-  m_Name: SpawnPoints
+  m_Name: Spawn Point
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -27,10 +27,9 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 1311683245}
-  m_Father: {fileID: 7609667120526454229}
-  m_RootOrder: 1
+  m_Children: []
+  m_Father: {fileID: 1311683245}
+  m_RootOrder: -1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1311683244
 GameObject:
@@ -42,7 +41,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1311683245}
   m_Layer: 0
-  m_Name: Passenger1
+  m_Name: Ego Car
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -55,14 +54,15 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1311683244}
-  m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
+  m_LocalRotation: {x: -0, y: 1, z: -0, w: 0}
   m_LocalPosition: {x: -278.6, y: -0.06, z: 153.6}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 935614564}
   - {fileID: 7492252986797691323}
-  m_Father: {fileID: 935614564}
-  m_RootOrder: 0
+  m_Father: {fileID: 7609667120526454229}
+  m_RootOrder: -1
   m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
 --- !u!1 &351673417259637703
 GameObject:
@@ -368,7 +368,7 @@ GameObject:
   - component: {fileID: 393028807606226806}
   - component: {fileID: 4336030306517430919}
   m_Layer: 5
-  m_Name: Eye Contact Traffic Circuit
+  m_Name: Path
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -655,7 +655,7 @@ GameObject:
   - component: {fileID: 3986739734504288073}
   - component: {fileID: 3253831884352091059}
   m_Layer: 5
-  m_Name: Eye Contact Traffic Circuit
+  m_Name: Path
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -841,7 +841,7 @@ GameObject:
   - component: {fileID: 7492252986797691323}
   - component: {fileID: 8043761391078894673}
   m_Layer: 5
-  m_Name: Ego Car Path
+  m_Name: Path
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1213,7 +1213,7 @@ GameObject:
   - component: {fileID: 6519749865735157834}
   - component: {fileID: 8156635355818172248}
   m_Layer: 0
-  m_Name: Line_0 Car Path
+  m_Name: Line_0 Car
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1253,6 +1253,7 @@ MonoBehaviour:
     SpawnDriver: 1
     SpawnPassenger: 0
     Car: {fileID: 7713759469045616529, guid: 1baf460ab026f1247ab4696be569ffae, type: 3}
+    VehicleType: 0
 --- !u!1 &5944889514550495764
 GameObject:
   m_ObjectHideFlags: 0
@@ -1571,7 +1572,7 @@ GameObject:
   - component: {fileID: 876251680127429309}
   - component: {fileID: 1391786539536471499}
   m_Layer: 0
-  m_Name: Line_2 Car Path
+  m_Name: Line_2 Car
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1611,6 +1612,7 @@ MonoBehaviour:
     SpawnDriver: 1
     SpawnPassenger: 0
     Car: {fileID: 7713759469045616529, guid: 1baf460ab026f1247ab4696be569ffae, type: 3}
+    VehicleType: 1
 --- !u!1 &6584885486885055685
 GameObject:
   m_ObjectHideFlags: 0
@@ -1622,7 +1624,7 @@ GameObject:
   - component: {fileID: 1786967557475907823}
   - component: {fileID: 5973176155138911245}
   m_Layer: 0
-  m_Name: Line_3 Car Path
+  m_Name: Line_3 Car
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1662,6 +1664,7 @@ MonoBehaviour:
     SpawnDriver: 1
     SpawnPassenger: 0
     Car: {fileID: 7713759469045616529, guid: 1baf460ab026f1247ab4696be569ffae, type: 3}
+    VehicleType: 0
 --- !u!1 &6692014269374732414
 GameObject:
   m_ObjectHideFlags: 0
@@ -1692,7 +1695,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 6395839017716348911}
-  - {fileID: 935614564}
+  - {fileID: 1311683245}
   - {fileID: 6519749865735157834}
   - {fileID: 876251680127429309}
   - {fileID: 1786967557475907823}
@@ -1725,8 +1728,10 @@ MonoBehaviour:
       type: 3}
     carIdx: 0
     SpawnPoint:
-      Point: {fileID: 1311683245}
+      Point: {fileID: 935614564}
       Type: 2
+      CameraIndex: 0
+      VehicleType: 0
     AutonomousPath: {fileID: 8043761391078894673}
     AutonomousIsYielding: 1
   PointsOfInterest: []
@@ -2153,7 +2158,7 @@ GameObject:
   - component: {fileID: 8430899067585578543}
   - component: {fileID: 3651127992788747819}
   m_Layer: 5
-  m_Name: Eye Contact Traffic Circuit
+  m_Name: Path
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
