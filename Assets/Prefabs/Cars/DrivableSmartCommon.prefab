@@ -1256,7 +1256,7 @@ Transform:
   - {fileID: 8376607358125735225}
   - {fileID: 6288204612606436795}
   m_Father: {fileID: 0}
-  m_RootOrder: 3
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!54 &54329053537499438
 Rigidbody:
@@ -1474,18 +1474,28 @@ MonoBehaviour:
   PlayerAsDriver:
     gameObjects:
     - {fileID: 1564327940702684}
-    - {fileID: 1261694921}
     monoBehaviours:
     - {fileID: 772200647187876941}
     collider: {fileID: 0}
   PlayerAsPassenger:
     gameObjects:
     - {fileID: 1564327940702684}
-    - {fileID: 2438546283645924342}
     monoBehaviours:
     - {fileID: 3454787565982020884}
     - {fileID: 1103068305145384009}
     collider: {fileID: 0}
+  AV:
+    gameObjects: []
+    monoBehaviours: []
+    collider: {fileID: 0}
+  MDV:
+    gameObjects:
+    - {fileID: 6296359851564515721}
+    monoBehaviours: []
+    collider: {fileID: 0}
+  cameras:
+  - {fileID: 1261694925}
+  - {fileID: 1661675653080951783}
   HMISlots:
     Hood: {fileID: 1650355202115934463}
     Top: {fileID: 6165430338979489048}
@@ -6654,7 +6664,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &7115833117292188907
 Transform:
   m_ObjectHideFlags: 0

@@ -22,12 +22,16 @@ public class AICarSyncSystem
         public Quaternion Rotation;
         public bool SpawnDriver;
         public bool SpawnPassenger;
+        public int VehicleType;
 
         public void Sync<T>(T synchronizer) where T : ISynchronizer
         {
             synchronizer.Sync(ref PrefabIdx);
             synchronizer.Sync(ref Position);
             synchronizer.Sync(ref Rotation);
+            synchronizer.Sync(ref SpawnDriver);
+            synchronizer.Sync(ref SpawnPassenger);
+            synchronizer.Sync(ref VehicleType);
         }
     }
 
@@ -76,7 +80,7 @@ public class AICarSyncSystem
         var avatar = aiCar.GetComponent<PlayerAvatar>();
         avatar.PassengerPuppet.SetActive(parameters.SpawnPassenger);
         avatar.DriverPuppet.SetActive(parameters.SpawnDriver);
-        avatar.Initialize(false, PlayerSystem.InputMode.None, PlayerSystem.ControlMode.HostAI);
+        avatar.Initialize(false, PlayerSystem.InputMode.None, PlayerSystem.ControlMode.HostAI, parameters.VehicleType);
         var rb = aiCar.GetComponent<Rigidbody>();
         rb.isKinematic = false;
         rb.GetComponent<Rigidbody>().useGravity = true;
@@ -87,7 +91,8 @@ public class AICarSyncSystem
             Position = parameters.SpawnPoint.position,
             Rotation = parameters.SpawnPoint.rotation,
             SpawnPassenger = parameters.SpawnPassenger,
-            SpawnDriver = parameters.SpawnDriver
+            SpawnDriver = parameters.SpawnDriver,
+            VehicleType = (int)parameters.VehicleType
         });
         return aiCar;
     }
@@ -99,7 +104,7 @@ public class AICarSyncSystem
         var avatar = go.GetComponent<PlayerAvatar>();
         avatar.PassengerPuppet.SetActive(msg.SpawnPassenger);
         avatar.DriverPuppet.SetActive(msg.SpawnDriver);
-        avatar.Initialize(true, PlayerSystem.InputMode.None, PlayerSystem.ControlMode.HostAI);
+        avatar.Initialize(true, PlayerSystem.InputMode.None, PlayerSystem.ControlMode.HostAI, (PlayerSystem.VehicleType)msg.VehicleType);
         Cars.Add(avatar);
     }
 
