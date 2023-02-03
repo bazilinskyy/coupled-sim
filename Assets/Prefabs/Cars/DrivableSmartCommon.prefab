@@ -1230,6 +1230,7 @@ GameObject:
   - component: {fileID: 1103068305145384009}
   - component: {fileID: 8515547635980188780}
   - component: {fileID: 4224836170552726509}
+  - component: {fileID: 8118022126883589177}
   m_Layer: 9
   m_Name: DrivableSmartCommon
   m_TagString: ManualCar
@@ -1256,7 +1257,7 @@ Transform:
   - {fileID: 8376607358125735225}
   - {fileID: 6288204612606436795}
   m_Father: {fileID: 0}
-  m_RootOrder: 4
+  m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!54 &54329053537499438
 Rigidbody:
@@ -1751,6 +1752,20 @@ MonoBehaviour:
   flatoutSpeed: 120
   minPitch: 1
   pitchSpeed: 0.07
+--- !u!114 &8118022126883589177
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1787876385652902}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4aaa6b2fd7910794087e468511b699b2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  meshRenderers:
+  - {fileID: 5389851980978712098}
 --- !u!1 &1819827312411906
 GameObject:
   m_ObjectHideFlags: 0
@@ -5054,7 +5069,6 @@ Transform:
   - {fileID: 6811798295045670324}
   - {fileID: 4367857203137857185}
   - {fileID: 1960357365134766561}
-  - {fileID: 6333064239792103844}
   m_Father: {fileID: 4830253048463184}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -5086,6 +5100,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 6333064239792103844}
   - {fileID: 2627210759987273782}
   m_Father: {fileID: 4830253048463184}
   m_RootOrder: 3
@@ -7721,13 +7736,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7894750089041155048}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.3, y: 1.393, z: -0.2659998}
+  m_LocalPosition: {x: -0.3, y: 1.342, z: -0.2659998}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 5527438145398831739}
-  m_Father: {fileID: 4031069173782525989}
-  m_RootOrder: 10
+  m_Father: {fileID: 5308124054116042950}
+  m_RootOrder: -1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &2125796918325750249
 MonoBehaviour:
