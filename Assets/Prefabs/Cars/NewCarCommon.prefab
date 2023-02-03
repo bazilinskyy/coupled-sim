@@ -3514,6 +3514,7 @@ GameObject:
   - component: {fileID: 1696011424401439527}
   - component: {fileID: 7992445498551782146}
   - component: {fileID: 2478723328460268675}
+  - component: {fileID: 2673223769286998360}
   m_Layer: 9
   m_Name: NewCarCommon
   m_TagString: ManualCar
@@ -3540,7 +3541,7 @@ Transform:
   - {fileID: 7852065129974499927}
   - {fileID: 5729602816075125461}
   m_Father: {fileID: 0}
-  m_RootOrder: 2
+  m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!54 &1731229833398619712
 Rigidbody:
@@ -4035,6 +4036,21 @@ MonoBehaviour:
   flatoutSpeed: 120
   minPitch: 1
   pitchSpeed: 0.07
+--- !u!114 &2673223769286998360
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1783928687406872520}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4aaa6b2fd7910794087e468511b699b2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  meshRenderers:
+  - {fileID: 1771009478083715186}
+  - {fileID: 1771509266570483212}
 --- !u!1 &1783933988476021450
 GameObject:
   m_ObjectHideFlags: 0
@@ -4321,7 +4337,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1789948238056324782
 Transform:
   m_ObjectHideFlags: 0
@@ -8901,8 +8917,8 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 4373604250286905176}
   - {fileID: 5702687424825841354}
+  - {fileID: 4373604250286905176}
   m_Father: {fileID: 1789823192781391934}
   m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}

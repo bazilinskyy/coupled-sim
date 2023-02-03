@@ -23,6 +23,7 @@ public class AICarSyncSystem
         public bool SpawnDriver;
         public bool SpawnPassenger;
         public int VehicleType;
+        public Vector3 Color;
 
         public void Sync<T>(T synchronizer) where T : ISynchronizer
         {
@@ -32,6 +33,7 @@ public class AICarSyncSystem
             synchronizer.Sync(ref SpawnDriver);
             synchronizer.Sync(ref SpawnPassenger);
             synchronizer.Sync(ref VehicleType);
+            synchronizer.Sync(ref Color);
         }
     }
 
@@ -81,6 +83,9 @@ public class AICarSyncSystem
         avatar.PassengerPuppet.SetActive(parameters.SpawnPassenger);
         avatar.DriverPuppet.SetActive(parameters.SpawnDriver);
         avatar.Initialize(false, PlayerSystem.InputMode.None, PlayerSystem.ControlMode.HostAI, parameters.VehicleType);
+        var paint = aiCar.GetComponent<PaintConfigurator>();
+        Color color = parameters.color;
+        paint.ChangePaint(color);
         var rb = aiCar.GetComponent<Rigidbody>();
         rb.isKinematic = false;
         rb.GetComponent<Rigidbody>().useGravity = true;
@@ -92,7 +97,8 @@ public class AICarSyncSystem
             Rotation = parameters.SpawnPoint.rotation,
             SpawnPassenger = parameters.SpawnPassenger,
             SpawnDriver = parameters.SpawnDriver,
-            VehicleType = (int)parameters.VehicleType
+            VehicleType = (int)parameters.VehicleType,
+            Color = new Vector3(color.r, color.g, color.b),
         });
         return aiCar;
     }
@@ -105,6 +111,7 @@ public class AICarSyncSystem
         avatar.PassengerPuppet.SetActive(msg.SpawnPassenger);
         avatar.DriverPuppet.SetActive(msg.SpawnDriver);
         avatar.Initialize(true, PlayerSystem.InputMode.None, PlayerSystem.ControlMode.HostAI, (PlayerSystem.VehicleType)msg.VehicleType);
+        avatar.GetComponent<PaintConfigurator>().ChangePaint(new Color(msg.Color.x, msg.Color.y, msg.Color.z));
         Cars.Add(avatar);
     }
 
