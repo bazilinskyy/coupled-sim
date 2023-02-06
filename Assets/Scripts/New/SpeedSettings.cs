@@ -22,6 +22,7 @@ public class SpeedSettings : MonoBehaviour
         Delete,
     }
 
+    public AICar targetAICar;
     //Simple Kinematics
     [FormerlySerializedAs("WaypointNumber")]
     public WaypointType Type = WaypointType.SetSpeedTarget;
@@ -47,6 +48,11 @@ public class SpeedSettings : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
+        var aiCar = other.GetComponent<AICar>();
+        if (aiCar == null || (targetAICar != null && targetAICar != aiCar))
+        {
+            return;
+        }
         if (other.gameObject.CompareTag("ManualCar") && causeToYield)
         {
             StartCoroutine(LookAtPlayerAfterCarStops(other.gameObject.GetComponent<AICar>(), other.gameObject.GetComponentInChildren<EyeContact>()));

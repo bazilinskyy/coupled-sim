@@ -288,7 +288,7 @@ public class AICar : MonoBehaviour, IVehicle
     void OnTriggerEnter(Collider other)
     {
         SpeedSettings speedSettings = other.GetComponent<SpeedSettings>();
-        if (speedSettings == null)
+        if (speedSettings == null || (speedSettings.targetAICar != null && speedSettings.targetAICar != this))
         {
             return;
         }

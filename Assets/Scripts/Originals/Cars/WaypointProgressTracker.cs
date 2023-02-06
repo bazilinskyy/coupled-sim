@@ -12,6 +12,7 @@ namespace UnityStandardAssets.Utility
         // and keeps track of progress and laps.
 
         [SerializeField] private WaypointCircuit circuit; // A reference to the waypoint-based route we should follow
+        public WaypointCircuit Circuit => circuit;
 
         [SerializeField] private float lookAheadForTargetOffset = 5;
         // The offset ahead along the route that the we will aim for
@@ -80,7 +81,6 @@ namespace UnityStandardAssets.Utility
                 target.rotation = circuit.Waypoints[progressNum].rotation;
             }
         }
-
 
         private void Update()
         {
