@@ -66,6 +66,14 @@ public class PlayerSystem : MonoBehaviour
         Assert.IsNotNull(tracker);
         aiCar.enabled = true;
         tracker.enabled = true;
+        foreach(var waypoint in tracker.Circuit.Waypoints)
+        {
+            var speedSettings = waypoint.GetComponent<SpeedSettings>();
+            if (speedSettings != null)
+            {
+                speedSettings.targetAICar = aiCar;
+            }
+        }
     }
 
     PlayerAvatar GetAvatarPrefab(SpawnPointType type, int carIdx)
