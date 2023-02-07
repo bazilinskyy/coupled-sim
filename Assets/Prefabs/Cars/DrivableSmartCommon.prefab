@@ -1231,6 +1231,7 @@ GameObject:
   - component: {fileID: 8515547635980188780}
   - component: {fileID: 4224836170552726509}
   - component: {fileID: 8118022126883589177}
+  - component: {fileID: 1806115740961270626}
   m_Layer: 9
   m_Name: DrivableSmartCommon
   m_TagString: ManualCar
@@ -1445,8 +1446,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: be2a9436c04c27b49bb907645aba70e1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  DriverPuppet: {fileID: 6531594965306263525}
-  PassengerPuppet: {fileID: 7499845786713119618}
   VRModeElements:
     gameObjects: []
     monoBehaviours:
@@ -1495,6 +1494,8 @@ MonoBehaviour:
     - {fileID: 6296359851564515721}
     monoBehaviours: []
     collider: {fileID: 0}
+  Internal: {fileID: 4224836170552726509}
+  External: {fileID: 1806115740961270626}
   cameras:
   - {fileID: 1261694925}
   - {fileID: 1661675653080951783}
@@ -1605,8 +1606,8 @@ AudioSource:
   SpatializePostEffects: 0
   Priority: 128
   DopplerLevel: 1
-  MinDistance: 5
-  MaxDistance: 120
+  MinDistance: 2.5
+  MaxDistance: 60
   Pan2D: 0
   rolloffMode: 0
   BypassEffects: 0
@@ -1742,17 +1743,18 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1787876385652902}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 46cf26a406bad0b4280494683f9c6af6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  starting: {fileID: 8300000, guid: 4ce5536d09910a148a92ac5408ae3c4b, type: 3}
-  rolling: {fileID: 8300000, guid: ec6858dbe984e3646af33a59d891ccf0, type: 3}
+  starting: {fileID: 0}
+  rolling: {fileID: 8300000, guid: a2433afdf39a6f842a45e18593605af0, type: 3}
   stopping: {fileID: 0}
   flatoutSpeed: 120
   minPitch: 1
   pitchSpeed: 0.07
+  volume: 1
 --- !u!114 &8118022126883589177
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1770,6 +1772,25 @@ MonoBehaviour:
   DriverPuppet: {fileID: 6531594965306263525}
   PassengerPuppet: {fileID: 7499845786713119618}
   Label: {fileID: 1939957558972515449}
+--- !u!114 &1806115740961270626
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1787876385652902}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 46cf26a406bad0b4280494683f9c6af6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  starting: {fileID: 0}
+  rolling: {fileID: 8300000, guid: 33d5f05eb46a3e345928831e0d00b15e, type: 3}
+  stopping: {fileID: 0}
+  flatoutSpeed: 120
+  minPitch: 1
+  pitchSpeed: 0.07
+  volume: 1
 --- !u!1 &1819827312411906
 GameObject:
   m_ObjectHideFlags: 0
