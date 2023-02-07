@@ -152,7 +152,7 @@ public class WorldLogger
         {
             writer.Write(driver.transform.position);
             writer.Write(driver.transform.rotation);
-            writer.Write((int)driver._carBlinkers.State);
+            writer.Write((int)driver.CarBlinkers.State);
             if ( driver == _playerSystem.LocalPlayer)
             {
                 var rb = driver.GetComponent<Rigidbody>();
