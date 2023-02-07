@@ -294,6 +294,8 @@ public class AICar : MonoBehaviour, IVehicle
         }
         if (other.gameObject.CompareTag("WP"))
         {
+            GetComponent<PlayerAvatar>().CarBlinkers.SwitchToState(speedSettings.BlinkerState);
+
             // If WaypointNumber is one, take over settings
             if (speedSettings.Type == SpeedSettings.WaypointType.InitialSetSpeed)
             {

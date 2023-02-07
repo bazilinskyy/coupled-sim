@@ -256,7 +256,9 @@ public class PlayerAvatar : MonoBehaviour
     public HMIAnchors HMISlots;
     public AvatarType Type;
     public Transform[] SyncTransforms;
-    public CarBlinkers _carBlinkers;
+    [SerializeField]
+    private CarBlinkers _carBlinkers;
+    public CarBlinkers CarBlinkers => _carBlinkers;
     List<Vector3> _pos = new List<Vector3>();
     List<Quaternion> _rot = new List<Quaternion>();
 

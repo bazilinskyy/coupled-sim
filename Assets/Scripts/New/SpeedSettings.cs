@@ -28,6 +28,8 @@ public class SpeedSettings : MonoBehaviour
     public WaypointType Type = WaypointType.SetSpeedTarget;
     public float speed = Defaults.Speed;                    //km/h
     public float acceleration = Defaults.Acceleration;      //m/s^2
+    public BlinkerState BlinkerState = BlinkerState.None;
+
     //Advanced Kinematics
     public float jerk = Defaults.Jerk;                      //m/s^3
     //public bool resetSpeedAfterStop = false;
