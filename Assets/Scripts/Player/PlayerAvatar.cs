@@ -67,9 +67,6 @@ public enum AvatarType
 // These are used for more than Players (AI cars have these as well)
 public class PlayerAvatar : MonoBehaviour
 {
-    public GameObject DriverPuppet;
-    public GameObject PassengerPuppet;
-
     [Header("Controls")]
     public ModeElements VRModeElements;
     public ModeElements FlatModeElements;

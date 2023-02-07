@@ -2613,6 +2613,7 @@ MonoBehaviour:
     Car: {fileID: 8343856187855894783, guid: 02b8c28a357f14a4b922a9b99b9763ae, type: 3}
     VehicleType: 0
     color: {r: 1, g: 1, b: 1, a: 1}
+    Labeled: 0
 --- !u!1 &4739995869452719884
 GameObject:
   m_ObjectHideFlags: 0
@@ -3227,6 +3228,7 @@ MonoBehaviour:
     Car: {fileID: 8343856187855894783, guid: 02b8c28a357f14a4b922a9b99b9763ae, type: 3}
     VehicleType: 0
     color: {r: 0.3584906, g: 0.3584906, b: 0.3584906, a: 1}
+    Labeled: 0
 --- !u!1 &5894981037337779573
 GameObject:
   m_ObjectHideFlags: 0
@@ -3745,7 +3747,7 @@ MonoBehaviour:
   Type: 1
   speed: 30
   acceleration: 2
-  BlinkerState: 1
+  BlinkerState: 0
   jerk: 5
   causeToYield: 0
   EyeContactWhileYielding: 0
@@ -3816,7 +3818,7 @@ MonoBehaviour:
   Type: 0
   speed: 25
   acceleration: 2
-  BlinkerState: 2
+  BlinkerState: 0
   jerk: 0
   causeToYield: 0
   EyeContactWhileYielding: 0
@@ -3939,8 +3941,9 @@ MonoBehaviour:
     SpawnDriver: 1
     SpawnPassenger: 0
     Car: {fileID: 8343856187855894783, guid: 02b8c28a357f14a4b922a9b99b9763ae, type: 3}
-    VehicleType: 1
+    VehicleType: 0
     color: {r: 0.13207549, g: 0.13207549, b: 0.13207549, a: 1}
+    Labeled: 0
 --- !u!1 &6564655690240934014
 GameObject:
   m_ObjectHideFlags: 0
@@ -4025,6 +4028,7 @@ MonoBehaviour:
     Car: {fileID: 7713759469045616529, guid: 1baf460ab026f1247ab4696be569ffae, type: 3}
     VehicleType: 0
     color: {r: 1, g: 1, b: 1, a: 1}
+    Labeled: 0
 --- !u!1 &6679715985421655586
 GameObject:
   m_ObjectHideFlags: 0
@@ -4078,6 +4082,7 @@ MonoBehaviour:
     Car: {fileID: 7713759469045616529, guid: 1baf460ab026f1247ab4696be569ffae, type: 3}
     VehicleType: 0
     color: {r: 0.403612, g: 0.6509434, b: 0, a: 1}
+    Labeled: 0
 --- !u!1 &6692014269374732414
 GameObject:
   m_ObjectHideFlags: 0
@@ -4156,11 +4161,9 @@ MonoBehaviour:
   Scene: MainScene
   Roles:
   - Name: Automated - Passenger
-    TopHMI: {fileID: 114674626593462642, guid: 9eaaf159fd53e9043a6a0f42f3729fa0, type: 3}
-    WindshieldHMI: {fileID: 114674626593462642, guid: 9eaaf159fd53e9043a6a0f42f3729fa0,
-      type: 3}
-    HoodHMI: {fileID: 114674626593462642, guid: 9eaaf159fd53e9043a6a0f42f3729fa0,
-      type: 3}
+    TopHMI: {fileID: 0}
+    WindshieldHMI: {fileID: 0}
+    HoodHMI: {fileID: 0}
     carIdx: 0
     SpawnPoint:
       Point: {fileID: 935614564}
@@ -4323,8 +4326,9 @@ MonoBehaviour:
     SpawnDriver: 1
     SpawnPassenger: 0
     Car: {fileID: 8343856187855894783, guid: 02b8c28a357f14a4b922a9b99b9763ae, type: 3}
-    VehicleType: 1
+    VehicleType: 0
     color: {r: 0.4528302, g: 0.10466359, b: 0.10466359, a: 1}
+    Labeled: 0
 --- !u!1 &7069850183166525927
 GameObject:
   m_ObjectHideFlags: 0
@@ -4418,7 +4422,7 @@ MonoBehaviour:
   Type: 1
   speed: 25
   acceleration: 1
-  BlinkerState: 1
+  BlinkerState: 0
   jerk: 0
   causeToYield: 0
   EyeContactWhileYielding: 0
@@ -4769,7 +4773,7 @@ MonoBehaviour:
   Type: 1
   speed: 30
   acceleration: 2
-  BlinkerState: 2
+  BlinkerState: 0
   jerk: 5
   causeToYield: 0
   EyeContactWhileYielding: 0
