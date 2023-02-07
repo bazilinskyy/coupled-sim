@@ -24,6 +24,8 @@ namespace VehicleBehaviour {
         public float minPitch = 0.7f;
         [Range(0.0f, 0.1f)]
         public float pitchSpeed = 0.05f;
+        [Range(0.0f, 1f)]
+        public float volume = 1;
 
         private AudioSource _source;
         private IVehicle _vehicle;
@@ -42,6 +44,7 @@ namespace VehicleBehaviour {
         void Update () {
             if (_vehicle.Handbrake && _source.clip == rolling)
             {
+                _source.volume = volume;
                 _source.clip = stopping;
                 _source.loop = false;
                 _source.Play();
@@ -49,6 +52,7 @@ namespace VehicleBehaviour {
 
             if (!_vehicle.Handbrake && (_source.clip == stopping || _source.clip == null))
             {
+                _source.volume = volume;
                 _source.clip = starting;
                 _source.Play();
                 _source.loop = false;
@@ -57,6 +61,7 @@ namespace VehicleBehaviour {
 
             if (!_vehicle.Handbrake && !_source.isPlaying)
             {
+                _source.volume = volume;
                 _source.clip = rolling;
                 _source.loop = true;
                 _source.Play();
