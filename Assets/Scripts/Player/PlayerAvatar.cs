@@ -82,6 +82,10 @@ public class PlayerAvatar : MonoBehaviour
     public ModeElements AV;
     public ModeElements MDV;
 
+    [Header("Audio")]
+    public EngineSoundManager Internal;
+    public EngineSoundManager External;
+
     [Serializable]
     public struct ModeElements
     {
@@ -103,6 +107,7 @@ public class PlayerAvatar : MonoBehaviour
     {
         if (isRemote)
         {
+            External.enabled = true;
             GetComponentInChildren<Rigidbody>().isKinematic = true;
             GetComponentInChildren<Rigidbody>().useGravity = false;
             foreach (var wc in GetComponentsInChildren<WheelCollider>())
@@ -141,12 +146,15 @@ public class PlayerAvatar : MonoBehaviour
             switch (controlMode)
             {
                 case PlayerSystem.ControlMode.Driver:
+                    Internal.enabled = true;
                     modeElements = PlayerAsDriver;
                     break;
                 case PlayerSystem.ControlMode.HostAI:
+                    External.enabled = true;
                     modeElements = HostDrivenAIElements;
                     break;
                 case PlayerSystem.ControlMode.Passenger:
+                    Internal.enabled = true;
                     modeElements = PlayerAsPassenger;
                     break;
             }
