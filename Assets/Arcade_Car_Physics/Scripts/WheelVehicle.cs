@@ -21,7 +21,7 @@ public interface IVehicle
 namespace VehicleBehaviour {
     [RequireComponent(typeof(Rigidbody))]
     public class WheelVehicle : MonoBehaviour, IVehicle {
-        
+        public PlayerAvatar playerAvatar;
         [Header("Inputs")]
     #if MULTIOSCONTROLS
         [SerializeField] PlayerNumber playerId;
@@ -294,7 +294,7 @@ namespace VehicleBehaviour {
                     throttle = GetInput(throttleInput) * (reverse?-1f:1);
                 }
                 breaking = Mathf.Clamp01(GetInput(brakeInput));
-
+                playerAvatar.SetBreakLights(breaking > 0);
                 // Turn
                 steering = turnInputCurve.Evaluate(GetInput(turnInput)) * steerAngle;
             }
