@@ -263,6 +263,7 @@ public class PlayerAvatar : MonoBehaviour
     public Transform[] SyncTransforms;
     [SerializeField]
     private CarBlinkers _carBlinkers;
+    public GameObject stopLights;
     public CarBlinkers CarBlinkers => _carBlinkers;
     List<Vector3> _pos = new List<Vector3>();
     List<Quaternion> _rot = new List<Quaternion>();
@@ -301,5 +302,10 @@ public class PlayerAvatar : MonoBehaviour
         {
             _carBlinkers.SwitchToState(pose.Blinkers);
         }
+    }
+
+    internal void SetBreakLights(bool breaking)
+    {
+        stopLights.SetActive(breaking);
     }
 }
