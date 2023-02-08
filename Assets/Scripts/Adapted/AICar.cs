@@ -19,10 +19,12 @@ public class AICar : MonoBehaviour, IVehicle
     }
 
     public CarState state = CarState.DRIVING;
-
+    public PlayerAvatar playerAvatar;
     // Motion related variables
     private float set_speed = 0;                                           // Velocity of cars in simulation
     private float set_acceleration = 0;                                     // Acceleration of cars in simulation
+    const float breakingTreshold = -1;
+                                    // Acceleration of cars in simulation
     public float jerk = 2;                                                 // Jerk of cars in simulation
     public float turn_rate_degree = 360;
     private float conversion = 3.6f;
@@ -124,6 +126,8 @@ public class AICar : MonoBehaviour, IVehicle
                 pitch = acceleration / 3 * HasPitch;
                 model.localRotation = Quaternion.Slerp(model.localRotation, Quaternion.Euler(-pitch, 0, 0), 0.5f);
             }
+
+            playerAvatar.SetBreakLights(set_acceleration < 0f && set_speed < speed);
 
             if (acceleration != 0 && Mathf.Abs(speed) < Mathf.Abs(set_speed) * (1 + tolerance) + tolerance * 10 && Mathf.Abs(speed) > Mathf.Abs(set_speed) * (1 - tolerance) - tolerance * 10)
             {
