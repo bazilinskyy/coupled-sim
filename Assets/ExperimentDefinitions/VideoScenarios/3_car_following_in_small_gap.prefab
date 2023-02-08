@@ -781,7 +781,7 @@ GameObject:
   - component: {fileID: 370511870967287112}
   - component: {fileID: 5695992513417894314}
   m_Layer: 0
-  m_Name: Line_1 Car (1)
+  m_Name: Target Car
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -795,7 +795,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5083140548521695586}
   m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
-  m_LocalPosition: {x: -278.45, y: 0, z: 155.6}
+  m_LocalPosition: {x: -278.45, y: 0, z: 197.63712}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1261,7 +1261,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   targetAICar: {fileID: 0}
   Type: 0
-  speed: 30
+  speed: 40
   acceleration: 2
   BlinkerState: 0
   jerk: 0
@@ -1333,7 +1333,7 @@ MonoBehaviour:
   targetAICar: {fileID: 0}
   Type: 1
   speed: 30
-  acceleration: 1
+  acceleration: -1
   BlinkerState: 0
   jerk: 0
   causeToYield: 0
@@ -1956,7 +1956,7 @@ PrefabInstance:
     - target: {fileID: 7609667120526454229, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
       propertyPath: m_RootOrder
-      value: 5
+      value: 7
       objectReference: {fileID: 0}
     - target: {fileID: 7609667120526454229, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}

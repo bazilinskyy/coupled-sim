@@ -8,6 +8,7 @@ public class TestSyncedCarSpawner : CarSpawnerBase
     {
         yield return new WaitForSeconds(0);
         AICar aICar = Spawn(spawnParams, false);
+        aICar.name = this.name + " Instance";
         foreach(var waypoint in spawnParams.Track.Waypoints)
         {
             var speedSettings = waypoint.GetComponent<SpeedSettings>();
