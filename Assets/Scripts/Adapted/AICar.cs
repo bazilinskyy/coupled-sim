@@ -37,7 +37,22 @@ public class AICar : MonoBehaviour, IVehicle
     private Transform rotationAxis;
     private float Timer1;
     private float Timer2;
-    public Transform model;
+    private Quaternion modelLocalRotation
+    {
+        get
+        {
+            return modelElements[0].localRotation;
+        }
+        set
+        {
+            foreach(var me in modelElements)
+            {
+                me.localRotation = value;
+            }
+        }
+    }
+    public Transform [] modelElements;
+
 
     public bool braking = false;
     public bool reset = false;
@@ -117,14 +132,14 @@ public class AICar : MonoBehaviour, IVehicle
                 acceleration = set_acceleration;
                 t += Mathf.Abs(jerk) / Mathf.Abs(set_acceleration) * Time.fixedDeltaTime;
                 pitch = acceleration / 3 * HasPitch;
-                model.localRotation = Quaternion.Slerp(model.localRotation, Quaternion.Euler(-pitch, 0, 0), 0.5f);
+                modelLocalRotation = Quaternion.Slerp(modelLocalRotation, Quaternion.Euler(-pitch, 0, 0), 0.5f);
             }
 
             if (set_acceleration > 0f && set_speed > speed || set_acceleration < 0f && set_speed < speed)
             {
                 speed = speed + set_acceleration * Time.fixedDeltaTime * conversion;
                 pitch = acceleration / 3 * HasPitch;
-                model.localRotation = Quaternion.Slerp(model.localRotation, Quaternion.Euler(-pitch, 0, 0), 0.5f);
+                modelLocalRotation = Quaternion.Slerp(modelLocalRotation, Quaternion.Euler(-pitch, 0, 0), 0.5f);
             }
 
             playerAvatar.SetBreakLights(set_acceleration < 0f && set_speed < speed);
@@ -170,11 +185,11 @@ public class AICar : MonoBehaviour, IVehicle
                 // Pitches larger than 0.5 degrees are capped at 0.5 degrees.
                 if (pitch < 0.5f)
                 {
-                    model.localRotation = Quaternion.Slerp(model.localRotation, Quaternion.Euler(pitch, 0, 0), 0.5f);
+                    modelLocalRotation = Quaternion.Slerp(modelLocalRotation, Quaternion.Euler(pitch, 0, 0), 0.5f);
                 }
                 else
                 {
-                    model.localRotation = Quaternion.Slerp(model.localRotation, Quaternion.Euler(0.5f, 0, 0), 0.5f);
+                    modelLocalRotation = Quaternion.Slerp(modelLocalRotation, Quaternion.Euler(0.5f, 0, 0), 0.5f);
                 }
             }
 
@@ -185,7 +200,7 @@ public class AICar : MonoBehaviour, IVehicle
 
                 if (pitch >= 0)
                 {
-                    model.localRotation = Quaternion.Slerp(model.localRotation, Quaternion.Euler(pitch, 0, 0), 0.5f);
+                    modelLocalRotation = Quaternion.Slerp(modelLocalRotation, Quaternion.Euler(pitch, 0, 0), 0.5f);
                 }
 
             }
@@ -197,7 +212,7 @@ public class AICar : MonoBehaviour, IVehicle
 
                 if (pitch >= 0)
                 {
-                    model.localRotation = Quaternion.Slerp(model.localRotation, Quaternion.Euler(pitch, 0, 0), 0.5f);
+                    modelLocalRotation = Quaternion.Slerp(modelLocalRotation, Quaternion.Euler(pitch, 0, 0), 0.5f);
                 }
 
                 speed = 0f;
@@ -211,7 +226,7 @@ public class AICar : MonoBehaviour, IVehicle
 
                 if (pitch >= 0) // Apply pitch only when larger than 0 degrees.
                 {
-                    model.localRotation = Quaternion.Slerp(model.localRotation, Quaternion.Euler(pitch, 0, 0), 0.5f);
+                    modelLocalRotation = Quaternion.Slerp(modelLocalRotation, Quaternion.Euler(pitch, 0, 0), 0.5f);
                 }
 
                 if (Timer2 >= 2f) // After standing still for two seconds, passenger can initiate driving again by pressing space.
