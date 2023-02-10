@@ -22867,21 +22867,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 62798df18f711064d8976a077ef884d0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  streetLightEvents:
-  - name: Both Bs to Red
+  initialStreetLightSetup:
+  - name: B Initial Setup
     deltaTime: 0
     carSections:
     - {fileID: 6437028506519182252}
     pedestrianSections:
     - {fileID: 6437197876576872084}
-    state: 2
-  - name: Both As to Green
+    state: 0
+  - name: A Initial Setup
     deltaTime: 0
     carSections:
     - {fileID: 6437824487964146560}
     pedestrianSections:
     - {fileID: 6437813501274814330}
-    state: 0
+    state: 2
+  streetLightEvents:
   - name: A Pedestrain - BlinkGreen
     deltaTime: 20
     carSections: []
@@ -22950,11 +22951,14 @@ MonoBehaviour:
     pedestrianSections:
     - {fileID: 6437197876576872084}
     state: 4
-  - name: LoopBack
+  - name: Both A - Green
     deltaTime: 2
-    carSections: []
-    pedestrianSections: []
-    state: 5
+    carSections:
+    - {fileID: 6437824487964146560}
+    pedestrianSections:
+    - {fileID: 6437813501274814330}
+    state: 0
+  CurrentIndex: 6
 --- !u!1 &6395839017716348897
 GameObject:
   m_ObjectHideFlags: 0
@@ -24449,7 +24453,7 @@ Transform:
   - {fileID: 5324136143214075226}
   - {fileID: 6922288404325097301}
   m_Father: {fileID: 0}
-  m_RootOrder: 7
+  m_RootOrder: 8
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &8692043556341430772
 MonoBehaviour:

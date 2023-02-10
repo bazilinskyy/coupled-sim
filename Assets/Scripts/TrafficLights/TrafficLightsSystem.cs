@@ -12,14 +12,19 @@ public class TrafficLightsSystem : MonoBehaviour
 
         public int SystemIdx;
         public int EventIdx;
+        public bool InitialSetup;
+
         public void Sync<T>(T synchronizer) where T : ISynchronizer
         {
+            synchronizer.Sync(ref SystemIdx);
             synchronizer.Sync(ref EventIdx);
+            synchronizer.Sync(ref InitialSetup);
         }
     }
 
     //synced traffic lights managers
     public TrafficLightsManager[] LightManagers;
+    List<int> _initiallyTriggeredEventsBuffer = new List<int>();
     List<int> _triggeredEventsBuffer = new List<int>();
     [HideInInspector]
     public CarTrafficLight[] CarLights;
@@ -38,7 +43,15 @@ public class TrafficLightsSystem : MonoBehaviour
         for (int i = 0; i < LightManagers.Length; i++)
         {
             var manager = LightManagers[i];
-            manager.UpdateHost(_triggeredEventsBuffer);
+            manager.UpdateHost(_initiallyTriggeredEventsBuffer, _triggeredEventsBuffer);
+            foreach (var trigger in _initiallyTriggeredEventsBuffer)
+            {
+                host.BroadcastReliable(new ChangeLightsMsg
+                {
+                    SystemIdx = i,
+                    EventIdx = trigger
+                });
+            }
             foreach (var trigger in _triggeredEventsBuffer)
             {
                 host.BroadcastReliable(new ChangeLightsMsg
@@ -47,6 +60,7 @@ public class TrafficLightsSystem : MonoBehaviour
                     EventIdx = trigger
                 });
             }
+            _initiallyTriggeredEventsBuffer.Clear();
             _triggeredEventsBuffer.Clear();
         }
     }
@@ -60,6 +74,6 @@ public class TrafficLightsSystem : MonoBehaviour
     private void OnChangeLightsMsg(ISynchronizer sync, int srcPlayerId)
     {
         var msg = NetMsg.Read<ChangeLightsMsg>(sync);
-        LightManagers[msg.SystemIdx].TriggerEvent(msg.EventIdx);
+        LightManagers[msg.SystemIdx].TriggerEvent(msg.EventIdx, msg.InitialSetup);
     }
 }
