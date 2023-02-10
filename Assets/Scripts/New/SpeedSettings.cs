@@ -57,7 +57,10 @@ public class SpeedSettings : MonoBehaviour
         }
         if (other.gameObject.CompareTag("ManualCar") && causeToYield)
         {
-            StartCoroutine(LookAtPlayerAfterCarStops(other.gameObject.GetComponent<AICar>(), other.gameObject.GetComponentInChildren<EyeContact>()));
+            var eyeContact = other.gameObject.GetComponentInChildren<EyeContact>();
+            if (eyeContact != null) {
+                StartCoroutine(LookAtPlayerAfterCarStops(other.gameObject.GetComponent<AICar>(), eyeContact));
+            }
         }
     }
 

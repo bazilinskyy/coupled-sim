@@ -315,15 +315,18 @@ public class AICar : MonoBehaviour, IVehicle
         {
             GetComponent<PlayerAvatar>().CarBlinkers.SwitchToState(speedSettings.BlinkerState);
 
-            // If WaypointNumber is one, take over settings
             if (speedSettings.Type == SpeedSettings.WaypointType.InitialSetSpeed)
             {
-                set_speed = speedSettings.speed;
-                set_acceleration = speedSettings.acceleration;
-                speed = speedSettings.speed;
+                if (speedSettings.causeToYield)
+                {
+                    speed = 0;
+                }
+                else
+                {
+                    speed = speedSettings.speed;
+                }
             }
-            // If WaypointNumber is one, take over settings
-            else if (speedSettings.Type == SpeedSettings.WaypointType.SetSpeedTarget)
+            if (speedSettings.Type == SpeedSettings.WaypointType.SetSpeedTarget || speedSettings.Type == SpeedSettings.WaypointType.InitialSetSpeed)
             {
                 if (speedSettings.causeToYield)
                 {
@@ -342,7 +345,6 @@ public class AICar : MonoBehaviour, IVehicle
                     set_acceleration = speedSettings.acceleration;
                 }
             }
-            // If WaypointNumber is two, destroy gameobject.
             else if (speedSettings.Type == SpeedSettings.WaypointType.Delete)
             {
                 gameObject.SetActive(false);

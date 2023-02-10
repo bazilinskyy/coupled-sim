@@ -37,7 +37,7 @@ public class TrafficLightsManager : MonoBehaviour
     private TrafficLightEvent[] initialStreetLightSetup;
     [SerializeField]
     private TrafficLightEvent[] streetLightEvents;
-    float _timer = 0;
+    public float CurrentTimer = 0;
     public int CurrentIndex = 0;
     bool initialized = false;
 
@@ -52,11 +52,11 @@ public class TrafficLightsManager : MonoBehaviour
             }
             initialized = true;
         }
-        while (_timer >= streetLightEvents[CurrentIndex].deltaTime && CurrentIndex < streetLightEvents.Length)
+        while (CurrentTimer >= streetLightEvents[CurrentIndex].deltaTime && CurrentIndex < streetLightEvents.Length)
         {
             triggeredEvents.Add(CurrentIndex);
             TriggerEvent(CurrentIndex, false);
-            _timer -= streetLightEvents[CurrentIndex].deltaTime;
+            CurrentTimer -= streetLightEvents[CurrentIndex].deltaTime;
             CurrentIndex++;
             if (CurrentIndex >= streetLightEvents.Length)
             {
@@ -64,7 +64,7 @@ public class TrafficLightsManager : MonoBehaviour
             }
         }
 
-        _timer += Time.deltaTime;
+        CurrentTimer += Time.deltaTime;
     }
 
     public void TriggerEvent(int idx, bool initialSetup)
