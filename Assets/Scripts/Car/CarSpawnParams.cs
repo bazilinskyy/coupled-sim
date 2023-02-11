@@ -14,4 +14,5 @@ public struct CarSpawnParams
     public PlayerSystem.VehicleType VehicleType;
     public Color color;
     public bool Labeled;
+    public CustomBehaviour [] customBehaviours;
 }

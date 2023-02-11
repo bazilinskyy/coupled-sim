@@ -23,11 +23,15 @@ public struct AvatarPose : INetSubMessage
     public List<Vector3> LocalPositions;
     public List<Quaternion> LocalRotations;
     public BlinkerState Blinkers;
+    public bool FrontLights;
+    public bool StopLights;
     public void DeserializeFrom(BinaryReader reader)
     {
         LocalPositions = reader.ReadListVector3();
         LocalRotations = reader.ReadListQuaternion();
         Blinkers = (BlinkerState)reader.ReadInt32();
+        FrontLights = reader.ReadBoolean();
+        StopLights = reader.ReadBoolean();
     }
 
     public void SerializeTo(BinaryWriter writer)
@@ -35,6 +39,8 @@ public struct AvatarPose : INetSubMessage
         writer.Write(LocalPositions);
         writer.Write(LocalRotations);
         writer.Write((int)Blinkers);
+        writer.Write(FrontLights);
+        writer.Write(StopLights);
     }
 
     IEnumerable<string> CsvEnumerator()
@@ -264,6 +270,7 @@ public class PlayerAvatar : MonoBehaviour
     [SerializeField]
     private CarBlinkers _carBlinkers;
     public GameObject stopLights;
+    public GameObject frontLights;
     public CarBlinkers CarBlinkers => _carBlinkers;
     List<Vector3> _pos = new List<Vector3>();
     List<Quaternion> _rot = new List<Quaternion>();
@@ -285,6 +292,8 @@ public class PlayerAvatar : MonoBehaviour
             LocalPositions = _pos,
             LocalRotations = _rot,
             Blinkers = _carBlinkers == null ? BlinkerState.None : _carBlinkers.State,
+            FrontLights = frontLights == null ? false : frontLights.activeSelf,
+            StopLights = stopLights == null ? false : stopLights.activeSelf,
         };
     }
 
@@ -301,6 +310,14 @@ public class PlayerAvatar : MonoBehaviour
         if (_carBlinkers != null)
         {
             _carBlinkers.SwitchToState(pose.Blinkers);
+        }
+        if (frontLights != null)
+        {
+            frontLights.SetActive(pose.FrontLights);
+        }
+        if (stopLights != null)
+        {
+            stopLights.SetActive(pose.StopLights);
         }
     }
 

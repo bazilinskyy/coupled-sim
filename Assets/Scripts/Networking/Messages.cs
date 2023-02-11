@@ -96,6 +96,8 @@ public struct UpdateClientPose : INetMessage
         int blinkers = (int)Pose.Blinkers;
         synchronizer.Sync(ref blinkers);
         Pose.Blinkers = (BlinkerState)blinkers;
+        synchronizer.Sync(ref Pose.FrontLights);
+        synchronizer.Sync(ref Pose.StopLights);
     }
 }
 
