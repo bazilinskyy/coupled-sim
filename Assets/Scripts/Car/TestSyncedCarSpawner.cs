@@ -17,5 +17,9 @@ public class TestSyncedCarSpawner : CarSpawnerBase
                 speedSettings.targetAICar = aICar;
             }
         }
+        foreach (var cb in spawnParams.customBehaviours) {
+            cb.Init(aICar);
+            aICar.CustomBehaviours.Add(cb);
+        }
     }
 }

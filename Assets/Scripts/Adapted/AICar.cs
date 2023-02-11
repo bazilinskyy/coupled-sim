@@ -61,6 +61,15 @@ public class AICar : MonoBehaviour, IVehicle
     private float startlocation;
     private float delta_distance;
 
+    public List<CustomBehaviour> CustomBehaviours = new List<CustomBehaviour>();
+    internal void TriggerCustomBehaviours(CustomBehaviourData bd)
+    {
+        foreach(var cb in CustomBehaviours)
+        {
+            cb.Trigger(bd);
+        }
+    }
+
     private float speedAfterYield;
     private float accAfterYield;
     private float yieldingTime;

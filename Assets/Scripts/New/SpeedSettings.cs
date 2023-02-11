@@ -47,6 +47,7 @@ public class SpeedSettings : MonoBehaviour
     [FormerlySerializedAs("lookAtPedToSeconds")]
     public float YieldingEyeContactUntil;
     //Dynamics
+    public CustomBehaviourData[] customBehaviourData;
 
     private void OnTriggerEnter(Collider other)
     {
@@ -61,6 +62,9 @@ public class SpeedSettings : MonoBehaviour
             if (eyeContact != null) {
                 StartCoroutine(LookAtPlayerAfterCarStops(other.gameObject.GetComponent<AICar>(), eyeContact));
             }
+        }
+        foreach (var bd in customBehaviourData) {
+            aiCar.TriggerCustomBehaviours(bd);
         }
     }
 
