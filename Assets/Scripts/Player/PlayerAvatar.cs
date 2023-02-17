@@ -113,7 +113,9 @@ public class PlayerAvatar : MonoBehaviour
     {
         if (isRemote)
         {
-            External.enabled = true;
+            if (External != null) {
+                External.enabled = true;
+            }
             GetComponentInChildren<Rigidbody>().isKinematic = true;
             GetComponentInChildren<Rigidbody>().useGravity = false;
             foreach (var wc in GetComponentsInChildren<WheelCollider>())
@@ -152,15 +154,24 @@ public class PlayerAvatar : MonoBehaviour
             switch (controlMode)
             {
                 case PlayerSystem.ControlMode.Driver:
-                    Internal.enabled = true;
+                    if (Internal != null)
+                    {
+                        Internal.enabled = true;
+                    }
                     modeElements = PlayerAsDriver;
                     break;
                 case PlayerSystem.ControlMode.HostAI:
-                    External.enabled = true;
+                    if (External != null)
+                    {
+                        External.enabled = true;
+                    }
                     modeElements = HostDrivenAIElements;
                     break;
                 case PlayerSystem.ControlMode.Passenger:
-                    Internal.enabled = true;
+                    if (Internal != null)
+                    {
+                        Internal.enabled = true;
+                    }
                     modeElements = PlayerAsPassenger;
                     break;
             }
