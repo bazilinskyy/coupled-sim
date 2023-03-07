@@ -76,24 +76,36 @@ public class NetworkingManager : MonoBehaviour
     {
         if (hideGui)
         {
-            return;
-        }
-        if (_netSystem == null)
-        {
-            if (InstantStartParams.SkipSelectionScreen || GUILayout.Button("Start Host"))
+            if (_netSystem == null)
             {
-                _netSystem = new Host(_levelManager, _playerSystem, _aiCarSystem, _logger, _fixedLogger, InstantStartParams);
-            }
-            if (!InstantStartParams.SkipSelectionScreen && GUILayout.Button("Start Client"))
+                if (InstantStartParams.SkipSelectionScreen)
+                {
+                    _netSystem = new Host(_levelManager, _playerSystem, _aiCarSystem, _logger, _fixedLogger, InstantStartParams);
+                }
+            } else
             {
-                _netSystem = new Client(_levelManager, _playerSystem, _aiCarSystem, _logger, _fixedLogger);
+                _netSystem.OnGUI();
             }
-
-            _logConverter.OnGUI();
         }
         else
         {
-            _netSystem.OnGUI();
+            if (_netSystem == null)
+            {
+                if (InstantStartParams.SkipSelectionScreen || GUILayout.Button("Start Host"))
+                {
+                    _netSystem = new Host(_levelManager, _playerSystem, _aiCarSystem, _logger, _fixedLogger, InstantStartParams);
+                }
+                if (!InstantStartParams.SkipSelectionScreen && GUILayout.Button("Start Client"))
+                {
+                    _netSystem = new Client(_levelManager, _playerSystem, _aiCarSystem, _logger, _fixedLogger);
+                }
+
+                _logConverter.OnGUI();
+            }
+            else
+            {
+                _netSystem.OnGUI();
+            }
         }
     }
 
