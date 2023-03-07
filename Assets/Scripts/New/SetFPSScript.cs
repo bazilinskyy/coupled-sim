@@ -25,6 +25,7 @@ public class SetFPSScript : MonoBehaviour
             m_frameCounter = 0;
             m_timeCounter = 0.0f;
         }
+        fps.enabled = !NetworkingManager.Instance.hideGui;
         SetFPS();
     }
 
