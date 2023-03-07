@@ -14,6 +14,12 @@ public struct InstantStartHostParameters
 // - updates client/host logic
 public class NetworkingManager : MonoBehaviour
 {
+    public static NetworkingManager Instance
+    {
+        get;
+        private set;
+    }
+
     NetworkSystem _netSystem;
     LevelManager _levelManager;
     PlayerSystem _playerSystem;
@@ -28,6 +34,9 @@ public class NetworkingManager : MonoBehaviour
 
     void Awake()
     {
+        if (Instance == null) {
+            Instance = this;
+        }
         DontDestroyOnLoad(gameObject);
         _playerSystem = GetComponent<PlayerSystem>();
         _levelManager = new LevelManager(_playerSystem, Experiments);
@@ -37,7 +46,7 @@ public class NetworkingManager : MonoBehaviour
         _logConverter = new LogConverter(_playerSystem.PedestrianPrefab);
     }
 
-    bool hideGui = false;
+    public bool hideGui = false;
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.Escape))
@@ -90,6 +99,10 @@ public class NetworkingManager : MonoBehaviour
 
     private void OnDestroy()
     {
+        if (Instance == this)
+        {
+            Instance = null;
+        }
         _logger.EndLog();
         _fixedLogger.EndLog();
     }
