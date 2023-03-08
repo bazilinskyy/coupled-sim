@@ -287,7 +287,6 @@ MonoBehaviour:
     - {fileID: 7713759469045616529, guid: 1baf460ab026f1247ab4696be569ffae, type: 3}
     - {fileID: 8343856187855894783, guid: 02b8c28a357f14a4b922a9b99b9763ae, type: 3}
   Experiments:
-  - {fileID: 8692043556341430772, guid: c5af73a307f19ac4b92fb4251cc579e0, type: 3}
   - {fileID: 8339373823643078367, guid: 96a426fc17a79824e9932e3f651ad683, type: 3}
   - {fileID: 8690531712627271718, guid: fe4297b61cf987f4590ba77669b05ef7, type: 3}
   - {fileID: 1881885188683625716, guid: d7650e3b6ee34d3428e6fb5273a5acaf, type: 3}
@@ -309,11 +308,21 @@ MonoBehaviour:
   - {fileID: 7207122182859282646, guid: c8f5e6ea86c0ea248b2f74f0c846dada, type: 3}
   - {fileID: 2308720202718575136, guid: 0fb3950a4dc9b244c8e697cac2503993, type: 3}
   hideGui: 1
-  InstantStartParams:
-    SkipSelectionScreen: 1
-    SelectedExperiment: 20
-    SelectedRole: 0
-    InputMode: 3
+  RunTrailSequenceAutomatically: 1
+  CurrentTrailIndex: 0
+  trails:
+  - experimentIndex: 19
+    roleIndex: 0
+    InputMode: 0
+    experimentParameters:
+    - name: target_labeled
+      value: true
+  - experimentIndex: 19
+    roleIndex: 0
+    InputMode: 0
+    experimentParameters:
+    - name: target_labeled
+      value: false
 --- !u!114 &301934534
 MonoBehaviour:
   m_ObjectHideFlags: 0
