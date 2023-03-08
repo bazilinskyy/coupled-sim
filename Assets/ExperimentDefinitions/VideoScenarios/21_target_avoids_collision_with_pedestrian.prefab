@@ -71,6 +71,7 @@ MonoBehaviour:
   brakingAcceleration: 0
   YieldingEyeContactSince: 0
   YieldingEyeContactUntil: 0
+  customBehaviourData: []
 --- !u!1 &690213527617528015
 GameObject:
   m_ObjectHideFlags: 0
@@ -175,6 +176,7 @@ MonoBehaviour:
   brakingAcceleration: 0
   YieldingEyeContactSince: 0
   YieldingEyeContactUntil: 0
+  customBehaviourData: []
 --- !u!1 &1775091087175645923
 GameObject:
   m_ObjectHideFlags: 0
@@ -358,6 +360,7 @@ MonoBehaviour:
   brakingAcceleration: 0
   YieldingEyeContactSince: 0
   YieldingEyeContactUntil: 0
+  customBehaviourData: []
 --- !u!1 &2761297158004248483
 GameObject:
   m_ObjectHideFlags: 0
@@ -548,6 +551,7 @@ MonoBehaviour:
   brakingAcceleration: 0
   YieldingEyeContactSince: 0
   YieldingEyeContactUntil: 0
+  customBehaviourData: []
 --- !u!1 &5494618996493110144
 GameObject:
   m_ObjectHideFlags: 0
@@ -650,6 +654,7 @@ MonoBehaviour:
   brakingAcceleration: 0
   YieldingEyeContactSince: 0
   YieldingEyeContactUntil: 0
+  customBehaviourData: []
 --- !u!1 &6050600087530028738
 GameObject:
   m_ObjectHideFlags: 0
@@ -704,6 +709,7 @@ MonoBehaviour:
     VehicleType: 0
     color: {r: 1, g: 1, b: 1, a: 1}
     Labeled: 0
+    customBehaviours: []
 --- !u!1 &6161879044857191854
 GameObject:
   m_ObjectHideFlags: 0
@@ -775,6 +781,7 @@ MonoBehaviour:
   brakingAcceleration: 0
   YieldingEyeContactSince: 0
   YieldingEyeContactUntil: 0
+  customBehaviourData: []
 --- !u!1 &6299812481627202349
 GameObject:
   m_ObjectHideFlags: 0
@@ -846,6 +853,7 @@ MonoBehaviour:
   brakingAcceleration: 0
   YieldingEyeContactSince: 0
   YieldingEyeContactUntil: 0
+  customBehaviourData: []
 --- !u!1 &8416680794652547526
 GameObject:
   m_ObjectHideFlags: 0
@@ -917,6 +925,7 @@ MonoBehaviour:
   brakingAcceleration: 0
   YieldingEyeContactSince: 0
   YieldingEyeContactUntil: 0
+  customBehaviourData: []
 --- !u!1 &8662039620166870649
 GameObject:
   m_ObjectHideFlags: 0
@@ -1002,6 +1011,7 @@ MonoBehaviour:
     VehicleType: 0
     color: {r: 0.13207549, g: 0.13207549, b: 0.13207549, a: 1}
     Labeled: 0
+    customBehaviours: []
 --- !u!1001 &2882908008452249383
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1132,6 +1142,16 @@ PrefabInstance:
       propertyPath: m_LocalPosition.z
       value: 148
       objectReference: {fileID: 0}
+    - target: {fileID: 4929907188672532565, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: carSpawners.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4929907188672532565, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: carSpawners.Array.data[0]
+      value: 
+      objectReference: {fileID: 1024463073802986014}
     - target: {fileID: 6160369970805395860, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
       propertyPath: m_Name
@@ -1145,7 +1165,7 @@ PrefabInstance:
     - target: {fileID: 7609667120526454229, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
       propertyPath: m_RootOrder
-      value: 7
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 7609667120526454229, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}

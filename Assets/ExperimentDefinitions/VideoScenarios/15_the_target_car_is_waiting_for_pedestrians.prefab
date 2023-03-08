@@ -2902,6 +2902,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8448320874216197367}
   - component: {fileID: 7207122182859282646}
+  - component: {fileID: 4230200183105688701}
   m_Layer: 0
   m_Name: 15_the_target_car_is_waiting_for_pedestrians
   m_TagString: Untagged
@@ -2937,7 +2938,7 @@ Transform:
   - {fileID: 1295939115458991857}
   - {fileID: 3250646030902382805}
   m_Father: {fileID: 0}
-  m_RootOrder: 11
+  m_RootOrder: 12
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &7207122182859282646
 MonoBehaviour:
@@ -2995,6 +2996,20 @@ MonoBehaviour:
       Path: {fileID: 5757813967244672145}
     - Pedestrian: {fileID: 8469465900123657584}
       Path: {fileID: 277827056393364281}
+--- !u!114 &4230200183105688701
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4646113355087706460}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 253bd1b1f529d6c41b9f94ef8933464c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  carSpawners:
+  - {fileID: 8399136166865549587}
 --- !u!1 &4832978365931358053
 GameObject:
   m_ObjectHideFlags: 0

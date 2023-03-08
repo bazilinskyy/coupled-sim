@@ -1,19 +1,26 @@
 ﻿using UnityEngine;
 
-[System.Serializable]
-public struct InstantStartHostParameters
-{
-    public bool SkipSelectionScreen;
-    public int SelectedExperiment;
-    public int SelectedRole;
-    public PlayerSystem.InputMode InputMode;
-}
-
 //logic entry point 
 // - presents main menu
 // - updates client/host logic
 public class NetworkingManager : MonoBehaviour
 {
+    [System.Serializable]
+    public class ExperimentParameter
+    {
+        public string name;
+        public string value;
+    }
+
+    [System.Serializable]
+    public class Trail
+    {
+        public int experimentIndex;
+        public int roleIndex;
+        public PlayerSystem.InputMode InputMode;
+        public ExperimentParameter [] experimentParameters;
+    }
+
     public static NetworkingManager Instance
     {
         get;
@@ -47,6 +54,9 @@ public class NetworkingManager : MonoBehaviour
     }
 
     public bool hideGui = false;
+    public bool RunTrailSequenceAutomatically;
+    public int CurrentTrailIndex;
+
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.Escape))
@@ -70,7 +80,7 @@ public class NetworkingManager : MonoBehaviour
         }
     }
 
-    public InstantStartHostParameters InstantStartParams;
+    public Trail[] trails;
 
     void OnGUI()
     {
@@ -78,24 +88,24 @@ public class NetworkingManager : MonoBehaviour
         {
             if (_netSystem == null)
             {
-                if (InstantStartParams.SkipSelectionScreen)
+                if (RunTrailSequenceAutomatically)
                 {
-                    _netSystem = new Host(_levelManager, _playerSystem, _aiCarSystem, _logger, _fixedLogger, InstantStartParams);
+                    _netSystem = new Host(_levelManager, _playerSystem, _aiCarSystem, _logger, _fixedLogger, trails[CurrentTrailIndex]);
                 }
             } else
             {
-                _netSystem.OnGUI();
+                _netSystem.OnGUI(RunTrailSequenceAutomatically);
             }
         }
         else
         {
             if (_netSystem == null)
             {
-                if (InstantStartParams.SkipSelectionScreen || GUILayout.Button("Start Host"))
+                if (RunTrailSequenceAutomatically || GUILayout.Button("Start Host"))
                 {
-                    _netSystem = new Host(_levelManager, _playerSystem, _aiCarSystem, _logger, _fixedLogger, InstantStartParams);
+                    _netSystem = new Host(_levelManager, _playerSystem, _aiCarSystem, _logger, _fixedLogger, trails[CurrentTrailIndex]);
                 }
-                if (!InstantStartParams.SkipSelectionScreen && GUILayout.Button("Start Client"))
+                if (!RunTrailSequenceAutomatically && GUILayout.Button("Start Client"))
                 {
                     _netSystem = new Client(_levelManager, _playerSystem, _aiCarSystem, _logger, _fixedLogger);
                 }
@@ -104,7 +114,7 @@ public class NetworkingManager : MonoBehaviour
             }
             else
             {
-                _netSystem.OnGUI();
+                _netSystem.OnGUI(RunTrailSequenceAutomatically);
             }
         }
     }

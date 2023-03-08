@@ -71,6 +71,7 @@ MonoBehaviour:
   brakingAcceleration: 0
   YieldingEyeContactSince: 0
   YieldingEyeContactUntil: 0
+  customBehaviourData: []
 --- !u!1 &146842869827515113
 GameObject:
   m_ObjectHideFlags: 0
@@ -142,6 +143,7 @@ MonoBehaviour:
   brakingAcceleration: 0
   YieldingEyeContactSince: 0
   YieldingEyeContactUntil: 0
+  customBehaviourData: []
 --- !u!1 &1027539855139823477
 GameObject:
   m_ObjectHideFlags: 0
@@ -213,6 +215,7 @@ MonoBehaviour:
   brakingAcceleration: 0
   YieldingEyeContactSince: 0
   YieldingEyeContactUntil: 0
+  customBehaviourData: []
 --- !u!1 &1302409802290974548
 GameObject:
   m_ObjectHideFlags: 0
@@ -343,6 +346,7 @@ MonoBehaviour:
   brakingAcceleration: 0
   YieldingEyeContactSince: 0
   YieldingEyeContactUntil: 0
+  customBehaviourData: []
 --- !u!1 &2168641719670733936
 GameObject:
   m_ObjectHideFlags: 0
@@ -414,6 +418,7 @@ MonoBehaviour:
   brakingAcceleration: 0
   YieldingEyeContactSince: 0
   YieldingEyeContactUntil: 0
+  customBehaviourData: []
 --- !u!1 &2424835329859469520
 GameObject:
   m_ObjectHideFlags: 0
@@ -540,6 +545,7 @@ MonoBehaviour:
   brakingAcceleration: 0
   YieldingEyeContactSince: 0
   YieldingEyeContactUntil: 0
+  customBehaviourData: []
 --- !u!1 &5875765012252895676
 GameObject:
   m_ObjectHideFlags: 0
@@ -611,6 +617,7 @@ MonoBehaviour:
   brakingAcceleration: 0
   YieldingEyeContactSince: 0
   YieldingEyeContactUntil: 0
+  customBehaviourData: []
 --- !u!1 &5894139190998477782
 GameObject:
   m_ObjectHideFlags: 0
@@ -682,6 +689,7 @@ MonoBehaviour:
   brakingAcceleration: 0
   YieldingEyeContactSince: 0
   YieldingEyeContactUntil: 0
+  customBehaviourData: []
 --- !u!1 &5963660777582140830
 GameObject:
   m_ObjectHideFlags: 0
@@ -736,6 +744,7 @@ MonoBehaviour:
     VehicleType: 0
     color: {r: 0.3584906, g: 0.3584906, b: 0.3584906, a: 1}
     Labeled: 0
+    customBehaviours: []
 --- !u!1 &6354124181253120645
 GameObject:
   m_ObjectHideFlags: 0
@@ -807,6 +816,7 @@ MonoBehaviour:
   brakingAcceleration: 0
   YieldingEyeContactSince: 0
   YieldingEyeContactUntil: 0
+  customBehaviourData: []
 --- !u!1 &6570145443420684806
 GameObject:
   m_ObjectHideFlags: 0
@@ -861,6 +871,7 @@ MonoBehaviour:
     VehicleType: 0
     color: {r: 0.13207549, g: 0.13207549, b: 0.13207549, a: 1}
     Labeled: 0
+    customBehaviours: []
 --- !u!1 &6837166344677664653
 GameObject:
   m_ObjectHideFlags: 0
@@ -915,6 +926,7 @@ MonoBehaviour:
     VehicleType: 0
     color: {r: 0.403612, g: 0.6509434, b: 0, a: 1}
     Labeled: 0
+    customBehaviours: []
 --- !u!1 &7121556936651569122
 GameObject:
   m_ObjectHideFlags: 0
@@ -986,6 +998,7 @@ MonoBehaviour:
   brakingAcceleration: 0
   YieldingEyeContactSince: 0
   YieldingEyeContactUntil: 0
+  customBehaviourData: []
 --- !u!1 &8644659577217367661
 GameObject:
   m_ObjectHideFlags: 0
@@ -1057,6 +1070,7 @@ MonoBehaviour:
   brakingAcceleration: 0
   YieldingEyeContactSince: 0
   YieldingEyeContactUntil: 0
+  customBehaviourData: []
 --- !u!1 &9162310835079341718
 GameObject:
   m_ObjectHideFlags: 0
@@ -1133,6 +1147,16 @@ PrefabInstance:
       propertyPath: speed
       value: 45
       objectReference: {fileID: 0}
+    - target: {fileID: 4929907188672532565, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: carSpawners.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4929907188672532565, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: carSpawners.Array.data[0]
+      value: 
+      objectReference: {fileID: 1225540568301907044}
     - target: {fileID: 6249121930277638278, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
       propertyPath: speed
@@ -1141,12 +1165,12 @@ PrefabInstance:
     - target: {fileID: 6692014269374732414, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
       propertyPath: m_Name
-      value: 12_changing_lines_to_let_vehicle_behind Variant
+      value: 12_changing_lines_to_let_vehicle_behind
       objectReference: {fileID: 0}
     - target: {fileID: 7609667120526454229, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
       propertyPath: m_RootOrder
-      value: 7
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 7609667120526454229, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
