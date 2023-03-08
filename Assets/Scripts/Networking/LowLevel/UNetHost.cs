@@ -65,6 +65,11 @@ public class UNetHost
         }
     }
 
+    public void Shutdown()
+    {
+        _transport.Shutdown();
+    }
+
     //processing network messages comming from clients
     public void Update(MessageDispatcher dispatch)
     {

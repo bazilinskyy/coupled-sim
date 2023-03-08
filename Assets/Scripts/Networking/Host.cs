@@ -58,6 +58,11 @@ public class Host : NetworkSystem
         }
     }
 
+    public void Shutdown()
+    {
+        _host.Shutdown();
+    }
+
     //handles ping message
     private void OnPing(ISynchronizer sync, int srcPlayerId)
     {
