@@ -25,7 +25,7 @@ public class LevelManager
     List<int> _roles;
 
 
-    public void LoadLevelWithLocalPlayer(int experiment, int localPlayerIdx, List<int> roles)
+    public void LoadLevelWithLocalPlayer(int experiment, int localPlayerIdx, List<int> roles, NetworkingManager.Trail trail)
     {
         var expPrefab = Experiments[experiment];
         _mainLoadOp = SceneManager.LoadSceneAsync(expPrefab.Scene);
@@ -50,12 +50,16 @@ public class LevelManager
                     }
                 }
             }
+            foreach(IExperimentModifier em in ActiveExperiment.GetComponentsInChildren(typeof(IExperimentModifier)))
+            {
+                em.SetParameter(trail.experimentParameters);
+            }
             _mainLoadOp = null;
         };
     }
 
-    public void LoadLevelNoLocalPlayer(int experiment, List<int> playerStartingPositions)
+    public void LoadLevelNoLocalPlayer(int experiment, List<int> playerStartingPositions, NetworkingManager.Trail trail)
     {
-        LoadLevelWithLocalPlayer(experiment, 0, playerStartingPositions);
+        LoadLevelWithLocalPlayer(experiment, 0, playerStartingPositions, trail);
     }
 }
