@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.SceneManagement;
 
 //logic entry point 
 // - presents main menu
@@ -55,13 +56,28 @@ public class NetworkingManager : MonoBehaviour
 
     public bool hideGui = false;
     public bool RunTrailSequenceAutomatically;
-    public int CurrentTrailIndex;
+    static int CurrentTrailIndex;
+
+    void NextTrail()
+    {
+        CurrentTrailIndex++;
+        Destroy(gameObject);
+        if (CurrentTrailIndex < trails.Length)
+        {
+            (_netSystem as Host).Shutdown();
+            SceneManager.LoadScene(0);
+        } else
+        {
+            Application.Quit();
+        }
+    }
 
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.Escape))
         {
-            Application.Quit();
+            //Application.Quit();
+            NextTrail();
         }
         if (Input.GetKeyDown(KeyCode.Tab))
         {
