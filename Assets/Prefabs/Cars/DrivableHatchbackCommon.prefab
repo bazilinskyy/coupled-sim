@@ -3835,8 +3835,8 @@ BoxCollider:
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 1.5, y: 1.3018076, z: 2.73}
-  m_Center: {x: 0, y: 1, z: 0}
+  m_Size: {x: 1.5, y: 0.7, z: 2.73}
+  m_Center: {x: 0, y: 0.7, z: 0}
 --- !u!114 &7263647346857764255
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8044,7 +8044,7 @@ LensFlare:
   m_FadeSpeed: 1000000
   m_IgnoreLayers:
     serializedVersion: 2
-    m_Bits: 6
+    m_Bits: 38
   m_Directional: 0
 --- !u!1 &2142647322278409482
 GameObject:
@@ -8192,6 +8192,54 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!1 &2485405892156156229
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7595925671314535359}
+  - component: {fileID: 9165446029431964024}
+  m_Layer: 0
+  m_Name: Flare
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7595925671314535359
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2485405892156156229}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0.536, y: -0.010999978, z: -0.075}
+  m_LocalScale: {x: 0.099999994, y: 0.099999994, z: 0.099999994}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4407007521647556340}
+  m_RootOrder: -1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!123 &9165446029431964024
+LensFlare:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2485405892156156229}
+  m_Enabled: 1
+  m_Flare: {fileID: 12100000, guid: 6620d560c047f0547a9d67e967de576d, type: 2}
+  m_Color: {r: 1, g: 0, b: 0, a: 0}
+  m_Brightness: 1
+  m_FadeSpeed: 1000000
+  m_IgnoreLayers:
+    serializedVersion: 2
+    m_Bits: 38
+  m_Directional: 0
 --- !u!1 &2493957153712446659
 GameObject:
   m_ObjectHideFlags: 0
@@ -10796,6 +10844,54 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!1 &5777495210941639737
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4992815445616826273}
+  - component: {fileID: 7443010111030790454}
+  m_Layer: 0
+  m_Name: Flare (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4992815445616826273
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5777495210941639737}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -0.536, y: -0.011, z: -0.07500005}
+  m_LocalScale: {x: 0.099999994, y: 0.099999994, z: 0.099999994}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4407007521647556340}
+  m_RootOrder: -1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!123 &7443010111030790454
+LensFlare:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5777495210941639737}
+  m_Enabled: 1
+  m_Flare: {fileID: 12100000, guid: 6620d560c047f0547a9d67e967de576d, type: 2}
+  m_Color: {r: 1, g: 0, b: 0, a: 0}
+  m_Brightness: 1
+  m_FadeSpeed: 1000000
+  m_IgnoreLayers:
+    serializedVersion: 2
+    m_Bits: 38
+  m_Directional: 0
 --- !u!1 &5819456327388400468
 GameObject:
   m_ObjectHideFlags: 0
@@ -11730,6 +11826,8 @@ Transform:
   m_Children:
   - {fileID: 2215876412812618657}
   - {fileID: 4946565233126741661}
+  - {fileID: 7595925671314535359}
+  - {fileID: 4992815445616826273}
   m_Father: {fileID: 3756334181715378006}
   m_RootOrder: -1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -13143,7 +13241,7 @@ LensFlare:
   m_FadeSpeed: 1000000
   m_IgnoreLayers:
     serializedVersion: 2
-    m_Bits: 6
+    m_Bits: 38
   m_Directional: 0
 --- !u!1 &8495491982309517740
 GameObject:
