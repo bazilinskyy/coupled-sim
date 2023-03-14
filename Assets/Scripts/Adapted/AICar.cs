@@ -151,7 +151,7 @@ public class AICar : MonoBehaviour, IVehicle
                 modelLocalRotation = Quaternion.Slerp(modelLocalRotation, Quaternion.Euler(-pitch, 0, 0), 0.5f);
             }
 
-            playerAvatar.SetBreakLights(set_acceleration < 0f && set_speed < speed);
+            playerAvatar.SetBreakLights(set_acceleration < 0f && (set_speed < speed || speed < 0.1f));
 
             if (acceleration != 0 && Mathf.Abs(speed) < Mathf.Abs(set_speed) * (1 + tolerance) + tolerance * 10 && Mathf.Abs(speed) > Mathf.Abs(set_speed) * (1 - tolerance) - tolerance * 10)
             {
