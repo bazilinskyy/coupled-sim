@@ -1556,6 +1556,7 @@ GameObject:
   - component: {fileID: 6495977335417210302}
   - component: {fileID: 7484532820057290028}
   - component: {fileID: 4574936833501624505}
+  - component: {fileID: 4529569132064545443}
   m_Layer: 0
   m_Name: Pedestrian_Eric
   m_TagString: Untagged
@@ -1613,7 +1614,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   moveSpeed: 1.6
-  dampingFactor: 0.05
+  HeightDampingFactor: 0.05
+  SpeedDampingFactor: 0.2
+  referenceSpeed: 1.6
+  animator: {fileID: 4670855384027296031}
 --- !u!114 &7484532820057290028
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1711,6 +1715,24 @@ MonoBehaviour:
   progressStyle: 0
   pointToPointThreshold: 4
   target: {fileID: 0}
+--- !u!143 &4529569132064545443
+CharacterController:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4670855384036770605}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Height: 2
+  m_Radius: 0.5
+  m_SlopeLimit: 45
+  m_StepOffset: 0.3
+  m_SkinWidth: 0.08
+  m_MinMoveDistance: 0.001
+  m_Center: {x: 0, y: 1, z: 0}
 --- !u!1 &4670855384036770607
 GameObject:
   m_ObjectHideFlags: 0
