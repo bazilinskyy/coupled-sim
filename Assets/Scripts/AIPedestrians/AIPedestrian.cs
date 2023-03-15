@@ -25,6 +25,7 @@ public class AIPedestrian : MonoBehaviour
             }
         }
         currentSpeed = moveSpeed;
+//        animator.SetBool("Walking", moveSpeed > 0.01f);
     }
 
     // Smoothing rate dictates the proportion of source remaining after one second
@@ -42,7 +43,7 @@ public class AIPedestrian : MonoBehaviour
         rot.y = steer.y;
         transform.eulerAngles = rot;
         var pos = transform.position;
-        pos += transform.forward * currentSpeed * Time.deltaTime;
+        pos += transform.forward * moveSpeed * Time.deltaTime;
         if (Physics.Raycast(pos + Vector3.up, Vector3.down, out RaycastHit hitInfo, 2))
         {
             pos.y = Damp(pos.y, hitInfo.point.y, HeightDampingFactor, Time.deltaTime);
@@ -58,5 +59,6 @@ public class AIPedestrian : MonoBehaviour
             return;
         }
         moveSpeed = speedSettings.targetSpeed;
+        //        animator.SetBool("Walking", moveSpeed > 0.01f);
     }
 }
