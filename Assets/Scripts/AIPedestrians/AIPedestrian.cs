@@ -4,7 +4,8 @@ using UnityStandardAssets.Utility;
 public class AIPedestrian : MonoBehaviour
 {
     WaypointProgressTracker _tracker;
-    float _startYPosition;
+    public float moveSpeed = 1;
+    public float dampingFactor = 0.1f;
 
     public void Init(WaypointCircuit circuit)
     {
@@ -12,7 +13,12 @@ public class AIPedestrian : MonoBehaviour
         _tracker = GetComponent<WaypointProgressTracker>();
         _tracker.enabled = true;
         _tracker.Init(circuit);
-        _startYPosition = transform.position.y;
+    }
+
+    // Smoothing rate dictates the proportion of source remaining after one second
+    public static float Damp(float source, float target, float smoothing, float dt)
+    {
+        return Mathf.Lerp(source, target, 1 - Mathf.Pow(smoothing, dt));
     }
 
     private void Update()
@@ -22,7 +28,11 @@ public class AIPedestrian : MonoBehaviour
         rot.y = steer.y;
         transform.eulerAngles = rot;
         var pos = transform.position;
-        pos.y = _startYPosition;
+        pos += transform.forward * moveSpeed * Time.deltaTime;
+        if (Physics.Raycast(pos + Vector3.up, Vector3.down, out RaycastHit hitInfo, 2))
+        {
+            pos.y = Damp(pos.y, hitInfo.point.y, dampingFactor, Time.deltaTime);
+        }
         transform.position = pos;
     }
 }
