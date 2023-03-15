@@ -2689,6 +2689,7 @@ GameObject:
   - component: {fileID: 74465175}
   - component: {fileID: 74465174}
   - component: {fileID: 74465173}
+  - component: {fileID: -5704615701825321326}
   m_Layer: 0
   m_Name: Pedestrian_BlueSuit
   m_TagString: Untagged
@@ -2711,7 +2712,7 @@ Transform:
   - {fileID: 3383969968974659045}
   - {fileID: 3383969968974659043}
   m_Father: {fileID: 0}
-  m_RootOrder: 5
+  m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!95 &3383969968982069791
 Animator:
@@ -2723,7 +2724,7 @@ Animator:
   m_GameObject: {fileID: 3383969968974815707}
   m_Enabled: 0
   m_Avatar: {fileID: 9000000, guid: e6ab94ea3d7bfb840aa41680fa79570e, type: 3}
-  m_Controller: {fileID: 9100000, guid: c7bdd68d8ab8a594bb8dae9a5e3d21ab, type: 2}
+  m_Controller: {fileID: 9100000, guid: ef15501e87d5f4e46a222f6980d72a7e, type: 2}
   m_CullingMode: 1
   m_UpdateMode: 0
   m_ApplyRootMotion: 1
@@ -2745,6 +2746,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 916bdf3837ede4f489fbd85740d74194, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  moveSpeed: 1.6
+  HeightDampingFactor: 0.05
+  SpeedDampingFactor: 0.2
+  referenceSpeed: 1.6
+  animator: {fileID: 3383969968982069791}
 --- !u!114 &74465174
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2757,8 +2763,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: be2a9436c04c27b49bb907645aba70e1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  DriverPuppet: {fileID: 0}
-  PassengerPuppet: {fileID: 0}
   VRModeElements:
     gameObjects: []
     monoBehaviours: []
@@ -2783,6 +2787,17 @@ MonoBehaviour:
     gameObjects: []
     monoBehaviours: []
     collider: {fileID: 0}
+  AV:
+    gameObjects: []
+    monoBehaviours: []
+    collider: {fileID: 0}
+  MDV:
+    gameObjects: []
+    monoBehaviours: []
+    collider: {fileID: 0}
+  Internal: {fileID: 0}
+  External: {fileID: 0}
+  cameras: []
   HMISlots:
     Hood: {fileID: 0}
     Top: {fileID: 0}
@@ -2821,6 +2836,8 @@ MonoBehaviour:
   - {fileID: 3383969968974658657}
   - {fileID: 3383969968974658655}
   _carBlinkers: {fileID: 0}
+  stopLights: {fileID: 0}
+  frontLights: {fileID: 0}
 --- !u!114 &74465173
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2841,6 +2858,24 @@ MonoBehaviour:
   progressStyle: 0
   pointToPointThreshold: 4
   target: {fileID: 0}
+--- !u!143 &-5704615701825321326
+CharacterController:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3383969968974815707}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Height: 2
+  m_Radius: 0.5
+  m_SlopeLimit: 45
+  m_StepOffset: 0.3
+  m_SkinWidth: 0.08
+  m_MinMoveDistance: 0.001
+  m_Center: {x: 0, y: 1, z: 0}
 --- !u!1 &3383969968974815709
 GameObject:
   m_ObjectHideFlags: 0
