@@ -6,4 +6,5 @@ public class PedestrianWaypoint : MonoBehaviour
 {
     public AIPedestrian target;
     public float targetSpeed = 1.6f;
+    public float targetBlendFactor = 1f;
 }

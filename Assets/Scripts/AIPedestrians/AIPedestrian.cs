@@ -4,11 +4,11 @@ using UnityStandardAssets.Utility;
 public class AIPedestrian : MonoBehaviour
 {
     WaypointProgressTracker _tracker;
-    public float moveSpeed = 1;
-    float currentSpeed;
+    public float moveSpeed = 1.6f;
+    public float animationBlendFactor = 1f;
+    float currentBlendFactor = 1f;
     public float HeightDampingFactor = 0.05f;
     public float SpeedDampingFactor = 0.05f;
-    public float referenceSpeed = 1.6f;
     public Animator animator;
     public void Init(WaypointCircuit circuit)
     {
@@ -24,7 +24,7 @@ public class AIPedestrian : MonoBehaviour
                 speedSettings.target = this;
             }
         }
-        currentSpeed = moveSpeed;
+        currentBlendFactor = animationBlendFactor;
 //        animator.SetBool("Walking", moveSpeed > 0.01f);
     }
 
@@ -36,8 +36,8 @@ public class AIPedestrian : MonoBehaviour
 
     private void Update()
     {
-        currentSpeed = Damp(currentSpeed, moveSpeed, SpeedDampingFactor, Time.deltaTime);
-        animator.SetFloat("Speed", currentSpeed / referenceSpeed);
+        currentBlendFactor = Damp(currentBlendFactor, animationBlendFactor, SpeedDampingFactor, Time.deltaTime);
+        animator.SetFloat("Speed", currentBlendFactor);
         var steer = Quaternion.LookRotation(_tracker.target.position - transform.position, Vector3.up).eulerAngles;
         var rot = transform.eulerAngles;
         rot.y = steer.y;
@@ -59,6 +59,6 @@ public class AIPedestrian : MonoBehaviour
             return;
         }
         moveSpeed = speedSettings.targetSpeed;
-        //        animator.SetBool("Walking", moveSpeed > 0.01f);
+        animationBlendFactor = speedSettings.targetBlendFactor;
     }
 }
