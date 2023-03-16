@@ -388,6 +388,8 @@ public class LogConverter
                     frame.PedestrianPositions.Add(reader.ReadListVector3());
                     frame.PedestrianRotations.Add(reader.ReadListQuaternion());
                     _ = reader.ReadInt32(); // Blinkers, unused
+                    _ = reader.ReadBoolean(); //high-beam, unused
+                    _ = reader.ReadBoolean(); //stop lights, unused
                 }
                 for (int i = 0; i < numCarLights; i++)
                 {
