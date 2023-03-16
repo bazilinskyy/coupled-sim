@@ -167,6 +167,7 @@ public class NetworkingManager : MonoBehaviour
         recorder.StartRecording(_levelManager.GetFilename(trail));
         yield return new WaitForSeconds(trail.recordingDuration);
         recorder.StopRecording();
+        yield return null;
         NextTrail();
     }
 }
