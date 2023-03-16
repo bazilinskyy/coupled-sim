@@ -60,6 +60,8 @@ public class NetworkingManager : MonoBehaviour
 
     public bool hideGui = false;
     public bool RunTrailSequenceAutomatically;
+    public bool recordVideos = false;
+
     static int CurrentTrailIndex;
 
     void NextTrail()
@@ -156,7 +158,9 @@ public class NetworkingManager : MonoBehaviour
     internal void StartRecording()
     {
 #if UNITY_EDITOR
-        StartCoroutine(RecordAndRunNextTrail());
+        if (recordVideos) {
+            StartCoroutine(RecordAndRunNextTrail());
+        }
 #endif
     }
 
