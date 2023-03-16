@@ -46,6 +46,7 @@ public struct ExperimentRoleDefinition
 
 public class ExperimentDefinition : MonoBehaviour
 {
+    public string ShortName;
     //the name of the experiment
     public string Name;
     //Unity scene name to be loaded as an experiment environment

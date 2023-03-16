@@ -61,6 +61,7 @@ public class Host : NetworkSystem
     public void Shutdown()
     {
         _host.Shutdown();
+        _currentState = NetState.Disconnected;
     }
 
     //handles ping message
@@ -202,7 +203,7 @@ public class Host : NetworkSystem
 
     bool started;
     //initializes experiment - sets it up locally and broadcasts experiment configuration message
-    void PrepareSimulatiion()
+    void PrepareSimulation()
     {
         if (started)
         {
@@ -307,8 +308,11 @@ public class Host : NetworkSystem
                         }
                         GUILayout.Label(playerReadyStr);
                         GUILayout.Label(playerRolesStr);
-                        if (GUILayout.Button("Start simulation"))
+                        if (GUILayout.Button("Start simulation") || RunTrailSequenceAutomatically)
                         {
+                            if (!startSimulation) {
+                                NetworkingManager.Instance.StartRecording();
+                            }
                             startSimulation = true;
                         }
                     }
@@ -316,7 +320,7 @@ public class Host : NetworkSystem
                     {
                         if (RunTrailSequenceAutomatically)
                         {
-                            PrepareSimulatiion();
+                            PrepareSimulation();
                             PlayerRolesGUI(RunTrailSequenceAutomatically);
                             _playerSys.SelectMode(currentTrail.InputMode);
                         }
@@ -325,7 +329,7 @@ public class Host : NetworkSystem
                             //GUI.enabled = AllRolesSelected();
                             if (GUILayout.Button("Start Game"))
                             {
-                                PrepareSimulatiion();
+                                PrepareSimulation();
                             }
                             GUI.enabled = true;
                             GUILayout.Label("Experiment:");

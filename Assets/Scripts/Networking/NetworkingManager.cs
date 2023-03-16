@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System;
+using System.Collections;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 
 //logic entry point 
@@ -20,6 +22,8 @@ public class NetworkingManager : MonoBehaviour
         public int roleIndex;
         public PlayerSystem.InputMode InputMode;
         public ExperimentParameter [] experimentParameters;
+        public float recordingStartTime;
+        public float recordingDuration;
     }
 
     public static NetworkingManager Instance
@@ -68,7 +72,11 @@ public class NetworkingManager : MonoBehaviour
             SceneManager.LoadScene(0);
         } else
         {
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#else
             Application.Quit();
+#endif
         }
     }
 
@@ -97,6 +105,7 @@ public class NetworkingManager : MonoBehaviour
     }
 
     public Trail[] trails;
+    public Recorder recorder;
 
     void OnGUI()
     {
@@ -143,5 +152,21 @@ public class NetworkingManager : MonoBehaviour
         }
         _logger.EndLog();
         _fixedLogger.EndLog();
+    }
+
+    internal void StartRecording()
+    {
+        var trail = trails[CurrentTrailIndex];
+        StartCoroutine(RecordAndRunNextTrail(trail));
+    }
+
+    private IEnumerator RecordAndRunNextTrail(Trail trail)
+    {
+        recorder.Init();
+        yield return new WaitForSeconds(trail.recordingStartTime);
+        recorder.StartRecording(_levelManager.GetFilename(trail));
+        yield return new WaitForSeconds(trail.recordingDuration);
+        recorder.StopRecording();
+        NextTrail();
     }
 }
