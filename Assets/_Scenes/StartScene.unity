@@ -245,6 +245,7 @@ GameObject:
   - component: {fileID: 301934533}
   - component: {fileID: 301934534}
   - component: {fileID: 301934535}
+  - component: {fileID: 301934536}
   m_Layer: 0
   m_Name: Managers
   m_TagString: Untagged
@@ -309,20 +310,24 @@ MonoBehaviour:
   - {fileID: 2308720202718575136, guid: 0fb3950a4dc9b244c8e697cac2503993, type: 3}
   hideGui: 1
   RunTrailSequenceAutomatically: 1
-  CurrentTrailIndex: 0
   trails:
-  - experimentIndex: 15
+  - experimentIndex: 0
     roleIndex: 0
     InputMode: 0
     experimentParameters:
     - name: target_labeled
       value: true
+    recordingStartTime: 15
+    recordingDuration: 5
   - experimentIndex: 19
     roleIndex: 0
     InputMode: 0
     experimentParameters:
     - name: target_labeled
       value: false
+    recordingStartTime: 15
+    recordingDuration: 5
+  recorder: {fileID: 301934536}
 --- !u!114 &301934534
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -353,6 +358,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5f320a49bc72c234b9dff48d5a15b071, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &301934536
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 301934531}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fc12e3395867a11429807fc8d01881e3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  directory: videos
 --- !u!1 &1256699364
 GameObject:
   m_ObjectHideFlags: 0
