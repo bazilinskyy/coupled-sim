@@ -21,15 +21,18 @@ If you use coupled-sim for academic work please cite the following paper:
 
 The coupled simulator supports both day and night-time settings. Figure above shows a view of the night mode. Figure below shows the top view of the environment. It is a model of a city centre containing:
 - Network of 2-lane roads
+- Loop of 4-lane road (partially surounded by buildings)
+- Loop of 6-lane road (partially surounded by buildings)
+- Half-clover interchange
 - 10 intersections with traffic lights that can be turned on and off before the experiment or programmatically in real-time
 - 34 zebra crossings
 - Static objects (buildings, parked cars, trees)
-- Advertisements (programmable and can be used as visual distractions)
 
 Drivable cars:
-- small (similar to Smart Fortwo)
-- medium (similar to Pontiac GTO)
-- large (similar to Nissan Datsun)
+- small (similar to Smart Fortwo) - DrivableSmartCommon
+- medium (similar to Ford Focus 2011) - DrivableHatchbackCommon
+~~- medium (similar to Pontiac GTO)~~
+~~- large (similar to Nissan Datsun)~~
 
 Cars that are not controlled by the human participants can be instructed to follow a trajectory before the experiment or can be programmed to respond to other road users.
 
@@ -39,7 +42,7 @@ Cars that are not controlled by the human participants can be instructed to foll
 The coupled simulator supports a keyboard and a gaming steering wheel as input sources for the driver of the manual car, a keyboard for the passenger of the AV to control the external human-machine interface, and a motion suit for the pedestrian. At the moment, supported motion suit is Xsens Motion Suit.
 
 #### Output
-The supported sources of output are a head-mounted display (HMD) and computer screen for the driver, a computer screen for the passenger, and a head-mounted display for the pedestrian. At the moment, supported HDM is Oculus Rift CV1.
+The supported sources of output are a head-mounted display (HMD) and computer screen for the driver, a computer screen for the passenger, and a head-mounted display for the pedestrian. ~~At the moment, supported HDM is Oculus Rift CV1.~~
 
 #### Networking and data logging
 The current number of human participants supported by the coupled simulator is three. However, this number can be expanded up to the number of agents supported by the network. Synchronization in a local network is handled by a custom-made network manager designed to support the exchange of information between agents with low latency and real-time data logging at 50 Hz for variables from the Unity environment and up to 700Hz from the motion suit. The data that are logged include the three-dimensional position and rotation of the manual car and the AV, the use of blinkers by the driver of the manual car, and 150 position and angular variables from the motion suit. The data are stored in binary format, and the coupled simulator contains a function to convert the saved data into a CSV file. 
