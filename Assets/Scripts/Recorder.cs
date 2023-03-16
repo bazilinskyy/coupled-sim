@@ -2,15 +2,18 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
+#if UNITY_EDITOR
 using UnityEditor.Recorder;
 using UnityEditor.Recorder.Input;
+#endif
 
 public class Recorder : MonoBehaviour
 {
+    public string directory = "videos";
+#if UNITY_EDITOR
     RecorderController recorderController; // control interface for recording video
     RecorderControllerSettings controllerSettings;
     MovieRecorderSettings videoRecorder;
-    public string directory = "videos";
 
     public void Init()
     {
@@ -46,4 +49,5 @@ public class Recorder : MonoBehaviour
     {
         recorderController.StopRecording();
     }
+#endif
 }
