@@ -379,14 +379,14 @@ namespace UnityStandardAssets.Utility.Inspector
             var circuit = circuitObject.targetObject as WaypointCircuit;
             StringBuilder sb = new StringBuilder();
             sb.Append($"Smooth: {circuit.smoothRoute}\n");
-            sb.Append($"name;tag;layer;x;y;z;rotX;rotY;rotZ;" +
+            sb.Append($"name;tag;layer;x;y;z;rotX;rotY;rotZ;scaleX;scaleY;scaleZ;" +
                 $"waypointType;speed;acceleration;blinkerState;jerk;causeToYield;lookAtPlayerWhileYielding;lookAtPlayerAfterYielding;yieldTime;brakingAcceleration;lookAtPedFromSeconds;lookAtPedToSeconds;customBehaviourDataString;" +
                 $"collider_enabled;isTrigger;centerX;centerY;centerZ;sizeX;sizeY;sizeZ" +
                 $"\n");
             foreach (var wp in circuit.Waypoints)
             {
                 var go = wp.gameObject;
-                sb.Append($"{go.name};{go.tag};{go.layer};{wp.position.x};{wp.position.y};{wp.position.z};{wp.rotation.eulerAngles.x};{wp.rotation.eulerAngles.y};{wp.rotation.eulerAngles.z}");
+                sb.Append($"{go.name};{go.tag};{go.layer};{wp.position.x};{wp.position.y};{wp.position.z};{wp.rotation.eulerAngles.x};{wp.rotation.eulerAngles.y};{wp.rotation.eulerAngles.z};{wp.localScale.x};{wp.localScale.y};{wp.localScale.z}");
                 var s = wp.GetComponent<SpeedSettings>();
                 if (s != null)
                 {
@@ -503,6 +503,11 @@ namespace UnityStandardAssets.Utility.Inspector
                 if (DeserializeFloat(out rotation.x) && DeserializeFloat(out rotation.y) && DeserializeFloat(out rotation.z))
                 {
                     wp.transform.rotation = Quaternion.Euler(rotation);
+                }
+                Vector3 scale = default;
+                if (DeserializeFloat(out scale.x) && DeserializeFloat(out scale.y) && DeserializeFloat(out scale.z))
+                {
+                    wp.transform.localScale = scale;
                 }
 
                 var speedSettings = wp.GetComponent<SpeedSettings>();
