@@ -105,7 +105,6 @@ public class NetworkingManager : MonoBehaviour
     }
 
     public Trail[] trails;
-    public Recorder recorder;
 
     void OnGUI()
     {
@@ -156,12 +155,16 @@ public class NetworkingManager : MonoBehaviour
 
     internal void StartRecording()
     {
-        var trail = trails[CurrentTrailIndex];
-        StartCoroutine(RecordAndRunNextTrail(trail));
+#if UNITY_EDITOR
+        StartCoroutine(RecordAndRunNextTrail());
+#endif
     }
 
-    private IEnumerator RecordAndRunNextTrail(Trail trail)
+#if UNITY_EDITOR
+    public Recorder recorder;
+    private IEnumerator RecordAndRunNextTrail()
     {
+        var trail = trails[CurrentTrailIndex];
         recorder.Init();
         yield return new WaitForSeconds(trail.recordingStartTime);
         recorder.StartRecording(_levelManager.GetFilename(trail));
@@ -170,4 +173,6 @@ public class NetworkingManager : MonoBehaviour
         yield return null;
         NextTrail();
     }
+#endif
+
 }
