@@ -380,7 +380,7 @@ namespace UnityStandardAssets.Utility.Inspector
             StringBuilder sb = new StringBuilder();
             sb.Append($"Smooth: {circuit.smoothRoute}\n");
             sb.Append($"name;tag;layer;x;y;z;rotX;rotY;rotZ;" +
-                $"waypointType;speed;acceleration;jerk;causeToYield;lookAtPlayerWhileYielding;lookAtPlayerAfterYielding;yieldTime;brakingAcceleration;lookAtPedFromSeconds;lookAtPedToSeconds;" +
+                $"waypointType;speed;acceleration;blinkerState;jerk;causeToYield;lookAtPlayerWhileYielding;lookAtPlayerAfterYielding;yieldTime;brakingAcceleration;lookAtPedFromSeconds;lookAtPedToSeconds;customBehaviourDataString;" +
                 $"collider_enabled;isTrigger;centerX;centerY;centerZ;sizeX;sizeY;sizeZ" +
                 $"\n");
             foreach (var wp in circuit.Waypoints)
@@ -390,10 +390,10 @@ namespace UnityStandardAssets.Utility.Inspector
                 var s = wp.GetComponent<SpeedSettings>();
                 if (s != null)
                 {
-                    sb.Append($";{s.Type};{s.speed};{s.acceleration};{s.jerk};{s.causeToYield};{s.EyeContactWhileYielding};{s.EyeContactAfterYielding};{s.yieldTime};{s.brakingAcceleration};{s.YieldingEyeContactSince};{s.YieldingEyeContactUntil}");
+                    sb.Append($";{(int)s.Type};{s.speed};{s.acceleration};{(int)s.BlinkerState};{s.jerk};{s.causeToYield};{s.EyeContactWhileYielding};{s.EyeContactAfterYielding};{s.yieldTime};{s.brakingAcceleration};{s.YieldingEyeContactSince};{s.YieldingEyeContactUntil};{s.GetCustomBehaviourDataString()}");
                 } else
                 {
-                    sb.Append($";;;;;;;;;;;");
+                    sb.Append($";;;;;;;;;;;;;");
                 }
 
                 var b = wp.GetComponent<BoxCollider>();
@@ -511,6 +511,8 @@ namespace UnityStandardAssets.Utility.Inspector
                 speedSettings.Type = (SpeedSettings.WaypointType)type;
                 DeserializeFloat(out speedSettings.speed, SpeedSettings.Defaults.Speed);
                 DeserializeFloat(out speedSettings.acceleration, SpeedSettings.Defaults.Acceleration);
+                DeserializeInt(out int blinkerState, SpeedSettings.Defaults.BlinkerState);
+                speedSettings.BlinkerState = (BlinkerState)blinkerState;
                 DeserializeFloat(out speedSettings.jerk, SpeedSettings.Defaults.Jerk);
                 DeserializeBool(out speedSettings.causeToYield);
                 DeserializeBool(out speedSettings.EyeContactWhileYielding);
@@ -519,6 +521,18 @@ namespace UnityStandardAssets.Utility.Inspector
                 DeserializeFloat(out speedSettings.brakingAcceleration);
                 DeserializeFloat(out speedSettings.YieldingEyeContactSince);
                 DeserializeFloat(out speedSettings.YieldingEyeContactUntil);
+                DeserializeString(out string customBehaviourDataString);
+                if (!string.IsNullOrWhiteSpace(customBehaviourDataString))
+                {
+                    //Debug.LogWarning("Circuit could not be fully deserialized. Fill customBehaviourData with: " + customBehaviourDataString);
+                    var ids = customBehaviourDataString.Split("%");
+                    speedSettings.customBehaviourData = new CustomBehaviourData[ids.Length];
+                    for(int j = 0; j < ids.Length; j++)
+                    { 
+                        var id = ids[j].Split("#")[1];
+                        speedSettings.customBehaviourData[j] = EditorUtility.InstanceIDToObject(int.Parse(id)) as CustomBehaviourData;
+                    }
+                }
 
                 var boxCollider = wp.GetComponent<BoxCollider>();
 
@@ -539,6 +553,8 @@ namespace UnityStandardAssets.Utility.Inspector
                     boxCollider.size = size;
                 }
             }
+
+            circuitObject.ApplyModifiedProperties();
         }
         
 

@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -13,6 +14,7 @@ public class SpeedSettings : MonoBehaviour
         public const float Speed = 5;
         public const float Acceleration = 5;
         public const float Jerk = 0;
+        public const int BlinkerState = 0;
     }
 
     public enum WaypointType
@@ -22,6 +24,7 @@ public class SpeedSettings : MonoBehaviour
         Delete,
     }
 
+    [HideInInspector]
     public AICar targetAICar;
     //Simple Kinematics
     [FormerlySerializedAs("WaypointNumber")]
@@ -93,6 +96,19 @@ public class SpeedSettings : MonoBehaviour
         }
     }
 
+    internal string GetCustomBehaviourDataString()
+    {
+        string result = "";
+        foreach(var cbd in customBehaviourData)
+        {
+            if (!string.IsNullOrWhiteSpace(result))
+            {
+                result += "%";
+            }
+            result += (cbd.name + "#" + cbd.GetInstanceID());
+        }
+        return result;
+    }
 }
 //switch 
 //        {
