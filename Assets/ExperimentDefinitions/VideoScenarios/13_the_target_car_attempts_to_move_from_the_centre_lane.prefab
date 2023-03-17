@@ -52,7 +52,7 @@ MonoBehaviour:
     SpawnPassenger: 0
     Car: {fileID: 8343856187855894783, guid: 02b8c28a357f14a4b922a9b99b9763ae, type: 3}
     VehicleType: 0
-    color: {r: 0.13207549, g: 0.13207549, b: 0.13207549, a: 1}
+    color: {r: 0.4509804, g: 0.105882354, b: 0.105882354, a: 1}
     Labeled: 0
     customBehaviours: []
 --- !u!1 &377912063944603776
@@ -107,7 +107,7 @@ MonoBehaviour:
     SpawnPassenger: 0
     Car: {fileID: 7713759469045616529, guid: 1baf460ab026f1247ab4696be569ffae, type: 3}
     VehicleType: 0
-    color: {r: 0.403612, g: 0.6509434, b: 0, a: 1}
+    color: {r: 1, g: 1, b: 1, a: 1}
     Labeled: 0
     customBehaviours: []
 --- !u!1 &657471071379948179
@@ -162,7 +162,7 @@ MonoBehaviour:
     SpawnPassenger: 0
     Car: {fileID: 8343856187855894783, guid: 02b8c28a357f14a4b922a9b99b9763ae, type: 3}
     VehicleType: 0
-    color: {r: 0.3584906, g: 0.3584906, b: 0.3584906, a: 1}
+    color: {r: 0.4509804, g: 0.105882354, b: 0.105882354, a: 1}
     Labeled: 0
     customBehaviours: []
 --- !u!1 &685993080303961942
@@ -488,7 +488,7 @@ MonoBehaviour:
     SpawnPassenger: 0
     Car: {fileID: 8343856187855894783, guid: 02b8c28a357f14a4b922a9b99b9763ae, type: 3}
     VehicleType: 0
-    color: {r: 1, g: 1, b: 1, a: 1}
+    color: {r: 0.4509804, g: 0.105882354, b: 0.105882354, a: 1}
     Labeled: 0
     customBehaviours: []
 --- !u!1 &2664990497236973979
@@ -1546,6 +1546,51 @@ PrefabInstance:
       propertyPath: m_LocalPosition.z
       value: 145.3
       objectReference: {fileID: 0}
+    - target: {fileID: 1497051605553192712, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: spawnParams.color.b
+      value: 0.105882354
+      objectReference: {fileID: 0}
+    - target: {fileID: 1497051605553192712, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: spawnParams.color.g
+      value: 0.105882354
+      objectReference: {fileID: 0}
+    - target: {fileID: 1497051605553192712, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: spawnParams.color.r
+      value: 0.4509804
+      objectReference: {fileID: 0}
+    - target: {fileID: 1729822193991571252, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: spawnParams.color.b
+      value: 0.105882354
+      objectReference: {fileID: 0}
+    - target: {fileID: 1729822193991571252, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: spawnParams.color.g
+      value: 0.105882354
+      objectReference: {fileID: 0}
+    - target: {fileID: 1729822193991571252, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: spawnParams.color.r
+      value: 0.4509804
+      objectReference: {fileID: 0}
+    - target: {fileID: 3249017520540067400, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: spawnParams.color.b
+      value: 0.105882354
+      objectReference: {fileID: 0}
+    - target: {fileID: 3249017520540067400, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: spawnParams.color.g
+      value: 0.105882354
+      objectReference: {fileID: 0}
+    - target: {fileID: 3249017520540067400, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: spawnParams.color.r
+      value: 0.4509804
+      objectReference: {fileID: 0}
     - target: {fileID: 4016054981085874454, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
       propertyPath: speed
@@ -1566,6 +1611,21 @@ PrefabInstance:
       propertyPath: carSpawners.Array.data[0]
       value: 
       objectReference: {fileID: 1931804950976690865}
+    - target: {fileID: 5568425964077111568, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: spawnParams.color.b
+      value: 0.105882354
+      objectReference: {fileID: 0}
+    - target: {fileID: 5568425964077111568, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: spawnParams.color.g
+      value: 0.105882354
+      objectReference: {fileID: 0}
+    - target: {fileID: 5568425964077111568, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: spawnParams.color.r
+      value: 0.4509804
+      objectReference: {fileID: 0}
     - target: {fileID: 6249121930277638278, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
       propertyPath: speed
@@ -1576,15 +1636,45 @@ PrefabInstance:
       propertyPath: acceleration
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 6667184160205234603, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: spawnParams.color.b
+      value: 0.105882354
+      objectReference: {fileID: 0}
+    - target: {fileID: 6667184160205234603, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: spawnParams.color.g
+      value: 0.105882354
+      objectReference: {fileID: 0}
+    - target: {fileID: 6667184160205234603, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: spawnParams.color.r
+      value: 0.4509804
+      objectReference: {fileID: 0}
     - target: {fileID: 6692014269374732414, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
       propertyPath: m_Name
       value: 13_the_target_car_attempts_to_move_from_the_centre_lane
       objectReference: {fileID: 0}
+    - target: {fileID: 7506156050185607217, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: spawnParams.color.b
+      value: 0.105882354
+      objectReference: {fileID: 0}
+    - target: {fileID: 7506156050185607217, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: spawnParams.color.g
+      value: 0.105882354
+      objectReference: {fileID: 0}
+    - target: {fileID: 7506156050185607217, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: spawnParams.color.r
+      value: 0.4509804
+      objectReference: {fileID: 0}
     - target: {fileID: 7609667120526454229, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
       propertyPath: m_RootOrder
-      value: 6
+      value: 7
       objectReference: {fileID: 0}
     - target: {fileID: 7609667120526454229, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
@@ -1635,6 +1725,21 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8006462248766568790, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: spawnParams.color.b
+      value: 0.105882354
+      objectReference: {fileID: 0}
+    - target: {fileID: 8006462248766568790, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: spawnParams.color.g
+      value: 0.105882354
+      objectReference: {fileID: 0}
+    - target: {fileID: 8006462248766568790, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: spawnParams.color.r
+      value: 0.4509804
       objectReference: {fileID: 0}
     - target: {fileID: 8692043556341430772, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
