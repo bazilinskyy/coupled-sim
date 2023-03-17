@@ -139,8 +139,8 @@ MonoBehaviour:
   causeToYield: 1
   EyeContactWhileYielding: 0
   EyeContactAfterYielding: 0
-  yieldTime: 3
-  brakingAcceleration: -4
+  yieldTime: 1
+  brakingAcceleration: -8
   YieldingEyeContactSince: 0
   YieldingEyeContactUntil: 0
   customBehaviourData: []
@@ -268,7 +268,7 @@ MonoBehaviour:
     SpawnPassenger: 0
     Car: {fileID: 8343856187855894783, guid: 02b8c28a357f14a4b922a9b99b9763ae, type: 3}
     VehicleType: 0
-    color: {r: 0.46226418, g: 0.46226418, b: 0.46226418, a: 1}
+    color: {r: 0.4509804, g: 0.105882354, b: 0.105882354, a: 1}
     Labeled: 0
     customBehaviours: []
 --- !u!1 &1463441979547847007
@@ -895,7 +895,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4680991625445297066}
   m_LocalRotation: {x: -0, y: 1, z: -0, w: 0}
-  m_LocalPosition: {x: -278.76, y: 0, z: 112.9}
+  m_LocalPosition: {x: -278.76, y: 0, z: 118}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -922,7 +922,7 @@ MonoBehaviour:
     SpawnPassenger: 0
     Car: {fileID: 8343856187855894783, guid: 02b8c28a357f14a4b922a9b99b9763ae, type: 3}
     VehicleType: 0
-    color: {r: 0.6, g: 0.6, b: 0.6, a: 1}
+    color: {r: 0.4509804, g: 0.105882354, b: 0.105882354, a: 1}
     Labeled: 0
     customBehaviours: []
 --- !u!1 &5335729118563654368
@@ -1106,7 +1106,7 @@ MonoBehaviour:
     SpawnPassenger: 0
     Car: {fileID: 8343856187855894783, guid: 02b8c28a357f14a4b922a9b99b9763ae, type: 3}
     VehicleType: 0
-    color: {r: 0.3584906, g: 0.3584906, b: 0.3584906, a: 1}
+    color: {r: 0.4509804, g: 0.105882354, b: 0.105882354, a: 1}
     Labeled: 0
     customBehaviours: []
 --- !u!1 &5737214977953678747
@@ -1422,7 +1422,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6760577940668489250}
   m_LocalRotation: {x: -0, y: 1, z: -0, w: 0}
-  m_LocalPosition: {x: -277.92, y: 0, z: 136.2}
+  m_LocalPosition: {x: -277.92, y: 0, z: 137}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1449,7 +1449,7 @@ MonoBehaviour:
     SpawnPassenger: 0
     Car: {fileID: 8343856187855894783, guid: 02b8c28a357f14a4b922a9b99b9763ae, type: 3}
     VehicleType: 0
-    color: {r: 0.4509804, g: 0.105882354, b: 0.105882354, a: 1}
+    color: {r: 1, g: 1, b: 1, a: 1}
     Labeled: 0
     customBehaviours: []
 --- !u!1 &6776975317883972002
@@ -1703,7 +1703,7 @@ MonoBehaviour:
     SpawnPassenger: 0
     Car: {fileID: 8343856187855894783, guid: 02b8c28a357f14a4b922a9b99b9763ae, type: 3}
     VehicleType: 0
-    color: {r: 0.13207549, g: 0.13207549, b: 0.13207549, a: 1}
+    color: {r: 0.4509804, g: 0.105882354, b: 0.105882354, a: 1}
     Labeled: 0
     customBehaviours: []
 --- !u!1 &8624130844080936258
@@ -1845,8 +1845,8 @@ MonoBehaviour:
   causeToYield: 1
   EyeContactWhileYielding: 0
   EyeContactAfterYielding: 0
-  yieldTime: 3
-  brakingAcceleration: -2
+  yieldTime: 1
+  brakingAcceleration: -8
   YieldingEyeContactSince: 0
   YieldingEyeContactUntil: 0
   customBehaviourData: []
@@ -1880,20 +1880,65 @@ PrefabInstance:
       propertyPath: m_Name
       value: WP 007
       objectReference: {fileID: 0}
+    - target: {fileID: 1497051605553192712, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: spawnParams.color.b
+      value: 0.105882354
+      objectReference: {fileID: 0}
+    - target: {fileID: 1497051605553192712, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: spawnParams.color.g
+      value: 0.105882354
+      objectReference: {fileID: 0}
+    - target: {fileID: 1497051605553192712, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: spawnParams.color.r
+      value: 0.4509804
+      objectReference: {fileID: 0}
     - target: {fileID: 1711078203338839215, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
       propertyPath: spawnParams.color.b
-      value: 0.6
+      value: 0.105882354
       objectReference: {fileID: 0}
     - target: {fileID: 1711078203338839215, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
       propertyPath: spawnParams.color.g
-      value: 0.6
+      value: 0.105882354
       objectReference: {fileID: 0}
     - target: {fileID: 1711078203338839215, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
       propertyPath: spawnParams.color.r
-      value: 0.6
+      value: 0.4509804
+      objectReference: {fileID: 0}
+    - target: {fileID: 1729822193991571252, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: spawnParams.color.b
+      value: 0.105882354
+      objectReference: {fileID: 0}
+    - target: {fileID: 1729822193991571252, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: spawnParams.color.g
+      value: 0.105882354
+      objectReference: {fileID: 0}
+    - target: {fileID: 1729822193991571252, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: spawnParams.color.r
+      value: 0.4509804
+      objectReference: {fileID: 0}
+    - target: {fileID: 3249017520540067400, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: spawnParams.color.b
+      value: 0.105882354
+      objectReference: {fileID: 0}
+    - target: {fileID: 3249017520540067400, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: spawnParams.color.g
+      value: 0.105882354
+      objectReference: {fileID: 0}
+    - target: {fileID: 3249017520540067400, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: spawnParams.color.r
+      value: 0.4509804
       objectReference: {fileID: 0}
     - target: {fileID: 4016054981085874454, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
@@ -1903,7 +1948,7 @@ PrefabInstance:
     - target: {fileID: 4016054981085874454, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
       propertyPath: yieldTime
-      value: 3
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4016054981085874454, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
@@ -1918,7 +1963,7 @@ PrefabInstance:
     - target: {fileID: 4016054981085874454, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
       propertyPath: brakingAcceleration
-      value: -2
+      value: -8
       objectReference: {fileID: 0}
     - target: {fileID: 4463566463944099219, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
@@ -1980,6 +2025,21 @@ PrefabInstance:
       propertyPath: carSpawners.Array.data[0]
       value: 
       objectReference: {fileID: 8434170712261374}
+    - target: {fileID: 5568425964077111568, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: spawnParams.color.b
+      value: 0.105882354
+      objectReference: {fileID: 0}
+    - target: {fileID: 5568425964077111568, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: spawnParams.color.g
+      value: 0.105882354
+      objectReference: {fileID: 0}
+    - target: {fileID: 5568425964077111568, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: spawnParams.color.r
+      value: 0.4509804
+      objectReference: {fileID: 0}
     - target: {fileID: 6160369970805395860, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
       propertyPath: m_Name
@@ -1995,6 +2055,21 @@ PrefabInstance:
       propertyPath: acceleration
       value: 2
       objectReference: {fileID: 0}
+    - target: {fileID: 6667184160205234603, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: spawnParams.color.b
+      value: 0.105882354
+      objectReference: {fileID: 0}
+    - target: {fileID: 6667184160205234603, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: spawnParams.color.g
+      value: 0.105882354
+      objectReference: {fileID: 0}
+    - target: {fileID: 6667184160205234603, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: spawnParams.color.r
+      value: 0.4509804
+      objectReference: {fileID: 0}
     - target: {fileID: 6692014269374732414, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
       propertyPath: m_Name
@@ -2004,6 +2079,21 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalPosition.x
       value: 0.22
+      objectReference: {fileID: 0}
+    - target: {fileID: 7506156050185607217, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: spawnParams.color.b
+      value: 0.105882354
+      objectReference: {fileID: 0}
+    - target: {fileID: 7506156050185607217, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: spawnParams.color.g
+      value: 0.105882354
+      objectReference: {fileID: 0}
+    - target: {fileID: 7506156050185607217, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: spawnParams.color.r
+      value: 0.4509804
       objectReference: {fileID: 0}
     - target: {fileID: 7609667120526454229, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
@@ -2063,32 +2153,32 @@ PrefabInstance:
     - target: {fileID: 7958805930173492197, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
       propertyPath: spawnParams.color.b
-      value: 0.5943396
+      value: 0.105882354
       objectReference: {fileID: 0}
     - target: {fileID: 7958805930173492197, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
       propertyPath: spawnParams.color.g
-      value: 0.5943396
+      value: 0.105882354
       objectReference: {fileID: 0}
     - target: {fileID: 7958805930173492197, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
       propertyPath: spawnParams.color.r
-      value: 0.5943396
+      value: 0.4509804
       objectReference: {fileID: 0}
     - target: {fileID: 8006462248766568790, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
       propertyPath: spawnParams.color.b
-      value: 1
+      value: 0.105882354
       objectReference: {fileID: 0}
     - target: {fileID: 8006462248766568790, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
       propertyPath: spawnParams.color.g
-      value: 1
+      value: 0.105882354
       objectReference: {fileID: 0}
     - target: {fileID: 8006462248766568790, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
       propertyPath: spawnParams.color.r
-      value: 1
+      value: 0.4509804
       objectReference: {fileID: 0}
     - target: {fileID: 8043761391078894673, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
@@ -2174,16 +2264,16 @@ PrefabInstance:
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 7609667120526454229, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 5062022534589574594}
-    - targetCorrespondingSourceObject: {fileID: 7609667120526454229, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
-        type: 3}
-      insertIndex: -1
+      insertIndex: 2
       addedObject: {fileID: 5513124922493290858}
     - targetCorrespondingSourceObject: {fileID: 7609667120526454229, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
-      insertIndex: -1
+      insertIndex: 3
       addedObject: {fileID: 6077484909926485829}
+    - targetCorrespondingSourceObject: {fileID: 7609667120526454229, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5062022534589574594}
     - targetCorrespondingSourceObject: {fileID: 7609667120526454229, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
       insertIndex: -1
