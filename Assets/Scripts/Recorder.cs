@@ -9,7 +9,7 @@ using UnityEditor.Recorder.Input;
 
 public class Recorder : MonoBehaviour
 {
-    public string directory = "videos";
+    public string directory = "../../videos";
 #if UNITY_EDITOR
     RecorderController recorderController; // control interface for recording video
     RecorderControllerSettings controllerSettings;
