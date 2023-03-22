@@ -35,6 +35,7 @@ public class NetworkingManager : MonoBehaviour
     NetworkSystem _netSystem;
     LevelManager _levelManager;
     PlayerSystem _playerSystem;
+    public PlayerSystem PlayerSystem => _playerSystem;
     WorldLogger _logger;
     WorldLogger _fixedLogger;
     LogConverter _logConverter;
