@@ -80,10 +80,10 @@ public class PlayerSystem : MonoBehaviour
     {
         switch (type)
         {
-            case SpawnPointType.Pedestrian:
+            case SpawnPointType.PlayerControlledPedestrian:
                 return _AvatarPrefab;
-            case SpawnPointType.Driver:
-            case SpawnPointType.Passenger:
+            case SpawnPointType.PlayerControlingCar:
+            case SpawnPointType.PlayerInAIControlledCar:
                 return _AvatarPrefabDriver[carIdx];
             default:
                 Assert.IsFalse(true, $"Invalid SpawnPointType: {type}");
@@ -93,7 +93,7 @@ public class PlayerSystem : MonoBehaviour
 
     public void SpawnLocalPlayer(SpawnPoint spawnPoint, int player, ExperimentRoleDefinition role)
     {
-        bool isPassenger = spawnPoint.Type == SpawnPointType.Passenger;
+        bool isPassenger = spawnPoint.Type == SpawnPointType.PlayerInAIControlledCar;
         LocalPlayer = SpawnAvatar(spawnPoint, GetAvatarPrefab(spawnPoint.Type, role.carIdx), player, role);
         LocalPlayer.Initialize(false, PlayerInputMode, isPassenger ? ControlMode.Passenger : ControlMode.Driver, spawnPoint.VehicleType, spawnPoint.CameraIndex);
         if (isPassenger)
@@ -132,9 +132,11 @@ public class PlayerSystem : MonoBehaviour
         var cameraSetup = spawnPoint.Point.GetComponent<CameraSetup>();
         if (cameraSetup != null)
         {
-            var cam = avatar.GetComponentInChildren<Camera>();
-            cam.fieldOfView = cameraSetup.fieldOfView;
-            cam.transform.localRotation = Quaternion.Euler(cameraSetup.rotation);
+            foreach (var cam in avatar.GetComponentsInChildren<Camera>())
+            {
+                cam.fieldOfView = cameraSetup.fieldOfView;
+                cam.transform.localRotation = Quaternion.Euler(cameraSetup.rotation);
+            }
         }
         Avatars.Add(avatar);
         GetAvatarsOfType(avatar.Type).Add(avatar);

@@ -196,6 +196,7 @@ public class Host : NetworkSystem
     //displays role selection GUI
     void PlayerRolesGUI(bool RunTrailSequenceAutomatically)
     {
+        GUILayout.Label($"Role binding:");
         var roles = _lvlManager.Experiments[_selectedExperiment].Roles;
         SelectRoleGUI(Host.PlayerId, this, roles, RunTrailSequenceAutomatically);
         ForEachConnectedPlayer((player, host) => SelectRoleGUI(player, host, roles, RunTrailSequenceAutomatically));
@@ -327,7 +328,7 @@ public class Host : NetworkSystem
                         else
                         {
                             //GUI.enabled = AllRolesSelected();
-                            if (GUILayout.Button("Start Game"))
+                            if (GUILayout.Button("Initialize experiment"))
                             {
                                 PrepareSimulation();
                             }

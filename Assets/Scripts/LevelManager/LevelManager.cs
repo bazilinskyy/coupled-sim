@@ -63,9 +63,9 @@ public class LevelManager
         LoadLevelWithLocalPlayer(experiment, 0, playerStartingPositions, trail);
     }
 
-    internal string GetFilename(NetworkingManager.Trail currentTrail)
+    internal string GetFilename(NetworkingManager.Trail currentTrail, int currentTrailIndex)
     {
-        string result = Experiments[currentTrail.experimentIndex].ShortName + "_roleIdx-" + currentTrail.roleIndex;
+        string result = currentTrailIndex + "_" + Experiments[currentTrail.experimentIndex].ShortName + "_roleIdx-" + currentTrail.roleIndex;
         foreach(var param in currentTrail.experimentParameters)
         {
             result += ("_" + param.name + "-" + param.value);

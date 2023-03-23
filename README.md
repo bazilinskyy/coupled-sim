@@ -1,3 +1,4 @@
+
 # Coupled simulator for research on driver-pedestrian interactions made in Unity.
 ## Usage of the simulator
 The simulator is open-source and free to use. It is aimed for, but not limited to, academic research. We welcome forking of this repository, pull requests, and any contributions in the spirit of open science and open-source code :heart_eyes::smile: For enquiries about collaboration, you may contact p.bazilinskyy@tue.nl.
@@ -31,10 +32,10 @@ The coupled simulator supports both day and night-time settings. Figure above sh
 Drivable cars:
 - small (similar to Smart Fortwo) - DrivableSmartCommon
 - medium (similar to Ford Focus 2011) - DrivableHatchbackCommon
-~~- medium (similar to Pontiac GTO)~~
-~~- large (similar to Nissan Datsun)~~
+- ~~medium (similar to Pontiac GTO)~~
+- ~~large (similar to Nissan Datsun)~~
 
-Cars that are not controlled by the human participants can be instructed to follow a trajectory before the experiment or can be programmed to respond to other road users.
+Cars that are not controlled by the human participants can be instructed to follow a defined trajectory or can be programmed to respond at runtime to other road users.
 
 ![](ReadmeFiles/world_top_view.png)
 
@@ -45,7 +46,7 @@ The coupled simulator supports a keyboard and a gaming steering wheel as input s
 The supported sources of output are a head-mounted display (HMD) and computer screen for the driver, a computer screen for the passenger, and a head-mounted display for the pedestrian. ~~At the moment, supported HDM is Oculus Rift CV1.~~
 
 #### Networking and data logging
-The current number of human participants supported by the coupled simulator is three. However, this number can be expanded up to the number of agents supported by the network. Synchronization in a local network is handled by a custom-made network manager designed to support the exchange of information between agents with low latency and real-time data logging at 50 Hz for variables from the Unity environment and up to 700Hz from the motion suit. The data that are logged include the three-dimensional position and rotation of the manual car and the AV, the use of blinkers by the driver of the manual car, and 150 position and angular variables from the motion suit. The data are stored in binary format, and the coupled simulator contains a function to convert the saved data into a CSV file. 
+The current number of human participants supported by the coupled simulator is four (host and three clients). However, this number can be expanded up to the number of agents supported by the network. Synchronization in a local network is handled by a custom-made network manager designed to support the exchange of information between agents with low latency and real-time data logging at 50 Hz for variables from the Unity environment and up to 700Hz from the motion suit. The data that are logged include the three-dimensional position and rotation of the manual car and the AV, the use of blinkers, high-beam, stop light, and 150 position and angular variables from the motion suit. The data are stored in binary format, and the coupled simulator contains a function to convert the saved data into a CSV file. 
 Besides logging data to the binary file, the same set of frame data (in a very similar binary format) is being sent with requested intervals (that can be set with _NetworkingManger.RealtimeLogInterval_ property) during the simulation to UDP port 40131 on localhost. The data can be used to monitor the simulation with external tools at runtime. _Tools/log_receiver.py_ file contains an example python script that consumes binary data and assembles it into a structure that is easy to interact with.
 It should be started before starting the simulation with 'python3 log_receiver.py' from within the _Tools_ folder.
 The structure of the frame object (with example data) is as follows:
@@ -53,16 +54,20 @@ The structure of the frame object (with example data) is as follows:
 {
    "timestamp":1.711700439453125,
    "roundtrip":0.0,
-   "Driver [car index]":{ # single integer-indexed entry for a car avatar controlled pedestrian avatar
+   "Driver [car index]":{ # single integer-indexed entry for a player controlled car avatar
       "position":(-94.58521270751953, -0.056745946407318115, 64.8435287475586),
       "rotation":(0.5252280235290527, 90.8692626953125, 359.9905700683594),
       "blinker":0,
+      "front":false,
+      "stop":false,
       "rigidbody":(3.1246094703674316, -0.0026992361526936293, -0.046936508268117905)
    },
-   "Driver [car index]":{ # multiple integer-indexed entries for each AI-controller pedestrian avatar
+   "Driver [car index]":{ # multiple integer-indexed entries for each AI-controlled car avatars
       "position":(-112.08060455322266, -0.056995689868927, 21.383098602294922),
       "rotation":(0.5083497762680054, 157.48184204101562, -0.0032447741832584143),
       "blinker":0,
+      "front":false,
+      "stop":false,
       "rigidbody":(0.5082536935806274, -0.0017757670721039176, -1.2219140529632568),
       "speed":5.904001235961914,
       "braking":false,
@@ -70,16 +75,16 @@ The structure of the frame object (with example data) is as follows:
       "takeoff":false,
       "eyecontact":false
    },
-   "Pedestrian [pedestrian index]":{ # multiple integer-indexed entries for each player or AI-controller pedestrian avatar
+   "Pedestrian [pedestrian index]":{ # multiple integer-indexed entries for each player or AI-controlled pedestrian avatars
        "bone  [bone index]":{ # multiple integer-indexed entries for each bone of pedestrian rig
           "position":(-94.58521270751953, -0.056745946407318115, 64.8435287475586),
           "rotation":(0.5252280235290527, 90.8692626953125, 359.9905700683594)
        }
    },
-   "CarLight [car traffic light index]":{ # multiple integer-indexed entries for each cars traffic light
+   "CarLight [car traffic light index]":{ # multiple integer-indexed entries for each car's traffic light
       "state":"b""\\x00"
    },
-   "PedestrianLight [pedestrian traffic light index]":{ # multiple integer-indexed entries for each pedestrains traffic light
+   "PedestrianLight [pedestrian traffic light index]":{ # multiple integer-indexed entries for each pedestrain's traffic light
       "state":"b""\\x02"
    },
 }
@@ -89,36 +94,58 @@ The host agent may use _Visual syncing_ button to display a red bar across all c
 ## Installation
 The simualator was tested on Windows 10 and macOS Mojave. All functionality is supported by both platforms. However, support for input and output devices was tested only on Windows 10.
 
-After checking out this project, launch Unity Hub to run the simulator with the correct version of Unity (currently **2019.3.5f1**).
+After checking out this project, launch Unity Hub to run the simulator with the correct version of Unity (currently **2022.1.23f1**).
 
-## How to run
+## Running a project
 Select the project from the Unity Hub projects list. Wait until the project loads in. If it is not in the Unity Hub list (it is the first time you are running the project), it has to be added first - click *Add* and select a folder containing the project files.
-Once the project is loaded into the Unity editor press the Play button to run it.
+Once the project is loaded into the Unity editor open StartScene scene.  
 
-To start host press _Start Host_ button. 
-To start the client press _Start Client_ button, enter the host IP address and press _Connect_.
-Steps to run an experiment:
-1. Start host and wait for clients to join if needed.
-2. Once all clients have joined, on the host, select one of the experiments listed under _Experiment:_.
-3. On the host, assign roles to participants. If no role is selected, the participant will run a "headless" mode.
-4. On both host and clients, each participant has to select control mode.
-5. Start an experiment with the _Start Game_ button - all clients will load selected experiment.
-6. Once all connected clients are ready (the experiment scene is fully loaded), _Start simulation_ button on the host machine will start the simulation.
+### Running simulation as a host
+1. Make sure that all three checkboxes (_Hide Gui_, _Run Trail Sequence Automatically_, _Record Videos_) in _NetworkingManager_ component on _Managers_ game object are unchecked.
+2. Press the Play button to run enter _Play Mode_.
+3. Once in _Play Mode_, press _Start Host_ button. 
+4. If needed, wait for clients to join.
+5. Once all clients have connected to the host or in case the host is handling the only participant, select one of the experiments listed under _Experiment:_ section.
+6. Assign roles to participants in _Role binding_ section. If no role is selected, the participant will run a "headless" mode.
+7. Select one of control modes listed under _Mode_ section.
+8. Start an experiment with the _Initialize experiment_ button - all clients will load selected experiment.
+9. Once all connected clients are ready - the experiment scene is fully loaded on each client, press _Start simulation_ button.
 
-# Instant start parameters
-If the user wants to prepare a build that runs simulation instantly with a selected experiment and role, he is able to do so by setting parameters of the InstantStartHostParameters struct. It can be accessed and changed on a _StartScene_ (scene) -> _Managers_ (game object) -> _NetworkingManager_ (component) -> _InstantStartParams_ (field). The struct consists of the following fields:
-- _SelectedExperiment_: int variable which indicates a zero-based index of a selected experiment in _Experiments_ list (field in NetworkingManager component).
-- _SelectedRole_: int variable which indicates a zero-based index of a selected role in _Roles_ list (field in ExperimentDefinition component) of a selected experiment prefab.
-- _SkipSelectionScreen_: boolean variable, that if set to true makes the simulator run (as host) a selected experiment (with a selected role) right after the application is run - skipping experiment and role selection screen.
-- _InputMode_: enum variable, that selects the display and controller pair for the instant start build. 
+### Running simulation as a client
+1. Make sure that all three checkboxes - _Hide Gui_, _Run Trail Sequence Automatically_, _Record Videos_ (_Managers_ (game object) -> _NetworkingManager_ (component)), are unchecked.
+2. Press the Play button to run enter _Play Mode_.
+3. Once in _Play Mode_, press _Start Client_ button.
+2. Enter the host IP address. 
+3. Press _Connect_.
+4. Once connected, select one of control modes listed under _Mode_ section.
+4. Wait until host starts the simulation.
+
+### Running simulation trails automatically
+If the simulation only has one participant that is controlled on a host machine, simulation trails can be set up beforehand and run automatically. It is especially useful when using simulator to record videos for trails which is described in next section. Most of a times user should have any GUI disabled, which can be done by checking _Hide Gui_ checkbox. Gui can be enabled at runtime by pressing _Tab_ button on the keyboard.
+To run simulation trails automatiacally, both _Run Trail Sequence Automatically_ has to be checked and trail sequence has to be set up. Once it is done, press Play button to enter _Play Mode_ - first trail in the sequence should start automatically. To finish current trail and either start next one or exit simulator (if currently played trail the last one), press _Escape_ button on the keyboard.
+In order to set up trail sequence, user has to define entries on the _Trails_ list (_StartScene_ (scene) -> _Managers_ (game object) -> _NetworkingManager_ (component) -> _Trails_ (field)). Each entry consists of the following fields:
+- _ExperimentIndex_: int variable which indicates a zero-based index of a selected experiment in _Experiments_ list (_NetworkingManager_ (component) -> _Experiments_ (field)).
+- _RoleIndex_: int variable which indicates a zero-based index of a selected role in _Roles_ list (_ExperimentDefinition_ (component) -> _Roles_ (field)) of a selected experiment prefab.
+- _InputMode_: enum variable, that sets participants display/controller pair for the trail.
 Available values are:
 - _Flat_: use a flat-screen to display simulation and mouse&keyboard/gamepad/steering wheel to control it.
 - _VR_: use virtual reality headset to display simulation and mouse&keyboard/gamepad/steering wheel to control it.  
 - _Suite_: use virtual reality headset to display simulation and XSense suite to control it (only pedestrian avatar).
 ![](ReadmeFiles/Instant.png)
+Additional experiment parameters can be defined for each trail that would modify baseline scenario implemented in experiment. Parametes take form of name-value pair defined in _Experiment Parametes_ list. Those parameters are consumed by any enabled scripts contained in experiment prefab that implement _IExperimentModifier_ interface right after experiment is loaded and before simulation has started. An example of such a script is _EnableAVLabel_.
+
+### Recording trail videos
+Simulator is able to record trail videos for "offline" use. Most of the setup is the same as for automatical trails running described above. There are three additional steps that need to be taken to set up automatic trails recording.
+1. _Record Videos_ checkbox has to be checked.
+2. Each trail in _Trails_ list has to have _Recording Start Time_ and _Recording Duration_ defined. _Recording Start Time_ defines at which second after the trail has started video recording should start. _Recording Duration_ defines how long the recording will last. After recording is finished simulator will proceed to the next trail in the sequence.
+3. Following video output parameters can be set up in _Managers_ (game object) -> _Recorder_ (component):
+- _Directory_ - output directory relative to Application.dataPath (when running from Unity Editor it is _Assets_ folder).
+- _Resolution_ - videos output resolution
+- _Framerate_ - videos output framerate
+Filenames of recorded videos conform following naming scheme: {trail index}\_{ExperimentDefinition.ShortName}\_roleIdx-{role index}\_{multiple "\_" separated " paremeter name-value pairs}\_{date and time in "yy-MM-dd\_hh-mm" format}
 
 ## Configuration
-The central point for configuring the simulator is _Managers_ game object from the _StartScene_ scene. It has two components:
+The central point for simulators configuration are two major components on _Managers_ game object from the _StartScene_ scene:
 - _PlayerSystem_: gathering references to player avatar prefabs,
 - _NetworkingManager_: gathering references to experiment definitions and elements spawned during networked experiment runtime (currently only waypoint-tracking cars - _AICar_).
 
@@ -129,7 +156,7 @@ To make newly created experiment selectable you have to add its prefab to _Exper
 
 ![](ReadmeFiles/networking_manager.png)
 
-To edit the experiment definition, double click the prefab in the _Project_ window.
+To edit the experiment definition, double click the experiment prefab in the _Project_ window.
 
 ![](ReadmeFiles/project.png)
 
@@ -138,54 +165,55 @@ Prefab will be opened in edit mode along with the currently defined _Regular Pre
 ![](ReadmeFiles/project_settings.png)
 
 _ExperimentDefinition_ component defines the following fields:
+- _ShortName_: the short name of the experiment used in video recording output filenames
 - _Name_: the name of the experiment
 - _Scene_: Unity scene name to be loaded as an experiment environment
 - _Roles_: list defining roles that can be taken during an experiment by participants
 - _Points of Interest_: static points that are logged in experiment logs to be used in the log processing and analysis
-- _Car Spawners_: references to game objects spawning non-player controlled cars
-- _AI Pedestrians_: defines a list of _PedestrianDesc_ structs that contain a pair of an _AIPedestrian_ (the game object that defines an AI-controlled pedestrian avatar) and _WaypointCircuit_ (defining a path of waypoints for the linked avatar) 
+- _Car Spawners_: references to game objects spawning AI-controlled cars
+- _AI Pedestrians_: defines AI-controlled pedestrians behaviour with a list of _PedestrianDesc_ structs containing a pair of an _AIPedestrian_ (the game object that defines an AI-controlled pedestrian avatar) and _WaypointCircuit_ (defining a path of waypoints for the linked avatar) 
 
 _Points of interest_ is a list of _Transform_ references.
 _CarSpawners_ list references game objects containing component inheriting from _CarSpawnerBase_. It defines, with overridden _IEnumerator SpawnCoroutine()_  method, spawn sequence (see _TestSyncedCarSpawner_ for reference implementation). Car prefabs spawned by the coroutine with _AICar Spawn(CarSpawnParams parameters, bool yielding)_ method must be one of the referenced prefabs in _AvatarPrefabDriver_ list on _NetworkManager_ component. 
 
-_Base.prefab_ from _ExperimentDefinitions_ folder is an example experiment definition showcasing simulator features.
+_Base.prefab_ from _ExperimentDefinitions_ folder is an example experiment definition showcasing most of simulator features.
 
 ![](ReadmeFiles/experiment_definition.png)
 
 ### Configuration of agents
-Roles field is a list of _ExperimentRoleDefinition_ struct's defining experiment roles with the following base data fields:
+_Roles_ field is a list of _ExperimentRoleDefinition_ struct's defining experiment roles with the following base data fields:
 - _Name_: short name/description of the role
 - _SpawnPoint.Point_: defines where player avatar will be spawned
-- _SpawnPoint.Type_: a type of player avatar. It may be either _Pedestrian_, _Driver_, _Passenger_ of an autonomous car.
+- _SpawnPoint.Type_: a type of player avatar. It may be either _PlayerControlledPedestrian_, _PlayerControlingCar_, _PlayerInAIControlledCar_ of an autonomous car.
 
 #### Adding and removing agents
-To add a new agent either increase the size of Roles array or duplicate existing role by right-clicking on the role name and selecting Duplicate from the context menu.
+To add a new agent either increase the size of _Roles_ array or duplicate existing role by right-clicking on the role name and selecting Duplicate from the context menu.
 
 To remove the agent right click on the role name and select Delete from the context menu or decrease the list size removing end entries that don't fit the resized list.
 
 #### Configuration of starting location of agents
 Add a new game object to the prefab and set its position and rotation.
-Drag the newly created object to the _SpawnPoint.Point_ in role definition.
+Drag the newly created game object object to the _SpawnPoint.Point_ field in role definition.
 
-### Agent camera configuration
-Additionally to the location, camera settings can be provided for a spawned agent.
-_CameraSetup_ component allows doing that. It should be added to the game object that represents a position where the avatar will be spawned (the one defined in _ExperimentDefinition_ (component) -> _Roles_ (list field) -> role entry on the list -> _SpawnPoint_ (struct) -> _Point_ (field)).
+#### Agent camera configuration
+Avatar prefab can have multiple cameras defined (_PlayerAvatar_ (component) -> _Cameras_ (field)), for example for a driver and passenger position. Camera that will dispalying world for the avatar is defined by providing _SpawnPoint.CameraIndex_.
+Additionally to the location, additional camera settings can be provided for a spawned agent with  _CameraSetup_ component. The component can be added to the _SpawnPoint.Point_ game object.
 The component exposes two fields:
 - _FieldOfView_: value which is set at spawn-time to _Camera.fieldOfView_ property.
 - _Rotation_: value which is set at spawn-time to _Transform.localRotation_ of a game object hosting _Camera_ component.
 ![](ReadmeFiles/CameraSetup.png)
 
-#### Configuration of the pedestrian agent
+#### Configuration for pedestrain (_PlayerControlledPedestrian_) agents
 No additional configuration is needed for pedestrian type agents.
 
-#### Configuration of the driver agent
-For _Driver_ role following field has to be defined:
-- _CarIdx_ - points to a car prefab on the _AvatarPrefabDriver_ (field on _PlayerSystem_ component) list that will be spawned for this role. 
-
-#### Configuration of the passenger agent
-For _Passenger_ type of agent following additional fields has to be defined:
+#### Common configuration for car (_PlayerControlingCar_ and _PlayerInAIControlledCar_) agents
+Following additional fields has to be defined:
 - Car Idx - indicates car prefab that will be spawned for this role. Selected prefab is the one on the indicated index on _AvatarPrefabDriver_ list (field on _PlayerSystem_ component)
-- _TopHMI_, _WindshieldHMI_, _HoodHMI_ fields - define which HMI prefab to spawn on indicated spots
+- _VehicleType_ - indicates how spawned car will be configured. It may be either _AV_ or _MDV_. This parameter corresponds to _AV_ and _MDV_ sections in _PlayerAvatar_ component.
+
+#### Configuration for _PlayerInAIControlledCar_ agents
+Following additional fields has to be defined:
+- _TopHMI_, _WindshieldHMI_, _HoodHMI_ fields - defines which HMI prefab to spawn on corresponding spots. Spots are defined in player avatar prefabs (_PlayerAvatar_ (component) -> _HMI Slots_ (field)).
 - _AutonomusPath_ - references game object defining waypoints for the autonomous car via _WaypointCirciut_ component
 
 ### Configuration of non-playable characters
@@ -344,3 +372,6 @@ We have used the following free assets:
 | [Street Bench](https://assetstore.unity.com/packages/3d/props/exterior/street-bench-656) | Rakshi Games | Unity asset
 | [waste bin](https://assetstore.unity.com/packages/3d/waste-bin-73303) | Lowpoly_Master | Unity asset
 | [Smart fortwo](https://grabcad.com/library/smart-fortwo-1) | Filippo Citati | MIT
+| [Vehicle - Essentials](https://assetstore.unity.com/packages/audio/sound-fx/transportation/vehicle-essentials-194951) | Nox Sound | Unity asset
+| [Road System](https://assetstore.unity.com/packages/tools/level-design/road-system-192818) | Maxi Barmetler | Unity asset
+| [Kajaman's Roads - Free](https://assetstore.unity.com/packages/3d/environments/roadways/kajaman-s-roads-free-52628) | Kajaman | Unity asset
