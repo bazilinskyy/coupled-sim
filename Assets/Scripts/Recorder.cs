@@ -10,6 +10,8 @@ using UnityEditor.Recorder.Input;
 public class Recorder : MonoBehaviour
 {
     public string directory = "../../videos";
+    public Vector2Int resolution = new Vector2Int(3840, 2160);
+    public int framerate = 60;
 #if UNITY_EDITOR
     RecorderController recorderController; // control interface for recording video
     RecorderControllerSettings controllerSettings;
@@ -28,12 +30,12 @@ public class Recorder : MonoBehaviour
         RecorderOptions.VerboseMode = false;
         videoRecorder.ImageInputSettings = new GameViewInputSettings()
         {
-            OutputWidth = 3840,
-            OutputHeight = 2160
+            OutputWidth = resolution.x,
+            OutputHeight = resolution.y
         };
         videoRecorder.AudioInputSettings.PreserveAudio = true;
         controllerSettings.AddRecorderSettings(videoRecorder);
-        controllerSettings.FrameRate = 60;
+        controllerSettings.FrameRate = framerate;
 
     }
 

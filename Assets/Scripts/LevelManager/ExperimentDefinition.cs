@@ -4,9 +4,9 @@ using UnityStandardAssets.Utility;
 
 public enum SpawnPointType
 {
-    Pedestrian,
-    Driver,
-    Passenger
+    PlayerControlledPedestrian,
+    PlayerControlingCar,
+    PlayerInAIControlledCar
 }
 [Serializable]
 public struct SpawnPoint
