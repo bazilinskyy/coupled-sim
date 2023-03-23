@@ -172,7 +172,7 @@ public class NetworkingManager : MonoBehaviour
         var trail = trails[CurrentTrailIndex];
         recorder.Init();
         yield return new WaitForSeconds(trail.recordingStartTime);
-        recorder.StartRecording(_levelManager.GetFilename(trail));
+        recorder.StartRecording(_levelManager.GetFilename(trail, CurrentTrailIndex));
         yield return new WaitForSeconds(trail.recordingDuration);
         recorder.StopRecording();
         yield return null;
