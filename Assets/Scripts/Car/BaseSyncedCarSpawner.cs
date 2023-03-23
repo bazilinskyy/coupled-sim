@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class TestSyncedCarSpawner : CarSpawnerBase
+public class BaseSyncedCarSpawner : CarSpawnerBase
 {
     protected override IEnumerator SpawnCoroutine()
     {
