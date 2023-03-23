@@ -115,10 +115,10 @@ Once the project is loaded into the Unity editor open StartScene scene.
 1. Make sure that all three checkboxes - _Hide Gui_, _Run Trail Sequence Automatically_, _Record Videos_ (_Managers_ (game object) -> _NetworkingManager_ (component)), are unchecked.
 2. Press the Play button to run enter _Play Mode_.
 3. Once in _Play Mode_, press _Start Client_ button.
-2. Enter the host IP address. 
-3. Press _Connect_.
-4. Once connected, select one of control modes listed under _Mode_ section.
-4. Wait until host starts the simulation.
+4. Enter the host IP address. 
+5. Press _Connect_.
+6. Once connected, select one of control modes listed under _Mode_ section.
+7. Wait until host starts the simulation.
 
 ### Running simulation trails automatically
 If the simulation only has one participant that is controlled on a host machine, simulation trails can be set up beforehand and run automatically. It is especially useful when using simulator to record videos for trails which is described in next section. Most of a times user should have any GUI disabled, which can be done by checking _Hide Gui_ checkbox. Gui can be enabled at runtime by pressing _Tab_ button on the keyboard.
@@ -126,23 +126,25 @@ To run simulation trails automatiacally, both _Run Trail Sequence Automatically_
 In order to set up trail sequence, user has to define entries on the _Trails_ list (_StartScene_ (scene) -> _Managers_ (game object) -> _NetworkingManager_ (component) -> _Trails_ (field)). Each entry consists of the following fields:
 - _ExperimentIndex_: int variable which indicates a zero-based index of a selected experiment in _Experiments_ list (_NetworkingManager_ (component) -> _Experiments_ (field)).
 - _RoleIndex_: int variable which indicates a zero-based index of a selected role in _Roles_ list (_ExperimentDefinition_ (component) -> _Roles_ (field)) of a selected experiment prefab.
-- _InputMode_: enum variable, that sets participants display/controller pair for the trail.
-Available values are:
-- _Flat_: use a flat-screen to display simulation and mouse&keyboard/gamepad/steering wheel to control it.
-- _VR_: use virtual reality headset to display simulation and mouse&keyboard/gamepad/steering wheel to control it.  
-- _Suite_: use virtual reality headset to display simulation and XSense suite to control it (only pedestrian avatar).
+- _InputMode_: enum variable, that sets participants display/controller pair for the trail. Available values are:
+	- _Flat_: use a flat-screen to display simulation and mouse&keyboard/gamepad/steering wheel to control it.
+	- _VR_: use virtual reality headset to display simulation and mouse&keyboard/gamepad/steering wheel to control it.  
+	- _Suite_: use virtual reality headset to display simulation and XSense suite to control it (only pedestrian avatar).
 ![](ReadmeFiles/Instant.png)
-Additional experiment parameters can be defined for each trail that would modify baseline scenario implemented in experiment. Parametes take form of name-value pair defined in _Experiment Parametes_ list. Those parameters are consumed by any enabled scripts contained in experiment prefab that implement _IExperimentModifier_ interface right after experiment is loaded and before simulation has started. An example of such a script is _EnableAVLabel_.
+
+Additional experiment parameters can be defined for each trail that would modify baseline scenario implemented in experiment. Parametes take form of name-value pair defined in _ExperimentParameters_ list. Those parameters are consumed by any enabled scripts contained in experiment prefab that implement _IExperimentModifier_ interface right after experiment is loaded and before simulation has started. An example of such a script is _EnableAVLabel_.
 
 ### Recording trail videos
 Simulator is able to record trail videos for "offline" use. Most of the setup is the same as for automatical trails running described above. There are three additional steps that need to be taken to set up automatic trails recording.
 1. _Record Videos_ checkbox has to be checked.
 2. Each trail in _Trails_ list has to have _Recording Start Time_ and _Recording Duration_ defined. _Recording Start Time_ defines at which second after the trail has started video recording should start. _Recording Duration_ defines how long the recording will last. After recording is finished simulator will proceed to the next trail in the sequence.
 3. Following video output parameters can be set up in _Managers_ (game object) -> _Recorder_ (component):
-- _Directory_ - output directory relative to Application.dataPath (when running from Unity Editor it is _Assets_ folder).
-- _Resolution_ - videos output resolution
-- _Framerate_ - videos output framerate
-Filenames of recorded videos conform following naming scheme: {trail index}\_{ExperimentDefinition.ShortName}\_roleIdx-{role index}\_{multiple "\_" separated " paremeter name-value pairs}\_{date and time in "yy-MM-dd\_hh-mm" format}
+-- _Directory_ - output directory relative to Application.dataPath (when running from Unity Editor it is _Assets_ folder).
+-- _Resolution_ - videos output resolution
+-- _Framerate_ - videos output framerate
+
+Filenames of recorded videos conform following naming scheme: 
+```{trail index}\_{ExperimentDefinition.ShortName}\_roleIdx-{role index}\_{multiple "\_" separated " paremeter name-value pairs}\_{date and time in "yy-MM-dd\_hh-mm" format}```
 
 ## Configuration
 The central point for simulators configuration are two major components on _Managers_ game object from the _StartScene_ scene:
@@ -174,7 +176,7 @@ _ExperimentDefinition_ component defines the following fields:
 - _AI Pedestrians_: defines AI-controlled pedestrians behaviour with a list of _PedestrianDesc_ structs containing a pair of an _AIPedestrian_ (the game object that defines an AI-controlled pedestrian avatar) and _WaypointCircuit_ (defining a path of waypoints for the linked avatar) 
 
 _Points of interest_ is a list of _Transform_ references.
-_CarSpawners_ list references game objects containing component inheriting from _CarSpawnerBase_. It defines, with overridden _IEnumerator SpawnCoroutine()_  method, spawn sequence (see _TestSyncedCarSpawner_ for reference implementation). Car prefabs spawned by the coroutine with _AICar Spawn(CarSpawnParams parameters, bool yielding)_ method must be one of the referenced prefabs in _AvatarPrefabDriver_ list on _NetworkManager_ component. 
+_CarSpawners_ list references game objects containing component inheriting from _CarSpawnerBase_. It defines, with overridden _IEnumerator SpawnCoroutine()_  method, spawn sequence (see _BaseSyncedCarSpawner_ for reference implementation). Car prefabs spawned by the coroutine with _AICar Spawn(CarSpawnParams parameters, bool yielding)_ method must be one of the referenced prefabs in _AvatarPrefabDriver_ list on _NetworkManager_ component. 
 
 _Base.prefab_ from _ExperimentDefinitions_ folder is an example experiment definition showcasing most of simulator features.
 
@@ -182,9 +184,12 @@ _Base.prefab_ from _ExperimentDefinitions_ folder is an example experiment defin
 
 ### Configuration of agents
 _Roles_ field is a list of _ExperimentRoleDefinition_ struct's defining experiment roles with the following base data fields:
-- _Name_: short name/description of the role
-- _SpawnPoint.Point_: defines where player avatar will be spawned
-- _SpawnPoint.Type_: a type of player avatar. It may be either _PlayerControlledPedestrian_, _PlayerControlingCar_, _PlayerInAIControlledCar_ of an autonomous car.
+ - _Name_: short name/description of the role
+ - _SpawnPoint.Point_: defines where player avatar will be spawned
+ - _SpawnPoint.Type_: a type of player avatar. It may be either:
+-- _PlayerControlledPedestrian_, 
+-- _PlayerControlingCar_,
+-- _PlayerInAIControlledCar_.
 
 #### Adding and removing agents
 To add a new agent either increase the size of _Roles_ array or duplicate existing role by right-clicking on the role name and selecting Duplicate from the context menu.
@@ -208,7 +213,7 @@ No additional configuration is needed for pedestrian type agents.
 
 #### Common configuration for car (_PlayerControlingCar_ and _PlayerInAIControlledCar_) agents
 Following additional fields has to be defined:
-- Car Idx - indicates car prefab that will be spawned for this role. Selected prefab is the one on the indicated index on _AvatarPrefabDriver_ list (field on _PlayerSystem_ component)
+- _CarIdx_ - indicates car prefab that will be spawned for this role. Selected prefab is the one on the indicated index on _AvatarPrefabDriver_ list (field on _PlayerSystem_ component)
 - _VehicleType_ - indicates how spawned car will be configured. It may be either _AV_ or _MDV_. This parameter corresponds to _AV_ and _MDV_ sections in _PlayerAvatar_ component.
 
 #### Configuration for _PlayerInAIControlledCar_ agents
@@ -216,51 +221,84 @@ Following additional fields has to be defined:
 - _TopHMI_, _WindshieldHMI_, _HoodHMI_ fields - defines which HMI prefab to spawn on corresponding spots. Spots are defined in player avatar prefabs (_PlayerAvatar_ (component) -> _HMI Slots_ (field)).
 - _AutonomusPath_ - references game object defining waypoints for the autonomous car via _WaypointCirciut_ component
 
-### Configuration of non-playable characters
+### Waypoints configuration
 ![](ReadmeFiles/traffic_circuit.png)
 
-Paths that can be followed both by non-playable pedestrians and vehicles are defined with the WaypointCircuit component.
-To add waypoint press plus sign and drag waypoint Transform into the newly added field.
-To remove waypoint press a minus sign next to the waypoint.
-To reorder waypoint click up/down signs next to a waypoint.
-To change the position of a waypoint select waypoint transform and move it do the desired position.
+Paths that can be followed both by non-playable pedestrians and vehicles are defined with the _WaypointCircuit_ component.
+To add waypoint  - press + sign at the bottom of the list and drag waypoint Transform into the newly added field.
+To remove waypoint - select waypoint on the _Items_ list and press + sign at the bottom of the list.
+To reorder waypoint - drag selected list item to the new position on the list.
+To change position of a waypoint - select waypoint transform (by double clicking on the reference from the _Items_ list) and move it do the desired position.
 
-#### Configuration of the movement of the non-playable vehicles
-Additionally, for vehicles, SpeedSetting along with Collider component might be used to further configure tracked path.
+#### Configuration of the movement AI-controlled pedestrians
+Additionally, for pedestrains, _PedestrianWaypoint_ along with trigger _BoxCollider_ component might be used to further configure agents behaviour on a tracked path.
+##### _PedestrianWaypoint_ component
+_PedestrianWaypoint_ component allows to change walking speed when pedestrian avatar enters _BoxCollider_ with following parameters:
+- _targetSpeed_ - controls movement speed
+- _targetBlendFactor_ - controls animation speed, by blending between idle and full speed walk
+#### Configuration of the movement AI-controlled cars
+Additionally, for vehicles, _SpeedSetting_ along with trigger _BoxCollider_ component might be used to further configure agents behaviour on a tracked path.
 
 ![](ReadmeFiles/speed_settings.png)
+##### _SpeedSettings_ component
+- _SpeedSettings_ component allows to change car behaviour when car avatar enters _BoxCollider_.
+- _Type_ - Indicates what kind of waypoint is it
+--  InitialSetSpeed - Waypoint placed at the spawnpoint that sets up initial speed to _speed_ or to 0 if _causeToYield_ is set to true.
+-- SetSpeedTarget - Regular waypoint that changes car behaviour according to rest of parameters.
+-- Delete - Destroys car avatar.
+- _speed_ - Indicates target speed that car will be trying to reach.
+- _acceleration_ - Indicates acceleration that will be used to reach target speed (If target speed is lower than current speed, value has to be negative.)
+- _BlinkerState_ - Indicates whether car should have any of turn indicator blinking.
+- _causeToYield_ - If checked, car will deaccelerate with _breakingAcceleration_, wait _yieldTime_ and resume driving by accelerating with _acceleration_ until car reaches _speed_.
+- _yieldTime_ - Indicates how long car should stay in place after making a full stop.
+- _brakingAcceleration_ - If _causeToYield_ is true, this value needs to be negative.
+Eye contact related parameters are described in "Configuration of driver's eye-contact behavior" section.
+##### Custom behaviours
+Waypoint can trigger custom behaviour, on _AICar_ with linked _CustomBehaviour_ derived component, by providing _ScriptableObject_ deriving form _CustomBehaviourData_ (See reference implementation in _BlinkWithFrontLights_ and _BlinkPatternData_). _CustomBehaviour_ components should be linked to _AICar_ at spawn time (See reference implementation in _BaseSyncedCarSpawner_).
+####  Exporting and importing WaypointCircuit's
+_WaypointCirciut_ can be serialized into CSV format (semicolon separated) with an _Export to file_ button. 
+CSV file can be modified in any external editor and then imported with an _Import from file_ button. Importing files will remove all current waypoint objects and replace them with newly created ones according to the data in the imported CSV file. Following parameters are serialized to and deserialized from CSV files:
+1. _GameObject_ properties
 
-#### Exporting and importing WaypointCircuit's
-_WaypointCirciut_ can be serialized into CSV format (semicolon separated) with an _Export to file_ button. The following parameters are serialized:
-Game object
-- name
-- tag
-- layer
+| Property name | CSV column | Type | Description
+| --- | --- | --- | ---
+| [name](https://docs.unity3d.com/ScriptReference/Object-name.html) | name | string | name
+| [tag](https://docs.unity3d.com/ScriptReference/GameObject-tag.html) | tag | string | tag
+| [layer](https://docs.unity3d.com/ScriptReference/GameObject-layer.html) | layer | integer | unity layer index
 
-Transform
-- x; y; z - world position
-- rotX; rotY; rotZ - world rotation (euler angles)
+2. _Transform_ properties
 
-SpeedSettings
-- waypointType
-- speed
-- acceleration
-- jerk
-- causeToYield
-- lookAtPlayerWhileYielding
-- lookAtPlayerAfterYielding
-- yieldTime
-- brakingAcceleration
-- lookAtPedFromSeconds
-- lookAtPedToSeconds
+| Property name | CSV columns | Units| Description
+| --- | --- | --- | ---
+| [position](https://docs.unity3d.com/ScriptReference/Transform-position.html) | x; y; z | meters | position
+| [eulerAngles](https://docs.unity3d.com/ScriptReference/Transform-eulerAngles.html) | rotX; rotY; rotZ | degrees | rotation in euler angles
+| [localScale](https://docs.unity3d.com/ScriptReference/Transform-localScale.html) | scaleX; scaleY; scaleZ | - | local scale
 
-BoxCollider
-- collider_enabled - component enable state
-- isTrigger
-- centerX; centerY; centerZ - box collider center
-- sizeX; sizeY; sizeZ - box collider size
+3. _SpeedSettings_ properties
 
-CSV file can be modified in any external editor and then imported with an _Import from file_ button. Importing files will remove all current waypoint objects and replace them with newly created ones according to the data in the imported CSV file.
+| Property name | CSV column | Type/Units| CSV values
+| --- | --- | --- | --- | ---
+| Type | waypointType | WaypointType enum | 0 for InitialSetSpeed, 1 for SetSpeedTarget, 2 for Delete | 
+| speed | speed | km/h | - | 
+| acceleration | acceleration | m/s<sup>2</sup> | - | 
+| BlinkerState | blinkerState | BlinkerState enum | (0 for None, 1 for Left, 2 for Right) | 
+| causeToYield | causeToYield | boolean | True/False | 
+| EyeContactWhileYielding | lookAtPlayerWhileYielding | boolean | True/False | 
+| EyeContactAfterYielding | lookAtPlayerAfterYielding | boolean | True/False | 
+| yieldTime | yieldTime | seconds | - | 
+| brakingAcceleration | brakingAcceleration | m/s<sup>2</sup> | - | 
+| YieldingEyeContactSince | lookAtPedFromSeconds | seconds | - | 
+| YieldingEyeContactUntil | lookAtPedToSeconds | seconds | - | 
+| customBehaviourData | customBehaviourDataString | any class derived from CustomBehaviourData | multiple entries of % separated {scriptable object name}#{scriptable object instance id} pairs | 
+
+4. _BoxCollider_ properties
+
+| Property name | CSV column(s) | CSV values | Description
+| --- | --- | --- | ---
+| [enabled](https://docs.unity3d.com/ScriptReference/Collider-enabled.html) | collider_enabled | (True/False) | component enable state
+| [isTrigger](https://docs.unity3d.com/ScriptReference/Collider-isTrigger.html) | isTrigger | (True/False) |
+| [center](https://docs.unity3d.com/ScriptReference/BoxCollider-center.html) | centerX; centerY; centerZ | - | box collider center
+| [size](https://docs.unity3d.com/ScriptReference/BoxCollider-size.html) | sizeX; sizeY; sizeZ | - | box collider size
 
 ### Configuration of driver's eye-contact behavior
 Initial eye contact tracking state and base tracking parameters are defined with fields in the _EyeContact_ component.
@@ -285,18 +323,24 @@ Eye contact behavior tracking state can be changed when the car reaches the wayp
 #### Configuration of daylight conditions
 ![](ReadmeFiles/day_night_control.png)
 
-DayNightControl component helps to define different experiment daylight conditions. It gathers lighting-related objects and allows defining two lightings presets - Day and Night, that can be quickly switched for a scene. This component is intended to be used at the experiment definition setup stage. When the development of the environment is complete, it is advised, to save the environment into two separate scenes (with different light setups) and bake lightmaps.
+_DayNightControl_ component helps to define different experiment daylight conditions. It gathers lighting-related objects and allows defining two lightings presets - Day and Night, that can be quickly switched for a scene. This component is intended to be used at the experiment definition setup stage. When the development of the environment is complete, it is advised, to save the environment into two separate scenes (with different light setups) and bake lightmaps.
 
 #### Configuration of traffic lights
 ![](ReadmeFiles/street_light_manager.png)
-
 Creating a traffic street lights system is best started with creating an instance of _ExampleStreetLightCrossSection_ and adjusting it. 
-Traffic light sequence is defined in _StreetLightManager_ component as a list of _StreetLightEvents_. Events are processed sequentially. Each event is defined with the following fields:
+_TrafficLightsManager_ component manages state of _CarSection_ and _PedestrainSection_ objects that group respectively _CarTrafficLight_ and _PedestrianTrafficLight_ instances that share common behaviour.
+Traffic light initial state is defined with list of _TrafficLightEvent_ structs stored in _initialStreetLightSetup_ field. This events are triggered once before simulation has started.
+Traffic light initial state is defined with list of _TrafficLightEvent_ structs stored in _streetLightEvents_ field. This events are triggered sequentially in a loop. 
+Each event is defined with the following fields:
 - _Name_: descriptive name of an event
 - _Delta Time_: relative time that has to pass since previous event to activate the event
 - _CarSections_: cars traffic light group that the event applies to
 - _PedestrianSections_: pedestrian traffic light group that the event applies to
-- _State_: state to be set on the lights specified by sections, LOOP_BACK is a special state that restarts the whole sequence
+- _State_: state to be set on the lights specified by sections
+
+_CurrentIndex_ and _CurrentTimer_ allow to skip ceratin parts of sequence. 
+- _CurrentIndex_ selects _TrafficLightEvent_ that the sequence will start from. 
+- _CurrentTimer_ sets time offset from the start of the selected _TrafficLightEvent_.
 
 ### Details on editing car prefabs
 _Speedometer_ component controls a speed indicator. 

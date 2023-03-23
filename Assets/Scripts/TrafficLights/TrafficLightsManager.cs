@@ -37,8 +37,8 @@ public class TrafficLightsManager : MonoBehaviour
     private TrafficLightEvent[] initialStreetLightSetup;
     [SerializeField]
     private TrafficLightEvent[] streetLightEvents;
-    public float CurrentTimer = 0;
     public int CurrentIndex = 0;
+    public float CurrentTimer = 0;
     bool initialized = false;
 
     public void UpdateHost(List<int> initiallyTriggeredEvents, List<int> triggeredEvents)
