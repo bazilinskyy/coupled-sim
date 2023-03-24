@@ -295,8 +295,8 @@ CSV file can be modified in any external editor and then imported with an _Impor
 
 | Property name | CSV column(s) | CSV values | Description
 | --- | --- | --- | ---
-| [enabled](https://docs.unity3d.com/ScriptReference/Collider-enabled.html) | collider_enabled | (True/False) | component enable state
-| [isTrigger](https://docs.unity3d.com/ScriptReference/Collider-isTrigger.html) | isTrigger | (True/False) |
+| [enabled](https://docs.unity3d.com/ScriptReference/Collider-enabled.html) | collider_enabled | (True/False) | is component enabled
+| [isTrigger](https://docs.unity3d.com/ScriptReference/Collider-isTrigger.html) | isTrigger | (True/False) | is collider a trigger
 | [center](https://docs.unity3d.com/ScriptReference/BoxCollider-center.html) | centerX; centerY; centerZ | - | box collider center
 | [size](https://docs.unity3d.com/ScriptReference/BoxCollider-size.html) | sizeX; sizeY; sizeZ | - | box collider size
 
@@ -327,7 +327,7 @@ _DayNightControl_ component helps to define different experiment daylight condit
 
 #### Configuration of traffic lights
 ![](ReadmeFiles/street_light_manager.png)
-Creating a traffic street lights system is best started with creating an instance of _ExampleStreetLightCrossSection_ and adjusting it. 
+Creating a traffic street lights system is best started with creating an instance of _ExampleStreetLightCrossSection_ prefab and adjusting it. 
 _TrafficLightsManager_ component manages state of _CarSection_ and _PedestrainSection_ objects that group respectively _CarTrafficLight_ and _PedestrianTrafficLight_ instances that share common behaviour.
 Traffic light initial state is defined with list of _TrafficLightEvent_ structs stored in _initialStreetLightSetup_ field. This events are triggered once before simulation has started.
 Traffic light initial state is defined with list of _TrafficLightEvent_ structs stored in _streetLightEvents_ field. This events are triggered sequentially in a loop. 
