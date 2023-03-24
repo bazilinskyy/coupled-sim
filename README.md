@@ -46,7 +46,7 @@ The coupled simulator supports a keyboard and a gaming steering wheel as input s
 The supported sources of output are a head-mounted display (HMD) and computer screen for the driver, a computer screen for the passenger, and a head-mounted display for the pedestrian. ~~At the moment, supported HDM is Oculus Rift CV1.~~
 
 #### Networking and data logging
-The current number of human participants supported by the coupled simulator is four (host and three clients). However, this number can be expanded up to the number of agents supported by the network. Synchronization in a local network is handled by a custom-made network manager designed to support the exchange of information between agents with low latency and real-time data logging at 50 Hz for variables from the Unity environment and up to 700Hz from the motion suit. The data that are logged include the three-dimensional position and rotation of the manual car and the AV, the use of blinkers, high-beam, stop light, and 150 position and angular variables from the motion suit. The data are stored in binary format, and the coupled simulator contains a function to convert the saved data into a CSV file. 
+The current number of human participants supported by the coupled simulator is four (host and three clients). However, this number can be expanded up to the number of agents supported by the network. Synchronization in a local network is handled by a custom-made network manager designed to support the exchange of information between agents with low latency and real-time data logging at 50 Hz for variables from the Unity environment and up to 700Hz from the motion suit. The data that are logged include the three-dimensional position and rotation of the manual car and the AV, the use of blinkers, high-beam, stop light, and 150 position and angular variables from the motion suit. The data are stored in binary format, and the coupled simulator contains a function to convert the saved data into a CSV file (_Convert log to csv_ button in _Play Mode_).
 Besides logging data to the binary file, the same set of frame data (in a very similar binary format) is being sent with requested intervals (that can be set with _NetworkingManger.RealtimeLogInterval_ property) during the simulation to UDP port 40131 on localhost. The data can be used to monitor the simulation with external tools at runtime. _Tools/log_receiver.py_ file contains an example python script that consumes binary data and assembles it into a structure that is easy to interact with.
 It should be started before starting the simulation with 'python3 log_receiver.py' from within the _Tools_ folder.
 The structure of the frame object (with example data) is as follows:
@@ -99,7 +99,7 @@ After checking out this project, launch Unity Hub to run the simulator with the 
 ## Running a project
 Select the project from the Unity Hub projects list. Wait until the project loads in. If it is not in the Unity Hub list (it is the first time you are running the project), it has to be added first - click *Add* and select a folder containing the project files.
 Once the project is loaded into the Unity editor open StartScene scene.  
-
+![](ReadmeFiles/running.png)
 ### Running simulation as a host
 1. Make sure that all three checkboxes (_Hide Gui_, _Run Trail Sequence Automatically_, _Record Videos_) in _NetworkingManager_ component on _Managers_ game object are unchecked.
 2. Press the Play button to run enter _Play Mode_.
@@ -121,6 +121,7 @@ Once the project is loaded into the Unity editor open StartScene scene.
 7. Wait until host starts the simulation.
 
 ### Running simulation trails automatically
+![](ReadmeFiles/Instant.png)
 If the simulation only has one participant that is controlled on a host machine, simulation trails can be set up beforehand and run automatically. It is especially useful when using simulator to record videos for trails which is described in next section. Most of a times user should have any GUI disabled, which can be done by checking _Hide Gui_ checkbox. Gui can be enabled at runtime by pressing _Tab_ button on the keyboard.
 To run simulation trails automatiacally, both _Run Trail Sequence Automatically_ has to be checked and trail sequence has to be set up. Once it is done, press Play button to enter _Play Mode_ - first trail in the sequence should start automatically. To finish current trail and either start next one or exit simulator (if currently played trail the last one), press _Escape_ button on the keyboard.
 In order to set up trail sequence, user has to define entries on the _Trails_ list (_StartScene_ (scene) -> _Managers_ (game object) -> _NetworkingManager_ (component) -> _Trails_ (field)). Each entry consists of the following fields:
@@ -130,7 +131,6 @@ In order to set up trail sequence, user has to define entries on the _Trails_ li
 	- _Flat_: use a flat-screen to display simulation and mouse&keyboard/gamepad/steering wheel to control it.
 	- _VR_: use virtual reality headset to display simulation and mouse&keyboard/gamepad/steering wheel to control it.  
 	- _Suite_: use virtual reality headset to display simulation and XSense suite to control it (only pedestrian avatar).
-![](ReadmeFiles/Instant.png)
 
 Additional experiment parameters can be defined for each trail that would modify baseline scenario implemented in experiment. Parametes take form of name-value pair defined in _ExperimentParameters_ list. Those parameters are consumed by any enabled scripts contained in experiment prefab that implement _IExperimentModifier_ interface right after experiment is loaded and before simulation has started. An example of such a script is _EnableAVLabel_.
 
@@ -142,7 +142,7 @@ Simulator is able to record trail videos for "offline" use. Most of the setup is
 -- _Directory_ - output directory relative to Application.dataPath (when running from Unity Editor it is _Assets_ folder).
 -- _Resolution_ - videos output resolution
 -- _Framerate_ - videos output framerate
-
+![](ReadmeFiles/recorder.png)
 Filenames of recorded videos conform following naming scheme: 
 ```{trail index}\_{ExperimentDefinition.ShortName}\_roleIdx-{role index}\_{multiple "\_" separated " paremeter name-value pairs}\_{date and time in "yy-MM-dd\_hh-mm" format}```
 
@@ -183,6 +183,7 @@ _Base.prefab_ from _ExperimentDefinitions_ folder is an example experiment defin
 ![](ReadmeFiles/experiment_definition.png)
 
 ### Configuration of agents
+![](ReadmeFiles/roles.png)
 _Roles_ field is a list of _ExperimentRoleDefinition_ struct's defining experiment roles with the following base data fields:
  - _Name_: short name/description of the role
  - _SpawnPoint.Point_: defines where player avatar will be spawned
@@ -233,14 +234,15 @@ To change position of a waypoint - select waypoint transform (by double clicking
 #### Configuration of the movement AI-controlled pedestrians
 Additionally, for pedestrains, _PedestrianWaypoint_ along with trigger _BoxCollider_ component might be used to further configure agents behaviour on a tracked path.
 ##### _PedestrianWaypoint_ component
+![](ReadmeFiles/pedestrian_waypoint.png)
 _PedestrianWaypoint_ component allows to change walking speed when pedestrian avatar enters _BoxCollider_ with following parameters:
 - _targetSpeed_ - controls movement speed
 - _targetBlendFactor_ - controls animation speed, by blending between idle and full speed walk
 #### Configuration of the movement AI-controlled cars
-Additionally, for vehicles, _SpeedSetting_ along with trigger _BoxCollider_ component might be used to further configure agents behaviour on a tracked path.
+Additionally, for vehicles, _SpeedSettings_ along with trigger _BoxCollider_ component might be used to further configure agents behaviour on a tracked path.
 
-![](ReadmeFiles/speed_settings.png)
 ##### _SpeedSettings_ component
+![](ReadmeFiles/speed_settings.png)
 - _SpeedSettings_ component allows to change car behaviour when car avatar enters _BoxCollider_.
 - _Type_ - Indicates what kind of waypoint is it
 --  InitialSetSpeed - Waypoint placed at the spawnpoint that sets up initial speed to _speed_ or to 0 if _causeToYield_ is set to true.
@@ -317,8 +319,6 @@ Eye contact behavior tracking state can be changed when the car reaches the wayp
 - _EyeContactAfterYielding_: defines how the driver will behave when the car resumes driving after a full stop. This value simply overwrites the current value of _EyeContact.EyeContactTracking_ if the car has fully stopped.
 - _YieldingEyeContactSince_: defines how many seconds need to pass before the driver will make eye contact (starting from the moment the car has fully stopped)
 - _YieldingEyeContactUntil_: defines how many seconds need to pass before the driver ceases to maintain eye contact (starting from the moment the car has fully stopped)
-
-![](ReadmeFiles/SpeedSettings.png)
 
 #### Configuration of daylight conditions
 ![](ReadmeFiles/day_night_control.png)
