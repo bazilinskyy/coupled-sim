@@ -200,7 +200,9 @@ namespace Barmetler.RoadSystem
 			newMesh.RecalculateNormals();
 			newMesh.RecalculateTangents();
 			newMesh.RecalculateBounds();
+#if UNITY_EDITOR
 			UnityEditor.Unwrapping.GenerateSecondaryUVSet(newMesh);
+#endif
 			mf.mesh = newMesh;
 			if (GetComponent<MeshCollider>() != null)
 				GetComponent<MeshCollider>().sharedMesh = newMesh;
