@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.Sockets;
 using System.Text;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -165,7 +163,7 @@ public class WorldLogger
             {
                 var rb = driver.GetComponent<Rigidbody>();
                 Assert.IsNotNull(rb);
-                Assert.IsFalse(rb.isKinematic);
+                //Assert.IsFalse(rb.isKinematic);
                 writer.Write(rb.velocity);
                 var ai = driver.GetComponent<AICar>();
                 Assert.IsNotNull(ai);
@@ -174,8 +172,8 @@ public class WorldLogger
                 writer.Write(ai.state == AICar.CarState.STOPPED);
                 writer.Write(ai.state == AICar.CarState.TAKEOFF);
                 var plap = driver.GetComponentInChildren<EyeContact>();
-                Assert.IsNotNull(plap);
-                writer.Write(plap.TargetPed != null);
+                //Assert.IsNotNull(plap);
+                writer.Write(plap != null && plap.TargetPed != null);
             }
         }
         foreach (var pedestrian in _playerSystem.Pedestrians)

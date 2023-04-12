@@ -205,10 +205,6 @@ public class Client : NetworkSystem
             }
             case NetState.Client_Connecting:
             {
-                if (_client.HasError)
-                {
-                    GUILayout.Label($"Client error: {_client.GetError()}");
-                }
                 if (GUILayout.Button("Cancel"))
                 {
                     _client.Disconnect();
