@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System;
 using UnityEngine;
 using UnityEngine.Serialization;
 using UnityEngine.Assertions;
 using VehicleBehaviour;
+using Unity.Networking.Transport;
 
 public enum HMISlot
 {
@@ -30,6 +30,14 @@ public struct AvatarPose : INetSubMessage
         LocalPositions = reader.ReadListVector3();
         LocalRotations = reader.ReadListQuaternion();
         Blinkers = (BlinkerState)reader.ReadInt32();
+        FrontLights = reader.ReadBoolean();
+        StopLights = reader.ReadBoolean();
+    }
+    public void DeserializeFrom(ref DataStreamReader reader)
+    {
+        LocalPositions = reader.ReadListVector3();
+        LocalRotations = reader.ReadListQuaternion();
+        Blinkers = (BlinkerState)reader.ReadInt();
         FrontLights = reader.ReadBoolean();
         StopLights = reader.ReadBoolean();
     }
