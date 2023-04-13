@@ -121,7 +121,7 @@ GameObject:
   - component: {fileID: 195205983826374785}
   - component: {fileID: 3025714818131957651}
   m_Layer: 0
-  m_Name: Line_0 Car
+  m_Name: Target Car
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -162,7 +162,7 @@ MonoBehaviour:
     SpawnPassenger: 0
     Car: {fileID: 8343856187855894783, guid: 02b8c28a357f14a4b922a9b99b9763ae, type: 3}
     VehicleType: 0
-    color: {r: 0.4509804, g: 0.105882354, b: 0.105882354, a: 1}
+    color: {r: 1, g: 1, b: 1, a: 1}
     Labeled: 0
     customBehaviours: []
 --- !u!1 &632737469776865599
@@ -900,7 +900,7 @@ GameObject:
   - component: {fileID: 8625192374713111933}
   - component: {fileID: 2377491069428159472}
   m_Layer: 0
-  m_Name: Line_2 Car (1)
+  m_Name: Target Car (2)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -941,7 +941,7 @@ MonoBehaviour:
     SpawnPassenger: 0
     Car: {fileID: 8343856187855894783, guid: 02b8c28a357f14a4b922a9b99b9763ae, type: 3}
     VehicleType: 0
-    color: {r: 0.4528302, g: 0.10466359, b: 0.10466359, a: 1}
+    color: {r: 1, g: 1, b: 1, a: 1}
     Labeled: 0
     customBehaviours: []
 --- !u!1 &4056324527243921030
@@ -1665,18 +1665,23 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1729822193991571252, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
+      propertyPath: spawnParams.Labeled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1729822193991571252, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
       propertyPath: spawnParams.color.b
-      value: 0.105882354
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1729822193991571252, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
       propertyPath: spawnParams.color.g
-      value: 0.105882354
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1729822193991571252, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
       propertyPath: spawnParams.color.r
-      value: 0.4509804
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2107391219870628740, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
@@ -1771,7 +1776,7 @@ PrefabInstance:
     - target: {fileID: 7609667120526454229, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
       propertyPath: m_RootOrder
-      value: 11
+      value: 12
       objectReference: {fileID: 0}
     - target: {fileID: 7609667120526454229, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
@@ -1842,6 +1847,11 @@ PrefabInstance:
         type: 3}
       propertyPath: spawnParams.color.r
       value: 0.4509804
+      objectReference: {fileID: 0}
+    - target: {fileID: 8346018858336705734, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: m_Name
+      value: Target Car (1)
       objectReference: {fileID: 0}
     - target: {fileID: 8692043556341430772, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
