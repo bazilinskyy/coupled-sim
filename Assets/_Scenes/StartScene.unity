@@ -310,7 +310,7 @@ MonoBehaviour:
   - {fileID: 5785245843907239180, guid: 5a26e650cf127da419c044538ed9bb66, type: 3}
   hideGui: 1
   RunTrailSequenceAutomatically: 1
-  recordVideos: 1
+  recordVideos: 0
   trails:
   - experimentIndex: 0
     roleIndex: 0
@@ -319,7 +319,7 @@ MonoBehaviour:
     - name: target_labeled
       value: true
     - name: ego_labeled
-      value: true
+      value: false
     recordingStartTime: 0
     recordingDuration: 25
   - experimentIndex: 1
@@ -518,6 +518,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   directory: ../../videos
+  resolution: {x: 3840, y: 2160}
+  framerate: 60
 --- !u!1 &1256699364
 GameObject:
   m_ObjectHideFlags: 0
