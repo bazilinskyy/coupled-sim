@@ -60,7 +60,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   targetAICar: {fileID: 0}
   Type: 0
-  speed: 30
+  speed: 31
   acceleration: 2
   BlinkerState: 0
   jerk: 0
@@ -204,7 +204,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   targetAICar: {fileID: 0}
   Type: 1
-  speed: 30
+  speed: 31
   acceleration: 1
   BlinkerState: 0
   jerk: 0
@@ -427,7 +427,7 @@ MonoBehaviour:
   causeToYield: 1
   EyeContactWhileYielding: 0
   EyeContactAfterYielding: 0
-  yieldTime: 7.75
+  yieldTime: 9
   brakingAcceleration: -1
   YieldingEyeContactSince: 0
   YieldingEyeContactUntil: 0
@@ -499,7 +499,7 @@ MonoBehaviour:
   causeToYield: 0
   EyeContactWhileYielding: 0
   EyeContactAfterYielding: 0
-  yieldTime: 21.5
+  yieldTime: 23
   brakingAcceleration: 0
   YieldingEyeContactSince: 0
   YieldingEyeContactUntil: 0
@@ -569,6 +569,78 @@ MonoBehaviour:
     - {fileID: 1273154660822853553}
   smoothRoute: 0
   editorVisualisationSubsteps: 500
+--- !u!1 &2702201833260747701
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7007860077264797051}
+  - component: {fileID: 5266085366916016393}
+  - component: {fileID: 7283286944086503071}
+  m_Layer: 5
+  m_Name: WP06 (3)
+  m_TagString: WP
+  m_Icon: {fileID: -964228994112308473, guid: 0000000000000000d000000000000000, type: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7007860077264797051
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2702201833260747701}
+  m_LocalRotation: {x: -0, y: 0.044168856, z: -0, w: 0.9990241}
+  m_LocalPosition: {x: -1.31, y: 0, z: -38.23}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 335952250635014000}
+  m_RootOrder: 6
+  m_LocalEulerAnglesHint: {x: 0, y: 5.063, z: 0}
+--- !u!65 &5266085366916016393
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2702201833260747701}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 1
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 4.25, y: 4, z: 0.01}
+  m_Center: {x: 0, y: 1, z: 0}
+--- !u!114 &7283286944086503071
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2702201833260747701}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetAICar: {fileID: 0}
+  Type: 0
+  speed: 30
+  acceleration: 1
+  BlinkerState: 0
+  jerk: 5
+  causeToYield: 0
+  EyeContactWhileYielding: 0
+  EyeContactAfterYielding: 0
+  yieldTime: 21
+  brakingAcceleration: 0
+  YieldingEyeContactSince: 0
+  YieldingEyeContactUntil: 0
+  customBehaviourData: []
 --- !u!1 &2834045098669106617
 GameObject:
   m_ObjectHideFlags: 0
@@ -629,7 +701,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   targetAICar: {fileID: 0}
   Type: 1
-  speed: 30
+  speed: 31
   acceleration: 1
   BlinkerState: 0
   jerk: 0
@@ -700,6 +772,78 @@ MonoBehaviour:
     - {fileID: 9164555792216228365}
   smoothRoute: 0
   editorVisualisationSubsteps: 500
+--- !u!1 &5127662197765504286
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1675122159786200259}
+  - component: {fileID: 2790834982316472933}
+  - component: {fileID: 3292397699542213666}
+  m_Layer: 5
+  m_Name: WP06 (2)
+  m_TagString: WP
+  m_Icon: {fileID: -964228994112308473, guid: 0000000000000000d000000000000000, type: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1675122159786200259
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5127662197765504286}
+  m_LocalRotation: {x: -0, y: 0.08671069, z: -0, w: 0.9962336}
+  m_LocalPosition: {x: -3.63, y: 0, z: -56.28}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 335952250635014000}
+  m_RootOrder: 6
+  m_LocalEulerAnglesHint: {x: 0, y: 9.949, z: 0}
+--- !u!65 &2790834982316472933
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5127662197765504286}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 1
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 4.25, y: 4, z: 0.01}
+  m_Center: {x: 0, y: 1, z: 0}
+--- !u!114 &3292397699542213666
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5127662197765504286}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetAICar: {fileID: 0}
+  Type: 0
+  speed: 30
+  acceleration: 1
+  BlinkerState: 0
+  jerk: 5
+  causeToYield: 0
+  EyeContactWhileYielding: 0
+  EyeContactAfterYielding: 0
+  yieldTime: 21
+  brakingAcceleration: 0
+  YieldingEyeContactSince: 0
+  YieldingEyeContactUntil: 0
+  customBehaviourData: []
 --- !u!1 &5263660626811699634
 GameObject:
   m_ObjectHideFlags: 0
@@ -760,7 +904,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   targetAICar: {fileID: 0}
   Type: 1
-  speed: 30
+  speed: 31
   acceleration: 1
   BlinkerState: 0
   jerk: 0
@@ -887,7 +1031,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   targetAICar: {fileID: 0}
   Type: 1
-  speed: 30
+  speed: 31
   acceleration: 1
   BlinkerState: 0
   jerk: 0
@@ -1399,7 +1543,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   targetAICar: {fileID: 0}
   Type: 1
-  speed: 30
+  speed: 31
   acceleration: 1
   BlinkerState: 0
   jerk: 0
@@ -1622,7 +1766,7 @@ MonoBehaviour:
   causeToYield: 0
   EyeContactWhileYielding: 0
   EyeContactAfterYielding: 0
-  yieldTime: 21.5
+  yieldTime: 24.5
   brakingAcceleration: 0
   YieldingEyeContactSince: 0
   YieldingEyeContactUntil: 0
@@ -1687,7 +1831,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   targetAICar: {fileID: 0}
   Type: 1
-  speed: 30
+  speed: 31
   acceleration: 1
   BlinkerState: 0
   jerk: 0
@@ -1759,7 +1903,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   targetAICar: {fileID: 0}
   Type: 1
-  speed: 30
+  speed: 31
   acceleration: 1
   BlinkerState: 0
   jerk: 0
@@ -1796,14 +1940,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7735213312981271154}
-  m_LocalRotation: {x: -0, y: 0.15213603, z: -0, w: 0.9883596}
-  m_LocalPosition: {x: -6.2, y: 0, z: -67.46}
+  m_LocalRotation: {x: -0, y: 0.13392217, z: -0, w: 0.9909919}
+  m_LocalPosition: {x: -6.12, y: 0, z: -67.04}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 335952250635014000}
   m_RootOrder: 6
-  m_LocalEulerAnglesHint: {x: 0, y: 17.501, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 15.393, z: 0}
 --- !u!65 &8266743611492388660
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1940,14 +2084,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8006040392980237044}
-  m_LocalRotation: {x: 0, y: 0.06853767, z: 0, w: 0.99764854}
-  m_LocalPosition: {x: -2.28, y: 0, z: -47.66}
+  m_LocalRotation: {x: -0, y: 0.06277106, z: -0, w: 0.998028}
+  m_LocalPosition: {x: -2.27, y: 0, z: -47.121}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 335952250635014000}
   m_RootOrder: 6
-  m_LocalEulerAnglesHint: {x: 0, y: 17.501, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 7.198, z: 0}
 --- !u!65 &6203928230781133894
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -2109,7 +2253,7 @@ MonoBehaviour:
   causeToYield: 1
   EyeContactWhileYielding: 0
   EyeContactAfterYielding: 0
-  yieldTime: 20.5
+  yieldTime: 22
   brakingAcceleration: 0
   YieldingEyeContactSince: 0
   YieldingEyeContactUntil: 0
@@ -2293,12 +2437,12 @@ PrefabInstance:
     - target: {fileID: 2980969265823883411, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: -29.9
+      value: -29.1
       objectReference: {fileID: 0}
     - target: {fileID: 2980969265823883411, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.99981827
+      value: 0.9997301
       objectReference: {fileID: 0}
     - target: {fileID: 2980969265823883411, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
@@ -2308,7 +2452,7 @@ PrefabInstance:
     - target: {fileID: 2980969265823883411, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0.019067626
+      value: 0.023233073
       objectReference: {fileID: 0}
     - target: {fileID: 2980969265823883411, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
@@ -2318,7 +2462,7 @@ PrefabInstance:
     - target: {fileID: 2980969265823883411, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
-      value: 2.185
+      value: 2.663
       objectReference: {fileID: 0}
     - target: {fileID: 3249017520540067400, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
@@ -2668,7 +2812,7 @@ PrefabInstance:
     - target: {fileID: 8043761391078894673, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
       propertyPath: waypointList.items.Array.size
-      value: 5
+      value: 7
       objectReference: {fileID: 0}
     - target: {fileID: 8043761391078894673, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
@@ -2679,20 +2823,30 @@ PrefabInstance:
         type: 3}
       propertyPath: waypointList.items.Array.data[1]
       value: 
-      objectReference: {fileID: 6323651959084497188}
+      objectReference: {fileID: 1675122159786200259}
     - target: {fileID: 8043761391078894673, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
       propertyPath: waypointList.items.Array.data[2]
       value: 
-      objectReference: {fileID: 5336441680490036824}
+      objectReference: {fileID: 6323651959084497188}
     - target: {fileID: 8043761391078894673, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
       propertyPath: waypointList.items.Array.data[3]
       value: 
-      objectReference: {fileID: 6818899138261048152}
+      objectReference: {fileID: 7007860077264797051}
     - target: {fileID: 8043761391078894673, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
       propertyPath: waypointList.items.Array.data[4]
+      value: 
+      objectReference: {fileID: 5336441680490036824}
+    - target: {fileID: 8043761391078894673, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: waypointList.items.Array.data[5]
+      value: 
+      objectReference: {fileID: 6818899138261048152}
+    - target: {fileID: 8043761391078894673, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: waypointList.items.Array.data[6]
       value: 
       objectReference: {fileID: 8171617945853191472}
     - target: {fileID: 8244551489638122103, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
@@ -2763,7 +2917,7 @@ PrefabInstance:
     - target: {fileID: 8812417634353776199, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
       propertyPath: yieldTime
-      value: 9
+      value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 8812417634353776199, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
@@ -2810,7 +2964,15 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 7492252986797691323, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
       insertIndex: 1
+      addedObject: {fileID: 1675122159786200259}
+    - targetCorrespondingSourceObject: {fileID: 7492252986797691323, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      insertIndex: 2
       addedObject: {fileID: 6323651959084497188}
+    - targetCorrespondingSourceObject: {fileID: 7492252986797691323, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      insertIndex: 3
+      addedObject: {fileID: 7007860077264797051}
   m_SourcePrefab: {fileID: 100100000, guid: 16055abd5fa62354bbfa3c45a1fd16eb, type: 3}
 --- !u!4 &335952250635014000 stripped
 Transform:
