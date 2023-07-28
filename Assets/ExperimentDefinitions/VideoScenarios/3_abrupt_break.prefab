@@ -60,7 +60,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   targetAICar: {fileID: 0}
   Type: 0
-  speed: 30
+  speed: 35
   acceleration: 1
   BlinkerState: 0
   jerk: 0
@@ -132,7 +132,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   targetAICar: {fileID: 0}
   Type: 1
-  speed: 30
+  speed: 35
   acceleration: 2
   BlinkerState: 0
   jerk: 0
@@ -458,7 +458,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   targetAICar: {fileID: 0}
   Type: 1
-  speed: 30
+  speed: 35
   acceleration: 2
   BlinkerState: 0
   jerk: 0
@@ -530,7 +530,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   targetAICar: {fileID: 0}
   Type: 1
-  speed: 30
+  speed: 35
   acceleration: 2
   BlinkerState: 0
   jerk: 5
@@ -657,7 +657,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   targetAICar: {fileID: 0}
   Type: 1
-  speed: 30
+  speed: 35
   acceleration: 2
   BlinkerState: 0
   jerk: 0
@@ -729,7 +729,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   targetAICar: {fileID: 0}
   Type: 1
-  speed: 30
+  speed: 35
   acceleration: 2
   BlinkerState: 0
   jerk: 0
@@ -895,7 +895,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4680991625445297066}
   m_LocalRotation: {x: -0, y: 1, z: -0, w: 0}
-  m_LocalPosition: {x: -278.8, y: 0, z: 118}
+  m_LocalPosition: {x: -278.8, y: 0, z: 115.9}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -985,7 +985,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   targetAICar: {fileID: 0}
   Type: 0
-  speed: 30
+  speed: 35
   acceleration: 1
   BlinkerState: 0
   jerk: 0
@@ -1422,7 +1422,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6760577940668489250}
   m_LocalRotation: {x: -0, y: 1, z: -0, w: 0}
-  m_LocalPosition: {x: -278.1, y: 0, z: 137}
+  m_LocalPosition: {x: -278.1, y: 0, z: 146.7}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1766,7 +1766,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   targetAICar: {fileID: 0}
   Type: 1
-  speed: 30
+  speed: 35
   acceleration: 2
   BlinkerState: 0
   jerk: 0
@@ -1804,7 +1804,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8855317113906247974}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 143.9}
+  m_LocalPosition: {x: 0, y: 0, z: 152.3}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1838,15 +1838,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   targetAICar: {fileID: 0}
   Type: 1
-  speed: 30
+  speed: 35
   acceleration: 2
   BlinkerState: 0
   jerk: 0
   causeToYield: 1
   EyeContactWhileYielding: 0
   EyeContactAfterYielding: 0
-  yieldTime: 1
-  brakingAcceleration: -8
+  yieldTime: 2
+  brakingAcceleration: -11
   YieldingEyeContactSince: 0
   YieldingEyeContactUntil: 0
   customBehaviourData: []
@@ -1868,7 +1868,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1311683245, guid: 16055abd5fa62354bbfa3c45a1fd16eb, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 155
+      value: 165.3
       objectReference: {fileID: 0}
     - target: {fileID: 1312576732937665531, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
@@ -1943,7 +1943,7 @@ PrefabInstance:
     - target: {fileID: 4016054981085874454, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
       propertyPath: speed
-      value: 30
+      value: 35
       objectReference: {fileID: 0}
     - target: {fileID: 4016054981085874454, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
@@ -1963,7 +1963,7 @@ PrefabInstance:
     - target: {fileID: 4016054981085874454, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
       propertyPath: brakingAcceleration
-      value: -8
+      value: -9
       objectReference: {fileID: 0}
     - target: {fileID: 4463566463944099219, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
@@ -1988,7 +1988,7 @@ PrefabInstance:
     - target: {fileID: 4463566463944099219, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: 153.7
+      value: 161.1
       objectReference: {fileID: 0}
     - target: {fileID: 4463566463944099219, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
@@ -2048,7 +2048,7 @@ PrefabInstance:
     - target: {fileID: 6249121930277638278, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
       propertyPath: speed
-      value: 30
+      value: 35
       objectReference: {fileID: 0}
     - target: {fileID: 6249121930277638278, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
@@ -2258,7 +2258,7 @@ PrefabInstance:
     - target: {fileID: 8812417634353776199, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
       propertyPath: speed
-      value: 30
+      value: 35
       objectReference: {fileID: 0}
     - target: {fileID: 8812417634353776199, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
