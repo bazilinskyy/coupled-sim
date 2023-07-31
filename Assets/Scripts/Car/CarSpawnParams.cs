@@ -11,4 +11,8 @@ public struct CarSpawnParams
     public bool SpawnDriver;
     public bool SpawnPassenger;
     public AICar Car;
+    public PlayerSystem.VehicleType VehicleType;
+    public Color color;
+    public bool Labeled;
+    public CustomBehaviour [] customBehaviours;
 }

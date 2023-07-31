@@ -80,6 +80,13 @@ while True:
             frame[key]["blinker"] = struct.unpack("i", received[offset:offset+4])[0]
             offset = offset + 4
             #frame.BlinkerStates.Add((BlinkerState)reader.ReadInt32());
+            frame[key]["front"] = struct.unpack("?", received[offset:offset+1])[0]
+            offset = offset + 1
+            #frame.Front.Add(reader.ReadBoolean());
+            frame[key]["stop"] = struct.unpack("?", received[offset:offset+1])[0]
+            offset = offset + 1
+            #frame.Stop.Add(reader.ReadBoolean());
+
             if (i == LocalDriver) :
             #if (i == log.LocalDriver)
             #{
@@ -134,6 +141,10 @@ while True:
 
             offset = offset + 4
             #_ = reader.ReadInt32(); // Blinkers, unused
+            offset = offset + 1
+            #_ = reader.ReadBoolean(); //high-beam, unused
+            offset = offset + 1
+            #_ = reader.ReadBoolean(); //stop lights, unused
         #}
         for i in range(numCarLights):
         #for (int i = 0; i < numCarLights; i++)

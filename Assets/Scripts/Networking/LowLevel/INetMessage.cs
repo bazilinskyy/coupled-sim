@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using Unity.Networking.Transport;
 
 //base interface for all network messages
 public interface INetMessage
@@ -11,4 +12,5 @@ public interface INetSubMessage
 {
     void SerializeTo(BinaryWriter writer);
     void DeserializeFrom(BinaryReader reader);
+    void DeserializeFrom(ref DataStreamReader reader);
 }

@@ -4,9 +4,9 @@ using UnityStandardAssets.Utility;
 
 public enum SpawnPointType
 {
-    Pedestrian,
-    Driver,
-    Passenger
+    PlayerControlledPedestrian,
+    PlayerControlingCar,
+    PlayerInAIControlledCar
 }
 [Serializable]
 public struct SpawnPoint
@@ -17,6 +17,8 @@ public struct SpawnPoint
     public Quaternion rotation => Point.rotation;
     //a type of player avatar
     public SpawnPointType Type;
+    public int CameraIndex;
+    public PlayerSystem.VehicleType VehicleType;
 }
 
 [Serializable]
@@ -44,6 +46,7 @@ public struct ExperimentRoleDefinition
 
 public class ExperimentDefinition : MonoBehaviour
 {
+    public string ShortName;
     //the name of the experiment
     public string Name;
     //Unity scene name to be loaded as an experiment environment
