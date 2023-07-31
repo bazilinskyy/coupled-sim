@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.18028378, g: 0.22571412, b: 0.30692285, a: 1}
+  m_IndirectSpecularColor: {r: 0.18028326, g: 0.22571333, b: 0.30692202, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -104,7 +104,7 @@ NavMeshSettings:
   serializedVersion: 2
   m_ObjectHideFlags: 0
   m_BuildSettings:
-    serializedVersion: 2
+    serializedVersion: 3
     agentTypeID: 0
     agentRadius: 0.5
     agentHeight: 2
@@ -117,7 +117,7 @@ NavMeshSettings:
     cellSize: 0.16666667
     manualTileSize: 0
     tileSize: 256
-    accuratePlacement: 0
+    buildHeightMesh: 0
     maxJobWorkers: 0
     preserveTilesOutsideBounds: 0
     debug:
@@ -166,9 +166,17 @@ BoxCollider:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 43580572}
   m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
   m_IsTrigger: 0
+  m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 2
+  serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!23 &43580575
@@ -286,30 +294,10 @@ MonoBehaviour:
   _aiCarSystem:
     Prefabs:
     - {fileID: 7713759469045616529, guid: 1baf460ab026f1247ab4696be569ffae, type: 3}
-    - {fileID: 8343856187855894783, guid: 02b8c28a357f14a4b922a9b99b9763ae, type: 3}
   Experiments:
   - {fileID: 8339373823643078367, guid: 96a426fc17a79824e9932e3f651ad683, type: 3}
-  - {fileID: 8690531712627271718, guid: fe4297b61cf987f4590ba77669b05ef7, type: 3}
-  - {fileID: 1881885188683625716, guid: d7650e3b6ee34d3428e6fb5273a5acaf, type: 3}
-  - {fileID: 1559263723498564743, guid: 9a147f7c98140ae42bc467d75530b756, type: 3}
-  - {fileID: 7204988125552765817, guid: a8343044dd814d94c91efd96364d3146, type: 3}
-  - {fileID: 8411844419333703320, guid: 5fdfcff7dfa9a804a9559156db572bca, type: 3}
-  - {fileID: 833586595077142658, guid: d337cbdc0c6db934e80a8d0b3aedf819, type: 3}
-  - {fileID: 4107809817854791533, guid: 5ad4d9957ff632d458cf9e8223f7146f, type: 3}
-  - {fileID: 8138305786588440669, guid: a0cd65d42b133cf42b0f904fc526c5c2, type: 3}
-  - {fileID: 7615228409024102701, guid: fa225906b6e04ef489c48a6aeb1505cd, type: 3}
-  - {fileID: 6661875403309412728, guid: 8a8f14cbdced3ec4e84fa7c267684b28, type: 3}
-  - {fileID: 8776124726034935421, guid: 5763ac6d6f0a62c479d45d4f1eff1c35, type: 3}
-  - {fileID: 2308720202718575136, guid: 0fb3950a4dc9b244c8e697cac2503993, type: 3}
-  - {fileID: 7207122182859282646, guid: c8f5e6ea86c0ea248b2f74f0c846dada, type: 3}
-  - {fileID: 7955144948358021057, guid: b3aad63de9e608949a5706451b6a615d, type: 3}
-  - {fileID: 2013119068458739519, guid: a63ce2cab8320aa4ea535eeb2c77c389, type: 3}
-  - {fileID: 1706235404331159950, guid: 14644f6f26c623541b809e23e33691e8, type: 3}
-  - {fileID: 1002732718368964850, guid: a8ac3ca7f2f37c84e95fd1fdca3e5b87, type: 3}
-  - {fileID: 1601589011424824816, guid: 4227fbd83986bcf47968cc166f83e8fd, type: 3}
-  - {fileID: 5785245843907239180, guid: 5a26e650cf127da419c044538ed9bb66, type: 3}
-  hideGui: 1
-  RunTrailSequenceAutomatically: 1
+  hideGui: 0
+  RunTrailSequenceAutomatically: 0
   recordVideos: 0
   trails:
   - experimentIndex: 0
@@ -569,9 +557,17 @@ Camera:
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
+  m_Iso: 200
+  m_ShutterSpeed: 0.005
+  m_Aperture: 16
+  m_FocusDistance: 10
+  m_FocalLength: 50
+  m_BladeCount: 5
+  m_Curvature: {x: 2, y: 11}
+  m_BarrelClipping: 0.25
+  m_Anamorphism: 0
   m_SensorSize: {x: 36, y: 24}
   m_LensShift: {x: 0, y: 0}
-  m_FocalLength: 50
   m_NormalizedViewPortRect:
     serializedVersion: 2
     x: 0
@@ -621,7 +617,7 @@ LightingSettings:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Settings.lighting
-  serializedVersion: 5
+  serializedVersion: 6
   m_GIWorkflowMode: 0
   m_EnableBakedLightmaps: 1
   m_EnableRealtimeLightmaps: 1
@@ -630,7 +626,7 @@ LightingSettings:
   m_AlbedoBoost: 1
   m_IndirectOutputScale: 1
   m_UsingShadowmask: 1
-  m_BakeBackend: 0
+  m_BakeBackend: 2
   m_LightmapMaxSize: 1024
   m_BakeResolution: 40
   m_Padding: 2
@@ -677,6 +673,7 @@ LightingSettings:
   m_PVRFilteringAtrousPositionSigmaAO: 1
   m_PVRTiledBaking: 0
   m_NumRaysToShootPerTexel: -1
+  m_RespectSceneVisibilityWhenBakingGI: 0
 --- !u!1 &1531541351
 GameObject:
   m_ObjectHideFlags: 0
@@ -820,9 +817,17 @@ Camera:
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
+  m_Iso: 200
+  m_ShutterSpeed: 0.005
+  m_Aperture: 16
+  m_FocusDistance: 10
+  m_FocalLength: 50
+  m_BladeCount: 5
+  m_Curvature: {x: 2, y: 11}
+  m_BarrelClipping: 0.25
+  m_Anamorphism: 0
   m_SensorSize: {x: 36, y: 24}
   m_LensShift: {x: 0, y: 0}
-  m_FocalLength: 50
   m_NormalizedViewPortRect:
     serializedVersion: 2
     x: 0
