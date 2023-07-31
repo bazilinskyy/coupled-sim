@@ -83,7 +83,7 @@ public class Client : NetworkSystem
     {
         _msgDispatcher.ClearLevelMessageHandlers();
         var msg = NetMsg.Read<StartGameMsg>(sync);
-        _lvlManager.LoadLevelWithLocalPlayer(msg.Experiment, _client.MyPlayerId, msg.Roles);
+        _lvlManager.LoadLevelWithLocalPlayer(msg.Experiment, _client.MyPlayerId, msg.Roles, null);
         _roles = msg.Roles;
         _transitionPhase = TransitionPhase.LoadingLevel;
         Time.timeScale = 0;
@@ -181,7 +181,7 @@ public class Client : NetworkSystem
 
     string _ip = "192.168.1.11";
     //displays client GUI
-    public override void OnGUI()
+    public override void OnGUI(bool RunTrailSequenceAutomatically)
     {
         GUILayout.Label($"Client mode: {_currentState}");
         switch (_currentState)
@@ -205,10 +205,6 @@ public class Client : NetworkSystem
             }
             case NetState.Client_Connecting:
             {
-                if (_client.HasError)
-                {
-                    GUILayout.Label($"Client error: {_client.GetError()}");
-                }
                 if (GUILayout.Button("Cancel"))
                 {
                     _client.Disconnect();

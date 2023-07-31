@@ -12,6 +12,7 @@ namespace UnityStandardAssets.Utility
         // and keeps track of progress and laps.
 
         [SerializeField] private WaypointCircuit circuit; // A reference to the waypoint-based route we should follow
+        public WaypointCircuit Circuit => circuit;
 
         [SerializeField] private float lookAheadForTargetOffset = 5;
         // The offset ahead along the route that the we will aim for
@@ -59,12 +60,12 @@ namespace UnityStandardAssets.Utility
             // You can manually create a transform and assign it to this component *and* the AI,
             // then this component will update it, and the AI can read it.
 
-            target = new GameObject(name + "Waypoint Target").transform;
+            target = new GameObject(name + " Waypoint Target").transform;
             //print("Makes Target");
+            this.circuit = circuit;
 
             Reset();
 
-            this.circuit = circuit;
         }
 
 
@@ -74,13 +75,12 @@ namespace UnityStandardAssets.Utility
             progressDistance = 4;
             progressNum = 0;
             lastPosition = transform.position;
-            if (progressStyle == ProgressStyle.PointToPoint)
+            //if (progressStyle == ProgressStyle.PointToPoint)
             {
                 target.position = circuit.Waypoints[progressNum].position;
                 target.rotation = circuit.Waypoints[progressNum].rotation;
             }
         }
-
 
         private void Update()
         {

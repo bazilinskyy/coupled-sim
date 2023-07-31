@@ -41,6 +41,12 @@ public class MessageDispatcher
         Assert.IsTrue(_dispatchIndex.ContainsKey(msgId), "The message handler was not registered in the dispatcher");
         _dispatchIndex[msgId](reader, playerId);
     }
+    
+    public void Dispatch(int msgId, NDeserializer reader, int playerId)
+    {
+        Assert.IsTrue(_dispatchIndex.ContainsKey(msgId), "The message handler was not registered in the dispatcher");
+        _dispatchIndex[msgId](reader, playerId);
+    }
 
     public Action HandleConnect;
 }
