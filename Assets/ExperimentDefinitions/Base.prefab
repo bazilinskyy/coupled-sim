@@ -26,6 +26,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1311683245}
   - {fileID: 9168689610437224543}
@@ -59,6 +60,7 @@ Transform:
   m_LocalRotation: {x: -0, y: 0.7071068, z: -0, w: 0.7071068}
   m_LocalPosition: {x: -96.3, y: -0.06, z: 64.9}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 935614564}
   m_RootOrder: 0
@@ -91,6 +93,7 @@ Transform:
   m_LocalRotation: {x: -0, y: -0.7071068, z: -0, w: 0.7071068}
   m_LocalPosition: {x: -49.209923, y: 0, z: 133.73512}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 8430899067585578543}
   m_RootOrder: 14
@@ -120,9 +123,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointType: 1
+  targetAICar: {fileID: 0}
+  Type: 1
   speed: 15
   acceleration: 1
+  BlinkerState: 0
   jerk: 0
   causeToYield: 0
   EyeContactWhileYielding: 0
@@ -159,6 +164,7 @@ Transform:
   m_LocalRotation: {x: -0, y: 0.7071068, z: -0, w: 0.7071068}
   m_LocalPosition: {x: -18.135, y: 0, z: 4.5051236}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 8430899067585578543}
   m_RootOrder: 7
@@ -188,9 +194,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointType: 1
+  targetAICar: {fileID: 0}
+  Type: 1
   speed: 15
   acceleration: 1
+  BlinkerState: 0
   jerk: 0
   causeToYield: 1
   EyeContactWhileYielding: 1
@@ -227,6 +235,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
   m_LocalPosition: {x: -53.68, y: 0, z: 132.51}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 4312964457461756476}
   m_RootOrder: 2
@@ -285,6 +294,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -107.9, y: 0, z: -38.33}
   m_LocalScale: {x: 1.0000002, y: 1, z: 1.0000002}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7492252986797691323}
   m_RootOrder: 9
@@ -314,9 +324,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointType: 1
+  targetAICar: {fileID: 0}
+  Type: 1
   speed: 30
   acceleration: 2
+  BlinkerState: 0
   jerk: 5
   causeToYield: 0
   EyeContactWhileYielding: 0
@@ -353,6 +365,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 0.7071068, z: -0, w: -0.7071068}
   m_LocalPosition: {x: -3.92, y: 0, z: -49.95}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7492252986797691323}
   m_RootOrder: 6
@@ -382,9 +395,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointType: 1
+  targetAICar: {fileID: 0}
+  Type: 1
   speed: 30
   acceleration: 2
+  BlinkerState: 0
   jerk: 5
   causeToYield: 0
   EyeContactWhileYielding: 0
@@ -421,6 +436,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
   m_LocalPosition: {x: 7.64, y: 0, z: -6.7}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7492252986797691323}
   m_RootOrder: 3
@@ -450,9 +466,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointType: 1
+  targetAICar: {fileID: 0}
+  Type: 1
   speed: 30
   acceleration: 2
+  BlinkerState: 0
   jerk: 5
   causeToYield: 0
   EyeContactWhileYielding: 0
@@ -489,6 +507,7 @@ Transform:
   m_LocalRotation: {x: -0, y: -0.5, z: -0, w: 0.8660254}
   m_LocalPosition: {x: -12.119926, y: 0, z: 125.19512}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 8430899067585578543}
   m_RootOrder: 13
@@ -518,9 +537,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointType: 1
+  targetAICar: {fileID: 0}
+  Type: 1
   speed: 15
   acceleration: 1
+  BlinkerState: 0
   jerk: 0
   causeToYield: 0
   EyeContactWhileYielding: 0
@@ -557,6 +578,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -107.89, y: 0, z: -6.7}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7492252986797691323}
   m_RootOrder: 10
@@ -586,9 +608,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointType: 1
+  targetAICar: {fileID: 0}
+  Type: 1
   speed: 30
   acceleration: 2
+  BlinkerState: 0
   jerk: 5
   causeToYield: 0
   EyeContactWhileYielding: 0
@@ -623,6 +647,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0.22246248, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 935614564}
   m_RootOrder: 1
@@ -655,6 +680,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 0.92387956, z: 0, w: 0.38268343}
   m_LocalPosition: {x: 6.95, y: 0, z: 4.13}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7492252986797691323}
   m_RootOrder: 2
@@ -684,9 +710,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointType: 1
+  targetAICar: {fileID: 0}
+  Type: 1
   speed: 30
   acceleration: 2
+  BlinkerState: 0
   jerk: 5
   causeToYield: 0
   EyeContactWhileYielding: 0
@@ -723,6 +751,7 @@ Transform:
   m_LocalRotation: {x: 0, y: -0.7071068, z: 0, w: 0.7071068}
   m_LocalPosition: {x: -76.7, y: 0, z: 10.04}
   m_LocalScale: {x: 4.2, y: 10, z: 0}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 4312964457461756476}
   m_RootOrder: 0
@@ -752,9 +781,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointType: 1
+  targetAICar: {fileID: 0}
+  Type: 1
   speed: 0
   acceleration: -2
+  BlinkerState: 0
   jerk: -6
   causeToYield: 0
   EyeContactWhileYielding: 0
@@ -791,6 +822,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
   m_LocalPosition: {x: -96.3, y: 0, z: 5}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7492252986797691323}
   m_RootOrder: 0
@@ -820,9 +852,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointType: 1
+  targetAICar: {fileID: 0}
+  Type: 1
   speed: 30
   acceleration: 2
+  BlinkerState: 0
   jerk: 5
   causeToYield: 0
   EyeContactWhileYielding: 0
@@ -859,6 +893,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 0.3826836, z: -0, w: -0.92387944}
   m_LocalPosition: {x: -107.06, y: 0, z: -49.23}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7492252986797691323}
   m_RootOrder: 8
@@ -888,9 +923,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointType: 1
+  targetAICar: {fileID: 0}
+  Type: 1
   speed: 30
   acceleration: 2
+  BlinkerState: 0
   jerk: 5
   causeToYield: 0
   EyeContactWhileYielding: 0
@@ -927,6 +964,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
   m_LocalPosition: {x: -4.09, y: 0, z: 4.92}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7492252986797691323}
   m_RootOrder: 1
@@ -956,9 +994,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointType: 1
+  targetAICar: {fileID: 0}
+  Type: 1
   speed: 30
   acceleration: 2
+  BlinkerState: 0
   jerk: 5
   causeToYield: 0
   EyeContactWhileYielding: 0
@@ -995,6 +1035,7 @@ Transform:
   m_LocalRotation: {x: -0, y: -0.258819, z: -0, w: 0.9659259}
   m_LocalPosition: {x: 7.4600754, y: 0, z: 102.16512}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 8430899067585578543}
   m_RootOrder: 12
@@ -1024,9 +1065,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointType: 1
+  targetAICar: {fileID: 0}
+  Type: 1
   speed: 15
   acceleration: 1
+  BlinkerState: 0
   jerk: 0
   causeToYield: 0
   EyeContactWhileYielding: 0
@@ -1062,6 +1105,7 @@ Transform:
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 59.9}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 6750191569094715530}
   - {fileID: 3073151224528846312}
@@ -1135,6 +1179,7 @@ Transform:
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 12.100075, y: 0, z: 15.625124}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 8430899067585578543}
   m_RootOrder: 10
@@ -1164,9 +1209,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointType: 1
+  targetAICar: {fileID: 0}
+  Type: 1
   speed: 15
   acceleration: 1
+  BlinkerState: 0
   jerk: 0
   causeToYield: 0
   EyeContactWhileYielding: 0
@@ -1201,6 +1248,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7609667120526454229}
   m_RootOrder: 3
@@ -1233,6 +1281,7 @@ Transform:
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 12.100075, y: 0, z: 62.92512}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 8430899067585578543}
   m_RootOrder: 11
@@ -1262,9 +1311,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointType: 1
+  targetAICar: {fileID: 0}
+  Type: 1
   speed: 15
   acceleration: 1
+  BlinkerState: 0
   jerk: 0
   causeToYield: 0
   EyeContactWhileYielding: 0
@@ -1301,6 +1352,7 @@ Transform:
   m_LocalRotation: {x: -0, y: 1, z: -0, w: 0}
   m_LocalPosition: {x: -112.359924, y: 0, z: 21.035124}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 8430899067585578543}
   m_RootOrder: 2
@@ -1330,9 +1382,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointType: 1
+  targetAICar: {fileID: 0}
+  Type: 1
   speed: 15
   acceleration: 1
+  BlinkerState: 0
   jerk: 0
   causeToYield: 0
   EyeContactWhileYielding: 0
@@ -1369,6 +1423,7 @@ Transform:
   m_LocalRotation: {x: -0, y: 0.7071068, z: -0, w: 0.7071068}
   m_LocalPosition: {x: 3.1700745, y: 0, z: 4.5051236}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 8430899067585578543}
   m_RootOrder: 8
@@ -1398,9 +1453,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointType: 1
+  targetAICar: {fileID: 0}
+  Type: 1
   speed: 15
   acceleration: 1
+  BlinkerState: 0
   jerk: 0
   causeToYield: 0
   EyeContactWhileYielding: 0
@@ -1437,6 +1494,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 0.38268343, z: 0, w: 0.92387956}
   m_LocalPosition: {x: -107.11, y: 0, z: 4.09}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7492252986797691323}
   m_RootOrder: 11
@@ -1466,9 +1524,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointType: 1
+  targetAICar: {fileID: 0}
+  Type: 1
   speed: 30
   acceleration: 2
+  BlinkerState: 0
   jerk: 5
   causeToYield: 0
   EyeContactWhileYielding: 0
@@ -1504,6 +1564,7 @@ Transform:
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7609667120526454229}
   m_RootOrder: 7
@@ -1526,6 +1587,9 @@ MonoBehaviour:
     SpawnDriver: 1
     SpawnPassenger: 0
     Car: {fileID: 7713759469045616529, guid: 1baf460ab026f1247ab4696be569ffae, type: 3}
+    VehicleType: 0
+    color: {r: 0, g: 0, b: 0, a: 0}
+    Labeled: 0
 --- !u!1 &5967787751095999991
 GameObject:
   m_ObjectHideFlags: 0
@@ -1554,6 +1618,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
   m_LocalPosition: {x: 7.64, y: 0, z: -38.34}
   m_LocalScale: {x: 1.0000002, y: 1, z: 1.0000002}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7492252986797691323}
   m_RootOrder: 4
@@ -1583,9 +1648,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointType: 1
+  targetAICar: {fileID: 0}
+  Type: 1
   speed: 30
   acceleration: 2
+  BlinkerState: 0
   jerk: 5
   causeToYield: 0
   EyeContactWhileYielding: 0
@@ -1622,6 +1689,7 @@ Transform:
   m_LocalRotation: {x: -0, y: 0.7071068, z: -0, w: 0.7071068}
   m_LocalPosition: {x: -75, y: 0, z: 4.5051236}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 8430899067585578543}
   m_RootOrder: 5
@@ -1651,9 +1719,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointType: 1
+  targetAICar: {fileID: 0}
+  Type: 1
   speed: 15
   acceleration: 1
+  BlinkerState: 0
   jerk: 0
   causeToYield: 0
   EyeContactWhileYielding: 0
@@ -1690,6 +1760,7 @@ Transform:
   m_LocalRotation: {x: -0, y: 0.7071068, z: -0, w: 0.7071068}
   m_LocalPosition: {x: -50, y: 0, z: 4.5051236}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 8430899067585578543}
   m_RootOrder: 6
@@ -1719,9 +1790,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointType: 1
+  targetAICar: {fileID: 0}
+  Type: 1
   speed: 15
   acceleration: 1
+  BlinkerState: 0
   jerk: 0
   causeToYield: 0
   EyeContactWhileYielding: 0
@@ -1758,6 +1831,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -108, y: 0, z: 37.2}
   m_LocalScale: {x: 10, y: 10, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 4312964457461756476}
   m_RootOrder: 1
@@ -1787,9 +1861,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointType: 1
+  targetAICar: {fileID: 0}
+  Type: 1
   speed: 0
   acceleration: -2
+  BlinkerState: 0
   jerk: -6
   causeToYield: 0
   EyeContactWhileYielding: 0
@@ -1826,6 +1902,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 0.7071068, z: -0, w: -0.7071068}
   m_LocalPosition: {x: -96.31, y: 0, z: -49.9}
   m_LocalScale: {x: 1.0000005, y: 1, z: 1.0000005}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7492252986797691323}
   m_RootOrder: 7
@@ -1855,9 +1932,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointType: 1
+  targetAICar: {fileID: 0}
+  Type: 1
   speed: 30
   acceleration: 2
+  BlinkerState: 0
   jerk: 5
   causeToYield: 0
   EyeContactWhileYielding: 0
@@ -1894,6 +1973,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 0.9238796, z: -0, w: -0.38268325}
   m_LocalPosition: {x: 6.91, y: 0, z: -49.15}
   m_LocalScale: {x: 1.0000005, y: 1, z: 1.0000005}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7492252986797691323}
   m_RootOrder: 5
@@ -1923,9 +2003,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointType: 1
+  targetAICar: {fileID: 0}
+  Type: 1
   speed: 30
   acceleration: 2
+  BlinkerState: 0
   jerk: 5
   causeToYield: 0
   EyeContactWhileYielding: 0
@@ -1962,6 +2044,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
   m_LocalPosition: {x: -112.359924, y: 0, z: 30.845123}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 8430899067585578543}
   m_RootOrder: 1
@@ -1991,9 +2074,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointType: 1
+  targetAICar: {fileID: 0}
+  Type: 1
   speed: 15
   acceleration: 1
+  BlinkerState: 0
   jerk: 0
   causeToYield: 0
   EyeContactWhileYielding: 0
@@ -2027,8 +2112,9 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6692014269374732414}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: -28.5, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 6395839017716348911}
   - {fileID: 935614564}
@@ -2040,7 +2126,7 @@ Transform:
   - {fileID: 6519749865735157834}
   - {fileID: 8430899067585578543}
   m_Father: {fileID: 0}
-  m_RootOrder: 0
+  m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &8692043556341430772
 MonoBehaviour:
@@ -2057,6 +2143,18 @@ MonoBehaviour:
   Name: Base Scenario
   Scene: MainScene
   Roles:
+  - Name: Driver
+    TopHMI: {fileID: 0}
+    WindshieldHMI: {fileID: 0}
+    HoodHMI: {fileID: 0}
+    carIdx: 0
+    SpawnPoint:
+      Point: {fileID: 571469619656576747}
+      Type: 1
+      CameraIndex: 0
+      VehicleType: 0
+    AutonomousPath: {fileID: 0}
+    AutonomousIsYielding: 0
   - Name: Automated - Passenger
     TopHMI: {fileID: 114674626593462642, guid: 9eaaf159fd53e9043a6a0f42f3729fa0, type: 3}
     WindshieldHMI: {fileID: 114674626593462642, guid: 9eaaf159fd53e9043a6a0f42f3729fa0,
@@ -2067,6 +2165,8 @@ MonoBehaviour:
     SpawnPoint:
       Point: {fileID: 1311683245}
       Type: 2
+      CameraIndex: 0
+      VehicleType: 0
     AutonomousPath: {fileID: 8043761391078894673}
     AutonomousIsYielding: 1
   - Name: Pedestrian
@@ -2077,16 +2177,8 @@ MonoBehaviour:
     SpawnPoint:
       Point: {fileID: 9168689610437224543}
       Type: 0
-    AutonomousPath: {fileID: 0}
-    AutonomousIsYielding: 0
-  - Name: Driver
-    TopHMI: {fileID: 0}
-    WindshieldHMI: {fileID: 0}
-    HoodHMI: {fileID: 0}
-    carIdx: 0
-    SpawnPoint:
-      Point: {fileID: 571469619656576747}
-      Type: 1
+      CameraIndex: 0
+      VehicleType: 0
     AutonomousPath: {fileID: 0}
     AutonomousIsYielding: 0
   PointsOfInterest: []
@@ -2122,6 +2214,7 @@ Transform:
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 2815826181675721001}
   - {fileID: 8609029755401214846}
@@ -2157,6 +2250,7 @@ Transform:
   m_LocalRotation: {x: -0, y: 0.30070576, z: -0, w: 0.953717}
   m_LocalPosition: {x: 11.160072, y: 0, z: 5.575124}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 8430899067585578543}
   m_RootOrder: 9
@@ -2186,9 +2280,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointType: 1
+  targetAICar: {fileID: 0}
+  Type: 1
   speed: 15
   acceleration: 1
+  BlinkerState: 0
   jerk: 0
   causeToYield: 0
   EyeContactWhileYielding: 0
@@ -2223,6 +2319,7 @@ Transform:
   m_LocalRotation: {x: 0, y: -0.7071068, z: 0, w: 0.7071068}
   m_LocalPosition: {x: -120.3, y: 0.22246248, z: 9.7}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 935614564}
   m_RootOrder: 2
@@ -2255,6 +2352,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
   m_LocalPosition: {x: -112.359924, y: 0, z: 57.60512}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 8430899067585578543}
   m_RootOrder: 0
@@ -2284,9 +2382,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointType: 1
+  targetAICar: {fileID: 0}
+  Type: 1
   speed: 15
   acceleration: 1
+  BlinkerState: 0
   jerk: 0
   causeToYield: 0
   EyeContactWhileYielding: 0
@@ -2323,6 +2423,7 @@ Transform:
   m_LocalRotation: {x: -0, y: 0.7071068, z: -0, w: 0.7071068}
   m_LocalPosition: {x: -100, y: 0, z: 4.5051236}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 8430899067585578543}
   m_RootOrder: 4
@@ -2352,9 +2453,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointType: 1
+  targetAICar: {fileID: 0}
+  Type: 1
   speed: 15
   acceleration: 1
+  BlinkerState: 0
   jerk: 0
   causeToYield: 0
   EyeContactWhileYielding: 0
@@ -2391,6 +2494,7 @@ Transform:
   m_LocalRotation: {x: -0, y: 0.76604444, z: -0, w: 0.64278764}
   m_LocalPosition: {x: -106.439926, y: 0, z: 5.0851235}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 8430899067585578543}
   m_RootOrder: 3
@@ -2420,9 +2524,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointType: 1
+  targetAICar: {fileID: 0}
+  Type: 1
   speed: 15
   acceleration: 1
+  BlinkerState: 0
   jerk: 0
   causeToYield: 0
   EyeContactWhileYielding: 0
@@ -2458,6 +2564,7 @@ Transform:
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 1}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1870218335211625825}
   - {fileID: 9049623286380411067}
@@ -2514,6 +2621,7 @@ PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Modification:
+    serializedVersion: 2
     m_TransformParent: {fileID: 7609667120526454229}
     m_Modifications:
     - target: {fileID: 3678436171455676945, guid: 8fb627e88d79d774992db56661edcf83,
@@ -2525,6 +2633,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7027320322760964821, guid: 8fb627e88d79d774992db56661edcf83,
+        type: 3}
+      propertyPath: m_RootOrder
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 7027320322760964821, guid: 8fb627e88d79d774992db56661edcf83,
         type: 3}
@@ -2543,6 +2656,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7027320322760964821, guid: 8fb627e88d79d774992db56661edcf83,
         type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7027320322760964821, guid: 8fb627e88d79d774992db56661edcf83,
+        type: 3}
       propertyPath: m_LocalRotation.x
       value: -0
       objectReference: {fileID: 0}
@@ -2555,16 +2673,6 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalRotation.z
       value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7027320322760964821, guid: 8fb627e88d79d774992db56661edcf83,
-        type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 7027320322760964821, guid: 8fb627e88d79d774992db56661edcf83,
-        type: 3}
-      propertyPath: m_RootOrder
-      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 7027320322760964821, guid: 8fb627e88d79d774992db56661edcf83,
         type: 3}
@@ -2582,6 +2690,7 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
+    m_AddedGameObjects: []
   m_SourcePrefab: {fileID: 100100000, guid: 8fb627e88d79d774992db56661edcf83, type: 3}
 --- !u!4 &8138627878072586462 stripped
 Transform:
@@ -2606,6 +2715,7 @@ PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Modification:
+    serializedVersion: 2
     m_TransformParent: {fileID: 7609667120526454229}
     m_Modifications:
     - target: {fileID: 7207718017691476130, guid: 132bebb0650c6984a9b02d142e538bde,
@@ -2617,6 +2727,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7207718017691476140, guid: 132bebb0650c6984a9b02d142e538bde,
+        type: 3}
+      propertyPath: m_RootOrder
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7207718017691476140, guid: 132bebb0650c6984a9b02d142e538bde,
         type: 3}
@@ -2635,6 +2750,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7207718017691476140, guid: 132bebb0650c6984a9b02d142e538bde,
         type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7207718017691476140, guid: 132bebb0650c6984a9b02d142e538bde,
+        type: 3}
       propertyPath: m_LocalRotation.x
       value: 0
       objectReference: {fileID: 0}
@@ -2646,16 +2766,6 @@ PrefabInstance:
     - target: {fileID: 7207718017691476140, guid: 132bebb0650c6984a9b02d142e538bde,
         type: 3}
       propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7207718017691476140, guid: 132bebb0650c6984a9b02d142e538bde,
-        type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 7207718017691476140, guid: 132bebb0650c6984a9b02d142e538bde,
-        type: 3}
-      propertyPath: m_RootOrder
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7207718017691476140, guid: 132bebb0650c6984a9b02d142e538bde,
@@ -2674,6 +2784,7 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
+    m_AddedGameObjects: []
   m_SourcePrefab: {fileID: 100100000, guid: 132bebb0650c6984a9b02d142e538bde, type: 3}
 --- !u!4 &6395839017716348911 stripped
 Transform:
@@ -2686,6 +2797,7 @@ PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Modification:
+    serializedVersion: 2
     m_TransformParent: {fileID: 7609667120526454229}
     m_Modifications:
     - target: {fileID: 1494033558445686922, guid: dfe1eb2bf326a0f459c687648bd18684,
@@ -2693,6 +2805,11 @@ PrefabInstance:
       propertyPath: TestCircuit
       value: 
       objectReference: {fileID: 8694987241760910644}
+    - target: {fileID: 7387523491508186194, guid: dfe1eb2bf326a0f459c687648bd18684,
+        type: 3}
+      propertyPath: m_RootOrder
+      value: 6
+      objectReference: {fileID: 0}
     - target: {fileID: 7387523491508186194, guid: dfe1eb2bf326a0f459c687648bd18684,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -2710,6 +2827,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7387523491508186194, guid: dfe1eb2bf326a0f459c687648bd18684,
         type: 3}
+      propertyPath: m_LocalRotation.w
+      value: -0.82677895
+      objectReference: {fileID: 0}
+    - target: {fileID: 7387523491508186194, guid: dfe1eb2bf326a0f459c687648bd18684,
+        type: 3}
       propertyPath: m_LocalRotation.x
       value: -0.021260174
       objectReference: {fileID: 0}
@@ -2722,16 +2844,6 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalRotation.z
       value: -0.035555974
-      objectReference: {fileID: 0}
-    - target: {fileID: 7387523491508186194, guid: dfe1eb2bf326a0f459c687648bd18684,
-        type: 3}
-      propertyPath: m_LocalRotation.w
-      value: -0.82677895
-      objectReference: {fileID: 0}
-    - target: {fileID: 7387523491508186194, guid: dfe1eb2bf326a0f459c687648bd18684,
-        type: 3}
-      propertyPath: m_RootOrder
-      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 7387523491508186194, guid: dfe1eb2bf326a0f459c687648bd18684,
         type: 3}
@@ -2759,6 +2871,7 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
+    m_AddedGameObjects: []
   m_SourcePrefab: {fileID: 100100000, guid: dfe1eb2bf326a0f459c687648bd18684, type: 3}
 --- !u!4 &1254850277491099203 stripped
 Transform:

@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System;
 using UnityEngine;
 using UnityEngine.Serialization;
 using UnityEngine.Assertions;
 using VehicleBehaviour;
+using Unity.Networking.Transport;
 
 public enum HMISlot
 {
@@ -23,11 +23,23 @@ public struct AvatarPose : INetSubMessage
     public List<Vector3> LocalPositions;
     public List<Quaternion> LocalRotations;
     public BlinkerState Blinkers;
+    public bool FrontLights;
+    public bool StopLights;
     public void DeserializeFrom(BinaryReader reader)
     {
         LocalPositions = reader.ReadListVector3();
         LocalRotations = reader.ReadListQuaternion();
         Blinkers = (BlinkerState)reader.ReadInt32();
+        FrontLights = reader.ReadBoolean();
+        StopLights = reader.ReadBoolean();
+    }
+    public void DeserializeFrom(ref DataStreamReader reader)
+    {
+        LocalPositions = reader.ReadListVector3();
+        LocalRotations = reader.ReadListQuaternion();
+        Blinkers = (BlinkerState)reader.ReadInt();
+        FrontLights = reader.ReadBoolean();
+        StopLights = reader.ReadBoolean();
     }
 
     public void SerializeTo(BinaryWriter writer)
@@ -35,6 +47,8 @@ public struct AvatarPose : INetSubMessage
         writer.Write(LocalPositions);
         writer.Write(LocalRotations);
         writer.Write((int)Blinkers);
+        writer.Write(FrontLights);
+        writer.Write(StopLights);
     }
 
     IEnumerable<string> CsvEnumerator()
@@ -67,9 +81,6 @@ public enum AvatarType
 // These are used for more than Players (AI cars have these as well)
 public class PlayerAvatar : MonoBehaviour
 {
-    public GameObject DriverPuppet;
-    public GameObject PassengerPuppet;
-
     [Header("Controls")]
     public ModeElements VRModeElements;
     public ModeElements FlatModeElements;
@@ -81,6 +92,13 @@ public class PlayerAvatar : MonoBehaviour
     public ModeElements PlayerAsDriver;
     public ModeElements PlayerAsPassenger;
 
+    [Header("Driver")]
+    public ModeElements AV;
+    public ModeElements MDV;
+
+    [Header("Audio")]
+    public EngineSoundManager Internal;
+    public EngineSoundManager External;
 
     [Serializable]
     public struct ModeElements
@@ -99,10 +117,13 @@ public class PlayerAvatar : MonoBehaviour
 
 
     //set up an Avatar (disabling and enabling needed components) for different control methods
-    public void Initialize(bool isRemote, PlayerSystem.InputMode inputMode, PlayerSystem.ControlMode controlMode)
+    public void Initialize(bool isRemote, PlayerSystem.InputMode inputMode, PlayerSystem.ControlMode controlMode, PlayerSystem.VehicleType vehicleType, int cameraIndex = -1)
     {
         if (isRemote)
         {
+            if (External != null) {
+                External.enabled = true;
+            }
             GetComponentInChildren<Rigidbody>().isKinematic = true;
             GetComponentInChildren<Rigidbody>().useGravity = false;
             foreach (var wc in GetComponentsInChildren<WheelCollider>())
@@ -116,6 +137,10 @@ public class PlayerAvatar : MonoBehaviour
         } 
         else
         {
+            if (cameraIndex >= 0) {
+                cameras[cameraIndex].gameObject.SetActive(true);
+            }
+
             ModeElements modeElements = default(ModeElements);
             switch (inputMode)
             {
@@ -137,13 +162,37 @@ public class PlayerAvatar : MonoBehaviour
             switch (controlMode)
             {
                 case PlayerSystem.ControlMode.Driver:
+                    if (Internal != null)
+                    {
+                        Internal.enabled = true;
+                    }
                     modeElements = PlayerAsDriver;
                     break;
                 case PlayerSystem.ControlMode.HostAI:
+                    if (External != null)
+                    {
+                        External.enabled = true;
+                    }
                     modeElements = HostDrivenAIElements;
                     break;
                 case PlayerSystem.ControlMode.Passenger:
+                    if (Internal != null)
+                    {
+                        Internal.enabled = true;
+                    }
                     modeElements = PlayerAsPassenger;
+                    break;
+            }
+
+            SetupModeElements(modeElements); 
+            
+            switch (vehicleType)
+            {
+                case PlayerSystem.VehicleType.AV:
+                    modeElements = AV;
+                    break;
+                case PlayerSystem.VehicleType.MDV:
+                    modeElements = MDV;
                     break;
             }
 
@@ -233,10 +282,15 @@ public class PlayerAvatar : MonoBehaviour
     }
 
     [Header("Other")]
+    public Camera[] cameras;
     public HMIAnchors HMISlots;
     public AvatarType Type;
     public Transform[] SyncTransforms;
-    public CarBlinkers _carBlinkers;
+    [SerializeField]
+    private CarBlinkers _carBlinkers;
+    public GameObject stopLights;
+    public GameObject frontLights;
+    public CarBlinkers CarBlinkers => _carBlinkers;
     List<Vector3> _pos = new List<Vector3>();
     List<Quaternion> _rot = new List<Quaternion>();
 
@@ -257,6 +311,8 @@ public class PlayerAvatar : MonoBehaviour
             LocalPositions = _pos,
             LocalRotations = _rot,
             Blinkers = _carBlinkers == null ? BlinkerState.None : _carBlinkers.State,
+            FrontLights = frontLights == null ? false : frontLights.activeSelf,
+            StopLights = stopLights == null ? false : stopLights.activeSelf,
         };
     }
 
@@ -274,5 +330,18 @@ public class PlayerAvatar : MonoBehaviour
         {
             _carBlinkers.SwitchToState(pose.Blinkers);
         }
+        if (frontLights != null)
+        {
+            frontLights.SetActive(pose.FrontLights);
+        }
+        if (stopLights != null)
+        {
+            stopLights.SetActive(pose.StopLights);
+        }
+    }
+
+    internal void SetBreakLights(bool breaking)
+    {
+        stopLights.SetActive(breaking);
     }
 }
