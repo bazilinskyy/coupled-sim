@@ -51,9 +51,17 @@ Camera:
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
+  m_Iso: 200
+  m_ShutterSpeed: 0.005
+  m_Aperture: 16
+  m_FocusDistance: 10
+  m_FocalLength: 50
+  m_BladeCount: 5
+  m_Curvature: {x: 2, y: 11}
+  m_BarrelClipping: 0.25
+  m_Anamorphism: 0
   m_SensorSize: {x: 36, y: 24}
   m_LensShift: {x: 0, y: 0}
-  m_FocalLength: 50
   m_NormalizedViewPortRect:
     serializedVersion: 2
     x: 0
@@ -298,9 +306,17 @@ Camera:
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
+  m_Iso: 200
+  m_ShutterSpeed: 0.005
+  m_Aperture: 16
+  m_FocusDistance: 10
+  m_FocalLength: 50
+  m_BladeCount: 5
+  m_Curvature: {x: 2, y: 11}
+  m_BarrelClipping: 0.25
+  m_Anamorphism: 0
   m_SensorSize: {x: 36, y: 24}
   m_LensShift: {x: 0, y: 0}
-  m_FocalLength: 50
   m_NormalizedViewPortRect:
     serializedVersion: 2
     x: 0
@@ -543,9 +559,17 @@ Camera:
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
+  m_Iso: 200
+  m_ShutterSpeed: 0.005
+  m_Aperture: 16
+  m_FocusDistance: 10
+  m_FocalLength: 50
+  m_BladeCount: 5
+  m_Curvature: {x: 2, y: 11}
+  m_BarrelClipping: 0.25
+  m_Anamorphism: 0
   m_SensorSize: {x: 36, y: 24}
   m_LensShift: {x: 0, y: 0}
-  m_FocalLength: 50
   m_NormalizedViewPortRect:
     serializedVersion: 2
     x: 0
@@ -1333,10 +1357,21 @@ Rigidbody:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1787876385652902}
-  serializedVersion: 2
+  serializedVersion: 4
   m_Mass: 1500
   m_Drag: 0.05
   m_AngularDrag: 0.1
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
   m_UseGravity: 1
   m_IsKinematic: 0
   m_Interpolate: 0
@@ -1495,9 +1530,17 @@ BoxCollider:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1787876385652902}
   m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
   m_IsTrigger: 0
+  m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 2
+  serializedVersion: 3
   m_Size: {x: 1.5, y: 0.7, z: 2.73}
   m_Center: {x: 0, y: 0.7, z: 0}
 --- !u!114 &8938021727904404209
@@ -2011,9 +2054,17 @@ Camera:
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
+  m_Iso: 200
+  m_ShutterSpeed: 0.005
+  m_Aperture: 16
+  m_FocusDistance: 10
+  m_FocalLength: 50
+  m_BladeCount: 5
+  m_Curvature: {x: 2, y: 11}
+  m_BarrelClipping: 0.25
+  m_Anamorphism: 0
   m_SensorSize: {x: 36, y: 24}
   m_LensShift: {x: 0, y: 0}
-  m_FocalLength: 50
   m_NormalizedViewPortRect:
     serializedVersion: 2
     x: 0
@@ -2731,9 +2782,17 @@ BoxCollider:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 314786087796457842}
   m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
   m_IsTrigger: 0
+  m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 2
+  serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &394475839077076854
@@ -4775,6 +4834,7 @@ WheelCollider:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2233151292397704232}
+  serializedVersion: 2
   m_Center: {x: 0, y: 0.15, z: 0}
   m_Radius: 0.27
   m_SuspensionSpring:
@@ -4797,7 +4857,15 @@ WheelCollider:
     m_AsymptoteSlip: 0.5
     m_AsymptoteValue: 0.75
     m_Stiffness: 2
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
   m_Enabled: 1
+  m_ProvidesContacts: 0
 --- !u!114 &8118893604333411395
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5127,14 +5195,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2405930147965908106}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.361, z: 0.293}
+  m_LocalRotation: {x: -0.4710811, y: 0.000052612828, z: -0.000159035, w: 0.8820899}
+  m_LocalPosition: {x: 0, y: 0.352, z: 0.837}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 3005722987351215843}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: -56.209, y: 0.025, z: -0.034}
 --- !u!1 &2438546283645924342
 GameObject:
   m_ObjectHideFlags: 0
@@ -5186,9 +5254,17 @@ Camera:
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
+  m_Iso: 200
+  m_ShutterSpeed: 0.005
+  m_Aperture: 16
+  m_FocusDistance: 10
+  m_FocalLength: 50
+  m_BladeCount: 5
+  m_Curvature: {x: 2, y: 11}
+  m_BarrelClipping: 0.25
+  m_Anamorphism: 0
   m_SensorSize: {x: 36, y: 24}
   m_LensShift: {x: 0, y: 0}
-  m_FocalLength: 50
   m_NormalizedViewPortRect:
     serializedVersion: 2
     x: 0
@@ -5429,6 +5505,7 @@ WheelCollider:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2465501146693319750}
+  serializedVersion: 2
   m_Center: {x: 0, y: 0.15, z: 0}
   m_Radius: 0.27
   m_SuspensionSpring:
@@ -5451,7 +5528,15 @@ WheelCollider:
     m_AsymptoteSlip: 0.5
     m_AsymptoteValue: 0.75
     m_Stiffness: 2
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
   m_Enabled: 1
+  m_ProvidesContacts: 0
 --- !u!114 &7803003518237382229
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5591,6 +5676,7 @@ WheelCollider:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2590204308891513981}
+  serializedVersion: 2
   m_Center: {x: 0, y: 0.15, z: 0}
   m_Radius: 0.27
   m_SuspensionSpring:
@@ -5613,7 +5699,15 @@ WheelCollider:
     m_AsymptoteSlip: 0.5
     m_AsymptoteValue: 0.75
     m_Stiffness: 2
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
   m_Enabled: 1
+  m_ProvidesContacts: 0
 --- !u!114 &3856690493516700972
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7957,9 +8051,17 @@ BoxCollider:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6080056742203526717}
   m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
   m_IsTrigger: 0
+  m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 2
+  serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &6296359851564515721
@@ -9886,6 +9988,7 @@ WheelCollider:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8414590981672045758}
+  serializedVersion: 2
   m_Center: {x: 0, y: 0.15, z: 0}
   m_Radius: 0.27
   m_SuspensionSpring:
@@ -9908,7 +10011,15 @@ WheelCollider:
     m_AsymptoteSlip: 0.5
     m_AsymptoteValue: 0.75
     m_Stiffness: 2
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
   m_Enabled: 1
+  m_ProvidesContacts: 0
 --- !u!114 &5263168857248101632
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10102,7 +10213,7 @@ PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Modification:
-    serializedVersion: 2
+    serializedVersion: 3
     m_TransformParent: {fileID: 2696370643274415756}
     m_Modifications:
     - target: {fileID: 7156813555131283438, guid: dbbb24367dd809f40a8b370b699c7028,
@@ -10181,11 +10292,21 @@ PrefabInstance:
       value: Driver
       objectReference: {fileID: 0}
     m_RemovedComponents: []
+    m_RemovedGameObjects: []
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 7156813555140603206, guid: dbbb24367dd809f40a8b370b699c7028,
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 2220999065844827415}
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 7156813555140677652, guid: dbbb24367dd809f40a8b370b699c7028,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1908649805642519540}
+    - targetCorrespondingSourceObject: {fileID: 7156813555140677652, guid: dbbb24367dd809f40a8b370b699c7028,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 7998332263121899790}
   m_SourcePrefab: {fileID: 100100000, guid: dbbb24367dd809f40a8b370b699c7028, type: 3}
 --- !u!1 &8595803345551730976 stripped
 GameObject:
@@ -10750,7 +10871,7 @@ PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Modification:
-    serializedVersion: 2
+    serializedVersion: 3
     m_TransformParent: {fileID: 8376607358125735225}
     m_Modifications:
     - target: {fileID: 100004, guid: e6ab94ea3d7bfb840aa41680fa79570e, type: 3}
@@ -11170,7 +11291,9 @@ PrefabInstance:
       value: -8.563001
       objectReference: {fileID: 0}
     m_RemovedComponents: []
+    m_RemovedGameObjects: []
     m_AddedGameObjects: []
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: e6ab94ea3d7bfb840aa41680fa79570e, type: 3}
 --- !u!4 &8762834653816545141 stripped
 Transform:
