@@ -294,7 +294,9 @@ public class LogConverter
     List<int> aiCarIndexes = new List<int>();
     bool IsAICar(int i) => aiCarIndexes.Contains(i);
 
+    #pragma warning disable 0414
     List<Vector3> _driverPositions;
+    #pragma warning restore 0414
     List<RunningAverage> _driverVels;
     //translation logic
     //referenceName, referencePos, referenceRot - parameters specifining new origin point, allowing transforming data into new coordinate system

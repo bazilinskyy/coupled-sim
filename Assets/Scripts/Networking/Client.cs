@@ -181,7 +181,7 @@ public class Client : NetworkSystem
 
     string _ip = "192.168.1.11";
     //displays client GUI
-    public override void OnGUI(bool RunTrailSequenceAutomatically)
+    public override void OnGUI(bool RunTrialSequenceAutomatically)
     {
         GUILayout.Label($"Client mode: {_currentState}");
         switch (_currentState)
