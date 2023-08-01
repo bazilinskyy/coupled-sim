@@ -188,7 +188,7 @@ public class PlayerSystem : MonoBehaviour
             {
                 PlayerInputMode = InputMode.Suite;
             }
-            if (GUILayout.Button("Oculus mode"))
+            if (GUILayout.Button("HMD mode"))
             {
                 PlayerInputMode = InputMode.VR;
             }
