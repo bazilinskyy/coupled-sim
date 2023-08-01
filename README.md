@@ -17,7 +17,7 @@ If you use coupled-sim for academic work please cite the following paper:
 [![demo video](ReadmeFiles/thumbnail_demo_video.png)](https://www.youtube.com/watch?v=W2VWLYnTYrM)
 
 ## Environment
-![](ReadmeFiles/night`mode_view.png)
+![](ReadmeFiles/night_mode_view.png)
 
 The coupled simulator supports both day and night-time settings. Figure above shows a view of the night mode. Figure below shows the top view of the environment. It is a model of a US-like city containing:
 - Network of 2-lane roads.
@@ -132,7 +132,7 @@ Once the project is loaded into the Unity editor open StartScene scene.
 Providing input for multiple agents on one machine is not supported. Input is provided only to the agent, the window of which is selected. This mode is intended for testing/debugging.
 
 ### Running simulation trials automatically
-![](ReadmeFiles/Instant.png)
+![](ReadmeFiles/instant.png)
 
 If the simulation only has one participant that is controlled on a host machine, simulation trials can be set up beforehand and run automatically. It is especially useful when using simulator to record videos for trials which is described in next section. Most of a times user should have any GUI disabled, which can be done by checking `Hide GUI` checkbox. GUI can be enabled at runtime by pressing `Tab` button on the keyboard.
 
@@ -196,7 +196,7 @@ Prefab will be opened in edit mode along with the currently defined `Regular Pre
 
 `Base.prefab` from `ExperimentDefinitions` folder is an example experiment definition showcasing most of simulator features.
 
-![](ReadmeFiles/experiment`definition.png)
+![](ReadmeFiles/experiment_definition.png)
 
 ### Configuration of agents
 ![](ReadmeFiles/roles.png)
@@ -253,7 +253,7 @@ To change position of a waypoint - select waypoint transform (by double clicking
 Additionally, for pedestrians, `PedestrianWaypoint` along with trigger `BoxCollider` component might be used to further configure agents behaviour on a tracked path.
 
 ##### `PedestrianWaypoint` component
-![](ReadmeFiles/pedestrian`waypoint.png)
+![](ReadmeFiles/pedestrian_waypoint.png)
 
 `PedestrianWaypoint` component allows to change walking speed when pedestrian avatar enters `BoxCollider` with following parameters:
 - `targetSpeed` - controls movement speed
@@ -263,7 +263,7 @@ Additionally, for pedestrians, `PedestrianWaypoint` along with trigger `BoxColli
 Additionally, for vehicles, `SpeedSettings` along with trigger `BoxCollider` component might be used to further configure agents behaviour on a tracked path.
 
 ##### `SpeedSettings` component
-![](ReadmeFiles/speed`settings.png)
+![](ReadmeFiles/speed_settings.png)
 
 - `SpeedSettings` component allows to change car behaviour when car avatar enters `BoxCollider`.
 - `Type` - Indicates what kind of waypoint is it
@@ -347,12 +347,12 @@ Eye contact behaviour tracking state can be changed when the car reaches the way
 - `YieldingEyeContactUntil`: defines how many seconds need to pass before the driver ceases to maintain eye contact (starting from the moment the car has fully stopped)
 
 #### Configuration of daylight conditions
-![](ReadmeFiles/day`night`control.png)
+![](ReadmeFiles/day_night_control.png)
 
 `DayNightControl` component helps to define different experiment daylight conditions. It gathers lighting-related objects and allows defining two lightings presets - Day and Night, that can be quickly switched for a scene. This component is intended to be used at the experiment definition setup stage. When the development of the environment is complete, it is advised, to save the environment into two separate scenes (with different light setups) and bake lightmaps.
 
 #### Configuration of traffic lights
-![](ReadmeFiles/street`light`manager.png)
+![](ReadmeFiles/street_light_manager.png)
 Creating a traffic street lights system is best started with creating an instance of `ExampleStreetLightCrossSection` prefab and adjusting it. 
 `TrafficLightsManager` component manages state of `CarSection` and `PedestrainSection` objects that group respectively `CarTrafficLight` and `PedestrianTrafficLight` instances that share common behaviour.
 Traffic light initial state is defined with list of `TrafficLightEvent` structures stored in `initialStreetLightSetup` field. This events are triggered once before simulation has started.
@@ -392,12 +392,12 @@ Turn on the Body Pack with all the sensors connected. This will sound like one b
 ##### The problem named Windows
 Delete the following software from the pc and re-install the latest version of MVN Analyze. This will re-install also the *bonjour print* services.
 
-![](ReadmeFiles/mvn`windows.png)
+![](ReadmeFiles/mvn_windows.png)
  
 ##### The post era of having problems with Windows
 If you have an avatar in MVN Analyze and all the sensors are working, boot Unity for the simulation. See figure below: press play to launch the simulation, use the dropdown menu to select a participant and press the trial button to launch a trial.
 
-![](ReadmeFiles/mvn`unity.png)
+![](ReadmeFiles/mvn_unity.png)
 
 **Note.** If you want to match the orientation of the Oculus to the orientation of the avatar’s head, make sure you have left-clicked the game screen in Unity and press the R-key on your keyboard. Pressing the R-key to match the visuals with the head orientation is an iterative process which requires feedback from the participants.
 
@@ -405,26 +405,27 @@ If you want to start a new trial, click play again at the top of the Unity scree
 
 ### Troubleshooting Oculus Rift
 Always run Oculus Home software when using Oculus Rift. Otherwise you will encounter black screens. Make sure your graphics driver and USB 3.0 connections are up to date. If Oculus gives a critical hardware error, disconnect Rift and set Oculus Home software to Beta (Public Test Channel, 1st figure below) and check if Oculus Home setting is set to allow Unknown apps (2nd figure below).
-![](ReadmeFiles/troubleshooting`rift`1.png)
 
-![](ReadmeFiles/troubleshooting`rift`2.png)
+![](ReadmeFiles/troubleshooting_rift_1.png)
+
+![](ReadmeFiles/troubleshooting_rift_2.png)
 
 ### Troubleshooting connection
 The agent PCs need to be connected via a local network. If you cannot reach the host machine, try to ping it.
 
 #### Windows firewall
-![](ReadmeFiles/windows`firewall.png)
+![](ReadmeFiles/windows_firewall.png)
 
 Inbound rules: Set correct Unity Editor version to allow all connections.
 
-![](ReadmeFiles/inbound`rules.png)
+![](ReadmeFiles/inbound_rules.png)
 
 ### Troubleshooting steering wheel
-Check if supporting software is installed (e.g., Logitech gaming software G27 is used in our case). In Unity, you can check which button corresponds to your specific wheel. You can find this out by using the following asset in an empty project: https://assetstore.unity.com/packages/tools/input-management/controller-tester-43621
+Check if supporting software is installed (e.g., Logitech gaming software G27 is used in our case). In Unity, you can check which button corresponds to your specific wheel. You can find this out by using the following asset in an empty project: https://assetstore.unity.com/packages/tools/input-management/controller-tester-43621.
 
 Then make sure you assign the correct inputs in Unity under `Edit ➡️ Project Settings ➡️ Input` (see figure below).
 
-![](ReadmeFiles/wheel`inputs.png)
+![](ReadmeFiles/wheel_inputs.png)
 
 ## Used assets
 We have used the following free assets:
