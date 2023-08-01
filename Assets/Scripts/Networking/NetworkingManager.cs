@@ -128,11 +128,11 @@ public class NetworkingManager : MonoBehaviour
         {
             if (_netSystem == null)
             {
-                if (RunTrialSequenceAutomatically || GUILayout.Button("Start Host"))
+                if (RunTrialSequenceAutomatically || GUILayout.Button("Start host"))
                 {
                     _netSystem = new Host(_levelManager, _playerSystem, _aiCarSystem, _logger, _fixedLogger, trials[CurrentTrialIndex]);
                 }
-                if (!RunTrialSequenceAutomatically && GUILayout.Button("Start Client"))
+                if (!RunTrialSequenceAutomatically && GUILayout.Button("Start client"))
                 {
                     _netSystem = new Client(_levelManager, _playerSystem, _aiCarSystem, _logger, _fixedLogger);
                 }
