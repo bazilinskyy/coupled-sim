@@ -95,7 +95,7 @@ The host agent may use `Visual syncing` button to display a red bar across all c
 ## Installation
 The simulator was tested on Windows 11 and macOS Ventura 13.5. All functionality is supported by both platforms. However, support for input and output devices was tested only on Windows 10.
 
-After checking out this project, launch Unity Hub to run the simulator with the correct version of Unity (currently **2022.2.12**).
+After checking out this project, launch Unity Hub to run the simulator with the correct version of Unity (currently **2022.3.5f1**).
 
 ## Running a project
 Select the project from the Unity Hub projects list. Wait until the project loads in. If it is not in the Unity Hub list (it is the first time you are running the project), it has to be added first - click `Add` and select a folder containing the project files.
