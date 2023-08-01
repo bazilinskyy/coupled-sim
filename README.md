@@ -223,6 +223,7 @@ Additionally to the location, additional camera settings can be provided for a s
 The component exposes two fields:
 - `FieldOfView`: value which is set at spawn-time to `Camera.fieldOfView` property.
 - `Rotation`: value which is set at spawn-time to `Transform.localRotation` of a game object hosting `Camera` component.
+
 ![](ReadmeFiles/camera_setup.png)
 
 #### Configuration for pedestrian agents (`PlayerControlledPedestrian`) 
@@ -235,8 +236,10 @@ Following additional fields has to be defined:
 
 #### Configuration for agents `PlayerInAIControlledCar` 
 Following additional fields has to be defined:
-- `TopHMI`, `WindshieldHMI`, `HoodHMI` fields - defines which HMI prefab to spawn on corresponding spots. Spots are defined in player avatar prefabs (`PlayerAvatar` (component) ➡️ `HMI Slots` (field)).
+- `TopHMI`, `WindshieldHMI` (see image below), `HoodHMI` fields - defines which eHMI prefab to spawn on corresponding spots. Spots are defined in player avatar prefabs (`PlayerAvatar` (component) ➡️ `HMI Slots` (field)).
 - `AutonomusPath` - references game object defining waypoints for the autonomous car via `WaypointCirciut` component
+
+![](ReadmeFiles/windshield_ehmi.png)
 
 ### Configuration of waypoints 
 ![](ReadmeFiles/traffic_circuit.png)
