@@ -381,6 +381,7 @@ To use analog display, set the following fields:
 ### Troubleshooting of the MVN suit
 #### Running the simulation
 Connect the ASUS Router with the USB Adapter to the PC and plug the Ethernet in a yellow port of the router. Let it boot up for some time while you prepare the software and the suit. Connect the Oculus Rift HDMI and USB 3.0 to the computer.
+
 Plug in the black MVN dongle in a USB 3.0 port of the computer Run the latest version of MVN Analyze. Fill out the anthropometric data and participant name by creating a new recording (1).
 
 Check under `Options ➡️ Preferences ➡️ Miscellaneous ➡️ Network Streamer` that the data streamer is set to `Unity3D`.
