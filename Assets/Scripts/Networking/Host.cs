@@ -25,11 +25,11 @@ public class Host : NetworkSystem
     const float PoseUpdateInterval = 0.01f;
 
     TrafficLightsSystem _lights;
-    NetworkingManager.Trail currentTrail;
+    NetworkingManager.Trial currentTrial;
 
-    public Host(LevelManager levelManager, PlayerSystem playerSys, AICarSyncSystem aiCarSystem, WorldLogger logger, WorldLogger fixedLogger, NetworkingManager.Trail instantStartParams)
+    public Host(LevelManager levelManager, PlayerSystem playerSys, AICarSyncSystem aiCarSystem, WorldLogger logger, WorldLogger fixedLogger, NetworkingManager.Trial instantStartParams)
     {
-        currentTrail = instantStartParams;
+        currentTrial = instantStartParams;
         _playerSys = playerSys;
         _lvlManager = levelManager;
         _aiCarSystem = aiCarSystem;
@@ -171,11 +171,11 @@ public class Host : NetworkSystem
     }
 
     //displays role selection GUI for a single player
-    static void SelectRoleGUI(int player, Host host, ExperimentRoleDefinition[] roles, bool RunTrailSequenceAutomatically)
+    static void SelectRoleGUI(int player, Host host, ExperimentRoleDefinition[] roles, bool RunTrialSequenceAutomatically)
     {
-        if (RunTrailSequenceAutomatically)
+        if (RunTrialSequenceAutomatically)
         {
-            host._playerRoles[player] = host.currentTrail.roleIndex;
+            host._playerRoles[player] = host.currentTrial.roleIndex;
         }
         else 
         {
@@ -194,12 +194,12 @@ public class Host : NetworkSystem
     }
 
     //displays role selection GUI
-    void PlayerRolesGUI(bool RunTrailSequenceAutomatically)
+    void PlayerRolesGUI(bool RunTrialSequenceAutomatically)
     {
         GUILayout.Label($"Role binding:");
         var roles = _lvlManager.Experiments[_selectedExperiment].Roles;
-        SelectRoleGUI(Host.PlayerId, this, roles, RunTrailSequenceAutomatically);
-        ForEachConnectedPlayer((player, host) => SelectRoleGUI(player, host, roles, RunTrailSequenceAutomatically));
+        SelectRoleGUI(Host.PlayerId, this, roles, RunTrialSequenceAutomatically);
+        ForEachConnectedPlayer((player, host) => SelectRoleGUI(player, host, roles, RunTrialSequenceAutomatically));
     }
 
     bool started;
@@ -227,11 +227,11 @@ public class Host : NetworkSystem
         }
         if (_playerRoles[Host.PlayerId] == -1)
         {
-            _lvlManager.LoadLevelNoLocalPlayer(_selectedExperiment, _playerRoles, currentTrail);
+            _lvlManager.LoadLevelNoLocalPlayer(_selectedExperiment, _playerRoles, currentTrial);
         }
         else
         {
-            _lvlManager.LoadLevelWithLocalPlayer(_selectedExperiment, 0, _playerRoles, currentTrail);
+            _lvlManager.LoadLevelWithLocalPlayer(_selectedExperiment, 0, _playerRoles, currentTrial);
         }
         _transitionPhase = TransitionPhase.LoadingLevel;
         Time.timeScale = 0;
@@ -284,15 +284,15 @@ public class Host : NetworkSystem
     }
 
     //displays host GUI
-    public override void OnGUI(bool RunTrailSequenceAutomatically)
+    public override void OnGUI(bool RunTrialSequenceAutomatically)
     {
-        if (!RunTrailSequenceAutomatically)
+        if (!RunTrialSequenceAutomatically)
         {
             GUILayout.Label($"Host mode: {_currentState}");
             GUILayout.Label("Connected: " + _host.NumRemotePlayers);
         } else
         {
-            _selectedExperiment = currentTrail.experimentIndex;
+            _selectedExperiment = currentTrial.experimentIndex;
         }
         switch (_currentState)
         {
@@ -309,7 +309,7 @@ public class Host : NetworkSystem
                         }
                         GUILayout.Label(playerReadyStr);
                         GUILayout.Label(playerRolesStr);
-                        if (GUILayout.Button("Start simulation") || RunTrailSequenceAutomatically)
+                        if (GUILayout.Button("Start simulation") || RunTrialSequenceAutomatically)
                         {
                             if (!startSimulation) {
                                 NetworkingManager.Instance.StartRecording();
@@ -319,16 +319,16 @@ public class Host : NetworkSystem
                     }
                     else
                     {
-                        if (RunTrailSequenceAutomatically)
+                        if (RunTrialSequenceAutomatically)
                         {
                             PrepareSimulation();
-                            PlayerRolesGUI(RunTrailSequenceAutomatically);
-                            _playerSys.SelectMode(currentTrail.InputMode);
+                            PlayerRolesGUI(RunTrialSequenceAutomatically);
+                            _playerSys.SelectMode(currentTrial.InputMode);
                         }
                         else
                         {
                             //GUI.enabled = AllRolesSelected();
-                            if (GUILayout.Button("Initialize experiment"))
+                            if (GUILayout.Button("Initialise experiment"))
                             {
                                 PrepareSimulation();
                             }
@@ -341,7 +341,7 @@ public class Host : NetworkSystem
                                     _selectedExperiment = i;
                                 }
                             }
-                            PlayerRolesGUI(RunTrailSequenceAutomatically);
+                            PlayerRolesGUI(RunTrialSequenceAutomatically);
                             _playerSys.SelectModeGUI();
                         }
                     }

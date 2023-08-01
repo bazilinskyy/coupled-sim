@@ -26,5 +26,5 @@ public abstract class NetworkSystem
 
     public abstract void Update();
     public abstract void FixedUpdate();
-    public abstract void OnGUI(bool RunTrailSequenceAutomatically);
+    public abstract void OnGUI(bool RunTrialSequenceAutomatically);
 }

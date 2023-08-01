@@ -1,4 +1,3 @@
-
 # Coupled simulator for research on driver-pedestrian interactions made in Unity.
 ## Usage of the simulator
 The simulator is open-source and free to use. It is aimed for, but not limited to, academic research. We welcome forking of this repository, pull requests, and any contributions in the spirit of open science and open-source code :heart_eyes::smile: For enquiries about collaboration, you may contact p.bazilinskyy@tue.nl.
@@ -21,13 +20,13 @@ If you use coupled-sim for academic work please cite the following paper:
 ![](ReadmeFiles/night_mode_view.png)
 
 The coupled simulator supports both day and night-time settings. Figure above shows a view of the night mode. Figure below shows the top view of the environment. It is a model of a city centre containing:
-- Network of 2-lane roads
-- Loop of 4-lane road (partially surounded by buildings)
-- Loop of 6-lane road (partially surounded by buildings)
-- Half-clover interchange
-- 10 intersections with traffic lights that can be turned on and off before the experiment or programmatically in real-time
-- 34 zebra crossings
-- Static objects (buildings, parked cars, trees)
+- Network of 2-lane roads.
+- Loop of 4-lane road (partially surrounded by buildings).
+- Loop of 6-lane road (partially surrounded by buildings).
+- Half-clover interchange.
+- 10 intersections with traffic lights that can be turned on and off before the experiment or programmatically in real-time.
+- 34 zebra crossings.
+- Static objects (buildings, parked cars, trees).
 
 Drivable cars:
 - small (similar to Smart Fortwo) - DrivableSmartCommon
@@ -92,27 +91,27 @@ The structure of the frame object (with example data) is as follows:
 The host agent may use _Visual syncing_ button to display a red bar across all clients and the host for 1 s to allow for visual synchronization in case screen capture software is used.
 
 ## Installation
-The simualator was tested on Windows 10 and macOS Mojave. All functionality is supported by both platforms. However, support for input and output devices was tested only on Windows 10.
+The simulator was tested on Windows 11 and macOS Ventura 13.5. All functionality is supported by both platforms. However, support for input and output devices was tested only on Windows 10.
 
-After checking out this project, launch Unity Hub to run the simulator with the correct version of Unity (currently **2022.1.23f1**).
+After checking out this project, launch Unity Hub to run the simulator with the correct version of Unity (currently **2022.2.12**).
 
 ## Running a project
 Select the project from the Unity Hub projects list. Wait until the project loads in. If it is not in the Unity Hub list (it is the first time you are running the project), it has to be added first - click *Add* and select a folder containing the project files.
 Once the project is loaded into the Unity editor open StartScene scene.  
 ![](ReadmeFiles/running.png)
 ### Running simulation as a host
-1. Make sure that all three checkboxes (_Hide Gui_, _Run Trail Sequence Automatically_, _Record Videos_) in _NetworkingManager_ component on _Managers_ game object are unchecked.
+1. Make sure that all three checkboxes (_Hide Gui_, _Run Trial Sequence Automatically_, _Record Videos_) in _NetworkingManager_ component on _Managers_ game object are unchecked.
 2. Press the Play button to run enter _Play Mode_.
 3. Once in _Play Mode_, press _Start Host_ button. 
 4. If needed, wait for clients to join.
 5. Once all clients have connected to the host or in case the host is handling the only participant, select one of the experiments listed under _Experiment:_ section.
 6. Assign roles to participants in _Role binding_ section. If no role is selected, the participant will run a "headless" mode.
 7. Select one of control modes listed under _Mode_ section.
-8. Start an experiment with the _Initialize experiment_ button - all clients will load selected experiment.
+8. Start an experiment with the _Initialise experiment_ button - all clients will load selected experiment.
 9. Once all connected clients are ready - the experiment scene is fully loaded on each client, press _Start simulation_ button.
 
 ### Running simulation as a client
-1. Make sure that all three checkboxes - _Hide Gui_, _Run Trail Sequence Automatically_, _Record Videos_ (_Managers_ (game object) -> _NetworkingManager_ (component)), are unchecked.
+1. Make sure that all three checkboxes - _Hide Gui_, _Run Trial Sequence Automatically_, _Record Videos_ (_Managers_ (game object) -> _NetworkingManager_ (component)), are unchecked.
 2. Press the Play button to run enter _Play Mode_.
 3. Once in _Play Mode_, press _Start Client_ button.
 4. Enter the host IP address. 
@@ -120,31 +119,31 @@ Once the project is loaded into the Unity editor open StartScene scene.
 6. Once connected, select one of control modes listed under _Mode_ section.
 7. Wait until host starts the simulation.
 
-### Running simulation trails automatically
+### Running simulation trials automatically
 ![](ReadmeFiles/Instant.png)
-If the simulation only has one participant that is controlled on a host machine, simulation trails can be set up beforehand and run automatically. It is especially useful when using simulator to record videos for trails which is described in next section. Most of a times user should have any GUI disabled, which can be done by checking _Hide Gui_ checkbox. Gui can be enabled at runtime by pressing _Tab_ button on the keyboard.
-To run simulation trails automatiacally, both _Run Trail Sequence Automatically_ has to be checked and trail sequence has to be set up. Once it is done, press Play button to enter _Play Mode_ - first trail in the sequence should start automatically. To finish current trail and either start next one or exit simulator (if currently played trail the last one), press _Escape_ button on the keyboard.
-In order to set up trail sequence, user has to define entries on the _Trails_ list (_StartScene_ (scene) -> _Managers_ (game object) -> _NetworkingManager_ (component) -> _Trails_ (field)). Each entry consists of the following fields:
+If the simulation only has one participant that is controlled on a host machine, simulation trials can be set up beforehand and run automatically. It is especially useful when using simulator to record videos for trials which is described in next section. Most of a times user should have any GUI disabled, which can be done by checking _Hide Gui_ checkbox. Gui can be enabled at runtime by pressing _Tab_ button on the keyboard.
+To run simulation trials automatiacally, both _Run Trial Sequence Automatically_ has to be checked and trial sequence has to be set up. Once it is done, press Play button to enter _Play Mode_ - first trial in the sequence should start automatically. To finish current trial and either start next one or exit simulator (if currently played trial the last one), press _Escape_ button on the keyboard.
+In order to set up trial sequence, user has to define entries on the _Trials_ list (_StartScene_ (scene) -> _Managers_ (game object) -> _NetworkingManager_ (component) -> _Trials_ (field)). Each entry consists of the following fields:
 - _ExperimentIndex_: int variable which indicates a zero-based index of a selected experiment in _Experiments_ list (_NetworkingManager_ (component) -> _Experiments_ (field)).
 - _RoleIndex_: int variable which indicates a zero-based index of a selected role in _Roles_ list (_ExperimentDefinition_ (component) -> _Roles_ (field)) of a selected experiment prefab.
-- _InputMode_: enum variable, that sets participants display/controller pair for the trail. Available values are:
+- _InputMode_: enum variable, that sets participants display/controller pair for the trial. Available values are:
 	- _Flat_: use a flat-screen to display simulation and mouse&keyboard/gamepad/steering wheel to control it.
 	- _VR_: use virtual reality headset to display simulation and mouse&keyboard/gamepad/steering wheel to control it.  
 	- _Suite_: use virtual reality headset to display simulation and XSense suite to control it (only pedestrian avatar).
 
-Additional experiment parameters can be defined for each trail that would modify baseline scenario implemented in experiment. Parametes take form of name-value pair defined in _ExperimentParameters_ list. Those parameters are consumed by any enabled scripts contained in experiment prefab that implement _IExperimentModifier_ interface right after experiment is loaded and before simulation has started. An example of such a script is _EnableAVLabel_.
+Additional experiment parameters can be defined for each trial that would modify baseline scenario implemented in experiment. Parametes take form of name-value pair defined in _ExperimentParameters_ list. Those parameters are consumed by any enabled scripts contained in experiment prefab that implement _IExperimentModifier_ interface right after experiment is loaded and before simulation has started. An example of such a script is _EnableAVLabel_.
 
-### Recording trail videos
-Simulator is able to record trail videos for "offline" use. Most of the setup is the same as for automatical trails running described above. There are three additional steps that need to be taken to set up automatic trails recording.
+### Recording trial videos
+Simulator is able to record trial videos for "offline" use. Most of the setup is the same as for automatical trials running described above. There are three additional steps that need to be taken to set up automatic trials recording.
 1. _Record Videos_ checkbox has to be checked.
-2. Each trail in _Trails_ list has to have _Recording Start Time_ and _Recording Duration_ defined. _Recording Start Time_ defines at which second after the trail has started video recording should start. _Recording Duration_ defines how long the recording will last. After recording is finished simulator will proceed to the next trail in the sequence.
+2. Each trial in _Trials_ list has to have _Recording Start Time_ and _Recording Duration_ defined. _Recording Start Time_ defines at which second after the trial has started video recording should start. _Recording Duration_ defines how long the recording will last. After recording is finished simulator will proceed to the next trial in the sequence.
 3. Following video output parameters can be set up in _Managers_ (game object) -> _Recorder_ (component):
 -- _Directory_ - output directory relative to Application.dataPath (when running from Unity Editor it is _Assets_ folder).
 -- _Resolution_ - videos output resolution
 -- _Framerate_ - videos output framerate
 ![](ReadmeFiles/recorder.png)
 Filenames of recorded videos conform following naming scheme: 
-```{trail index}\_{ExperimentDefinition.ShortName}\_roleIdx-{role index}\_{multiple "\_" separated " paremeter name-value pairs}\_{date and time in "yy-MM-dd\_hh-mm" format}```
+```{trial index}\_{ExperimentDefinition.ShortName}\_roleIdx-{role index}\_{multiple "\_" separated " paremeter name-value pairs}\_{date and time in "yy-MM-dd\_hh-mm" format}```
 
 ## Configuration
 The central point for simulators configuration are two major components on _Managers_ game object from the _StartScene_ scene:

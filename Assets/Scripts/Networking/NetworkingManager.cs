@@ -16,7 +16,7 @@ public class NetworkingManager : MonoBehaviour
     }
 
     [System.Serializable]
-    public class Trail
+    public class Trial
     {
         public int experimentIndex;
         public int roleIndex;
@@ -60,16 +60,16 @@ public class NetworkingManager : MonoBehaviour
     }
 
     public bool hideGui = false;
-    public bool RunTrailSequenceAutomatically;
+    public bool RunTrialSequenceAutomatically;
     public bool recordVideos = false;
 
-    static int CurrentTrailIndex;
+    static int CurrentTrialIndex;
 
-    void NextTrail()
+    void NextTrial()
     {
-        CurrentTrailIndex++;
+        CurrentTrialIndex++;
         Destroy(gameObject);
-        if (CurrentTrailIndex < trails.Length)
+        if (CurrentTrialIndex < trials.Length)
         {
             (_netSystem as Host).Shutdown();
             SceneManager.LoadScene(0);
@@ -88,7 +88,7 @@ public class NetworkingManager : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Escape))
         {
             //Application.Quit();
-            NextTrail();
+            NextTrial();
         }
         if (Input.GetKeyDown(KeyCode.Tab))
         {
@@ -107,7 +107,7 @@ public class NetworkingManager : MonoBehaviour
         }
     }
 
-    public Trail[] trails;
+    public Trial[] trials;
 
     void OnGUI()
     {
@@ -115,24 +115,24 @@ public class NetworkingManager : MonoBehaviour
         {
             if (_netSystem == null)
             {
-                if (RunTrailSequenceAutomatically)
+                if (RunTrialSequenceAutomatically)
                 {
-                    _netSystem = new Host(_levelManager, _playerSystem, _aiCarSystem, _logger, _fixedLogger, trails[CurrentTrailIndex]);
+                    _netSystem = new Host(_levelManager, _playerSystem, _aiCarSystem, _logger, _fixedLogger, trials[CurrentTrialIndex]);
                 }
             } else
             {
-                _netSystem.OnGUI(RunTrailSequenceAutomatically);
+                _netSystem.OnGUI(RunTrialSequenceAutomatically);
             }
         }
         else
         {
             if (_netSystem == null)
             {
-                if (RunTrailSequenceAutomatically || GUILayout.Button("Start Host"))
+                if (RunTrialSequenceAutomatically || GUILayout.Button("Start Host"))
                 {
-                    _netSystem = new Host(_levelManager, _playerSystem, _aiCarSystem, _logger, _fixedLogger, trails[CurrentTrailIndex]);
+                    _netSystem = new Host(_levelManager, _playerSystem, _aiCarSystem, _logger, _fixedLogger, trials[CurrentTrialIndex]);
                 }
-                if (!RunTrailSequenceAutomatically && GUILayout.Button("Start Client"))
+                if (!RunTrialSequenceAutomatically && GUILayout.Button("Start Client"))
                 {
                     _netSystem = new Client(_levelManager, _playerSystem, _aiCarSystem, _logger, _fixedLogger);
                 }
@@ -141,7 +141,7 @@ public class NetworkingManager : MonoBehaviour
             }
             else
             {
-                _netSystem.OnGUI(RunTrailSequenceAutomatically);
+                _netSystem.OnGUI(RunTrialSequenceAutomatically);
             }
         }
     }
@@ -160,23 +160,23 @@ public class NetworkingManager : MonoBehaviour
     {
 #if UNITY_EDITOR
         if (recordVideos) {
-            StartCoroutine(RecordAndRunNextTrail());
+            StartCoroutine(RecordAndRunNextTrial());
         }
 #endif
     }
 
 #if UNITY_EDITOR
     public Recorder recorder;
-    private IEnumerator RecordAndRunNextTrail()
+    private IEnumerator RecordAndRunNextTrial()
     {
-        var trail = trails[CurrentTrailIndex];
+        var trial = trials[CurrentTrialIndex];
         recorder.Init();
-        yield return new WaitForSeconds(trail.recordingStartTime);
-        recorder.StartRecording(_levelManager.GetFilename(trail, CurrentTrailIndex));
-        yield return new WaitForSeconds(trail.recordingDuration);
+        yield return new WaitForSeconds(trial.recordingStartTime);
+        recorder.StartRecording(_levelManager.GetFilename(trial, CurrentTrialIndex));
+        yield return new WaitForSeconds(trial.recordingDuration);
         recorder.StopRecording();
         yield return null;
-        NextTrail();
+        NextTrial();
     }
 #endif
 
