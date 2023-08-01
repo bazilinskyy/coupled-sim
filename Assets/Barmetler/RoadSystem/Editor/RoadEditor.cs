@@ -713,12 +713,18 @@ namespace Barmetler.RoadSystem
 					}
 
 					GUILayout.Label("Roll Angle", GUILayout.Width(EditorGUIUtility.labelWidth));
+					// todo: update obsolete method
+					#pragma warning disable 0618
 					float oldFloat = road.GetAngle(selectedAnchorPoint / 3);
+					#pragma warning restore 0618
 					float newFloat = EditorGUILayout.DelayedFloatField(oldFloat);
 					if (newFloat != oldFloat)
 					{
 						Undo.RecordObject(road, "Change Angle");
+						// todo: update obsolete method
+						#pragma warning disable 0618
 						road.MoveAngle(selectedAnchorPoint / 3, newFloat);
+						#pragma warning restore 0618
 					}
 				}
 				GUI.DragWindow();
