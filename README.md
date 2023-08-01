@@ -157,6 +157,7 @@ Simulator is able to record trial videos for "offline" use. Most of the setup is
 -- `Directory` - output directory relative to Application.dataPath (when running from Unity Editor it is `Assets` folder).
 -- `Resolution` - videos output resolution
 -- `Framerate` - videos output frame rate
+
 ![](ReadmeFiles/recorder.png)
 
 Filenames of recorded videos conform following naming scheme: 
@@ -200,6 +201,7 @@ Prefab will be opened in edit mode along with the currently defined `Regular Pre
 
 ### Configuration of agents
 ![](ReadmeFiles/roles.png)
+
 `Roles` field is a list of `ExperimentRoleDefinition` structures defining experiment roles with the following base data fields:
  - `Name`: short name/description of the role
  - `SpawnPoint.Point`: defines where player avatar will be spawned
@@ -337,6 +339,7 @@ Initial eye contact tracking state and base tracking parameters are defined with
 - `MinTrackingDistance` and `MaxTrackingDistance` define (in meters) the range of distances at which eye contact tracking is possible. Distance is measured between the driver's head position and the pedestrian's root position (ignoring a distance on a vertical axis).
 - `MaxHeadRotation` (in degrees) limits head movement on a vertical axis.
 `EyeContact`, if tracking is enabled, selects as the target the closest game object tagged with a `"Pedestrian"` tag that is within the distance range, if it meets rotation constraint (this constrain is checked when the closest object is already selected).
+
 ![](ReadmeFiles/pedestrian.png)
 
 `EyeContactRigControl` is a component that consumes tracking target provided by `EyeContact` component and animates drivers head movement.
@@ -356,6 +359,7 @@ Eye contact behaviour tracking state can be changed when the car reaches the way
 
 #### Configuration of traffic lights
 ![](ReadmeFiles/street_light_manager.png)
+
 Creating a traffic street lights system is best started with creating an instance of `ExampleStreetLightCrossSection` prefab and adjusting it. 
 `TrafficLightsManager` component manages state of `CarSection` and `PedestrainSection` objects that group respectively `CarTrafficLight` and `PedestrianTrafficLight` instances that share common behaviour.
 Traffic light initial state is defined with list of `TrafficLightEvent` structures stored in `initialStreetLightSetup` field. This events are triggered once before simulation has started.
