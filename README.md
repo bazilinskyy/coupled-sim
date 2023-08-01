@@ -47,7 +47,7 @@ The simulator supports giving output to both a computer screen and a head-mounte
 ## Networking and data logging
 The current number of human participants supported by the coupled simulator is four (host and three clients). However, this number can be expanded up to the number of agents supported by the network. Synchronization in a local network is handled by a custom-made network manager designed to support the exchange of information between agents with low latency and real-time data logging at 50 Hz for variables from the Unity environment and up to 700Hz from the motion suit. The data that are logged include the three-dimensional position and rotation of the manual car and the AV, the use of blinkers, high-beam, stop light, and 150 position and angular variables from the motion suit. The data are stored in binary format, and the coupled simulator contains a function to convert the saved data into a CSV file (`Convert log to csv` button in `Play Mode`).
 
-Besides logging data to the binary file, the same set of frame data (in a very similar binary format) is being sent with requested intervals (that can be set with `NetworkingManger.RealtimeLogInterval` property) during the simulation to UDP port 40131 on localhost. The data can be used to monitor the simulation with external tools at runtime. `Tools/log_receiver.py` file contains an example python script that consumes binary data and assembles it into a structure that is easy to interact with. It should be started before starting the simulation with `python3 log_receiver.py` from within the `Tools` folder.
+Besides logging data to the binary file, the same set of frame data (in a very similar binary format) is being sent with requested intervals (that can be set with `NetworkingManger.RealtimeLogInterval` property) during the simulation to UDP port 40131 on localhost. The data can be used to monitor the simulation with external tools at runtime. `Tools/log_receiver.py` file contains an example python script that consumes binary data and assembles it into a structure that is easy to interact with. It should be started before starting the simulation with `python log_receiver.py` (with Python 3) from within the `Tools` folder.
 
 The structure of the frame object (with example data) is as follows:
 ```
@@ -340,7 +340,7 @@ Initial eye contact tracking state and base tracking parameters are defined with
 
 ![](ReadmeFiles/eye_contact.png)
 
-Eye contact behaviour tracking state can be changed when the car reaches the waypoint. Behavior change is defined by the `SpeedSettings` - the component embedded on waypoint objects. The following four fields control those changes:
+Eye contact behaviour tracking state can be changed when the car reaches the waypoint. Behaviour change is defined by the `SpeedSettings` - the component embedded on waypoint objects. The following four fields control those changes:
 - `EyeContactWhileYielding`: defines how the driver will behave while the car is fully stopped
 - `EyeContactAfterYielding`: defines how the driver will behave when the car resumes driving after a full stop. This value simply overwrites the current value of `EyeContact.EyeContactTracking` if the car has fully stopped.
 - `YieldingEyeContactSince`: defines how many seconds need to pass before the driver will make eye contact (starting from the moment the car has fully stopped)
