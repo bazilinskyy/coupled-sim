@@ -125,8 +125,11 @@ Once the project is loaded into the Unity editor open StartScene scene.
 7. Wait until host starts the simulation.
 
 ### Running simulation with multiple agents on one machine
-1. Run host agent as described above inside of Unity. Note the IP address in the console.
-2. Run other agents after building them `File` `Build And Run`.
+1. Run host agent inside of Unity (as described above).
+2. Note the IP address in the console of Unity.
+3. Run other  agents after building them `File` ➡️ `Build And Run`. Connect using the IP address from the (1).
+
+Providing input for multiple agents on one machine is not supported. Input is provided only to the agent, the window of which is selected. This mode is intended for testing/debugging.
 
 ### Running simulation trials automatically
 ![](ReadmeFiles/Instant.png)
