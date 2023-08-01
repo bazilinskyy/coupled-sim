@@ -1,6 +1,6 @@
 # Coupled simulator for research on driver-pedestrian interactions made in Unity.
 ## Usage of the simulator
-The simulator is open-source and free to use. It is aimed for, but not limited to, academic research. We welcome forking of this repository, pull requests, and any contributions in the spirit of open science and open-source code :heart_eyes::smile: For enquiries about collaboration, you may contact p.bazilinskyy@tue.nl.
+The simulator is open-source and free to use. It is aimed for, but not limited to, academic research. We welcome forking of this repository, pull requests, and any contributions in the spirit of open science and open-source code 😍😄 For enquiries about collaboration, you may contact p.bazilinskyy@tue.nl.
 
 ## Citation
 If you use coupled-sim for academic work please cite the following paper:
@@ -12,7 +12,7 @@ If you use coupled-sim for academic work please cite the following paper:
 1. Stopping by looking: A driver-pedestrian interaction study in a coupled simulator using head-mounted displays with eye-tracking - [paper](http://doi.org/10.1016/j.apergo.2022.103825).
 
 ## Description of the simulator
-:tv: These days, a video is worth more than a million words. The image below points to a YouTube video of the recording of a demo of the simulator with 3 agents:
+📺 These days, a video is worth more than a million words. The image below points to a YouTube video of the recording of a demo of the simulator with 3 agents:
 
 [![demo video](ReadmeFiles/thumbnail_demo_video.png)](https://www.youtube.com/watch?v=W2VWLYnTYrM)
 
@@ -103,25 +103,30 @@ Select the project from the Unity Hub projects list. Wait until the project load
 Once the project is loaded into the Unity editor open StartScene scene. 
 
 ![](ReadmeFiles/running.png)
+
 ### Running simulation as a host
 1. Make sure that all three checkboxes (`Hide GUI`, `Run Trial Sequence Automatically`, `Record Videos`) in `NetworkingManager` component on `Managers` game object are unchecked.
 2. Press the Play button to run enter `Play Mode`.
 3. Once in `Play Mode`, press `Start Host` button. 
 4. If needed, wait for clients to join.
-5. Once all clients have connected to the host or in case the host is handling the only participant, select one of the experiments listed under `Experiment:` section.
+5. Once all clients have connected to the host or in case the host is handling the only participant, select one of the experiments listed under `Experiment` section.
 6. Assign roles to participants in `Role binding` section. If no role is selected, the participant will run a "headless" mode.
 7. Select one of control modes listed under `Mode` section.
 8. Start an experiment with the `Initialise experiment` button - all clients will load selected experiment.
 9. Once all connected clients are ready - the experiment scene is fully loaded on each client, press `Start simulation` button.
 
 ### Running simulation as a client
-1. Make sure that all three checkboxes - `Hide GUI`, `Run trial sequence automatically`, `Record videos` (`Managers` (game object) -> `NetworkingManager` (component)), are unchecked.
+1. Make sure that all three checkboxes - `Hide GUI`, `Run trial sequence automatically`, `Record videos` (`Managers` (game object) ➡️ `NetworkingManager` (component)), are unchecked.
 2. Press the Play button to run enter `Play mode`.
 3. Once in `Play Mode`, press `Start client` button.
 4. Enter the host IP address. 
 5. Press `Connect`.
 6. Once connected, select one of control modes listed under `Mode` section.
 7. Wait until host starts the simulation.
+
+### Running simulation with multiple agents on one machine
+1. Run host agent as described above inside of Unity. Note the IP address in the console.
+2. Run other agents after building them `File` `Build And Run`.
 
 ### Running simulation trials automatically
 ![](ReadmeFiles/Instant.png)
@@ -130,9 +135,9 @@ If the simulation only has one participant that is controlled on a host machine,
 
 To run simulation trials automatically, both `Run Trial Sequence Automatically` has to be checked and trial sequence has to be set up. Once it is done, press Play button to enter `Play Mode` - first trial in the sequence should start automatically. To finish current trial and either start next one or exit simulator (if currently played trial the last one), press `Escape` button on the keyboard.
 
-In order to set up trial sequence, user has to define entries on the `Trials` list (`StartScene` (scene) -> `Managers` (game object) -> `NetworkingManager` (component) -> `Trials` (field)). Each entry consists of the following fields:
-- `ExperimentIndex`: int variable which indicates a zero-based index of a selected experiment in `Experiments` list (`NetworkingManager` (component) -> `Experiments` (field)).
-- `RoleIndex`: int variable which indicates a zero-based index of a selected role in `Roles` list (`ExperimentDefinition` (component) -> `Roles` (field)) of a selected experiment prefab.
+In order to set up trial sequence, user has to define entries on the `Trials` list (`StartScene` (scene) ➡️ `Managers` (game object) ➡️ `NetworkingManager` (component) ➡️ `Trials` (field)). Each entry consists of the following fields:
+- `ExperimentIndex`: int variable which indicates a zero-based index of a selected experiment in `Experiments` list (`NetworkingManager` (component) ➡️ `Experiments` (field)).
+- `RoleIndex`: int variable which indicates a zero-based index of a selected role in `Roles` list (`ExperimentDefinition` (component) ➡️ `Roles` (field)) of a selected experiment prefab.
 - `InputMode`: enum variable, that sets participants display/controller pair for the trial. Available values are:
 	- `Flat`: use a flat-screen to display simulation and mouse&keyboard/gamepad/steering wheel to control it.
 	- `VR`: use virtual reality headset to display simulation and mouse&keyboard/gamepad/steering wheel to control it.  
@@ -145,7 +150,7 @@ Simulator is able to record trial videos for "offline" use. Most of the setup is
 
 1. `Record Videos` checkbox has to be checked.
 2. Each trial in `Trials` list has to have `Recording Start Time` and `Recording Duration` defined. `Recording Start Time` defines at which second after the trial has started video recording should start. `Recording Duration` defines how long the recording will last. After recording is finished simulator will proceed to the next trial in the sequence.
-3. Following video output parameters can be set up in `Managers` (game object) -> `Recorder` (component):
+3. Following video output parameters can be set up in `Managers` (game object) ➡️ `Recorder` (component):
 -- `Directory` - output directory relative to Application.dataPath (when running from Unity Editor it is `Assets` folder).
 -- `Resolution` - videos output resolution
 -- `Framerate` - videos output frame rate
@@ -170,7 +175,7 @@ To edit the experiment definition, double click the experiment prefab in the `Pr
 
 ![](ReadmeFiles/project.png)
 
-Prefab will be opened in edit mode along with the currently defined `Regular Prefab Editing Environment`. When defining the experiment it is worth setting `Regular Prefab Editing Environment` variable to the Unity scene defined in the experiment (`Edit -> Project Settings -> Editor -> Prefab Editing Environments -> Regular Environment`).
+Prefab will be opened in edit mode along with the currently defined `Regular Prefab Editing Environment`. When defining the experiment it is worth setting `Regular Prefab Editing Environment` variable to the Unity scene defined in the experiment (`Edit` ➡️ `Project Settings` ➡️ `Editor` ➡️ `Prefab Editing Environments` ➡️ `Regular Environment`).
 
 ![](ReadmeFiles/project_settings.png)
 
@@ -210,7 +215,7 @@ Add a new game object to the prefab and set its position and rotation.
 Drag the newly created game object object to the `SpawnPoint.Point` field in role definition.
 
 #### Configuration of agent camera 
-Avatar prefab can have multiple cameras defined (`PlayerAvatar` (component) -> `Cameras` (field)), for example for a driver and passenger position. Camera that will displaying world for the avatar is defined by providing `SpawnPoint.CameraIndex`.
+Avatar prefab can have multiple cameras defined (`PlayerAvatar` (component) ➡️ `Cameras` (field)), for example for a driver and passenger position. Camera that will displaying world for the avatar is defined by providing `SpawnPoint.CameraIndex`.
 Additionally to the location, additional camera settings can be provided for a spawned agent with  `CameraSetup` component. The component can be added to the `SpawnPoint.Point` game object.
 The component exposes two fields:
 - `FieldOfView`: value which is set at spawn-time to `Camera.fieldOfView` property.
@@ -227,7 +232,7 @@ Following additional fields has to be defined:
 
 #### Configuration for agents `PlayerInAIControlledCar` 
 Following additional fields has to be defined:
-- `TopHMI`, `WindshieldHMI`, `HoodHMI` fields - defines which HMI prefab to spawn on corresponding spots. Spots are defined in player avatar prefabs (`PlayerAvatar` (component) -> `HMI Slots` (field)).
+- `TopHMI`, `WindshieldHMI`, `HoodHMI` fields - defines which HMI prefab to spawn on corresponding spots. Spots are defined in player avatar prefabs (`PlayerAvatar` (component) ➡️ `HMI Slots` (field)).
 - `AutonomusPath` - references game object defining waypoints for the autonomous car via `WaypointCirciut` component
 
 ### Configuration of waypoints 
@@ -375,7 +380,7 @@ To use analog display, set the following fields:
 Connect the ASUS Router with the USB Adapter to the PC and plug the Ethernet in a yellow port of the router. Let it boot up for some time while you prepare the software and the suit. Connect the Oculus Rift HDMI and USB 3.0 to the computer.
 Plug in the black MVN dongle in a USB 3.0 port of the computer Run the latest version of MVN Analyze. Fill out the anthropometric data and participant name by creating a new recording (1).
 
-Check under `Options -> Preferences -> Miscellaneous -> Network Streamer` that the data streamer is set to `Unity3D`.
+Check under `Options ➡️ Preferences ➡️ Miscellaneous ➡️ Network Streamer` that the data streamer is set to `Unity3D`.
 
 Note: if you find out later on that somehow the avatar looks buggy in Unity, play around with the down sampling skip factor in the `Network Streamer` overview to improve rendering.
 
@@ -414,7 +419,7 @@ Inbound rules: Set correct Unity Editor version to allow all connections.
 ### Troubleshooting steering wheel
 Check if supporting software is installed (e.g., Logitech gaming software G27 is used in our case). In Unity, you can check which button corresponds to your specific wheel. You can find this out by using the following asset in an empty project: https://assetstore.unity.com/packages/tools/input-management/controller-tester-43621
 
-Then make sure you assign the correct inputs in Unity under `Edit -> Project Settings -> Input` (see figure below).
+Then make sure you assign the correct inputs in Unity under `Edit ➡️ Project Settings ➡️ Input` (see figure below).
 
 ![](ReadmeFiles/wheel`inputs.png)
 
