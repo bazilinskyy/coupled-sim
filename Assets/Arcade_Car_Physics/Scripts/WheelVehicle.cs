@@ -31,6 +31,7 @@ namespace VehicleBehaviour {
         public bool IsPlayer { get{ return isPlayer; } set{ isPlayer = value; } } 
 
         // Input names to read using GetAxis
+        #pragma warning disable 0414
         [SerializeField] string throttleInput = "Throttle";
         [SerializeField] string brakeInput = "Brake";
         [SerializeField] string turnInput = "Horizontal";
@@ -40,6 +41,7 @@ namespace VehicleBehaviour {
         [SerializeField] string blinkersLeftInput = "blinker_left";
         [SerializeField] string blinkersRightInput = "blinker_right";
         [SerializeField] string blinkersClearInput = "blinker_clear";
+        #pragma warning restore 0414
         
         /* 
          *  Turn input curve: x real input, y value used
