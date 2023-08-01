@@ -19,7 +19,7 @@ If you use the coupled sim for academic work please cite the following paper:
 ## Environment
 ![](ReadmeFiles/night_mode_view.png)
 
-The coupled simulator supports both day and night-time settings. Figure above shows a view of the night mode. Figure below shows the top view of the environment. It is a model of a US-like city containing:
+The coupled simulator supports both day and night-time settings. Figure above shows a view of the night mode. Figures below shows the top view of the environment. It is a model of a US-like city containing:
 - Network of 2-lane roads.
 - Loop of 4-lane road (partially surrounded by buildings).
 - Loop of 6-lane road (partially surrounded by buildings).
@@ -28,7 +28,9 @@ The coupled simulator supports both day and night-time settings. Figure above sh
 - 34 zebra crossings.
 - Static objects (buildings, parked cars, trees).
 
-![](ReadmeFiles/world_top_view.png)
+<!-- ![](ReadmeFiles/world_top_view.png) -->
+![](ReadmeFiles/world_all.png)
+![](ReadmeFiles/world_centre.png)
 
 ### Drivable cars
 1. small (similar to Smart Fortwo) - *DrivableSmartCommon* object.
