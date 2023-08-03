@@ -140,7 +140,7 @@ If the simulation only has one participant that is controlled on a host machine,
 
 To run simulation trials automatically, both `Run Trial Sequence Automatically` has to be checked and trial sequence has to be set up. Once it is done, press Play button to enter `Play Mode` - first trial in the sequence should start automatically. To finish current trial and either start next one or exit simulator (if currently played trial the last one), press `Escape` button on the keyboard.
 
-In order to set up trial sequence, user has to define entries on the `Trials` list (`StartScene` (scene) ➡️ `Managers` (game object) ➡️ `NetworkingManager` (component) ➡️ `Trials` (field)). Each entry consists of the following fields:
+In order to set up trial sequence, user has to define entries on the `Trials` list (`StartScene` (scene) ➡️ `Managers` (game object) ➡️ `NetworkingManager` (component) ➡️ `Trials` (click arrow to open the field)). Each entry consists of the following fields:
 - `ExperimentIndex`: int variable which indicates a zero-based index of a selected experiment in `Experiments` list (`NetworkingManager` (component) ➡️ `Experiments` (field)).
 - `RoleIndex`: int variable which indicates a zero-based index of a selected role in `Roles` list (`ExperimentDefinition` (component) ➡️ `Roles` (field)) of a selected experiment prefab.
 - `InputMode`: enum variable, that sets participants display/controller pair for the trial. Available values are:
