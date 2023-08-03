@@ -100,9 +100,9 @@ The simulator was tested on Windows 11 and macOS Ventura 13.5. All functionality
 After checking out this project, launch Unity Hub to run the simulator with the correct version of Unity (currently **2022.3.5f1**).
 
 ## Running a project
-Select the project from the Unity Hub projects list. Wait until the project loads in. If it is not in the Unity Hub list (it is the first time you are running the project), it has to be added first - click `Add` and select a folder containing the project files.
+ When opening this project for the first time, click `Add` and select your entire downloaded folder containing all the project files. In case you have already used this project before, select the project from the Unity Hub projects list. Wait until the project loads in.
 
-Once the project is loaded into the Unity editor open StartScene scene. 
+Once the project is loaded into the Unity editor open StartScene scene. You do this by going to the project tab, and clicking on the StartScene icon in the Scenes folder. Now, we will explain three different ways to run scenes, the locations for the first three steps for running as a host or client correlate with the numbers in the picture below. 
 
 ![](ReadmeFiles/running.png)
 
