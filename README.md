@@ -100,9 +100,9 @@ The simulator was tested on Windows 11 and macOS Ventura 13.5. All functionality
 After checking out this project, launch Unity Hub to run the simulator with the correct version of Unity (currently **2022.3.5f1**).
 
 ## Running a project
-Select the project from the Unity Hub projects list. Wait until the project loads in. If it is not in the Unity Hub list (it is the first time you are running the project), it has to be added first - click `Add` and select a folder containing the project files.
+ When opening this project for the first time, click `Add` and select your entire downloaded folder containing all the project files. In case you have already used this project before, select the project from the Unity Hub projects list. Wait until the project loads in.
 
-Once the project is loaded into the Unity editor open StartScene scene. 
+Once the project is loaded into the Unity editor open StartScene scene. You do this by going to the project tab, and clicking on the StartScene icon in the Scenes folder. Now, we will explain three different ways to run scenes, the locations for the first three steps for running as a host or client correlate with the numbers in the picture below. 
 
 ![](ReadmeFiles/running.png)
 
@@ -140,7 +140,7 @@ If the simulation only has one participant that is controlled on a host machine,
 
 To run simulation trials automatically, both `Run Trial Sequence Automatically` has to be checked and trial sequence has to be set up. Once it is done, press Play button to enter `Play Mode` - first trial in the sequence should start automatically. To finish current trial and either start next one or exit simulator (if currently played trial the last one), press `Escape` button on the keyboard.
 
-In order to set up trial sequence, user has to define entries on the `Trials` list (`StartScene` (scene) ➡️ `Managers` (game object) ➡️ `NetworkingManager` (component) ➡️ `Trials` (field)). Each entry consists of the following fields:
+In order to set up trial sequence, user has to define entries on the `Trials` list (`StartScene` (scene) ➡️ `Managers` (game object) ➡️ `NetworkingManager` (component) ➡️ `Trials` (click arrow to open the field)). Each entry consists of the following fields:
 - `ExperimentIndex`: int variable which indicates a zero-based index of a selected experiment in `Experiments` list (`NetworkingManager` (component) ➡️ `Experiments` (field)).
 - `RoleIndex`: int variable which indicates a zero-based index of a selected role in `Roles` list (`ExperimentDefinition` (component) ➡️ `Roles` (field)) of a selected experiment prefab.
 - `InputMode`: enum variable, that sets participants display/controller pair for the trial. Available values are:
