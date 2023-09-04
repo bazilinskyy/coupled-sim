@@ -220,6 +220,78 @@ MonoBehaviour:
     - {fileID: 8053331526755647618}
   smoothRoute: 0
   editorVisualisationSubsteps: 500
+--- !u!1 &709931825655753871
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2861064061509671434}
+  - component: {fileID: 2382635082852565378}
+  - component: {fileID: 7866705097490877182}
+  m_Layer: 5
+  m_Name: Waypoint 006
+  m_TagString: WP
+  m_Icon: {fileID: -964228994112308473, guid: 0000000000000000d000000000000000, type: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2861064061509671434
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 709931825655753871}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 444.8}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3139833295308636856}
+  m_RootOrder: 6
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &2382635082852565378
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 709931825655753871}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 1
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 4.25, y: 4, z: 0.01}
+  m_Center: {x: 0, y: 1, z: 0}
+--- !u!114 &7866705097490877182
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 709931825655753871}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetAICar: {fileID: 0}
+  Type: 1
+  speed: 40
+  acceleration: 1
+  BlinkerState: 0
+  jerk: 0
+  causeToYield: 0
+  EyeContactWhileYielding: 0
+  EyeContactAfterYielding: 0
+  yieldTime: 0
+  brakingAcceleration: 0
+  YieldingEyeContactSince: 0
+  YieldingEyeContactUntil: 0
+  customBehaviourData: []
 --- !u!1 &798481571278575832
 GameObject:
   m_ObjectHideFlags: 0
@@ -491,6 +563,61 @@ MonoBehaviour:
   YieldingEyeContactSince: 0
   YieldingEyeContactUntil: 0
   customBehaviourData: []
+--- !u!1 &1685481419063484156
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3139833295308636856}
+  - component: {fileID: 3152719961528972963}
+  m_Layer: 5
+  m_Name: Path
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3139833295308636856
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1685481419063484156}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 8031495358014925722}
+  - {fileID: 6135839666811294996}
+  - {fileID: 2861064061509671434}
+  m_Father: {fileID: 6936684193046335930}
+  m_RootOrder: -1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3152719961528972963
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1685481419063484156}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 70852dc981465ea48bb527b9e33a87fd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  waypointList:
+    circuit: {fileID: 3152719961528972963}
+    items:
+    - {fileID: 8031495358014925722}
+    - {fileID: 6135839666811294996}
+    - {fileID: 2861064061509671434}
+  smoothRoute: 0
+  editorVisualisationSubsteps: 500
 --- !u!1 &1826224712738964321
 GameObject:
   m_ObjectHideFlags: 0
@@ -914,7 +1041,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4037021503160312291}
   m_LocalRotation: {x: -0, y: 1, z: -0, w: 0}
-  m_LocalPosition: {x: -274.018, y: 0, z: 219.5}
+  m_LocalPosition: {x: -274.018, y: 0, z: 179.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -941,7 +1068,7 @@ MonoBehaviour:
     SpawnPassenger: 0
     Car: {fileID: 8343856187855894783, guid: 02b8c28a357f14a4b922a9b99b9763ae, type: 3}
     VehicleType: 0
-    color: {r: 0.4509804, g: 0.105882354, b: 0.105882354, a: 1}
+    color: {r: 1, g: 1, b: 1, a: 1}
     Labeled: 0
     customBehaviours: []
 --- !u!1 &4056324527243921030
@@ -997,6 +1124,78 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4056324527243921030}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetAICar: {fileID: 0}
+  Type: 1
+  speed: 40
+  acceleration: 1
+  BlinkerState: 0
+  jerk: 0
+  causeToYield: 0
+  EyeContactWhileYielding: 0
+  EyeContactAfterYielding: 0
+  yieldTime: 0
+  brakingAcceleration: 0
+  YieldingEyeContactSince: 0
+  YieldingEyeContactUntil: 0
+  customBehaviourData: []
+--- !u!1 &4170113543467810429
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6135839666811294996}
+  - component: {fileID: 4312069107806068560}
+  - component: {fileID: 4323137321024757091}
+  m_Layer: 5
+  m_Name: Waypoint 005
+  m_TagString: WP
+  m_Icon: {fileID: -964228994112308473, guid: 0000000000000000d000000000000000, type: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6135839666811294996
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4170113543467810429}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 150}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3139833295308636856}
+  m_RootOrder: 5
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &4312069107806068560
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4170113543467810429}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 1
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 4.25, y: 4, z: 0.01}
+  m_Center: {x: 0, y: 1, z: 0}
+--- !u!114 &4323137321024757091
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4170113543467810429}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
@@ -1431,6 +1630,78 @@ MonoBehaviour:
   YieldingEyeContactSince: 0
   YieldingEyeContactUntil: 0
   customBehaviourData: []
+--- !u!1 &6589963553232096315
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8031495358014925722}
+  - component: {fileID: 5487626219508785427}
+  - component: {fileID: 1302964186883332005}
+  m_Layer: 5
+  m_Name: Waypoint 004
+  m_TagString: WP
+  m_Icon: {fileID: -964228994112308473, guid: 0000000000000000d000000000000000, type: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8031495358014925722
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6589963553232096315}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3139833295308636856}
+  m_RootOrder: 4
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &5487626219508785427
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6589963553232096315}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 1
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 4.25, y: 4, z: 0.01}
+  m_Center: {x: 0, y: 1, z: 0}
+--- !u!114 &1302964186883332005
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6589963553232096315}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetAICar: {fileID: 0}
+  Type: 0
+  speed: 40
+  acceleration: 2
+  BlinkerState: 0
+  jerk: 0
+  causeToYield: 0
+  EyeContactWhileYielding: 0
+  EyeContactAfterYielding: 0
+  yieldTime: 0
+  brakingAcceleration: 0
+  YieldingEyeContactSince: 0
+  YieldingEyeContactUntil: 0
+  customBehaviourData: []
 --- !u!1 &6780737696468991315
 GameObject:
   m_ObjectHideFlags: 0
@@ -1503,6 +1774,61 @@ MonoBehaviour:
   YieldingEyeContactSince: 0
   YieldingEyeContactUntil: 0
   customBehaviourData: []
+--- !u!1 &7841607145213059952
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6936684193046335930}
+  - component: {fileID: 491140725917617962}
+  m_Layer: 0
+  m_Name: Line_2 Car (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6936684193046335930
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7841607145213059952}
+  m_LocalRotation: {x: -0, y: 1, z: -0, w: 0}
+  m_LocalPosition: {x: -274.018, y: 0, z: 142.8}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 3139833295308636856}
+  m_Father: {fileID: 7098174584610429694}
+  m_RootOrder: -1
+  m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
+--- !u!114 &491140725917617962
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7841607145213059952}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a981201a2cb3a744d98abf717096af49, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  spawnParams:
+    SpawnPoint: {fileID: 8031495358014925722}
+    Track: {fileID: 3152719961528972963}
+    SpawnDriver: 1
+    SpawnPassenger: 0
+    Car: {fileID: 8343856187855894783, guid: 02b8c28a357f14a4b922a9b99b9763ae, type: 3}
+    VehicleType: 0
+    color: {r: 0.4509804, g: 0.105882354, b: 0.105882354, a: 1}
+    Labeled: 0
+    customBehaviours: []
 --- !u!1 &8477770591736513707
 GameObject:
   m_ObjectHideFlags: 0
@@ -1728,6 +2054,81 @@ PrefabInstance:
       propertyPath: spawnParams.color.r
       value: 0.4509804
       objectReference: {fileID: 0}
+    - target: {fileID: 4929907188672532565, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: carSpawners.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4929907188672532565, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: carSpawners.Array.data[0]
+      value: 
+      objectReference: {fileID: 2377491069428159472}
+    - target: {fileID: 4929907188672532565, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: carSpawners.Array.data[1]
+      value: 
+      objectReference: {fileID: 1376606004970496031}
+    - target: {fileID: 4929907188672532565, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: carSpawners.Array.data[2]
+      value: 
+      objectReference: {fileID: 2296175278415079459}
+    - target: {fileID: 4929907188672532565, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: carSpawners.Array.data[3]
+      value: 
+      objectReference: {fileID: 7207893822717922941}
+    - target: {fileID: 4929907188672532565, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: carSpawners.Array.data[4]
+      value: 
+      objectReference: {fileID: 5069991231476149819}
+    - target: {fileID: 4929907188672532565, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: carSpawners.Array.data[5]
+      value: 
+      objectReference: {fileID: 2742107200273273187}
+    - target: {fileID: 4929907188672532565, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: carSpawners.Array.data[6]
+      value: 
+      objectReference: {fileID: 6313386332890535552}
+    - target: {fileID: 4929907188672532565, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: carSpawners.Array.data[7]
+      value: 
+      objectReference: {fileID: 7307200430673009870}
+    - target: {fileID: 4929907188672532565, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: carSpawners.Array.data[8]
+      value: 
+      objectReference: {fileID: 2064275148625093508}
+    - target: {fileID: 4929907188672532565, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: carSpawners.Array.data[9]
+      value: 
+      objectReference: {fileID: 3025714818131957651}
+    - target: {fileID: 4929907188672532565, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: carSpawners.Array.data[10]
+      value: 
+      objectReference: {fileID: 4942593626262478781}
+    - target: {fileID: 4929907188672532565, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: carSpawners.Array.data[11]
+      value: 
+      objectReference: {fileID: 1985500485734077656}
+    - target: {fileID: 4929907188672532565, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: carSpawners.Array.data[12]
+      value: 
+      objectReference: {fileID: 5449304150099025152}
+    - target: {fileID: 4929907188672532565, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: carSpawners.Array.data[13]
+      value: 
+      objectReference: {fileID: 2377491069428159472}
     - target: {fileID: 4965527162721192782, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -1806,7 +2207,7 @@ PrefabInstance:
     - target: {fileID: 7609667120526454229, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
       propertyPath: m_RootOrder
-      value: 12
+      value: 17
       objectReference: {fileID: 0}
     - target: {fileID: 7609667120526454229, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
@@ -1891,18 +2292,63 @@ PrefabInstance:
     - target: {fileID: 8692043556341430772, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
       propertyPath: Name
-      value: 0 Baseline
+      value: test-trial-video
       objectReference: {fileID: 0}
     - target: {fileID: 8692043556341430772, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
       propertyPath: ShortName
-      value: 0_baseline
+      value: 0_test-trial-video
       objectReference: {fileID: 0}
     - target: {fileID: 8692043556341430772, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
       propertyPath: CarSpawners.Array.size
-      value: 0
+      value: 15
       objectReference: {fileID: 0}
+    - target: {fileID: 8692043556341430772, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: CarSpawners.Array.data[0]
+      value: 
+      objectReference: {fileID: 7147220203807289114}
+    - target: {fileID: 8692043556341430772, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: CarSpawners.Array.data[1]
+      value: 
+      objectReference: {fileID: 1376606004970496031}
+    - target: {fileID: 8692043556341430772, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: CarSpawners.Array.data[2]
+      value: 
+      objectReference: {fileID: 2296175278415079459}
+    - target: {fileID: 8692043556341430772, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: CarSpawners.Array.data[3]
+      value: 
+      objectReference: {fileID: 7207893822717922941}
+    - target: {fileID: 8692043556341430772, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: CarSpawners.Array.data[4]
+      value: 
+      objectReference: {fileID: 2742107200273273187}
+    - target: {fileID: 8692043556341430772, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: CarSpawners.Array.data[5]
+      value: 
+      objectReference: {fileID: 5069991231476149819}
+    - target: {fileID: 8692043556341430772, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: CarSpawners.Array.data[6]
+      value: 
+      objectReference: {fileID: 6313386332890535552}
+    - target: {fileID: 8692043556341430772, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: CarSpawners.Array.data[7]
+      value: 
+      objectReference: {fileID: 7307200430673009870}
+    - target: {fileID: 8692043556341430772, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: CarSpawners.Array.data[8]
+      value: 
+      objectReference: {fileID: 2064275148625093508}
     - target: {fileID: 8692043556341430772, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
       propertyPath: CarSpawners.Array.data[9]
@@ -1928,6 +2374,11 @@ PrefabInstance:
       propertyPath: CarSpawners.Array.data[13]
       value: 
       objectReference: {fileID: 2377491069428159472}
+    - target: {fileID: 8692043556341430772, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      propertyPath: CarSpawners.Array.data[14]
+      value: 
+      objectReference: {fileID: 491140725917617962}
     - target: {fileID: 8783243251333659372, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -1960,10 +2411,122 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 8625192374713111933}
+    - targetCorrespondingSourceObject: {fileID: 7609667120526454229, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6936684193046335930}
   m_SourcePrefab: {fileID: 100100000, guid: 16055abd5fa62354bbfa3c45a1fd16eb, type: 3}
+--- !u!114 &1376606004970496031 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1729822193991571252, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+    type: 3}
+  m_PrefabInstance: {fileID: 800303456490092331}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a981201a2cb3a744d98abf717096af49, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &2064275148625093508 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1711078203338839215, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+    type: 3}
+  m_PrefabInstance: {fileID: 800303456490092331}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a981201a2cb3a744d98abf717096af49, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &2296175278415079459 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1497051605553192712, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+    type: 3}
+  m_PrefabInstance: {fileID: 800303456490092331}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a981201a2cb3a744d98abf717096af49, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &2742107200273273187 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3249017520540067400, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+    type: 3}
+  m_PrefabInstance: {fileID: 800303456490092331}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a981201a2cb3a744d98abf717096af49, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &5069991231476149819 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 5568425964077111568, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+    type: 3}
+  m_PrefabInstance: {fileID: 800303456490092331}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a981201a2cb3a744d98abf717096af49, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &6313386332890535552 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6667184160205234603, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+    type: 3}
+  m_PrefabInstance: {fileID: 800303456490092331}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a981201a2cb3a744d98abf717096af49, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!4 &7098174584610429694 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7609667120526454229, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
     type: 3}
   m_PrefabInstance: {fileID: 800303456490092331}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &7147220203807289114 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7506156050185607217, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+    type: 3}
+  m_PrefabInstance: {fileID: 800303456490092331}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a981201a2cb3a744d98abf717096af49, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &7207893822717922941 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8006462248766568790, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+    type: 3}
+  m_PrefabInstance: {fileID: 800303456490092331}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a981201a2cb3a744d98abf717096af49, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &7307200430673009870 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7958805930173492197, guid: 16055abd5fa62354bbfa3c45a1fd16eb,
+    type: 3}
+  m_PrefabInstance: {fileID: 800303456490092331}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a981201a2cb3a744d98abf717096af49, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
