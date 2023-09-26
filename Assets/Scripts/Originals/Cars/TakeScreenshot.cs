@@ -1,34 +1,25 @@
-// TODO:
-// By default, screenshot files are placed next to the executable bundle -- we don't want this in a
-// shipping game, as it will fail if the user doesn't have write access to the Applications folder.
-// Instead we should place the screenshots on the user's desktop. However, the ~/ notation doesn't
-// work, and Unity doesn't have a mechanism to return special paths. Therefore, the correct way to
-// solve this is probably with a plug-in to return OS specific special paths.
- 
-// Mono/.NET has functions to get special paths... see discussion page. --Aarku
- 
 using UnityEngine;
-using System.Collections;
- 
+
 public class TakeScreenshot : MonoBehaviour
-{    
-    private int screenshotCount = 0;
- 
-    // Check for screenshot key each frame
+{
+    // The time at which you want to capture the screenshot (in seconds)
+    public float screenshotTime = 5.0f; // Default value of 5 seconds
+
+    private bool screenshotTaken = false;
+
     void Update()
     {
-        // take screenshot on up->down transition of F9 key
-        if (Input.GetKeyDown("f9"))
-        {        
-            string screenshotFilename;
-            do
-            {
-                screenshotCount++;
-                screenshotFilename = "screenshot" + screenshotCount + ".png";
- 
-            } while (System.IO.File.Exists(screenshotFilename));
- 
+        // Check if the screenshot has not been taken and the current time has reached the specified screenshotTime
+        if (!screenshotTaken && Time.time >= screenshotTime)
+        {
+            // Generate a filename for the screenshot based on the time
+            string screenshotFilename = "screenshot_" + screenshotTime.ToString("F1") + "s.jpg";
+
+            // Capture the screenshot and save it with the generated filename
             ScreenCapture.CaptureScreenshot(screenshotFilename);
+
+            // Set the flag to indicate that the screenshot has been taken
+            screenshotTaken = true;
         }
     }
 }
