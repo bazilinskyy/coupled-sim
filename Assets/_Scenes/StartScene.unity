@@ -246,6 +246,7 @@ GameObject:
   - component: {fileID: 301934534}
   - component: {fileID: 301934535}
   - component: {fileID: 301934536}
+  - component: {fileID: 301934537}
   m_Layer: 0
   m_Name: Managers
   m_TagString: Untagged
@@ -288,13 +289,13 @@ MonoBehaviour:
     - {fileID: 7713759469045616529, guid: 1baf460ab026f1247ab4696be569ffae, type: 3}
     - {fileID: 8343856187855894783, guid: 02b8c28a357f14a4b922a9b99b9763ae, type: 3}
   Experiments:
-  - {fileID: 1559263723498564743, guid: 9a147f7c98140ae42bc467d75530b756, type: 3}
   - {fileID: 8339373823643078367, guid: 96a426fc17a79824e9932e3f651ad683, type: 3}
   - {fileID: 8690531712627271718, guid: fe4297b61cf987f4590ba77669b05ef7, type: 3}
   - {fileID: 1881885188683625716, guid: d7650e3b6ee34d3428e6fb5273a5acaf, type: 3}
+  - {fileID: 1559263723498564743, guid: 9a147f7c98140ae42bc467d75530b756, type: 3}
   - {fileID: 1559263723498564743, guid: f5a84dc12e7cb4894aa2c48e6e56d90e, type: 3}
   - {fileID: 7204988125552765817, guid: 8fe8e7b94e76d465da9bd8b793c83906, type: 3}
-  - {fileID: 7204988125552765817, guid: a8343044dd814d94c91efd96364d3146, type: 3}
+  - {fileID: 7204988125552765817, guid: 0772160248f684d33bf87475e567ec0b, type: 3}
   - {fileID: 8411844419333703320, guid: 5fdfcff7dfa9a804a9559156db572bca, type: 3}
   - {fileID: 833586595077142658, guid: d337cbdc0c6db934e80a8d0b3aedf819, type: 3}
   - {fileID: 4107809817854791533, guid: 5ad4d9957ff632d458cf9e8223f7146f, type: 3}
@@ -315,7 +316,7 @@ MonoBehaviour:
   - {fileID: 1559263723498564743, guid: 9a147f7c98140ae42bc467d75530b756, type: 3}
   - {fileID: 1559263723498564743, guid: f5a84dc12e7cb4894aa2c48e6e56d90e, type: 3}
   - {fileID: 7204988125552765817, guid: 8fe8e7b94e76d465da9bd8b793c83906, type: 3}
-  - {fileID: 7204988125552765817, guid: a8343044dd814d94c91efd96364d3146, type: 3}
+  - {fileID: 7204988125552765817, guid: 0772160248f684d33bf87475e567ec0b, type: 3}
   - {fileID: 8411844419333703320, guid: 5fdfcff7dfa9a804a9559156db572bca, type: 3}
   - {fileID: 833586595077142658, guid: d337cbdc0c6db934e80a8d0b3aedf819, type: 3}
   - {fileID: 4107809817854791533, guid: 5ad4d9957ff632d458cf9e8223f7146f, type: 3}
@@ -336,7 +337,7 @@ MonoBehaviour:
   - {fileID: 1559263723498564743, guid: 9a147f7c98140ae42bc467d75530b756, type: 3}
   - {fileID: 1559263723498564743, guid: f5a84dc12e7cb4894aa2c48e6e56d90e, type: 3}
   - {fileID: 7204988125552765817, guid: 8fe8e7b94e76d465da9bd8b793c83906, type: 3}
-  - {fileID: 7204988125552765817, guid: a8343044dd814d94c91efd96364d3146, type: 3}
+  - {fileID: 7204988125552765817, guid: 0772160248f684d33bf87475e567ec0b, type: 3}
   - {fileID: 8411844419333703320, guid: 5fdfcff7dfa9a804a9559156db572bca, type: 3}
   - {fileID: 833586595077142658, guid: d337cbdc0c6db934e80a8d0b3aedf819, type: 3}
   - {fileID: 4107809817854791533, guid: 5ad4d9957ff632d458cf9e8223f7146f, type: 3}
@@ -357,7 +358,7 @@ MonoBehaviour:
   - {fileID: 1559263723498564743, guid: 9a147f7c98140ae42bc467d75530b756, type: 3}
   - {fileID: 1559263723498564743, guid: f5a84dc12e7cb4894aa2c48e6e56d90e, type: 3}
   - {fileID: 7204988125552765817, guid: 8fe8e7b94e76d465da9bd8b793c83906, type: 3}
-  - {fileID: 7204988125552765817, guid: a8343044dd814d94c91efd96364d3146, type: 3}
+  - {fileID: 7204988125552765817, guid: 0772160248f684d33bf87475e567ec0b, type: 3}
   - {fileID: 8411844419333703320, guid: 5fdfcff7dfa9a804a9559156db572bca, type: 3}
   - {fileID: 833586595077142658, guid: d337cbdc0c6db934e80a8d0b3aedf819, type: 3}
   - {fileID: 4107809817854791533, guid: 5ad4d9957ff632d458cf9e8223f7146f, type: 3}
@@ -372,9 +373,11 @@ MonoBehaviour:
   - {fileID: 1706235404331159950, guid: 14644f6f26c623541b809e23e33691e8, type: 3}
   - {fileID: 1002732718368964850, guid: a8ac3ca7f2f37c84e95fd1fdca3e5b87, type: 3}
   - {fileID: 5785245843907239180, guid: 5a26e650cf127da419c044538ed9bb66, type: 3}
+  - {fileID: 8339373823643078367, guid: c439738d1054b4e3393f7acd2d9cfaea, type: 3}
+  - {fileID: 8339373823643078367, guid: c439738d1054b4e3393f7acd2d9cfaea, type: 3}
   hideGui: 1
   RunTrailSequenceAutomatically: 1
-  recordVideos: 0
+  recordVideos: 1
   trails:
   - experimentIndex: 0
     roleIndex: 0
@@ -1216,6 +1219,26 @@ MonoBehaviour:
       value: true
     recordingStartTime: 0
     recordingDuration: 45
+  - experimentIndex: 84
+    roleIndex: 0
+    InputMode: 0
+    experimentParameters:
+    - name: target_labeled
+      value: true
+    - name: ego_labeled
+      value: false
+    recordingStartTime: 0
+    recordingDuration: 45
+  - experimentIndex: 85
+    roleIndex: 0
+    InputMode: 0
+    experimentParameters:
+    - name: target_labeled
+      value: true
+    - name: ego_labeled
+      value: true
+    recordingStartTime: 0
+    recordingDuration: 45
   recorder: {fileID: 301934536}
 --- !u!114 &301934534
 MonoBehaviour:
@@ -1262,6 +1285,19 @@ MonoBehaviour:
   directory: videos
   resolution: {x: 3840, y: 2160}
   framerate: 60
+--- !u!114 &301934537
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 301934531}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f8246f31629db2e439d1976375f25ebe, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  screenshotTime: 8.5
 --- !u!1 &1256699364
 GameObject:
   m_ObjectHideFlags: 0
