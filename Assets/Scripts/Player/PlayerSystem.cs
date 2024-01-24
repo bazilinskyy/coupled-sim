@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityStandardAssets.Utility;
@@ -36,18 +37,18 @@ public class PlayerSystem : MonoBehaviour
     PlayerAvatar[] _AvatarPrefabDriver;
 
 
-    [NonSerialized]
+    // [NonSerialized]
     public PlayerAvatar LocalPlayer;
     public PlayerAvatar PedestrianPrefab => _AvatarPrefab;
 
     // Avatars contains both Drivers and Pedestrians (in arbitrary order)
-    [NonSerialized]
+    //[NonSerialized]
     public List<PlayerAvatar> Avatars = new List<PlayerAvatar>();
-    [NonSerialized]
+    //[NonSerialized]
     public List<PlayerAvatar> Cars = new List<PlayerAvatar>();
-    [NonSerialized]
+    //[NonSerialized]
     public List<PlayerAvatar> Pedestrians = new List<PlayerAvatar>();
-    [NonSerialized]
+    //[NonSerialized]
     public List<PlayerAvatar> Passengers = new List<PlayerAvatar>();
 
     PlayerAvatar[] Player2Avatar = new PlayerAvatar[UNetConfig.MaxPlayers];
@@ -201,5 +202,14 @@ public class PlayerSystem : MonoBehaviour
     public void SelectMode(InputMode inputMode)
     {
         PlayerInputMode = inputMode;
+    }
+
+
+    private void OnDisable()
+    {
+        Avatars = null;
+        Cars = null;
+        Pedestrians = null;
+        Passengers = null;
     }
 }

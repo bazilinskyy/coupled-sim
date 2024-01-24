@@ -113,8 +113,10 @@ public class PlayerAvatar : MonoBehaviour
         public MonoBehaviour[] disabledMonoBehaviours;
         */
     }
-
-
+    
+    [Header("SOSXR")]
+    [SerializeField] private bool m_instantiateXRRig = true;
+    [SerializeField] private GameObject m_xrRigPrefab = null;
 
     //set up an Avatar (disabling and enabling needed components) for different control methods
     public void Initialize(bool isRemote, PlayerSystem.InputMode inputMode, PlayerSystem.ControlMode controlMode, PlayerSystem.VehicleType vehicleType, int cameraIndex = -1)
@@ -138,7 +140,22 @@ public class PlayerAvatar : MonoBehaviour
         else
         {
             if (cameraIndex >= 0) {
-                cameras[cameraIndex].gameObject.SetActive(true);
+                if (m_instantiateXRRig && m_xrRigPrefab != null && inputMode == PlayerSystem.InputMode.VR || inputMode == PlayerSystem.InputMode.Suite)
+                {
+                    var rig = Instantiate(m_xrRigPrefab, transform);
+                    rig.transform.localPosition = Vector3.zero;
+                    rig.transform.localRotation = Quaternion.identity;
+                    rig.transform.parent = cameras[cameraIndex].transform.parent;
+                    
+                    var cam = rig.GetComponentInChildren<Camera>();
+                    cameras[cameraIndex] = cam;
+                    
+                    Debug.Log("Maarten: Instantiated XR_Origin rig for XR, instead of enabling the default camera.");
+                }
+                else
+                {
+                    cameras[cameraIndex].gameObject.SetActive(true);
+                }
             }
 
             ModeElements modeElements = default(ModeElements);
