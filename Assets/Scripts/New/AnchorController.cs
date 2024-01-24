@@ -10,10 +10,18 @@ public class AnchorController : MonoBehaviour
     private Quaternion Anchor_y;
         
 
+    private void Start()
+    {
+        Debug.Log("This used to rotate the Y coordinates, possibly for MVN suit. However it appeared broken, so now turned off");
+    }
+
+
+
     private void LateUpdate()
     {
-        Anchor_y = Quaternion.Euler(new Vector3(0f, -transform.rotation.eulerAngles.y, 0f));
+        // todo: check if in suit mode
+        // Anchor_y = Quaternion.Euler(new Vector3(0f, -transform.rotation.eulerAngles.y, 0f));
         
-        transform.localRotation = Anchor_y;               
+        // transform.localRotation = Anchor_y;               
     }
 }
