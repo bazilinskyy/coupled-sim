@@ -14,7 +14,6 @@ public class WaypointDrawer : MonoBehaviour
     private void Awake ()
     {
         _waypointCircuit = GetComponent<WaypointCircuit>();
-       
     }
 
 
@@ -31,7 +30,15 @@ public class WaypointDrawer : MonoBehaviour
                 Gizmos.DrawLine(_waypointCircuit.Waypoints[i].transform.position, _waypointCircuit.Waypoints[i+1].transform.position);
             }
 
+            if (i == 0)
+            {
+                 Gizmos.DrawCube(_waypointCircuit.Waypoints[i].transform.position, Vector3.one);
+            }
+            else{
+
+          
             Gizmos.DrawSphere(_waypointCircuit.Waypoints[i].transform.position, 0.25f);
+              }
         }
     }
 }
