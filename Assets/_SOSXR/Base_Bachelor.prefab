@@ -2280,13 +2280,27 @@ MonoBehaviour:
       VehicleType: 0
     AutonomousPath: {fileID: 0}
     AutonomousIsYielding: 0
-  - Name: Automated - Passenger
+  - Name: Taxi - Passenger
     TopHMI: {fileID: 114674626593462642, guid: 9eaaf159fd53e9043a6a0f42f3729fa0, type: 3}
     WindshieldHMI: {fileID: 114674626593462642, guid: 9eaaf159fd53e9043a6a0f42f3729fa0,
       type: 3}
     HoodHMI: {fileID: 114674626593462642, guid: 9eaaf159fd53e9043a6a0f42f3729fa0,
       type: 3}
     carIdx: 1
+    SpawnPoint:
+      Point: {fileID: 1311683245}
+      Type: 2
+      CameraIndex: 1
+      VehicleType: 1
+    AutonomousPath: {fileID: 8043761391078894673}
+    AutonomousIsYielding: 1
+  - Name: Taxi - Automated - Passenger
+    TopHMI: {fileID: 114674626593462642, guid: 9eaaf159fd53e9043a6a0f42f3729fa0, type: 3}
+    WindshieldHMI: {fileID: 114674626593462642, guid: 9eaaf159fd53e9043a6a0f42f3729fa0,
+      type: 3}
+    HoodHMI: {fileID: 114674626593462642, guid: 9eaaf159fd53e9043a6a0f42f3729fa0,
+      type: 3}
+    carIdx: 2
     SpawnPoint:
       Point: {fileID: 1311683245}
       Type: 2
