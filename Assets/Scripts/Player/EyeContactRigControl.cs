@@ -1,10 +1,7 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.Animations.Rigging;
-using UnityEngine.Rendering;
 using UnityEngine.Serialization;
-using VehicleBehaviour;
+
 
 public class EyeContactRigControl : MonoBehaviour
 {
@@ -20,6 +17,7 @@ public class EyeContactRigControl : MonoBehaviour
     private EyeContact playerLookAtPed;
     private GameObject target;
 
+
     private void Start()
     {
         playerLookAtPed = GetComponent<EyeContact>();
@@ -33,21 +31,18 @@ public class EyeContactRigControl : MonoBehaviour
         target.name = "Head Tracking Target";
     }
 
+
     private void LateUpdate()
     {
-        if(playerLookAtPed.TargetPed != null)
+        if (playerLookAtPed.TargetPed != null)
         {
             target.transform.parent = null;
             target.transform.position = Vector3.Lerp(target.transform.position, playerLookAtPed.TargetPed.position, HeadRotationLerpingSpeed * Time.deltaTime);
-        } 
+        }
         else
         {
             target.transform.parent = NeutralPositionHeadTrackingTarget;
             target.transform.position = Vector3.Lerp(target.transform.position, NeutralPositionHeadTrackingTarget.position, HeadRotationLerpingSpeed * Time.deltaTime);
         }
     }
-
-
-
-
 }

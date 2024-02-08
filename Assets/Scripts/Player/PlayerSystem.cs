@@ -1,14 +1,22 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEditor;
+﻿using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityEngine.Serialization;
 using UnityStandardAssets.Utility;
+
 
 //spawns, initializes and manages avatar at runtime
 public class PlayerSystem : MonoBehaviour
 {
+    public enum ControlMode
+    {
+        Driver,
+        Passenger,
+        HostAI
+    }
+
+
     public enum InputMode
     {
         Flat,
@@ -17,12 +25,6 @@ public class PlayerSystem : MonoBehaviour
         None
     }
 
-    public enum ControlMode
-    {
-        Driver,
-        Passenger,
-        HostAI
-    }
 
     public enum VehicleType
     {
@@ -30,35 +32,45 @@ public class PlayerSystem : MonoBehaviour
         AV
     }
 
+
     public InputMode PlayerInputMode;
-    [SerializeField]
-    PlayerAvatar _AvatarPrefab;
-    [SerializeField]
-    PlayerAvatar[] _AvatarPrefabDriver;
+    [FormerlySerializedAs("_AvatarPrefab")] [SerializeField] private PlayerAvatar m_pedestrianPrefab;
+    [SerializeField] private PlayerAvatar[] m_passengerPrefabs;
+    [FormerlySerializedAs("_AvatarPrefabDriver")] [SerializeField] private PlayerAvatar[] m_driverPrefabs;
 
 
     // [NonSerialized]
     public PlayerAvatar LocalPlayer;
-    public PlayerAvatar PedestrianPrefab => _AvatarPrefab;
 
     // Avatars contains both Drivers and Pedestrians (in arbitrary order)
     //[NonSerialized]
-    public List<PlayerAvatar> Avatars = new List<PlayerAvatar>();
+    public List<PlayerAvatar> Avatars = new();
     //[NonSerialized]
-    public List<PlayerAvatar> Cars = new List<PlayerAvatar>();
+    public List<PlayerAvatar> Cars = new();
     //[NonSerialized]
-    public List<PlayerAvatar> Pedestrians = new List<PlayerAvatar>();
+    public List<PlayerAvatar> Pedestrians = new();
     //[NonSerialized]
-    public List<PlayerAvatar> Passengers = new List<PlayerAvatar>();
+    public List<PlayerAvatar> Passengers = new();
 
-    PlayerAvatar[] Player2Avatar = new PlayerAvatar[UNetConfig.MaxPlayers];
-    public PlayerAvatar GetAvatar(int player) => Player2Avatar[player];
+    private readonly List<AvatarPose> _poses = new();
 
-    HMIManager _hmiManager;
-    void Awake()
+    private readonly PlayerAvatar[] Player2Avatar = new PlayerAvatar[UNetConfig.MaxPlayers];
+
+    private HMIManager _hmiManager;
+    public PlayerAvatar PedestrianPrefab => m_pedestrianPrefab;
+
+
+    public PlayerAvatar GetAvatar(int player)
+    {
+        return Player2Avatar[player];
+    }
+
+
+    private void Awake()
     {
         _hmiManager = FindObjectOfType<HMIManager>();
     }
+
 
     public void ActivatePlayerAICar()
     {
@@ -67,9 +79,11 @@ public class PlayerSystem : MonoBehaviour
         Assert.IsNotNull(tracker);
         aiCar.enabled = true;
         tracker.enabled = true;
-        foreach(var waypoint in tracker.Circuit.Waypoints)
+
+        foreach (var waypoint in tracker.Circuit.Waypoints)
         {
             var speedSettings = waypoint.GetComponent<SpeedSettings>();
+
             if (speedSettings != null)
             {
                 speedSettings.targetAICar = aiCar;
@@ -77,26 +91,32 @@ public class PlayerSystem : MonoBehaviour
         }
     }
 
-    PlayerAvatar GetAvatarPrefab(SpawnPointType type, int carIdx)
+
+    private PlayerAvatar GetAvatarPrefab(SpawnPointType type, int carIdx)
     {
         switch (type)
         {
             case SpawnPointType.PlayerControlledPedestrian:
-                return _AvatarPrefab;
-            case SpawnPointType.PlayerControlingCar:
+                return m_pedestrianPrefab;
+            case SpawnPointType.PlayerControllingCar:
             case SpawnPointType.PlayerInAIControlledCar:
-                return _AvatarPrefabDriver[carIdx];
+                return m_driverPrefabs[carIdx];
+            case SpawnPointType.PlayerPassivePassenger:
+                return m_passengerPrefabs[0];
             default:
                 Assert.IsFalse(true, $"Invalid SpawnPointType: {type}");
+
                 return null;
         }
     }
 
+
     public void SpawnLocalPlayer(SpawnPoint spawnPoint, int player, ExperimentRoleDefinition role)
     {
-        bool isPassenger = spawnPoint.Type == SpawnPointType.PlayerInAIControlledCar;
+        var isPassenger = spawnPoint.Type == SpawnPointType.PlayerInAIControlledCar;
         LocalPlayer = SpawnAvatar(spawnPoint, GetAvatarPrefab(spawnPoint.Type, role.carIdx), player, role);
         LocalPlayer.Initialize(false, PlayerInputMode, isPassenger ? ControlMode.Passenger : ControlMode.Driver, spawnPoint.VehicleType, spawnPoint.CameraIndex);
+
         if (isPassenger)
         {
             var waypointFollow = LocalPlayer.GetComponent<WaypointProgressTracker>();
@@ -109,11 +129,13 @@ public class PlayerSystem : MonoBehaviour
         }
     }
 
+
     public void SpawnRemotePlayer(SpawnPoint spawnPoint, int player, ExperimentRoleDefinition role)
     {
         var remotePlayer = SpawnAvatar(spawnPoint, GetAvatarPrefab(spawnPoint.Type, role.carIdx), player, role);
         remotePlayer.Initialize(true, InputMode.None, ControlMode.HostAI, spawnPoint.VehicleType);
     }
+
 
     public List<PlayerAvatar> GetAvatarsOfType(AvatarType type)
     {
@@ -121,16 +143,38 @@ public class PlayerSystem : MonoBehaviour
         {
             case AvatarType.Pedestrian: return Pedestrians;
             case AvatarType.Driver: return Cars;
-            default: Assert.IsFalse(true, $"No avatar collection for type {type}"); return null;
+            case AvatarType.Driven_Passenger: return Passengers;
+            default:
+                Assert.IsFalse(true, $"No avatar collection for type {type}");
+
+                return null;
         }
     }
 
-    PlayerAvatar SpawnAvatar(SpawnPoint spawnPoint, PlayerAvatar prefab, int player, ExperimentRoleDefinition role)
+
+    private PlayerAvatar SpawnAvatar(SpawnPoint spawnPoint, PlayerAvatar prefab, int player, ExperimentRoleDefinition role)
     {
-        var avatar = GameObject.Instantiate(prefab);
+        var avatar = Instantiate(prefab);
         avatar.transform.position = spawnPoint.position;
         avatar.transform.rotation = spawnPoint.rotation;
+
+        if (prefab.Type == AvatarType.Driven_Passenger)
+        {
+            var carTag = "ManualCar";
+            var drivenCar = GameObject.FindGameObjectWithTag(carTag);
+
+            if (drivenCar != null)
+            {
+                avatar.transform.parent = drivenCar.transform;
+            }
+            else
+            {
+                Debug.LogErrorFormat("For avatar {0} we're supposed to find a car with the tag {1}, but we couldn't find one in the scene. This is not good.", avatar.name, carTag);
+            }
+        }
+        
         var cameraSetup = spawnPoint.Point.GetComponent<CameraSetup>();
+
         if (cameraSetup != null)
         {
             foreach (var cam in avatar.GetComponentsInChildren<Camera>())
@@ -139,40 +183,49 @@ public class PlayerSystem : MonoBehaviour
                 cam.transform.localRotation = Quaternion.Euler(cameraSetup.rotation);
             }
         }
+        
         Avatars.Add(avatar);
         GetAvatarsOfType(avatar.Type).Add(avatar);
         Player2Avatar[player] = avatar;
+
         if (role.HoodHMI != null)
         {
             _hmiManager.AddHMI(avatar.HMISlots.Spawn(HMISlot.Hood, role.HoodHMI));
         }
+
         if (role.TopHMI != null)
         {
             _hmiManager.AddHMI(avatar.HMISlots.Spawn(HMISlot.Top, role.TopHMI));
         }
+
         if (role.WindshieldHMI != null)
         {
             _hmiManager.AddHMI(avatar.HMISlots.Spawn(HMISlot.Windshield, role.WindshieldHMI));
         }
+
         return avatar;
     }
 
-    List<AvatarPose> _poses = new List<AvatarPose>();
+
     public List<AvatarPose> GatherPoses()
     {
         _poses.Clear();
+
         foreach (var avatar in Avatars)
         {
             _poses.Add(avatar.GetPose());
         }
+
         return _poses;
     }
 
+
     public void ApplyPoses(List<AvatarPose> poses)
     {
-        for (int i = 0; i < Avatars.Count; i++)
+        for (var i = 0; i < Avatars.Count; i++)
         {
             var avatar = Avatars[i];
+
             if (avatar != LocalPlayer)
             {
                 Avatars[i].ApplyPose(poses[i]);
@@ -180,24 +233,33 @@ public class PlayerSystem : MonoBehaviour
         }
     }
 
-    //displays controler selection GUI
+
+    //displays controller selection GUI
     public void SelectModeGUI()
     {
+        GUILayout.Label($"Mode: {PlayerInputMode}");
 
-            GUILayout.Label($"Mode: {PlayerInputMode}");
-            if (GUILayout.Button("Suite mode"))
-            {
-                PlayerInputMode = InputMode.Suite;
-            }
-            if (GUILayout.Button("HMD mode"))
-            {
-                PlayerInputMode = InputMode.VR;
-            }
-            if (GUILayout.Button("Keyboard mode"))
-            {
-                PlayerInputMode = InputMode.Flat;
-            }
+        if (GUILayout.Button("Suite mode"))
+        {
+            PlayerInputMode = InputMode.Suite;
+        }
+
+        if (GUILayout.Button("HMD mode"))
+        {
+            PlayerInputMode = InputMode.VR;
+        }
+
+        if (GUILayout.Button("Keyboard mode"))
+        {
+            PlayerInputMode = InputMode.Flat;
+        }
+
+        if (GUILayout.Button("None"))
+        {
+            PlayerInputMode = InputMode.None;
+        }
     }
+
 
     public void SelectMode(InputMode inputMode)
     {

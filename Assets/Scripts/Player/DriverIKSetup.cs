@@ -1,6 +1,5 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
+
 
 public class DriverIKSetup : MonoBehaviour
 {
@@ -10,14 +9,16 @@ public class DriverIKSetup : MonoBehaviour
     public Transform LeftElbowHint;
     public Transform RightHand;
     public Transform RightElbowHint;
-    Animator _anim;
+    private Animator _anim;
 
-    void Awake()
+
+    private void Awake()
     {
         _anim = GetComponent<Animator>();
     }
 
-    void OnAnimatorIK(int layerIndex)
+
+    private void OnAnimatorIK(int layerIndex)
     {
         _anim.SetIKPositionWeight(AvatarIKGoal.LeftFoot, 1);
         _anim.SetIKPositionWeight(AvatarIKGoal.RightFoot, 1);
