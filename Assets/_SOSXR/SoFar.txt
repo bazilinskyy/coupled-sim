@@ -1,0 +1,26 @@
+﻿08-02-2024
+
+You can either have 1 human passenger, or 2 cars as passenger, inside your manually driven car...
+
+You can have 1 passenger (clone of pedestrian), as a passenger is fine. One manual car and the passenger sync perfect.
+However, 2 is too many, then then they don't sync over the network. 
+
+This is also the case if you run with 3 pedestrians. None sync. 
+
+However, if you have three manually driven cars, all is good. They sync perfect.
+
+So I tried making a car as a pedestrian: "Driven_Passenger_Madtest".... and this works!
+To make this work, it needs two separate spawn points, so that they're not colliding. 
+Needs to have the tag "ManualCar" removed, and in the PlayerAvatar set it as 'Driven_Avatar', 
+so that the PlayerSystem can parent it to the 'real' car. 
+
+Conclusion:
+There's simply something about the prefab of the pedestrian which is conflicting with it being used as a 2nd passenger.
+
+Next steps: 
+Create a prefab (maybe stripped down of the Hatchback car?) for a passenger which works, even when having 2 of them in the same manual car. 
+
+
+
+Best, 
+Maarten
