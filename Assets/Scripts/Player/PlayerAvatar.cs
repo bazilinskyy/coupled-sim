@@ -87,7 +87,8 @@ public struct AvatarPose : INetSubMessage
 public enum AvatarType
 {
     Pedestrian,
-    Driver
+    Driver,
+    Driven_Passenger
 }
 
 
@@ -98,6 +99,7 @@ public class PlayerAvatar : MonoBehaviour
     public ModeElements VRModeElements;
     public ModeElements FlatModeElements;
     public ModeElements SuiteModeElements;
+    public ModeElements NoModeElements;
 
     [Header("Player")]
     [FormerlySerializedAs("LocalModeElements")]
@@ -192,6 +194,12 @@ public class PlayerAvatar : MonoBehaviour
                     modeElements = VRModeElements;
 
                     break;
+                case PlayerSystem.InputMode.None:
+
+                    modeElements = NoModeElements;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(inputMode), inputMode, null);
             }
 
             SetupModeElements(modeElements);
@@ -225,6 +233,8 @@ public class PlayerAvatar : MonoBehaviour
                     modeElements = PlayerAsPassenger;
 
                     break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(controlMode), controlMode, null);
             }
 
             SetupModeElements(modeElements);
@@ -239,6 +249,8 @@ public class PlayerAvatar : MonoBehaviour
                     modeElements = MDV;
 
                     break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(vehicleType), vehicleType, null);
             }
 
             SetupModeElements(modeElements);
@@ -306,8 +318,8 @@ public class PlayerAvatar : MonoBehaviour
             LocalPositions = _pos,
             LocalRotations = _rot,
             Blinkers = _carBlinkers == null ? BlinkerState.None : _carBlinkers.State,
-            FrontLights = frontLights == null ? false : frontLights.activeSelf,
-            StopLights = stopLights == null ? false : stopLights.activeSelf
+            FrontLights = frontLights != null && frontLights.activeSelf,
+            StopLights = stopLights != null && stopLights.activeSelf
         };
     }
 

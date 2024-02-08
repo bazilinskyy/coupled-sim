@@ -6,8 +6,10 @@ public enum SpawnPointType
 {
     PlayerControlledPedestrian,
     PlayerControlingCar,
-    PlayerInAIControlledCar
+    PlayerInAIControlledCar,
+    PlayerPassivePassenger
 }
+
 [Serializable]
 public struct SpawnPoint
 {

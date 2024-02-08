@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityEngine.Serialization;
 using UnityStandardAssets.Utility;
 
 
@@ -32,8 +33,9 @@ public class PlayerSystem : MonoBehaviour
 
 
     public InputMode PlayerInputMode;
-    [SerializeField] private PlayerAvatar _AvatarPrefab;
-    [SerializeField] private PlayerAvatar[] _AvatarPrefabDriver;
+    [FormerlySerializedAs("_AvatarPrefab")] [SerializeField] private PlayerAvatar m_pedestrianPrefab;
+    [SerializeField] private PlayerAvatar[] m_passengerPrefabs;
+    [FormerlySerializedAs("_AvatarPrefabDriver")] [SerializeField] private PlayerAvatar[] m_driverPrefabs;
 
 
     // [NonSerialized]
@@ -49,12 +51,12 @@ public class PlayerSystem : MonoBehaviour
     //[NonSerialized]
     public List<PlayerAvatar> Passengers = new();
 
-    private HMIManager _hmiManager;
-
     private readonly List<AvatarPose> _poses = new();
 
     private readonly PlayerAvatar[] Player2Avatar = new PlayerAvatar[UNetConfig.MaxPlayers];
-    public PlayerAvatar PedestrianPrefab => _AvatarPrefab;
+
+    private HMIManager _hmiManager;
+    public PlayerAvatar PedestrianPrefab => m_pedestrianPrefab;
 
 
     public PlayerAvatar GetAvatar(int player)
@@ -94,10 +96,12 @@ public class PlayerSystem : MonoBehaviour
         switch (type)
         {
             case SpawnPointType.PlayerControlledPedestrian:
-                return _AvatarPrefab;
+                return m_pedestrianPrefab;
             case SpawnPointType.PlayerControlingCar:
             case SpawnPointType.PlayerInAIControlledCar:
-                return _AvatarPrefabDriver[carIdx];
+                return m_driverPrefabs[carIdx];
+            case SpawnPointType.PlayerPassivePassenger:
+                return m_passengerPrefabs[0];
             default:
                 Assert.IsFalse(true, $"Invalid SpawnPointType: {type}");
 
@@ -138,6 +142,7 @@ public class PlayerSystem : MonoBehaviour
         {
             case AvatarType.Pedestrian: return Pedestrians;
             case AvatarType.Driver: return Cars;
+            case AvatarType.Driven_Passenger: return Passengers;
             default:
                 Assert.IsFalse(true, $"No avatar collection for type {type}");
 
@@ -212,7 +217,7 @@ public class PlayerSystem : MonoBehaviour
     }
 
 
-    //displays controler selection GUI
+    //displays controller selection GUI
     public void SelectModeGUI()
     {
         GUILayout.Label($"Mode: {PlayerInputMode}");
@@ -230,6 +235,11 @@ public class PlayerSystem : MonoBehaviour
         if (GUILayout.Button("Keyboard mode"))
         {
             PlayerInputMode = InputMode.Flat;
+        }
+
+        if (GUILayout.Button("None"))
+        {
+            PlayerInputMode = InputMode.None;
         }
     }
 
