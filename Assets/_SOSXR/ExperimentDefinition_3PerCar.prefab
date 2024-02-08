@@ -34,6 +34,7 @@ Transform:
   - {fileID: 9168689610437224543}
   - {fileID: 571469619656576747}
   - {fileID: 2616189901370565436}
+  - {fileID: 89640435007566345}
   m_Father: {fileID: 7609667120526454229}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1311683244
@@ -725,6 +726,37 @@ MonoBehaviour:
   YieldingEyeContactSince: 0
   YieldingEyeContactUntil: 0
   customBehaviourData: []
+--- !u!1 &2773336481460991637
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 89640435007566345}
+  m_Layer: 0
+  m_Name: Driven_Backseat
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &89640435007566345
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2773336481460991637}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: -0.7071068, z: 0, w: 0.7071068}
+  m_LocalPosition: {x: -115.53, y: 0.22246248, z: 11.45}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 935614564}
+  m_LocalEulerAnglesHint: {x: 0, y: -90, z: 0}
 --- !u!1 &2876006939872120056
 GameObject:
   m_ObjectHideFlags: 0
@@ -1567,6 +1599,18 @@ MonoBehaviour:
       VehicleType: 0
     AutonomousPath: {fileID: 0}
     AutonomousIsYielding: 0
+  - Name: Driven - Backseat
+    TopHMI: {fileID: 0}
+    WindshieldHMI: {fileID: 0}
+    HoodHMI: {fileID: 0}
+    carIdx: 0
+    SpawnPoint:
+      Point: {fileID: 89640435007566345}
+      Type: 3
+      CameraIndex: 0
+      VehicleType: 0
+    AutonomousPath: {fileID: 0}
+    AutonomousIsYielding: 0
   - Name: Automated - Passenger
     TopHMI: {fileID: 114674626593462642, guid: 9eaaf159fd53e9043a6a0f42f3729fa0, type: 3}
     WindshieldHMI: {fileID: 114674626593462642, guid: 9eaaf159fd53e9043a6a0f42f3729fa0,
@@ -1690,7 +1734,7 @@ Transform:
   m_GameObject: {fileID: 8065187189252779656}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0.7071068, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: -120.3, y: 0.22246248, z: 11.45}
+  m_LocalPosition: {x: -117.28, y: 0.22246248, z: 6.64}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
