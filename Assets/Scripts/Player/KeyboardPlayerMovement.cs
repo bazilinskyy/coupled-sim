@@ -1,24 +1,24 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
+
 
 //debug keyboard controller for pedestrian role
 public class KeyboardPlayerMovement : MonoBehaviour
 {
-    Rigidbody _rb;
-    [SerializeField]
-    float _speed;
-    [SerializeField]
-    float _rotateSpeed = 50;
+    [SerializeField] private float _speed;
+    [SerializeField] private float _rotateSpeed = 50;
+    private Rigidbody _rb;
 
-    void Awake()
+
+    private void Awake()
     {
         _rb = GetComponent<Rigidbody>();
     }
 
-    void FixedUpdate()
+
+    private void FixedUpdate()
     {
-        Vector3 move = default(Vector3);
+        var move = default(Vector3);
+
         if (Input.GetKey(KeyCode.W))
         {
             move.z += _speed;
@@ -27,6 +27,7 @@ public class KeyboardPlayerMovement : MonoBehaviour
         {
             move.z -= _speed;
         }
+
         if (Input.GetKey(KeyCode.A))
         {
             move.x -= _speed;
@@ -35,7 +36,9 @@ public class KeyboardPlayerMovement : MonoBehaviour
         {
             move.x += _speed;
         }
+
         float rot = 0;
+
         if (Input.GetKey(KeyCode.Q))
         {
             rot -= _rotateSpeed;
@@ -44,6 +47,7 @@ public class KeyboardPlayerMovement : MonoBehaviour
         {
             rot += _rotateSpeed;
         }
+
         _rb.MovePosition(_rb.position + _rb.rotation * move * Time.fixedDeltaTime);
         _rb.MoveRotation(_rb.rotation * Quaternion.Euler(0, rot * Time.fixedDeltaTime, 0));
     }

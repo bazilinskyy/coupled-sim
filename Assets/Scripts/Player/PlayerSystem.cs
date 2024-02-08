@@ -1,14 +1,20 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEditor;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityStandardAssets.Utility;
 
+
 //spawns, initializes and manages avatar at runtime
 public class PlayerSystem : MonoBehaviour
 {
+    public enum ControlMode
+    {
+        Driver,
+        Passenger,
+        HostAI
+    }
+
+
     public enum InputMode
     {
         Flat,
@@ -17,12 +23,6 @@ public class PlayerSystem : MonoBehaviour
         None
     }
 
-    public enum ControlMode
-    {
-        Driver,
-        Passenger,
-        HostAI
-    }
 
     public enum VehicleType
     {
@@ -30,35 +30,44 @@ public class PlayerSystem : MonoBehaviour
         AV
     }
 
+
     public InputMode PlayerInputMode;
-    [SerializeField]
-    PlayerAvatar _AvatarPrefab;
-    [SerializeField]
-    PlayerAvatar[] _AvatarPrefabDriver;
+    [SerializeField] private PlayerAvatar _AvatarPrefab;
+    [SerializeField] private PlayerAvatar[] _AvatarPrefabDriver;
 
 
     // [NonSerialized]
     public PlayerAvatar LocalPlayer;
-    public PlayerAvatar PedestrianPrefab => _AvatarPrefab;
 
     // Avatars contains both Drivers and Pedestrians (in arbitrary order)
     //[NonSerialized]
-    public List<PlayerAvatar> Avatars = new List<PlayerAvatar>();
+    public List<PlayerAvatar> Avatars = new();
     //[NonSerialized]
-    public List<PlayerAvatar> Cars = new List<PlayerAvatar>();
+    public List<PlayerAvatar> Cars = new();
     //[NonSerialized]
-    public List<PlayerAvatar> Pedestrians = new List<PlayerAvatar>();
+    public List<PlayerAvatar> Pedestrians = new();
     //[NonSerialized]
-    public List<PlayerAvatar> Passengers = new List<PlayerAvatar>();
+    public List<PlayerAvatar> Passengers = new();
 
-    PlayerAvatar[] Player2Avatar = new PlayerAvatar[UNetConfig.MaxPlayers];
-    public PlayerAvatar GetAvatar(int player) => Player2Avatar[player];
+    private HMIManager _hmiManager;
 
-    HMIManager _hmiManager;
-    void Awake()
+    private readonly List<AvatarPose> _poses = new();
+
+    private readonly PlayerAvatar[] Player2Avatar = new PlayerAvatar[UNetConfig.MaxPlayers];
+    public PlayerAvatar PedestrianPrefab => _AvatarPrefab;
+
+
+    public PlayerAvatar GetAvatar(int player)
+    {
+        return Player2Avatar[player];
+    }
+
+
+    private void Awake()
     {
         _hmiManager = FindObjectOfType<HMIManager>();
     }
+
 
     public void ActivatePlayerAICar()
     {
@@ -67,9 +76,11 @@ public class PlayerSystem : MonoBehaviour
         Assert.IsNotNull(tracker);
         aiCar.enabled = true;
         tracker.enabled = true;
-        foreach(var waypoint in tracker.Circuit.Waypoints)
+
+        foreach (var waypoint in tracker.Circuit.Waypoints)
         {
             var speedSettings = waypoint.GetComponent<SpeedSettings>();
+
             if (speedSettings != null)
             {
                 speedSettings.targetAICar = aiCar;
@@ -77,7 +88,8 @@ public class PlayerSystem : MonoBehaviour
         }
     }
 
-    PlayerAvatar GetAvatarPrefab(SpawnPointType type, int carIdx)
+
+    private PlayerAvatar GetAvatarPrefab(SpawnPointType type, int carIdx)
     {
         switch (type)
         {
@@ -88,15 +100,18 @@ public class PlayerSystem : MonoBehaviour
                 return _AvatarPrefabDriver[carIdx];
             default:
                 Assert.IsFalse(true, $"Invalid SpawnPointType: {type}");
+
                 return null;
         }
     }
 
+
     public void SpawnLocalPlayer(SpawnPoint spawnPoint, int player, ExperimentRoleDefinition role)
     {
-        bool isPassenger = spawnPoint.Type == SpawnPointType.PlayerInAIControlledCar;
+        var isPassenger = spawnPoint.Type == SpawnPointType.PlayerInAIControlledCar;
         LocalPlayer = SpawnAvatar(spawnPoint, GetAvatarPrefab(spawnPoint.Type, role.carIdx), player, role);
         LocalPlayer.Initialize(false, PlayerInputMode, isPassenger ? ControlMode.Passenger : ControlMode.Driver, spawnPoint.VehicleType, spawnPoint.CameraIndex);
+
         if (isPassenger)
         {
             var waypointFollow = LocalPlayer.GetComponent<WaypointProgressTracker>();
@@ -109,11 +124,13 @@ public class PlayerSystem : MonoBehaviour
         }
     }
 
+
     public void SpawnRemotePlayer(SpawnPoint spawnPoint, int player, ExperimentRoleDefinition role)
     {
         var remotePlayer = SpawnAvatar(spawnPoint, GetAvatarPrefab(spawnPoint.Type, role.carIdx), player, role);
         remotePlayer.Initialize(true, InputMode.None, ControlMode.HostAI, spawnPoint.VehicleType);
     }
+
 
     public List<PlayerAvatar> GetAvatarsOfType(AvatarType type)
     {
@@ -121,16 +138,21 @@ public class PlayerSystem : MonoBehaviour
         {
             case AvatarType.Pedestrian: return Pedestrians;
             case AvatarType.Driver: return Cars;
-            default: Assert.IsFalse(true, $"No avatar collection for type {type}"); return null;
+            default:
+                Assert.IsFalse(true, $"No avatar collection for type {type}");
+
+                return null;
         }
     }
 
-    PlayerAvatar SpawnAvatar(SpawnPoint spawnPoint, PlayerAvatar prefab, int player, ExperimentRoleDefinition role)
+
+    private PlayerAvatar SpawnAvatar(SpawnPoint spawnPoint, PlayerAvatar prefab, int player, ExperimentRoleDefinition role)
     {
-        var avatar = GameObject.Instantiate(prefab);
+        var avatar = Instantiate(prefab);
         avatar.transform.position = spawnPoint.position;
         avatar.transform.rotation = spawnPoint.rotation;
         var cameraSetup = spawnPoint.Point.GetComponent<CameraSetup>();
+
         if (cameraSetup != null)
         {
             foreach (var cam in avatar.GetComponentsInChildren<Camera>())
@@ -139,40 +161,49 @@ public class PlayerSystem : MonoBehaviour
                 cam.transform.localRotation = Quaternion.Euler(cameraSetup.rotation);
             }
         }
+
         Avatars.Add(avatar);
         GetAvatarsOfType(avatar.Type).Add(avatar);
         Player2Avatar[player] = avatar;
+
         if (role.HoodHMI != null)
         {
             _hmiManager.AddHMI(avatar.HMISlots.Spawn(HMISlot.Hood, role.HoodHMI));
         }
+
         if (role.TopHMI != null)
         {
             _hmiManager.AddHMI(avatar.HMISlots.Spawn(HMISlot.Top, role.TopHMI));
         }
+
         if (role.WindshieldHMI != null)
         {
             _hmiManager.AddHMI(avatar.HMISlots.Spawn(HMISlot.Windshield, role.WindshieldHMI));
         }
+
         return avatar;
     }
 
-    List<AvatarPose> _poses = new List<AvatarPose>();
+
     public List<AvatarPose> GatherPoses()
     {
         _poses.Clear();
+
         foreach (var avatar in Avatars)
         {
             _poses.Add(avatar.GetPose());
         }
+
         return _poses;
     }
 
+
     public void ApplyPoses(List<AvatarPose> poses)
     {
-        for (int i = 0; i < Avatars.Count; i++)
+        for (var i = 0; i < Avatars.Count; i++)
         {
             var avatar = Avatars[i];
+
             if (avatar != LocalPlayer)
             {
                 Avatars[i].ApplyPose(poses[i]);
@@ -180,24 +211,28 @@ public class PlayerSystem : MonoBehaviour
         }
     }
 
+
     //displays controler selection GUI
     public void SelectModeGUI()
     {
+        GUILayout.Label($"Mode: {PlayerInputMode}");
 
-            GUILayout.Label($"Mode: {PlayerInputMode}");
-            if (GUILayout.Button("Suite mode"))
-            {
-                PlayerInputMode = InputMode.Suite;
-            }
-            if (GUILayout.Button("HMD mode"))
-            {
-                PlayerInputMode = InputMode.VR;
-            }
-            if (GUILayout.Button("Keyboard mode"))
-            {
-                PlayerInputMode = InputMode.Flat;
-            }
+        if (GUILayout.Button("Suite mode"))
+        {
+            PlayerInputMode = InputMode.Suite;
+        }
+
+        if (GUILayout.Button("HMD mode"))
+        {
+            PlayerInputMode = InputMode.VR;
+        }
+
+        if (GUILayout.Button("Keyboard mode"))
+        {
+            PlayerInputMode = InputMode.Flat;
+        }
     }
+
 
     public void SelectMode(InputMode inputMode)
     {
