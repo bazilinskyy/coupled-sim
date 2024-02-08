@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.Serialization;
@@ -97,7 +98,7 @@ public class PlayerSystem : MonoBehaviour
         {
             case SpawnPointType.PlayerControlledPedestrian:
                 return m_pedestrianPrefab;
-            case SpawnPointType.PlayerControlingCar:
+            case SpawnPointType.PlayerControllingCar:
             case SpawnPointType.PlayerInAIControlledCar:
                 return m_driverPrefabs[carIdx];
             case SpawnPointType.PlayerPassivePassenger:
@@ -156,6 +157,22 @@ public class PlayerSystem : MonoBehaviour
         var avatar = Instantiate(prefab);
         avatar.transform.position = spawnPoint.position;
         avatar.transform.rotation = spawnPoint.rotation;
+
+        if (prefab.Type == AvatarType.Driven_Passenger)
+        {
+            var carTag = "ManualCar";
+            var drivenCar = GameObject.FindGameObjectWithTag(carTag);
+
+            if (drivenCar != null)
+            {
+                avatar.transform.parent = drivenCar.transform;
+            }
+            else
+            {
+                Debug.LogErrorFormat("For avatar {0} we're supposed to find a car with the tag {1}, but we couldn't find one in the scene. This is not good.", avatar.name, carTag);
+            }
+        }
+        
         var cameraSetup = spawnPoint.Point.GetComponent<CameraSetup>();
 
         if (cameraSetup != null)
@@ -166,7 +183,7 @@ public class PlayerSystem : MonoBehaviour
                 cam.transform.localRotation = Quaternion.Euler(cameraSetup.rotation);
             }
         }
-
+        
         Avatars.Add(avatar);
         GetAvatarsOfType(avatar.Type).Add(avatar);
         Player2Avatar[player] = avatar;

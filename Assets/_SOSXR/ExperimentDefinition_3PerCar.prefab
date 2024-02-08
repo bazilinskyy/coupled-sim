@@ -29,6 +29,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 8769864853207741435}
   - {fileID: 1311683245}
   - {fileID: 9168689610437224543}
   - {fileID: 571469619656576747}
@@ -884,6 +885,37 @@ MonoBehaviour:
   YieldingEyeContactSince: 0
   YieldingEyeContactUntil: 0
   customBehaviourData: []
+--- !u!1 &3142802756935059347
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8769864853207741435}
+  m_Layer: 0
+  m_Name: AI_Car
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8769864853207741435
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3142802756935059347}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: 0.7071068, z: -0, w: 0.7071068}
+  m_LocalPosition: {x: -107.92, y: -0.06, z: 43.43}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 935614564}
+  m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
 --- !u!1 &3851620885151820159
 GameObject:
   m_ObjectHideFlags: 0
@@ -1126,9 +1158,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   spawnParams:
-    SpawnPoint: {fileID: 0}
-    Track: {fileID: 0}
-    SpawnDriver: 1
+    SpawnPoint: {fileID: 8769864853207741435}
+    Track: {fileID: 8043761391078894673}
+    SpawnDriver: 0
     SpawnPassenger: 0
     Car: {fileID: 7713759469045616529, guid: 1baf460ab026f1247ab4696be569ffae, type: 3}
     VehicleType: 0

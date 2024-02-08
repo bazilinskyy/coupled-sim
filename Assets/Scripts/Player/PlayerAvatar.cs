@@ -178,7 +178,7 @@ public class PlayerAvatar : MonoBehaviour
                 }
             }
 
-            var modeElements = default(ModeElements);
+            ModeElements modeElements;
 
             switch (inputMode)
             {

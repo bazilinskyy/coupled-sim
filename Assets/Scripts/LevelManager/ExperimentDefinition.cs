@@ -5,7 +5,7 @@ using UnityStandardAssets.Utility;
 public enum SpawnPointType
 {
     PlayerControlledPedestrian,
-    PlayerControlingCar,
+    PlayerControllingCar,
     PlayerInAIControlledCar,
     PlayerPassivePassenger
 }
