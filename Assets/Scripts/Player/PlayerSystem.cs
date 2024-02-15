@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.Serialization;
@@ -172,7 +171,7 @@ public class PlayerSystem : MonoBehaviour
                 Debug.LogErrorFormat("For avatar {0} we're supposed to find a car with the tag {1}, but we couldn't find one in the scene. This is not good.", avatar.name, carTag);
             }
         }
-        
+
         var cameraSetup = spawnPoint.Point.GetComponent<CameraSetup>();
 
         if (cameraSetup != null)
@@ -183,7 +182,7 @@ public class PlayerSystem : MonoBehaviour
                 cam.transform.localRotation = Quaternion.Euler(cameraSetup.rotation);
             }
         }
-        
+
         Avatars.Add(avatar);
         GetAvatarsOfType(avatar.Type).Add(avatar);
         Player2Avatar[player] = avatar;
@@ -275,5 +274,3 @@ public class PlayerSystem : MonoBehaviour
         Passengers = null;
     }
 }
-
-
