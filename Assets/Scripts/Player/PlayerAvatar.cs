@@ -281,7 +281,14 @@ public class PlayerAvatar : MonoBehaviour
         {
             foreach (var go in modeElements.gameObjects)
             {
-                go.SetActive(true);
+                if (go != null)
+                {
+                    go.SetActive(true);
+                }
+                else
+                {
+                    Debug.LogWarning("MAARTEN: A GameObject mode-element was expected here, but they are null");
+                }
             }
         }
 

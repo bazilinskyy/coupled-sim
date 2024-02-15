@@ -184,7 +184,7 @@ public class WorldLogger
             }
             else
             {
-                Debug.LogWarning("We don't have any CarBlinkers in our _driverBuffer");
+                Debug.LogWarning("MAARTEN: We don't have any CarBlinkers in our _driverBuffer");
             }
 
             if (driver.frontLights != null)
@@ -193,7 +193,7 @@ public class WorldLogger
             }
             else
             {
-                Debug.LogWarning("We dont have any FrontLights in our _driverBuffer");
+                Debug.LogWarning("MAARTEN: We dont have any FrontLights in our _driverBuffer");
             }
 
             if (driver.stopLights != null)
@@ -202,7 +202,7 @@ public class WorldLogger
             }
             else
             {
-                Debug.LogWarning("We don't have any StopLights in our _driverBuffer");
+                Debug.LogWarning("MAARTEN: We don't have any StopLights in our _driverBuffer");
             }
 
             if (driver == _playerSystem.LocalPlayer)
