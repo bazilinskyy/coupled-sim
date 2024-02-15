@@ -114,6 +114,12 @@ public class AICarSyncSystem
 
         for (var i = 0; i < msg.Poses.Count; i++)
         {
+            if (Cars[i] == null)
+            {
+                Debug.LogWarning("MAARTEN: I don't have a car here");
+                continue;
+            }
+            
             Cars[i].ApplyPose(msg.Poses[i]);
         }
     }
