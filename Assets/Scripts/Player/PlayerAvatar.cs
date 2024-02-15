@@ -159,17 +159,17 @@ public class PlayerAvatar : MonoBehaviour
             if (_carBlinkers == null)
             {
                 _carBlinkers = FindObjectOfType<CarBlinkers>();
-                Debug.LogWarningFormat("MAARTEN: In our PlayerAvatar, a passenger doesn't carry their own blinkers, so they needed to find some 'out there'. We want to be sure we got the correct blinkers: {0}", _carBlinkers.name);
+                Debug.LogWarningFormat("SOSXR: In our PlayerAvatar, a passenger doesn't carry their own blinkers, so they needed to find some 'out there'. We want to be sure we got the correct blinkers: {0}", _carBlinkers.name);
             }
 
             if (stopLights == null)
             {
-                Debug.LogWarning("We don't yet have any stoplights, but also no way to get some new ones.");
+                Debug.LogWarning("SOSXR: We don't yet have any stoplights, but also no way to get some new ones.");
             }
 
             if (frontLights == null)
             {
-                Debug.LogWarning("We don't yet have any front lights, but also no way to get some new ones. Maybe they're on a car somewhere?");
+                Debug.LogWarning("SOSXR: We don't yet have any front lights, but also no way to get some new ones. Maybe they're on a car somewhere?");
             }
         }
         else
@@ -186,7 +186,7 @@ public class PlayerAvatar : MonoBehaviour
                     var cam = rig.GetComponentInChildren<Camera>();
                     cameras[cameraIndex] = cam;
 
-                    Debug.Log("Maarten: Instantiated XR_Origin rig for XR, instead of enabling the default camera.");
+                    Debug.Log("SOSXR: Instantiated XR_Origin rig for XR, instead of enabling the default camera.");
                 }
                 else
                 {
@@ -287,7 +287,7 @@ public class PlayerAvatar : MonoBehaviour
                 }
                 else
                 {
-                    Debug.LogWarning("MAARTEN: A GameObject mode-element was expected here, but they are null");
+                    Debug.LogWarning("SOSXR: A GameObject mode-element was expected here, but they are null");
                 }
             }
         }
@@ -302,7 +302,7 @@ public class PlayerAvatar : MonoBehaviour
                 }
                 else
                 {
-                    Debug.LogWarning("MAARTEN: A MonoBehaviour mode-element was expected here, but they are null.");
+                    Debug.LogWarning("SOSXR: A MonoBehaviour mode-element was expected here, but they are null.");
                 }
             }
         }

@@ -116,7 +116,7 @@ public class AICarSyncSystem
         {
             if (Cars[i] == null)
             {
-                Debug.LogWarning("MAARTEN: I don't have a car here");
+                Debug.LogWarning("SOSXR: I don't have a car here");
                 continue;
             }
             
