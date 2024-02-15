@@ -168,7 +168,7 @@ public class PlayerSystem : MonoBehaviour
             }
             else
             {
-                Debug.LogErrorFormat("For avatar {0} we're supposed to find a car with the tag {1}, but we couldn't find one in the scene. This is not good.", avatar.name, carTag);
+                Debug.LogErrorFormat("SOSXR: For avatar {0} we're supposed to find a car with the tag {1}, but we couldn't find one in the scene. This is not good.", avatar.name, carTag);
             }
         }
 
