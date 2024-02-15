@@ -1,28 +1,47 @@
 ﻿15-02-2024
 
-Goal for today: go from 'car' as passenger to 'passenger as passenger'. 
+Goal for today: go from 'car as passenger' to 'passenger as passenger'. 
 
-I'm encountering two errors, which seem to be able to overcome by updating:
+I'm encountering two errors, one dealing with Unity Transport, the other with a Stack Overflow. Both seem to be able to overcome by updating:
     https://gamedev.stackexchange.com/questions/186134/a-native-collection-has-not-been-disposed-resulting-in-a-memory-leak-enable-fu
     https://issuetracker.unity3d.com/issues/resetting-event-queue-with-pending-events-error-thrown-after-connecting-client-to-server
-However I'll wait with updating. Don't know where it's coming from, and there may be something simpler going on. 
+However I'll wait with updating. Don't know where it's coming from, it wasn't there last week, and there may be something simpler going on. 
 
-Now with this commit there's passengers inside the car who are actually passengers. Their prefab is still a mess. Will clean that up now.
+Now there's passengers inside the car who are actually passengers. Their prefab is still a mess and includes so much Car stuff. Will clean that up now.
 
-Create passenger with new 'Passenger' layer, which collides with nothing. 
-His RB cannot be kinematic, but can do !Gravity.
-
-Glad I didn't update the UnityTransport package. The issues seemed to have gone away once I picked up all the created null-errors.
+Glad I didn't update the UnityTransport package. The issues seemed to have gone away once I picked up all the projects' null-errors.
 Null errors dealing with car-lights etc, which are caused because a passenger doesn't really have a personal own spawned car, ergo no lights.
 Once I dealt with all those, the connection errors seemed to have gone away. 
 
 Passengers are now happily in the car. I first disabled all car-components 'around them', and then once that was happy, I deleted all that. 
-Now they do have an AnimationRig, which needs some placing. 
+The passenger has new 'Passenger' layer, which collides with nothing. 
+His RB cannot be kinematic, but can do !Gravity.
+
+They do have an AnimationRig, which needs some placing. 
 I added new targets for Head, Hand and Hand. The Head has two constraints: a pos/rot and a lookat. 
 I don't think the lookat is needed for what we're after. I left it on there, but set the weight to 0. 
-OK the passengers respond fairly well to their rigs. I will now start making sure that the VR portion of this experience works at least somewhat.
+The passengers respond fairly well to their rigs. The rig is not yet connected to HMD/Controllers
 
+I noticed that only 192.168.0.11 can be host? 12 at least doesn't want to just yet. Maybe due to some firewall setting?
 
+I will now start making sure that the VR portion of this experience works at least somewhat.
+
+XR works in general. A passenger can have an HMD, as can the driver. Both HMDs neatly drive along with a driven car. 
+Need to test whether two passengers can both have an HMD. Then need to test whether 3 in car can all have HMD. 
+
+'R'-key is clearly a button to yoink the HMD to floor level. Need to figure out why that's there, and whether we can get rid of it. 
+
+The positioning of the HMD camera is horrendous. I'll first try to set it to the location of the face-target.
+
+The repositioning of the HMD camera now works to a degree. We can reposition&flatten it to another object, which we can then add to the Prefab.
+There's a Target_XROrigin thing on the prefab, with a tag, and the RecenterXROrigin component will go and look for that.
+A weird thing that happens is that because there's this phase of initialisation prior to hitting "Start Simulation", the OnEnable method gets called and then 
+I think there's some messing around with the Time settings? Maybe the program is paused that way. Anyway, doesn't matter, but it does provide some interesting thing for the 
+recenter script to figure out when it should run. 
+
+That's all for today now. 
+Bye
+Maarten
 
 
 

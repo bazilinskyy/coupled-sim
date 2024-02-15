@@ -179,9 +179,9 @@ public class PlayerAvatar : MonoBehaviour
                 if ((m_instantiateXRRig && m_xrRigPrefab != null && inputMode == PlayerSystem.InputMode.VR) || inputMode == PlayerSystem.InputMode.Suite)
                 {
                     var rig = Instantiate(m_xrRigPrefab, transform);
+                    rig.transform.parent = cameras[cameraIndex].transform.parent; // This will probably be the 'CameraParent'
                     rig.transform.localPosition = Vector3.zero;
                     rig.transform.localRotation = Quaternion.identity;
-                    rig.transform.parent = cameras[cameraIndex].transform.parent;
 
                     var cam = rig.GetComponentInChildren<Camera>();
                     cameras[cameraIndex] = cam;
