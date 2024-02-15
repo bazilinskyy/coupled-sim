@@ -33,8 +33,6 @@ Transform:
   - {fileID: 1311683245}
   - {fileID: 9168689610437224543}
   - {fileID: 571469619656576747}
-  - {fileID: 2616189901370565436}
-  - {fileID: 89640435007566345}
   m_Father: {fileID: 7609667120526454229}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1311683244
@@ -751,12 +749,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2773336481460991637}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: -0.7071068, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: -118.97, y: 0.22246248, z: 9.7}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0.17, y: 0, z: -1}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 935614564}
+  m_Father: {fileID: 571469619656576747}
   m_LocalEulerAnglesHint: {x: 0, y: -90, z: 0}
 --- !u!114 &2816677570816598251
 MonoBehaviour:
@@ -773,7 +771,7 @@ MonoBehaviour:
   m_radius: 0.25
   m_color:
     serializedVersion: 2
-    rgba: 4283177542
+    rgba: 4278191374
 --- !u!1 &2876006939872120056
 GameObject:
   m_ObjectHideFlags: 0
@@ -1724,7 +1722,9 @@ Transform:
   m_LocalPosition: {x: -120.3, y: 0.22246248, z: 9.7}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 89640435007566345}
+  - {fileID: 2616189901370565436}
   m_Father: {fileID: 935614564}
   m_LocalEulerAnglesHint: {x: 0, y: -90, z: 0}
 --- !u!114 &5477595725360610884
@@ -1742,7 +1742,7 @@ MonoBehaviour:
   m_radius: 0.25
   m_color:
     serializedVersion: 2
-    rgba: 4279173375
+    rgba: 4293937310
 --- !u!1 &8065187189252779656
 GameObject:
   m_ObjectHideFlags: 0
@@ -1768,12 +1768,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8065187189252779656}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: -0.7071068, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: -120.988, y: 0.22246248, z: 10.713}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 935614564}
+  m_Father: {fileID: 571469619656576747}
   m_LocalEulerAnglesHint: {x: 0, y: -90, z: 0}
 --- !u!114 &2299038053523415606
 MonoBehaviour:
@@ -1790,7 +1790,7 @@ MonoBehaviour:
   m_radius: 0.25
   m_color:
     serializedVersion: 2
-    rgba: 4287465592
+    rgba: 4288186991
 --- !u!1001 &1257692278195448331
 PrefabInstance:
   m_ObjectHideFlags: 0
