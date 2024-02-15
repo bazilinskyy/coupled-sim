@@ -735,6 +735,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 89640435007566345}
+  - component: {fileID: 2816677570816598251}
   m_Layer: 0
   m_Name: Driven_Backseat
   m_TagString: Untagged
@@ -751,12 +752,28 @@ Transform:
   m_GameObject: {fileID: 2773336481460991637}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0.7071068, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: -115.53, y: 0.22246248, z: 11.45}
+  m_LocalPosition: {x: -118.97, y: 0.22246248, z: 9.7}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 935614564}
   m_LocalEulerAnglesHint: {x: 0, y: -90, z: 0}
+--- !u!114 &2816677570816598251
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2773336481460991637}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 43a2c6fdf0104b83bc556d149457cc40, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_radius: 0.25
+  m_color:
+    serializedVersion: 2
+    rgba: 4283177542
 --- !u!1 &2876006939872120056
 GameObject:
   m_ObjectHideFlags: 0
@@ -1687,6 +1704,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 571469619656576747}
+  - component: {fileID: 5477595725360610884}
   m_Layer: 0
   m_Name: Driver
   m_TagString: Untagged
@@ -1709,6 +1727,22 @@ Transform:
   m_Children: []
   m_Father: {fileID: 935614564}
   m_LocalEulerAnglesHint: {x: 0, y: -90, z: 0}
+--- !u!114 &5477595725360610884
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7533570759686457814}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 43a2c6fdf0104b83bc556d149457cc40, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_radius: 0.25
+  m_color:
+    serializedVersion: 2
+    rgba: 4279173375
 --- !u!1 &8065187189252779656
 GameObject:
   m_ObjectHideFlags: 0
@@ -1718,6 +1752,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2616189901370565436}
+  - component: {fileID: 2299038053523415606}
   m_Layer: 0
   m_Name: Driven_Passenger
   m_TagString: Untagged
@@ -1734,12 +1769,28 @@ Transform:
   m_GameObject: {fileID: 8065187189252779656}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0.7071068, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: -117.28, y: 0.22246248, z: 6.64}
+  m_LocalPosition: {x: -120.988, y: 0.22246248, z: 10.713}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 935614564}
   m_LocalEulerAnglesHint: {x: 0, y: -90, z: 0}
+--- !u!114 &2299038053523415606
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8065187189252779656}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 43a2c6fdf0104b83bc556d149457cc40, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_radius: 0.25
+  m_color:
+    serializedVersion: 2
+    rgba: 4287465592
 --- !u!1001 &1257692278195448331
 PrefabInstance:
   m_ObjectHideFlags: 0

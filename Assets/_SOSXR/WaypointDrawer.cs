@@ -1,26 +1,24 @@
-using System.Collections;
-using System.Collections.Generic;
+using System;
 using UnityEngine;
 using UnityStandardAssets.Utility;
+
 
 [ExecuteAlways]
 [RequireComponent(typeof(WaypointCircuit))]
 public class WaypointDrawer : MonoBehaviour
 {
-   private WaypointCircuit _waypointCircuit;
+    private WaypointCircuit _waypointCircuit;
 
 
-
-    private void Awake ()
+    private void Awake()
     {
         _waypointCircuit = GetComponent<WaypointCircuit>();
-       
     }
 
 
     private void OnDrawGizmos()
     {
-        for (int i = 0; i < _waypointCircuit.Waypoints.Length ; i++)
+        for (var i = 0; i < _waypointCircuit.Waypoints.Length; i++)
         {
             if (i == _waypointCircuit.Waypoints.Length - 1)
             {
@@ -28,12 +26,10 @@ public class WaypointDrawer : MonoBehaviour
             }
             else
             {
-                Gizmos.DrawLine(_waypointCircuit.Waypoints[i].transform.position, _waypointCircuit.Waypoints[i+1].transform.position);
+                Gizmos.DrawLine(_waypointCircuit.Waypoints[i].transform.position, _waypointCircuit.Waypoints[i + 1].transform.position);
             }
 
             Gizmos.DrawSphere(_waypointCircuit.Waypoints[i].transform.position, 0.25f);
         }
     }
 }
-
-

@@ -155,6 +155,22 @@ public class PlayerAvatar : MonoBehaviour
             {
                 su.enabled = false;
             }
+
+            if (_carBlinkers == null)
+            {
+                _carBlinkers = FindObjectOfType<CarBlinkers>();
+                Debug.LogWarningFormat("MAARTEN: In our PlayerAvatar, a passenger doesn't carry their own blinkers, so they needed to find some 'out there'. We want to be sure we got the correct blinkers: {0}", _carBlinkers.name);
+            }
+
+            if (stopLights == null)
+            {
+                Debug.LogWarning("We don't yet have any stoplights, but also no way to get some new ones.");
+            }
+
+            if (frontLights == null)
+            {
+                Debug.LogWarning("We don't yet have any front lights, but also no way to get some new ones. Maybe they're on a car somewhere?");
+            }
         }
         else
         {
@@ -197,6 +213,7 @@ public class PlayerAvatar : MonoBehaviour
                 case PlayerSystem.InputMode.None:
 
                     modeElements = NoModeElements;
+
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(inputMode), inputMode, null);
@@ -272,7 +289,14 @@ public class PlayerAvatar : MonoBehaviour
         {
             foreach (var mb in modeElements.monoBehaviours)
             {
-                mb.enabled = true;
+                if (mb != null)
+                {
+                    mb.enabled = true;
+                }
+                else
+                {
+                    Debug.LogWarning("MAARTEN: A MonoBehaviour mode-element was expected here, but they are null.");
+                }
             }
         }
 
