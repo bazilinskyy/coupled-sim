@@ -10,6 +10,7 @@ public enum SpawnPointType
     PlayerPassivePassenger
 }
 
+
 [Serializable]
 public struct SpawnPoint
 {
