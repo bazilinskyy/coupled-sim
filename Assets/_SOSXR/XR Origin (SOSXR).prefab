@@ -76,7 +76,6 @@ GameObject:
   - component: {fileID: 129551783411758988}
   - component: {fileID: 2646452172763545617}
   - component: {fileID: 3142116873106760334}
-  - component: {fileID: 8409891191596914868}
   m_Layer: 0
   m_Name: Left_Attach
   m_TagString: Controller_Left_AttachPoint
@@ -149,27 +148,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!135 &8409891191596914868
-SphereCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1109772382821412249}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Radius: 0.5
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &2985672217390894936
 GameObject:
   m_ObjectHideFlags: 0
@@ -1445,7 +1423,6 @@ GameObject:
   - component: {fileID: 2882375737893079865}
   - component: {fileID: 872541751523754437}
   - component: {fileID: 3847385431552505532}
-  - component: {fileID: 4205003876193343832}
   m_Layer: 0
   m_Name: Right_Attach
   m_TagString: Controller_Right_AttachPoint
@@ -1518,27 +1495,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!65 &4205003876193343832
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5665973941421005110}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 1, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &5866318587881342538
 GameObject:
   m_ObjectHideFlags: 0
@@ -1793,3 +1749,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_recenterToTag: Target_XROrigin
   m_fireDelay: 2
+  m_debug: 0

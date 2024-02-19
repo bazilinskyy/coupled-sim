@@ -1,4 +1,5 @@
-﻿using Unity.XR.CoreUtils;
+﻿using System;
+using Unity.XR.CoreUtils;
 using UnityEngine;
 using UnityEngine.XR;
 
@@ -10,6 +11,8 @@ public class RecenterXROrigin : MonoBehaviour
     private Transform _recenterTo;
     private Transform _xrCamera;
     private XROrigin _xrOrigin;
+
+    [SerializeField] private bool m_debug = false;
 
 
     private void Awake()
@@ -100,5 +103,17 @@ public class RecenterXROrigin : MonoBehaviour
         var rotationAngleY = _recenterTo.transform.rotation.eulerAngles.y - _xrCamera.transform.rotation.eulerAngles.y;
 
         _xrOrigin.transform.Rotate(0, rotationAngleY, 0);
+    }
+
+
+    private void Update()
+    {
+        if (!m_debug)
+        {
+            return;
+        }
+
+        RecenterAndFlatten();
+        Debug.Log("SOSXR: You're recentering the rig every frame. This is only supposed to happen when you want to find out the correct position for the HMD. Because this is A) expensive, B) mightily uncomfortable");
     }
 }
