@@ -3,10 +3,18 @@
 
 public static class ExtensionMethods
 {
+    public static void ZeroOut(this Transform input)
+    {
+        input.position = Vector3.zero;
+        input.rotation = Quaternion.identity;
+    }
+ 
+    
     public static Vector3 Flatten(this Vector3 input)
     {
         return new Vector3(input.x, 0, input.z);
     }
+    
     
     /// <summary>
     ///     Find by tag the transform of (sub)child in a given parent, recursively.

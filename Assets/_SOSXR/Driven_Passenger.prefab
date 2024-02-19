@@ -83,7 +83,7 @@ MonoBehaviour:
   m_radius: 0.15
   m_color:
     serializedVersion: 2
-    rgba: 4279508226
+    rgba: 4282797750
 --- !u!1 &510759243375576539
 GameObject:
   m_ObjectHideFlags: 0
@@ -141,6 +141,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8391831393875507518}
   - component: {fileID: 5828777688184419250}
+  - component: {fileID: 585916621719829302}
   m_Layer: 15
   m_Name: Target_Hand_Right
   m_TagString: Untagged
@@ -178,7 +179,20 @@ MonoBehaviour:
   m_radius: 0.1
   m_color:
     serializedVersion: 2
-    rgba: 4281736393
+    rgba: 4278510116
+--- !u!114 &585916621719829302
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1117818311099048151}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1f8c141f7ce441db97a819b68133bdc9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_tagToSearchFor: Controller_Right_AttachPoint
 --- !u!1 &1584200821045370048
 GameObject:
   m_ObjectHideFlags: 0
@@ -857,6 +871,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5902651862827094172}
   - component: {fileID: 7277618512189514677}
+  - component: {fileID: 3573032263462561463}
   m_Layer: 15
   m_Name: Target_Head_Position
   m_TagString: Untagged
@@ -894,7 +909,20 @@ MonoBehaviour:
   m_radius: 0.1
   m_color:
     serializedVersion: 2
-    rgba: 4290430661
+    rgba: 4286157477
+--- !u!114 &3573032263462561463
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3351959025385700786}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1f8c141f7ce441db97a819b68133bdc9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_tagToSearchFor: HMD_AttachPoint
 --- !u!1 &3888856132941938574
 GameObject:
   m_ObjectHideFlags: 0
@@ -970,6 +998,7 @@ GameObject:
   m_Component:
   - component: {fileID: 9091500302008494899}
   - component: {fileID: 4921967157553513850}
+  - component: {fileID: 3039575092530218418}
   m_Layer: 15
   m_Name: Target_Hand_Left
   m_TagString: Untagged
@@ -1007,7 +1036,20 @@ MonoBehaviour:
   m_radius: 0.1
   m_color:
     serializedVersion: 2
-    rgba: 4287523961
+    rgba: 4280556833
+--- !u!114 &3039575092530218418
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5918120822381838973}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1f8c141f7ce441db97a819b68133bdc9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_tagToSearchFor: Controller_Left_AttachPoint
 --- !u!1 &7321257587254611535
 GameObject:
   m_ObjectHideFlags: 0
@@ -1055,7 +1097,7 @@ MonoBehaviour:
   m_radius: 0.1
   m_color:
     serializedVersion: 2
-    rgba: 4278540338
+    rgba: 4279270217
 --- !u!1 &7661147631939441798
 GameObject:
   m_ObjectHideFlags: 0
