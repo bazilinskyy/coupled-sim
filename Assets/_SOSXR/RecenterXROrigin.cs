@@ -5,7 +5,7 @@ using UnityEngine.XR;
 
 public class RecenterXROrigin : MonoBehaviour
 {
-    [SerializeField] private string m_recenterToTag = "Target_XROrigin";
+    [SerializeField] [TagSelector] private string m_recenterToTag = "Target_XROrigin";
     [SerializeField] [Range(0f, 10f)] private float m_fireDelay = 2f;
     private Transform _recenterTo;
     private Transform _xrCamera;
