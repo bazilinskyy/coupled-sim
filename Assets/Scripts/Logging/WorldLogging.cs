@@ -286,19 +286,19 @@ public class LogConverter
 
     private readonly List<SerializedPOI> customPois = new()
     {
-        new SerializedPOI()
+        new SerializedPOI
         {
             Name = "ldist",
             Position = new Vector3(0, 0, 7.75f),
             Rotation = Quaternion.Euler(new Vector3())
         },
-        new SerializedPOI()
+        new SerializedPOI
         {
             Name = "rdist",
             Position = new Vector3(0, 0, 2.75f),
             Rotation = Quaternion.Euler(new Vector3())
         },
-        new SerializedPOI()
+        new SerializedPOI
         {
             Name = "spawn point",
             Position = new Vector3(0, 0.2224625f, 0),
@@ -923,7 +923,7 @@ public class LogConverter
 
         public static Log New()
         {
-            return new Log()
+            return new Log
             {
                 POIs = new List<SerializedPOI>(),
                 CarLightNames = new List<string>(),

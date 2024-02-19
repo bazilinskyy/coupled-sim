@@ -6,8 +6,8 @@ using UnityEngine.XR;
 public class RecenterXROrigin : MonoBehaviour
 {
     [SerializeField] private string m_recenterToTag = "Target_XROrigin";
-    [SerializeField] [Range(0f, 10f)] private float m_fireDelay = 2f; 
-    private GameObject _recenterTo;
+    [SerializeField] [Range(0f, 10f)] private float m_fireDelay = 2f;
+    private Transform _recenterTo;
     private Transform _xrCamera;
     private XROrigin _xrOrigin;
 
@@ -66,12 +66,10 @@ public class RecenterXROrigin : MonoBehaviour
         {
             return;
         }
+        
+        _recenterTo = transform.root.FindChildByTag(m_recenterToTag); // Go to the root GameObject, then search back downwards until you find something with this tag.
 
-        if (GameObject.FindGameObjectWithTag(m_recenterToTag) != null)
-        {
-            _recenterTo = GameObject.FindGameObjectWithTag(m_recenterToTag);
-        }
-        else
+        if (_recenterTo == null)
         {
             Debug.LogWarningFormat("SOSXR: We don't have anything in our scene with the tag {0}, are you sure that it is defined?", m_recenterToTag);
         }

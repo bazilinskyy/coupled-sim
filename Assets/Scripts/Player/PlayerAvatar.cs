@@ -159,9 +159,12 @@ public class PlayerAvatar : MonoBehaviour
             if (_carBlinkers == null)
             {
                 _carBlinkers = FindObjectOfType<CarBlinkers>();
+            }
+            if (_carBlinkers == null)
+            {
                 Debug.LogWarningFormat("SOSXR: In our PlayerAvatar, a passenger doesn't carry their own blinkers, so they needed to find some 'out there'. We want to be sure we got the correct blinkers: {0}", _carBlinkers.name);
             }
-
+            
             if (stopLights == null)
             {
                 Debug.LogWarning("SOSXR: We don't yet have any stoplights, but also no way to get some new ones.");
@@ -185,7 +188,7 @@ public class PlayerAvatar : MonoBehaviour
 
                     var cam = rig.GetComponentInChildren<Camera>();
                     cameras[cameraIndex] = cam;
-
+                    
                     Debug.Log("SOSXR: Instantiated XR_Origin rig for XR, instead of enabling the default camera.");
                 }
                 else
