@@ -1,21 +1,52 @@
 ﻿19-02-2024
-Double tags XROrigin, hij vind de verkeerde tag, namelijk die van de andere player.
-Fixed
 
-I got the passenger very much hooked unto the XR rig. Hands and Face move along to where the HMD / controllers are. 
+### HMD / CONTROLLER CONTROLLED AVATAR ###
+I got the passenger very much hooked unto the XR rig. Hands and Face move along to where the HMD / controllers are.
+It's a little rudimentary (e.g. controllers map to wrists, which is just a little weird) but that is really details for some later stage.
+At some point we're gonna have to do something about the draw-distance, or possibly layers. Since it is a littl uncomfortable 
+to gaze into your own eyeballs. Also, the rigs should have limits. There's some definite exorcist vibes going on now. 
+
+Driver has now HMD positioning too. Controllers naturally do not sync his hands, since the good man needs hands on the wheel at all times. 
 
 The 'Press R to enter floorLevel hell' was caused by the CameraCounter.cs script. I don't think it did anything majestic, 
-so I took it off the prefabs we're using. 
+so I took it off the prefabs we're using.
 
-Driver has now HMD positioning too. Controllers naturally not, since the good man needs hands on the wheel at all times. 
 
-At some point we're gonna have to do something about the draw-distance, or possibly layers. Since it is a littl uncomfortable 
-to gaze into your own eyeballs.
-
-Also, the rigs should have limits. There's some definite exorcist vibes going on now. 
-
+### EYE TRACKING ### 
 Started new branch SOSXR_Varjo. Here I can test a little with the eyetracking from Varjo. 
 
+Ok, the eyetrackingexample is quite clear, is good starting point. Also good: their HDRP Sample thing. That's a separate Unity Project.
+
+Eyeball-rotation from Varjo interferes with the animator or the rig. Actually the other way around --> rig (or animator?) interferes with Varjo. 
+When animator off, rig doesn't work, but Varjo can move the eyeballs. Requires fixing. 
+
+That brings me to: moving the eyeballs. That really shouldn't happen. Is creepy AF. A little rotation is good, a little move is
+baaaad. But that's a possibility to change in the Varjo SDK:
+if (gazeData.leftStatus != VarjoEyeTracking.GazeEyeStatus.Invalid)
+{
+    leftEyeTransform.position = xrCamera.transform.TransformPoint(gazeData.left.origin);
+    leftEyeTransform.rotation = Quaternion.LookRotation(xrCamera.transform.TransformDirection(gazeData.left.forward));
+}
+
+That's simply removing that position line. I think. 
+
+That's for next time to do :). 
+
+Next time: get eyeballs rotate nicely with gaze. This shouldn't be a lot of work. 
+Then test whether that works (you need a second set of... well.. eyeballs,  
+because the system de-inits the eye-tracker as soon as you remove your face from the HMD). 
+
+Then, we need to get that data synced.
+
+I'm 85% confident that these above things can be done within about 1 day work. 
+
+After that there's the creating the AIOs, which is little to no work at all.
+After that there's the logging the gaze data in some reasonable way. This will be unknown amount of work, since I'm not 
+familiar at all with the data logging procedure. Pavlo: any ideas?
+
+
+Best, 
+Maarten
 
 
 

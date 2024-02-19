@@ -16,7 +16,7 @@ PrefabInstance:
     - target: {fileID: 8734844057781662295, guid: 42396fdd2570828489ea3e98e685c8b5,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.2
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8734844057781662295, guid: 42396fdd2570828489ea3e98e685c8b5,
         type: 3}
@@ -26,7 +26,7 @@ PrefabInstance:
     - target: {fileID: 8734844057781662295, guid: 42396fdd2570828489ea3e98e685c8b5,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.075
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8734844057781662295, guid: 42396fdd2570828489ea3e98e685c8b5,
         type: 3}
@@ -336,6 +336,10 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 6210965462216812022}
+    - targetCorrespondingSourceObject: {fileID: 6300200497835139431, guid: fd094099d278ea945908c884c0d9a5e2,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6310314723683077181}
   m_SourcePrefab: {fileID: 100100000, guid: fd094099d278ea945908c884c0d9a5e2, type: 3}
 --- !u!1 &1422170957023196873 stripped
 GameObject:
@@ -366,8 +370,8 @@ MonoBehaviour:
   checkGazeCalibrated: 281
   showFixationPoint: 0
   fixationPointTransform: {fileID: 937131486983908877}
-  leftEyeTransform: {fileID: 396170368062656697}
-  rightEyeTransform: {fileID: 8614202270660359246}
+  leftEyeTransform: {fileID: 0}
+  rightEyeTransform: {fileID: 0}
   xrCamera: {fileID: 1576757768086385750}
   gazeTarget: {fileID: 4904425366907481998}
   gazeRadius: 0.01
@@ -379,6 +383,20 @@ MonoBehaviour:
   useCustomLogPath: 0
   customLogPath: 
   printFramerate: 0
+--- !u!114 &6310314723683077181
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1422170957023196873}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 923087a985344b77a0940a940ee9e4e2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_leftEyeTag: Eye_Left
+  m_rightEyeTag: Eye_Right
 --- !u!20 &1576757768086385750 stripped
 Camera:
   m_CorrespondingSourceObject: {fileID: 5851190611770418168, guid: fd094099d278ea945908c884c0d9a5e2,
@@ -407,7 +425,7 @@ PrefabInstance:
     - target: {fileID: 8734844057781662295, guid: 42396fdd2570828489ea3e98e685c8b5,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.2
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8734844057781662295, guid: 42396fdd2570828489ea3e98e685c8b5,
         type: 3}
@@ -417,7 +435,7 @@ PrefabInstance:
     - target: {fileID: 8734844057781662295, guid: 42396fdd2570828489ea3e98e685c8b5,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.075
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8734844057781662295, guid: 42396fdd2570828489ea3e98e685c8b5,
         type: 3}

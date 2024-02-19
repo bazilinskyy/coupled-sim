@@ -225,20 +225,15 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 396170368062656697, guid: a4af4edd0797b244e8f65279184c083e,
-        type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 396170368062656697, guid: a4af4edd0797b244e8f65279184c083e,
-        type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 1422170957023196873, guid: a4af4edd0797b244e8f65279184c083e,
         type: 3}
       propertyPath: m_Name
       value: XR Origin (SOSXR)_VarjoTest
+      objectReference: {fileID: 0}
+    - target: {fileID: 6210965462216812022, guid: a4af4edd0797b244e8f65279184c083e,
+        type: 3}
+      propertyPath: rightEyeTransform
+      value: 
       objectReference: {fileID: 0}
     - target: {fileID: 6775717287441836863, guid: a4af4edd0797b244e8f65279184c083e,
         type: 3}
@@ -290,16 +285,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 8614202270660359246, guid: a4af4edd0797b244e8f65279184c083e,
-        type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8614202270660359246, guid: a4af4edd0797b244e8f65279184c083e,
-        type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -344,7 +329,7 @@ MeshCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 5
-  m_Convex: 0
+  m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: 10209, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!23 &817682108

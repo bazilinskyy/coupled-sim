@@ -75,10 +75,10 @@ public class EyeTrackingExample : MonoBehaviour
     public bool printFramerate = false;
 
     private static readonly string[] ColumnNames = {"Frame", "CaptureTime", "LogTime", "HMDPosition", "HMDRotation", "GazeStatus", "CombinedGazeForward", "CombinedGazePosition", "InterPupillaryDistanceInMM", "LeftEyeStatus", "LeftEyeForward", "LeftEyePosition", "LeftPupilIrisDiameterRatio", "LeftPupilDiameterInMM", "LeftIrisDiameterInMM", "RightEyeStatus", "RightEyeForward", "RightEyePosition", "RightPupilIrisDiameterRatio", "RightPupilDiameterInMM", "RightIrisDiameterInMM", "FocusDistance", "FocusStability"};
-    private List<VarjoEyeTracking.GazeData> dataSinceLastUpdate;
-    private InputDevice device;
 
     private readonly List<InputDevice> devices = new();
+    private List<VarjoEyeTracking.GazeData> dataSinceLastUpdate;
+    private InputDevice device;
     private Vector3 direction;
     private float distance;
     private List<VarjoEyeTracking.EyeMeasurements> eyeMeasurementsSinceLastUpdate;

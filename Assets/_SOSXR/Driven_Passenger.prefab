@@ -83,7 +83,7 @@ MonoBehaviour:
   m_radius: 0.15
   m_color:
     serializedVersion: 2
-    rgba: 4282797750
+    rgba: 4288094779
 --- !u!1 &510759243375576539
 GameObject:
   m_ObjectHideFlags: 0
@@ -130,7 +130,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Weight: 1
-  m_Effectors: []
+  m_Effectors:
+  - m_Transform: {fileID: 4095920144625342483}
+    m_Style:
+      shape: {fileID: 4300000, guid: c6793350c150f456688e39a81f97364a, type: 2}
+      color: {r: 1, g: 0, b: 0, a: 0.5}
+      size: 0.1
+      position: {x: 0, y: 0, z: 0}
+      rotation: {x: 0, y: 0, z: 0}
+    m_Visible: 1
 --- !u!1 &1117818311099048151
 GameObject:
   m_ObjectHideFlags: 0
@@ -179,7 +187,7 @@ MonoBehaviour:
   m_radius: 0.1
   m_color:
     serializedVersion: 2
-    rgba: 4278510116
+    rgba: 4286285692
 --- !u!114 &585916621719829302
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -401,7 +409,7 @@ MonoBehaviour:
   Internal: {fileID: 0}
   External: {fileID: 0}
   m_instantiateXRRig: 1
-  m_xrRigPrefab: {fileID: 6300200497835139431, guid: fd094099d278ea945908c884c0d9a5e2,
+  m_xrRigPrefab: {fileID: 1422170957023196873, guid: a4af4edd0797b244e8f65279184c083e,
     type: 3}
   cameras:
   - {fileID: 1785558095472007331}
@@ -909,7 +917,7 @@ MonoBehaviour:
   m_radius: 0.1
   m_color:
     serializedVersion: 2
-    rgba: 4286157477
+    rgba: 4284828349
 --- !u!114 &3573032263462561463
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1036,7 +1044,7 @@ MonoBehaviour:
   m_radius: 0.1
   m_color:
     serializedVersion: 2
-    rgba: 4280556833
+    rgba: 4283421026
 --- !u!114 &3039575092530218418
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1097,7 +1105,7 @@ MonoBehaviour:
   m_radius: 0.1
   m_color:
     serializedVersion: 2
-    rgba: 4279270217
+    rgba: 4279656261
 --- !u!1 &7661147631939441798
 GameObject:
   m_ObjectHideFlags: 0
@@ -3155,7 +3163,7 @@ GameObject:
   - component: {fileID: 8038360431898794304}
   m_Layer: 15
   m_Name: Eye_R
-  m_TagString: Untagged
+  m_TagString: Eye_Right
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -3343,7 +3351,7 @@ GameObject:
   - component: {fileID: 8038360431898858228}
   m_Layer: 15
   m_Name: Eye_L
-  m_TagString: Untagged
+  m_TagString: Eye_Left
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
