@@ -19,6 +19,7 @@ public class WaypointDrawer : MonoBehaviour
     {
         for (var i = 0; i < _waypointCircuit.Waypoints.Length; i++)
         {
+            
             if (i == _waypointCircuit.Waypoints.Length - 1)
             {
                 Gizmos.DrawLine(_waypointCircuit.Waypoints[i].transform.position, _waypointCircuit.Waypoints[0].transform.position);
@@ -27,6 +28,7 @@ public class WaypointDrawer : MonoBehaviour
             {
                 Gizmos.DrawLine(_waypointCircuit.Waypoints[i].transform.position, _waypointCircuit.Waypoints[i + 1].transform.position);
             }
+            
 
             if (i == 0)
             {

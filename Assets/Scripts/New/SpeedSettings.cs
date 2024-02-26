@@ -20,7 +20,7 @@ public class SpeedSettings : MonoBehaviour
     public AICar targetAICar;
     //Simple Kinematics
 
-    [Range(5, 50)] public float speed = Defaults.Speed; //km/h
+    [Range(0, 80)] public float speed = Defaults.Speed; //km/h
     [Range(1, 5)] public float acceleration = Defaults.Acceleration; //m/s^2
     [Range(-5, -1)] public float brakingAcceleration = Defaults.Deceleration; //must be negative
 
