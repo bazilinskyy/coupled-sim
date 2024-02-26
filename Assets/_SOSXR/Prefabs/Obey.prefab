@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6751880793443609143}
   - component: {fileID: 6266994859693006351}
+  - component: {fileID: -5762148752882733550}
   m_Layer: 0
   m_Name: Obey
   m_TagString: Untagged
@@ -44,11 +45,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ae35bb5bd919c1848a8e6e3d011d4134, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_colliderLength: 20
-  m_deceleration: -3
   m_acceleration: 2
   m_speedWhenGoing: 30
+  m_deceleration: -3
   m_obey: 1
-  m_eventOnRunningRedLight:
-    m_PersistentCalls:
-      m_Calls: []
+--- !u!114 &-5762148752882733550
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9017391957425672210}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b85e81d127ac49ae801b8e8e15fde962, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

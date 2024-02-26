@@ -1,6 +1,5 @@
 using System;
 using UnityEngine;
-using UnityEngine.Events;
 
 
 /// <summary>
@@ -18,19 +17,24 @@ using UnityEngine.Events;
 /// </summary>
 public class Obey : MonoBehaviour
 {
-    [SerializeField] [Range(1, 50)] private float m_colliderLength = 20f;
-    [SerializeField] [Range(-5, -1)] private float m_deceleration = -3f;
-    [SerializeField] [Range(1, 5)] private float m_acceleration = 2f;
-    [SerializeField] [Range(5, 50)] private float m_speedWhenGoing = 30f;
+    [SerializeField] [Range(1, 5)] private float m_acceleration = Defaults.Acceleration;
+    [SerializeField] [Range(5, 50)] private float m_speedWhenGoing = Defaults.Speed;
+    [SerializeField] [Range(-5, -1)] private float m_deceleration = Defaults.Deceleration;
+    [Space(10)]
     [SerializeField] private bool m_obey = true;
-    
-    public static Action RanRedLight;
-    
+
+    public bool ObeyTrafficLight => m_obey;
+
+    private readonly float _colliderLength = 20f;
     private SpeedSettings[] _allSpeedSettings;
     private BoxCollider _boxCollider;
+
+    private LightState _previousLightState;
     private SpeedSettings _speedSettings;
 
     private CarTrafficLight m_carTrafficLight;
+
+    public static Action RanRedLight;
 
 
     private void Awake()
@@ -39,16 +43,20 @@ public class Obey : MonoBehaviour
 
         m_carTrafficLight = GetComponentInParent<CarTrafficLight>();
 
+        CreateNewSpeedSetter();
+    }
+
+
+    private void CreateNewSpeedSetter()
+    {
         _speedSettings = gameObject.AddComponent<SpeedSettings>();
-        _speedSettings.speed = 30;
-        _speedSettings.customBehaviourData = Array.Empty<CustomBehaviourData>();
+        _speedSettings.speed = m_speedWhenGoing;
+        _speedSettings.CustomBehaviourData = Array.Empty<CustomBehaviourData>();
 
         _boxCollider = gameObject.AddComponent<BoxCollider>();
-        _boxCollider.size = new Vector3(m_colliderLength, 2f, 2f);
-        _boxCollider.center = new Vector3(m_colliderLength / 3, -2, 0);
+        _boxCollider.size = new Vector3(_colliderLength, 2f, 2f);
+        _boxCollider.center = new Vector3(_colliderLength / 3, -2, 0);
         _boxCollider.isTrigger = true;
-
-        _allSpeedSettings = FindObjectsOfType<SpeedSettings>();
     }
 
 
@@ -60,6 +68,8 @@ public class Obey : MonoBehaviour
 
     private void DisableConflictingSpeedSetters()
     {
+        _allSpeedSettings = FindObjectsOfType<SpeedSettings>();
+
         foreach (var speedSettings in _allSpeedSettings)
         {
             if (speedSettings == _speedSettings)
@@ -86,6 +96,11 @@ public class Obey : MonoBehaviour
             return;
         }
 
+        if (_previousLightState == m_carTrafficLight.State)
+        {
+            return;
+        }
+
         if (m_carTrafficLight.State == LightState.RED)
         {
             _speedSettings.speed = 0f;
@@ -96,10 +111,18 @@ public class Obey : MonoBehaviour
             _speedSettings.speed = m_speedWhenGoing;
             _speedSettings.acceleration = m_acceleration;
         }
+
         // This is where you might wanna put other states as well. 
+        _previousLightState = m_carTrafficLight.State;
     }
 
 
+    /// <summary>
+    ///     Something entered my collider
+    ///     Currently this is not doing anything too useful aside from letting us know as soon as the car enters and it is set
+    ///     to !m_obey, that this is the case
+    /// </summary>
+    /// <param name="other"></param>
     private void OnTriggerEnter(Collider other)
     {
         var aiCar = other.GetComponent<AICar>();
@@ -121,33 +144,35 @@ public class Obey : MonoBehaviour
     }
 
 
+    /// <summary>
+    ///     Something exited my collider
+    /// </summary>
+    /// <param name="other"></param>
     private void OnTriggerExit(Collider other)
     {
-        var aiCar = other.GetComponent<AICar>();
+        var aiCar = other.GetComponent<AICar>(); // Do you have a Car component? / Are you a car? 
 
-        if (aiCar == null)
+        if (aiCar == null) // If you're not a Car, don't continue this function
         {
             return;
         }
 
-        if (!aiCar.isActiveAndEnabled)
+        if (!aiCar.isActiveAndEnabled) // If you ARE a Car, but somehow are disabled, don't continue this function
         {
             return;
         }
 
-        if (m_obey)
+        if (!m_obey) // Only run the following code block if we're not planning on obeying this traffic light.
         {
-            return;
-        }
-
-        if (m_carTrafficLight.State == LightState.RED)
-        {
-            RanRedLight?.Invoke();
-            Debug.Log("We ran a red light and now are firing this Action / Event. Pick this up by any other component. E.g.: this is where you'd hook up the audio system ('SORRY NOT SORRY!') for instance");
-        }
-        else
-        {
-            Debug.Log("This could also be a place to add multiple functions for other light states. Like what to do when light was Yellow? Is not a traffic violation, but might be something interesting anyway.");
+            if (m_carTrafficLight.State == LightState.RED) // Is the light RED?
+            {
+                RanRedLight?.Invoke(); // Fire this event.
+                Debug.Log("We ran a red light and now are firing this Action / Event. Pick this up by any other component. E.g.: this is where you'd hook up the audio system ('SORRY NOT SORRY!') for instance");
+            }
+            else // Is the light anything but red?
+            {
+                Debug.Log("This could also be a place to add multiple functions for other light states. Like what to do when light was Yellow? Is not a traffic violation, but might be something interesting anyway.");
+            }
         }
     }
 }

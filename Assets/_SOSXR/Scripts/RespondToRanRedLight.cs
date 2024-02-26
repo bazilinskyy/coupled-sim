@@ -15,8 +15,8 @@ public class RespondToRanRedLight : MonoBehaviour
 
     private void FireEvent()
     {
+        Debug.Log("The Action/Event 'RanRedLight' has been invoked somewhere, I respond with firing this UnityEvent");
         m_eventToFire?.Invoke();
-        Debug.Log("Ran red light has been Invoked somewhere, I respond with this UnityEvent");
     }
 
 

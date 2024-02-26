@@ -1,17 +1,15 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityStandardAssets.Utility;
+
 
 [ExecuteAlways]
 [RequireComponent(typeof(WaypointCircuit))]
 public class WaypointDrawer : MonoBehaviour
 {
-   private WaypointCircuit _waypointCircuit;
+    private WaypointCircuit _waypointCircuit;
 
 
-
-    private void Awake ()
+    private void Awake()
     {
         _waypointCircuit = GetComponent<WaypointCircuit>();
     }
@@ -19,7 +17,7 @@ public class WaypointDrawer : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        for (int i = 0; i < _waypointCircuit.Waypoints.Length ; i++)
+        for (var i = 0; i < _waypointCircuit.Waypoints.Length; i++)
         {
             if (i == _waypointCircuit.Waypoints.Length - 1)
             {
@@ -27,20 +25,17 @@ public class WaypointDrawer : MonoBehaviour
             }
             else
             {
-                Gizmos.DrawLine(_waypointCircuit.Waypoints[i].transform.position, _waypointCircuit.Waypoints[i+1].transform.position);
+                Gizmos.DrawLine(_waypointCircuit.Waypoints[i].transform.position, _waypointCircuit.Waypoints[i + 1].transform.position);
             }
 
             if (i == 0)
             {
-                 Gizmos.DrawCube(_waypointCircuit.Waypoints[i].transform.position, Vector3.one);
+                Gizmos.DrawCube(_waypointCircuit.Waypoints[i].transform.position, Vector3.one);
             }
-            else{
-
-          
-            Gizmos.DrawSphere(_waypointCircuit.Waypoints[i].transform.position, 0.25f);
-              }
+            else
+            {
+                Gizmos.DrawSphere(_waypointCircuit.Waypoints[i].transform.position, 0.25f);
+            }
         }
     }
 }
-
-
