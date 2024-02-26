@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using SOSXR;
 using UnityEngine;
 
@@ -45,6 +46,16 @@ public class SpeedSettings : MonoBehaviour
     //Dynamics
     public CustomBehaviourData[] CustomBehaviourData { get; set; }
 
+    private float _storedAcceleration;
+    private float _storedDeceleration;
+
+
+    private void Start()
+    {
+        _storedAcceleration = acceleration;
+        _storedDeceleration = brakingAcceleration;
+    }
+
 
     private void OnTriggerEnter(Collider other)
     {
@@ -53,6 +64,19 @@ public class SpeedSettings : MonoBehaviour
         if (aiCar == null || (targetAICar != null && targetAICar != aiCar))
         {
             return;
+        }
+
+        if (aiCar.speed > speed)
+        {
+            acceleration = _storedDeceleration;
+        }
+        else if (aiCar.speed < speed)
+        {
+            acceleration = _storedAcceleration;
+        }
+        else
+        {
+            acceleration = _storedAcceleration;
         }
 
         if (other.gameObject.CompareTag("ManualCar") && causeToYield)
