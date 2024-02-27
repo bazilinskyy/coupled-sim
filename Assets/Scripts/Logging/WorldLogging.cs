@@ -25,6 +25,9 @@ public class WorldLogger
     private int _lastFrameAICarCount;
     private BinaryWriter _fileWriter;
     private float _startTime;
+    int _expDefnr;
+    int _trialNr;
+    int _participantNr;
 
     private LiveLogger _liveLogger;
 
@@ -34,6 +37,44 @@ public class WorldLogger
 
     public float RealtimeLogInterval = 0;
     private float lastRealtimeLog = 0;
+    
+    // Data from varjo HMD
+    float distance_pa;
+    long Frame_pa;
+    long CaptureTime_pa;
+
+    Vector3 Hmdposition_pa; float Hmdposition_pa_x; float Hmdposition_pa_y; float Hmdposition_pa_z;
+    Vector3 Hmdrotation_pa; float Hmdrotation_pa_x; float Hmdrotation_pa_y; float Hmdrotation_pa_z;
+
+    double LeftEyePupilSize_pa;
+    double RightEyePupilSize_pa;
+    double FocusDistance_pa;
+    double FocusStability_pa;
+
+    Vector3 gazeRayForward_pa;      float gazeRayForward_pa_x;      float gazeRayForward_pa_y;      float gazeRayForward_pa_z;
+    Vector3 gazeRayDirection_pa;    float gazeRayDirection_pa_x;    float gazeRayDirection_pa_y;    float gazeRayDirection_pa_z;
+    Vector3 gazePosition_pa;        float gazePosition_pa_x;        float gazePosition_pa_y;        float gazePosition_pa_z;
+    Vector3 gazeRayOrigin_pa;       float gazeRayOrigin_pa_x;       float gazeRayOrigin_pa_y;       float gazeRayOrigin_pa_z;
+
+    float distance_pe;
+    float Frame_pe;
+    float CaptureTime_pe;
+    
+    Vector3 Hmdposition_pe; float Hmdposition_pe_x; float Hmdposition_pe_y; float Hmdposition_pe_z;
+    Vector3 Hmdrotation_pe; float Hmdrotation_pe_x; float Hmdrotation_pe_y; float Hmdrotation_pe_z;
+    
+    double LeftEyePupilSize_pe;
+    double RightEyePupilSize_pe;
+    double FocusDistance_pe;
+    double FocusStability_pe;
+
+    Vector3 gazeRayForward_pe;      float gazeRayForward_pe_x;      float gazeRayForward_pe_y;      float gazeRayForward_pe_z;
+    Vector3 gazeRayDirection_pe;    float gazeRayDirection_pe_x;    float gazeRayDirection_pe_y;    float gazeRayDirection_pe_z;
+    Vector3 gazePosition_pe;        float gazePosition_pe_x;        float gazePosition_pe_y;        float gazePosition_pe_z;
+    Vector3 gazeRayOrigin_pe;       float gazeRayOrigin_pe_x;       float gazeRayOrigin_pe_y;       float gazeRayOrigin_pe_z;
+
+    // Data from Vive controller
+    float gapAcceptance;
 
 
     public WorldLogger(PlayerSystem playerSys, AICarSyncSystem aiCarSystem)
@@ -54,7 +95,10 @@ public class WorldLogger
             Directory.CreateDirectory("ExperimentLogs");
         }
 
-        _fileWriter = new BinaryWriter(File.Create("ExperimentLogs/" + fileName + DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss") + ".binLog"));
+        // _fileWriter = new BinaryWriter(File.Create("ExperimentLogs/" + fileName + DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss") + ".binLog"));
+        // TODO: finish moving code from https://github.com/bazilinskyy/coupled-sim/blob/Johnson/ to log participant number, trial, experiment-definition
+        _fileWriter = new BinaryWriter(File.Create("ExperimentLogs/" + "participant_" + PersistentManager.Instance.ParticipantNr + "_Trialnr_" + PersistentManager.Instance.listNr + "_expdef_" + PersistentManager.Instance.experimentnr + "_" + fileName + DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss") + ".binLog"));
+
         _startTime = time;
         _fileWriter.Write(DateTime.Now.ToBinary());
         _driverBuffer.Clear();
@@ -98,7 +142,7 @@ public class WorldLogger
         {
             _liveLogger = new LiveLogger();
             _liveLogger.Init();
-
+            Debug.LogWarning(_playerSystem.LocalPlayer);
             _liveLogger.BeginLog(
                 _driverBuffer.IndexOf(_playerSystem.LocalPlayer),
                 _playerSystem.Cars.Count + _playerSystem.Passengers.Count,
@@ -204,7 +248,86 @@ public class WorldLogger
             {
                 Debug.LogWarning("SOSXR: We don't have any StopLights in our _driverBuffer");
             }
+            
+            // TODO: will it blend for also passengers in the car?
+            // TODO: there is some magic with hardcoding values for pedestrians going on at https://github.com/bazilinskyy/coupled-sim/blob/f3caebfafe296620a17eba1e75cc182a72a674c3/Assets/Scripts/Logging/WorldLogging.cs#L290. maybe need to see if it can be useful in our case (finding NetworkObject_x manually as a reference point?)
+            var passengerGaze = driver.transform.GetComponentInChildren<VarjoGazeRay_CS>();
+            // Code enters the invalid statement and afterwards the valid statement (eye-calibration)
+            if (VarjoPlugin.GetGaze().status == VarjoPlugin.GazeStatus.VALID && driver.transform.Find("Gaze"))
+            {
+                    distance_pa = passengerGaze.getGazeRayHit().distance;
 
+                    Frame_pa = passengerGaze.Frame;
+                    CaptureTime_pa = passengerGaze.CaptureTime;
+
+                    Hmdposition_pa = passengerGaze.hmdposition;
+                    Hmdposition_pa_x = Hmdposition_pa.x; Hmdposition_pa_y = Hmdposition_pa.y; Hmdposition_pa_z = Hmdposition_pa.z;
+                    
+                    Hmdrotation_pa = passengerGaze.hmdrotation;
+                    Hmdrotation_pa_x = Hmdrotation_pa.x; Hmdrotation_pa_y = Hmdrotation_pa.y; Hmdrotation_pa_z = Hmdrotation_pa.z;
+
+                    LeftEyePupilSize_pa = passengerGaze.LeftPupilSize;
+                    RightEyePupilSize_pa = passengerGaze.RightPupilSize;
+                    FocusDistance_pa = passengerGaze.FocusDistance;
+                    FocusStability_pa = passengerGaze.FocusStability;
+
+                    gazeRayForward_pa = passengerGaze.gazeRayForward;       // hmd space
+                    gazeRayForward_pa_x = gazeRayForward_pa.x; gazeRayForward_pa_y = gazeRayForward_pa.y; gazeRayForward_pa_z = gazeRayForward_pa.z;
+
+                    gazeRayDirection_pa = passengerGaze.gazeRayDirection;   // world space
+                    gazeRayDirection_pa_x = gazeRayDirection_pa.x; gazeRayDirection_pa_y = gazeRayDirection_pa.y; gazeRayDirection_pa_z = gazeRayDirection_pa.z;
+
+                    gazePosition_pa = passengerGaze.gazePosition;           // hmd space
+                    gazePosition_pa_x = gazePosition_pa.x; gazePosition_pa_y = gazePosition_pa.y; gazePosition_pa_z = gazePosition_pa.z;
+
+                    gazeRayOrigin_pa = passengerGaze.gazeRayOrigin;         // world space
+                    gazeRayOrigin_pa_x = gazeRayOrigin_pa.x; gazeRayOrigin_pa_y = gazeRayOrigin_pa.y; gazeRayOrigin_pa_z = gazeRayOrigin_pa.z;
+            }
+            else if(VarjoPlugin.GetGaze().status != VarjoPlugin.GazeStatus.VALID)
+            {
+                distance_pa = -1.0f;
+                Frame_pa = (long)-1.0f;
+                CaptureTime_pa = (long)-1.0f;
+
+                Hmdposition_pa_x = -1.0f; Hmdposition_pa_y = -1.0f; Hmdposition_pa_z = -1.0f;
+                Hmdrotation_pa_x = -1.0f; Hmdrotation_pa_y = -1.0f; Hmdrotation_pa_z = -1.0f;
+
+                LeftEyePupilSize_pa = -1.0;
+                RightEyePupilSize_pa = -1.0;
+                FocusDistance_pa = -1.0;
+                FocusStability_pa = -1.0;
+
+                gazeRayForward_pa_x = -1.0f;    gazeRayForward_pa_y = -1.0f;    gazeRayForward_pa_z = -1.0f;
+                gazeRayDirection_pa_x = -1.0f;  gazeRayDirection_pa_y = -1.0f;  gazeRayDirection_pa_z = -1.0f;
+                gazePosition_pa_x = -1.0f;      gazePosition_pa_y = -1.0f;      gazePosition_pa_z = -1.0f;
+                gazeRayOrigin_pa_x = -1.0f;     gazeRayOrigin_pa_y = -1.0f;     gazeRayOrigin_pa_z = -1.0f;
+            }
+            _fileWriter.Write(distance_pa);
+            _fileWriter.Write(Frame_pa);
+            _fileWriter.Write(CaptureTime_pa);
+
+            _fileWriter.Write(Hmdposition_pa_x); _fileWriter.Write(Hmdposition_pa_y); _fileWriter.Write(Hmdposition_pa_z);
+            _fileWriter.Write(Hmdrotation_pa_x); _fileWriter.Write(Hmdrotation_pa_y); _fileWriter.Write(Hmdrotation_pa_z);
+
+            _fileWriter.Write(LeftEyePupilSize_pa);
+            _fileWriter.Write(RightEyePupilSize_pa);
+            _fileWriter.Write(FocusDistance_pa);
+            _fileWriter.Write(FocusStability_pa);
+
+            _fileWriter.Write(gazeRayForward_pa_x);     _fileWriter.Write(gazeRayForward_pa_y);     _fileWriter.Write(gazeRayForward_pa_z);
+            _fileWriter.Write(gazeRayDirection_pa_x);   _fileWriter.Write(gazeRayDirection_pa_y);   _fileWriter.Write(gazeRayDirection_pa_z);
+            _fileWriter.Write(gazePosition_pa_x);       _fileWriter.Write(gazePosition_pa_y);       _fileWriter.Write(gazePosition_pa_z);
+            _fileWriter.Write(gazeRayOrigin_pa_x);      _fileWriter.Write(gazeRayOrigin_pa_y);      _fileWriter.Write(gazeRayOrigin_pa_z);
+            
+            // TODO: same controller as we have now? TBC if all participants will be inputing a value of "trust" with a controller. In the manual driving condition, may not apply for the driver behind the steering wheel
+            // Vive controller
+            // TODO: Hardcoding networking object is a way to get the controller?
+            gapAcceptance = N10.position.x; //pedestrian.transform.GetComponentInChildren<ViveInput>().getGapAcceptance();
+
+            _fileWriter.Write(gapAcceptance);
+            
+            // Only log car velocity if local player
+            // TODO: relevant for us?
             if (driver == _playerSystem.LocalPlayer)
             {
                 var rb = driver.GetComponent<Rigidbody>();
@@ -369,6 +492,7 @@ public class LogConverter
 
         Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
         const string separator = ";";
+        // TODO: maybe need to adjust based on https://github.com/bazilinskyy/coupled-sim/blob/f3caebfafe296620a17eba1e75cc182a72a674c3/Assets/Scripts/Logging/WorldLogging.cs#L530C8-L533C1
         const string driverTransformHeader = "pos_x;pos_y;pos_z;rot_x;rot_y;rot_z;blinkers;front_lights;stop_lights;vel_local_x;vel_local_y;vel_local_z;vel_local_smooth_x;vel_local_smooth_y;vel_local_smooth_z;vel_x;vel_y;vel_z;vel_smooth_x;vel_smooth_y;vel_smooth_z";
         const string localDriverTransformHeader = driverTransformHeader + ";rb_vel_x;rb_vel_y;rb_vel_z;rb_vel_local_x;rb_vel_local_y;rb_vel_local_z";
         const string aiCarTransformHeader = localDriverTransformHeader + ";aicar_speed;braking;stopped;takeoff;eyecontact";
@@ -427,7 +551,9 @@ public class LogConverter
 
                     continue;
                 }
-
+                Debug.LogWarning(LogFrameType.PositionsUpdate);
+                Debug.LogWarning(eventType);
+                
                 Assert.AreEqual(LogFrameType.PositionsUpdate, eventType);
                 var frame = new SerializedFrame();
                 log.Frames.Add(frame);
@@ -953,6 +1079,45 @@ public class LogConverter
         public readonly Dictionary<int, bool> braking = new();
         public readonly Dictionary<int, bool> stopped = new();
         public readonly Dictionary<int, bool> takeoff = new();
-        public readonly Dictionary<int, bool> eyecontact = new();
+        public readonly Dictionary<int, bool> eyecontact = new(); //TODO: remove eyecontact from everywhere? in principle, we could check if eye contact was detected between any of the three people, it's be amazing
+        
+        // Varjo data of the passenger
+        public float distance_pa;
+        public long Frame_pa;
+        public long CaptureTime_pa;
+
+        public float Hmdposition_pa_x; public float Hmdposition_pa_y; public float Hmdposition_pa_z;
+        public float Hmdrotation_pa_x; public float Hmdrotation_pa_y; public float Hmdrotation_pa_z;
+
+        public double LeftEyePupilSize_pa;
+        public double RightEyePupilSize_pa;
+        public double FocusDistance_pa;
+        public double FocusStability_pa;
+
+        public float gazeRayForward_pa_x;   public float gazeRayForward_pa_y;   public float gazeRayForward_pa_z;
+        public float gazeRayDirection_pa_x; public float gazeRayDirection_pa_y; public float gazeRayDirection_pa_z;
+        public float gazePosition_pa_x;     public float gazePosition_pa_y;     public float gazePosition_pa_z;
+        public float gazeRayOrigin_pa_x;    public float gazeRayOrigin_pa_y;    public float gazeRayOrigin_pa_z;
+
+        // Varjo data of the pedestrian
+        public float distance_pe;
+        public float Frame_pe;
+        public float CaptureTime_pe;
+
+        public float Hmdposition_pe_x; public float Hmdposition_pe_y; public float Hmdposition_pe_z;
+        public float Hmdrotation_pe_x; public float Hmdrotation_pe_y; public float Hmdrotation_pe_z;
+
+        public double LeftEyePupilSize_pe;
+        public double RightEyePupilSize_pe;
+        public double FocusDistance_pe;
+        public double FocusStability_pe;
+
+        public float gazeRayForward_pe_x;   public float gazeRayForward_pe_y;   public float gazeRayForward_pe_z;
+        public float gazeRayDirection_pe_x; public float gazeRayDirection_pe_y; public float gazeRayDirection_pe_z;
+        public float gazePosition_pe_x;     public float gazePosition_pe_y;     public float gazePosition_pe_z;
+        public float gazeRayOrigin_pe_x;    public float gazeRayOrigin_pe_y;    public float gazeRayOrigin_pe_z;
+
+        // Vive controller data of the pedestrian
+        public float gapAcceptance;
     }
 }
