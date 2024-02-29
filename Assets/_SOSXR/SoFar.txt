@@ -1,4 +1,19 @@
-﻿19-02-2024
+﻿29-02-2024
+Moved worldlogger into uncommented file and got back the working version via Git. 
+Removed eye-ball-rotation from animation clip (that was 'blocking' eyeball for varjo)
+Scratch that last bit. The Eyeball rotation in the animation clip wasn't the issue. 
+The thing was that the eyeball movement from Varjo needed to be done in LateUpdate, that makes it happen AFTER animation
+I applied an offset to the thing, because the model is 84.354 off on Z.
+IT now at least looks forward, but doesn't yet match my eye movement (e.g. looks down right when I am looking up)
+However, here I really need a secodn pair of eyes, since I cannot both see and adjust the rotation of the offset to match my own eyemovements
+
+Gtg for now.
+Best 
+Maarten
+
+
+
+19-02-2024
 
 ### HMD / CONTROLLER CONTROLLED AVATAR ###
 I got the passenger very much hooked unto the XR rig. Hands and Face move along to where the HMD / controllers are.

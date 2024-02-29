@@ -43,7 +43,9 @@ public class EyeTrackingExample : MonoBehaviour
     [Header("Visualization Transforms")]
     public Transform fixationPointTransform;
     public Transform leftEyeTransform;
+    [SerializeField] private Vector3 m_leftEyeRotationOffset = new(0, 0, 84.354f); // SOSXR
     public Transform rightEyeTransform;
+    [SerializeField] private Vector3 m_rightEyeRotationOffset = new(0, 0, 84.354f); // SOSXR
 
     [Header("XR camera")]
     public Camera xrCamera;
@@ -186,6 +188,51 @@ public class EyeTrackingExample : MonoBehaviour
             gazeTarget.GetComponentInChildren<MeshRenderer>().enabled = !gazeTarget.GetComponentInChildren<MeshRenderer>().enabled;
         }
 
+        // GetEyeData(); Moved to LateUpdate
+
+        // SphereCast(); Moved to LateUpdate
+
+        if (Input.GetKeyDown(loggingToggleKey))
+        {
+            if (!logging)
+            {
+                StartLogging();
+            }
+            else
+            {
+                StopLogging();
+            }
+
+            return;
+        }
+
+        if (logging)
+        {
+            var dataCount = VarjoEyeTracking.GetGazeList(out dataSinceLastUpdate, out eyeMeasurementsSinceLastUpdate);
+
+            if (printFramerate)
+            {
+                gazeDataCount += dataCount;
+            }
+
+            for (var i = 0; i < dataCount; i++)
+            {
+                LogGazeData(dataSinceLastUpdate[i], eyeMeasurementsSinceLastUpdate[i]);
+            }
+        }
+    }
+
+
+    private void LateUpdate()
+    {
+        GetEyeData();
+
+        SphereCast();
+    }
+
+
+    private void GetEyeData()
+    {
         // Get gaze data if gaze is allowed and calibrated
         if (VarjoEyeTracking.IsGazeAllowed() && VarjoEyeTracking.IsGazeCalibrated())
         {
@@ -205,22 +252,26 @@ public class EyeTrackingExample : MonoBehaviour
                 {
                     if (eyes.TryGetLeftEyePosition(out leftEyePosition))
                     {
-                        leftEyeTransform.localPosition = leftEyePosition;
+                        // leftEyeTransform.localPosition = leftEyePosition;
                     }
 
                     if (eyes.TryGetLeftEyeRotation(out leftEyeRotation))
                     {
                         leftEyeTransform.localRotation = leftEyeRotation;
+                        var offset = Quaternion.Euler(m_leftEyeRotationOffset);
+                        leftEyeTransform.localRotation *= offset;
                     }
 
                     if (eyes.TryGetRightEyePosition(out rightEyePosition))
                     {
-                        rightEyeTransform.localPosition = rightEyePosition;
+                        // rightEyeTransform.localPosition = rightEyePosition;
                     }
 
                     if (eyes.TryGetRightEyeRotation(out rightEyeRotation))
                     {
                         rightEyeTransform.localRotation = rightEyeRotation;
+                        var offset = Quaternion.Euler(m_rightEyeRotationOffset);
+                        rightEyeTransform.localRotation *= offset;
                     }
 
                     if (eyes.TryGetFixationPoint(out fixationPoint))
@@ -244,14 +295,18 @@ public class EyeTrackingExample : MonoBehaviour
                     // GazeRay vectors are relative to the HMD pose so they need to be transformed to world space
                     if (gazeData.leftStatus != VarjoEyeTracking.GazeEyeStatus.Invalid)
                     {
-                        leftEyeTransform.position = xrCamera.transform.TransformPoint(gazeData.left.origin);
+                        // leftEyeTransform.position = xrCamera.transform.TransformPoint(gazeData.left.origin);
                         leftEyeTransform.rotation = Quaternion.LookRotation(xrCamera.transform.TransformDirection(gazeData.left.forward));
+                        var offset = Quaternion.Euler(m_leftEyeRotationOffset);
+                        leftEyeTransform.localRotation *= offset;
                     }
 
                     if (gazeData.rightStatus != VarjoEyeTracking.GazeEyeStatus.Invalid)
                     {
-                        rightEyeTransform.position = xrCamera.transform.TransformPoint(gazeData.right.origin);
+                        // rightEyeTransform.position = xrCamera.transform.TransformPoint(gazeData.right.origin);
                         rightEyeTransform.rotation = Quaternion.LookRotation(xrCamera.transform.TransformDirection(gazeData.right.forward));
+                        var offset = Quaternion.Euler(m_rightEyeRotationOffset);
+                        rightEyeTransform.localRotation *= offset;
                     }
 
                     // Set gaze origin as raycast origin
@@ -265,7 +320,11 @@ public class EyeTrackingExample : MonoBehaviour
                 }
             }
         }
+    }
 
+
+    private void SphereCast()
+    {
         // Raycast to world from VR Camera position towards fixation point
         if (Physics.SphereCast(rayOrigin, gazeRadius, direction, out hit))
         {
@@ -300,35 +359,6 @@ public class EyeTrackingExample : MonoBehaviour
             gazeTarget.transform.position = rayOrigin + direction * floatingGazeTargetDistance;
             gazeTarget.transform.LookAt(rayOrigin, Vector3.up);
             gazeTarget.transform.localScale = Vector3.one * floatingGazeTargetDistance;
-        }
-
-        if (Input.GetKeyDown(loggingToggleKey))
-        {
-            if (!logging)
-            {
-                StartLogging();
-            }
-            else
-            {
-                StopLogging();
-            }
-
-            return;
-        }
-
-        if (logging)
-        {
-            var dataCount = VarjoEyeTracking.GetGazeList(out dataSinceLastUpdate, out eyeMeasurementsSinceLastUpdate);
-
-            if (printFramerate)
-            {
-                gazeDataCount += dataCount;
-            }
-
-            for (var i = 0; i < dataCount; i++)
-            {
-                LogGazeData(dataSinceLastUpdate[i], eyeMeasurementsSinceLastUpdate[i]);
-            }
         }
     }
 
