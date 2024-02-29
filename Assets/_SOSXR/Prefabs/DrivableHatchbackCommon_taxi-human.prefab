@@ -3624,7 +3624,6 @@ GameObject:
   - component: {fileID: 7992445498551782146}
   - component: {fileID: 2478723328460268675}
   - component: {fileID: 2673223769286998360}
-  - component: {fileID: 9145836946652966720}
   m_Layer: 9
   m_Name: DrivableHatchbackCommon_taxi-human
   m_TagString: ManualCar
@@ -3913,7 +3912,7 @@ MonoBehaviour:
     monoBehaviours: []
     collider: {fileID: 0}
   Internal: {fileID: 2478723328460268675}
-  External: {fileID: 9145836946652966720}
+  External: {fileID: 0}
   m_instantiateXRRig: 1
   m_xrRigPrefab: {fileID: 6300200497835139431, guid: fd094099d278ea945908c884c0d9a5e2,
     type: 3}
@@ -4200,25 +4199,6 @@ MonoBehaviour:
   DriverPuppet: {fileID: 4783791075495129227}
   PassengerPuppet: {fileID: 8129944699451714796}
   Label: {fileID: 4081566330483786554}
---- !u!114 &9145836946652966720
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1783928687406872520}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 46cf26a406bad0b4280494683f9c6af6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  starting: {fileID: 0}
-  rolling: {fileID: 8300000, guid: 33d5f05eb46a3e345928831e0d00b15e, type: 3}
-  stopping: {fileID: 0}
-  flatoutSpeed: 120
-  minPitch: 1
-  pitchSpeed: 0.07
-  volume: 1
 --- !u!1 &1783933988476021450
 GameObject:
   m_ObjectHideFlags: 0

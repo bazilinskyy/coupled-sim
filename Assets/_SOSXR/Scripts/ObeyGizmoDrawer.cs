@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System;
+using TMPro;
+using UnityEngine;
 
 
 [RequireComponent(typeof(Obey))]

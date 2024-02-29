@@ -22,10 +22,9 @@ public class Obey : MonoBehaviour
     [SerializeField] [Range(-5, -1)] private float m_deceleration = Defaults.Deceleration;
     [Space(10)]
     [SerializeField] private bool m_obey = true;
+    [SerializeField] private Vector3 m_colliderSize = new(20, 2, 2);
 
-    public bool ObeyTrafficLight => m_obey;
-
-    private readonly float _colliderLength = 20f;
+    //private readonly float _colliderLength = 20f;
     private SpeedSettings[] _allSpeedSettings;
     private BoxCollider _boxCollider;
 
@@ -35,6 +34,7 @@ public class Obey : MonoBehaviour
     private CarTrafficLight m_carTrafficLight;
 
     public static Action RanRedLight;
+    public bool ObeyTrafficLight => m_obey;
 
 
     private void Awake()
@@ -54,8 +54,8 @@ public class Obey : MonoBehaviour
         _speedSettings.CustomBehaviourData = Array.Empty<CustomBehaviourData>();
 
         _boxCollider = gameObject.AddComponent<BoxCollider>();
-        _boxCollider.size = new Vector3(_colliderLength, 2f, 2f);
-        _boxCollider.center = new Vector3(_colliderLength / 3, -2, 0);
+        _boxCollider.size = new Vector3(m_colliderSize.x, m_colliderSize.y, m_colliderSize.z);
+        _boxCollider.center = new Vector3(m_colliderSize.x / 2, -m_colliderSize.y, 0);
         _boxCollider.isTrigger = true;
     }
 
@@ -81,9 +81,13 @@ public class Obey : MonoBehaviour
 
             if (theirBox.bounds.Intersects(_boxCollider.bounds))
             {
-                theirBox.gameObject.SetActive(false);
-                Debug.LogWarning("One other SpeedSetting component was in my way, I disabled their GameObject completely.");
-                // This needed doing because otherwise that other speedsetter would interfere, and make the car accelerate for instance when it should stop for red light
+                var otherSpeedSettings = theirBox.gameObject.GetComponent<SpeedSettings>();
+
+                if (otherSpeedSettings != null)
+                {
+                    otherSpeedSettings.enabled = false;
+                    Debug.LogWarning("One other SpeedSetting component was in my way, I disabled it."); // This needed doing because otherwise that other speedsetter would interfere, and make the car accelerate for instance when it should stop for red light
+                }
             }
         }
     }
@@ -134,6 +138,8 @@ public class Obey : MonoBehaviour
 
         if (!aiCar.isActiveAndEnabled)
         {
+            Debug.LogError("AICar was found, but is not active");
+
             return;
         }
 
