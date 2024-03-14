@@ -5,7 +5,7 @@ using UnityEngine;
 
 [RequireComponent(typeof(Obey))]
 [ExecuteAlways]
-public class ObeyGizmoDrawer : MonoBehaviour
+public class GizmoDrawer_Obey : MonoBehaviour
 {
     private Obey _obey;
 
