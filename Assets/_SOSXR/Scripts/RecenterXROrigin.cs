@@ -1,18 +1,17 @@
-﻿using System;
-using Unity.XR.CoreUtils;
+﻿using Unity.XR.CoreUtils;
 using UnityEngine;
 using UnityEngine.XR;
 
 
 public class RecenterXROrigin : MonoBehaviour
 {
-    [SerializeField] [TagSelector] private string m_recenterToTag = "Target_XROrigin";
-    [SerializeField] [Range(0f, 10f)] private float m_fireDelay = 2f;
-    private Transform _recenterTo;
+    [SerializeField] [Range(0f, 10f)] private readonly float m_fireDelay = 2f;
     private Transform _xrCamera;
     private XROrigin _xrOrigin;
 
-    [SerializeField] private bool m_debug = false;
+    [SerializeField] private readonly bool m_debug = false;
+
+    public Transform RecenterTo { get; set; }
 
 
     private void Awake()
@@ -42,9 +41,8 @@ public class RecenterXROrigin : MonoBehaviour
 
 
     [ContextMenu(nameof(RecenterAndFlatten))]
-    public void RecenterAndFlatten()
+    public virtual void RecenterAndFlatten()
     {
-        FindObjectWithTag();
         RecenterPosition(true);
         RecenterRotation();
 
@@ -53,9 +51,8 @@ public class RecenterXROrigin : MonoBehaviour
 
 
     [ContextMenu(nameof(RecenterWithoutFlatten))]
-    public void RecenterWithoutFlatten()
+    public virtual void RecenterWithoutFlatten()
     {
-        FindObjectWithTag();
         RecenterPosition(false);
         RecenterRotation();
 
@@ -63,25 +60,9 @@ public class RecenterXROrigin : MonoBehaviour
     }
 
 
-    private void FindObjectWithTag()
-    {
-        if (_recenterTo != null)
-        {
-            return;
-        }
-        
-        _recenterTo = transform.root.FindChildByTag(m_recenterToTag); // Go to the root GameObject, then search back downwards until you find something with this tag.
-
-        if (_recenterTo == null)
-        {
-            Debug.LogWarningFormat("SOSXR: We don't have anything in our scene with the tag {0}, are you sure that it is defined?", m_recenterToTag);
-        }
-    }
-
-
     private void RecenterPosition(bool flatten)
     {
-        var distanceDiff = _recenterTo.transform.position - _xrCamera.position;
+        var distanceDiff = RecenterTo.transform.position - _xrCamera.position;
         _xrOrigin.transform.position += distanceDiff;
 
         if (flatten && _xrOrigin.CurrentTrackingOriginMode == TrackingOriginModeFlags.Floor)
@@ -100,7 +81,7 @@ public class RecenterXROrigin : MonoBehaviour
 
     private void RecenterRotation()
     {
-        var rotationAngleY = _recenterTo.transform.rotation.eulerAngles.y - _xrCamera.transform.rotation.eulerAngles.y;
+        var rotationAngleY = RecenterTo.transform.rotation.eulerAngles.y - _xrCamera.transform.rotation.eulerAngles.y;
 
         _xrOrigin.transform.Rotate(0, rotationAngleY, 0);
     }

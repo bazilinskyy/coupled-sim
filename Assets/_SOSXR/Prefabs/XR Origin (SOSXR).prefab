@@ -143,58 +143,26 @@ MonoBehaviour:
   m_PositionInput:
     m_UseReference: 1
     m_Action:
-      m_Name: Position
+      m_Name: 
       m_Type: 0
-      m_ExpectedControlType: Vector3
-      m_Id: 4a77056c-8e83-49b4-93ba-2f41efa6cb1e
+      m_ExpectedControlType: 
+      m_Id: 
       m_Processors: 
       m_Interactions: 
-      m_SingletonActionBindings:
-      - m_Name: 
-        m_Id: 47596943-8668-47cf-9502-f13f338b2dea
-        m_Path: <XRHMD>/centerEyePosition
-        m_Interactions: 
-        m_Processors: 
-        m_Groups: 
-        m_Action: Position
-        m_Flags: 0
-      - m_Name: 
-        m_Id: 9deeddb7-161f-4687-902c-e2499621eef3
-        m_Path: <HandheldARInputDevice>/devicePosition
-        m_Interactions: 
-        m_Processors: 
-        m_Groups: 
-        m_Action: Position
-        m_Flags: 0
+      m_SingletonActionBindings: []
       m_Flags: 0
     m_Reference: {fileID: 4554971212278988162, guid: e83993518ed9ae54188f0ecaad73bd34,
       type: 3}
   m_RotationInput:
     m_UseReference: 1
     m_Action:
-      m_Name: Rotation
+      m_Name: 
       m_Type: 0
-      m_ExpectedControlType: Quaternion
-      m_Id: 103db5c4-9530-4ffb-9458-6b0e32f3b6b5
+      m_ExpectedControlType: 
+      m_Id: 
       m_Processors: 
       m_Interactions: 
-      m_SingletonActionBindings:
-      - m_Name: 
-        m_Id: ab4f8727-2907-4fc4-805c-0c1c29c55525
-        m_Path: <XRHMD>/centerEyeRotation
-        m_Interactions: 
-        m_Processors: 
-        m_Groups: 
-        m_Action: Rotation
-        m_Flags: 0
-      - m_Name: 
-        m_Id: 18abb963-6cff-476b-a9b4-0909c99c4e3c
-        m_Path: <HandheldARInputDevice>/deviceRotation
-        m_Interactions: 
-        m_Processors: 
-        m_Groups: 
-        m_Action: Rotation
-        m_Flags: 0
+      m_SingletonActionBindings: []
       m_Flags: 0
     m_Reference: {fileID: -3309794989231883254, guid: e83993518ed9ae54188f0ecaad73bd34,
       type: 3}
@@ -248,6 +216,7 @@ GameObject:
   - component: {fileID: 1934983178896604305}
   - component: {fileID: 2755355045059380279}
   - component: {fileID: 1230385652278433199}
+  - component: {fileID: 1013557389240389378}
   m_Layer: 0
   m_Name: XR Origin (SOSXR)
   m_TagString: Untagged
@@ -302,3 +271,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_ActionAssets:
   - {fileID: -944628639613478452, guid: e83993518ed9ae54188f0ecaad73bd34, type: 3}
+--- !u!114 &1013557389240389378
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6300200497835139431}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b1822bd2da0c4a5fadf20dd1209374fe, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_recenterToTag: 
+  m_fireDelay: 2
+  m_debug: 0

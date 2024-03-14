@@ -13,7 +13,7 @@ public class PlayerSystem : MonoBehaviour
     {
         Flat,
         VR,
-        Suite,
+        Suit,
         None
     }
 
@@ -187,7 +187,7 @@ public class PlayerSystem : MonoBehaviour
             GUILayout.Label($"Mode: {PlayerInputMode}");
             if (GUILayout.Button("Suite mode"))
             {
-                PlayerInputMode = InputMode.Suite;
+                PlayerInputMode = InputMode.Suit;
             }
             if (GUILayout.Button("HMD mode"))
             {
