@@ -125,7 +125,7 @@ public class AICar : MonoBehaviour, IVehicle
         var new_position = transform.InverseTransformPoint(target.position);
         var psi = Mathf.Asin(new_position.x / (Mathf.Pow(new_position.x * new_position.x + new_position.z * new_position.z, 0.5f) + 0.001f));
 
-        //  Update all required informations
+        //  Update all required information
         rotationAxis.rotation = Quaternion.Euler(0, rotationAxis.rotation.eulerAngles.y, 0); //heading
 
         //  Change of Ambient Traffic rotations based on current heading and target position
