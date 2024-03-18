@@ -113,9 +113,11 @@ public class PlayerAvatar : MonoBehaviour
     public EngineSoundManager Internal;
     public EngineSoundManager External;
 
+
     [Header("SOSXR")]
-    [SerializeField] private readonly bool m_instantiateXRRig = true;
-    [SerializeField] private readonly GameObject m_xrRigPrefab = null;
+    [SerializeField] private bool m_instantiateXRRig = true;
+    [SerializeField] private GameObject m_xrRigPrefab = null;
+    
 
     [Header("Other")]
     public Camera[] cameras;
@@ -156,9 +158,8 @@ public class PlayerAvatar : MonoBehaviour
         }
         else
         {
-            if (cameraIndex >= 0)
-            {
-                if ((m_instantiateXRRig && m_xrRigPrefab != null && inputMode == PlayerSystem.InputMode.VR) || inputMode == PlayerSystem.InputMode.Suit)
+
+         if ((m_instantiateXRRig && m_xrRigPrefab != null && inputMode == PlayerSystem.InputMode.VR) || inputMode == PlayerSystem.InputMode.Suit)
                 {
                     var rig = Instantiate(m_xrRigPrefab, transform);
 
@@ -176,16 +177,22 @@ public class PlayerAvatar : MonoBehaviour
                         return;
                     }
 
-                    recenter.RecenterTo = cameras[cameraIndex].transform.parent;
-                    recenter.RecenterAndFlatten();
+                    //recenter.RecenterTo = cameras[cameraIndex].transform.parent;
+                    //  recenter.RecenterWithoutFlatten();
                     
-                    Debug.Log("SOSXR: Recentered and flattened the Rig.");
+                    // Debug.Log("SOSXR: Recentered but no flattened the Rig.");
+                }
+/*
+            if (cameraIndex >= 0)
+            {
+       
                 }
                 else
                 {
                     cameras[cameraIndex].gameObject.SetActive(true);
                 }
-            }
+            } */
+
 
             var modeElements = default(ModeElements);
 
