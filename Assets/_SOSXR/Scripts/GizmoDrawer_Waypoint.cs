@@ -1,11 +1,10 @@
-using System;
 using UnityEngine;
 using UnityStandardAssets.Utility;
 
 
 [ExecuteAlways]
 [RequireComponent(typeof(WaypointCircuit))]
-public class WaypointDrawer : MonoBehaviour
+public class GizmoDrawer_Waypoint : MonoBehaviour
 {
     [SerializeField] private Color m_startPointColor = Color.green;
     [SerializeField] private Color m_pathColor = Color.blue;

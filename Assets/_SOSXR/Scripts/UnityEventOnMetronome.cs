@@ -3,10 +3,10 @@ using UnityEngine;
 using UnityEngine.Events;
 
 
-public class MetronomeUnityEvent : MonoBehaviour
+public class UnityEventOnMetronome : MonoBehaviour
 {
     [SerializeField] private UnityEvent m_eventToFire;
-    
+
     [Space(20)]
     [SerializeField] [Range(0, 120)] private int m_initialDelay = 2;
     [SerializeField] [Range(1, 120)] private int m_playInterval = 45;

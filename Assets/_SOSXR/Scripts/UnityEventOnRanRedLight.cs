@@ -2,7 +2,7 @@
 using UnityEngine.Events;
 
 
-public class RespondToRanRedLight : MonoBehaviour
+public class UnityEventOnRanRedLight : MonoBehaviour
 {
     [SerializeField] private UnityEvent m_eventToFire;
 

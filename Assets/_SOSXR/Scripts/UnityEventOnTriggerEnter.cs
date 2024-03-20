@@ -2,7 +2,7 @@
 using UnityEngine.Events;
 
 
-public class OnTriggerEnterEvent : MonoBehaviour
+public class UnityEventOnTriggerEnter : MonoBehaviour
 {
     [SerializeField] protected UnityEvent m_eventToFire;
     [SerializeField] [TagSelector] protected string m_tagToCheckFor = "ManualCar";

@@ -6,10 +6,10 @@ using UnityEngine.XR;
 public class RecenterXROrigin : MonoBehaviour
 {
     [SerializeField] [Range(0f, 10f)] private readonly float m_fireDelay = 2f;
-    private Transform _xrCamera;
-    private XROrigin _xrOrigin;
 
     [SerializeField] private readonly bool m_debug = false;
+    private Transform _xrCamera;
+    private XROrigin _xrOrigin;
 
     public Transform RecenterTo { get; set; }
 

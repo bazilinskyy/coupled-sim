@@ -4,7 +4,6 @@
 [ExecuteAlways]
 public class GizmoDrawer_Sphere : MonoBehaviour
 {
-
     [SerializeField] private float m_radius = 0.25f;
     [SerializeField] private Color32 m_color = Color.red;
 

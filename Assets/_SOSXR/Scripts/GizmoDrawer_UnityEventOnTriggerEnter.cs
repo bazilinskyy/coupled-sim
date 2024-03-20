@@ -1,16 +1,16 @@
 ﻿using UnityEngine;
 
 
-[RequireComponent(typeof(OnTriggerEnterEvent))]
+[RequireComponent(typeof(UnityEventOnTriggerEnter))]
 [ExecuteAlways]
-public class GizmoDrawer_OnTriggerEnterEvent : MonoBehaviour
+public class GizmoDrawer_UnityEventOnTriggerEnter : MonoBehaviour
 {
-    private OnTriggerEnterEvent _onTriggerEnterEvent;
+    private UnityEventOnTriggerEnter _onTriggerEnterEvent;
 
 
     private void Awake()
     {
-        _onTriggerEnterEvent = GetComponent<OnTriggerEnterEvent>();
+        _onTriggerEnterEvent = GetComponent<UnityEventOnTriggerEnter>();
     }
 
 
