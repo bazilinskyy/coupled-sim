@@ -117,7 +117,7 @@ public class PlayerAvatar : MonoBehaviour
     [Header("SOSXR")]
     [SerializeField] private bool m_instantiateXRRig = true;
     [SerializeField] private GameObject m_xrRigPrefab = null;
-    
+
 
     [Header("Other")]
     public Camera[] cameras;
@@ -158,34 +158,37 @@ public class PlayerAvatar : MonoBehaviour
         }
         else
         {
+            if ((m_instantiateXRRig && m_xrRigPrefab != null && inputMode == PlayerSystem.InputMode.VR) || inputMode == PlayerSystem.InputMode.Suit)
+            {
+                var rig = Instantiate(m_xrRigPrefab, transform);
 
-         if ((m_instantiateXRRig && m_xrRigPrefab != null && inputMode == PlayerSystem.InputMode.VR) || inputMode == PlayerSystem.InputMode.Suit)
+                var cam = rig.GetComponentInChildren<Camera>();
+                cameras[cameraIndex] = cam;
+
+                Debug.Log("SOSXR: Instantiated XR_Origin rig for XR, instead of enabling the default camera.");
+
+                var recenter = rig.GetComponent<RecenterXROrigin>();
+
+                if (recenter == null)
                 {
-                    var rig = Instantiate(m_xrRigPrefab, transform);
+                    Debug.LogError("No RecenterXROrigin found, this is not good. Cannot proceed");
 
-                    var cam = rig.GetComponentInChildren<Camera>();
-                    cameras[cameraIndex] = cam;
-
-                    Debug.Log("SOSXR: Instantiated XR_Origin rig for XR, instead of enabling the default camera.");
-
-                    var recenter = rig.GetComponent<RecenterXROrigin>();
-
-                    if (recenter == null)
-                    {
-                        Debug.LogError("No RecenterXROrigin found, this is not good. Cannot proceed");
-
-                        return;
-                    }
-
-                    //recenter.RecenterTo = cameras[cameraIndex].transform.parent;
-                    //  recenter.RecenterWithoutFlatten();
-                    
-                    // Debug.Log("SOSXR: Recentered but no flattened the Rig.");
+                    return;
                 }
+
+                //recenter.RecenterTo = cameras[cameraIndex].transform.parent;
+                //  recenter.RecenterWithoutFlatten();
+
+                // Debug.Log("SOSXR: Recentered but no flattened the Rig.");
+            }
+            else
+            {
+                cameras[cameraIndex].gameObject.SetActive(true);
+            }
 /*
             if (cameraIndex >= 0)
             {
-       
+
                 }
                 else
                 {
@@ -389,12 +392,12 @@ public class PlayerAvatar : MonoBehaviour
     public struct HMIAnchors
     {
         public Transform Hood;
+        public Transform Top;
+        public Transform Windshield;
         [NonSerialized]
         public HMI HoodHMI;
-        public Transform Top;
         [NonSerialized]
         public HMI TopHMI;
-        public Transform Windshield;
         [NonSerialized]
         public HMI WindshieldHMI;
 

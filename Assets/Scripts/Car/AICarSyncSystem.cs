@@ -75,9 +75,12 @@ public class AICarSyncSystem
         Assert.AreEqual(Mode.Host, _mode, "Only host can spawn synced objects");
         var prefabIdx = FindPrefabIndex(parameters.Car);
         Assert.AreNotEqual(-1, prefabIdx, $"The prefab {parameters.Car} was not added to NetworkingManager -> AICarSyncSystem -> Prefabs");
+        
+       
         var aiCar = GameObject.Instantiate(Prefabs[prefabIdx], parameters.SpawnPoint.position, parameters.SpawnPoint.rotation);
         aiCar.gameObject.layer = LayerMask.NameToLayer(yielding ? "Yielding" : "Car");
         aiCar.enabled = true;
+        
         var waypointProgressTracker = aiCar.GetComponent<WaypointProgressTracker>();
         waypointProgressTracker.enabled = true;
         waypointProgressTracker.Init(parameters.Track);

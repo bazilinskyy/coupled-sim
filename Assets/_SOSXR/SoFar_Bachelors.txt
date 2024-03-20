@@ -1,4 +1,25 @@
-﻿Added new audio from human driver missing the light
+﻿20-03-2024
+
+Turn down sound due to hardly audible human. City = .25, Car = .5, Human = 1.
+Should test robot voice too. 
+
+Added UnityEvent option to each waypoint. We can hook up some audio (e.g.: "Your destination is up on the right").
+It's currently on all waypoints. As soon as you hook up anything to it, it will display an Icon in the Scene view. 
+The ones that are hooked up have an empty AudioSource, which is set to 3D... but now I think of it, this is no good. 
+This needs to be in reverse: the car needs to check for specific waypoints, and the audio in the car needs to fire. 
+Because otherwise the positioning of the audio is not correct compared to the position of the person or robot speaking.
+
+I added a Metronome thing. It has a fire delay of X seconds, and a repetition of Y seconds. It just requires some sound.
+Or some whatever: since it works via a UnityEvent, it simply calls that event every Y seconds. Whatever we hook up to that
+is what will happen. 
+
+
+
+
+
+
+-----
+Added new audio from human driver missing the light
 Added '2d' audio of city (should test this)
 
 Disabled all traffic that crosses the overpass: otherwise longwinded solution needed for the flying car problem.
