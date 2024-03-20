@@ -1,47 +1,99 @@
 ﻿20-03-2024
 
-Turn down sound due to hardly audible human. City = .25, Car = .5, Human = 1.
-Should test robot voice too. 
+I turned down sound due to hardly audible human:
+    City volume: 0.125
+    Car volume: 0.35
+    Human: 1
+    Robot: 1
+    Increased the range of the spoken word (human/robot) too. It was still awfully quiet.
 
 Added UnityEvent option to each waypoint. We can hook up some audio (e.g.: "Your destination is up on the right").
-It's currently on all waypoints. As soon as you hook up anything to it, it will display an Icon in the Scene view. 
-The ones that are hooked up have an empty AudioSource, which is set to 3D... but now I think of it, this is no good. 
+UnityEvent invoker is currently on all waypoints. As soon as you hook up anything to it, it will display an Icon in the Scene view. 
+For now, as an example, the ones that are hooked up have an empty AudioSource, which is set to 3D... but now I think of it, this is no good. 
 This needs to be in reverse: the car needs to check for specific waypoints, and the audio in the car needs to fire. 
-Because otherwise the positioning of the audio is not correct compared to the position of the person or robot speaking.
+Because otherwise the positioning of the audio is not correct compared to the position of the person or robot speaking. Will fix. 
 
-I added a Metronome thing. It has a fire delay of X seconds, and a repetition of Y seconds. It just requires some sound.
-Or some whatever: since it works via a UnityEvent, it simply calls that event every Y seconds. Whatever we hook up to that
-is what will happen. 
+I added a Metronome thing. It has a fire delay of X seconds, and a repetition of Y seconds. There is already an AudioSource (2D) attached to it.
+It just requires some sound, which I don't have yet.
 
-Did better with the audio controller. It's now all piped via the audio source of the driver/robot. The UnityEventOnTriggerEnter
-classes still rule when, but no longer what. They fire another 'event' type thing (on the EventsSystem) which is then 
-picked up by the AudioSystem. Is a bit convoluted, but that's needed because the car is not in the scene prior to scene start...
-
-The EventsSystem btw can currently call 4 things:
-- We're on our way (called 10meter after start driving)
-- Shitty red light (called when the red light)
-- Nearly there (well... obvious... when nearly there)
-- When at destination
-
-Each of these can have some audio attached to it. Could be fun. 
-
-City volume even lower: .125
-Car lower as well .35
-Increased the range of the spoken word too. It was still awfully quiet.
-
-Added the audio files I just received:
+I added the audio files to the project that I just received:
 - Human almost there (cut)
 - Robot almost there
 - Robot missed red light
 
-We still have slots available for 'we are on our way' and 'we have now arrived' audio files.
+Fixed the aforementioned audio controller. It's now all piped via the audio source of the driver/robot. The UnityEventOnTriggerEnter
+classes still rule when, but no longer what, is fired. They fire another 'event' type thing (on the EventsSystem) which is then 
+picked up by the AudioSystem. Is a bit convoluted, but that's needed because the car is not in the scene prior to scene start...
+
+So, in summary: the waypoint sees a car crossing its boundary, it then fires a UnityEvent. Some of them are hooked up to the
+EventsSystem, and will fire an Action. These Actions can be picked up wherever, but are currently used in the AudioSystem, 
+each playing their own Audio Clip. The EventsSystem can currently invoke 4 events that are happening:
+1. We're on our way (called 10meter after start driving)
+2. Shitty red light (called when running red light)
+3. Nearly there (called 15 meters before stop)
+4. When at destination (called at stop)
+Currently only 2 and 3 are hooked up with audio. We still have slots available for 'we are on our way' and 'we have now arrived' audio files.
+Up to you whether you want to use them (or others), or not.
 Also have not yet received the Metronome sound. 
 
+I think we shouldn't have a passenger model. It just doesn't really work well, since you're gonna have this very
+static body that's real distracting. Better not to have a body than to have a badly working body. (or you wanna look into some eyeballs?)
+
+Re-enabled the steering wheel. Why was this disabled? Ok admittedly it looks a little weird, since it's not moving when the car is 
+obviously turning. 
+
+The model of the blue suited dude doesn't allow for any facial expression, nor any eye blinks. If any expression is desirable,
+we're gonna need entire new population. A (very) quick AssetStore search didn't result any likely candidates. We'd want characters:
+- That have similar art style to rest of art style (ie. semi realistic, but not photorealistic)
+- Are fully rigged (so we can have animations)
+- Have a decent set of blendshapes (to control face), with at minimum some blinking capabilities
+- Have a decent variety in people / age / gender / heritage (preferably modular / mix-and-match-style)
+
+The car could do with a double-sided shader. If you look out of the back window you see where the material should be,
+but isn't. I believe circonia (?) has a free double sided shader. For next time. 
+
+XR in Quest seems to go well. It's easiest if we can place participants in space. So no chairs bolted to the floor, but some 
+leeway to place them in the correct virtual space. In practice: you have HMD on their face, then turn on program. You ask them
+ if they feel like they're really sitting in the car seat, or whether they are next/infront/behind car seat. Then move them physically
+ so their physical place matches their perception of place in XR. This could theoretically be a little distance away (1 meter?)
+ Alternatively we have some software control in code as to where the participant should sit, but this is something that requires a boatload of testing. 
+
+Audio is beautifully located in XR!! Lovely to hear the driver speak, it feels quite natural.
+It does make it painfully clear that the blue-suited-dude is just a static puppet though, when you hear him say something and you look at him and he's just :|
+
+Mirror projection is not linked to the XR camera, so that remains a little static when you move. This could be better. 
+
+Audio of car is not linked to speed of car. This could be better. 
+
+Rear wheels of the other cars are like 1 meter in front...? This was already in the base program, but haven't had the time to fix that bug. 
+
+Crash of car during previous test was due to that the traffic light is setup so that opposing lanes have green light simultanaously. 
+This then causes crash if either wants to turn left... This happened on the intersection where you leave the city to head towards the highway.
+I fixed the lanes so that the cars no longer cross the same area on intersection. I hope this is enough, so that even if they come 
+to the intersection at the same time, they move next to each other. We need to test this quite a lot. 
+
+However, I still don't understand why it only crashed sometimes...? Like 9 out of 10 there
+was no other car to crash into me... however sometimes there was..? I thought that the traffic-light-timing was all 
+pretty much pre-determined? So how come this other car is at the intersection at this drastically different moment than all other times?
+
+Also ask your participants for other moments of bad driving. This should be of influence for the trust rating. 
+
+Also, it would not be an entirely bad idea to have a webcam pointing over the shoulder of the participant, also displaying the monitor.
+This way you have a recording of how a participant was moving, and can see on the screen what they saw. This case, if you get a weird
+rating at a weird time, you can check if there was anything weird shown to the participant. Maybe they gave low trust rating 
+when they made a very sharp turn? Or maybe when they actually looked into the blank void that is the driver's soulless face?
+
+Anyhoo. Test test double test. 
 
 
+Best, 
+Maarten
+
+---------
 
 
------
+Date?
+
 Added new audio from human driver missing the light
 Added '2d' audio of city (should test this)
 
