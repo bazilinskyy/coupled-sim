@@ -4,13 +4,13 @@ using UnityEngine.Events;
 
 public class UnityEventOnTriggerEnter : MonoBehaviour
 {
-    [SerializeField] protected UnityEvent m_eventToFire;
-    [SerializeField] [TagSelector] protected string m_tagToCheckFor = "ManualCar";
+    [SerializeField] private UnityEvent m_eventToFire;
+    [SerializeField] [TagSelector] private string m_tagToCheckFor = "ManualCar";
 
     public UnityEvent EventToFire => m_eventToFire;
 
 
-    protected virtual void OnTriggerEnter(Collider other)
+    private void OnTriggerEnter(Collider other)
     {
         if (other.gameObject.CompareTag(m_tagToCheckFor))
         {

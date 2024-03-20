@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using UnityEngine.Events;
 
 
@@ -9,7 +10,7 @@ public class UnityEventOnRanRedLight : MonoBehaviour
 
     private void OnEnable()
     {
-        Obey.RanRedLight += FireEvent;
+        EventsSystem.RanRedLight += FireEvent;
     }
 
 
@@ -22,6 +23,6 @@ public class UnityEventOnRanRedLight : MonoBehaviour
 
     private void OnDisable()
     {
-        Obey.RanRedLight -= FireEvent;
+        EventsSystem.RanRedLight -= FireEvent;
     }
 }

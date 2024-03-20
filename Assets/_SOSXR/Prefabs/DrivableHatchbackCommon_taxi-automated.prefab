@@ -3624,6 +3624,7 @@ GameObject:
   - component: {fileID: 7992445498551782146}
   - component: {fileID: 2478723328460268675}
   - component: {fileID: 2673223769286998360}
+  - component: {fileID: 8714571987367787352}
   m_Layer: 9
   m_Name: DrivableHatchbackCommon_taxi-automated
   m_TagString: ManualCar
@@ -4021,9 +4022,10 @@ AudioSource:
   m_GameObject: {fileID: 1783928687406872520}
   m_Enabled: 1
   serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: 0}
+  OutputAudioMixerGroup: {fileID: 24300002, guid: 29f208b5bd5989047964548dfa014e2c,
+    type: 2}
   m_audioClip: {fileID: 0}
-  m_PlayOnAwake: 1
+  m_PlayOnAwake: 0
   m_Volume: 1
   m_Pitch: 1
   Loop: 0
@@ -4032,10 +4034,10 @@ AudioSource:
   SpatializePostEffects: 0
   Priority: 128
   DopplerLevel: 1
-  MinDistance: 2.5
-  MaxDistance: 60
+  MinDistance: 0.25
+  MaxDistance: 10
   Pan2D: 0
-  rolloffMode: 0
+  rolloffMode: 2
   BypassEffects: 0
   BypassListenerEffects: 0
   BypassReverbZones: 0
@@ -4043,77 +4045,23 @@ AudioSource:
     serializedVersion: 2
     m_Curve:
     - serializedVersion: 3
-      time: 0.008333334
+      time: 0
       value: 1
-      inSlope: -120.04797
-      outSlope: -120.04797
+      inSlope: 0
+      outSlope: 0
       tangentMode: 0
       weightedMode: 0
-      inWeight: 0
-      outWeight: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
     - serializedVersion: 3
-      time: 0.016666668
-      value: 0.5
-      inSlope: -30.011993
-      outSlope: -30.011993
+      time: 0.97088623
+      value: 0.4952469
+      inSlope: 0
+      outSlope: 0
       tangentMode: 0
       weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    - serializedVersion: 3
-      time: 0.033333335
-      value: 0.25
-      inSlope: -7.5029984
-      outSlope: -7.5029984
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    - serializedVersion: 3
-      time: 0.06666667
-      value: 0.125
-      inSlope: -1.8757496
-      outSlope: -1.8757496
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    - serializedVersion: 3
-      time: 0.13333334
-      value: 0.0625
-      inSlope: -0.4689374
-      outSlope: -0.4689374
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    - serializedVersion: 3
-      time: 0.26666668
-      value: 0.03125
-      inSlope: -0.11723435
-      outSlope: -0.11723435
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    - serializedVersion: 3
-      time: 0.53333336
-      value: 0.015625
-      inSlope: -0.029308587
-      outSlope: -0.029308587
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    - serializedVersion: 3
-      time: 1
-      value: 0
-      inSlope: -0.008336664
-      outSlope: -0.008336664
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
@@ -4180,7 +4128,7 @@ MonoBehaviour:
   flatoutSpeed: 120
   minPitch: 1
   pitchSpeed: 0.07
-  volume: 1
+  volume: 0.35
 --- !u!114 &2673223769286998360
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4199,6 +4147,18 @@ MonoBehaviour:
   DriverPuppet: {fileID: 4783791075495129227}
   PassengerPuppet: {fileID: 8129944699451714796}
   Label: {fileID: 4081566330483786554}
+--- !u!114 &8714571987367787352
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1783928687406872520}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2d91ae79b7e64ea89f9603903f38abbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1783933988476021450
 GameObject:
   m_ObjectHideFlags: 0
@@ -14156,6 +14116,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7917604406408063109, guid: ed813c97b2e952a4ea2f6e8a63df1f09,
+        type: 3}
+      propertyPath: m_Volume
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

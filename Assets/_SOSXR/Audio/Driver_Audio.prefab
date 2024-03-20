@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1098698529053550531}
   - component: {fileID: 4331342302760271897}
-  - component: {fileID: 1280896306131272855}
+  - component: {fileID: 6314910846840478900}
   m_Layer: 9
   m_Name: Driver_Audio
   m_TagString: Untagged
@@ -130,7 +130,7 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
---- !u!114 &1280896306131272855
+--- !u!114 &6314910846840478900
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -139,21 +139,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 4746124677694571945}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 561ca51664fd4aeaafcdfbde349b345e, type: 3}
+  m_Script: {fileID: 11500000, guid: 5db77737d45844109f735c2a4d80cde0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_eventToFire:
-    m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 4331342302760271897}
-        m_TargetAssemblyTypeName: UnityEngine.AudioSource, UnityEngine
-        m_MethodName: Play
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+  m_onOurWayClip: {fileID: 0}
+  m_ranRedLightClip: {fileID: 8300000, guid: 27947cb8c7018d945867da6f27b36f10, type: 3}
+  m_nearlyThereClip: {fileID: 0}
+  m_haveArrivedClip: {fileID: 0}

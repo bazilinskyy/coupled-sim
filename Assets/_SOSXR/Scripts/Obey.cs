@@ -32,8 +32,7 @@ public class Obey : MonoBehaviour
     private SpeedSettings _speedSettings;
 
     private CarTrafficLight m_carTrafficLight;
-
-    public static Action RanRedLight;
+    
     public bool ObeyTrafficLight => m_obey;
 
 
@@ -172,7 +171,10 @@ public class Obey : MonoBehaviour
         {
             if (m_carTrafficLight.State == LightState.RED) // Is the light RED?
             {
-                RanRedLight?.Invoke(); // Fire this event.
+                var eventsSystem = FindObjectOfType<EventsSystem>();
+                
+                eventsSystem.InvokeRanRedLight(); // Fire this event.
+                
                 Debug.Log("We ran a red light and now are firing this Action / Event. Pick this up by any other component. E.g.: this is where you'd hook up the audio system ('SORRY NOT SORRY!') for instance");
             }
             else // Is the light anything but red?

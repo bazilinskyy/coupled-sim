@@ -39,4 +39,11 @@ public static class ExtensionMethods
 
         return null;
     }
+
+
+    public static void PlayClip(this AudioSource source, AudioClip clip)
+    {
+        source.clip = clip;
+        source.Play();
+    }
 }

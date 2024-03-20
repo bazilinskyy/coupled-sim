@@ -13,6 +13,29 @@ I added a Metronome thing. It has a fire delay of X seconds, and a repetition of
 Or some whatever: since it works via a UnityEvent, it simply calls that event every Y seconds. Whatever we hook up to that
 is what will happen. 
 
+Did better with the audio controller. It's now all piped via the audio source of the driver/robot. The UnityEventOnTriggerEnter
+classes still rule when, but no longer what. They fire another 'event' type thing (on the EventsSystem) which is then 
+picked up by the AudioSystem. Is a bit convoluted, but that's needed because the car is not in the scene prior to scene start...
+
+The EventsSystem btw can currently call 4 things:
+- We're on our way (called 10meter after start driving)
+- Shitty red light (called when the red light)
+- Nearly there (well... obvious... when nearly there)
+- When at destination
+
+Each of these can have some audio attached to it. Could be fun. 
+
+City volume even lower: .125
+Car lower as well .35
+Increased the range of the spoken word too. It was still awfully quiet.
+
+Added the audio files I just received:
+- Human almost there (cut)
+- Robot almost there
+- Robot missed red light
+
+We still have slots available for 'we are on our way' and 'we have now arrived' audio files.
+Also have not yet received the Metronome sound. 
 
 
 

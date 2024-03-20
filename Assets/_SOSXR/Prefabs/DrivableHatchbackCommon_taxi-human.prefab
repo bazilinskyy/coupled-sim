@@ -3624,6 +3624,7 @@ GameObject:
   - component: {fileID: 7992445498551782146}
   - component: {fileID: 2478723328460268675}
   - component: {fileID: 2673223769286998360}
+  - component: {fileID: 5631713835831599623}
   m_Layer: 9
   m_Name: DrivableHatchbackCommon_taxi-human
   m_TagString: ManualCar
@@ -4024,7 +4025,7 @@ AudioSource:
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 0}
   m_PlayOnAwake: 1
-  m_Volume: 1
+  m_Volume: 0.35
   m_Pitch: 1
   Loop: 0
   Mute: 0
@@ -4180,7 +4181,7 @@ MonoBehaviour:
   flatoutSpeed: 120
   minPitch: 1
   pitchSpeed: 0.07
-  volume: 1
+  volume: 0.35
 --- !u!114 &2673223769286998360
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4199,6 +4200,18 @@ MonoBehaviour:
   DriverPuppet: {fileID: 4783791075495129227}
   PassengerPuppet: {fileID: 8129944699451714796}
   Label: {fileID: 4081566330483786554}
+--- !u!114 &5631713835831599623
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1783928687406872520}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2d91ae79b7e64ea89f9603903f38abbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1783933988476021450
 GameObject:
   m_ObjectHideFlags: 0
@@ -14595,17 +14608,67 @@ PrefabInstance:
     - target: {fileID: 7917604406408063109, guid: d5191fa44eff8e94d99aed8d524c6047,
         type: 3}
       propertyPath: m_Volume
-      value: 0.5
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7917604406408063109, guid: d5191fa44eff8e94d99aed8d524c6047,
         type: 3}
       propertyPath: MaxDistance
-      value: 2
+      value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 7917604406408063109, guid: d5191fa44eff8e94d99aed8d524c6047,
         type: 3}
       propertyPath: MinDistance
       value: 0.25
+      objectReference: {fileID: 0}
+    - target: {fileID: 7917604406408063109, guid: d5191fa44eff8e94d99aed8d524c6047,
+        type: 3}
+      propertyPath: rolloffMode
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 7917604406408063109, guid: d5191fa44eff8e94d99aed8d524c6047,
+        type: 3}
+      propertyPath: rolloffCustomCurve.m_Curve.Array.size
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 7917604406408063109, guid: d5191fa44eff8e94d99aed8d524c6047,
+        type: 3}
+      propertyPath: rolloffCustomCurve.m_Curve.Array.data[1].time
+      value: 0.97088623
+      objectReference: {fileID: 0}
+    - target: {fileID: 7917604406408063109, guid: d5191fa44eff8e94d99aed8d524c6047,
+        type: 3}
+      propertyPath: rolloffCustomCurve.m_Curve.Array.data[2].time
+      value: 0.9741211
+      objectReference: {fileID: 0}
+    - target: {fileID: 7917604406408063109, guid: d5191fa44eff8e94d99aed8d524c6047,
+        type: 3}
+      propertyPath: rolloffCustomCurve.m_Curve.Array.data[1].value
+      value: 0.4952469
+      objectReference: {fileID: 0}
+    - target: {fileID: 7917604406408063109, guid: d5191fa44eff8e94d99aed8d524c6047,
+        type: 3}
+      propertyPath: rolloffCustomCurve.m_Curve.Array.data[2].value
+      value: 0.7190552
+      objectReference: {fileID: 0}
+    - target: {fileID: 7917604406408063109, guid: d5191fa44eff8e94d99aed8d524c6047,
+        type: 3}
+      propertyPath: rolloffCustomCurve.m_Curve.Array.data[1].inSlope
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7917604406408063109, guid: d5191fa44eff8e94d99aed8d524c6047,
+        type: 3}
+      propertyPath: rolloffCustomCurve.m_Curve.Array.data[1].outSlope
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7917604406408063109, guid: d5191fa44eff8e94d99aed8d524c6047,
+        type: 3}
+      propertyPath: rolloffCustomCurve.m_Curve.Array.data[2].inWeight
+      value: 0.33333334
+      objectReference: {fileID: 0}
+    - target: {fileID: 7917604406408063109, guid: d5191fa44eff8e94d99aed8d524c6047,
+        type: 3}
+      propertyPath: rolloffCustomCurve.m_Curve.Array.data[2].outWeight
+      value: 0.33333334
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
