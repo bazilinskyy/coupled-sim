@@ -5946,19 +5946,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_eventToFire:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 7737769105929072020}
-        m_TargetAssemblyTypeName: EventsSystem, Assembly-CSharp
-        m_MethodName: InvokeNearlyThere
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
   m_tagToCheckFor: ManualCar
 --- !u!114 &6823893796968578842
 MonoBehaviour:
@@ -8622,13 +8610,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1105668248119667350}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: 0.7071068, z: -0, w: 0.7071068}
+  m_LocalRotation: {x: -0.0006966698, y: 0.7011191, z: 0.0039777188, w: 0.7130328}
   m_LocalPosition: {x: -118.86, y: 0, z: -151.37}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7492252986797691323}
-  m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
+  m_LocalEulerAnglesHint: {x: -0.377, y: 89.034, z: 0.269}
 --- !u!65 &7978741984310896020
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -10273,7 +10261,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_eventToFire:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 2347910257235198925}
+        m_TargetAssemblyTypeName: UnityEngine.AudioSource, UnityEngine
+        m_MethodName: Play
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   m_initialDelay: 2
   m_playInterval: 45
 --- !u!82 &2347910257235198925
@@ -10286,9 +10286,9 @@ AudioSource:
   m_Enabled: 1
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
-  m_audioClip: {fileID: 8300000, guid: 9a844981e2ab675418b05dc05fdf3d73, type: 3}
+  m_audioClip: {fileID: 8300000, guid: 37f2c81032aafeb49acf3b890263fcda, type: 3}
   m_PlayOnAwake: 0
-  m_Volume: 1
+  m_Volume: 0.2
   m_Pitch: 1
   Loop: 0
   Mute: 0
@@ -59806,7 +59806,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_eventToFire:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 7737769105929072020}
+        m_TargetAssemblyTypeName: EventsSystem, Assembly-CSharp
+        m_MethodName: InvokeNearlyThere
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   m_tagToCheckFor: ManualCar
 --- !u!114 &1461599194595431315
 MonoBehaviour:
