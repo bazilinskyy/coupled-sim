@@ -167,15 +167,6 @@ public class PlayerAvatar : MonoBehaviour
 
                 Debug.Log("SOSXR: Instantiated XR_Origin rig for XR, instead of enabling the default camera.");
 
-                var recenter = rig.GetComponent<RecenterXROrigin>();
-
-                if (recenter == null)
-                {
-                    Debug.LogError("No RecenterXROrigin found, this is not good. Cannot proceed");
-
-                    return;
-                }
-
                 //recenter.RecenterTo = cameras[cameraIndex].transform.parent;
                 //  recenter.RecenterWithoutFlatten();
 

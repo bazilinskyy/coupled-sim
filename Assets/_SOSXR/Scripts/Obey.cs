@@ -20,11 +20,11 @@ public class Obey : MonoBehaviour
     [SerializeField] [Range(1, 5)] private float m_acceleration = Defaults.Acceleration;
     [SerializeField] [Range(5, 50)] private float m_speedWhenGoing = Defaults.Speed;
     [SerializeField] [Range(-5, -1)] private float m_deceleration = Defaults.Deceleration;
+    
     [Space(10)]
     [SerializeField] private bool m_obey = true;
     [SerializeField] private Vector3 m_colliderSize = new(20, 2, 2);
-
-    //private readonly float _colliderLength = 20f;
+    
     private SpeedSettings[] _allSpeedSettings;
     private BoxCollider _boxCollider;
 
@@ -85,7 +85,8 @@ public class Obey : MonoBehaviour
                 if (otherSpeedSettings != null)
                 {
                     otherSpeedSettings.enabled = false;
-                    Debug.LogWarning("One other SpeedSetting component was in my way, I disabled it."); // This needed doing because otherwise that other speedsetter would interfere, and make the car accelerate for instance when it should stop for red light
+                    
+                    Debug.Log("One other SpeedSetting component was in my way, I disabled it."); // This needed doing because otherwise that other speedsetter would interfere, and make the car accelerate for instance when it should stop for red light
                 }
             }
         }
@@ -179,7 +180,9 @@ public class Obey : MonoBehaviour
             }
             else // Is the light anything but red?
             {
-                Debug.Log("This could also be a place to add multiple functions for other light states. Like what to do when light was Yellow? Is not a traffic violation, but might be something interesting anyway.");
+                Debug.LogWarning("We have set this light to be 'do not obey', but by the time we crossed it, it was not red... is this a problem?");
+                
+                // Debug.Log("This could also be a place to add multiple functions for other light states. Like what to do when light was Yellow? Is not a traffic violation, but might be something interesting anyway.");
             }
         }
     }

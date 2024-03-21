@@ -1,4 +1,27 @@
-﻿20-03-2024
+﻿21-03-2024
+
+I adjusted the speed settings of the opposing lanes at the intersection near the park. I sped up the opposing car, 
+and slowed down our car, so that each can move past the other smoother. I'll do the same with the intersection near the highway.
+
+More crashes, when we didn't Obey the traffic light, we got sideswiped by some a-hole in a muscle car. 
+Funny story: this was the same muscle car who caused so much grief near the highway. I'm gonna delete him. 
+It was the circuit: "Incoming Traffic Circuit_2" and the car "Other_Traffic_2".
+
+There were some null errors popping up in the AICarSyncSystem and the BaseSyncedCarSpawner. It didn't really seem to affect
+whether there was a car or not, so I null-checked them with some error messages. 
+
+I can theoretically use the Angular Velocity on the AICar to turn the steering wheel. The wheel wasn't moving since it was 
+controlled by the WheelVehicle, which is only used when you're manually doing the car thing. AIcars don't use that thing. 
+But AICar has an AngularVelocity thing, from which I can grab the Y value, and use that (together with a multiplier and possibly
+an AnimationCurve) to rotate the steering wheel. - is steer left, + is steer right. Values seemed to max out at 1.5 something. 
+
+
+------
+
+
+
+
+20-03-2024
 
 I turned down sound due to hardly audible human:
     City volume: 0.125

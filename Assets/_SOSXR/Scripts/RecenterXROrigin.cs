@@ -62,6 +62,12 @@ public class RecenterXROrigin : MonoBehaviour
 
     private void RecenterPosition(bool flatten)
     {
+        if (RecenterTo == null)
+        {
+            Debug.LogWarning("I don't have a RecenterTo object. Have you tried setting this some way?");
+            return;
+        }
+        
         var distanceDiff = RecenterTo.transform.position - _xrCamera.position;
         _xrOrigin.transform.position += distanceDiff;
 

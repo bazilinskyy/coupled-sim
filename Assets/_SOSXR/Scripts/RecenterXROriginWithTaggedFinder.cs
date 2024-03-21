@@ -3,7 +3,7 @@
 
 public class RecenterXROriginWithTaggedFinder : RecenterXROrigin
 {
-    [SerializeField] [TagSelector] private readonly string m_recenterToTag = "Target_XROrigin";
+    [SerializeField] [TagSelector] private string m_recenterToTag = "Target_XROrigin";
 
 
     public override void RecenterAndFlatten()

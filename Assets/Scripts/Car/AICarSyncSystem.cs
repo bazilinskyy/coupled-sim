@@ -75,8 +75,13 @@ public class AICarSyncSystem
         Assert.AreEqual(Mode.Host, _mode, "Only host can spawn synced objects");
         var prefabIdx = FindPrefabIndex(parameters.Car);
         Assert.AreNotEqual(-1, prefabIdx, $"The prefab {parameters.Car} was not added to NetworkingManager -> AICarSyncSystem -> Prefabs");
+
+        if (parameters.SpawnPoint == null)
+        {
+            Debug.LogWarning("Spawnpoint for car is null!, it this correct? Cannot proceed spawning a car");
+            return null;
+        }
         
-       
         var aiCar = GameObject.Instantiate(Prefabs[prefabIdx], parameters.SpawnPoint.position, parameters.SpawnPoint.rotation);
         aiCar.gameObject.layer = LayerMask.NameToLayer(yielding ? "Yielding" : "Car");
         aiCar.enabled = true;

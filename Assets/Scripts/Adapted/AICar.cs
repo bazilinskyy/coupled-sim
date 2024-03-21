@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using SOSXR;
 using UnityEngine;
 using UnityStandardAssets.Utility;
 
@@ -52,7 +53,7 @@ public class AICar : MonoBehaviour, IVehicle
 
     private GameObject ManualCarTrigger;
     private float pitch = 0; // Pitch of the car
-    private Transform rotationAxis;
+   private Transform rotationAxis;
     private float set_acceleration = 0; // Acceleration of cars in simulation
     // Motion related variables
     private float set_speed = 0; // Velocity of cars in simulation
@@ -67,6 +68,7 @@ public class AICar : MonoBehaviour, IVehicle
     private float triggerlocation;
     private float yieldingTime;
     private const float breakingTreshold = -1;
+    [SerializeField] [DisableEditing] private float m_showAngularVelocity;
 
     private Quaternion modelLocalRotation
     {
@@ -130,7 +132,8 @@ public class AICar : MonoBehaviour, IVehicle
 
         //  Change of Ambient Traffic rotations based on current heading and target position
         theRigidbody.angularVelocity = new Vector3(0f, psi * turn_rate_degree * Mathf.PI / 360f, 0f);
-
+        m_showAngularVelocity = theRigidbody.angularVelocity.y.RoundCorrectly(2);
+        
         if (shouldYield && speed == 0.0f)
         {
             StartCoroutine(Yield(yieldingTime));

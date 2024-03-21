@@ -16819,7 +16819,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   targetAICar: {fileID: 0}
-  speed: 30
+  speed: 20
   acceleration: 2
   brakingAcceleration: -3
   Type: 1
@@ -34647,7 +34647,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1249559187204806280
 Transform:
   m_ObjectHideFlags: 0
@@ -37482,7 +37482,7 @@ Transform:
   m_GameObject: {fileID: 4298408725978489694}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.7071068, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: -108.99, y: 0, z: -87.79}
+  m_LocalPosition: {x: -109.12, y: 0, z: -89.43}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -37522,7 +37522,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   targetAICar: {fileID: 0}
-  speed: 25
+  speed: 15
   acceleration: 1
   brakingAcceleration: -3
   Type: 1
@@ -41785,7 +41785,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   targetAICar: {fileID: 0}
-  speed: 30
+  speed: 35
   acceleration: 2
   brakingAcceleration: -3
   Type: 1
@@ -58438,7 +58438,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   targetAICar: {fileID: 0}
-  speed: 30
+  speed: 35
   acceleration: 2
   brakingAcceleration: -3
   Type: 1
@@ -58790,7 +58790,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   targetAICar: {fileID: 0}
-  speed: 30
+  speed: 20
   acceleration: 2
   brakingAcceleration: -3
   Type: 1
@@ -63050,7 +63050,7 @@ Transform:
   m_GameObject: {fileID: 7370091500280643800}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.7071068, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: -114.69, y: 0, z: -90.47}
+  m_LocalPosition: {x: -115.51, y: 0, z: -91.2}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -63090,7 +63090,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   targetAICar: {fileID: 0}
-  speed: 30
+  speed: 15
   acceleration: 2
   brakingAcceleration: -3
   Type: 1
@@ -79429,6 +79429,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: Other_Traffic_2
       objectReference: {fileID: 0}
+    - target: {fileID: 3405761036828612067, guid: 8f7ee988d80614bcb9b16c0672dfe7c4,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3405761036828846531, guid: 8f7ee988d80614bcb9b16c0672dfe7c4,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -80176,6 +80181,11 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 7609667120526454229}
     m_Modifications:
+    - target: {fileID: 330380830620026740, guid: abaabd75d13fbce4fbb9270218d0aa17,
+        type: 3}
+      propertyPath: m_speedWhenGoing
+      value: 20
+      objectReference: {fileID: 0}
     - target: {fileID: 330380830627883429, guid: abaabd75d13fbce4fbb9270218d0aa17,
         type: 3}
       propertyPath: m_obey
@@ -80189,7 +80199,17 @@ PrefabInstance:
     - target: {fileID: 330380830627883429, guid: abaabd75d13fbce4fbb9270218d0aa17,
         type: 3}
       propertyPath: m_speedWhenGoing
-      value: 35
+      value: 40
+      objectReference: {fileID: 0}
+    - target: {fileID: 2279140481971189113, guid: abaabd75d13fbce4fbb9270218d0aa17,
+        type: 3}
+      propertyPath: m_speedWhenGoing
+      value: 15
+      objectReference: {fileID: 0}
+    - target: {fileID: 2279140481994726312, guid: abaabd75d13fbce4fbb9270218d0aa17,
+        type: 3}
+      propertyPath: m_acceleration
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 3407359278645602232, guid: abaabd75d13fbce4fbb9270218d0aa17,
         type: 3}
