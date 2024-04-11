@@ -47,6 +47,9 @@ public class EyeTrackingExample : MonoBehaviour
     public Transform rightEyeTransform;
     [SerializeField] private Vector3 m_rightEyeRotationOffset = new(0, 0, 84.354f); // SOSXR
 
+    [Tooltip("SOSXR: We don't want to set the localPosition of the eyes if it is in a model")]
+    [SerializeField] private bool m_setEyePosition = false; // SOSXR
+
     [Header("XR camera")]
     public Camera xrCamera;
 
@@ -250,21 +253,11 @@ public class EyeTrackingExample : MonoBehaviour
                 // Get data for eye positions, rotations and the fixation point
                 if (device.TryGetFeatureValue(CommonUsages.eyesData, out eyes))
                 {
-                    if (eyes.TryGetLeftEyePosition(out leftEyePosition))
-                    {
-                        // leftEyeTransform.localPosition = leftEyePosition;
-                    }
-
                     if (eyes.TryGetLeftEyeRotation(out leftEyeRotation))
                     {
                         leftEyeTransform.localRotation = leftEyeRotation;
                         var offset = Quaternion.Euler(m_leftEyeRotationOffset);
                         leftEyeTransform.localRotation *= offset;
-                    }
-
-                    if (eyes.TryGetRightEyePosition(out rightEyePosition))
-                    {
-                        // rightEyeTransform.localPosition = rightEyePosition;
                     }
 
                     if (eyes.TryGetRightEyeRotation(out rightEyeRotation))
@@ -277,6 +270,20 @@ public class EyeTrackingExample : MonoBehaviour
                     if (eyes.TryGetFixationPoint(out fixationPoint))
                     {
                         fixationPointTransform.localPosition = fixationPoint;
+                    }
+
+                    if (!m_setEyePosition)  
+                    {
+                        return; // SOSXR: We don't want to set the localPosition of the eyes if it is in a model
+                    }
+
+                    if (eyes.TryGetLeftEyePosition(out leftEyePosition))
+                    {
+                        leftEyeTransform.localPosition = leftEyePosition;
+                    }
+                    if (eyes.TryGetRightEyePosition(out rightEyePosition))
+                    {
+                        rightEyeTransform.localPosition = rightEyePosition;
                     }
                 }
 

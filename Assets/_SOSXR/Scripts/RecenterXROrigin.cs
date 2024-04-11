@@ -100,8 +100,8 @@ public class RecenterXROrigin : MonoBehaviour
     {     
         if (Input.GetKeyDown(m_recenterKey))
         {
-            RecenterAndFlatten();
-            Debug.Log("SOSXR: RecenterAndFlatten via key");
+            RecenterWithoutFlatten();
+            Debug.Log("SOSXR: RecenterWithoutFlatten via key");
         }
     }
 }

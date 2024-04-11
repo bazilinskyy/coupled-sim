@@ -27,6 +27,7 @@ public class EyeProviderFromTag : MonoBehaviour
     {
         if (_eyeTrackingExample.leftEyeTransform == null || _eyeTrackingExample.rightEyeTransform == null)
         {
+            Debug.Log("SOSXR: Try to find transforms via tags");
             if (transform.root.FindChildByTag(m_leftEyeTag) != null)
             {
                 _eyeTrackingExample.leftEyeTransform = transform.root.FindChildByTag(m_leftEyeTag);
