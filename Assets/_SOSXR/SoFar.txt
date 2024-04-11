@@ -1,8 +1,8 @@
 ﻿11-04-2024
 
-Got XR3 to behave much better through Varjo Base 4.2.1
+Got XR3 to behave much better through Varjo Base 4.2.1. Less restart / diva issues.
 
-Now reassign shortcuts, because 'R' is resetting the camera position. No longer directly unto floor.
+Now reassigning shortcuts, because 'R' is resetting the camera position. No longer directly unto floor.
 However, it does not match well with the 'Press R to Reverse'. 
 I know I removed the CameraCounter.cs from our prefabs, but just to be sure I've also set a bool in the inspector to turn it off. 
 This is because the CameraCounter gets spawned automatically. 
@@ -20,6 +20,23 @@ Updated VarjoEyeTracking to allow enabling/disabling moving of eyeballs. This sh
 Checked with model: eyes rotate according to tracking. Will need a second person with eyeballs to help fine-tune.
 
 Will start making sure the passenger can have this too. 
+
+Before I got to the passenger, worked with Vennila on the eye tracking of the driver. It was behaving strangely. 
+It doesn't yet move in the same direction real-life eyeballs are moving, but something like this:
+Left = down
+Down = left
+Right = up
+up = right
+Worked a little with the offset to see what's what, because also the model's eyeball is actually two-sided. It could 
+be that we're looking at the back of the eyeball instead of the front.
+Should test next time by placing coloured markers on both the front and the back of the eyeball. 
+
+Also need to get more Varjo info.
+
+
+Ttyl!
+
+Maarten
 
 
 

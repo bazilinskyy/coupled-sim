@@ -16,6 +16,7 @@ public enum GazeDataSource
 
 public class EyeTrackingExample : MonoBehaviour
 {
+
     [Header("Gaze data")]
     public GazeDataSource gazeDataSource = GazeDataSource.InputSubsystem;
 
@@ -39,13 +40,17 @@ public class EyeTrackingExample : MonoBehaviour
 
     [Header("Toggle fixation point indicator visibility")]
     public bool showFixationPoint = true;
-
-    [Header("Visualization Transforms")]
     public Transform fixationPointTransform;
+
+    [Header("Eyeball Transforms")]
     public Transform leftEyeTransform;
     [SerializeField] private Vector3 m_leftEyeRotationOffset = new(0, 0, 84.354f); // SOSXR
     public Transform rightEyeTransform;
+        
+    public Vector3 VarjoEye;
     [SerializeField] private Vector3 m_rightEyeRotationOffset = new(0, 0, 84.354f); // SOSXR
+
+    public Vector3 OffsettedEye;
 
     [Tooltip("SOSXR: We don't want to set the localPosition of the eyes if it is in a model")]
     [SerializeField] private bool m_setEyePosition = false; // SOSXR
@@ -135,13 +140,16 @@ public class EyeTrackingExample : MonoBehaviour
             gazeTarget.SetActive(false);
         }
 
-        if (showFixationPoint)
+        if (fixationPointTransform != null)
         {
-            fixationPointTransform.gameObject.SetActive(true);
-        }
-        else
-        {
-            fixationPointTransform.gameObject.SetActive(false);
+            if (showFixationPoint)
+            {
+                fixationPointTransform.gameObject.SetActive(true);
+            }
+            else
+            {
+                fixationPointTransform.gameObject.SetActive(false);
+            }
         }
     }
 
@@ -223,6 +231,12 @@ public class EyeTrackingExample : MonoBehaviour
                 LogGazeData(dataSinceLastUpdate[i], eyeMeasurementsSinceLastUpdate[i]);
             }
         }
+
+        if (Input.GetKeyDown(KeyCode.Keypad9))
+        {
+            Debug.Log(VarjoEye);
+            Debug.Log(OffsettedEye);
+        }
     }
 
 
@@ -253,6 +267,19 @@ public class EyeTrackingExample : MonoBehaviour
                 // Get data for eye positions, rotations and the fixation point
                 if (device.TryGetFeatureValue(CommonUsages.eyesData, out eyes))
                 {
+                    if (m_setEyePosition)  // SOSXR: We don't want to set the localPosition of the eyes if it is in a model
+                    {
+                        if (eyes.TryGetLeftEyePosition(out leftEyePosition))
+                        {
+                            leftEyeTransform.localPosition = leftEyePosition;
+                        }
+                        if (eyes.TryGetRightEyePosition(out rightEyePosition))
+                        {
+                            rightEyeTransform.localPosition = rightEyePosition;
+                        }
+                    }
+
+
                     if (eyes.TryGetLeftEyeRotation(out leftEyeRotation))
                     {
                         leftEyeTransform.localRotation = leftEyeRotation;
@@ -263,27 +290,19 @@ public class EyeTrackingExample : MonoBehaviour
                     if (eyes.TryGetRightEyeRotation(out rightEyeRotation))
                     {
                         rightEyeTransform.localRotation = rightEyeRotation;
+                        VarjoEye = rightEyeRotation.eulerAngles;
                         var offset = Quaternion.Euler(m_rightEyeRotationOffset);
                         rightEyeTransform.localRotation *= offset;
+                        OffsettedEye = rightEyeTransform.localRotation.eulerAngles;
+                        // Debug.log(rightEyeTransform.localRotation.eulerAngles); // print eyerotation value after offset
                     }
 
                     if (eyes.TryGetFixationPoint(out fixationPoint))
                     {
-                        fixationPointTransform.localPosition = fixationPoint;
-                    }
-
-                    if (!m_setEyePosition)  
-                    {
-                        return; // SOSXR: We don't want to set the localPosition of the eyes if it is in a model
-                    }
-
-                    if (eyes.TryGetLeftEyePosition(out leftEyePosition))
-                    {
-                        leftEyeTransform.localPosition = leftEyePosition;
-                    }
-                    if (eyes.TryGetRightEyePosition(out rightEyePosition))
-                    {
-                        rightEyeTransform.localPosition = rightEyePosition;
+                        if (fixationPointTransform != null)
+                        {
+                            fixationPointTransform.localPosition = fixationPoint;
+                        }
                     }
                 }
 

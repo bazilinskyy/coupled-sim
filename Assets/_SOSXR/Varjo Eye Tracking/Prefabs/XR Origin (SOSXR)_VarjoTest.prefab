@@ -335,11 +335,11 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 6300200497835139431, guid: fd094099d278ea945908c884c0d9a5e2,
         type: 3}
       insertIndex: -1
-      addedObject: {fileID: 6210965462216812022}
+      addedObject: {fileID: 6310314723683077181}
     - targetCorrespondingSourceObject: {fileID: 6300200497835139431, guid: fd094099d278ea945908c884c0d9a5e2,
         type: 3}
       insertIndex: -1
-      addedObject: {fileID: 6310314723683077181}
+      addedObject: {fileID: 8122518715258596720}
   m_SourcePrefab: {fileID: 100100000, guid: fd094099d278ea945908c884c0d9a5e2, type: 3}
 --- !u!1 &1422170957023196873 stripped
 GameObject:
@@ -347,42 +347,6 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 4959129537805637550}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &6210965462216812022
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1422170957023196873}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 35ef8abca48318c45a3e7f1c5e9725c7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  gazeDataSource: 0
-  gazeCalibrationMode: 0
-  calibrationRequestKey: 32
-  gazeOutputFilterType: 1
-  setOutputFilterTypeKey: 303
-  frequency: 0
-  toggleGazeTarget: 13
-  checkGazeAllowed: 280
-  checkGazeCalibrated: 281
-  showFixationPoint: 0
-  fixationPointTransform: {fileID: 937131486983908877}
-  leftEyeTransform: {fileID: 0}
-  rightEyeTransform: {fileID: 0}
-  xrCamera: {fileID: 1576757768086385750}
-  gazeTarget: {fileID: 4904425366907481998}
-  gazeRadius: 0.01
-  floatingGazeTargetDistance: 5
-  targetOffset: 0.2
-  hitForce: 5
-  m_freeRotatingTag: FreeRotating
-  loggingToggleKey: 305
-  useCustomLogPath: 0
-  customLogPath: 
-  printFramerate: 0
 --- !u!114 &6310314723683077181
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -397,6 +361,47 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_leftEyeTag: Eye_Left
   m_rightEyeTag: Eye_Right
+--- !u!114 &8122518715258596720
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1422170957023196873}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 605578c30c1aa9947a4e2307894d492b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gazeDataSource: 0
+  gazeCalibrationMode: 0
+  calibrationRequestKey: 32
+  gazeOutputFilterType: 1
+  setOutputFilterTypeKey: 303
+  frequency: 0
+  toggleGazeTarget: 13
+  checkGazeAllowed: 280
+  checkGazeCalibrated: 281
+  showFixationPoint: 0
+  fixationPointTransform: {fileID: 937131486983908877}
+  leftEyeTransform: {fileID: 0}
+  m_leftEyeRotationOffset: {x: 0, y: 0, z: 84.354}
+  rightEyeTransform: {fileID: 0}
+  VarjoEye: {x: 0, y: 0, z: 0}
+  m_rightEyeRotationOffset: {x: 0, y: 0, z: 84.354}
+  OffsettedEye: {x: 0, y: 0, z: 0}
+  m_setEyePosition: 0
+  xrCamera: {fileID: 1576757768086385750}
+  gazeTarget: {fileID: 4904425366907481998}
+  gazeRadius: 0.01
+  floatingGazeTargetDistance: 5
+  targetOffset: 0.2
+  hitForce: 5
+  m_freeRotatingTag: FreeRotating
+  loggingToggleKey: 305
+  useCustomLogPath: 0
+  customLogPath: 
+  printFramerate: 0
 --- !u!20 &1576757768086385750 stripped
 Camera:
   m_CorrespondingSourceObject: {fileID: 5851190611770418168, guid: fd094099d278ea945908c884c0d9a5e2,
