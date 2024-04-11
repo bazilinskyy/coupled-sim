@@ -1,4 +1,29 @@
-﻿29-02-2024
+﻿11-04-2024
+
+Got XR3 to behave much better through Varjo Base 4.2.1
+
+Now reassign shortcuts, because 'R' is resetting the camera position. No longer directly unto floor.
+However, it does not match well with the 'Press R to Reverse'. 
+I know I removed the CameraCounter.cs from our prefabs, but just to be sure I've also set a bool in the inspector to turn it off. 
+This is because the CameraCounter gets spawned automatically. 
+It clearly is the Cameracounter that's doing this.
+
+Problem is also that CameraCounter is calling something that's obsolete, and only works in stationary, not roomscale.
+I'm going to keep the CameraCounter's implementation off, and set a keycode for my own recentering.  
+---> RECENTERING IS NOW NUM-0 (so the '0' key on the numpad)
+
+Weird thing was that RecenterXROrigin.cs kept getting disabled in Start. No indication as to why or where.
+Only when I removed the component from the prefab, and re-added it, did it get fixed. Now the thing stays enabled, 
+and we can use '0' to RecenterAndFlatten. 
+
+
+
+
+
+--------------------------
+
+
+29-02-2024
 Moved worldlogger into uncommented file and got back the working version via Git. 
 Removed eye-ball-rotation from animation clip (that was 'blocking' eyeball for varjo)
 Scratch that last bit. The Eyeball rotation in the animation clip wasn't the issue. 

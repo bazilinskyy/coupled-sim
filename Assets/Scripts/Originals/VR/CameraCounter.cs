@@ -4,6 +4,8 @@ using UnityEngine.XR;
 
 public class CameraCounter : MonoBehaviour
 {
+    [SerializeField] private bool m_allowRecentering = false;
+
     private Transform _childCamera;
 
 
@@ -15,6 +17,11 @@ public class CameraCounter : MonoBehaviour
 
     private void Update()
     {
+        if (!m_allowRecentering)
+        {
+            return;
+        }
+        
         if (Input.GetKeyDown(KeyCode.R))
         {
             InputTracking.Recenter();

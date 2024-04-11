@@ -7,13 +7,10 @@ using UnityEngine.XR;
 public class RecenterXROrigin : MonoBehaviour
 {
     [SerializeField] [TagSelector] private string m_recenterToTag = "Target_XROrigin";
-    [SerializeField] [Range(0f, 10f)] private float m_fireDelay = 2f;
+    [SerializeField] private KeyCode m_recenterKey = KeyCode.Keypad0;
     private Transform _recenterTo;
     private Transform _xrCamera;
     private XROrigin _xrOrigin;
-
-    [SerializeField] private bool m_debug = false;
-
 
     private void Awake()
     {
@@ -31,13 +28,6 @@ public class RecenterXROrigin : MonoBehaviour
         }
 
         _xrCamera = _xrOrigin.GetComponentInChildren<Camera>().transform;
-    }
-
-
-    private void OnEnable()
-    {
-        Invoke(nameof(RecenterAndFlatten), m_fireDelay);
-        Debug.LogFormat("SOSXR: Will run {0} in {1} seconds", nameof(RecenterAndFlatten), m_fireDelay);
     }
 
 
@@ -107,13 +97,11 @@ public class RecenterXROrigin : MonoBehaviour
 
 
     private void Update()
-    {
-        if (!m_debug)
+    {     
+        if (Input.GetKeyDown(m_recenterKey))
         {
-            return;
+            RecenterAndFlatten();
+            Debug.Log("SOSXR: RecenterAndFlatten via key");
         }
-
-        RecenterAndFlatten();
-        Debug.Log("SOSXR: You're recentering the rig every frame. This is only supposed to happen when you want to find out the correct position for the HMD. Because this is A) expensive, B) mightily uncomfortable");
     }
 }
