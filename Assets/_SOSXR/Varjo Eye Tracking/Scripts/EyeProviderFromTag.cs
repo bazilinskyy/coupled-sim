@@ -25,23 +25,24 @@ public class EyeProviderFromTag : MonoBehaviour
 
     private void FindEyes()
     {
-        if (_eyeTrackingExample.m_leftEyeTransform == null || _eyeTrackingExample.m_rightEyeTransform == null)
+        if (_eyeTrackingExample.LeftEyeTransform == null || _eyeTrackingExample.RightEyeTransform == null)
         {
             Debug.Log("SOSXR: Try to find transforms via tags");
 
             if (transform.root.FindChildByTag(m_leftEyeTag) != null)
             {
-                _eyeTrackingExample.m_leftEyeTransform = transform.root.FindChildByTag(m_leftEyeTag);
+                _eyeTrackingExample.LeftEyeTransform = transform.root.FindChildByTag(m_leftEyeTag);
             }
 
             if (transform.root.FindChildByTag(m_rightEyeTag) != null)
             {
-                _eyeTrackingExample.m_rightEyeTransform = transform.root.FindChildByTag(m_rightEyeTag);
+                _eyeTrackingExample.RightEyeTransform = transform.root.FindChildByTag(m_rightEyeTag);
             }
         }
 
-        if (_eyeTrackingExample.m_leftEyeTransform != null && _eyeTrackingExample.m_rightEyeTransform != null)
+        if (_eyeTrackingExample.LeftEyeTransform != null && _eyeTrackingExample.RightEyeTransform != null)
         {
+            Debug.Log("SOSXR: Found eyeball transforms via tag, will disable EyeProviderFromTag now");
             enabled = false;
         }
     }
