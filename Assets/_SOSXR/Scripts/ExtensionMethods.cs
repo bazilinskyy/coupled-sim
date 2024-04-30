@@ -8,14 +8,14 @@ public static class ExtensionMethods
         input.position = Vector3.zero;
         input.rotation = Quaternion.identity;
     }
- 
-    
+
+
     public static Vector3 Flatten(this Vector3 input)
     {
         return new Vector3(input.x, 0, input.z);
     }
-    
-    
+
+
     /// <summary>
     ///     Find by tag the transform of (sub)child in a given parent, recursively.
     ///     Adapted from: https://forum.unity.com/threads/solved-find-a-child-by-name-searching-all-subchildren.40684/

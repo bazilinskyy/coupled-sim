@@ -10,6 +10,12 @@ Both the carrot as the puntmuts are attached to the XR Rig. The carrot is a bit 
 
 Amended passenger model to more reflect the components of the Driver model
 
+The chainIK constraint needs to be on something that's not rotating along with the XRRig, because otherwise the -40 to 40
+limits simply won't apply. With the driver this is done by having that Target be sort of the headrest of the car. 
+With the passenger I should do something similar. Gonna need a car for that though, and something networked. So for another day.
+--> I had the Target_Head_Position in there, which took its pos-rot from an object with tag HMD_AttachPoint.
+
+Refactoring VarjoEyeTracking to understand it. 
 
 
 

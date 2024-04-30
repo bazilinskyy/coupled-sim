@@ -12,6 +12,7 @@ public class WaypointDrawer : MonoBehaviour
     private void Awake()
     {
         _waypointCircuit = GetComponent<WaypointCircuit>();
+        
     }
 
 

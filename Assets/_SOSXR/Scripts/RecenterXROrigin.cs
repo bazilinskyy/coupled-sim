@@ -1,5 +1,4 @@
-﻿using System;
-using Unity.XR.CoreUtils;
+﻿using Unity.XR.CoreUtils;
 using UnityEngine;
 using UnityEngine.XR;
 
@@ -11,6 +10,7 @@ public class RecenterXROrigin : MonoBehaviour
     private Transform _recenterTo;
     private Transform _xrCamera;
     private XROrigin _xrOrigin;
+
 
     private void Awake()
     {
@@ -59,7 +59,7 @@ public class RecenterXROrigin : MonoBehaviour
         {
             return;
         }
-        
+
         _recenterTo = transform.root.FindChildByTag(m_recenterToTag); // Go to the root GameObject, then search back downwards until you find something with this tag.
 
         if (_recenterTo == null)
@@ -97,7 +97,7 @@ public class RecenterXROrigin : MonoBehaviour
 
 
     private void Update()
-    {     
+    {
         if (Input.GetKeyDown(m_recenterKey))
         {
             RecenterWithoutFlatten();

@@ -3,38 +3,46 @@
 
 public class RotateWithGaze : MonoBehaviour
 {
-    public GameObject demoObject;
-    public float forceAmount;
-    public Material flatMaterial;
-    public Material objectMaterial;
-    private MeshRenderer mr;
-    private Rigidbody rb;
+    [SerializeField] private GameObject m_gameObjectToRotate;
+    [SerializeField] private float m_forceAmount;
+    [SerializeField] private Material m_flatMaterial;
+    [SerializeField] private Material m_objectMaterial;
+
+    private MeshRenderer _meshRenderer;
+    private Rigidbody _rigidbody;
 
 
-    private void Start()
+    private void Awake()
     {
-        rb = GetComponentInChildren<Rigidbody>();
-        mr = demoObject.GetComponent<MeshRenderer>();
+        _rigidbody = GetComponentInChildren<Rigidbody>();
+        _meshRenderer = m_gameObjectToRotate.GetComponent<MeshRenderer>();
     }
 
 
     private void Update()
     {
-        // Check if object is rotating and change material accordingly
-        if (!rb.IsSleeping())
+        ChangeRotatingMaterial();
+    }
+
+
+    private void ChangeRotatingMaterial()
+    {
+        if (!_rigidbody.IsSleeping())
         {
-            mr.material = objectMaterial;
+            _meshRenderer.material = m_objectMaterial;
         }
         else
         {
-            mr.material = flatMaterial;
+            _meshRenderer.material = m_flatMaterial;
         }
     }
 
 
-    // Rotates object hit with gaze tracking raycast
+    /// <summary>
+    ///     Rotates object hit with gaze tracking raycast
+    /// </summary>
     public void RayHit()
     {
-        rb.AddTorque(Vector3.up * forceAmount * Time.deltaTime, ForceMode.Force);
+        _rigidbody.AddTorque(Vector3.up * (m_forceAmount * Time.deltaTime), ForceMode.Force);
     }
 }

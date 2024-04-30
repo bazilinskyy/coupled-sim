@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.XR;
-using Varjo.XR;
+using static Varjo.XR.VarjoEyeTracking;
 
 
 public enum GazeDataSource
@@ -16,110 +17,109 @@ public enum GazeDataSource
 
 public class EyeTrackingExample : MonoBehaviour
 {
+    [FormerlySerializedAs("gazeDataSource")] [Header("Gaze data")]
+    public GazeDataSource m_gazeDataSource = GazeDataSource.InputSubsystem;
 
-    [Header("Gaze data")]
-    public GazeDataSource gazeDataSource = GazeDataSource.InputSubsystem;
+    [FormerlySerializedAs("gazeCalibrationMode")] [Header("Gaze calibration settings")]
+    public GazeCalibrationMode m_gazeCalibrationMode = GazeCalibrationMode.Fast;
+    [FormerlySerializedAs("calibrationRequestKey")] public KeyCode m_calibrationRequestKey = KeyCode.Space;
 
-    [Header("Gaze calibration settings")]
-    public VarjoEyeTracking.GazeCalibrationMode gazeCalibrationMode = VarjoEyeTracking.GazeCalibrationMode.Fast;
-    public KeyCode calibrationRequestKey = KeyCode.Space;
+    [FormerlySerializedAs("gazeOutputFilterType")] [Header("Gaze output filter settings")]
+    public GazeOutputFilterType m_gazeOutputFilterType = GazeOutputFilterType.Standard;
+    [FormerlySerializedAs("setOutputFilterTypeKey")] public KeyCode m_setOutputFilterTypeKey = KeyCode.RightShift;
 
-    [Header("Gaze output filter settings")]
-    public VarjoEyeTracking.GazeOutputFilterType gazeOutputFilterType = VarjoEyeTracking.GazeOutputFilterType.Standard;
-    public KeyCode setOutputFilterTypeKey = KeyCode.RightShift;
+    [FormerlySerializedAs("frequency")] [Header("Gaze data output frequency")]
+    public GazeOutputFrequency m_frequency;
 
-    [Header("Gaze data output frequency")]
-    public VarjoEyeTracking.GazeOutputFrequency frequency;
+    [FormerlySerializedAs("toggleGazeTarget")] [Header("Toggle gaze target visibility")]
+    public KeyCode m_toggleGazeTarget = KeyCode.Return;
 
-    [Header("Toggle gaze target visibility")]
-    public KeyCode toggleGazeTarget = KeyCode.Return;
+    [FormerlySerializedAs("checkGazeAllowed")] [Header("Debug Gaze")]
+    public KeyCode m_checkGazeAllowed = KeyCode.PageUp;
+    [FormerlySerializedAs("checkGazeCalibrated")] public KeyCode m_checkGazeCalibrated = KeyCode.PageDown;
 
-    [Header("Debug Gaze")]
-    public KeyCode checkGazeAllowed = KeyCode.PageUp;
-    public KeyCode checkGazeCalibrated = KeyCode.PageDown;
+    [FormerlySerializedAs("showFixationPoint")] [Header("Toggle fixation point indicator visibility")]
+    public bool m_showFixationPoint = true;
+    [FormerlySerializedAs("fixationPointTransform")] public Transform m_fixationPointTransform;
 
-    [Header("Toggle fixation point indicator visibility")]
-    public bool showFixationPoint = true;
-    public Transform fixationPointTransform;
-
-    [Header("Eyeball Transforms")]
-    public Transform leftEyeTransform;
+    [FormerlySerializedAs("leftEyeTransform")] [Header("Eyeball Transforms")]
+    public Transform m_leftEyeTransform;
     [SerializeField] private Vector3 m_leftEyeRotationOffset = new(0, 0, 84.354f); // SOSXR
-    public Transform rightEyeTransform;
-        
-    public Vector3 VarjoEye;
+    [FormerlySerializedAs("rightEyeTransform")] public Transform m_rightEyeTransform;
+
+    [FormerlySerializedAs("VarjoEye")] public Vector3 m_VarjoEye;
     [SerializeField] private Vector3 m_rightEyeRotationOffset = new(0, 0, 84.354f); // SOSXR
 
-    public Vector3 OffsettedEye;
+    [FormerlySerializedAs("OffsettedEye")] public Vector3 m_offsettedEye;
 
     [Tooltip("SOSXR: We don't want to set the localPosition of the eyes if it is in a model")]
     [SerializeField] private bool m_setEyePosition = false; // SOSXR
 
-    [Header("XR camera")]
-    public Camera xrCamera;
+    [FormerlySerializedAs("m_xrCamera")] [FormerlySerializedAs("xrCamera")] [Header("XR camera")]
+    public Camera m_XRCamera;
 
-    [Header("Gaze point indicator")]
-    public GameObject gazeTarget;
+    [FormerlySerializedAs("gazeTarget")] [Header("Gaze point indicator")]
+    public GameObject m_gazeTarget;
 
-    [Header("Gaze ray radius")]
-    public float gazeRadius = 0.01f;
+    [FormerlySerializedAs("gazeRadius")] [Header("Gaze ray radius")]
+    public float m_gazeRadius = 0.01f;
 
-    [Header("Gaze point distance if not hit anything")]
-    public float floatingGazeTargetDistance = 5f;
+    [FormerlySerializedAs("floatingGazeTargetDistance")] [Header("Gaze point distance if not hit anything")]
+    public float m_floatingGazeTargetDistance = 5f;
 
-    [Header("Gaze target offset towards viewer")]
-    public float targetOffset = 0.2f;
+    [FormerlySerializedAs("targetOffset")] [Header("Gaze target offset towards viewer")]
+    public float m_targetOffset = 0.2f;
 
-    [Header("Amount of force give to freerotating objects at point where user is looking")]
-    public float hitForce = 5f;
+    [FormerlySerializedAs("hitForce")] [Header("Amount of force give to freerotating objects at point where user is looking")]
+    public float m_hitForce = 5f;
     [SerializeField] private string m_freeRotatingTag = "FreeRotating";
 
-    [Header("Gaze data logging")]
-    public KeyCode loggingToggleKey = KeyCode.RightControl;
+    [FormerlySerializedAs("loggingToggleKey")] [Header("Gaze data logging")]
+    public KeyCode m_loggingToggleKey = KeyCode.RightControl;
 
-    [Header("Default path is Logs under application data path.")]
-    public bool useCustomLogPath = false;
-    public string customLogPath = "";
+    [FormerlySerializedAs("useCustomLogPath")] [Header("Default path is Logs under application data path.")]
+    public bool m_useCustomLogPath = false;
+    [FormerlySerializedAs("customLogPath")] public string m_customLogPath = "";
 
-    [Header("Print gaze data framerate while logging.")]
-    public bool printFramerate = false;
+    [FormerlySerializedAs("printFramerate")] [Header("Print gaze data framerate while logging.")]
+    public bool m_printFramerate = false;
 
-    private static readonly string[] ColumnNames = {"Frame", "CaptureTime", "LogTime", "HMDPosition", "HMDRotation", "GazeStatus", "CombinedGazeForward", "CombinedGazePosition", "InterPupillaryDistanceInMM", "LeftEyeStatus", "LeftEyeForward", "LeftEyePosition", "LeftPupilIrisDiameterRatio", "LeftPupilDiameterInMM", "LeftIrisDiameterInMM", "RightEyeStatus", "RightEyeForward", "RightEyePosition", "RightPupilIrisDiameterRatio", "RightPupilDiameterInMM", "RightIrisDiameterInMM", "FocusDistance", "FocusStability"};
+    private static readonly string[] _columnNames = {"Frame", "CaptureTime", "LogTime", "HMDPosition", "HMDRotation", "GazeStatus", "CombinedGazeForward", "CombinedGazePosition", "InterPupillaryDistanceInMM", "LeftEyeStatus", "LeftEyeForward", "LeftEyePosition", "LeftPupilIrisDiameterRatio", "LeftPupilDiameterInMM", "LeftIrisDiameterInMM", "RightEyeStatus", "RightEyeForward", "RightEyePosition", "RightPupilIrisDiameterRatio", "RightPupilDiameterInMM", "RightIrisDiameterInMM", "FocusDistance", "FocusStability"};
 
-    private readonly List<InputDevice> devices = new();
-    private List<VarjoEyeTracking.GazeData> dataSinceLastUpdate;
-    private InputDevice device;
-    private Vector3 direction;
-    private float distance;
-    private List<VarjoEyeTracking.EyeMeasurements> eyeMeasurementsSinceLastUpdate;
-    private Eyes eyes;
-    private Vector3 fixationPoint;
-    private VarjoEyeTracking.GazeData gazeData;
+    private readonly List<InputDevice> _devices = new();
+    private List<GazeData> _dataSinceLastUpdate;
+    private InputDevice _inputDevice;
+    private Vector3 _direction;
+    private float _distance;
+    private List<EyeMeasurements> _eyeMeasurementsSinceLastUpdate;
+    private Eyes _eyes;
+    private Vector3 _fixationPoint;
+    private GazeData _gazeData;
 
-    private int gazeDataCount = 0;
-    private float gazeTimer = 0f;
-    private RaycastHit hit;
-    private Vector3 leftEyePosition;
-    private Quaternion leftEyeRotation;
-    private bool logging = false;
-    private Vector3 rayOrigin;
-    private Vector3 rightEyePosition;
-    private Quaternion rightEyeRotation;
-    private StreamWriter writer = null;
-    private const string ValidString = "VALID";
-    private const string InvalidString = "INVALID";
+    private int _gazeDataCount = 0;
+    private float _gazeTimer = 0f;
+    private RaycastHit _hit;
+    private Vector3 _leftEyePosition;
+    private Quaternion _leftEyeRotation;
+    private bool _logging = false;
+    private Vector3 _rayOrigin;
+    private Vector3 _rightEyePosition;
+    private Quaternion _rightEyeRotation;
+    private StreamWriter _streamWriter = null;
+    private const string _ValidString = "VALID";
+    private const string _InvalidString = "INVALID";
 
 
     private void GetDevice()
     {
-        InputDevices.GetDevicesAtXRNode(XRNode.CenterEye, devices);
-        device = devices.FirstOrDefault();
+        InputDevices.GetDevicesAtXRNode(XRNode.CenterEye, _devices);
+        _inputDevice = _devices.FirstOrDefault();
     }
 
 
     private void OnEnable()
     {
-        if (!device.isValid)
+        if (!_inputDevice.isValid)
         {
             GetDevice();
         }
@@ -128,27 +128,27 @@ public class EyeTrackingExample : MonoBehaviour
 
     private void Start()
     {
-        VarjoEyeTracking.SetGazeOutputFrequency(frequency);
+        SetGazeOutputFrequency(m_frequency);
 
         //Hiding the gazetarget if gaze is not available or if the gaze calibration is not done
-        if (VarjoEyeTracking.IsGazeAllowed() && VarjoEyeTracking.IsGazeCalibrated())
+        if (IsGazeAllowed() && IsGazeCalibrated())
         {
-            gazeTarget.SetActive(true);
+            m_gazeTarget.SetActive(true);
         }
         else
         {
-            gazeTarget.SetActive(false);
+            m_gazeTarget.SetActive(false);
         }
 
-        if (fixationPointTransform != null)
+        if (m_fixationPointTransform != null)
         {
-            if (showFixationPoint)
+            if (m_showFixationPoint)
             {
-                fixationPointTransform.gameObject.SetActive(true);
+                m_fixationPointTransform.gameObject.SetActive(true);
             }
             else
             {
-                fixationPointTransform.gameObject.SetActive(false);
+                m_fixationPointTransform.gameObject.SetActive(false);
             }
         }
     }
@@ -156,56 +156,56 @@ public class EyeTrackingExample : MonoBehaviour
 
     private void Update()
     {
-        if (logging && printFramerate)
+        if (_logging && m_printFramerate)
         {
-            gazeTimer += Time.deltaTime;
+            _gazeTimer += Time.deltaTime;
 
-            if (gazeTimer >= 1.0f)
+            if (_gazeTimer >= 1.0f)
             {
-                Debug.Log("Gaze data rows per second: " + gazeDataCount);
-                gazeDataCount = 0;
-                gazeTimer = 0f;
+                Debug.Log("Gaze data rows per second: " + _gazeDataCount);
+                _gazeDataCount = 0;
+                _gazeTimer = 0f;
             }
         }
 
         // Request gaze calibration
-        if (Input.GetKeyDown(calibrationRequestKey))
+        if (Input.GetKeyDown(m_calibrationRequestKey))
         {
-            VarjoEyeTracking.RequestGazeCalibration(gazeCalibrationMode);
+            RequestGazeCalibration(m_gazeCalibrationMode);
         }
 
         // Set output filter type
-        if (Input.GetKeyDown(setOutputFilterTypeKey))
+        if (Input.GetKeyDown(m_setOutputFilterTypeKey))
         {
-            VarjoEyeTracking.SetGazeOutputFilterType(gazeOutputFilterType);
-            Debug.Log("Gaze output filter type is now: " + VarjoEyeTracking.GetGazeOutputFilterType());
+            SetGazeOutputFilterType(m_gazeOutputFilterType);
+            Debug.Log("Gaze output filter type is now: " + GetGazeOutputFilterType());
         }
 
         // Check if gaze is allowed
-        if (Input.GetKeyDown(checkGazeAllowed))
+        if (Input.GetKeyDown(m_checkGazeAllowed))
         {
-            Debug.Log("Gaze allowed: " + VarjoEyeTracking.IsGazeAllowed());
+            Debug.Log("Gaze allowed: " + IsGazeAllowed());
         }
 
         // Check if gaze is calibrated
-        if (Input.GetKeyDown(checkGazeCalibrated))
+        if (Input.GetKeyDown(m_checkGazeCalibrated))
         {
-            Debug.Log("Gaze calibrated: " + VarjoEyeTracking.IsGazeCalibrated());
+            Debug.Log("Gaze calibrated: " + IsGazeCalibrated());
         }
 
         // Toggle gaze target visibility
-        if (Input.GetKeyDown(toggleGazeTarget))
+        if (Input.GetKeyDown(m_toggleGazeTarget))
         {
-            gazeTarget.GetComponentInChildren<MeshRenderer>().enabled = !gazeTarget.GetComponentInChildren<MeshRenderer>().enabled;
+            m_gazeTarget.GetComponentInChildren<MeshRenderer>().enabled = !m_gazeTarget.GetComponentInChildren<MeshRenderer>().enabled;
         }
 
         // GetEyeData(); Moved to LateUpdate
 
         // SphereCast(); Moved to LateUpdate
 
-        if (Input.GetKeyDown(loggingToggleKey))
+        if (Input.GetKeyDown(m_loggingToggleKey))
         {
-            if (!logging)
+            if (!_logging)
             {
                 StartLogging();
             }
@@ -217,25 +217,25 @@ public class EyeTrackingExample : MonoBehaviour
             return;
         }
 
-        if (logging)
+        if (_logging)
         {
-            var dataCount = VarjoEyeTracking.GetGazeList(out dataSinceLastUpdate, out eyeMeasurementsSinceLastUpdate);
+            var dataCount = GetGazeList(out _dataSinceLastUpdate, out _eyeMeasurementsSinceLastUpdate);
 
-            if (printFramerate)
+            if (m_printFramerate)
             {
-                gazeDataCount += dataCount;
+                _gazeDataCount += dataCount;
             }
 
             for (var i = 0; i < dataCount; i++)
             {
-                LogGazeData(dataSinceLastUpdate[i], eyeMeasurementsSinceLastUpdate[i]);
+                LogGazeData(_dataSinceLastUpdate[i], _eyeMeasurementsSinceLastUpdate[i]);
             }
         }
 
         if (Input.GetKeyDown(KeyCode.Keypad9))
         {
-            Debug.Log(VarjoEye);
-            Debug.Log(OffsettedEye);
+            Debug.Log(m_VarjoEye);
+            Debug.Log(m_offsettedEye);
         }
     }
 
@@ -251,98 +251,99 @@ public class EyeTrackingExample : MonoBehaviour
     private void GetEyeData()
     {
         // Get gaze data if gaze is allowed and calibrated
-        if (VarjoEyeTracking.IsGazeAllowed() && VarjoEyeTracking.IsGazeCalibrated())
+        if (IsGazeAllowed() && IsGazeCalibrated())
         {
             //Get device if not valid
-            if (!device.isValid)
+            if (!_inputDevice.isValid)
             {
                 GetDevice();
             }
 
             // Show gaze target
-            gazeTarget.SetActive(true);
+            m_gazeTarget.SetActive(true);
 
-            if (gazeDataSource == GazeDataSource.InputSubsystem)
+            if (m_gazeDataSource == GazeDataSource.InputSubsystem)
             {
                 // Get data for eye positions, rotations and the fixation point
-                if (device.TryGetFeatureValue(CommonUsages.eyesData, out eyes))
+                if (_inputDevice.TryGetFeatureValue(CommonUsages.eyesData, out _eyes))
                 {
-                    if (m_setEyePosition)  // SOSXR: We don't want to set the localPosition of the eyes if it is in a model
+                    if (m_setEyePosition) // SOSXR: We don't want to set the localPosition of the eyes if it is in a model
                     {
-                        if (eyes.TryGetLeftEyePosition(out leftEyePosition))
+                        if (_eyes.TryGetLeftEyePosition(out _leftEyePosition))
                         {
-                            leftEyeTransform.localPosition = leftEyePosition;
+                            m_leftEyeTransform.localPosition = _leftEyePosition;
                         }
-                        if (eyes.TryGetRightEyePosition(out rightEyePosition))
+
+                        if (_eyes.TryGetRightEyePosition(out _rightEyePosition))
                         {
-                            rightEyeTransform.localPosition = rightEyePosition;
+                            m_rightEyeTransform.localPosition = _rightEyePosition;
                         }
                     }
 
 
-                    if (eyes.TryGetLeftEyeRotation(out leftEyeRotation))
+                    if (_eyes.TryGetLeftEyeRotation(out _leftEyeRotation))
                     {
-                        leftEyeTransform.localRotation = leftEyeRotation;
+                        m_leftEyeTransform.localRotation = _leftEyeRotation;
                         var offset = Quaternion.Euler(m_leftEyeRotationOffset);
-                        leftEyeTransform.localRotation *= offset;
+                        m_leftEyeTransform.localRotation *= offset;
                     }
 
-                    if (eyes.TryGetRightEyeRotation(out rightEyeRotation))
+                    if (_eyes.TryGetRightEyeRotation(out _rightEyeRotation))
                     {
-                        rightEyeTransform.localRotation = rightEyeRotation;
-                        VarjoEye = rightEyeRotation.eulerAngles;
+                        m_rightEyeTransform.localRotation = _rightEyeRotation;
+                        m_VarjoEye = _rightEyeRotation.eulerAngles;
                         var offset = Quaternion.Euler(m_rightEyeRotationOffset);
-                        rightEyeTransform.localRotation *= offset;
-                        OffsettedEye = rightEyeTransform.localRotation.eulerAngles;
+                        m_rightEyeTransform.localRotation *= offset;
+                        m_offsettedEye = m_rightEyeTransform.localRotation.eulerAngles;
                         // Debug.log(rightEyeTransform.localRotation.eulerAngles); // print eyerotation value after offset
                     }
 
-                    if (eyes.TryGetFixationPoint(out fixationPoint))
+                    if (_eyes.TryGetFixationPoint(out _fixationPoint))
                     {
-                        if (fixationPointTransform != null)
+                        if (m_fixationPointTransform != null)
                         {
-                            fixationPointTransform.localPosition = fixationPoint;
+                            m_fixationPointTransform.localPosition = _fixationPoint;
                         }
                     }
                 }
 
                 // Set raycast origin point to VR camera position
-                rayOrigin = xrCamera.transform.position;
+                _rayOrigin = m_XRCamera.transform.position;
 
                 // Direction from VR camera towards fixation point
-                direction = (fixationPointTransform.position - xrCamera.transform.position).normalized;
+                _direction = (m_fixationPointTransform.position - m_XRCamera.transform.position).normalized;
             }
             else
             {
-                gazeData = VarjoEyeTracking.GetGaze();
+                _gazeData = GetGaze();
 
-                if (gazeData.status != VarjoEyeTracking.GazeStatus.Invalid)
+                if (_gazeData.status != GazeStatus.Invalid)
                 {
                     // GazeRay vectors are relative to the HMD pose so they need to be transformed to world space
-                    if (gazeData.leftStatus != VarjoEyeTracking.GazeEyeStatus.Invalid)
+                    if (_gazeData.leftStatus != GazeEyeStatus.Invalid)
                     {
                         // leftEyeTransform.position = xrCamera.transform.TransformPoint(gazeData.left.origin);
-                        leftEyeTransform.rotation = Quaternion.LookRotation(xrCamera.transform.TransformDirection(gazeData.left.forward));
+                        m_leftEyeTransform.rotation = Quaternion.LookRotation(m_XRCamera.transform.TransformDirection(_gazeData.left.forward));
                         var offset = Quaternion.Euler(m_leftEyeRotationOffset);
-                        leftEyeTransform.localRotation *= offset;
+                        m_leftEyeTransform.localRotation *= offset;
                     }
 
-                    if (gazeData.rightStatus != VarjoEyeTracking.GazeEyeStatus.Invalid)
+                    if (_gazeData.rightStatus != GazeEyeStatus.Invalid)
                     {
                         // rightEyeTransform.position = xrCamera.transform.TransformPoint(gazeData.right.origin);
-                        rightEyeTransform.rotation = Quaternion.LookRotation(xrCamera.transform.TransformDirection(gazeData.right.forward));
+                        m_rightEyeTransform.rotation = Quaternion.LookRotation(m_XRCamera.transform.TransformDirection(_gazeData.right.forward));
                         var offset = Quaternion.Euler(m_rightEyeRotationOffset);
-                        rightEyeTransform.localRotation *= offset;
+                        m_rightEyeTransform.localRotation *= offset;
                     }
 
                     // Set gaze origin as raycast origin
-                    rayOrigin = xrCamera.transform.TransformPoint(gazeData.gaze.origin);
+                    _rayOrigin = m_XRCamera.transform.TransformPoint(_gazeData.gaze.origin);
 
                     // Set gaze direction as raycast direction
-                    direction = xrCamera.transform.TransformDirection(gazeData.gaze.forward);
+                    _direction = m_XRCamera.transform.TransformDirection(_gazeData.gaze.forward);
 
                     // Fixation point can be calculated using ray origin, direction and focus distance
-                    fixationPointTransform.position = rayOrigin + direction * gazeData.focusDistance;
+                    m_fixationPointTransform.position = _rayOrigin + _direction * _gazeData.focusDistance;
                 }
             }
         }
@@ -352,21 +353,21 @@ public class EyeTrackingExample : MonoBehaviour
     private void SphereCast()
     {
         // Raycast to world from VR Camera position towards fixation point
-        if (Physics.SphereCast(rayOrigin, gazeRadius, direction, out hit))
+        if (Physics.SphereCast(_rayOrigin, m_gazeRadius, _direction, out _hit))
         {
             // Put target on gaze raycast position with offset towards user
-            gazeTarget.transform.position = hit.point - direction * targetOffset;
+            m_gazeTarget.transform.position = _hit.point - _direction * m_targetOffset;
 
             // Make gaze target point towards user
-            gazeTarget.transform.LookAt(rayOrigin, Vector3.up);
+            m_gazeTarget.transform.LookAt(_rayOrigin, Vector3.up);
 
             // Scale gazetarget with distance so it appears to be always same size
-            distance = hit.distance;
-            gazeTarget.transform.localScale = Vector3.one * distance;
+            _distance = _hit.distance;
+            m_gazeTarget.transform.localScale = Vector3.one * _distance;
 
             // Prefer layers or tags to identify looked objects in your application
             // This is done here using GetComponent for the sake of clarity as an example
-            var rotateWithGaze = hit.collider.gameObject.GetComponent<RotateWithGaze>();
+            var rotateWithGaze = _hit.collider.gameObject.GetComponent<RotateWithGaze>();
 
             if (rotateWithGaze != null)
             {
@@ -374,7 +375,7 @@ public class EyeTrackingExample : MonoBehaviour
             }
 
             // Alternative way to check if you hit object with tag
-            if (hit.transform.CompareTag(m_freeRotatingTag))
+            if (_hit.transform.CompareTag(m_freeRotatingTag))
             {
                 AddForceAtHitPosition();
             }
@@ -382,9 +383,9 @@ public class EyeTrackingExample : MonoBehaviour
         else
         {
             // If gaze ray didn't hit anything, the gaze target is shown at fixed distance
-            gazeTarget.transform.position = rayOrigin + direction * floatingGazeTargetDistance;
-            gazeTarget.transform.LookAt(rayOrigin, Vector3.up);
-            gazeTarget.transform.localScale = Vector3.one * floatingGazeTargetDistance;
+            m_gazeTarget.transform.position = _rayOrigin + _direction * m_floatingGazeTargetDistance;
+            m_gazeTarget.transform.LookAt(_rayOrigin, Vector3.up);
+            m_gazeTarget.transform.localScale = Vector3.one * m_floatingGazeTargetDistance;
         }
     }
 
@@ -392,16 +393,16 @@ public class EyeTrackingExample : MonoBehaviour
     private void AddForceAtHitPosition()
     {
         //Get Rigidbody form hit object and add force on hit position
-        var rb = hit.rigidbody;
+        var rb = _hit.rigidbody;
 
         if (rb != null)
         {
-            rb.AddForceAtPosition(direction * hitForce, hit.point, ForceMode.Force);
+            rb.AddForceAtPosition(_direction * m_hitForce, _hit.point, ForceMode.Force);
         }
     }
 
 
-    private void LogGazeData(VarjoEyeTracking.GazeData data, VarjoEyeTracking.EyeMeasurements eyeMeasurements)
+    private void LogGazeData(GazeData data, EyeMeasurements eyeMeasurements)
     {
         var logData = new string[23];
 
@@ -415,12 +416,12 @@ public class EyeTrackingExample : MonoBehaviour
         logData[2] = (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond).ToString();
 
         // HMD
-        logData[3] = xrCamera.transform.localPosition.ToString("F3");
-        logData[4] = xrCamera.transform.localRotation.ToString("F3");
+        logData[3] = m_XRCamera.transform.localPosition.ToString("F3");
+        logData[4] = m_XRCamera.transform.localRotation.ToString("F3");
 
         // Combined gaze
-        var invalid = data.status == VarjoEyeTracking.GazeStatus.Invalid;
-        logData[5] = invalid ? InvalidString : ValidString;
+        var invalid = data.status == GazeStatus.Invalid;
+        logData[5] = invalid ? _InvalidString : _ValidString;
         logData[6] = invalid ? "" : data.gaze.forward.ToString("F3");
         logData[7] = invalid ? "" : data.gaze.origin.ToString("F3");
 
@@ -428,8 +429,8 @@ public class EyeTrackingExample : MonoBehaviour
         logData[8] = invalid ? "" : eyeMeasurements.interPupillaryDistanceInMM.ToString("F3");
 
         // Left eye
-        var leftInvalid = data.leftStatus == VarjoEyeTracking.GazeEyeStatus.Invalid;
-        logData[9] = leftInvalid ? InvalidString : ValidString;
+        var leftInvalid = data.leftStatus == GazeEyeStatus.Invalid;
+        logData[9] = leftInvalid ? _InvalidString : _ValidString;
         logData[10] = leftInvalid ? "" : data.left.forward.ToString("F3");
         logData[11] = leftInvalid ? "" : data.left.origin.ToString("F3");
         logData[12] = leftInvalid ? "" : eyeMeasurements.leftPupilIrisDiameterRatio.ToString("F3");
@@ -437,8 +438,8 @@ public class EyeTrackingExample : MonoBehaviour
         logData[14] = leftInvalid ? "" : eyeMeasurements.leftIrisDiameterInMM.ToString("F3");
 
         // Right eye
-        var rightInvalid = data.rightStatus == VarjoEyeTracking.GazeEyeStatus.Invalid;
-        logData[15] = rightInvalid ? InvalidString : ValidString;
+        var rightInvalid = data.rightStatus == GazeEyeStatus.Invalid;
+        logData[15] = rightInvalid ? _InvalidString : _ValidString;
         logData[16] = rightInvalid ? "" : data.right.forward.ToString("F3");
         logData[17] = rightInvalid ? "" : data.right.origin.ToString("F3");
         logData[18] = rightInvalid ? "" : eyeMeasurements.rightPupilIrisDiameterRatio.ToString("F3");
@@ -456,7 +457,7 @@ public class EyeTrackingExample : MonoBehaviour
     // Write given values in the log file
     private void Log(string[] values)
     {
-        if (!logging || writer == null)
+        if (!_logging || _streamWriter == null)
         {
             return;
         }
@@ -469,50 +470,50 @@ public class EyeTrackingExample : MonoBehaviour
             line += values[i] + (i == values.Length - 1 ? "" : ";"); // Do not add semicolon to last data string
         }
 
-        writer.WriteLine(line);
+        _streamWriter.WriteLine(line);
     }
 
 
     public void StartLogging()
     {
-        if (logging)
+        if (_logging)
         {
             Debug.LogWarning("Logging was on when StartLogging was called. No new log was started.");
 
             return;
         }
 
-        logging = true;
+        _logging = true;
 
-        var logPath = useCustomLogPath ? customLogPath : Application.dataPath + "/Logs/";
+        var logPath = m_useCustomLogPath ? m_customLogPath : Application.dataPath + "/Logs/";
         Directory.CreateDirectory(logPath);
 
         var now = DateTime.Now;
         var fileName = $"{now.Year}-{now.Month:00}-{now.Day:00}-{now.Hour:00}-{now.Minute:00}";
 
         var path = logPath + fileName + ".csv";
-        writer = new StreamWriter(path);
+        _streamWriter = new StreamWriter(path);
 
-        Log(ColumnNames);
+        Log(_columnNames);
         Debug.Log("Log file started at: " + path);
     }
 
 
     private void StopLogging()
     {
-        if (!logging)
+        if (!_logging)
         {
             return;
         }
 
-        if (writer != null)
+        if (_streamWriter != null)
         {
-            writer.Flush();
-            writer.Close();
-            writer = null;
+            _streamWriter.Flush();
+            _streamWriter.Close();
+            _streamWriter = null;
         }
 
-        logging = false;
+        _logging = false;
         Debug.Log("Logging ended");
     }
 

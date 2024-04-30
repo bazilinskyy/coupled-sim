@@ -4,13 +4,16 @@ using UnityEngine.XR;
 
 public class CameraCounter : MonoBehaviour
 {
+    [SerializeField] private KeyCode m_recenterKey = KeyCode.Alpha0;
     [SerializeField] private bool m_allowRecentering = false;
 
     private Transform _childCamera;
+    private XRInputSubsystem _xrInputSubsystem;
 
 
     private void Awake()
     {
+        _xrInputSubsystem = new XRInputSubsystem();
         _childCamera = transform.GetChild(0);
     }
 
@@ -21,10 +24,10 @@ public class CameraCounter : MonoBehaviour
         {
             return;
         }
-        
-        if (Input.GetKeyDown(KeyCode.R))
+
+        if (Input.GetKeyDown(m_recenterKey))
         {
-            InputTracking.Recenter();
+            _xrInputSubsystem.TryRecenter();
         }
     }
 

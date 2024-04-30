@@ -4,8 +4,8 @@
 [RequireComponent(typeof(EyeTrackingExample))]
 public class EyeProviderFromTag : MonoBehaviour
 {
-    [TagSelector] [SerializeField] private string m_leftEyeTag;
-    [TagSelector] [SerializeField] private string m_rightEyeTag;
+    [TagSelector] [SerializeField] private string m_leftEyeTag = "Eye_Left";
+    [TagSelector] [SerializeField] private string m_rightEyeTag = "Eye_Right";
 
     private EyeTrackingExample _eyeTrackingExample;
 
@@ -25,20 +25,22 @@ public class EyeProviderFromTag : MonoBehaviour
 
     private void FindEyes()
     {
-        if (_eyeTrackingExample.leftEyeTransform == null || _eyeTrackingExample.rightEyeTransform == null)
+        if (_eyeTrackingExample.m_leftEyeTransform == null || _eyeTrackingExample.m_rightEyeTransform == null)
         {
             Debug.Log("SOSXR: Try to find transforms via tags");
+
             if (transform.root.FindChildByTag(m_leftEyeTag) != null)
             {
-                _eyeTrackingExample.leftEyeTransform = transform.root.FindChildByTag(m_leftEyeTag);
+                _eyeTrackingExample.m_leftEyeTransform = transform.root.FindChildByTag(m_leftEyeTag);
             }
+
             if (transform.root.FindChildByTag(m_rightEyeTag) != null)
             {
-                _eyeTrackingExample.rightEyeTransform = transform.root.FindChildByTag(m_rightEyeTag);
+                _eyeTrackingExample.m_rightEyeTransform = transform.root.FindChildByTag(m_rightEyeTag);
             }
         }
 
-        if (_eyeTrackingExample.leftEyeTransform != null && _eyeTrackingExample.rightEyeTransform != null)
+        if (_eyeTrackingExample.m_leftEyeTransform != null && _eyeTrackingExample.m_rightEyeTransform != null)
         {
             enabled = false;
         }

@@ -1,35 +1,51 @@
 ﻿using UnityEngine;
 using UnityEngine.XR;
-using System.Collections;
+
 
 // Script obtained from MVN to reset the camera of the Oculus onto the head of the MVN Avatar.
 // Used in combination with AnchorController.cs
 
+
 public class CameraController : MonoBehaviour
 {
-    Transform
-        childCamera;
+    [SerializeField] private KeyCode m_recenterKey = KeyCode.Alpha0;
+    [SerializeField] private bool m_allowRecentering = false;
 
-    // Use this for initialization
-    void Start()
+    private Transform _childCamera;
+    private XRInputSubsystem _xrInputSubsystem;
+
+
+    private void Awake()
     {
-        childCamera = transform.parent;
+        _xrInputSubsystem = new XRInputSubsystem();
     }
+
+
+    private void Start()
+    {
+        _childCamera = transform.parent;
+    }
+
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.R))
+        if (!m_allowRecentering)
         {
-            UnityEngine.XR.InputTracking.Recenter();
+            return;
+        }
+
+        if (Input.GetKeyDown(m_recenterKey))
+        {
+            _xrInputSubsystem.TryRecenter();
         }
     }
-    // Update is called once per frame
-    void LateUpdate()
+
+
+    private void LateUpdate()
     {
-        Vector3 invertedPosition = -childCamera.localPosition;
-        Quaternion invertedRotation = Quaternion.Inverse(childCamera.localRotation);
+        var invertedPosition = -_childCamera.localPosition;
+        var invertedRotation = Quaternion.Inverse(_childCamera.localRotation);
         transform.localPosition = invertedPosition;
         transform.localRotation = invertedRotation;
-
     }
 }
