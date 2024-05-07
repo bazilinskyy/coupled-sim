@@ -42,9 +42,18 @@
                     "initialStateCheck": true
                 },
                 {
-                    "name": "Left Trigger",
+                    "name": "Left Trigger Pressed",
                     "type": "Button",
                     "id": "3a5eb397-1214-4ee3-8c6a-ff8bfae15b68",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Left Trigger Released",
+                    "type": "Button",
+                    "id": "56dea2c6-6ec8-41b9-b735-06e6d00c49e6",
                     "expectedControlType": "Button",
                     "processors": "",
                     "interactions": "",
@@ -598,10 +607,10 @@
                     "name": "",
                     "id": "2fa557c6-5c80-4d68-a19c-a72fdbe9bb98",
                     "path": "<XRController>{LeftHand}/triggerPressed",
-                    "interactions": "",
+                    "interactions": "Press",
                     "processors": "",
                     "groups": "XR Device",
-                    "action": "Left Trigger",
+                    "action": "Left Trigger Pressed",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -976,6 +985,17 @@
                     "processors": "",
                     "groups": "XR Device",
                     "action": "Right Trigger Released",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "013a97fa-7100-4e0f-890d-c7582ec7e622",
+                    "path": "<XRController>{LeftHand}/triggerPressed",
+                    "interactions": "Press(behavior=1)",
+                    "processors": "",
+                    "groups": "XR Device",
+                    "action": "Left Trigger Released",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

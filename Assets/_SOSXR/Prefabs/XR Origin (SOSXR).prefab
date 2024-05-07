@@ -829,7 +829,7 @@ MonoBehaviour:
   m_radius: 0.1
   m_color:
     serializedVersion: 2
-    rgba: 4278849552
+    rgba: 4278848010
 --- !u!1 &5154358797637920075
 GameObject:
   m_ObjectHideFlags: 0
@@ -1770,7 +1770,7 @@ MonoBehaviour:
   m_radius: 0.1
   m_color:
     serializedVersion: 2
-    rgba: 4292601562
+    rgba: 4278520836
 --- !u!1 &6300200497835139431
 GameObject:
   m_ObjectHideFlags: 0
@@ -1783,6 +1783,7 @@ GameObject:
   - component: {fileID: 2755355045059380279}
   - component: {fileID: 1230385652278433199}
   - component: {fileID: -2782599296692069380}
+  - component: {fileID: 1909199673429246057}
   m_Layer: 0
   m_Name: XR Origin (SOSXR)
   m_TagString: Untagged
@@ -1851,3 +1852,38 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_recenterToTag: Target_XROrigin
   m_recenterKey: 256
+--- !u!114 &1909199673429246057
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6300200497835139431}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e0d2ea648eb94807aa655c56aadd515c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  RatingHand: 0
+  m_leftButtonPressRef: {fileID: -2946921572223811912, guid: e83993518ed9ae54188f0ecaad73bd34,
+    type: 3}
+  m_leftButtonReleaseRef: {fileID: -103791890421675425, guid: e83993518ed9ae54188f0ecaad73bd34,
+    type: 3}
+  m_leftRotateRef: {fileID: -8608096329379983506, guid: e83993518ed9ae54188f0ecaad73bd34,
+    type: 3}
+  m_rightButtonPressRef: {fileID: -1336355139137886794, guid: e83993518ed9ae54188f0ecaad73bd34,
+    type: 3}
+  m_rightButtonReleaseRef: {fileID: 7862927886206012239, guid: e83993518ed9ae54188f0ecaad73bd34,
+    type: 3}
+  m_rightRotateRef: {fileID: 5569717180345140897, guid: e83993518ed9ae54188f0ecaad73bd34,
+    type: 3}
+  m_reminderHapticsInterval: 30
+  m_reminderHapticsDuration: 2.5
+  m_reminderHapticsIntensity: 0.5
+  m_activeHapticsInterval: 0.5
+  m_activeHapticsDuration: 0.15
+  m_activeHapticsIntensity: 0.25
+  _rotation: {x: 0, y: 0, z: 0}
+  _rawZRotation: 0
+  _recalculatedZRotation: 0
+  _allStoredValues: []

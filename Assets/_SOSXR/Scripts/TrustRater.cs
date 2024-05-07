@@ -9,21 +9,33 @@ using static UnityEngine.XR.InputDevices;
 using InputDevice = UnityEngine.XR.InputDevice;
 
 
+public enum Handedness
+{
+    Right,
+    Left
+}
+
+
 public class TrustRater : MonoBehaviour
 {
-    [Header("Handedness && Input Action References")]
-    [Tooltip("Select either Left or Right")]
-    [SerializeField] private InputDeviceCharacteristics m_handedness;
-    [Tooltip("Would be handy if you actually use these references on the same chirality as we have the handedness")]
-    [SerializeField] private InputActionReference m_buttonPressRef;
-    [SerializeField] private InputActionReference m_buttonReleaseRef;
-    [SerializeField] private InputActionReference m_rotateRef;
+    [Tooltip("With what hand should we do the rating?")]
+    public Handedness RatingHand = Handedness.Right;
+
+    [Header("Input References: Left")]
+    [SerializeField] private InputActionReference m_leftButtonPressRef;
+    [SerializeField] private InputActionReference m_leftButtonReleaseRef;
+    [SerializeField] private InputActionReference m_leftRotateRef;
+
+    [Header("Input References: Right")]
+    [SerializeField] private InputActionReference m_rightButtonPressRef;
+    [SerializeField] private InputActionReference m_rightButtonReleaseRef;
+    [SerializeField] private InputActionReference m_rightRotateRef;
 
     [Header("Reminder Haptics")]
     [Tooltip("Seconds")]
     [SerializeField] [Range(10, 120)] private int m_reminderHapticsInterval = 30;
     [Tooltip("Seconds")]
-    [SerializeField] [Range(0.1f, 2f)] private float m_reminderHapticsDuration = 2.5f;
+    [SerializeField] [Range(0.1f, 5f)] private float m_reminderHapticsDuration = 2.5f;
     [Tooltip("Amplitude")]
     [SerializeField] [Range(0.1f, 2f)] private float m_reminderHapticsIntensity = 0.5f;
 
@@ -31,64 +43,76 @@ public class TrustRater : MonoBehaviour
     [Tooltip("Seconds")]
     [SerializeField] [Range(0.1f, 1f)] private float m_activeHapticsInterval = 0.5f;
     [Tooltip("Seconds")]
-    [SerializeField] [Range(0.1f, 2f)] private float m_activeHapticsDuration = 0.15f;
+    [SerializeField] [Range(0.1f, 2.5f)] private float m_activeHapticsDuration = 0.15f;
     [Tooltip("Amplitude")]
     [SerializeField] [Range(0.1f, 2f)] private float m_activeHapticsIntensity = 0.25f;
 
     [Header("Active Values")]
-    [SerializeField] [DisableEditing] private bool _measureRotation;
     [SerializeField] [DisableEditing] private Vector3 _rotation;
-    [SerializeField] [DisableEditing] private float _zRot;
+    [SerializeField] [DisableEditing] private float _rawZRotation;
 
     [Header("Storing / Stored Values")]
-    [SerializeField] [DisableEditing] private bool _valueHasBeenStored;
-    [SerializeField] [DisableEditing] private List<float> _storedValues = new();
+    [Tooltip("We're interested in going from 0-180. We do this by taking 360-raw rotation if that raw rotation was more than 180 to begin with.")]
+    [SerializeField] [DisableEditing] private float _recalculatedZRotation;
+    [SerializeField] [DisableEditing] private List<float> _allStoredValues = new();
 
     private readonly List<InputDevice> _devices = new();
-    private Coroutine _hapticsReminder;
-    private Coroutine _hapticsActive;
+
+    private InputAction _buttonPressAction;
+    private InputAction _buttonReleaseAction;
+    private InputAction _rotationAction;
+
+    private Coroutine _hapticsReminderCR;
+    private Coroutine _hapticsActiveCR;
+    private Coroutine _measureRotationCR;
 
 
-    private void OnValidate()
+    private void Awake()
     {
-        if (m_handedness is InputDeviceCharacteristics.Left or InputDeviceCharacteristics.Right)
+        var characteristics = InputDeviceCharacteristics.Controller;
+
+        if (RatingHand == Handedness.Right)
         {
-            // This is what it should be. So no action needed here. 
+            _buttonPressAction = m_rightButtonPressRef.action;
+            _buttonReleaseAction = m_rightButtonReleaseRef.action;
+            _rotationAction = m_rightRotateRef.action;
+
+            characteristics &= InputDeviceCharacteristics.Right; // Is this correct? https://docs.unity3d.com/ScriptReference/XR.InputDevices.GetDevicesWithCharacteristics.html
         }
-        else if (m_handedness == InputDeviceCharacteristics.None)
+        else if (RatingHand == Handedness.Left)
         {
-            Debug.Log("Handedness needs to be something, cannot be None. Needs to be Left XOR Right.");
+            _buttonPressAction = m_leftButtonPressRef.action;
+            _buttonReleaseAction = m_leftButtonReleaseRef.action;
+            _rotationAction = m_leftRotateRef.action;
+
+            characteristics &= InputDeviceCharacteristics.Left; // Is this correct? https://docs.unity3d.com/ScriptReference/XR.InputDevices.GetDevicesWithCharacteristics.html 
         }
-        else
-        {
-            Debug.LogWarning("Handedness needs to be either Left XOR Right. Not both, and not something else");
-        }
+
+        GetDevicesWithCharacteristics(characteristics, _devices);
+
+        Debug.LogFormat("We now have {0} devices that match the characteristics", _devices.Count);
     }
 
 
     private void Start()
     {
-        var characteristics = InputDeviceCharacteristics.Controller & m_handedness; // Is this correct? https://docs.unity3d.com/ScriptReference/XR.InputDevices.GetDevicesWithCharacteristics.html
-        GetDevicesWithCharacteristics(characteristics, _devices);
-        Debug.LogFormat("We now have {0} devices that match the characteristics", _devices.Count);
-
-        if (_hapticsReminder != null)
+        if (_hapticsReminderCR != null)
         {
-            StopCoroutine(_hapticsReminder);
+            StopCoroutine(_hapticsReminderCR);
         }
 
-        _hapticsReminder = StartCoroutine(HapticsCR(m_reminderHapticsInterval, m_reminderHapticsIntensity, m_reminderHapticsDuration));
+        _hapticsReminderCR = StartCoroutine(HapticsCR(m_reminderHapticsInterval, m_reminderHapticsIntensity, m_reminderHapticsDuration));
     }
 
 
     private void OnEnable()
     {
-        m_buttonPressRef.action.performed += ButtonPressed;
-        m_buttonReleaseRef.action.performed += ButtonReleased;
+        _buttonPressAction.performed += ButtonPressed;
+        _buttonReleaseAction.performed += ButtonReleased;
 
-        m_buttonPressRef.action.Enable();
-        m_buttonReleaseRef.action.Enable();
-        m_rotateRef.action.Enable();
+        _buttonPressAction.Enable();
+        _buttonReleaseAction.Enable();
+        _rotationAction.Enable();
     }
 
 
@@ -119,58 +143,37 @@ public class TrustRater : MonoBehaviour
 
     private void ButtonPressed(CallbackContext context)
     {
-        _measureRotation = true;
+        Debug.Log("You pressed the button. Well done.");
 
-        if (_hapticsActive != null)
+        if (_measureRotationCR != null)
         {
-            StopCoroutine(_hapticsActive);
+            Debug.LogWarning("The measure CR wasn't null when we wanted to start a new measurement, this doesn't seem to be ok?");
+            StopCoroutine(_measureRotationCR);
         }
 
-        _hapticsActive = StartCoroutine(HapticsCR(m_activeHapticsInterval, m_activeHapticsIntensity, m_activeHapticsDuration));
+        _measureRotationCR = StartCoroutine(MeasureRotationCR());
 
-        Debug.Log("Pressed the button");
+        if (_hapticsActiveCR != null)
+        {
+            Debug.LogWarning("The active haptics coroutine wasn't null when we pressed the (trigger) button anew, this doesn't seem to be ok?");
+            StopCoroutine(_hapticsActiveCR);
+        }
+
+        _hapticsActiveCR = StartCoroutine(HapticsCR(m_activeHapticsInterval, m_activeHapticsIntensity, m_activeHapticsDuration));
     }
 
 
-    private void Update()
+    private IEnumerator MeasureRotationCR()
     {
-        if (_measureRotation)
+        _recalculatedZRotation = 0f;
+
+        for (;;)
         {
-            _rotation = m_rotateRef.action.ReadValue<Quaternion>().eulerAngles;
+            _rotation = _rotationAction.ReadValue<Quaternion>().eulerAngles;
 
-            _zRot = _rotation.z;
+            _rawZRotation = _rotation.z;
 
-            _valueHasBeenStored = false;
-        }
-        else
-        {
-            if (_valueHasBeenStored)
-            {
-                return;
-            }
-
-            var temp = _zRot;
-
-            if (temp > 180)
-            {
-                temp = 360 - temp;
-                Debug.LogFormat("Remapped from {0} to {1}", _zRot, temp);
-            }
-
-            _zRot = temp;
-
-            if (_zRot is < 0 or > 180)
-            {
-                Debug.LogWarningFormat("Measured rotation is {0}, which is outside of the expected range. Something seems wrong?", _zRot);
-            }
-
-            _storedValues.Add(_zRot);
-            Debug.LogFormat("Stored value is {0}. We can send all kinds of actions and events from here", _storedValues[^1]);
-
-            _rotation = Vector3.zero; // Resetting values
-            _zRot = 0f;
-
-            _valueHasBeenStored = true; // Making sure this bit only happens once every time we store a value
+            yield return null;
         }
     }
 
@@ -178,28 +181,82 @@ public class TrustRater : MonoBehaviour
     private void ButtonReleased(CallbackContext context)
     {
         Debug.Log("Released the button");
-        _measureRotation = false;
 
-        if (_hapticsActive != null)
+        if (_hapticsActiveCR != null)
         {
-            StopCoroutine(_hapticsActive);
+            StopCoroutine(_hapticsActiveCR);
         }
         else
         {
             Debug.LogWarning("The active haptics were already turned off when I released the button, that doesn't seem right.");
         }
+
+        if (_measureRotationCR != null)
+        {
+            StopCoroutine(_measureRotationCR);
+        }
+        else
+        {
+            Debug.LogWarning("The measurement coroutine had already been stopped prior to our call to stop it (on the release of the trigger button, this doesn't seem correct");
+        }
+
+        RecalculateZRotation();
+    }
+
+
+    private void RecalculateZRotation()
+    {
+        var temp = _rawZRotation;
+
+        if (temp > 180)
+        {
+            temp = 360 - temp;
+
+            Debug.LogFormat("Recalculated from {0} to {1}", _recalculatedZRotation, temp);
+        }
+
+        _recalculatedZRotation = temp;
+
+        CheckForIncorrectValues();
+    }
+
+
+    private void CheckForIncorrectValues()
+    {
+        if (_recalculatedZRotation is < 0 or > 180)
+        {
+            Debug.LogWarningFormat("Measured rotation is {0}, which is outside of the expected range. Something seems wrong?", _recalculatedZRotation);
+        }
+
+        StoreRotationValues();
+    }
+
+
+    private void StoreRotationValues()
+    {
+        _allStoredValues.Add(_recalculatedZRotation);
+
+        Debug.LogFormat("Stored value is {0}. We can also send all kinds of actions and events from this part of the code", _allStoredValues[^1]);
+
+        ResetValues();
+    }
+
+
+    private void ResetValues()
+    {
+        _rotation = Vector3.zero;
+        _rawZRotation = 0;
     }
 
 
     private void OnDisable()
     {
-        m_buttonPressRef.action.performed -= ButtonPressed;
-        m_buttonReleaseRef.action.performed -= ButtonReleased;
+        _buttonPressAction.performed -= ButtonPressed;
+        _buttonReleaseAction.performed -= ButtonReleased;
 
-        m_buttonPressRef.action.Disable();
-        m_buttonReleaseRef.action.Disable();
-
-        m_rotateRef.action.Disable();
+        _buttonPressAction.Disable();
+        _buttonReleaseAction.Disable();
+        _rotationAction.Disable();
 
         StopAllCoroutines();
     }
