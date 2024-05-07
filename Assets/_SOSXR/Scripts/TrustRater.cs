@@ -47,6 +47,9 @@ public class TrustRater : MonoBehaviour
     [Tooltip("Amplitude")]
     [SerializeField] [Range(0.1f, 2f)] private float m_activeHapticsIntensity = 0.25f;
 
+    [Header("Rotation measurement interval")]
+    [SerializeField] [Range(0.001f, 0.5f)] private float m_rotationInterval = 0.01f;
+
     [Header("Active Values")]
     [SerializeField] [DisableEditing] private Vector3 _rotation;
     [SerializeField] [DisableEditing] private float _rawZRotation;
@@ -77,7 +80,7 @@ public class TrustRater : MonoBehaviour
             _buttonReleaseAction = m_rightButtonReleaseRef.action;
             _rotationAction = m_rightRotateRef.action;
 
-            characteristics &= InputDeviceCharacteristics.Right; // Is this correct? https://docs.unity3d.com/ScriptReference/XR.InputDevices.GetDevicesWithCharacteristics.html
+            characteristics |= InputDeviceCharacteristics.Right; // Is this correct? https://docs.unity3d.com/ScriptReference/XR.InputDevices.GetDevicesWithCharacteristics.html
         }
         else if (RatingHand == Handedness.Left)
         {
@@ -85,12 +88,19 @@ public class TrustRater : MonoBehaviour
             _buttonReleaseAction = m_leftButtonReleaseRef.action;
             _rotationAction = m_leftRotateRef.action;
 
-            characteristics &= InputDeviceCharacteristics.Left; // Is this correct? https://docs.unity3d.com/ScriptReference/XR.InputDevices.GetDevicesWithCharacteristics.html 
+            characteristics |= InputDeviceCharacteristics.Left; // Is this correct? https://docs.unity3d.com/ScriptReference/XR.InputDevices.GetDevicesWithCharacteristics.html 
         }
 
         GetDevicesWithCharacteristics(characteristics, _devices);
 
-        Debug.LogFormat("We now have {0} devices that match the characteristics", _devices.Count);
+        if (_devices.Count < 1)
+        {
+            Debug.LogError("We don't have enough controller!");
+        }
+        else
+        {
+            Debug.LogFormat("We now have {0} devices that match the characteristics", _devices.Count);
+        }
     }
 
 
@@ -149,6 +159,7 @@ public class TrustRater : MonoBehaviour
         {
             Debug.LogWarning("The measure CR wasn't null when we wanted to start a new measurement, this doesn't seem to be ok?");
             StopCoroutine(_measureRotationCR);
+            _measureRotationCR = null;
         }
 
         _measureRotationCR = StartCoroutine(MeasureRotationCR());
@@ -157,6 +168,7 @@ public class TrustRater : MonoBehaviour
         {
             Debug.LogWarning("The active haptics coroutine wasn't null when we pressed the (trigger) button anew, this doesn't seem to be ok?");
             StopCoroutine(_hapticsActiveCR);
+            _hapticsActiveCR = null;
         }
 
         _hapticsActiveCR = StartCoroutine(HapticsCR(m_activeHapticsInterval, m_activeHapticsIntensity, m_activeHapticsDuration));
@@ -166,6 +178,7 @@ public class TrustRater : MonoBehaviour
     private IEnumerator MeasureRotationCR()
     {
         _recalculatedZRotation = 0f;
+        var waitSeconds = new WaitForSeconds(m_rotationInterval);
 
         for (;;)
         {
@@ -173,7 +186,7 @@ public class TrustRater : MonoBehaviour
 
             _rawZRotation = _rotation.z;
 
-            yield return null;
+            yield return waitSeconds;
         }
     }
 
@@ -185,6 +198,7 @@ public class TrustRater : MonoBehaviour
         if (_hapticsActiveCR != null)
         {
             StopCoroutine(_hapticsActiveCR);
+            _hapticsActiveCR = null;
         }
         else
         {
@@ -194,6 +208,7 @@ public class TrustRater : MonoBehaviour
         if (_measureRotationCR != null)
         {
             StopCoroutine(_measureRotationCR);
+            _measureRotationCR = null;
         }
         else
         {
@@ -259,5 +274,8 @@ public class TrustRater : MonoBehaviour
         _rotationAction.Disable();
 
         StopAllCoroutines();
+        _hapticsActiveCR = null;
+        _measureRotationCR = null;
+        _hapticsReminderCR = null;
     }
 }
