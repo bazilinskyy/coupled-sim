@@ -1,3 +1,5 @@
+// Using directives for XR and Input System to simplify references in the code.
+
 using System.Collections;
 using System.Collections.Generic;
 using SOSXR;
@@ -9,6 +11,7 @@ using static UnityEngine.XR.InputDevices;
 using InputDevice = UnityEngine.XR.InputDevice;
 
 
+// Enumeration to specify the handedness of the controller.
 public enum Handedness
 {
     Right,
@@ -16,6 +19,10 @@ public enum Handedness
 }
 
 
+/// <summary>
+///     TrustRater handles the input from an XR controller and measures trust via rotation and button presses.
+///     It also manages haptic feedback based on user interactions.
+/// </summary>
 public class TrustRater : MonoBehaviour
 {
     [Tooltip("With what hand should we do the rating?")]
@@ -32,29 +39,31 @@ public class TrustRater : MonoBehaviour
     [SerializeField] private InputActionReference m_rightRotateRef;
 
     [Header("Reminder Haptics")]
-    [Tooltip("Seconds")]
+    [Tooltip("Seconds between haptic reminders.")]
     [SerializeField] [Range(10, 120)] private int m_reminderHapticsInterval = 30;
-    [Tooltip("Seconds")]
+    [Tooltip("Duration of the haptic reminder pulse.")]
     [SerializeField] [Range(0.1f, 5f)] private float m_reminderHapticsDuration = 2.5f;
-    [Tooltip("Amplitude")]
+    [Tooltip("Intensity of the haptic reminder pulse.")]
     [SerializeField] [Range(0.1f, 2f)] private float m_reminderHapticsIntensity = 0.5f;
 
     [Header("Active Haptics")]
-    [Tooltip("Seconds")]
+    [Tooltip("Seconds between active haptic feedback.")]
     [SerializeField] [Range(0.1f, 1f)] private float m_activeHapticsInterval = 0.5f;
-    [Tooltip("Seconds")]
+    [Tooltip("Duration of the active haptic pulse.")]
     [SerializeField] [Range(0.1f, 2.5f)] private float m_activeHapticsDuration = 0.15f;
-    [Tooltip("Amplitude")]
+    [Tooltip("Intensity of the active haptic pulse.")]
     [SerializeField] [Range(0.1f, 2f)] private float m_activeHapticsIntensity = 0.25f;
 
     [Header("Rotation measurement interval")]
+    [Tooltip("Interval in seconds for measuring the controller rotation.")]
     [SerializeField] [Range(0.001f, 0.5f)] private float m_rotationInterval = 0.01f;
 
+    [Header("These fields store runtime values and are not meant to be edited directly.")]
     [Header("Active Values")]
     [SerializeField] [DisableEditing] private Vector3 _rotation;
     [SerializeField] [DisableEditing] private float _rawZRotation;
 
-    [Header("Storing / Stored Values")]
+    [Header("Stored Values")]
     [Tooltip("We're interested in going from 0-180. We do this by taking 360-raw rotation if that raw rotation was more than 180 to begin with.")]
     [SerializeField] [DisableEditing] private float _recalculatedZRotation;
     [SerializeField] [DisableEditing] private List<float> _allStoredValues = new();
@@ -74,13 +83,13 @@ public class TrustRater : MonoBehaviour
     {
         var characteristics = InputDeviceCharacteristics.Controller;
 
-        if (RatingHand == Handedness.Right)
+        if (RatingHand == Handedness.Right) // Selects the characteristics based on the hand chosen.
         {
             _buttonPressAction = m_rightButtonPressRef.action;
             _buttonReleaseAction = m_rightButtonReleaseRef.action;
             _rotationAction = m_rightRotateRef.action;
 
-            characteristics |= InputDeviceCharacteristics.Right; // Is this correct? https://docs.unity3d.com/ScriptReference/XR.InputDevices.GetDevicesWithCharacteristics.html
+            characteristics |= InputDeviceCharacteristics.Right;
         }
         else if (RatingHand == Handedness.Left)
         {
@@ -88,14 +97,15 @@ public class TrustRater : MonoBehaviour
             _buttonReleaseAction = m_leftButtonReleaseRef.action;
             _rotationAction = m_leftRotateRef.action;
 
-            characteristics |= InputDeviceCharacteristics.Left; // Is this correct? https://docs.unity3d.com/ScriptReference/XR.InputDevices.GetDevicesWithCharacteristics.html 
+            characteristics |= InputDeviceCharacteristics.Left;
         }
 
         GetDevicesWithCharacteristics(characteristics, _devices);
 
-        if (_devices.Count < 1)
+
+        if (_devices.Count < 1) // Logs an error if no suitable devices are found.
         {
-            Debug.LogError("We don't have enough controller!");
+            Debug.LogError("We don't have enough controllers!");
         }
         else
         {
@@ -126,31 +136,39 @@ public class TrustRater : MonoBehaviour
     }
 
 
+    /// <summary>
+    ///     Coroutine to handle repeated sending of haptic impulses at specified intervals.
+    /// </summary>
     private IEnumerator HapticsCR(float interval, float amplitude, float duration)
     {
         for (;;)
         {
             yield return new WaitForSeconds(interval);
-
             SendHapticImpulse(amplitude, duration);
         }
     }
 
 
-    public void SendHapticImpulse(float amplitude, float duration)
+    /// <summary>
+    ///     Sends a haptic impulse to all detected devices if they support it.
+    /// </summary>
+    private void SendHapticImpulse(float amplitude, float duration)
     {
-        foreach (var device in _devices) // Is this correct? https://docs.unity3d.com/Manual/xr_input.html#Haptics
+        foreach (var device in _devices)
         {
             if (device.TryGetHapticCapabilities(out var capabilities) && capabilities.supportsImpulse)
             {
                 device.SendHapticImpulse(0, amplitude, duration);
-
-                Debug.LogFormat("Send haptics to device {0}", device.name);
+                Debug.LogFormat("Sent haptics to device {0}", device.name);
             }
         }
     }
 
 
+    /// <summary>
+    ///     Is fired when the button (trigger) is pressed down, starting the rotation measurement and the coroutine for the
+    ///     'active haptics'.
+    /// </summary>
     private void ButtonPressed(CallbackContext context)
     {
         Debug.Log("You pressed the button. Well done.");
@@ -175,15 +193,18 @@ public class TrustRater : MonoBehaviour
     }
 
 
+    /// <summary>
+    ///     Coroutine to continuously measure the rotation of the controller.
+    /// </summary>
     private IEnumerator MeasureRotationCR()
     {
-        _recalculatedZRotation = 0f;
+        _recalculatedZRotation = 0f; // This is reset here, but can also be reset in ResetValues();
+
         var waitSeconds = new WaitForSeconds(m_rotationInterval);
 
         for (;;)
         {
             _rotation = _rotationAction.ReadValue<Quaternion>().eulerAngles;
-
             _rawZRotation = _rotation.z;
 
             yield return waitSeconds;
@@ -191,6 +212,9 @@ public class TrustRater : MonoBehaviour
     }
 
 
+    /// <summary>
+    ///     Handles the button release event, stopping the rotation measurement and the 'active haptics'.
+    /// </summary>
     private void ButtonReleased(CallbackContext context)
     {
         Debug.Log("Released the button");
@@ -212,13 +236,16 @@ public class TrustRater : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning("The measurement coroutine had already been stopped prior to our call to stop it (on the release of the trigger button, this doesn't seem correct");
+            Debug.LogWarning("The measurement coroutine had already been stopped prior to our call to stop it (on the release of the trigger button), this doesn't seem correct");
         }
 
         RecalculateZRotation();
     }
 
 
+    /// <summary>
+    ///     Recalculates the Z rotation of the controller to maintain it within a 0-180 range.
+    /// </summary>
     private void RecalculateZRotation()
     {
         var temp = _rawZRotation;
@@ -226,7 +253,6 @@ public class TrustRater : MonoBehaviour
         if (temp > 180)
         {
             temp = 360 - temp;
-
             Debug.LogFormat("Recalculated from {0} to {1}", _recalculatedZRotation, temp);
         }
 
@@ -236,6 +262,9 @@ public class TrustRater : MonoBehaviour
     }
 
 
+    /// <summary>
+    ///     Checks if the recalculated rotation is within the expected range.
+    /// </summary>
     private void CheckForIncorrectValues()
     {
         if (_recalculatedZRotation is < 0 or > 180)
@@ -247,6 +276,9 @@ public class TrustRater : MonoBehaviour
     }
 
 
+    /// <summary>
+    ///     Stores the recalculated rotation value for further analysis.
+    /// </summary>
     private void StoreRotationValues()
     {
         _allStoredValues.Add(_recalculatedZRotation);
@@ -257,6 +289,11 @@ public class TrustRater : MonoBehaviour
     }
 
 
+    /// <summary>
+    ///     Resets the rotation values to zero.
+    ///     Right now the _recalculatedZRotation is not reset here, but at the start of a new measurement. Once testing is
+    ///     complete, that can/should be done here for consistency.
+    /// </summary>
     private void ResetValues()
     {
         _rotation = Vector3.zero;
@@ -264,6 +301,9 @@ public class TrustRater : MonoBehaviour
     }
 
 
+    /// <summary>
+    ///     Disables the input actions and stops all coroutines when the object is disabled.
+    /// </summary>
     private void OnDisable()
     {
         _buttonPressAction.performed -= ButtonPressed;
