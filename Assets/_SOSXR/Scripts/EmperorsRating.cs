@@ -1,13 +1,13 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using SOSXR;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.XR;
 using static UnityEngine.InputSystem.InputAction;
 using static UnityEngine.XR.InputDevices;
 using InputDevice = UnityEngine.XR.InputDevice;
+using Random = UnityEngine.Random;
 
 
 // Enumeration to specify the handedness of the controller used for the rating
@@ -21,11 +21,14 @@ public enum Handedness
 [Serializable]
 public struct Rating
 {
+    [Header("Don't edit these manually")]
     public string DateAndTime;
+    public Handedness RatingHand;
     public Quaternion StartRotationQuaternion;
     public Vector3 StartRotation;
     public Quaternion EndRotationQuaternion;
     public Vector3 EndRotation;
+    public Axis MeasuredAxis;
     public float EndRotationAxisRaw;
     public float EndRotationAxisRecalculated;
 }
@@ -82,16 +85,16 @@ public class EmperorsRating : MonoBehaviour
     [Header("Rotation measurement settings")]
     [Tooltip("Interval in seconds for measuring the controller rotation.")]
     [SerializeField] [Range(0.001f, 0.5f)] private float m_rotationMeasureInterval = 0.01f;
-
-
-    [Header("These fields store runtime values and are not meant to be edited directly.")]
-    [SerializeField] [DisableEditing] private Rating _currentRating;
-    [SerializeField] [DisableEditing] private List<Rating> _ratingValues = new();
     [SerializeField] private Axis m_axisToMeasure = Axis.z;
 
-    private readonly List<InputDevice> _devices = new();
+    [Header("These fields store runtime values and are not meant to be edited directly.")]
+    [SerializeField] private List<Rating> _ratingValues = new();
 
-    private readonly string dateTimeFormat = "yyyy-MM-dd HH:mm:ss";
+    [Header("Debug: make up random measurements instead of controller rotations")]
+    [SerializeField] private bool m_debug = true;
+
+    private readonly List<InputDevice> _devices = new();
+    private Rating _currentRating = new();
 
     private InputAction _buttonPressAction;
     private InputAction _buttonReleaseAction;
@@ -100,6 +103,10 @@ public class EmperorsRating : MonoBehaviour
     private Coroutine _hapticsReminderCR;
     private Coroutine _hapticsActiveCR;
     private Coroutine _measureRotationCR;
+
+    private const string dateTimeFormat = "yyyy-MM-dd HH:mm:ss";
+
+    public List<Rating> RatingValues => _ratingValues;
 
 
     private void Awake()
@@ -125,7 +132,6 @@ public class EmperorsRating : MonoBehaviour
 
         GetDevicesWithCharacteristics(characteristics, _devices);
 
-
         if (_devices.Count < 1) // Logs an error if no suitable devices are found.
         {
             Debug.LogError("We don't have enough controllers!");
@@ -134,6 +140,8 @@ public class EmperorsRating : MonoBehaviour
         {
             Debug.LogFormat("We now have {0} devices that match the characteristics", _devices.Count);
         }
+
+        _ratingValues = new List<Rating>();
     }
 
 
@@ -232,19 +240,28 @@ public class EmperorsRating : MonoBehaviour
 
         _currentRating = new Rating();
 
-        var now = DateTime.Now;
-        _currentRating.DateAndTime = now.ToString(dateTimeFormat);
+        _currentRating.DateAndTime = DateTime.Now.ToString(dateTimeFormat);
+        _currentRating.MeasuredAxis = m_axisToMeasure;
+        _currentRating.RatingHand = RatingHand;
 
-        _currentRating.StartRotationQuaternion = _rotationAction.ReadValue<Quaternion>();
-        _currentRating.StartRotation = _currentRating.StartRotationQuaternion.eulerAngles;
+        _currentRating.StartRotationQuaternion = m_debug ? GetRandomQuaternion() : _rotationAction.ReadValue<Quaternion>();
 
         for (;;)
         {
-            _currentRating.EndRotationQuaternion = _rotationAction.ReadValue<Quaternion>();
-            _currentRating.EndRotation = _currentRating.EndRotationQuaternion.eulerAngles;
+            _currentRating.EndRotationQuaternion = m_debug ? GetRandomQuaternion() : _rotationAction.ReadValue<Quaternion>();
 
             yield return waitSeconds;
         }
+    }
+
+
+    /// <summary>
+    ///     For debug purposes
+    /// </summary>
+    /// <returns></returns>
+    private Quaternion GetRandomQuaternion()
+    {
+        return Quaternion.Euler(Random.Range(0f, 360), Random.Range(0f, 360), Random.Range(0f, 360));
     }
 
 
@@ -287,29 +304,23 @@ public class EmperorsRating : MonoBehaviour
 
 
     /// <summary>
-    ///     Recalculates the Z rotation of the controller to maintain it within a 0-180 range.
+    ///     Recalculates Quaternion to more acceptable Vector3 formats.
+    ///     Recalculates the rotation of the controller to maintain it within a 0-180 range.
     /// </summary>
     private void RecalculateRotation()
     {
-        if (m_axisToMeasure == Axis.x)
+        _currentRating.StartRotation = _currentRating.StartRotationQuaternion.eulerAngles;
+        _currentRating.EndRotation = _currentRating.EndRotationQuaternion.eulerAngles;
+
+        _currentRating.EndRotationAxisRaw = _currentRating.EndRotation[(int) m_axisToMeasure];
+        var rawValue = _currentRating.EndRotationAxisRaw;
+
+        if (rawValue > 180)
         {
-            _currentRating.EndRotationAxisRaw = _currentRating.EndRotation.x;
-        }
-        else if (m_axisToMeasure == Axis.y)
-        {
-            _currentRating.EndRotationAxisRaw = _currentRating.EndRotation.y;
-        }
-        else if (m_axisToMeasure == Axis.z)
-        {
-            _currentRating.EndRotationAxisRaw = _currentRating.EndRotation.z;
+            rawValue = 360 - rawValue;
         }
 
-        if (_currentRating.EndRotationAxisRaw > 180)
-        {
-            _currentRating.EndRotationAxisRaw = 360 - _currentRating.EndRotationAxisRaw;
-        }
-
-        _currentRating.EndRotationAxisRecalculated = _currentRating.EndRotationAxisRaw;
+        _currentRating.EndRotationAxisRecalculated = rawValue;
 
         CheckForIncorrectValues();
     }
@@ -335,8 +346,6 @@ public class EmperorsRating : MonoBehaviour
     private void StoreRotationValues()
     {
         _ratingValues.Add(_currentRating);
-
-        Debug.LogFormat("Stored value is {0}. We can also send all kinds of actions and events from this part of the code", _ratingValues[^1]);
     }
 
 

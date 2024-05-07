@@ -1883,7 +1883,14 @@ MonoBehaviour:
   m_activeHapticsInterval: 0.5
   m_activeHapticsDuration: 0.15
   m_activeHapticsIntensity: 0.25
-  _rotation: {x: 0, y: 0, z: 0}
-  _rawZRotation: 0
-  _recalculatedZRotation: 0
-  _allStoredValues: []
+  m_rotationMeasureInterval: 0.01
+  m_axisToMeasure: 2
+  _ratingValues:
+  - DateAndTime: 
+    StartRotationQuaternion: {x: 0, y: 0, z: 0, w: 0}
+    StartRotation: {x: 0, y: 0, z: 0}
+    EndRotationQuaternion: {x: 0, y: 0, z: 0, w: 0}
+    EndRotation: {x: 0, y: 0, z: 0}
+    EndRotationAxisRaw: 0
+    EndRotationAxisRecalculated: 0
+  m_debug: 1
