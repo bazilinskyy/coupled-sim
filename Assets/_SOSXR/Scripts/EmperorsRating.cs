@@ -1,5 +1,4 @@
-// Using directives for XR and Input System to simplify references in the code.
-
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using SOSXR;
@@ -11,7 +10,7 @@ using static UnityEngine.XR.InputDevices;
 using InputDevice = UnityEngine.XR.InputDevice;
 
 
-// Enumeration to specify the handedness of the controller.
+// Enumeration to specify the handedness of the controller used for the rating
 public enum Handedness
 {
     Right,
@@ -19,11 +18,37 @@ public enum Handedness
 }
 
 
+[Serializable]
+public struct Rating
+{
+    public string DateAndTime;
+    public Quaternion StartRotationQuaternion;
+    public Vector3 StartRotation;
+    public Quaternion EndRotationQuaternion;
+    public Vector3 EndRotation;
+    public float EndRotationAxisRaw;
+    public float EndRotationAxisRecalculated;
+}
+
+
+public enum Axis
+{
+    x,
+    y,
+    z
+}
+
+
 /// <summary>
-///     TrustRater handles the input from an XR controller and measures trust via rotation and button presses.
-///     It also manages haptic feedback based on user interactions.
+///     The emperor's rating handles the input from an XR controller allows a participant to rate something with a value
+///     going from 0 (excellent), to 180 (not so excellent) via rotation and button presses.
+///     It's called the emperor's rating due to the semblance of thumbs-up / thumbs-down in the Arena.
+///     The class handles setting a haptic reminder every X seconds, so that participants don't forget to provide a rating.
+///     Then they press and hold a button (suggested is to use the trigger), while rotating the controller around the
+///     length-wise axis.
+///     Testing should indicate whether this axis is the one desired, or that another axis should be measured instead.
 /// </summary>
-public class TrustRater : MonoBehaviour
+public class EmperorsRating : MonoBehaviour
 {
     [Tooltip("With what hand should we do the rating?")]
     public Handedness RatingHand = Handedness.Right;
@@ -54,21 +79,19 @@ public class TrustRater : MonoBehaviour
     [Tooltip("Intensity of the active haptic pulse.")]
     [SerializeField] [Range(0.1f, 2f)] private float m_activeHapticsIntensity = 0.25f;
 
-    [Header("Rotation measurement interval")]
+    [Header("Rotation measurement settings")]
     [Tooltip("Interval in seconds for measuring the controller rotation.")]
-    [SerializeField] [Range(0.001f, 0.5f)] private float m_rotationInterval = 0.01f;
+    [SerializeField] [Range(0.001f, 0.5f)] private float m_rotationMeasureInterval = 0.01f;
+
 
     [Header("These fields store runtime values and are not meant to be edited directly.")]
-    [Header("Active Values")]
-    [SerializeField] [DisableEditing] private Vector3 _rotation;
-    [SerializeField] [DisableEditing] private float _rawZRotation;
-
-    [Header("Stored Values")]
-    [Tooltip("We're interested in going from 0-180. We do this by taking 360-raw rotation if that raw rotation was more than 180 to begin with.")]
-    [SerializeField] [DisableEditing] private float _recalculatedZRotation;
-    [SerializeField] [DisableEditing] private List<float> _allStoredValues = new();
+    [SerializeField] [DisableEditing] private Rating _currentRating;
+    [SerializeField] [DisableEditing] private List<Rating> _ratingValues = new();
+    [SerializeField] private Axis m_axisToMeasure = Axis.z;
 
     private readonly List<InputDevice> _devices = new();
+
+    private readonly string dateTimeFormat = "yyyy-MM-dd HH:mm:ss";
 
     private InputAction _buttonPressAction;
     private InputAction _buttonReleaseAction;
@@ -171,6 +194,13 @@ public class TrustRater : MonoBehaviour
     /// </summary>
     private void ButtonPressed(CallbackContext context)
     {
+        ButtonPressed();
+    }
+
+
+    [ContextMenu(nameof(ButtonPressed))]
+    private void ButtonPressed()
+    {
         Debug.Log("You pressed the button. Well done.");
 
         if (_measureRotationCR != null)
@@ -198,14 +228,20 @@ public class TrustRater : MonoBehaviour
     /// </summary>
     private IEnumerator MeasureRotationCR()
     {
-        _recalculatedZRotation = 0f; // This is reset here, but can also be reset in ResetValues();
+        var waitSeconds = new WaitForSeconds(m_rotationMeasureInterval);
 
-        var waitSeconds = new WaitForSeconds(m_rotationInterval);
+        _currentRating = new Rating();
+
+        var now = DateTime.Now;
+        _currentRating.DateAndTime = now.ToString(dateTimeFormat);
+
+        _currentRating.StartRotationQuaternion = _rotationAction.ReadValue<Quaternion>();
+        _currentRating.StartRotation = _currentRating.StartRotationQuaternion.eulerAngles;
 
         for (;;)
         {
-            _rotation = _rotationAction.ReadValue<Quaternion>().eulerAngles;
-            _rawZRotation = _rotation.z;
+            _currentRating.EndRotationQuaternion = _rotationAction.ReadValue<Quaternion>();
+            _currentRating.EndRotation = _currentRating.EndRotationQuaternion.eulerAngles;
 
             yield return waitSeconds;
         }
@@ -216,6 +252,13 @@ public class TrustRater : MonoBehaviour
     ///     Handles the button release event, stopping the rotation measurement and the 'active haptics'.
     /// </summary>
     private void ButtonReleased(CallbackContext context)
+    {
+        ButtonReleased();
+    }
+
+
+    [ContextMenu(nameof(ButtonReleased))]
+    private void ButtonReleased()
     {
         Debug.Log("Released the button");
 
@@ -239,24 +282,34 @@ public class TrustRater : MonoBehaviour
             Debug.LogWarning("The measurement coroutine had already been stopped prior to our call to stop it (on the release of the trigger button), this doesn't seem correct");
         }
 
-        RecalculateZRotation();
+        RecalculateRotation();
     }
 
 
     /// <summary>
     ///     Recalculates the Z rotation of the controller to maintain it within a 0-180 range.
     /// </summary>
-    private void RecalculateZRotation()
+    private void RecalculateRotation()
     {
-        var temp = _rawZRotation;
-
-        if (temp > 180)
+        if (m_axisToMeasure == Axis.x)
         {
-            temp = 360 - temp;
-            Debug.LogFormat("Recalculated from {0} to {1}", _recalculatedZRotation, temp);
+            _currentRating.EndRotationAxisRaw = _currentRating.EndRotation.x;
+        }
+        else if (m_axisToMeasure == Axis.y)
+        {
+            _currentRating.EndRotationAxisRaw = _currentRating.EndRotation.y;
+        }
+        else if (m_axisToMeasure == Axis.z)
+        {
+            _currentRating.EndRotationAxisRaw = _currentRating.EndRotation.z;
         }
 
-        _recalculatedZRotation = temp;
+        if (_currentRating.EndRotationAxisRaw > 180)
+        {
+            _currentRating.EndRotationAxisRaw = 360 - _currentRating.EndRotationAxisRaw;
+        }
+
+        _currentRating.EndRotationAxisRecalculated = _currentRating.EndRotationAxisRaw;
 
         CheckForIncorrectValues();
     }
@@ -267,9 +320,9 @@ public class TrustRater : MonoBehaviour
     /// </summary>
     private void CheckForIncorrectValues()
     {
-        if (_recalculatedZRotation is < 0 or > 180)
+        if (_currentRating.EndRotationAxisRecalculated is < 0 or > 180)
         {
-            Debug.LogWarningFormat("Measured rotation is {0}, which is outside of the expected range. Something seems wrong?", _recalculatedZRotation);
+            Debug.LogWarningFormat("Measured rotation is {0}, which is outside of the expected range. Something seems wrong?", _currentRating.EndRotationAxisRecalculated);
         }
 
         StoreRotationValues();
@@ -281,23 +334,9 @@ public class TrustRater : MonoBehaviour
     /// </summary>
     private void StoreRotationValues()
     {
-        _allStoredValues.Add(_recalculatedZRotation);
+        _ratingValues.Add(_currentRating);
 
-        Debug.LogFormat("Stored value is {0}. We can also send all kinds of actions and events from this part of the code", _allStoredValues[^1]);
-
-        ResetValues();
-    }
-
-
-    /// <summary>
-    ///     Resets the rotation values to zero.
-    ///     Right now the _recalculatedZRotation is not reset here, but at the start of a new measurement. Once testing is
-    ///     complete, that can/should be done here for consistency.
-    /// </summary>
-    private void ResetValues()
-    {
-        _rotation = Vector3.zero;
-        _rawZRotation = 0;
+        Debug.LogFormat("Stored value is {0}. We can also send all kinds of actions and events from this part of the code", _ratingValues[^1]);
     }
 
 
