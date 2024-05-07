@@ -1,5 +1,5 @@
 {
-    "name": "Trauma Input Actions",
+    "name": "SOSXR Input Actions",
     "maps": [
         {
             "name": "Default",
@@ -114,9 +114,18 @@
                     "initialStateCheck": true
                 },
                 {
-                    "name": "Right Trigger",
+                    "name": "Right Trigger Pressed",
                     "type": "Button",
                     "id": "ddcb887b-c4e8-4659-906c-b842ece3d151",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Right Trigger Released",
+                    "type": "Button",
+                    "id": "37a8bf65-42ab-488b-85e8-667e908c4425",
                     "expectedControlType": "Button",
                     "processors": "",
                     "interactions": "",
@@ -600,21 +609,10 @@
                     "name": "",
                     "id": "a141f271-c355-40ea-a9dc-7947bfbe61a5",
                     "path": "<XRController>{RightHand}/triggerPressed",
-                    "interactions": "",
+                    "interactions": "Press",
                     "processors": "",
                     "groups": "XR Device",
-                    "action": "Right Trigger",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "3d23b245-0ae3-4719-8e19-5e6f1eac11a7",
-                    "path": "<XRController>{RightHand}/gripPressed",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "XR Device",
-                    "action": "Right Trigger",
+                    "action": "Right Trigger Pressed",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -972,34 +970,12 @@
                 },
                 {
                     "name": "",
-                    "id": "2a10689f-47fd-4679-861b-793a33ff79e6",
-                    "path": "<XRController>{LeftHand}/gripPressed",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "XR Device",
-                    "action": "Left Trigger",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "6e2db80c-83b8-4e8e-89c8-20bc2c9b6a5b",
-                    "path": "<XRController>{LeftHand}/triggerPressed",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "XR Device",
-                    "action": "Left Grip",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "44e9c9d6-c58c-40c0-a67e-3ba288c856e5",
+                    "id": "242026e8-38e5-4f17-88cc-17e4d7ce9c60",
                     "path": "<XRController>{RightHand}/triggerPressed",
-                    "interactions": "",
+                    "interactions": "Press(behavior=1)",
                     "processors": "",
                     "groups": "XR Device",
-                    "action": "Right Grip",
+                    "action": "Right Trigger Released",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
