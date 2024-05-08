@@ -1,33 +1,26 @@
 using System;
 using System.IO;
 using UnityEngine;
-using Varjo.XR;
 
 
 public class LogEyeTracking
 {
+    public LogEyeTracking(VarjoEyeTracking varjoEyeTracking)
+    {
+        m_useCustomLogPath = false;
+        _varjoEyeTracking = varjoEyeTracking;
+    }
+    
     private readonly bool m_useCustomLogPath;
     private readonly string m_customLogPath = "";
 
-
     private Camera _camera;
 
+    private StreamWriter _streamWriter;
 
-    public bool _logging = false;
+    private VarjoEyeTracking _varjoEyeTracking;
 
-    private StreamWriter _streamWriter = null;
-    private readonly LogEyeTracking _logEyeTracking;
-
-    private EyeTrackingExample _eyeTrackingExample;
-
-
-    public LogEyeTracking(EyeTrackingExample eyeTrackingExample)
-    {
-        m_useCustomLogPath = false;
-        _eyeTrackingExample = eyeTrackingExample;
-    }
-
-
+    public bool Logging { get; private set; } = false;
 
     private const string _ValidString = "VALID";
     private const string _InvalidString = "INVALID";
@@ -38,7 +31,7 @@ public class LogEyeTracking
 
     public void ToggleLogging()
     {
-        if (!_logging)
+        if (!Logging)
         {
             StartLogging();
         }
@@ -47,7 +40,9 @@ public class LogEyeTracking
             StopLogging();
         }
     }
-    public void LogGazeData(VarjoEyeTracking.GazeData data, VarjoEyeTracking.EyeMeasurements eyeMeasurements)
+
+
+    public void LogGazeData(Varjo.XR.VarjoEyeTracking.GazeData data, Varjo.XR.VarjoEyeTracking.EyeMeasurements eyeMeasurements)
     {
         var logData = new string[23];
 
@@ -65,7 +60,7 @@ public class LogEyeTracking
         logData[4] = _camera.transform.localRotation.ToString("F3");
 
         // Combined gaze
-        var invalid = data.status == VarjoEyeTracking.GazeStatus.Invalid;
+        var invalid = data.status == Varjo.XR.VarjoEyeTracking.GazeStatus.Invalid;
         logData[5] = invalid ? _InvalidString : _ValidString;
         logData[6] = invalid ? "" : data.gaze.forward.ToString("F3");
         logData[7] = invalid ? "" : data.gaze.origin.ToString("F3");
@@ -74,7 +69,7 @@ public class LogEyeTracking
         logData[8] = invalid ? "" : eyeMeasurements.interPupillaryDistanceInMM.ToString("F3");
 
         // Left eye
-        var leftInvalid = data.leftStatus == VarjoEyeTracking.GazeEyeStatus.Invalid;
+        var leftInvalid = data.leftStatus == Varjo.XR.VarjoEyeTracking.GazeEyeStatus.Invalid;
         logData[9] = leftInvalid ? _InvalidString : _ValidString;
         logData[10] = leftInvalid ? "" : data.left.forward.ToString("F3");
         logData[11] = leftInvalid ? "" : data.left.origin.ToString("F3");
@@ -83,7 +78,7 @@ public class LogEyeTracking
         logData[14] = leftInvalid ? "" : eyeMeasurements.leftIrisDiameterInMM.ToString("F3");
 
         // Right eye
-        var rightInvalid = data.rightStatus == VarjoEyeTracking.GazeEyeStatus.Invalid;
+        var rightInvalid = data.rightStatus == Varjo.XR.VarjoEyeTracking.GazeEyeStatus.Invalid;
         logData[15] = rightInvalid ? _InvalidString : _ValidString;
         logData[16] = rightInvalid ? "" : data.right.forward.ToString("F3");
         logData[17] = rightInvalid ? "" : data.right.origin.ToString("F3");
@@ -101,7 +96,7 @@ public class LogEyeTracking
 
     private void Log(string[] values)
     {
-        if (!_logging || _streamWriter == null)
+        if (!Logging || _streamWriter == null)
         {
             return;
         }
@@ -120,14 +115,14 @@ public class LogEyeTracking
 
     public void StartLogging()
     {
-        if (_logging)
+        if (Logging)
         {
             Debug.LogWarning("Logging was on when StartLogging was called. No new log was started.");
 
             return;
         }
 
-        _logging = true;
+        Logging = true;
 
         var logPath = m_useCustomLogPath ? m_customLogPath : Application.dataPath + "/Logs/";
         Directory.CreateDirectory(logPath);
@@ -145,7 +140,7 @@ public class LogEyeTracking
 
     public void StopLogging()
     {
-        if (!_logging)
+        if (!Logging)
         {
             return;
         }
@@ -157,7 +152,7 @@ public class LogEyeTracking
             _streamWriter = null;
         }
 
-        _logging = false;
+        Logging = false;
         Debug.Log("Logging ended");
     }
 

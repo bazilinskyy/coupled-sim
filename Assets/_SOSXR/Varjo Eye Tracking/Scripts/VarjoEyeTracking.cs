@@ -1,8 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
-using SOSXR;
 using UnityEngine;
-using UnityEngine.Serialization;
 using UnityEngine.XR;
 using static Varjo.XR.VarjoEyeTracking;
 
@@ -15,10 +13,10 @@ public enum GazeDataSource
 
 
 [RequireComponent(typeof(Camera))]
-public class EyeTrackingExample : MonoBehaviour
+public class VarjoEyeTracking : MonoBehaviour
 {
     [Header("Debug Gaze")]
-    [Tooltip("Will poll Varjos functions: IsGazeAllowed() and IsGazeCalibrated() simultanaously into one neat package")]
+    [Tooltip("Will poll Varjo functions: IsGazeAllowed() and IsGazeCalibrated() simultaneously into one neat package")]
     [SerializeField] private KeyCode m_canWeUseGazeKey = KeyCode.Alpha9;
 
     [Tooltip("Gaze data")]
@@ -26,7 +24,7 @@ public class EyeTrackingExample : MonoBehaviour
 
     [Tooltip("Gaze calibration settings")]
     [SerializeField] private GazeCalibrationMode m_gazeCalibrationMode = GazeCalibrationMode.Fast;
-    [FormerlySerializedAs("calibrationRequestKey")] [SerializeField] private KeyCode m_calibrationRequestKey = KeyCode.Space;
+    [SerializeField] private KeyCode m_calibrationRequestKey = KeyCode.Space;
 
     [Tooltip("Gaze output filter settings")]
     [SerializeField] private GazeOutputFilterType m_gazeOutputFilterType = GazeOutputFilterType.Standard;
@@ -41,22 +39,6 @@ public class EyeTrackingExample : MonoBehaviour
     [Tooltip("Toggle fixation point indicator visibility")]
     [SerializeField] private bool m_showFixationPoint = true;
     [SerializeField] private Transform m_fixationPointTransform;
-
-    [Header("EyeBalls")]
-    [Tooltip("SOSXR: We don't want to set the localPosition of the eyes if it is in a model")]
-    [SerializeField] private bool m_setEyePosition = false; // SOSXR
-    public Transform LeftEyeTransform;
-    public Transform RightEyeTransform;
-    [Tooltip("Depending on the model, a rotation is needed here.")]
-    [SerializeField] private Vector3 m_leftEyeRotationOffset = new(0, 0, 84.354f); // SOSXR
-    [SerializeField] private Vector3 m_rightEyeRotationOffset = new(0, 0, 84.354f); // SOSXR
-
-    [Header("EyeBalls - Trying to make sense of incoming data")]
-    [SerializeField] private KeyCode m_printVarjoEyeTrackingInformation = KeyCode.Alpha8;
-    [Tooltip("This is Varjo's data")]
-    [SerializeField] [DisableEditing] private Vector3 m_rightEyeTrackingRotation;
-    [Tooltip("This is Varjo's data with the offset")]
-    [SerializeField] [DisableEditing] private Vector3 m_rightEyeRotationWithOffset;
 
     [Tooltip("Gaze point indicator")]
     [SerializeField] private GameObject m_gazeTarget;
@@ -74,10 +56,7 @@ public class EyeTrackingExample : MonoBehaviour
     [SerializeField] private KeyCode m_loggingToggleKey = KeyCode.RightControl;
     [SerializeField] private bool m_useCustomLogPath = false;
     [SerializeField] private string m_customLogPath = "";
-
-
-    private static readonly string[] _columnNames = {"Frame", "CaptureTime", "LogTime", "HMDPosition", "HMDRotation", "GazeStatus", "CombinedGazeForward", "CombinedGazePosition", "InterPupillaryDistanceInMM", "LeftEyeStatus", "LeftEyeForward", "LeftEyePosition", "LeftPupilIrisDiameterRatio", "LeftPupilDiameterInMM", "LeftIrisDiameterInMM", "RightEyeStatus", "RightEyeForward", "RightEyePosition", "RightPupilIrisDiameterRatio", "RightPupilDiameterInMM", "RightIrisDiameterInMM", "FocusDistance", "FocusStability"};
-
+    
     private readonly List<InputDevice> _devices = new();
 
     private MeshRenderer _gazeRenderer;
@@ -102,24 +81,15 @@ public class EyeTrackingExample : MonoBehaviour
     private Vector3 _rightEyeTrackingPosition;
     private Quaternion _rightEyeTrackingRotation;
 
-
-    private const string _ValidString = "VALID";
-    private const string _InvalidString = "INVALID";
-
-
-    public EyeTrackingExample()
-    {
-        LOGEyeTracking = new LogEyeTracking(this);
-    }
-
-
-    public LogEyeTracking LOGEyeTracking { get; }
+    private LogEyeTracking _log;
 
 
     private void Awake()
     {
         _camera = transform.root.GetComponentInChildren<Camera>();
         _gazeRenderer = m_gazeTarget.GetComponentInChildren<MeshRenderer>();
+
+        _log = new LogEyeTracking(this);
     }
 
 
@@ -167,6 +137,7 @@ public class EyeTrackingExample : MonoBehaviour
         if (Input.GetKeyDown(m_setOutputFilterTypeKey))
         {
             SetGazeOutputFilterType(m_gazeOutputFilterType);
+            
             Debug.Log("Gaze output filter type is now: " + GetGazeOutputFilterType());
         }
 
@@ -180,12 +151,6 @@ public class EyeTrackingExample : MonoBehaviour
             _gazeRenderer.enabled = !_gazeRenderer.enabled;
         }
 
-        if (Input.GetKeyDown(m_printVarjoEyeTrackingInformation))
-        {
-            Debug.Log(m_rightEyeTrackingRotation);
-            Debug.Log(m_rightEyeRotationWithOffset);
-        }
-
         HandleLogging();
     }
 
@@ -194,10 +159,10 @@ public class EyeTrackingExample : MonoBehaviour
     {
         if (Input.GetKeyDown(m_loggingToggleKey))
         {
-            LOGEyeTracking.ToggleLogging();
+            _log.ToggleLogging();
         }
 
-        if (!LOGEyeTracking._logging)
+        if (!_log.Logging)
         {
             return;
         }
@@ -217,7 +182,7 @@ public class EyeTrackingExample : MonoBehaviour
 
         for (var i = 0; i < dataCount; i++)
         {
-            LOGEyeTracking.LogGazeData(_dataSinceLastUpdate[i], _eyeMeasurementsSinceLastUpdate[i]);
+            _log.LogGazeData(_dataSinceLastUpdate[i], _eyeMeasurementsSinceLastUpdate[i]);
         }
     }
 
@@ -229,16 +194,17 @@ public class EyeTrackingExample : MonoBehaviour
         SphereCast();
     }
 
-
+/// <summary>
+/// Get gaze data if gaze is allowed and calibrated
+/// </summary>
     private void GetEyeData()
     {
-        // Get gaze data if gaze is allowed and calibrated
-        if (!CanWeUseGaze())
+        if (!CanWeUseGaze()) 
         {
             return;
         }
 
-        if (!_inputDevice.isValid)
+        if (!_inputDevice.isValid) 
         {
             GetDevice();
         }
@@ -247,52 +213,22 @@ public class EyeTrackingExample : MonoBehaviour
 
         if (m_gazeDataSource == GazeDataSource.InputSubsystem)
         {
-            Tralla();
+            GetGazeDataFromInputSubsystem();
         }
-        else
+        else if (m_gazeDataSource == GazeDataSource.GazeAPI)
         {
-            Lala();
+            GetGazeDataFromGazeApi();
         }
     }
 
 
-    private void Tralla()
+    private void GetGazeDataFromInputSubsystem()
     {
         if (!_inputDevice.TryGetFeatureValue(CommonUsages.eyesData, out _eyes))
         {
             return;
         }
-
-        if (m_setEyePosition) // SOSXR: We don't want to set the localPosition of the eyes if it is in a model
-        {
-            if (_eyes.TryGetLeftEyePosition(out _leftEyeTrackingPosition))
-            {
-                LeftEyeTransform.localPosition = _leftEyeTrackingPosition;
-            }
-
-            if (_eyes.TryGetRightEyePosition(out _rightEyeTrackingPosition))
-            {
-                RightEyeTransform.localPosition = _rightEyeTrackingPosition;
-            }
-        }
-
-
-        if (_eyes.TryGetLeftEyeRotation(out _leftEyeTrackingRotation))
-        {
-            LeftEyeTransform.localRotation = _leftEyeTrackingRotation;
-
-            LeftEyeTransform.localRotation *= Quaternion.Euler(m_leftEyeRotationOffset);
-        }
-
-        if (_eyes.TryGetRightEyeRotation(out _rightEyeTrackingRotation))
-        {
-            RightEyeTransform.localRotation = _rightEyeTrackingRotation;
-            m_rightEyeTrackingRotation = _rightEyeTrackingRotation.eulerAngles;
-
-            RightEyeTransform.localRotation *= Quaternion.Euler(m_rightEyeRotationOffset);
-            m_rightEyeRotationWithOffset = RightEyeTransform.localRotation.eulerAngles;
-        }
-
+        
         if (_eyes.TryGetFixationPoint(out _fixationPoint))
         {
             if (m_fixationPointTransform != null)
@@ -301,80 +237,45 @@ public class EyeTrackingExample : MonoBehaviour
             }
         }
 
-
         _rayOrigin = _camera.transform.position;
+        
         _direction = (m_fixationPointTransform.position - _camera.transform.position).normalized;
     }
 
 
-    private void Lala()
+    private void GetGazeDataFromGazeApi()
     {
         _gazeData = GetGaze();
 
         if (_gazeData.status == GazeStatus.Invalid)
         {
+            Debug.LogWarning("GazeStatus is Invalid");
+
             return;
         }
 
-        // Set gaze origin as raycast origin
-        _rayOrigin = _camera.transform.TransformPoint(_gazeData.gaze.origin);
+        _rayOrigin = _camera.transform.TransformPoint(_gazeData.gaze.origin); // Set gaze origin as raycast origin
 
-        // Set gaze direction as raycast direction
-        _direction = _camera.transform.TransformDirection(_gazeData.gaze.forward);
+        _direction = _camera.transform.TransformDirection(_gazeData.gaze.forward); // Set gaze direction as raycast direction
 
-        // Fixation point can be calculated using ray origin, direction and focus distance
-        m_fixationPointTransform.position = _rayOrigin + _direction * _gazeData.focusDistance;
-
-        HandleLeftEyeBall();
-
-        HandleRightEyeBall();
-    }
-
-
-    private void HandleRightEyeBall()
-    {
-        if (_gazeData.rightStatus == GazeEyeStatus.Invalid) // rightEyeTransform.position = xrCamera.transform.TransformPoint(gazeData.right.origin);
-        {
-            return;
-        }
-
-        RightEyeTransform.rotation = Quaternion.LookRotation(_camera.transform.TransformDirection(_gazeData.right.forward));
-
-        RightEyeTransform.localRotation *= Quaternion.Euler(m_rightEyeRotationOffset);
-    }
-
-
-    private void HandleLeftEyeBall()
-    {
-        if (_gazeData.leftStatus == GazeEyeStatus.Invalid) // GazeRay vectors are relative to the HMD pose so they need to be transformed to world space
-        {
-            return;
-        }
-
-        LeftEyeTransform.rotation = Quaternion.LookRotation(_camera.transform.TransformDirection(_gazeData.left.forward));
-
-        LeftEyeTransform.localRotation *= Quaternion.Euler(m_leftEyeRotationOffset);
+        m_fixationPointTransform.position = _rayOrigin + _direction * _gazeData.focusDistance; // Fixation point can be calculated using ray origin, direction and focus distance
     }
 
 
     private void SphereCast()
     {
-        // Raycast to world from VR Camera position towards fixation point
-        if (Physics.SphereCast(_rayOrigin, m_gazeRadius, _direction, out _hit))
+        if (Physics.SphereCast(_rayOrigin, m_gazeRadius, _direction, out _hit)) // Raycast to world from XR Camera position towards fixation point
         {
-            // Put target on gaze raycast position with offset towards user
-            m_gazeTarget.transform.position = _hit.point - _direction * m_targetOffset;
+            m_gazeTarget.transform.position = _hit.point - _direction * m_targetOffset; // Put target on gaze raycast position with offset towards user
+            
+            m_gazeTarget.transform.LookAt(_rayOrigin, Vector3.up); // Make gaze target point towards user
 
-            // Make gaze target point towards user
-            m_gazeTarget.transform.LookAt(_rayOrigin, Vector3.up);
-
-            // Scale gazetarget with distance so it appears to be always same size
-            _distance = _hit.distance;
+            _distance = _hit.distance; // Scale gaze-target with distance so it appears to be always same size
+            
             m_gazeTarget.transform.localScale = Vector3.one * _distance;
         }
-        else
+        else // If gaze ray didn't hit anything, the gaze target is shown at fixed distance
         {
-            // If gaze ray didn't hit anything, the gaze target is shown at fixed distance
             m_gazeTarget.transform.position = _rayOrigin + _direction * m_floatingGazeTargetDistance;
             m_gazeTarget.transform.LookAt(_rayOrigin, Vector3.up);
             m_gazeTarget.transform.localScale = Vector3.one * m_floatingGazeTargetDistance;
