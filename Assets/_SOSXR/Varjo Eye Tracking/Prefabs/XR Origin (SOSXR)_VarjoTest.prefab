@@ -250,7 +250,7 @@ PrefabInstance:
     - target: {fileID: 1493516723137134811, guid: fd094099d278ea945908c884c0d9a5e2,
         type: 3}
       propertyPath: m_color.rgba
-      value: 4283846979
+      value: 4279765520
       objectReference: {fileID: 0}
     - target: {fileID: 1934983178896604305, guid: fd094099d278ea945908c884c0d9a5e2,
         type: 3}
@@ -320,7 +320,7 @@ PrefabInstance:
     - target: {fileID: 8063747827035807481, guid: fd094099d278ea945908c884c0d9a5e2,
         type: 3}
       propertyPath: m_color.rgba
-      value: 4281041540
+      value: 4284572516
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -349,7 +349,7 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 5866318587881342538, guid: fd094099d278ea945908c884c0d9a5e2,
         type: 3}
       insertIndex: -1
-      addedObject: {fileID: 2732431982940286218}
+      addedObject: {fileID: 3508924616911426839}
   m_SourcePrefab: {fileID: 100100000, guid: fd094099d278ea945908c884c0d9a5e2, type: 3}
 --- !u!1 &1565853709047239140 stripped
 GameObject:
@@ -369,6 +369,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 605578c30c1aa9947a4e2307894d492b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_canWeUseGazeKey: 57
   m_gazeDataSource: 0
   m_gazeCalibrationMode: 0
   m_calibrationRequestKey: 32
@@ -376,29 +377,13 @@ MonoBehaviour:
   m_setOutputFilterTypeKey: 303
   m_frequency: 0
   m_toggleGazeTarget: 13
-  m_checkGazeAllowed: 280
-  m_checkGazeCalibrated: 281
   m_showFixationPoint: 0
   m_fixationPointTransform: {fileID: 937131486983908877}
-  m_leftEyeTransform: {fileID: 0}
-  m_leftEyeRotationOffset: {x: 0, y: 0, z: 84.354}
-  m_rightEyeTransform: {fileID: 0}
-  m_VarjoEye: {x: 0, y: 0, z: 0}
-  m_rightEyeRotationOffset: {x: 0, y: 0, z: 84.354}
-  m_offsettedEye: {x: 0, y: 0, z: 0}
-  m_setEyePosition: 0
-  m_XRCamera: {fileID: 1576757768086385750}
   m_gazeTarget: {fileID: 4904425366907481998}
   m_gazeRadius: 0.01
   m_floatingGazeTargetDistance: 5
   m_targetOffset: 0.2
-  m_hitForce: 5
-  m_freeRotatingTag: FreeRotating
-  m_loggingToggleKey: 305
-  m_useCustomLogPath: 0
-  m_customLogPath: 
-  m_printFramerate: 0
---- !u!114 &2732431982940286218
+--- !u!114 &3508924616911426839
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -407,17 +392,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 1565853709047239140}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 923087a985344b77a0940a940ee9e4e2, type: 3}
+  m_Script: {fileID: 11500000, guid: 67cbaf74306f45a79287b035c9f29239, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_leftEyeTag: Eye_Left
-  m_rightEyeTag: Eye_Right
---- !u!20 &1576757768086385750 stripped
-Camera:
-  m_CorrespondingSourceObject: {fileID: 5851190611770418168, guid: fd094099d278ea945908c884c0d9a5e2,
-    type: 3}
-  m_PrefabInstance: {fileID: 4959129537805637550}
-  m_PrefabAsset: {fileID: 0}
+  m_startEnabled: 1
 --- !u!4 &6775717287441836863 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1934983178896604305, guid: fd094099d278ea945908c884c0d9a5e2,

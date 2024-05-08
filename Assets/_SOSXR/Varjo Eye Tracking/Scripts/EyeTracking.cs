@@ -13,7 +13,7 @@ public enum GazeDataSource
 
 
 [RequireComponent(typeof(Camera))]
-public class VarjoEyeTracking : MonoBehaviour
+public class EyeTracking : MonoBehaviour
 {
     [Header("Debug Gaze")]
     [Tooltip("Will poll Varjo functions: IsGazeAllowed() and IsGazeCalibrated() simultaneously into one neat package")]
@@ -51,36 +51,22 @@ public class VarjoEyeTracking : MonoBehaviour
 
     [Tooltip("Gaze target offset towards viewer")]
     [SerializeField] private float m_targetOffset = 0.2f;
-
-    [Header("Gaze data logging")]
-    [SerializeField] private KeyCode m_loggingToggleKey = KeyCode.RightControl;
-    [SerializeField] private bool m_useCustomLogPath = false;
-    [SerializeField] private string m_customLogPath = "";
     
     private readonly List<InputDevice> _devices = new();
-
     private MeshRenderer _gazeRenderer;
-
     private Camera _camera;
-    private List<GazeData> _dataSinceLastUpdate;
     private InputDevice _inputDevice;
     private Vector3 _direction;
     private float _distance;
-    private List<EyeMeasurements> _eyeMeasurementsSinceLastUpdate;
     private Eyes _eyes;
     private Vector3 _fixationPoint;
     private GazeData _gazeData;
-
-    private int _gazeDataCount = 0;
-    private float _gazeTimer = 0f;
     private RaycastHit _hit;
     private Vector3 _leftEyeTrackingPosition;
     private Quaternion _leftEyeTrackingRotation;
-
     private Vector3 _rayOrigin;
     private Vector3 _rightEyeTrackingPosition;
     private Quaternion _rightEyeTrackingRotation;
-
     private LogEyeTracking _log;
 
 
@@ -89,7 +75,7 @@ public class VarjoEyeTracking : MonoBehaviour
         _camera = transform.root.GetComponentInChildren<Camera>();
         _gazeRenderer = m_gazeTarget.GetComponentInChildren<MeshRenderer>();
 
-        _log = new LogEyeTracking(this);
+        _log = GetComponent<LogEyeTracking>();
     }
 
 
@@ -137,7 +123,7 @@ public class VarjoEyeTracking : MonoBehaviour
         if (Input.GetKeyDown(m_setOutputFilterTypeKey))
         {
             SetGazeOutputFilterType(m_gazeOutputFilterType);
-            
+
             Debug.Log("Gaze output filter type is now: " + GetGazeOutputFilterType());
         }
 
@@ -151,39 +137,7 @@ public class VarjoEyeTracking : MonoBehaviour
             _gazeRenderer.enabled = !_gazeRenderer.enabled;
         }
 
-        HandleLogging();
-    }
-
-
-    private void HandleLogging()
-    {
-        if (Input.GetKeyDown(m_loggingToggleKey))
-        {
-            _log.ToggleLogging();
-        }
-
-        if (!_log.Logging)
-        {
-            return;
-        }
-
-        _gazeTimer += Time.deltaTime;
-
-        if (_gazeTimer >= 1.0f)
-        {
-            Debug.Log("Gaze data rows per second: " + _gazeDataCount);
-            _gazeDataCount = 0;
-            _gazeTimer = 0f;
-        }
-
-        var dataCount = GetGazeList(out _dataSinceLastUpdate, out _eyeMeasurementsSinceLastUpdate);
-
-        _gazeDataCount += dataCount;
-
-        for (var i = 0; i < dataCount; i++)
-        {
-            _log.LogGazeData(_dataSinceLastUpdate[i], _eyeMeasurementsSinceLastUpdate[i]);
-        }
+        _log.LogFrameEyeTrackingData();
     }
 
 
@@ -194,17 +148,18 @@ public class VarjoEyeTracking : MonoBehaviour
         SphereCast();
     }
 
-/// <summary>
-/// Get gaze data if gaze is allowed and calibrated
-/// </summary>
+
+    /// <summary>
+    ///     Get gaze data if gaze is allowed and calibrated
+    /// </summary>
     private void GetEyeData()
     {
-        if (!CanWeUseGaze()) 
+        if (!CanWeUseGaze())
         {
             return;
         }
 
-        if (!_inputDevice.isValid) 
+        if (!_inputDevice.isValid)
         {
             GetDevice();
         }
@@ -228,7 +183,7 @@ public class VarjoEyeTracking : MonoBehaviour
         {
             return;
         }
-        
+
         if (_eyes.TryGetFixationPoint(out _fixationPoint))
         {
             if (m_fixationPointTransform != null)
@@ -238,7 +193,7 @@ public class VarjoEyeTracking : MonoBehaviour
         }
 
         _rayOrigin = _camera.transform.position;
-        
+
         _direction = (m_fixationPointTransform.position - _camera.transform.position).normalized;
     }
 
@@ -267,11 +222,11 @@ public class VarjoEyeTracking : MonoBehaviour
         if (Physics.SphereCast(_rayOrigin, m_gazeRadius, _direction, out _hit)) // Raycast to world from XR Camera position towards fixation point
         {
             m_gazeTarget.transform.position = _hit.point - _direction * m_targetOffset; // Put target on gaze raycast position with offset towards user
-            
+
             m_gazeTarget.transform.LookAt(_rayOrigin, Vector3.up); // Make gaze target point towards user
 
             _distance = _hit.distance; // Scale gaze-target with distance so it appears to be always same size
-            
+
             m_gazeTarget.transform.localScale = Vector3.one * _distance;
         }
         else // If gaze ray didn't hit anything, the gaze target is shown at fixed distance
@@ -280,5 +235,11 @@ public class VarjoEyeTracking : MonoBehaviour
             m_gazeTarget.transform.LookAt(_rayOrigin, Vector3.up);
             m_gazeTarget.transform.localScale = Vector3.one * m_floatingGazeTargetDistance;
         }
+    }
+
+
+    private void OnApplicationQuit()
+    {
+        _log.StopLogging();
     }
 }
