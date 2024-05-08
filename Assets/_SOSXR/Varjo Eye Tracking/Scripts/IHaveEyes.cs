@@ -2,7 +2,7 @@ using UnityEngine;
 
 
 /// <summary>
-/// Implement this interface at VarjoEyeTracking when we're ready for eyeball madness.
+///     Implement this interface at VarjoEyeTracking when we're ready for eyeball madness.
 /// </summary>
 public interface IHaveEyes
 {

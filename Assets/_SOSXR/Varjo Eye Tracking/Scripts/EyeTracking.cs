@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using UnityEngine.Serialization;
 using UnityEngine.XR;
 using static Varjo.XR.VarjoEyeTracking;
@@ -25,7 +24,7 @@ public class EyeTracking : MonoBehaviour
     [SerializeField] private KeyCode m_setOutputFilterTypeKey = KeyCode.RightShift;
     [SerializeField] private KeyCode m_toggleGazeTarget = KeyCode.Return;
     [FormerlySerializedAs("m_toggleFixationPoint")] [SerializeField] private KeyCode m_toggleFixationPointKey = KeyCode.Alpha5;
-    
+
     [Header("Settings")]
     [SerializeField] private GazeDataSource m_gazeDataSource = GazeDataSource.InputSubsystem;
     [SerializeField] private GazeCalibrationMode m_gazeCalibrationMode = GazeCalibrationMode.Fast;
@@ -93,19 +92,13 @@ public class EyeTracking : MonoBehaviour
     }
 
 
-    private bool CanWeUseGaze()
-    {
-        return IsGazeAllowed() && IsGazeCalibrated();
-    }
-
-
     private void Update()
     {
         if (Input.GetKeyDown(m_toggleFixationPointKey))
         {
-            m_fixationPointTransform.gameObject.SetActive(!m_fixationPointTransform.gameObject.activeInHierarchy);    
+            m_fixationPointTransform.gameObject.SetActive(!m_fixationPointTransform.gameObject.activeInHierarchy);
         }
-        
+
         if (Input.GetKeyDown(m_calibrationRequestKey))
         {
             RequestGazeCalibration(m_gazeCalibrationMode);
@@ -140,6 +133,12 @@ public class EyeTracking : MonoBehaviour
         GetEyeData();
 
         SphereCast();
+    }
+
+
+    private bool CanWeUseGaze()
+    {
+        return IsGazeAllowed() && IsGazeCalibrated();
     }
 
 

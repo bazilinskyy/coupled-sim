@@ -206,6 +206,6 @@ public class LogEyeTracking : MonoBehaviour
 
     private void OnApplicationQuit()
     {
-        StopLogging();
+        StopLogging(); // Since this is now MonoBehaviour, this can be here
     }
 }
