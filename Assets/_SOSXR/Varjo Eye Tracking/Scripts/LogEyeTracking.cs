@@ -202,4 +202,10 @@ public class LogEyeTracking : MonoBehaviour
 
         _streamWriter.WriteLine(line);
     }
+
+
+    private void OnApplicationQuit()
+    {
+        StopLogging();
+    }
 }

@@ -1,8 +1,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.Serialization;
 using UnityEngine.XR;
 using static Varjo.XR.VarjoEyeTracking;
+using CommonUsages = UnityEngine.XR.CommonUsages;
+using InputDevice = UnityEngine.XR.InputDevice;
 
 
 public enum GazeDataSource
@@ -12,46 +16,33 @@ public enum GazeDataSource
 }
 
 
-[RequireComponent(typeof(Camera))]
 public class EyeTracking : MonoBehaviour
 {
-    [Header("Debug Gaze")]
+    [Header("KeyCodes")]
     [Tooltip("Will poll Varjo functions: IsGazeAllowed() and IsGazeCalibrated() simultaneously into one neat package")]
     [SerializeField] private KeyCode m_canWeUseGazeKey = KeyCode.Alpha9;
-
-    [Tooltip("Gaze data")]
-    [SerializeField] private GazeDataSource m_gazeDataSource = GazeDataSource.InputSubsystem;
-
-    [Tooltip("Gaze calibration settings")]
-    [SerializeField] private GazeCalibrationMode m_gazeCalibrationMode = GazeCalibrationMode.Fast;
     [SerializeField] private KeyCode m_calibrationRequestKey = KeyCode.Space;
-
-    [Tooltip("Gaze output filter settings")]
-    [SerializeField] private GazeOutputFilterType m_gazeOutputFilterType = GazeOutputFilterType.Standard;
     [SerializeField] private KeyCode m_setOutputFilterTypeKey = KeyCode.RightShift;
-
-    [Tooltip("Gaze data output frequency")]
-    [SerializeField] private GazeOutputFrequency m_frequency;
-
-    [Tooltip("Toggle gaze target visibility")]
     [SerializeField] private KeyCode m_toggleGazeTarget = KeyCode.Return;
+    [FormerlySerializedAs("m_toggleFixationPoint")] [SerializeField] private KeyCode m_toggleFixationPointKey = KeyCode.Alpha5;
+    
+    [Header("Settings")]
+    [SerializeField] private GazeDataSource m_gazeDataSource = GazeDataSource.InputSubsystem;
+    [SerializeField] private GazeCalibrationMode m_gazeCalibrationMode = GazeCalibrationMode.Fast;
+    [SerializeField] private GazeOutputFilterType m_gazeOutputFilterType = GazeOutputFilterType.Standard;
+    [SerializeField] private GazeOutputFrequency m_gazeOutputFrequency;
 
-    [Tooltip("Toggle fixation point indicator visibility")]
-    [SerializeField] private bool m_showFixationPoint = true;
+    [Space(15)]
     [SerializeField] private Transform m_fixationPointTransform;
-
     [Tooltip("Gaze point indicator")]
     [SerializeField] private GameObject m_gazeTarget;
-
     [Tooltip("Gaze ray radius")]
     [SerializeField] private float m_gazeRadius = 0.01f;
-
     [Tooltip("Gaze point distance if not hit anything")]
     [SerializeField] private float m_floatingGazeTargetDistance = 5f;
-
     [Tooltip("Gaze target offset towards viewer")]
     [SerializeField] private float m_targetOffset = 0.2f;
-    
+
     private readonly List<InputDevice> _devices = new();
     private MeshRenderer _gazeRenderer;
     private Camera _camera;
@@ -73,37 +64,32 @@ public class EyeTracking : MonoBehaviour
     private void Awake()
     {
         _camera = transform.root.GetComponentInChildren<Camera>();
-        _gazeRenderer = m_gazeTarget.GetComponentInChildren<MeshRenderer>();
-
+        _gazeRenderer = m_gazeTarget.transform.root.GetComponentInChildren<MeshRenderer>();
         _log = GetComponent<LogEyeTracking>();
+    }
+
+
+    private void Start()
+    {
+        SetGazeOutputFrequency(m_gazeOutputFrequency);
     }
 
 
     private void OnEnable()
     {
-        if (_inputDevice.isValid)
-        {
-            return;
-        }
-
         GetDevice();
     }
 
 
     private void GetDevice()
     {
+        if (_inputDevice.isValid)
+        {
+            return;
+        }
+
         InputDevices.GetDevicesAtXRNode(XRNode.CenterEye, _devices);
         _inputDevice = _devices.FirstOrDefault();
-    }
-
-
-    private void Start()
-    {
-        SetGazeOutputFrequency(m_frequency);
-
-        m_gazeTarget.SetActive(CanWeUseGaze());
-
-        m_fixationPointTransform.gameObject.SetActive(m_showFixationPoint);
     }
 
 
@@ -115,6 +101,11 @@ public class EyeTracking : MonoBehaviour
 
     private void Update()
     {
+        if (Input.GetKeyDown(m_toggleFixationPointKey))
+        {
+            m_fixationPointTransform.gameObject.SetActive(!m_fixationPointTransform.gameObject.activeInHierarchy);    
+        }
+        
         if (Input.GetKeyDown(m_calibrationRequestKey))
         {
             RequestGazeCalibration(m_gazeCalibrationMode);
@@ -134,7 +125,10 @@ public class EyeTracking : MonoBehaviour
 
         if (Input.GetKeyDown(m_toggleGazeTarget))
         {
-            _gazeRenderer.enabled = !_gazeRenderer.enabled;
+            if (m_gazeTarget.activeInHierarchy || (!m_gazeTarget.activeInHierarchy && CanWeUseGaze()))
+            {
+                m_gazeTarget.SetActive(!m_gazeTarget.activeInHierarchy);
+            }
         }
 
         _log.LogFrameEyeTrackingData();
@@ -159,10 +153,7 @@ public class EyeTracking : MonoBehaviour
             return;
         }
 
-        if (!_inputDevice.isValid)
-        {
-            GetDevice();
-        }
+        GetDevice();
 
         m_gazeTarget.SetActive(true);
 
@@ -184,12 +175,9 @@ public class EyeTracking : MonoBehaviour
             return;
         }
 
-        if (_eyes.TryGetFixationPoint(out _fixationPoint))
+        if (_eyes.TryGetFixationPoint(out _fixationPoint) && m_fixationPointTransform != null)
         {
-            if (m_fixationPointTransform != null)
-            {
-                m_fixationPointTransform.localPosition = _fixationPoint;
-            }
+            m_fixationPointTransform.localPosition = _fixationPoint;
         }
 
         _rayOrigin = _camera.transform.position;
@@ -235,11 +223,5 @@ public class EyeTracking : MonoBehaviour
             m_gazeTarget.transform.LookAt(_rayOrigin, Vector3.up);
             m_gazeTarget.transform.localScale = Vector3.one * m_floatingGazeTargetDistance;
         }
-    }
-
-
-    private void OnApplicationQuit()
-    {
-        _log.StopLogging();
     }
 }
