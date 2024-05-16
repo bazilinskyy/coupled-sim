@@ -250,8 +250,28 @@ PrefabInstance:
     - target: {fileID: 1493516723137134811, guid: fd094099d278ea945908c884c0d9a5e2,
         type: 3}
       propertyPath: m_color.rgba
-      value: 4280031515
+      value: 4285407898
       objectReference: {fileID: 0}
+    - target: {fileID: 1909199673429246057, guid: fd094099d278ea945908c884c0d9a5e2,
+        type: 3}
+      propertyPath: m_debug
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1909199673429246057, guid: fd094099d278ea945908c884c0d9a5e2,
+        type: 3}
+      propertyPath: RatingHand
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1909199673429246057, guid: fd094099d278ea945908c884c0d9a5e2,
+        type: 3}
+      propertyPath: m_leftController
+      value: 
+      objectReference: {fileID: 7906228838686311554}
+    - target: {fileID: 1909199673429246057, guid: fd094099d278ea945908c884c0d9a5e2,
+        type: 3}
+      propertyPath: m_rightController
+      value: 
+      objectReference: {fileID: 2802006661646916611}
     - target: {fileID: 1934983178896604305, guid: fd094099d278ea945908c884c0d9a5e2,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -320,7 +340,7 @@ PrefabInstance:
     - target: {fileID: 8063747827035807481, guid: fd094099d278ea945908c884c0d9a5e2,
         type: 3}
       propertyPath: m_color.rgba
-      value: 4281273115
+      value: 4281866110
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -370,14 +390,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_canWeUseGazeKey: 57
+  m_calibrationRequestKey: 32
+  m_setOutputFilterTypeKey: 303
+  m_toggleGazeTarget: 13
+  m_toggleFixationPointKey: 53
   m_gazeDataSource: 0
   m_gazeCalibrationMode: 0
-  m_calibrationRequestKey: 32
   m_gazeOutputFilterType: 1
-  m_setOutputFilterTypeKey: 303
-  m_frequency: 0
-  m_toggleGazeTarget: 13
-  m_showFixationPoint: 0
+  m_gazeOutputFrequency: 0
   m_fixationPointTransform: {fileID: 937131486983908877}
   m_gazeTarget: {fileID: 4904425366907481998}
   m_gazeRadius: 0.01
@@ -396,12 +416,36 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_startEnabled: 1
+--- !u!114 &2802006661646916611 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7075405964399299501, guid: fd094099d278ea945908c884c0d9a5e2,
+    type: 3}
+  m_PrefabInstance: {fileID: 4959129537805637550}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: caff514de9b15ad48ab85dcff5508221, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!4 &6775717287441836863 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1934983178896604305, guid: fd094099d278ea945908c884c0d9a5e2,
     type: 3}
   m_PrefabInstance: {fileID: 4959129537805637550}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &7906228838686311554 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2984425538800948012, guid: fd094099d278ea945908c884c0d9a5e2,
+    type: 3}
+  m_PrefabInstance: {fileID: 4959129537805637550}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: caff514de9b15ad48ab85dcff5508221, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &8955157986325095150
 PrefabInstance:
   m_ObjectHideFlags: 0
