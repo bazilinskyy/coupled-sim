@@ -106,7 +106,7 @@ public class LogEyeTracking : MonoBehaviour
     /// <summary>
     ///     Should be run in Update when we want to log any eyetracking data.
     /// </summary>
-    public void LogFrameEyeTrackingData()
+    public void LogFrameEyeTrackingData(SOSXRData sosxrData)
     {
         if (!Logging)
         {
@@ -128,14 +128,14 @@ public class LogEyeTracking : MonoBehaviour
 
         for (var i = 0; i < dataCount; i++)
         {
-            LogGazeData(_dataSinceLastUpdate[i], _eyeMeasurementsSinceLastUpdate[i]);
+            LogGazeData(_dataSinceLastUpdate[i], _eyeMeasurementsSinceLastUpdate[i], sosxrData);
         }
     }
 
 
-    private void LogGazeData(GazeData data, EyeMeasurements eyeMeasurements)
+    private void LogGazeData(GazeData data, EyeMeasurements eyeMeasurements, SOSXRData sosxrData)
     {
-        var logData = new string[23];
+        var logData = new string[24];
 
         // Gaze data frame number
         logData[0] = data.frameNumber.ToString();
@@ -180,6 +180,9 @@ public class LogEyeTracking : MonoBehaviour
         // Focus
         logData[21] = invalid ? "" : data.focusDistance.ToString();
         logData[22] = invalid ? "" : data.focusStability.ToString();
+        
+        // SOSXR 
+        logData[23] = sosxrData.FocusName;
 
         Log(logData);
     }

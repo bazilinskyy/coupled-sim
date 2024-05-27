@@ -124,7 +124,12 @@ public class EyeTracking : MonoBehaviour
             }
         }
 
-        _log.LogFrameEyeTrackingData();
+        var sosxrData = new SOSXRData();
+        sosxrData.FocusName = _hit.transform.name;
+
+        _log.LogFrameEyeTrackingData(sosxrData);
+        
+        Debug.LogFormat("We hit {0}", _hit.transform.name);
     }
 
 
