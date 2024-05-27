@@ -123,13 +123,17 @@ public class EyeTracking : MonoBehaviour
                 m_gazeTarget.SetActive(!m_gazeTarget.activeInHierarchy);
             }
         }
+        
+        var focusName = _hit.collider != null ? _hit.collider.name : "NULL"; // With _hit.transform.name you'd get the info of the RigidBody, where we want info on the Collider. 
 
-        var sosxrData = new SOSXRData();
-        sosxrData.FocusName = _hit.transform.name;
+        Debug.LogFormat("We hit {0}", focusName);
+
+        var sosxrData = new SOSXRData
+        {
+            FocusName = focusName
+        };
 
         _log.LogFrameEyeTrackingData(sosxrData);
-        
-        Debug.LogFormat("We hit {0}", _hit.transform.name);
     }
 
 

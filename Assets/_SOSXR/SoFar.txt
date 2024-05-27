@@ -2,6 +2,28 @@
 
 Importing assets as requested in email.
 
+We're now also logging the name of the collider we're looking at correctly. (Future Maarten: this was not yet correct: see collider/transform debacle).
+
+Fixed rear wheel position (the WheelColliders referenced in the WheelVehicle where in the wrong place)
+
+Removed global box collider (that was for when we still had some damn traffic)
+
+Made car material 2-sided. Before you could look out the back and see  through the metal bits of the car. 
+
+Added colliders to windows of vehicle. They still a bit opaque, so hard to see the road. Good luck! (will of course remove the Renderer later, but is good for positioning now). 
+
+It needs to poll for the name of the COLLIDER, not the TRANSFORM. With the Transform it will look towards the thing that has the RigidBody. 
+We're trying to get info from the thing that has the Collider. Therefore: _hit.collider.name and not _hit.transform.name
+
+Added collider to driver and passenger both head and body. They're a little big, might have to play with making them smaller at the risk of losing hits. 
+Also risk hitting your own collider. The head positioning of your own avatar is still really messy. I haven't touched it so far, but regardless, it looks like it's going to give me some grief in the future.
+
+Colliders like so seem to work quite well. Will probably have to rename the collider for head and for body to be clear which passenger /driver is being looked at:
+e.g. driver should have "Driver_HEAD", and "Passenger_1_HEAD" etc or somesuch. 
+
+It does look like eyetracking has it's own data export and could be happiest just to leave it like that and combine with coupled-sim log post-study. 
+
+
 
 
 -----
