@@ -1,56 +1,48 @@
 ﻿using System;
 using System.Collections;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+
 
 //logic entry point 
 // - presents main menu
 // - updates client/host logic
 public class NetworkingManager : MonoBehaviour
 {
-    [System.Serializable]
-    public class ExperimentParameter
-    {
-        public string name;
-        public string value;
-    }
-
-    [System.Serializable]
-    public class Trial
-    {
-        public int experimentIndex;
-        public int roleIndex;
-        public PlayerSystem.InputMode InputMode;
-        public ExperimentParameter [] experimentParameters;
-        public float recordingStartTime;
-        public float recordingDuration;
-    }
-
-    public static NetworkingManager Instance
-    {
-        get;
-        private set;
-    }
-
-    NetworkSystem _netSystem;
-    LevelManager _levelManager;
-    PlayerSystem _playerSystem;
-    public PlayerSystem PlayerSystem => _playerSystem;
-    WorldLogger _logger;
-    WorldLogger _fixedLogger;
-    LogConverter _logConverter;
     public float RealtimeLogInterval = 0.2f;
 
-    [SerializeField]
-    AICarSyncSystem _aiCarSystem;
+    [SerializeField] private AICarSyncSystem _aiCarSystem;
     public ExperimentDefinition[] Experiments;
 
-    void Awake()
+    public bool hideGui = false;
+    public bool RunTrialSequenceAutomatically;
+    public bool recordVideos = false;
+
+    public Trial[] trials;
+
+    private NetworkSystem _netSystem;
+    private LevelManager _levelManager;
+    private PlayerSystem _playerSystem;
+    private WorldLogger _logger;
+    private WorldLogger _fixedLogger;
+    private LogConverter _logConverter;
+
+    private static int CurrentTrialIndex;
+
+    public static NetworkingManager Instance { get; private set; }
+    public PlayerSystem PlayerSystem => _playerSystem;
+
+
+    private void Awake()
     {
-        if (Instance == null) {
+        if (Instance == null)
+        {
             Instance = this;
         }
+
         DontDestroyOnLoad(gameObject);
+        
         _playerSystem = GetComponent<PlayerSystem>();
         _levelManager = new LevelManager(_playerSystem, Experiments);
         _logger = new WorldLogger(_playerSystem, _aiCarSystem);
@@ -59,57 +51,52 @@ public class NetworkingManager : MonoBehaviour
         _logConverter = new LogConverter(_playerSystem.PedestrianPrefab);
     }
 
-    public bool hideGui = false;
-    public bool RunTrialSequenceAutomatically;
-    public bool recordVideos = false;
 
-    static int CurrentTrialIndex;
-
-    void NextTrial()
+    private void NextTrial()
     {
         CurrentTrialIndex++;
         Destroy(gameObject);
+
         if (CurrentTrialIndex < trials.Length)
         {
-            (_netSystem as Host).Shutdown();
+            (_netSystem as Host)?.Shutdown();
             SceneManager.LoadScene(0);
-        } else
+        }
+        else
         {
-#if UNITY_EDITOR
-            UnityEditor.EditorApplication.isPlaying = false;
-#else
+            #if UNITY_EDITOR
+            EditorApplication.isPlaying = false;
+            #else
             Application.Quit();
-#endif
+            #endif
         }
     }
 
-    void Update()
+
+    private void Update()
     {
         if (Input.GetKeyDown(KeyCode.Escape))
         {
             //Application.Quit();
             NextTrial();
         }
+
         if (Input.GetKeyDown(KeyCode.Tab))
         {
             hideGui = !hideGui;
         }
-        if (_netSystem != null)
-        {
-            _netSystem.Update();
-        }
+
+        _netSystem?.Update();
     }
-    void FixedUpdate()
+
+
+    private void FixedUpdate()
     {
-        if (_netSystem != null)
-        {
-            _netSystem.FixedUpdate();
-        }
+        _netSystem?.FixedUpdate();
     }
 
-    public Trial[] trials;
 
-    void OnGUI()
+    private void OnGUI()
     {
         if (hideGui)
         {
@@ -119,7 +106,8 @@ public class NetworkingManager : MonoBehaviour
                 {
                     _netSystem = new Host(_levelManager, _playerSystem, _aiCarSystem, _logger, _fixedLogger, trials[CurrentTrialIndex]);
                 }
-            } else
+            }
+            else
             {
                 _netSystem.OnGUI(RunTrialSequenceAutomatically);
             }
@@ -132,6 +120,7 @@ public class NetworkingManager : MonoBehaviour
                 {
                     _netSystem = new Host(_levelManager, _playerSystem, _aiCarSystem, _logger, _fixedLogger, trials[CurrentTrialIndex]);
                 }
+
                 if (!RunTrialSequenceAutomatically && GUILayout.Button("Start client"))
                 {
                     _netSystem = new Client(_levelManager, _playerSystem, _aiCarSystem, _logger, _fixedLogger);
@@ -146,38 +135,65 @@ public class NetworkingManager : MonoBehaviour
         }
     }
 
+
     private void OnDestroy()
     {
         if (Instance == this)
         {
             Instance = null;
         }
+
         _logger.EndLog();
         _fixedLogger.EndLog();
     }
 
+
     internal void StartRecording()
     {
-#if UNITY_EDITOR
-        if (recordVideos) {
+        #if UNITY_EDITOR
+        if (recordVideos)
+        {
             StartCoroutine(RecordAndRunNextTrial());
         }
-#endif
+        #endif
     }
 
-#if UNITY_EDITOR
+
+    [Serializable]
+    public class ExperimentParameter
+    {
+        public string name;
+        public string value;
+    }
+
+
+    [Serializable]
+    public class Trial
+    {
+        public int experimentIndex;
+        public int roleIndex;
+        public PlayerSystem.InputMode InputMode;
+        public ExperimentParameter[] experimentParameters;
+        public float recordingStartTime;
+        public float recordingDuration;
+    }
+
+
+    #if UNITY_EDITOR
     public Recorder recorder;
     private IEnumerator RecordAndRunNextTrial()
     {
         var trial = trials[CurrentTrialIndex];
         recorder.Init();
+
         yield return new WaitForSeconds(trial.recordingStartTime);
         recorder.StartRecording(_levelManager.GetFilename(trial, CurrentTrialIndex));
+
         yield return new WaitForSeconds(trial.recordingDuration);
         recorder.StopRecording();
+
         yield return null;
         NextTrial();
     }
-#endif
-
+    #endif
 }
