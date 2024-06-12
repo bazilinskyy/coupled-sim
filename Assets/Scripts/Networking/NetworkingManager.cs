@@ -42,7 +42,7 @@ public class NetworkingManager : MonoBehaviour
         }
 
         DontDestroyOnLoad(gameObject);
-        
+
         _playerSystem = GetComponent<PlayerSystem>();
         _levelManager = new LevelManager(_playerSystem, Experiments);
         _logger = new WorldLogger(_playerSystem, _aiCarSystem);

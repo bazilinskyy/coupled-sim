@@ -152,13 +152,12 @@ public class Host : NetworkSystem
 
                             _aiPedestrianSyncSystem = _lvlManager.ActiveExperiment.AIPedestrians;
                             _aiPedestrianSyncSystem.InitHost(_host);
-                            ExperimentRoleDefinition experimentRoleDefinition;
                             var role = _playerRoles[PlayerId];
                             var roleName = "No role";
 
                             if (role != -1)
                             {
-                                experimentRoleDefinition = _lvlManager.ActiveExperiment.Roles[role];
+                                var experimentRoleDefinition = _lvlManager.ActiveExperiment.Roles[role];
 
                                 if (experimentRoleDefinition.AutonomousPath != null)
                                 {
@@ -186,6 +185,10 @@ public class Host : NetworkSystem
                 _logger.LogFrame(0, Time.realtimeSinceStartup);
 
                 break;
+            case NetState.Client_Connecting:
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
         }
     }
 
@@ -278,6 +281,7 @@ public class Host : NetworkSystem
         }
 
         _transitionPhase = TransitionPhase.LoadingLevel;
+        
         Time.timeScale = 0;
     }
 
@@ -419,6 +423,12 @@ public class Host : NetworkSystem
             }
 
                 break;
+            case NetState.Disconnected:
+                break;
+            case NetState.Client_Connecting:
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
         }
     }
 }
