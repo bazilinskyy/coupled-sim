@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class CopyPositionAndRotationOfTaggedTarget : MonoBehaviour
 {
-    [SerializeField] [DisableEditing] private Transform m_taggedTransform;
+    [SerializeField] private Transform m_taggedTransform;
     [TagSelector] [SerializeField] private string m_tagToSearchFor;
     [Tooltip("When this is enabled, it will go to the root GameObject (its ancestor), and then go down all their children to find a tagged object. This can be useful for when working with networked systems, in which multiples of the same prefabs could be spawned, each having their own version of the tagged object.\n" +
              "If this is disabled, it will search throughout the scene for a tagged transform")]
