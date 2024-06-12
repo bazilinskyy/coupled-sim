@@ -1865,12 +1865,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RatingHand: 0
+  m_leftController: {fileID: 0}
   m_leftButtonPressRef: {fileID: -2946921572223811912, guid: e83993518ed9ae54188f0ecaad73bd34,
     type: 3}
   m_leftButtonReleaseRef: {fileID: -103791890421675425, guid: e83993518ed9ae54188f0ecaad73bd34,
     type: 3}
   m_leftRotateRef: {fileID: -8608096329379983506, guid: e83993518ed9ae54188f0ecaad73bd34,
     type: 3}
+  m_rightController: {fileID: 0}
   m_rightButtonPressRef: {fileID: -1336355139137886794, guid: e83993518ed9ae54188f0ecaad73bd34,
     type: 3}
   m_rightButtonReleaseRef: {fileID: 7862927886206012239, guid: e83993518ed9ae54188f0ecaad73bd34,
@@ -1884,13 +1886,11 @@ MonoBehaviour:
   m_activeHapticsDuration: 0.15
   m_activeHapticsIntensity: 0.25
   m_rotationMeasureInterval: 0.01
-  m_axisToMeasure: 2
   _ratingValues:
   - DateAndTime: 
+    RatingHand: 0
     StartRotationQuaternion: {x: 0, y: 0, z: 0, w: 0}
     StartRotation: {x: 0, y: 0, z: 0}
     EndRotationQuaternion: {x: 0, y: 0, z: 0, w: 0}
     EndRotation: {x: 0, y: 0, z: 0}
-    EndRotationAxisRaw: 0
-    EndRotationAxisRecalculated: 0
   m_debug: 1

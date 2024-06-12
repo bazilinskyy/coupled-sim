@@ -4133,12 +4133,11 @@ MonoBehaviour:
     collider: {fileID: 0}
   Internal: {fileID: 2478723328460268675}
   External: {fileID: 9145836946652966720}
-  m_instantiateXRRig: 1
+  m_instantiateXRRig: 0
   m_xrRigPrefab: {fileID: 1422170957023196873, guid: a4af4edd0797b244e8f65279184c083e,
     type: 3}
   cameras:
-  - {fileID: 1785558095472007331}
-  - {fileID: 1137412425827703945}
+  - {fileID: 5707564978662803316}
   HMISlots:
     Hood: {fileID: 1018005857743138705}
     Top: {fileID: 5573083158113718902}
@@ -13291,6 +13290,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 350350811369953309}
   - {fileID: 1785558095472007328}
   m_Father: {fileID: 5702687424825841354}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -15113,7 +15113,7 @@ PrefabInstance:
     - target: {fileID: 4764351552333431003, guid: dbbb24367dd809f40a8b370b699c7028,
         type: 3}
       propertyPath: m_color.rgba
-      value: 4278561133
+      value: 4284578926
       objectReference: {fileID: 0}
     - target: {fileID: 6596234522564231215, guid: dbbb24367dd809f40a8b370b699c7028,
         type: 3}
@@ -15227,6 +15227,130 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 927708794685263450}
   m_PrefabAsset: {fileID: 0}
+--- !u!1001 &2163630834878588044
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 6085194420971212053}
+    m_Modifications:
+    - target: {fileID: 1493516723137134811, guid: fd094099d278ea945908c884c0d9a5e2,
+        type: 3}
+      propertyPath: m_color.rgba
+      value: 4280567598
+      objectReference: {fileID: 0}
+    - target: {fileID: 1909199673429246057, guid: fd094099d278ea945908c884c0d9a5e2,
+        type: 3}
+      propertyPath: m_leftController
+      value: 
+      objectReference: {fileID: 3993582297383221152}
+    - target: {fileID: 1909199673429246057, guid: fd094099d278ea945908c884c0d9a5e2,
+        type: 3}
+      propertyPath: m_rightController
+      value: 
+      objectReference: {fileID: 8950384169590353697}
+    - target: {fileID: 1934983178896604305, guid: fd094099d278ea945908c884c0d9a5e2,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1934983178896604305, guid: fd094099d278ea945908c884c0d9a5e2,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1934983178896604305, guid: fd094099d278ea945908c884c0d9a5e2,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1934983178896604305, guid: fd094099d278ea945908c884c0d9a5e2,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1934983178896604305, guid: fd094099d278ea945908c884c0d9a5e2,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1934983178896604305, guid: fd094099d278ea945908c884c0d9a5e2,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1934983178896604305, guid: fd094099d278ea945908c884c0d9a5e2,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1934983178896604305, guid: fd094099d278ea945908c884c0d9a5e2,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1934983178896604305, guid: fd094099d278ea945908c884c0d9a5e2,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1934983178896604305, guid: fd094099d278ea945908c884c0d9a5e2,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6300200497835139431, guid: fd094099d278ea945908c884c0d9a5e2,
+        type: 3}
+      propertyPath: m_Name
+      value: XR Origin (SOSXR)
+      objectReference: {fileID: 0}
+    - target: {fileID: 8063747827035807481, guid: fd094099d278ea945908c884c0d9a5e2,
+        type: 3}
+      propertyPath: m_color.rgba
+      value: 4281335196
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: fd094099d278ea945908c884c0d9a5e2, type: 3}
+--- !u!4 &350350811369953309 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1934983178896604305, guid: fd094099d278ea945908c884c0d9a5e2,
+    type: 3}
+  m_PrefabInstance: {fileID: 2163630834878588044}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &3993582297383221152 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2984425538800948012, guid: fd094099d278ea945908c884c0d9a5e2,
+    type: 3}
+  m_PrefabInstance: {fileID: 2163630834878588044}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: caff514de9b15ad48ab85dcff5508221, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!20 &5707564978662803316 stripped
+Camera:
+  m_CorrespondingSourceObject: {fileID: 5851190611770418168, guid: fd094099d278ea945908c884c0d9a5e2,
+    type: 3}
+  m_PrefabInstance: {fileID: 2163630834878588044}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &8950384169590353697 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7075405964399299501, guid: fd094099d278ea945908c884c0d9a5e2,
+    type: 3}
+  m_PrefabInstance: {fileID: 2163630834878588044}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: caff514de9b15ad48ab85dcff5508221, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &7015557156177752735
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -162,17 +162,17 @@ public class PlayerAvatar : MonoBehaviour
             }
             if (_carBlinkers == null)
             {
-                Debug.LogWarningFormat("SOSXR: In our PlayerAvatar, a passenger doesn't carry their own blinkers, so they needed to find some 'out there'. We want to be sure we got the correct blinkers: {0}", _carBlinkers.name);
+                Debug.LogFormat("SOSXR: In our PlayerAvatar, a passenger doesn't carry their own blinkers, so they needed to find some 'out there'. We want to be sure we got the correct blinkers: {0}", _carBlinkers.name);
             }
             
             if (stopLights == null)
             {
-                Debug.LogWarning("SOSXR: We don't yet have any stoplights, but also no way to get some new ones.");
+                Debug.Log("SOSXR: We don't yet have any stoplights, but also no way to get some new ones.");
             }
 
             if (frontLights == null)
             {
-                Debug.LogWarning("SOSXR: We don't yet have any front lights, but also no way to get some new ones. Maybe they're on a car somewhere?");
+                Debug.Log("SOSXR: We don't yet have any front lights, but also no way to get some new ones. Maybe they're on a car somewhere?");
             }
         }
         else
@@ -185,6 +185,8 @@ public class PlayerAvatar : MonoBehaviour
                     rig.transform.parent = cameras[cameraIndex].transform.parent; // This will probably be the 'CameraParent'
                     rig.transform.localPosition = Vector3.zero;
                     rig.transform.localRotation = Quaternion.identity;
+                    
+                    
 
                     var cam = rig.GetComponentInChildren<Camera>();
                     cameras[cameraIndex] = cam;
