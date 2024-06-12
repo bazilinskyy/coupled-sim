@@ -1,5 +1,4 @@
-﻿using SOSXR;
-using UnityEngine;
+﻿using UnityEngine;
 
 
 public class CopyPositionAndRotationOfTaggedTarget : MonoBehaviour

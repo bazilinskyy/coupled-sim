@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
+using Unity.XR.CoreUtils;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.Serialization;
+using UnityEngine.XR.Interaction.Toolkit;
 using UnityStandardAssets.Utility;
 
 
@@ -132,6 +134,11 @@ public class PlayerSystem : MonoBehaviour
     public void SpawnRemotePlayer(SpawnPoint spawnPoint, int player, ExperimentRoleDefinition role)
     {
         var remotePlayer = SpawnAvatar(spawnPoint, GetAvatarPrefab(spawnPoint.Type, role.carIdx), player, role);
+        
+        var remoteXROrigin = remotePlayer.GetComponentInChildren<XROrigin>();
+        remoteXROrigin.transform.GetChild(0).gameObject.SetActive(false);
+        Debug.LogWarning("SOSXR: I'm disabling the first child of the remote player. That sounds very wrong.");
+        
         remotePlayer.Initialize(true, InputMode.None, ControlMode.HostAI, spawnPoint.VehicleType);
     }
 
