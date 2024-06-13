@@ -144,7 +144,11 @@ public class PlayerSystem : MonoBehaviour
     private static void DisableRemoteXROriginParts(PlayerAvatar remotePlayer)
     {
         var remoteXROrigin = remotePlayer.GetComponentInChildren<XROrigin>();
-        
+
+        if (remotePlayer == null)
+        {
+            return;
+        }
         remotePlayer.gameObject.SetActive(false); 
         if (!remotePlayer.gameObject.activeInHierarchy)
         {
