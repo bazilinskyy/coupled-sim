@@ -135,11 +135,21 @@ public class PlayerSystem : MonoBehaviour
     {
         var remotePlayer = SpawnAvatar(spawnPoint, GetAvatarPrefab(spawnPoint.Type, role.carIdx), player, role);
         
+        DisableRemoteXROriginParts(remotePlayer);
+
+        remotePlayer.Initialize(true, InputMode.None, ControlMode.HostAI, spawnPoint.VehicleType);
+    }
+
+
+    private static void DisableRemoteXROriginParts(PlayerAvatar remotePlayer)
+    {
         var remoteXROrigin = remotePlayer.GetComponentInChildren<XROrigin>();
         remoteXROrigin.transform.GetChild(0).gameObject.SetActive(false);
         Debug.LogWarning("SOSXR: I'm disabling the first child of the remote player. That sounds very wrong.");
-        
-        remotePlayer.Initialize(true, InputMode.None, ControlMode.HostAI, spawnPoint.VehicleType);
+
+        var recenter = remotePlayer.GetComponent<RecenterXROrigin>();
+        recenter.enabled = false;
+        Debug.Log("SOSXR: Disabling remote RecenterXROrigin");
     }
 
 
