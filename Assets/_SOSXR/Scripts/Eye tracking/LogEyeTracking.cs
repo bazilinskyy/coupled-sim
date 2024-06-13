@@ -183,6 +183,8 @@ public class LogEyeTracking : MonoBehaviour
         
         // SOSXR 
         logData[23] = sosxrData.FocusName;
+        
+        // SOSXR : Emperor's Rating
 
         Log(logData);
     }
