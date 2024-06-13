@@ -85,7 +85,7 @@ MonoBehaviour:
   m_radius: 0.15
   m_color:
     serializedVersion: 2
-    rgba: 4282991373
+    rgba: 4278914059
 --- !u!1 &510759243375576539
 GameObject:
   m_ObjectHideFlags: 0
@@ -221,7 +221,7 @@ MonoBehaviour:
   m_radius: 0.1
   m_color:
     serializedVersion: 2
-    rgba: 4284769894
+    rgba: 4285630017
 --- !u!114 &585916621719829302
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -883,6 +883,59 @@ MonoBehaviour:
     m_HintWeight: 0
     m_MaintainTargetPositionOffset: 0
     m_MaintainTargetRotationOffset: 0
+--- !u!1 &3152810767025621747
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6496334066497407144}
+  - component: {fileID: 3782960377935713093}
+  m_Layer: 0
+  m_Name: Passenger_Head
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6496334066497407144
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3152810767025621747}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.05, y: -0, z: -0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8038360431898813552}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!135 &3782960377935713093
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3152810767025621747}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Radius: 0.2
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &3351959025385700786
 GameObject:
   m_ObjectHideFlags: 0
@@ -931,7 +984,7 @@ MonoBehaviour:
   m_radius: 0.1
   m_color:
     serializedVersion: 2
-    rgba: 4286735539
+    rgba: 4280748863
 --- !u!114 &3573032263462561463
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1139,7 +1192,7 @@ MonoBehaviour:
   m_radius: 0.1
   m_color:
     serializedVersion: 2
-    rgba: 4279440400
+    rgba: 4284970576
 --- !u!114 &3039575092530218418
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1288,7 +1341,7 @@ MonoBehaviour:
   m_radius: 0.1
   m_color:
     serializedVersion: 2
-    rgba: 4285888844
+    rgba: 4286876547
 --- !u!1 &7661147631939441798
 GameObject:
   m_ObjectHideFlags: 0
@@ -1930,9 +1983,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8038360431898813552}
-  - component: {fileID: 5209726698837220282}
   m_Layer: 15
-  m_Name: Passenger_Head_M
+  m_Name: Head_M
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1955,29 +2007,9 @@ Transform:
   - {fileID: 8038360431898794304}
   - {fileID: 8038360431898860214}
   - {fileID: 8038360431898834032}
+  - {fileID: 6496334066497407144}
   m_Father: {fileID: 8038360431898887298}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!135 &5209726698837220282
-SphereCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8038360431898972420}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Radius: 0.2
-  m_Center: {x: -0.075, y: 0, z: 0}
 --- !u!1 &8038360431898973268
 GameObject:
   m_ObjectHideFlags: 0
@@ -4619,12 +4651,12 @@ PrefabInstance:
     - target: {fileID: 3114927327432231255, guid: a4af4edd0797b244e8f65279184c083e,
         type: 3}
       propertyPath: m_color.rgba
-      value: 4287954136
+      value: 4293439640
       objectReference: {fileID: 0}
     - target: {fileID: 5793977135206799221, guid: a4af4edd0797b244e8f65279184c083e,
         type: 3}
       propertyPath: m_color.rgba
-      value: 4279130005
+      value: 4290491079
       objectReference: {fileID: 0}
     - target: {fileID: 6775717287441836863, guid: a4af4edd0797b244e8f65279184c083e,
         type: 3}
