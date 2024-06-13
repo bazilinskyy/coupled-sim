@@ -9,7 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4610597559980520345}
-  - component: {fileID: 7442698985361534631}
+  - component: {fileID: 5335117400120193727}
   m_Layer: 0
   m_Name: Driver_Head
   m_TagString: Untagged
@@ -32,8 +32,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 7156813555140586026}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!135 &7442698985361534631
-SphereCollider:
+--- !u!136 &5335117400120193727
+CapsuleCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -50,9 +50,11 @@ SphereCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Radius: 0.2
-  m_Center: {x: 0, y: 0, z: 0}
+  serializedVersion: 2
+  m_Radius: 0.09
+  m_Height: 0.25
+  m_Direction: 0
+  m_Center: {x: -0.01, y: 0.025, z: 0}
 --- !u!1 &510737072600106412
 GameObject:
   m_ObjectHideFlags: 0
@@ -424,7 +426,7 @@ MonoBehaviour:
   m_radius: 0.15
   m_color:
     serializedVersion: 2
-    rgba: 4283273223
+    rgba: 4279226072
 --- !u!1 &4712703033922600709
 GameObject:
   m_ObjectHideFlags: 0

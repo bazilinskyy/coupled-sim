@@ -144,6 +144,13 @@ public class PlayerSystem : MonoBehaviour
     private static void DisableRemoteXROriginParts(PlayerAvatar remotePlayer)
     {
         var remoteXROrigin = remotePlayer.GetComponentInChildren<XROrigin>();
+        
+        remotePlayer.gameObject.SetActive(false); 
+        if (!remotePlayer.gameObject.activeInHierarchy)
+        {
+            return; // This is of course a bit bs, but a good way to quickly see what happens if we disable the entire XROrigin Gameobject.
+        }
+        
         remoteXROrigin.transform.GetChild(0).gameObject.SetActive(false);
         Debug.LogWarning("SOSXR: I'm disabling the first child of the remote player. That sounds very wrong.");
 

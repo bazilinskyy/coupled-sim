@@ -85,7 +85,7 @@ MonoBehaviour:
   m_radius: 0.15
   m_color:
     serializedVersion: 2
-    rgba: 4278914059
+    rgba: 4289631354
 --- !u!1 &510759243375576539
 GameObject:
   m_ObjectHideFlags: 0
@@ -221,7 +221,7 @@ MonoBehaviour:
   m_radius: 0.1
   m_color:
     serializedVersion: 2
-    rgba: 4285630017
+    rgba: 4279632409
 --- !u!114 &585916621719829302
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -892,7 +892,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6496334066497407144}
-  - component: {fileID: 3782960377935713093}
+  - component: {fileID: 2987752281267685494}
   m_Layer: 0
   m_Name: Passenger_Head
   m_TagString: Untagged
@@ -915,8 +915,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 8038360431898813552}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!135 &3782960377935713093
-SphereCollider:
+--- !u!136 &2987752281267685494
+CapsuleCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -933,9 +933,11 @@ SphereCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Radius: 0.2
-  m_Center: {x: 0, y: 0, z: 0}
+  serializedVersion: 2
+  m_Radius: 0.09
+  m_Height: 0.25
+  m_Direction: 0
+  m_Center: {x: -0.01, y: 0.025, z: 0}
 --- !u!1 &3351959025385700786
 GameObject:
   m_ObjectHideFlags: 0
@@ -984,7 +986,7 @@ MonoBehaviour:
   m_radius: 0.1
   m_color:
     serializedVersion: 2
-    rgba: 4280748863
+    rgba: 4278597426
 --- !u!114 &3573032263462561463
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1192,7 +1194,7 @@ MonoBehaviour:
   m_radius: 0.1
   m_color:
     serializedVersion: 2
-    rgba: 4284970576
+    rgba: 4283048764
 --- !u!114 &3039575092530218418
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1341,7 +1343,7 @@ MonoBehaviour:
   m_radius: 0.1
   m_color:
     serializedVersion: 2
-    rgba: 4286876547
+    rgba: 4279839767
 --- !u!1 &7661147631939441798
 GameObject:
   m_ObjectHideFlags: 0
@@ -4651,12 +4653,12 @@ PrefabInstance:
     - target: {fileID: 3114927327432231255, guid: a4af4edd0797b244e8f65279184c083e,
         type: 3}
       propertyPath: m_color.rgba
-      value: 4293439640
+      value: 4284027125
       objectReference: {fileID: 0}
     - target: {fileID: 5793977135206799221, guid: a4af4edd0797b244e8f65279184c083e,
         type: 3}
       propertyPath: m_color.rgba
-      value: 4290491079
+      value: 4280361569
       objectReference: {fileID: 0}
     - target: {fileID: 6775717287441836863, guid: a4af4edd0797b244e8f65279184c083e,
         type: 3}
