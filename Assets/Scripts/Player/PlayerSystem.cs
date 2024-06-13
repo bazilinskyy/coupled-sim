@@ -147,7 +147,7 @@ public class PlayerSystem : MonoBehaviour
         remoteXROrigin.transform.GetChild(0).gameObject.SetActive(false);
         Debug.LogWarning("SOSXR: I'm disabling the first child of the remote player. That sounds very wrong.");
 
-        var recenter = remotePlayer.GetComponent<RecenterXROrigin>();
+        var recenter = remoteXROrigin.GetComponent<RecenterXROrigin>();
         recenter.enabled = false;
         Debug.Log("SOSXR: Disabling remote RecenterXROrigin");
     }
