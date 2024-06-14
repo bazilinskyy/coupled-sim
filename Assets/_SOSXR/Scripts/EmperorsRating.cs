@@ -1,14 +1,13 @@
-// Enumeration to specify the handedness of the controller used for the rating
-
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Serialization;
 using UnityEngine.XR.Interaction.Toolkit;
 using Random = UnityEngine.Random;
 
 
+// Enumeration to specify the handedness of the controller used for the rating
 public enum Handedness
 {
     Right,
@@ -20,12 +19,10 @@ public enum Handedness
 public struct Rating
 {
     [Header("Don't edit these manually")]
-    public string DateAndTime;
     public Handedness RatingHand;
-    public Quaternion StartRotationQuaternion;
-    public Vector3 StartRotation;
-    public Quaternion EndRotationQuaternion;
-    public Vector3 EndRotation;
+    public long CurrentUnixTimeSeconds;
+    public Quaternion CurrentRotation;
+     public Vector3 CurrentHumanReadableRotation;
 }
 
 
@@ -75,13 +72,11 @@ public class EmperorsRating : MonoBehaviour
     [Tooltip("Interval in seconds for measuring the controller rotation.")]
     [SerializeField] [Range(0.001f, 0.5f)] private float m_rotationMeasureInterval = 0.01f;
 
-    [Header("These fields store runtime values and are not meant to be edited directly.")]
-    [SerializeField] private List<Rating> _ratingValues = new();
 
     [Header("Debug: make up random measurements instead of controller rotations")]
     [SerializeField] private bool m_debug = true;
 
-    private Rating _currentRating = new();
+    public Rating CurrentRating = new();
 
     private XRBaseController _controller;
 
@@ -93,10 +88,6 @@ public class EmperorsRating : MonoBehaviour
     private Coroutine _hapticsActiveCR;
     private Coroutine _measureRotationCR;
 
-    private const string dateTimeFormat = "yyyy-MM-dd HH:mm:ss";
-
-    public List<Rating> RatingValues => _ratingValues;
-
 
     private void Awake()
     {
@@ -107,9 +98,6 @@ public class EmperorsRating : MonoBehaviour
     [ContextMenu(nameof(Setup))]
     private void Setup()
     {
-        _ratingValues = new List<Rating>();
-
-
         if (RatingHand == Handedness.Right) // Selects the characteristics based on the hand chosen.
         {
             _buttonPressAction = m_rightButtonPressRef.action;
@@ -211,20 +199,15 @@ public class EmperorsRating : MonoBehaviour
     /// </summary>
     private IEnumerator MeasureRotationCR()
     {
-        var waitSeconds = new WaitForSeconds(m_rotationMeasureInterval);
-
-        _currentRating = new Rating();
-
-        _currentRating.DateAndTime = DateTime.Now.ToString(dateTimeFormat);
-        _currentRating.RatingHand = RatingHand;
-
-        _currentRating.StartRotationQuaternion = m_debug ? GetRandomQuaternion() : _rotationAction.ReadValue<Quaternion>();
-
         for (;;)
         {
-            _currentRating.EndRotationQuaternion = m_debug ? GetRandomQuaternion() : _rotationAction.ReadValue<Quaternion>();
+            CurrentRating = new Rating();
+            CurrentRating.CurrentUnixTimeSeconds = DateTimeOffset.Now.ToUnixTimeSeconds();
+            CurrentRating.RatingHand = RatingHand;
+            CurrentRating.CurrentRotation = m_debug ? GetRandomQuaternion() : _rotationAction.ReadValue<Quaternion>();
+            CurrentRating.CurrentHumanReadableRotation = CurrentRating.CurrentRotation.eulerAngles;
 
-            yield return waitSeconds;
+            yield return null;
         }
     }
 
@@ -253,6 +236,8 @@ public class EmperorsRating : MonoBehaviour
     {
         Debug.Log("Released the button");
 
+        CurrentRating = new Rating();
+
         if (_hapticsActiveCR != null)
         {
             StopCoroutine(_hapticsActiveCR);
@@ -272,30 +257,6 @@ public class EmperorsRating : MonoBehaviour
         {
             Debug.LogWarning("The measurement coroutine had already been stopped prior to our call to stop it (on the release of the trigger button), this doesn't seem correct");
         }
-
-        RecalculateRotation();
-    }
-
-
-    /// <summary>
-    ///     Recalculates Quaternion to more acceptable Vector3 formats.
-    ///     Recalculates the rotation of the controller to maintain it within a 0-180 range.
-    /// </summary>
-    private void RecalculateRotation()
-    {
-        _currentRating.StartRotation = _currentRating.StartRotationQuaternion.eulerAngles;
-        _currentRating.EndRotation = _currentRating.EndRotationQuaternion.eulerAngles;
-
-        StoreRotationValues();
-    }
-
-
-    /// <summary>
-    ///     Stores the recalculated rotation value for further analysis.
-    /// </summary>
-    private void StoreRotationValues()
-    {
-        _ratingValues.Add(_currentRating);
     }
 
 

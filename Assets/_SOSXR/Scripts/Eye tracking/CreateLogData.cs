@@ -2,20 +2,22 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
+using UnityEngine.Serialization;
 using static Varjo.XR.VarjoEyeTracking;
 
 
-[RequireComponent(typeof(EyeTracking))]
-public class LogData : MonoBehaviour
+
+public class CreateLogData : MonoBehaviour
 {
     [SerializeField] private bool m_startEnabled = true;
 
     private readonly bool m_useCustomLogPath = false;
     private readonly string m_customLogPath = "";
-    private static readonly string[] _columnNames = {"Frame", "CaptureTime", "LogTime", "HMDPosition", "HMDRotation", "GazeStatus", "CombinedGazeForward", "CombinedGazePosition", "InterPupillaryDistanceInMM", "LeftEyeStatus", "LeftEyeForward", "LeftEyePosition", "LeftPupilIrisDiameterRatio", "LeftPupilDiameterInMM", "LeftIrisDiameterInMM", "RightEyeStatus", "RightEyeForward", "RightEyePosition", "RightPupilIrisDiameterRatio", "RightPupilDiameterInMM", "RightIrisDiameterInMM", "FocusDistance", "FocusStability", "FocusName"};
-    private Camera _camera;
+    private static readonly string[] _columnNames = {"UnixTimeSeconds", "Frame", "CaptureTime", "LogTime", "HMDPosition", "HMDRotation", "GazeStatus", "CombinedGazeForward", "CombinedGazePosition", "InterPupillaryDistanceInMM", "LeftEyeStatus", "LeftEyeForward", "LeftEyePosition", "LeftPupilIrisDiameterRatio", "LeftPupilDiameterInMM", "LeftIrisDiameterInMM", "RightEyeStatus", "RightEyeForward", "RightEyePosition", "RightPupilIrisDiameterRatio", "RightPupilDiameterInMM", "RightIrisDiameterInMM", "FocusDistance", "FocusStability", "FocusName", "EmperorsRating - UnixTimeSeconds", "EmperorsRating - RatingHand", "EmperorsRating - CurrentRotation", "EmperorsRating - CurrentHumanReadableRotation"};
+    [SerializeField] private Camera m_camera;
     private StreamWriter _streamWriter;
-    private EyeTracking _eyeTracking;
+    [FormerlySerializedAs("_eyeTracking")] [SerializeField] private EyeTracking m_eyeTracking;
+    [FormerlySerializedAs("_emperorsRating")] [SerializeField] private EmperorsRating m_emperorsRating;
     private int _gazeDataCount = 0;
     private float _gazeTimer = 0f;
     private List<GazeData> _dataSinceLastUpdate;
@@ -29,8 +31,21 @@ public class LogData : MonoBehaviour
 
     private void Awake()
     {
-        _eyeTracking = GetComponent<EyeTracking>();
-        _camera = transform.root.GetComponentInChildren<Camera>();
+        if (m_eyeTracking == null)
+        {
+        m_eyeTracking = GetComponent<EyeTracking>();
+         
+        }
+        
+        if (m_camera == null)
+        {
+            m_camera = transform.root.GetComponentInChildren<Camera>();
+        }
+        
+        if (m_emperorsRating == null)
+        {
+            m_emperorsRating = GetComponent<EmperorsRating>();
+        }
     }
 
 
@@ -141,56 +156,63 @@ public class LogData : MonoBehaviour
 
     private void CreateLog(GazeData data, EyeMeasurements eyeMeasurements)
     {
-        var logData = new string[24];
+        var logData = new string[29];
 
+        // SOSXR : UnixTimeSeconds
+        logData[0] = DateTimeOffset.Now.ToUnixTimeSeconds().ToString();
+        
         // Gaze data frame number
-        logData[0] = data.frameNumber.ToString();
+        logData[1] = data.frameNumber.ToString();
 
         // Gaze data capture time (nanoseconds)
-        logData[1] = data.captureTime.ToString();
+        logData[2] = data.captureTime.ToString();
 
         // Log time (milliseconds)
-        logData[2] = (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond).ToString();
+        logData[3] = (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond).ToString();
 
         // HMD
-        logData[3] = _camera.transform.localPosition.ToString("F3");
-        logData[4] = _camera.transform.localRotation.ToString("F3");
+        logData[4] = m_camera.transform.localPosition.ToString("F3");
+        logData[5] = m_camera.transform.localRotation.ToString("F3");
 
         // Combined gaze
         var invalid = data.status == GazeStatus.Invalid;
-        logData[5] = invalid ? _InvalidString : _ValidString;
-        logData[6] = invalid ? "" : data.gaze.forward.ToString("F3");
-        logData[7] = invalid ? "" : data.gaze.origin.ToString("F3");
+        logData[6] = invalid ? _InvalidString : _ValidString;
+        logData[7] = invalid ? "" : data.gaze.forward.ToString("F3");
+        logData[8] = invalid ? "" : data.gaze.origin.ToString("F3");
 
         // IPD
-        logData[8] = invalid ? "" : eyeMeasurements.interPupillaryDistanceInMM.ToString("F3");
+        logData[9] = invalid ? "" : eyeMeasurements.interPupillaryDistanceInMM.ToString("F3");
 
         // Left eye
         var leftInvalid = data.leftStatus == GazeEyeStatus.Invalid;
-        logData[9] = leftInvalid ? _InvalidString : _ValidString;
-        logData[10] = leftInvalid ? "" : data.left.forward.ToString("F3");
-        logData[11] = leftInvalid ? "" : data.left.origin.ToString("F3");
-        logData[12] = leftInvalid ? "" : eyeMeasurements.leftPupilIrisDiameterRatio.ToString("F3");
-        logData[13] = leftInvalid ? "" : eyeMeasurements.leftPupilDiameterInMM.ToString("F3");
-        logData[14] = leftInvalid ? "" : eyeMeasurements.leftIrisDiameterInMM.ToString("F3");
+        logData[10] = leftInvalid ? _InvalidString : _ValidString;
+        logData[11] = leftInvalid ? "" : data.left.forward.ToString("F3");
+        logData[12] = leftInvalid ? "" : data.left.origin.ToString("F3");
+        logData[13] = leftInvalid ? "" : eyeMeasurements.leftPupilIrisDiameterRatio.ToString("F3");
+        logData[14] = leftInvalid ? "" : eyeMeasurements.leftPupilDiameterInMM.ToString("F3");
+        logData[15] = leftInvalid ? "" : eyeMeasurements.leftIrisDiameterInMM.ToString("F3");
 
         // Right eye
         var rightInvalid = data.rightStatus == GazeEyeStatus.Invalid;
-        logData[15] = rightInvalid ? _InvalidString : _ValidString;
-        logData[16] = rightInvalid ? "" : data.right.forward.ToString("F3");
-        logData[17] = rightInvalid ? "" : data.right.origin.ToString("F3");
-        logData[18] = rightInvalid ? "" : eyeMeasurements.rightPupilIrisDiameterRatio.ToString("F3");
-        logData[19] = rightInvalid ? "" : eyeMeasurements.rightPupilDiameterInMM.ToString("F3");
-        logData[20] = rightInvalid ? "" : eyeMeasurements.rightIrisDiameterInMM.ToString("F3");
+        logData[16] = rightInvalid ? _InvalidString : _ValidString;
+        logData[17] = rightInvalid ? "" : data.right.forward.ToString("F3");
+        logData[18] = rightInvalid ? "" : data.right.origin.ToString("F3");
+        logData[19] = rightInvalid ? "" : eyeMeasurements.rightPupilIrisDiameterRatio.ToString("F3");
+        logData[20] = rightInvalid ? "" : eyeMeasurements.rightPupilDiameterInMM.ToString("F3");
+        logData[22] = rightInvalid ? "" : eyeMeasurements.rightIrisDiameterInMM.ToString("F3");
 
         // Focus
-        logData[21] = invalid ? "" : data.focusDistance.ToString();
-        logData[22] = invalid ? "" : data.focusStability.ToString();
+        logData[22] = invalid ? "" : data.focusDistance.ToString();
+        logData[23] = invalid ? "" : data.focusStability.ToString();
 
         // SOSXR 
-        logData[23] = _eyeTracking.FocusName;
+        logData[24] = m_eyeTracking.FocusName;
 
         // SOSXR : Emperor's Rating
+        logData[25] = m_emperorsRating.CurrentRating.CurrentUnixTimeSeconds.ToString();
+        logData[26] = m_emperorsRating.CurrentRating.RatingHand.ToString();
+        logData[27] = m_emperorsRating.CurrentRating.CurrentRotation.ToString("F3");
+        logData[28] = m_emperorsRating.CurrentRating.CurrentHumanReadableRotation.ToString("F3");
 
         WriteLog(logData);
     }

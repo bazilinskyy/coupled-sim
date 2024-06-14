@@ -187,6 +187,7 @@ public class EyeTracking : MonoBehaviour
         _rayOrigin = _camera.transform.position;
 
         _direction = (m_fixationPointTransform.position - _camera.transform.position).normalized;
+        
     }
 
 
