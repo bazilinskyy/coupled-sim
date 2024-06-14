@@ -57,14 +57,15 @@ public class EyeTracking : MonoBehaviour
     private Vector3 _rayOrigin;
     private Vector3 _rightEyeTrackingPosition;
     private Quaternion _rightEyeTrackingRotation;
-    private LogEyeTracking _log;
 
+    // SOSXR: Added FocusName property
+    public string FocusName { get; private set; }
 
+    
     private void Awake()
     {
         _camera = transform.root.GetComponentInChildren<Camera>();
         _gazeRenderer = m_gazeTarget.transform.root.GetComponentInChildren<MeshRenderer>();
-        _log = GetComponent<LogEyeTracking>();
     }
 
 
@@ -124,16 +125,11 @@ public class EyeTracking : MonoBehaviour
             }
         }
         
-        var focusName = _hit.collider != null ? _hit.collider.name : "NULL"; // With _hit.transform.name you'd get the info of the RigidBody, where we want info on the Collider. 
+        FocusName = _hit.collider != null ? _hit.collider.name : "NULL"; // With _hit.transform.name you'd get the info of the RigidBody, where we want info on the Collider. 
 
-        Debug.LogFormat("We hit {0}", focusName);
-
-        var sosxrData = new SOSXRData
-        {
-            FocusName = focusName
-        };
-
-        _log.LogFrameEyeTrackingData(sosxrData);
+        Debug.LogFormat("We hit {0}", FocusName);
+        
+        
     }
 
 

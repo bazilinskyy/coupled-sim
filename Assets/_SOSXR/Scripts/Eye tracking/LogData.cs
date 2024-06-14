@@ -6,7 +6,7 @@ using static Varjo.XR.VarjoEyeTracking;
 
 
 [RequireComponent(typeof(EyeTracking))]
-public class LogEyeTracking : MonoBehaviour
+public class LogData : MonoBehaviour
 {
     [SerializeField] private bool m_startEnabled = true;
 
@@ -78,7 +78,7 @@ public class LogEyeTracking : MonoBehaviour
         var path = logPath + fileName + ".csv";
         _streamWriter = new StreamWriter(path);
 
-        Log(_columnNames);
+        WriteLog(_columnNames);
         Debug.Log("Log file started at: " + path);
     }
 
@@ -103,10 +103,16 @@ public class LogEyeTracking : MonoBehaviour
     }
 
 
+    private void Update()
+    {
+        LogFrameData();
+    }
+
+
     /// <summary>
     ///     Should be run in Update when we want to log any eyetracking data.
     /// </summary>
-    public void LogFrameEyeTrackingData(SOSXRData sosxrData)
+    public void LogFrameData()
     {
         if (!Logging)
         {
@@ -128,12 +134,12 @@ public class LogEyeTracking : MonoBehaviour
 
         for (var i = 0; i < dataCount; i++)
         {
-            LogGazeData(_dataSinceLastUpdate[i], _eyeMeasurementsSinceLastUpdate[i], sosxrData);
+            CreateLog(_dataSinceLastUpdate[i], _eyeMeasurementsSinceLastUpdate[i]);
         }
     }
 
 
-    private void LogGazeData(GazeData data, EyeMeasurements eyeMeasurements, SOSXRData sosxrData)
+    private void CreateLog(GazeData data, EyeMeasurements eyeMeasurements)
     {
         var logData = new string[24];
 
@@ -180,17 +186,17 @@ public class LogEyeTracking : MonoBehaviour
         // Focus
         logData[21] = invalid ? "" : data.focusDistance.ToString();
         logData[22] = invalid ? "" : data.focusStability.ToString();
-        
+
         // SOSXR 
-        logData[23] = sosxrData.FocusName;
-        
+        logData[23] = _eyeTracking.FocusName;
+
         // SOSXR : Emperor's Rating
 
-        Log(logData);
+        WriteLog(logData);
     }
 
 
-    private void Log(string[] values)
+    private void WriteLog(string[] values)
     {
         if (!Logging || _streamWriter == null)
         {
