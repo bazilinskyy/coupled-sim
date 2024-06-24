@@ -35,6 +35,7 @@ public struct Rating
 ///     length-wise axis.
 ///     Testing should indicate whether this axis is the one desired, or that another axis should be measured instead.
 /// </summary>
+
 public class EmperorsRating : MonoBehaviour
 {
     [Tooltip("With what hand should we do the rating?")]

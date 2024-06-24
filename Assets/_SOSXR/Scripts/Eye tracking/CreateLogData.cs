@@ -16,8 +16,8 @@ public class CreateLogData : MonoBehaviour
     private static readonly string[] _columnNames = {"UnixTimeSeconds", "Frame", "CaptureTime", "LogTime", "HMDPosition", "HMDRotation", "GazeStatus", "CombinedGazeForward", "CombinedGazePosition", "InterPupillaryDistanceInMM", "LeftEyeStatus", "LeftEyeForward", "LeftEyePosition", "LeftPupilIrisDiameterRatio", "LeftPupilDiameterInMM", "LeftIrisDiameterInMM", "RightEyeStatus", "RightEyeForward", "RightEyePosition", "RightPupilIrisDiameterRatio", "RightPupilDiameterInMM", "RightIrisDiameterInMM", "FocusDistance", "FocusStability", "FocusName", "EmperorsRating - UnixTimeSeconds", "EmperorsRating - RatingHand", "EmperorsRating - CurrentRotation", "EmperorsRating - CurrentHumanReadableRotation"};
     [SerializeField] private Camera m_camera;
     private StreamWriter _streamWriter;
-    [FormerlySerializedAs("_eyeTracking")] [SerializeField] private EyeTracking m_eyeTracking;
-    [FormerlySerializedAs("_emperorsRating")] [SerializeField] private EmperorsRating m_emperorsRating;
+    [SerializeField] private EyeTracking m_eyeTracking;
+    [SerializeField] private EmperorsRating m_emperorsRating;
     private int _gazeDataCount = 0;
     private float _gazeTimer = 0f;
     private List<GazeData> _dataSinceLastUpdate;

@@ -58,7 +58,7 @@ public class RecenterXROrigin : MonoBehaviour
     {
         if (m_recenterTo != null)
         {
-            return;
+           // return;
         }
 
         m_recenterTo = transform.root.FindChildByTag(m_recenterToTag); // Go to the root GameObject, then search back downwards until you find something with this tag.
