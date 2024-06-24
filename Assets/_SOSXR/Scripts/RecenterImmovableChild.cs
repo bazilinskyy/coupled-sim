@@ -1,37 +1,16 @@
-﻿using Unity.XR.CoreUtils;
-using UnityEngine;
-using UnityEngine.Serialization;
-using UnityEngine.XR;
+﻿using UnityEngine;
 
 
-public class RecenterXROrigin : MonoBehaviour
+public class RecenterImmovableChild : MonoBehaviour
 {
+    [SerializeField] private Transform m_parent;
+    [Tooltip("This can be the XR Camera for instance")]
+    [SerializeField] private Transform m_immovableChild; 
     [SerializeField] private Transform m_recenterTo;
     [Tooltip("If no RecenterTo Transform has been set, it will search for this Tag")]
     [SerializeField] [TagSelector] private string m_recenterToTag = "Target_XROrigin";
     [SerializeField] private KeyCode m_recenterKey = KeyCode.Keypad0;
-    private Transform _xrCamera;
-    private XROrigin _xrOrigin;
-
-
-    private void Awake()
-    {
-        GetRequiredComponents();
-    }
-
-
-    private void GetRequiredComponents()
-    {
-        _xrOrigin = GetComponent<XROrigin>();
-
-        if (_xrOrigin == null)
-        {
-            return;
-        }
-
-        _xrCamera = _xrOrigin.GetComponentInChildren<Camera>().transform;
-    }
-
+    
 
     [ContextMenu(nameof(RecenterAndFlatten))]
     public void RecenterAndFlatten()
@@ -73,28 +52,21 @@ public class RecenterXROrigin : MonoBehaviour
 
     private void RecenterPosition(bool flatten)
     {
-        var distanceDiff = m_recenterTo.transform.position - _xrCamera.position;
-        _xrOrigin.transform.position += distanceDiff;
-
-        if (flatten && _xrOrigin.CurrentTrackingOriginMode == TrackingOriginModeFlags.Floor)
-        {
-            Debug.LogWarning("SOSXR: You want to flatten the _xrCamera on the _xrRig, but the CurrenTrackingOrigin-mode on the aforementioned Rig is set to 'floor', which doesn't allow setting the Y component");
-
-            return;
-        }
+        var distanceDiff = m_recenterTo.transform.position - m_immovableChild.position;
+        m_parent.transform.position += distanceDiff;
 
         if (flatten)
         {
-            _xrOrigin.transform.position = _xrOrigin.transform.position.Flatten();
+            m_parent.transform.position = m_parent.transform.position.Flatten();
         }
     }
 
 
     private void RecenterRotation()
     {
-        var rotationAngleY = m_recenterTo.transform.rotation.eulerAngles.y - _xrCamera.transform.rotation.eulerAngles.y;
+        var rotationAngleY = m_recenterTo.transform.rotation.eulerAngles.y - m_immovableChild.transform.rotation.eulerAngles.y;
 
-        _xrOrigin.transform.Rotate(0, rotationAngleY, 0);
+        m_parent.transform.Rotate(0, rotationAngleY, 0);
     }
 
 

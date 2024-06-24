@@ -2,26 +2,24 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
-using UnityEngine.Serialization;
 using static Varjo.XR.VarjoEyeTracking;
-
 
 
 public class CreateLogData : MonoBehaviour
 {
     [SerializeField] private bool m_startEnabled = true;
-
-    private readonly bool m_useCustomLogPath = false;
-    private readonly string m_customLogPath = "";
-    private static readonly string[] _columnNames = {"UnixTimeSeconds", "Frame", "CaptureTime", "LogTime", "HMDPosition", "HMDRotation", "GazeStatus", "CombinedGazeForward", "CombinedGazePosition", "InterPupillaryDistanceInMM", "LeftEyeStatus", "LeftEyeForward", "LeftEyePosition", "LeftPupilIrisDiameterRatio", "LeftPupilDiameterInMM", "LeftIrisDiameterInMM", "RightEyeStatus", "RightEyeForward", "RightEyePosition", "RightPupilIrisDiameterRatio", "RightPupilDiameterInMM", "RightIrisDiameterInMM", "FocusDistance", "FocusStability", "FocusName", "EmperorsRating - UnixTimeSeconds", "EmperorsRating - RatingHand", "EmperorsRating - CurrentRotation", "EmperorsRating - CurrentHumanReadableRotation"};
     [SerializeField] private Camera m_camera;
-    private StreamWriter _streamWriter;
     [SerializeField] private EyeTracking m_eyeTracking;
     [SerializeField] private EmperorsRating m_emperorsRating;
-    private int _gazeDataCount = 0;
-    private float _gazeTimer = 0f;
+    private static readonly string[] _columnNames = {"UnixTimeSeconds", "Frame", "CaptureTime", "LogTime", "HMDPosition", "HMDRotation", "GazeStatus", "CombinedGazeForward", "CombinedGazePosition", "InterPupillaryDistanceInMM", "LeftEyeStatus", "LeftEyeForward", "LeftEyePosition", "LeftPupilIrisDiameterRatio", "LeftPupilDiameterInMM", "LeftIrisDiameterInMM", "RightEyeStatus", "RightEyeForward", "RightEyePosition", "RightPupilIrisDiameterRatio", "RightPupilDiameterInMM", "RightIrisDiameterInMM", "FocusDistance", "FocusStability", "FocusName", "EmperorsRating - UnixTimeSeconds", "EmperorsRating - RatingHand", "EmperorsRating - CurrentRotation", "EmperorsRating - CurrentHumanReadableRotation"};
+    private readonly string m_customLogPath = "";
+
+    private readonly bool m_useCustomLogPath = false;
     private List<GazeData> _dataSinceLastUpdate;
     private List<EyeMeasurements> _eyeMeasurementsSinceLastUpdate;
+    private int _gazeDataCount = 0;
+    private float _gazeTimer = 0f;
+    private StreamWriter _streamWriter;
     private const string _ValidString = "VALID";
     private const string _InvalidString = "INVALID";
 
@@ -33,15 +31,14 @@ public class CreateLogData : MonoBehaviour
     {
         if (m_eyeTracking == null)
         {
-        m_eyeTracking = GetComponent<EyeTracking>();
-         
+            m_eyeTracking = GetComponent<EyeTracking>();
         }
-        
+
         if (m_camera == null)
         {
             m_camera = transform.root.GetComponentInChildren<Camera>();
         }
-        
+
         if (m_emperorsRating == null)
         {
             m_emperorsRating = GetComponent<EmperorsRating>();
@@ -160,7 +157,7 @@ public class CreateLogData : MonoBehaviour
 
         // SOSXR : UnixTimeSeconds
         logData[0] = DateTimeOffset.Now.ToUnixTimeSeconds().ToString();
-        
+
         // Gaze data frame number
         logData[1] = data.frameNumber.ToString();
 
