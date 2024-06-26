@@ -93,6 +93,7 @@ public class EmperorsRating : MonoBehaviour
     private void Awake()
     {
         Setup();
+        CurrentRating = new Rating();
     }
 
 

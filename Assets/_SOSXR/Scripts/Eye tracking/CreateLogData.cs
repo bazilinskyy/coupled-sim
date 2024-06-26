@@ -7,11 +7,13 @@ using static Varjo.XR.VarjoEyeTracking;
 
 public class CreateLogData : MonoBehaviour
 {
+    [SerializeField] private NullValueHandling m_nullValueHandling = NullValueHandling.Fill;
+
     [SerializeField] private bool m_startEnabled = true;
     [SerializeField] private Camera m_camera;
     [SerializeField] private EyeTracking m_eyeTracking;
     [SerializeField] private EmperorsRating m_emperorsRating;
-    private static readonly string[] _columnNames = {"UnixTimeSeconds", "Frame", "CaptureTime", "LogTime", "HMDPosition", "HMDRotation", "GazeStatus", "CombinedGazeForward", "CombinedGazePosition", "InterPupillaryDistanceInMM", "LeftEyeStatus", "LeftEyeForward", "LeftEyePosition", "LeftPupilIrisDiameterRatio", "LeftPupilDiameterInMM", "LeftIrisDiameterInMM", "RightEyeStatus", "RightEyeForward", "RightEyePosition", "RightPupilIrisDiameterRatio", "RightPupilDiameterInMM", "RightIrisDiameterInMM", "FocusDistance", "FocusStability", "FocusName", "EmperorsRating - UnixTimeSeconds", "EmperorsRating - RatingHand", "EmperorsRating - CurrentRotation", "EmperorsRating - CurrentHumanReadableRotation"};
+    private static readonly string[] _columnNames = {"UnixTimeSeconds", "Frame", "CaptureTime", "LogTime", "HMDPosition", "HMDRotation", "GazeStatus", "CombinedGazeForward", "CombinedGazePosition", "InterPupillaryDistanceInMM", "LeftEyeStatus", "LeftEyeForward", "LeftEyePosition", "LeftPupilIrisDiameterRatio", "LeftPupilDiameterInMM", "LeftIrisDiameterInMM", "RightEyeStatus", "RightEyeForward", "RightEyePosition", "RightPupilIrisDiameterRatio", "RightPupilDiameterInMM", "RightIrisDiameterInMM", "FocusDistance", "FocusStability", "FocusName", "EmperorsRating - UnixTimeSeconds", "RatingHand", "CurrentRotation", "CurrentHumanReadableRotation"};
     private readonly string m_customLogPath = "";
 
     private readonly bool m_useCustomLogPath = false;
@@ -22,7 +24,6 @@ public class CreateLogData : MonoBehaviour
     private StreamWriter _streamWriter;
     private const string _ValidString = "VALID";
     private const string _InvalidString = "INVALID";
-
 
     public bool Logging { get; private set; } = false;
 
@@ -105,6 +106,7 @@ public class CreateLogData : MonoBehaviour
 
         if (_streamWriter != null)
         {
+            Debug.Log("Closing StreamWriter");
             _streamWriter.Flush();
             _streamWriter.Close();
             _streamWriter = null;
@@ -146,6 +148,7 @@ public class CreateLogData : MonoBehaviour
 
         for (var i = 0; i < dataCount; i++)
         {
+            Debug.Log($"Logging data for frame {i}");
             CreateLog(_dataSinceLastUpdate[i], _eyeMeasurementsSinceLastUpdate[i]);
         }
     }
@@ -196,7 +199,7 @@ public class CreateLogData : MonoBehaviour
         logData[18] = rightInvalid ? "" : data.right.origin.ToString("F3");
         logData[19] = rightInvalid ? "" : eyeMeasurements.rightPupilIrisDiameterRatio.ToString("F3");
         logData[20] = rightInvalid ? "" : eyeMeasurements.rightPupilDiameterInMM.ToString("F3");
-        logData[22] = rightInvalid ? "" : eyeMeasurements.rightIrisDiameterInMM.ToString("F3");
+        logData[21] = rightInvalid ? "" : eyeMeasurements.rightIrisDiameterInMM.ToString("F3");
 
         // Focus
         logData[22] = invalid ? "" : data.focusDistance.ToString();
@@ -219,23 +222,50 @@ public class CreateLogData : MonoBehaviour
     {
         if (!Logging || _streamWriter == null)
         {
+            Debug.LogWarning("Logging is not active or StreamWriter is null");
+
             return;
         }
 
-        var line = "";
-
         for (var i = 0; i < values.Length; ++i)
         {
+            if (values[i] == null)
+            {
+                if (m_nullValueHandling == NullValueHandling.SkipLine)
+                {
+                    Debug.LogWarning("One of the log values is null");
+
+                    return;
+                }
+
+                if (m_nullValueHandling == NullValueHandling.Fill)
+                {
+                    values[i] = "SOSXR_NULL";
+
+                    Debug.Log("We filled a value with" + values[i].ToString());
+                }
+            }
+
             values[i] = values[i].Replace("\r", "").Replace("\n", ""); // Remove new lines so they don't break csv
-            line += values[i] + (i == values.Length - 1 ? "" : ";"); // Do not add semicolon to last data string
         }
 
+        var line = string.Join(";", values); // Join all values with a semicolon
+        // Debug.Log("Writing line to log: " + line);
+
         _streamWriter.WriteLine(line);
+        _streamWriter.Flush(); // Make sure to flush the stream writer to ensure data is written to the file
     }
 
 
     private void OnApplicationQuit()
     {
         StopLogging(); // Since this is now MonoBehaviour, this can be here
+    }
+
+
+    private enum NullValueHandling
+    {
+        Fill,
+        SkipLine
     }
 }
