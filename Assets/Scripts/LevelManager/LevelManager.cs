@@ -56,9 +56,7 @@ public class LevelManager
                     }
                 }
             }
-
-  
-
+            
             foreach (IExperimentModifier em in ActiveExperiment.GetComponentsInChildren(typeof(IExperimentModifier)))
             {
                 em.SetParameter(trial.experimentParameters);

@@ -829,7 +829,7 @@ MonoBehaviour:
   m_radius: 0.1
   m_color:
     serializedVersion: 2
-    rgba: 4291720727
+    rgba: 4282008124
 --- !u!1 &5154358797637920075
 GameObject:
   m_ObjectHideFlags: 0
@@ -1623,7 +1623,7 @@ Camera:
   m_Depth: 0
   m_CullingMask:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 65463
   m_RenderingPath: -1
   m_TargetTexture: {fileID: 0}
   m_TargetDisplay: 0
@@ -1770,7 +1770,7 @@ MonoBehaviour:
   m_radius: 0.1
   m_color:
     serializedVersion: 2
-    rgba: 4278321921
+    rgba: 4288102987
 --- !u!1 &6300200497835139431
 GameObject:
   m_ObjectHideFlags: 0
@@ -1850,6 +1850,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b1822bd2da0c4a5fadf20dd1209374fe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_recenterTo: {fileID: 0}
   m_recenterToTag: Target_XROrigin
   m_recenterKey: 256
 --- !u!114 &1909199673429246057
@@ -1886,11 +1887,9 @@ MonoBehaviour:
   m_activeHapticsDuration: 0.15
   m_activeHapticsIntensity: 0.25
   m_rotationMeasureInterval: 0.01
-  _ratingValues:
-  - DateAndTime: 
-    RatingHand: 0
-    StartRotationQuaternion: {x: 0, y: 0, z: 0, w: 0}
-    StartRotation: {x: 0, y: 0, z: 0}
-    EndRotationQuaternion: {x: 0, y: 0, z: 0, w: 0}
-    EndRotation: {x: 0, y: 0, z: 0}
   m_debug: 1
+  CurrentRating:
+    RatingHand: 0
+    CurrentUnixTimeSeconds: 0
+    CurrentRotation: {x: 0, y: 0, z: 0, w: 0}
+    CurrentHumanReadableRotation: {x: 0, y: 0, z: 0}

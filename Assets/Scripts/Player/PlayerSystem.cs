@@ -128,14 +128,30 @@ public class PlayerSystem : MonoBehaviour
             var hmiControl = LocalPlayer.GetComponent<ClientHMIController>();
             hmiControl.Init(_hmiManager);
         }
-    }
+
+        var layerChanger = LocalPlayer.GetComponentsInChildren<LayerChanger>();
+
+        if (layerChanger == null)
+        {
+            Debug.LogWarning("I didn't find a layerchanger");
+        }
+        else if (layerChanger.Length > 1)
+        {
+            Debug.LogWarning("I found too many layerchangers");
+        }
+        else
+        {
+            Debug.Log("I found the exact good amount of layerchangers");
+            layerChanger[0].SetLayer();
+        }
+}
 
 
     public void SpawnRemotePlayer(SpawnPoint spawnPoint, int player, ExperimentRoleDefinition role)
     {
         var remotePlayer = SpawnAvatar(spawnPoint, GetAvatarPrefab(spawnPoint.Type, role.carIdx), player, role);
         
-        DisableRemoteXROriginParts(remotePlayer);
+        // DisableRemoteXROriginParts(remotePlayer);
 
         remotePlayer.Initialize(true, InputMode.None, ControlMode.HostAI, spawnPoint.VehicleType);
     }

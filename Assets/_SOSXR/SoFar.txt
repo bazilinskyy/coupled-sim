@@ -1,4 +1,32 @@
 ﻿
+25-06-2024
+
+Exciting day! Got the steering wheel to work. Turns out that none of the mappings in Unity were correct in relation to the steering wheel.
+Also, exciting enough: most values are mentioned at least twice (e.g. "Horizontal", "Throttle"). So we had a good hour or so trying to see what would change 
+the Throttle, before realizing that the second reference was effectively blocking our testing process. Anyhoo. Good fun. 
+
+We now have Throttle, Break, Steering, and what was already there: blinky light. 
+
+Next up: we need to install that steering wheel unto a PC that can handle a Varjo XR headset. Not all of them can, and the one the steering wheel is on, is unfortunately 'old'.
+Then we can start testing the steering wheel icm with the HMD. 
+
+I added the possibility for the avatars to follow the position of the HMD, meaning that aside from head-rotation, we now also have a bit of upper-body movement (yeah baby). 
+This effectively makes it a little more realistic, since you can move around and your avatar actually does this too. 
+This effect can easily be broken, since if you move too far, you're gonna get some exorcist kinda moves. So there's gonna be some "participant participation" in maintaining this fragile illusion. 
+
+In conjunction to the previous comment: clothes now also render on the inside, so that if your HMD moves out of the area where the neck would meet the face, you don't just look into a bottomless void. 
+Also: your own face is now not rendered! That's good because you kept looking at your own eyeballs. Freaky. 
+
+Will have to test whether you can actually still see other people's eyeballs though. 
+
+Jom had some issues with data not being stored, that was due to something in the StreamWriter not working too well. ChatGPT was kind enough to fix it. However, later, Jom was having similar issues.
+Those I've not been able to reproduce, the thing spits out data like a firehose. (data now lives in /Assets/_SOSXR/Logs/ btw)
+
+ 
+
+-----
+
+
 24-06-2024
 
 Trying to remove XROrigin. It seems to work just fine if we get rid of it, but I'm not 100% sure just yet. 
