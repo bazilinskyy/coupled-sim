@@ -13,10 +13,9 @@ public class CreateLogData : MonoBehaviour
     [SerializeField] private Camera m_camera;
     [SerializeField] private EyeTracking m_eyeTracking;
     [SerializeField] private EmperorsRating m_emperorsRating;
+    [SerializeField] private bool m_useCustomLogPath = false;
+    [SerializeField] private string m_customLogPath = Application.dataPath + "/_SOSXR/Logs/";
     private static readonly string[] _columnNames = {"UnixTimeSeconds", "Frame", "CaptureTime", "LogTime", "HMDPosition", "HMDRotation", "GazeStatus", "CombinedGazeForward", "CombinedGazePosition", "InterPupillaryDistanceInMM", "LeftEyeStatus", "LeftEyeForward", "LeftEyePosition", "LeftPupilIrisDiameterRatio", "LeftPupilDiameterInMM", "LeftIrisDiameterInMM", "RightEyeStatus", "RightEyeForward", "RightEyePosition", "RightPupilIrisDiameterRatio", "RightPupilDiameterInMM", "RightIrisDiameterInMM", "FocusDistance", "FocusStability", "FocusName", "EmperorsRating - UnixTimeSeconds", "RatingHand", "CurrentRotation", "CurrentHumanReadableRotation"};
-    private readonly string m_customLogPath = "";
-
-    private readonly bool m_useCustomLogPath = false;
     private List<GazeData> _dataSinceLastUpdate;
     private List<EyeMeasurements> _eyeMeasurementsSinceLastUpdate;
     private int _gazeDataCount = 0;
@@ -119,6 +118,12 @@ public class CreateLogData : MonoBehaviour
 
     private void Update()
     {
+        if (Time.timeScale <= 0)
+        {
+            Debug.LogWarning("Timescale is 0, will not write logs");
+            return;
+        }
+        
         LogFrameData();
     }
 
@@ -137,7 +142,7 @@ public class CreateLogData : MonoBehaviour
 
         if (_gazeTimer >= 1.0f)
         {
-            Debug.Log("Gaze data rows per second: " + _gazeDataCount);
+            // Debug.Log("Gaze data rows per second: " + _gazeDataCount);
             _gazeDataCount = 0;
             _gazeTimer = 0f;
         }
@@ -148,7 +153,7 @@ public class CreateLogData : MonoBehaviour
 
         for (var i = 0; i < dataCount; i++)
         {
-            Debug.Log($"Logging data for frame {i}");
+            // Debug.Log($"Logging data for frame {i}");
             CreateLog(_dataSinceLastUpdate[i], _eyeMeasurementsSinceLastUpdate[i]);
         }
     }
@@ -231,18 +236,17 @@ public class CreateLogData : MonoBehaviour
         {
             if (values[i] == null)
             {
-                if (m_nullValueHandling == NullValueHandling.SkipLine)
+                switch (m_nullValueHandling)
                 {
-                    Debug.LogWarning("One of the log values is null");
+                    case NullValueHandling.SkipValue:
+                        Debug.LogWarning("One of the log values is null.");
 
-                    return;
-                }
+                        continue;
+                    case NullValueHandling.Fill:
+                        values[i] = "SOSXR_NULL";
+                        Debug.Log("We filled a value with" + values[i]);
 
-                if (m_nullValueHandling == NullValueHandling.Fill)
-                {
-                    values[i] = "SOSXR_NULL";
-
-                    Debug.Log("We filled a value with" + values[i].ToString());
+                        break;
                 }
             }
 
@@ -250,6 +254,7 @@ public class CreateLogData : MonoBehaviour
         }
 
         var line = string.Join(";", values); // Join all values with a semicolon
+
         // Debug.Log("Writing line to log: " + line);
 
         _streamWriter.WriteLine(line);
@@ -266,6 +271,6 @@ public class CreateLogData : MonoBehaviour
     private enum NullValueHandling
     {
         Fill,
-        SkipLine
+        SkipValue
     }
 }
