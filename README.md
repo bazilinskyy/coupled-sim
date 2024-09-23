@@ -311,7 +311,7 @@ CSV file can be modified in any external editor and then imported with an `Impor
 
 3. `SpeedSettings` properties
 
-| Property name | CSV column | Type/Units| CSV values
+| Property name | CSV column | Type | CSV values
 | --- | --- | --- | --- | ---
 | Type | waypointType | WaypointType enum | 0 for InitialSetSpeed, 1 for SetSpeedTarget, 2 for Delete | 
 | speed | speed | km/h | - | 
