@@ -312,19 +312,19 @@ CSV file can be modified in any external editor and then imported with an `Impor
 3. `SpeedSettings` properties
 
 | Property name | CSV column | Type | CSV values
-| --- | --- | --- | --- | ---
-| Type | waypointType | WaypointType enum | 0 for InitialSetSpeed, 1 for SetSpeedTarget, 2 for Delete | 
-| speed | speed | km/h | - | 
+| --- | --- | --- | ---
+| Type | waypointType | WaypointType enum | 0 for InitialSetSpeed, 1 for SetSpeedTarget, 2 for Delete
+| speed | speed | km/h | -
 | acceleration | acceleration | m/s<sup>2</sup> | - | 
-| BlinkerState | blinkerState | BlinkerState enum | (0 for None, 1 for Left, 2 for Right) | 
-| causeToYield | causeToYield | boolean | True/False | 
-| EyeContactWhileYielding | lookAtPlayerWhileYielding | boolean | True/False | 
-| EyeContactAfterYielding | lookAtPlayerAfterYielding | boolean | True/False | 
-| yieldTime | yieldTime | seconds | - | 
-| brakingAcceleration | brakingAcceleration | m/s<sup>2</sup> | - | 
-| YieldingEyeContactSince | lookAtPedFromSeconds | seconds | - | 
-| YieldingEyeContactUntil | lookAtPedToSeconds | seconds | - | 
-| customBehaviourData | customBehaviourDataString | any class derived from CustomBehaviourData | multiple entries of % separated {scriptable object name}#{scriptable object instance id} pairs | 
+| BlinkerState | blinkerState | BlinkerState enum | (0 for None, 1 for Left, 2 for Right)
+| causeToYield | causeToYield | boolean | True/False
+| EyeContactWhileYielding | lookAtPlayerWhileYielding | boolean | True/False
+| EyeContactAfterYielding | lookAtPlayerAfterYielding | boolean | True/False
+| yieldTime | yieldTime | seconds | -
+| brakingAcceleration | brakingAcceleration | m/s<sup>2</sup> | -
+| YieldingEyeContactSince | lookAtPedFromSeconds | seconds | -
+| YieldingEyeContactUntil | lookAtPedToSeconds | seconds | -
+| customBehaviourData | customBehaviourDataString | any class derived from CustomBehaviourData | multiple entries of % separated {scriptable object name}#{scriptable object instance id} pairs
 
 4. `BoxCollider` properties
 
