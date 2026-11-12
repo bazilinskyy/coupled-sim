@@ -33,6 +33,19 @@ public class NetworkingManager : MonoBehaviour
     }
 
     NetworkSystem _netSystem;
+    public NetworkSystem NetSystem => _netSystem;
+    public int CurrentTrial => CurrentTrialIndex;
+
+    /// <summary>Starts the host (as the "Start host" button does).</summary>
+    public void StartHost()
+    {
+        if (_netSystem != null) return;
+        var trial = trials != null && trials.Length > 0 ? trials[CurrentTrialIndex] : new Trial { experimentParameters = new ExperimentParameter[0] };
+        _netSystem = new Host(_levelManager, _playerSystem, _aiCarSystem, _logger, _fixedLogger, trial);
+    }
+
+    /// <summary>Ends the current trial: next trial of the sequence, or quits after the last (as Esc).</summary>
+    public void RequestNextTrial() => NextTrial();
     LevelManager _levelManager;
     PlayerSystem _playerSystem;
     public PlayerSystem PlayerSystem => _playerSystem;

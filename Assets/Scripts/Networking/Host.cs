@@ -59,6 +59,43 @@ public class Host : NetworkSystem
         }
     }
 
+    // ---- for the experimenter dashboard
+    public bool InGame => _currentState == NetState.InGame;
+    public string StateName => _currentState == NetState.Lobby && _transitionPhase == TransitionPhase.WaitingForAwakes ? "Ready to start"
+        : _currentState == NetState.Lobby && _transitionPhase == TransitionPhase.LoadingLevel ? "Loading" : _currentState.ToString();
+    public int SelectedExperiment { get => _selectedExperiment; set { if (_currentState == NetState.Lobby && !started) _selectedExperiment = value; } }
+    public bool IsPlayerConnected(int player) => player == PlayerId || _host.PlayerConnected(player);
+    public int GetRole(int player) => _playerRoles[player];
+    public bool IsReady(int player) => _playerReadyStatus[player];
+    public void SetRole(int player, int role)
+    {
+        if (_currentState == NetState.Lobby && !started && player >= 0 && player < _playerRoles.Count) _playerRoles[player] = role;
+    }
+    public bool IsMapExperiment => !string.IsNullOrEmpty(_lvlManager.Experiments[_selectedExperiment].Map);
+    public string CurrentMap => _lvlManager.MapFor(_selectedExperiment, currentTrial);
+    /// <summary>Chooses the city (MapCatalog index) or a location "lat,lon[,radius]" for map experiments.</summary>
+    public void SetMap(int index, string location = null)
+    {
+        if (_currentState != NetState.Lobby || started) return;
+        _lvlManager.MapOverride = index;
+        _lvlManager.LocationOverride = OsmMap.TryParseLocation(location, out _, out _, out _) ? location : null;
+    }
+
+    /// <summary>Loads the experiment on all agents (as "Initialise experiment").</summary>
+    public void Initialise()
+    {
+        if (_currentState == NetState.Lobby && _transitionPhase == TransitionPhase.None) PrepareSimulation();
+    }
+    /// <summary>Starts the simulation once everything is loaded (as "Start simulation").</summary>
+    public void StartSimulation()
+    {
+        if (_currentState == NetState.Lobby && _transitionPhase == TransitionPhase.WaitingForAwakes && !startSimulation)
+        {
+            NetworkingManager.Instance.StartRecording();
+            startSimulation = true;
+        }
+    }
+
     public void Shutdown()
     {
         _host.Shutdown();

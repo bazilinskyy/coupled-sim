@@ -257,6 +257,7 @@ GameObject:
   - component: {fileID: 301934534}
   - component: {fileID: 301934535}
   - component: {fileID: 301934536}
+  - component: {fileID: 301934537}
   m_Layer: 0
   m_Name: Managers
   m_TagString: Untagged
@@ -368,6 +369,22 @@ MonoBehaviour:
   directory: ../../videos
   resolution: {x: 3840, y: 2160}
   framerate: 60
+--- !u!114 &301934537
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 301934531}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb2281704fe004faf97710a7a2355b82, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ExperimentDashboard
+  Port: 8080
+  AllowRemote: 1
+  UpdateInterval: 0.2
+  MapResolution: 1024
 --- !u!1 &1256699364
 GameObject:
   m_ObjectHideFlags: 0
