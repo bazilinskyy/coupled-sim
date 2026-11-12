@@ -50,6 +50,7 @@ The source code of the coupled simulator is released under the [MIT License](LIC
 - Traffic lights with programmable sequences; day and night versions of the town.
 - Logging of all agents (cars, pedestrian skeletons, traffic lights, eye contact) to binary files, conversion to CSV, and live streaming over UDP.
 - Automatic trial sequences with per-trial parameters and video recording.
+- A web dashboard for the experimenter: run the session, switch eHMIs, weather and time from any device, and watch a live map of all agents.
 
 ## Graphics
 The simulator uses the **Universal Render Pipeline** (URP 17.6): the pipeline asset is `Assets/URPDefaultResources/Fantastic.asset` (HDR, 4× MSAA, soft shadows up to 150 m, Forward+ for many lights) with its renderer `Default_Forward_Renderer` (screen-space ambient occlusion). Post-processing (ACES tonemapping, bloom, colour grading, vignette) comes from the global volume `Post-processing (URP)` in the environment scenes with `Assets/Settings/Rendering/SimulatorVolumeProfile.asset`; every participant camera gets post-processing and SMAA anti-aliasing when it starts rendering (`UrpCameraSetup`). Materials were converted with the Render Pipeline Converter; `Assets/Editor/Graphics/GraphicsSetup.cs` holds the conversion steps (including baking the Tree Creator trees to normal meshes).
@@ -121,6 +122,16 @@ Trial videos for "offline" use (for example online questionnaires) are recorded 
 ![](ReadmeFiles/recorder.png)
 
 Videos are named `{trial index}_{ExperimentDefinition.ShortName}_roleIdx-{role index}_{parameter name}-{value}_..._{yy-MM-dd_hh-mm}`, where `hh` is the hour on a 12-hour clock.
+
+### Experimenter dashboard
+The host serves a dashboard at `http://<host ip>:8080` (the address is in the console; change the port with `-dashboardPort N`), to run an experiment from any computer, tablet or phone on the lab network, without walking to the host PC:
+- start the host, choose the experiment (and for city maps the city, or a location), bind roles to the connected participants, choose the host's mode, initialise the experiment, start the simulation and go to the next trial;
+- switch eHMIs, set the weather and time of day, trigger visual syncing;
+- watch a live top-down map of the scene (rendered from the scene when it loads) with every participant (ringed), AV, AI car, SUMO vehicle, two-wheeler and pedestrian, and the traffic lights; see who is connected and ready, the trial and the frame rate.
+
+![](ReadmeFiles/dashboard.jpg)
+
+It needs no internet and no installation (a plain web page from the simulator). Allow TCP port 8080 in the host's firewall to use it from other devices. The `ExperimentDashboard` component sits on `Managers` in `StartScene`.
 
 ## Controls
 | Who | Action | Keyboard | Steering wheel / gamepad |
