@@ -43,6 +43,7 @@ The source code of the coupled simulator is released under the [MIT License](LIC
 - Background traffic with a choice of car-following models (IDM, Gipps, Krauss) that follows other cars, stops at red lights, slows down for bends and yields to pedestrians.
 - Participants can also be cyclists, e-scooter riders or moped riders, with two-wheeler dynamics (power, legal speed limits, lean and steering).
 - Time of day (solar position) and weather (clouds, rain with wet roads, fog), set per trial; URP graphics with post-processing and ambient occlusion.
+- 20 city maps from OpenStreetMap on six continents (Eindhoven, Delft, London, Tokyo, New York, Cairo, São Paulo, Sydney, ...), built at load time, and maps of any place by coordinates.
 - Coupling with [SUMO](https://eclipse.dev/sumo/) over TraCI: SUMO traffic in the scene, participants' cars and the AV in SUMO.
 - AI pedestrians with individual walking speeds, gap-acceptance crossing decisions that react to yielding cars and eHMIs, collision avoidance (social force model), traffic-aware head movements, and 12 realistic avatars.
 - eHMIs on the hood, roof and windshield of AVs, switched by the passenger or the host.
@@ -151,6 +152,28 @@ The town (`MainScene`, with a night version `MainScene-night`) is a model of a U
 
 ![](ReadmeFiles/world_all.png)
 ![](ReadmeFiles/world_centre.png)
+
+### City maps (OpenStreetMap)
+Besides the hand-built town, experiments can take place in real city centres, built from [OpenStreetMap](https://www.openstreetmap.org) data while the scene loads (in 1-2 s), much like CARLA's towns: roads with their real widths and markings, red cycle paths, raised pavements with kerbs, zebra crossings (with `PedestrianCrossing`s for AI pedestrians), buildings at their mapped height with brick, plaster or concrete façades, parks, water, mapped trees and street lamps. Every agent builds the same map from the same data. Each map has a SUMO scenario with cars and bicycles on the same streets (`Assets/StreamingAssets/Sumo/Maps`).
+
+| Continent | Maps (population) |
+| --- | --- |
+| Europe | Eindhoven (240k), Delft (105k), London (8.9M)\*, Barcelona (1.6M), Ghent (265k) |
+| Asia | Tokyo, Shibuya crossing (14M)\*, Ho Chi Minh City (9M), Luang Prabang (56k) |
+| Africa | Cairo (10M), Nairobi (4.4M)\*, Stellenbosch (175k)\* |
+| North America | New York, Midtown (8.3M), Montreal (1.8M), Boulder (105k) |
+| South America | São Paulo (11.5M), Montevideo (1.3M), Cusco (430k) |
+| Oceania | Sydney (5.3M)\*, Auckland (1.7M)\*, Wellington (215k)\* |
+
+\* left-hand traffic: spawn points and SUMO traffic keep left (the participant's car is still left-hand drive).
+
+**Choosing a map.** Use the `City map (OpenStreetMap)` experiment (`Assets/ExperimentDefinitions/CityMap.prefab`, scene `OsmMap`): the host picks the city in its GUI, or a trial sets it with the parameter `map` (e.g. `map=Tokyo`). The roles (driver, pedestrian, cyclist, e-scooter and moped rider, second driver) use `OsmSpawnPoint`s, which put them on a driving lane, a pavement, a cycle path or the road edge near the map centre, so the experiment works in every city. Time of day uses the city's location and time zone.
+
+**Driving anywhere.** The trial parameter `location=lat,lon[,radius]` (e.g. `location=51.4479,5.4904,350` for the TU/e campus) builds a map of any place: the OpenStreetMap data (radius 100-1000 m, default 400 m) is downloaded the first time (internet needed) and cached in the simulator's data folder; with SUMO installed, a SUMO network and random traffic for the place are built too. The host sends the location to the clients. To add a place to the catalogue for good, save its `.osm.gz` in `Assets/StreamingAssets/Maps` and add it to `MapCatalog`.
+
+Limitations: building shapes and heights are as good as the OSM data (buildings without a height get 3.5 floors), roofs are flat and façades generic; traffic lights in the map are not shown (SUMO runs its own signals); roads have no elevation (bridges are only slightly raised).
+
+Map data © OpenStreetMap contributors, available under the [Open Database License](https://www.openstreetmap.org/copyright).
 
 ### Vehicles
 The repository contains these drivable car prefabs in `Assets/Prefabs/Cars`:

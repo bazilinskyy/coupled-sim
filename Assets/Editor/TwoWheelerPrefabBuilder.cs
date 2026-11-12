@@ -31,6 +31,8 @@ public static class TwoWheelerPrefabBuilder
         Build(TwoWheelerType.EScooter, "EScooter", new Color(0.12f, 0.12f, 0.13f), "Male_Adult_05");
         Build(TwoWheelerType.Moped25, "Moped", new Color(0.62f, 0.75f, 0.7f), "Male_Adult_09");
         AssetDatabase.SaveAssets();
+        BuildAIBicycle();
+        AssetDatabase.SaveAssets();
     }
 
     // ------------------------------------------------------------------ materials and meshes
@@ -443,6 +445,32 @@ public static class TwoWheelerPrefabBuilder
             {
                 PrefabUtility.UnloadPrefabContents(root);
             }
+        }
+    }
+
+    /// <summary>
+    /// AIBicycle: the bicycle with a different rider, as an externally driven AI vehicle (for SUMO's
+    /// bicycles): an AICar component (disabled) so it can be spawned and synced like AI cars.
+    /// </summary>
+    public static void BuildAIBicycle()
+    {
+        var root = PrefabUtility.LoadPrefabContents($"{Dir}/Bicycle.prefab");
+        try
+        {
+            root.name = "AIBicycle";
+            var ai = root.AddComponent<AICar>();
+            ai.enabled = false;
+            ai.playerAvatar = root.GetComponent<PlayerAvatar>();
+            ai.modelElements = new Transform[0];
+            var tracker = root.AddComponent<UnityStandardAssets.Utility.WaypointProgressTracker>();
+            tracker.enabled = false;
+            foreach (var cam in root.GetComponentsInChildren<Camera>(true)) Object.DestroyImmediate(cam.gameObject);
+            root.GetComponent<PlayerAvatar>().cameras = new Camera[0];
+            PrefabUtility.SaveAsPrefabAsset(root, $"{Dir}/AIBicycle.prefab");
+        }
+        finally
+        {
+            PrefabUtility.UnloadPrefabContents(root);
         }
     }
 }

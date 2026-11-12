@@ -1,0 +1,13 @@
+<configuration>
+  <input>
+    <net-file value="Delft.net.xml.gz"/>
+    <route-files value="cars.rou.xml.gz,bikes.rou.xml.gz"/>
+  </input>
+  <time>
+    <step-length value="0.05"/>
+  </time>
+  <processing>
+    <ignore-route-errors value="true"/>
+    <time-to-teleport value="120"/>
+  </processing>
+</configuration>

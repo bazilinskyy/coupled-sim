@@ -77,11 +77,19 @@ public struct StartGameMsg : INetMessage
     public int MessageId => (int)MsgId.S_StartGame;
     public List<int> Roles;
     public int Experiment;
+    // index in MapCatalog of the city map to build (-1: the experiment's own scene)
+    public int Map;
+    // a map of any place (trial parameter "location"): centre and half size; radius 0 = none
+    public float LocationLat, LocationLon, LocationRadius;
 
     public void Sync<T>(T synchronizer) where T : ISynchronizer
     {
         synchronizer.Sync(ref Roles);
         synchronizer.Sync(ref Experiment);
+        synchronizer.Sync(ref Map);
+        synchronizer.Sync(ref LocationLat);
+        synchronizer.Sync(ref LocationLon);
+        synchronizer.Sync(ref LocationRadius);
     }
 }
 

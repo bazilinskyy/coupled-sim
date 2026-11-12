@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -224,7 +225,9 @@ public class Host : NetworkSystem
         _host.BroadcastReliable(new StartGameMsg
         {
             Roles = _playerRoles,
-            Experiment = _selectedExperiment
+            Experiment = _selectedExperiment,
+            Map = MapCatalog.IndexOf(_lvlManager.MapFor(_selectedExperiment, currentTrial)),
+            LocationLat = Location(0), LocationLon = Location(1), LocationRadius = Location(2),
         });
         for (int i = 0; i < UNetConfig.MaxPlayers; i++)
         {
@@ -240,6 +243,14 @@ public class Host : NetworkSystem
         }
         _transitionPhase = TransitionPhase.LoadingLevel;
         Time.timeScale = 0;
+    }
+
+    // the coordinates of a map chosen by location (0 if a catalogue map or none)
+    float Location(int i)
+    {
+        var map = _lvlManager.MapFor(_selectedExperiment, currentTrial);
+        if (map == null || !OsmMap.TryParseLocation(map, out var lat, out var lon, out var r)) return 0f;
+        return i == 0 ? (float)lat : i == 1 ? (float)lon : r;
     }
 
     void UpdateGame()
@@ -367,6 +378,15 @@ public class Host : NetworkSystem
                             {
                                 _selectedExperiment = i;
                             }
+                        }
+                        // map experiments: choose the city, like CARLA's towns
+                        if (!string.IsNullOrEmpty(_lvlManager.Experiments[_selectedExperiment].Map))
+                        {
+                            GUILayout.Label("Map: " + (_lvlManager.MapFor(_selectedExperiment, currentTrial) ?? ""));
+                            var names = MapCatalog.Maps.Select(m => m.City).ToArray();
+                            int current = MapCatalog.IndexOf(_lvlManager.MapFor(_selectedExperiment, currentTrial));
+                            int chosen = GUILayout.SelectionGrid(current, names, 5);
+                            if (chosen != current) _lvlManager.MapOverride = chosen;
                         }
                         PlayerRolesGUI(false);
                         _playerSys.SelectModeGUI();
