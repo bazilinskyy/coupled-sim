@@ -136,6 +136,11 @@ public class Host : NetworkSystem
                                 roleName = experimentRoleDefinition.Name;
                             }
                             _host.BroadcastReliable(new AllReadyMsg());
+                            var environment = GameObject.FindAnyObjectByType<EnvironmentController>();
+                            if (environment != null)
+                            {
+                                _host.BroadcastReliable(environment.GetState());
+                            }
                             _transitionPhase = TransitionPhase.None;
                             _currentState = NetState.InGame;
                             Time.timeScale = 1f;
