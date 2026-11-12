@@ -26,10 +26,35 @@ public class LevelManager
     List<int> _roles;
 
 
+    /// <summary>Map chosen by the host for map experiments (index in MapCatalog; -1 = the experiment's own).</summary>
+    public int MapOverride = -1;
+
+    /// <summary>City map to build for this experiment and trial: trial parameter "map", then MapOverride, then the experiment's Map.</summary>
+    /// <summary>A place chosen by coordinates ("lat,lon[,radius]"), sent by the host; null = none.</summary>
+    public string LocationOverride;
+
+    public string MapFor(int experiment, NetworkingManager.Trial trial)
+    {
+        var exp = Experiments[experiment];
+        if (string.IsNullOrEmpty(exp.Map)) return null;
+        if (trial?.experimentParameters != null)
+            foreach (var p in trial.experimentParameters)
+            {
+                if (p.name.ToLower() == "map" && MapCatalog.IndexOf(p.value) >= 0) return MapCatalog.Maps[MapCatalog.IndexOf(p.value)].Name;
+                if (p.name.ToLower() == "location" && OsmMap.TryParseLocation(p.value, out _, out _, out _)) return p.value;
+            }
+        if (!string.IsNullOrEmpty(LocationOverride)) return LocationOverride;
+        if (MapOverride >= 0 && MapOverride < MapCatalog.Maps.Length) return MapCatalog.Maps[MapOverride].Name;
+        return exp.Map;
+    }
+
     public void LoadLevelWithLocalPlayer(int experiment, int localPlayerIdx, List<int> roles, NetworkingManager.Trial trial)
     {
         var expPrefab = Experiments[experiment];
-        _mainLoadOp = SceneManager.LoadSceneAsync(expPrefab.Scene);
+        var map = MapFor(experiment, trial);
+        OsmMap.Requested = map;
+        if (map != null) Debug.Log($"Map: {map}");
+        _mainLoadOp = SceneManager.LoadSceneAsync(map != null && string.IsNullOrEmpty(expPrefab.Scene) ? "OsmMap" : expPrefab.Scene);
         _mainLoadOp.completed += (op) =>
         {
             ActiveExperiment = GameObject.Instantiate(expPrefab);
