@@ -34,9 +34,10 @@ public class PedestrianCrossing : MonoBehaviour
     /// Builds the list of vehicles approaching this crossing, from the point of view of a pedestrian
     /// standing at `from` and crossing towards `to`.
     /// </summary>
-    public void GetApproachingVehicles(Vector3 from, Vector3 to, List<ApproachingVehicle> result)
+    public void GetApproachingVehicles(Vector3 from, Vector3 to, List<ApproachingVehicle> result, List<Vector3> positions = null)
     {
         result.Clear();
+        positions?.Clear();
         var a = new Vector2(from.x, from.z);
         var b = new Vector2(to.x, to.z);
         var ab = b - a;
@@ -65,13 +66,14 @@ public class PedestrianCrossing : MonoBehaviour
 
             result.Add(new ApproachingVehicle
             {
-                Id = v.Avatar.GetInstanceID(),
+                Id = v.Avatar.GetEntityId().GetHashCode(),
                 DistanceToConflict = tVehicle - 2.2f, // vehicle position is its centre; use the front
                 Speed = Mathf.Max(0f, v.Speed),
                 Acceleration = v.Acceleration,
                 ClearDistance = Mathf.Clamp(sCrossing + LateralMargin, 0f, crossingLength),
                 Ehmi = v.Ehmi,
             });
+            positions?.Add(v.Position);
         }
     }
 

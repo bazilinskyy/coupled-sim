@@ -33,6 +33,16 @@ public class AIPedestrian : MonoBehaviour
     public PedestrianProfile Profile = PedestrianProfile.Default;
     public SocialForceParameters SocialForce = SocialForceParameters.Default;
 
+    [Header("Animation")]
+    [Tooltip("Blend and playback speed follow the actual walking speed, so the feet do not slide.")]
+    public bool MatchAnimationToSpeed = true;
+    [Tooltip("Head and eyes follow approaching traffic at the kerb and while crossing (needs IK Pass on the animator layer).")]
+    public bool LookAtTraffic = true;
+    [Tooltip("Place the feet on kerbs and uneven ground (needs IK Pass on the animator layer).")]
+    public bool FootIK = true;
+    [Tooltip("Walking speed (m/s) of the walk animation at full blend; 0 = measure it from the clip.")]
+    public float WalkClipSpeed = 0f;
+
     [Header("State (read only)")]
     public CrossingPhase Phase;
     public string DecisionReason;
@@ -40,6 +50,7 @@ public class AIPedestrian : MonoBehaviour
     static readonly List<AIPedestrian> _active = new List<AIPedestrian>();
     static readonly List<SocialAgent> _agents = new List<SocialAgent>();
     static readonly List<ApproachingVehicle> _vehicles = new List<ApproachingVehicle>();
+    static readonly List<Vector3> _vehiclePositions = new List<Vector3>();
 
     GapAcceptanceModel _crossingModel;
     PedestrianCrossing _crossing;
@@ -47,6 +58,11 @@ public class AIPedestrian : MonoBehaviour
     SysVector2 _velocity;
     float _speedFactor = 1f; // from PedestrianWaypoint relative to the authored speed
     float _authoredSpeed;
+
+    Vector3 _lookTarget;
+    float _lookWeight;
+    float _scanTimer;
+    int _scanSide = 1;
 
     public void Init(WaypointCircuit circuit)
     {
@@ -76,7 +92,26 @@ public class AIPedestrian : MonoBehaviour
                 moveSpeed = Profile.WalkingSpeed;
             }
             _velocity = ToSys(transform.forward) * moveSpeed;
+            if (WalkClipSpeed <= 0f) WalkClipSpeed = MeasureWalkClipSpeed();
         }
+    }
+
+    // Speed of the walk clip: humanoid clips store their root speed normalised by the avatar's scale.
+    float MeasureWalkClipSpeed()
+    {
+        float speed = 0f;
+        if (animator != null && animator.runtimeAnimatorController != null)
+        {
+            foreach (var clip in animator.runtimeAnimatorController.animationClips)
+            {
+                if (clip.name.ToLower().Contains("walk"))
+                {
+                    float s = clip.averageSpeed.magnitude * (animator.isHuman ? animator.humanScale : 1f);
+                    speed = Mathf.Max(speed, s);
+                }
+            }
+        }
+        return speed > 0.3f ? speed : 1.4f; // in-place clips: typical walking speed
     }
 
     static int StableHash(string s)
@@ -133,8 +168,13 @@ public class AIPedestrian : MonoBehaviour
 
         if (_crossing != null)
         {
-            _crossing.GetApproachingVehicles(_crossFrom, _crossTo, _vehicles);
+            _crossing.GetApproachingVehicles(_crossFrom, _crossTo, _vehicles, _vehiclePositions);
+            var phaseBefore = _crossingModel.Phase;
             bool walk = _crossingModel.Update(dt, _vehicles);
+            if (walk && phaseBefore != CrossingPhase.Crossing)
+            {
+                PedestrianDecisionLog.Write(this, "start crossing", _crossingModel, _vehicles);
+            }
             if (_crossingModel.Phase == CrossingPhase.Crossing)
             {
                 desiredDir = _crossTo - transform.position;
@@ -152,7 +192,6 @@ public class AIPedestrian : MonoBehaviour
                 // wait at the kerb, facing the road
                 desiredDir = _crossTo - transform.position;
                 desiredSpeed = 0f;
-                if (walk) PedestrianDecisionLog.Write(this, "start crossing", _crossingModel, _vehicles);
             }
             if (_crossingModel != null)
             {
@@ -204,9 +243,81 @@ public class AIPedestrian : MonoBehaviour
         }
 
         float speed = _velocity.Length();
-        float blend = animationBlendFactor * Mathf.Clamp(speed / Mathf.Max(0.1f, moveSpeed), 0f, 1.5f);
+        float reference = MatchAnimationToSpeed ? WalkClipSpeed : Mathf.Max(0.1f, moveSpeed);
+        float blend = animationBlendFactor * Mathf.Clamp01(speed / reference);
         currentBlendFactor = Damp(currentBlendFactor, blend, SpeedDampingFactor, dt);
         animator.SetFloat("Speed", currentBlendFactor);
+        // faster than the clip: play it faster instead of sliding
+        animator.speed = MatchAnimationToSpeed && speed > reference ? Mathf.Min(2f, speed / reference) : 1f;
+
+        UpdateLookTarget(dt, desiredDir);
+    }
+
+    // Where the pedestrian looks: the most urgent approaching car at the kerb (or scanning both
+    // ways), a close non-yielding car while crossing, otherwise ahead.
+    void UpdateLookTarget(float dt, Vector3 desiredDir)
+    {
+        var head = transform.position + Vector3.up * 1.6f;
+        Vector3 target = head + (desiredDir.sqrMagnitude > 1e-4f ? desiredDir.normalized : transform.forward) * 10f;
+        float weight = 0.3f;
+        var phase = _crossingModel != null ? _crossingModel.Phase : CrossingPhase.Approaching;
+        if (_crossing != null && (phase == CrossingPhase.Waiting || phase == CrossingPhase.Starting || phase == CrossingPhase.Crossing))
+        {
+            int best = -1;
+            float bestTta = phase == CrossingPhase.Crossing ? 4f : 30f;
+            for (int i = 0; i < _vehicles.Count && i < _vehiclePositions.Count; i++)
+            {
+                var a = _crossingModel.Assess(_vehicles[i], _crossingModel.WaitingTime);
+                if (phase == CrossingPhase.Crossing && a.Yielding) continue;
+                if (a.TimeToArrival < bestTta) { bestTta = a.TimeToArrival; best = i; }
+            }
+            if (best >= 0)
+            {
+                target = _vehiclePositions[best] + Vector3.up * 1.2f;
+                weight = 1f;
+            }
+            else if (phase != CrossingPhase.Crossing)
+            {
+                // no traffic: look left and right along the road
+                _scanTimer -= dt;
+                if (_scanTimer <= 0f) { _scanSide = -_scanSide; _scanTimer = 1.2f; }
+                var across = _crossTo - _crossFrom; across.y = 0;
+                var along = Vector3.Cross(Vector3.up, across.normalized);
+                target = head + along * (15f * _scanSide) + across.normalized * 3f;
+                weight = 1f;
+            }
+        }
+        _lookTarget = Vector3.Lerp(_lookTarget == Vector3.zero ? target : _lookTarget, target, 1f - Mathf.Exp(-dt * 5f));
+        _lookWeight = Mathf.Lerp(_lookWeight, weight, 1f - Mathf.Exp(-dt * 3f));
+    }
+
+    void OnAnimatorIK(int layerIndex)
+    {
+        if (Behaviour != BehaviourMode.BehaviourModels || animator == null) return;
+        if (LookAtTraffic && _lookWeight > 0.01f)
+        {
+            animator.SetLookAtWeight(_lookWeight, 0.15f, 0.8f, 1f, 0.5f);
+            animator.SetLookAtPosition(_lookTarget);
+        }
+        if (FootIK)
+        {
+            PlaceFoot(AvatarIKGoal.LeftFoot);
+            PlaceFoot(AvatarIKGoal.RightFoot);
+        }
+    }
+
+    // Shifts a foot by the difference between the ground under it and under the body (kerbs, slopes).
+    void PlaceFoot(AvatarIKGoal foot)
+    {
+        var p = animator.GetIKPosition(foot);
+        if (!Physics.Raycast(p + Vector3.up * 0.5f, Vector3.down, out var hit, 1.0f, ~0, QueryTriggerInteraction.Ignore)) return;
+        float delta = hit.point.y - transform.position.y;
+        if (Mathf.Abs(delta) < 0.02f || Mathf.Abs(delta) > 0.35f) return;
+        // feet in the air (swing phase) are higher above the root: apply less
+        float lift = p.y - transform.position.y;
+        float w = Mathf.Clamp01(1f - lift / 0.2f);
+        animator.SetIKPositionWeight(foot, w);
+        animator.SetIKPosition(foot, p + Vector3.up * delta);
     }
 
     void SnapToGround(ref Vector3 pos)

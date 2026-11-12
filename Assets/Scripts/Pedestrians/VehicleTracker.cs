@@ -29,7 +29,7 @@ public class VehicleTracker : MonoBehaviour
         {
             if (_instance == null)
             {
-                _instance = FindFirstObjectByType<VehicleTracker>();
+                _instance = FindAnyObjectByType<VehicleTracker>();
                 if (_instance == null)
                 {
                     _instance = new GameObject("VehicleTracker").AddComponent<VehicleTracker>();
@@ -62,7 +62,7 @@ public class VehicleTracker : MonoBehaviour
 
     void Rescan()
     {
-        foreach (var avatar in FindObjectsByType<PlayerAvatar>(FindObjectsSortMode.None))
+        foreach (var avatar in FindObjectsByType<PlayerAvatar>())
         {
             if (avatar.Type != AvatarType.Driver || _vehicles.ContainsKey(avatar)) continue;
             var t = avatar.transform;

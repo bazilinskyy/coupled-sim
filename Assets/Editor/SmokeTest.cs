@@ -26,6 +26,9 @@ public static class SmokeTest
     const string KeyOut = "SmokeTest.Out";
     const string KeyTrial = "SmokeTest.Trial";
     const string KeyErrors = "SmokeTest.Errors";
+    const string KeyExperiment = "SmokeTest.Experiment";
+    const string KeyRole = "SmokeTest.Role";
+    const string KeyShot = "SmokeTest.Shot";
 
     static double _startTime = -1;
     static double _inGameSince = -1;
@@ -52,6 +55,9 @@ public static class SmokeTest
         SessionState.SetFloat(KeySeconds, float.Parse(Arg("-smokeSeconds", "20"), System.Globalization.CultureInfo.InvariantCulture));
         SessionState.SetString(KeyOut, Path.GetFullPath(Arg("-smokeOut", "SmokeTest")));
         SessionState.SetInt(KeyTrial, int.Parse(Arg("-smokeTrial", "0")));
+        SessionState.SetInt(KeyExperiment, int.Parse(Arg("-smokeExperiment", "-1")));
+        SessionState.SetInt(KeyRole, int.Parse(Arg("-smokeRole", "-1")));
+        SessionState.SetString(KeyShot, Arg("-smokeShot", ""));
         SessionState.SetString(KeyErrors, "");
         Directory.CreateDirectory(SessionState.GetString(KeyOut, "SmokeTest"));
 
@@ -94,6 +100,8 @@ public static class SmokeTest
             }
             var t = nm.trials[Mathf.Clamp(trial, 0, nm.trials.Length - 1)];
             t.InputMode = PlayerSystem.InputMode.Flat;
+            if (SessionState.GetInt(KeyExperiment, -1) >= 0) t.experimentIndex = SessionState.GetInt(KeyExperiment, 0);
+            if (SessionState.GetInt(KeyRole, -1) >= 0) t.roleIndex = SessionState.GetInt(KeyRole, 0);
             nm.trials = new[] { t };
             nm.recordVideos = false;
             nm.RunTrialSequenceAutomatically = true;
@@ -106,7 +114,7 @@ public static class SmokeTest
         // the clock starts once the experiment scene runs (loading a big scene takes a while)
         if (_inGameSince < 0)
         {
-            var avatars = UnityEngine.Object.FindObjectsByType<PlayerAvatar>(FindObjectsSortMode.None);
+            var avatars = UnityEngine.Object.FindObjectsByType<PlayerAvatar>();
             if (SceneManager.GetActiveScene().path != "Assets/_Scenes/StartScene.unity" && avatars.Length > 0 && Time.timeScale > 0)
             {
                 _inGameSince = EditorApplication.timeSinceStartup;
@@ -143,7 +151,7 @@ public static class SmokeTest
         sb.AppendLine($"Average frame time: {Time.smoothDeltaTime * 1000:F1} ms (batch mode, no vsync)");
 
         int movedCars = 0, cars = 0, peds = 0, movedPeds = 0;
-        foreach (var a in UnityEngine.Object.FindObjectsByType<PlayerAvatar>(FindObjectsSortMode.None))
+        foreach (var a in UnityEngine.Object.FindObjectsByType<PlayerAvatar>())
         {
             bool isCar = a.Type == AvatarType.Driver;
             if (isCar) cars++; else peds++;
@@ -152,14 +160,34 @@ public static class SmokeTest
             if (moved > 1f) { if (isCar) movedCars++; else movedPeds++; }
             sb.AppendLine($"  {(isCar ? "car" : "pedestrian")} {a.name}: moved {moved:F1} m, at {a.transform.position}");
         }
-        foreach (var p in UnityEngine.Object.FindObjectsByType<AIPedestrian>(FindObjectsSortMode.None))
+        foreach (var p in UnityEngine.Object.FindObjectsByType<AIPedestrian>())
         {
-            sb.AppendLine($"  AI pedestrian {p.name}: {p.transform.position}");
+            sb.AppendLine($"  AI pedestrian {p.name}: {p.transform.position}, {p.Behaviour}, phase {p.Phase}, {p.DecisionReason}");
+        }
+        foreach (var f in Directory.GetFiles("ExperimentLogs", "PedestrianDecisions-*.csv").OrderBy(File.GetLastWriteTime).Reverse().Take(1))
+        {
+            if (File.GetLastWriteTime(f) < DateTime.Now.AddMinutes(-10)) continue;
+            var lines = File.ReadAllLines(f);
+            sb.AppendLine($"Pedestrian decisions ({f}, {lines.Length - 1} events):");
+            foreach (var l in lines.Skip(1).Take(40)) sb.AppendLine("  " + l);
         }
         sb.AppendLine($"Cars: {cars} ({movedCars} moved), pedestrians: {peds} ({movedPeds} moved)");
 
         int shot = 0;
-        foreach (var cam in UnityEngine.Object.FindObjectsByType<Camera>(FindObjectsSortMode.None))
+        // extra views: -smokeShot "x,y,z,yaw,pitch;x,y,z,yaw,pitch"
+        foreach (var view in SessionState.GetString(KeyShot, "").Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
+        {
+            var v = view.Split(',').Select(x => float.Parse(x, System.Globalization.CultureInfo.InvariantCulture)).ToArray();
+            var camGo = new GameObject("SmokeTestCamera");
+            var c = camGo.AddComponent<Camera>();
+            c.fieldOfView = 50;
+            camGo.transform.SetPositionAndRotation(new Vector3(v[0], v[1], v[2]), Quaternion.Euler(v.Length > 4 ? v[4] : 0, v[3], 0));
+            var path = Path.Combine(outDir, $"view{shot++}.png");
+            SaveCamera(c, path, 1600, 900);
+            sb.AppendLine($"Screenshot: {path}");
+            UnityEngine.Object.DestroyImmediate(camGo);
+        }
+        foreach (var cam in UnityEngine.Object.FindObjectsByType<Camera>())
         {
             if (!cam.isActiveAndEnabled || cam.targetTexture != null) continue;
             var path = Path.Combine(outDir, $"camera{shot++}_{San(cam.name)}.png");
