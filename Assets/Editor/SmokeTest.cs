@@ -129,6 +129,12 @@ public static class SmokeTest
             return;
         }
         double elapsed = EditorApplication.timeSinceStartup - _inGameSince;
+        // agents spawned later (traffic) are measured from when they first appear
+        foreach (var a in UnityEngine.Object.FindObjectsByType<PlayerAvatar>())
+        {
+            var id = a.GetInstanceIDSafe();
+            if (!_startPositions.ContainsKey(id)) _startPositions[id] = (a.name, a.transform.position);
+        }
         if (elapsed - _lastSnapshot > 5)
         {
             _lastSnapshot = elapsed;
