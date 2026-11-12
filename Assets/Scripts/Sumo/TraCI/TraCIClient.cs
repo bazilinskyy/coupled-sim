@@ -257,8 +257,14 @@ namespace CoupledSim.TraCI
             IgnoredVehicles.Add(id);
             if (string.IsNullOrEmpty(routeEdge))
             {
+                // the first edge this kind of vehicle may use (footways, rail etc. are not allowed)
+                string vClass = typeId == "DEFAULT_BIKETYPE" ? "bicycle" : "passenger";
                 foreach (var e in GetEdgeIds())
-                    if (!e.StartsWith(":")) { routeEdge = e; break; }
+                {
+                    if (e.StartsWith(":")) continue;
+                    var allowed = GetStringList(CMD_GET_LANE_VARIABLE, LANE_ALLOWED, e + "_0");
+                    if (allowed.Count == 0 || allowed.Contains(vClass)) { routeEdge = e; break; }
+                }
             }
             string routeId = "coupledsim_route_" + id;
             Set(CMD_SET_ROUTE_VARIABLE, ADD, routeId, new TraCIWriter().TypedStringList(new[] { routeEdge }));

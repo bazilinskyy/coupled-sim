@@ -107,8 +107,8 @@ public static class SmokeTest
             t.InputMode = PlayerSystem.InputMode.Flat;
             if (SessionState.GetInt(KeyExperiment, -1) >= 0) t.experimentIndex = SessionState.GetInt(KeyExperiment, 0);
             if (SessionState.GetInt(KeyRole, -1) >= 0) t.roleIndex = SessionState.GetInt(KeyRole, 0);
-            // -smokeParams "name=value,name=value": extra experiment parameters for the trial
-            var extra = SessionState.GetString(KeyParams, "").Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+            // -smokeParams "name=value;name=value": extra experiment parameters for the trial
+            var extra = SessionState.GetString(KeyParams, "").Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries)
                 .Select(kv => kv.Split('=')).Where(kv => kv.Length == 2)
                 .Select(kv => new NetworkingManager.ExperimentParameter { name = kv[0].Trim(), value = kv[1].Trim() });
             t.experimentParameters = (t.experimentParameters ?? new NetworkingManager.ExperimentParameter[0]).Concat(extra).ToArray();

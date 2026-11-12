@@ -24,6 +24,8 @@ public class SumoBridge : CarSpawnerBase
     public bool LaunchSumo = true;
     [Tooltip("SUMO configuration (.sumocfg): absolute, or relative to StreamingAssets.")]
     public string SumoConfig = "Sumo/MainScene/mainscene.sumocfg";
+    [Tooltip("In a city map: use that map's scenario, StreamingAssets/Sumo/Maps/{map}/{map}.sumocfg.")]
+    public bool UseMapScenario = false;
     [Tooltip("SUMO binary; empty: $SUMO_HOME/bin/sumo, else 'sumo' on the PATH. Use sumo-gui to watch SUMO's view.")]
     public string SumoBinary = "";
     public string Host = "127.0.0.1";
@@ -40,6 +42,8 @@ public class SumoBridge : CarSpawnerBase
     [Header("Vehicles")]
     [Tooltip("AI car prefabs used for SUMO vehicles (picked by vehicle id); they must be in NetworkingManager ➡️ AI Car System ➡️ Prefabs. Empty: Spawn Params ➡️ Car.")]
     public AICar[] CarPrefabs;
+    [Tooltip("Prefabs for SUMO vehicles of class bicycle (e.g. AIBicycle); empty: Car Prefabs.")]
+    public AICar[] BicyclePrefabs;
     [Tooltip("Use SUMO's vehicle colours.")]
     public bool UseSumoColors = true;
     [Tooltip("Put the participants' cars and the AV into SUMO, so SUMO traffic reacts to them.")]
@@ -75,8 +79,11 @@ public class SumoBridge : CarSpawnerBase
         public float NextGroundProbe;
         public int Signals = -1;
         public bool Stopped;
+        public AICar Prefab;
+        public TwoWheelerController TwoWheeler;
     }
 
+    readonly HashSet<string> _warned = new HashSet<string>();
     Thread _thread;
     volatile bool _running;
     Process _process;
@@ -117,6 +124,12 @@ public class SumoBridge : CarSpawnerBase
 
     bool StartSumo()
     {
+        if (UseMapScenario && OsmMap.Current != null)
+        {
+            var name = OsmMap.Current.Info.Name;
+            SumoConfig = name == "Location" ? BuildLocationScenario(OsmMap.Current.Info) : $"Sumo/Maps/{name}/{name}.sumocfg";
+            if (SumoConfig == null) return false;
+        }
         var cfg = Path.IsPathRooted(SumoConfig) ? SumoConfig : Path.Combine(Application.streamingAssetsPath, SumoConfig);
         if (!File.Exists(cfg))
         {
@@ -152,6 +165,48 @@ public class SumoBridge : CarSpawnerBase
         }
     }
 
+    /// <summary>
+    /// SUMO scenario for a map chosen by coordinates: network (netconvert, in the scene's projection)
+    /// and random traffic (randomTrips), built once with the local SUMO and cached.
+    /// </summary>
+    string BuildLocationScenario(MapInfo info)
+    {
+        var home = Environment.GetEnvironmentVariable("SUMO_HOME");
+        if (string.IsNullOrEmpty(home))
+        {
+            Debug.LogWarning("SumoBridge: no SUMO traffic for this location: install SUMO and set SUMO_HOME");
+            return null;
+        }
+        var ci = System.Globalization.CultureInfo.InvariantCulture;
+        var key = string.Format(ci, "{0:F5}_{1:F5}", info.Latitude, info.Longitude);
+        var dir = Path.Combine(Application.persistentDataPath, "Sumo", key);
+        var cfg = Path.Combine(dir, "location.sumocfg");
+        if (File.Exists(cfg)) return cfg;
+        Directory.CreateDirectory(dir);
+        var osm = Directory.GetFiles(Path.Combine(Application.persistentDataPath, "Maps"), key + "_*.osm.gz");
+        if (osm.Length == 0) return null;
+        bool win = Application.platform == RuntimePlatform.WindowsPlayer || Application.platform == RuntimePlatform.WindowsEditor;
+        string netconvert = Path.Combine(home, "bin", win ? "netconvert.exe" : "netconvert");
+        string proj = string.Format(ci, "+proj=tmerc +lat_0={0} +lon_0={1} +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +units=m +no_defs", info.Latitude, info.Longitude);
+        bool Run(string exe, string args)
+        {
+            try
+            {
+                var p = Process.Start(new ProcessStartInfo(exe, args) { WorkingDirectory = dir, UseShellExecute = false, CreateNoWindow = true });
+                p.WaitForExit(180000);
+                return p.ExitCode == 0;
+            }
+            catch (Exception e) { Debug.LogWarning($"SumoBridge: {Path.GetFileName(exe)} failed: {e.Message}"); return false; }
+        }
+        if (!Run(netconvert, $"--osm-files \"{osm[0]}\" -o location.net.xml --proj \"{proj}\" --offset.disable-normalization --geometry.remove --roundabouts.guess --junctions.join --tls.guess-signals --keep-edges.by-vclass passenger,bicycle --remove-edges.isolated"))
+            return null;
+        var python = win ? "python" : "python3";
+        Run(python, $"\"{Path.Combine(home, "tools", "randomTrips.py")}\" -n location.net.xml -r location.rou.xml -e 3600 -p 2.0 --fringe-factor 5 --validate --seed 1");
+        File.WriteAllText(cfg, "<configuration><input><net-file value=\"location.net.xml\"/><route-files value=\"location.rou.xml\"/></input>" +
+                               "<time><step-length value=\"0.05\"/></time><processing><ignore-route-errors value=\"true\"/><time-to-teleport value=\"120\"/></processing></configuration>");
+        return cfg;
+    }
+
     // ------------------------------------------------------------------ SUMO thread
 
     void Worker()
@@ -184,9 +239,17 @@ public class SumoBridge : CarSpawnerBase
                 }
                 foreach (var e in egos)
                 {
-                    if (addedEgos.Add(e.Id)) client.AddExternalVehicle(e.Id, e.TypeId);
-                    client.MoveToXY(e.Id, e.X, e.Y, e.Angle);
-                    client.SetSpeed(e.Id, e.Speed);
+                    try
+                    {
+                        if (addedEgos.Add(e.Id)) client.AddExternalVehicle(e.Id, e.TypeId);
+                        client.MoveToXY(e.Id, e.X, e.Y, e.Angle);
+                        client.SetSpeed(e.Id, e.Speed);
+                    }
+                    catch (TraCIException ex)
+                    {
+                        // e.g. the participant is off the road network: SUMO traffic just does not see them
+                        if (_warned.Add(e.Id)) Debug.LogWarning($"SumoBridge: {e.Id} not placed in SUMO: {ex.Message}");
+                    }
                 }
                 foreach (var id in stop)
                 {
@@ -319,6 +382,12 @@ public class SumoBridge : CarSpawnerBase
         pos.y = car.GroundY;
         var t = car.Car.transform;
         t.SetPositionAndRotation(pos, rot);
+        if (car.TwoWheeler != null)
+        {
+            float yawRate = Mathf.DeltaAngle(yawA, yawB) * Mathf.Deg2Rad / (float)Math.Max(1e-3, _deltaT);
+            car.TwoWheeler.State.Speed = (float)b.Speed;
+            car.TwoWheeler.State.Lean = Mathf.Atan((float)b.Speed * yawRate / 9.81f);
+        }
 
         // signals: bit 0 right blinker, bit 1 left blinker, bit 3 brake light
         if (b.Signals != car.Signals)
@@ -351,11 +420,15 @@ public class SumoBridge : CarSpawnerBase
         return float.IsNaN(best) ? (fallback != 0f ? fallback : sumoHeight) : best;
     }
 
+    AICar PrefabFor(string id, string vClass)
+    {
+        var list = vClass == "bicycle" && BicyclePrefabs != null && BicyclePrefabs.Length > 0 ? BicyclePrefabs : CarPrefabs;
+        return list != null && list.Length > 0 ? list[(id.GetHashCode() & 0x7fffffff) % list.Length] : spawnParams.Car;
+    }
+
     SumoCar Acquire(SumoVehicleState v)
     {
-        var prefab = CarPrefabs != null && CarPrefabs.Length > 0
-            ? CarPrefabs[(v.Id.GetHashCode() & 0x7fffffff) % CarPrefabs.Length]
-            : spawnParams.Car;
+        var prefab = PrefabFor(v.Id, v.VehicleClass);
         if (prefab == null) return null;
         var color = UseSumoColors ? new Color(v.Color.R / 255f, v.Color.G / 255f, v.Color.B / 255f) : spawnParams.color;
         var pos = SumoToUnity(v.Position.X, v.Position.Y);
@@ -371,7 +444,15 @@ public class SumoBridge : CarSpawnerBase
         }
         var car = _syncSystem.SpawnExternal(prefab, pos, rot, PlayerSystem.VehicleType.MDV, color);
         car.name = "SUMO " + v.Id;
-        return new SumoCar { Car = car, Avatar = car.GetComponent<PlayerAvatar>(), GroundY = pos.y };
+        var sc = new SumoCar { Car = car, Avatar = car.GetComponent<PlayerAvatar>(), GroundY = pos.y, Prefab = prefab };
+        if (car.TryGetComponent<TwoWheelerController>(out var tw))
+        {
+            // animation only: wheels, lean (no physics, no input)
+            tw.ReadInput = false;
+            tw.enabled = true;
+            sc.TwoWheeler = tw;
+        }
+        return sc;
     }
 
     void Release(string id)
@@ -380,9 +461,7 @@ public class SumoBridge : CarSpawnerBase
         _cars.Remove(id);
         if (car.Car == null) return;
         _syncSystem.SetCarActive(car.Avatar, false);
-        var prefab = CarPrefabs != null && CarPrefabs.Length > 0
-            ? CarPrefabs[(id.GetHashCode() & 0x7fffffff) % CarPrefabs.Length]
-            : spawnParams.Car;
+        var prefab = car.Prefab;
         if (!_pool.TryGetValue(prefab, out var stack)) _pool[prefab] = stack = new Stack<SumoCar>();
         stack.Push(car);
     }
