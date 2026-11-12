@@ -33,9 +33,9 @@ public class Client : NetworkSystem
         _client = new UNetClient();
         _client.Init();
 
-        _hmiManager = GameObject.FindObjectOfType<HMIManager>();
+        _hmiManager = GameObject.FindAnyObjectByType<HMIManager>();
         Assert.IsNotNull(_hmiManager, "Missing HMI manager");
-        _visualSyncManager = GameObject.FindObjectOfType<VisualSyncManager>();
+        _visualSyncManager = GameObject.FindAnyObjectByType<VisualSyncManager>();
         Assert.IsNotNull(_visualSyncManager, "Missing VS manager");
 
         _currentState = NetState.Disconnected;
@@ -66,7 +66,7 @@ public class Client : NetworkSystem
     private void OnAllReady(ISynchronizer sync, int srcPlayerId)
     {
         Debug.Log("AllReady");
-        var lights = GameObject.FindObjectOfType<TrafficLightsSystem>();
+        var lights = GameObject.FindAnyObjectByType<TrafficLightsSystem>();
         lights?.RegisterHandlers(_msgDispatcher);
         ExperimentRoleDefinition experimentRoleDefinition = _lvlManager.ActiveExperiment.Roles[_roles[_client.MyPlayerId]];
         if (experimentRoleDefinition.AutonomousPath != null) {

@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.Assertions;
 
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using Unity.Networking.Transport;
 
 public struct TransportEvent
@@ -37,7 +38,7 @@ public class UNetHost
     BinaryWriter _writer;
     MemoryStream _writerStream;
     Serializer _serializer;
-    Dictionary<int, int> _connId2playerId = new Dictionary<int, int>();
+    Dictionary<NetworkConnection, int> _connId2playerId = new Dictionary<NetworkConnection, int>();
     NetworkConnection[] _playerId2connId = new NetworkConnection[MaxPlayers];
 
     public bool PlayerConnected(int player) => _playerId2connId[player] != default(NetworkConnection);
@@ -61,8 +62,7 @@ public class UNetHost
     {
         m_Driver = NetworkDriver.Create();
         reliablePipeline = m_Driver.CreatePipeline(typeof(ReliableSequencedPipelineStage));
-        var endpoint = NetworkEndPoint.AnyIpv4;
-        endpoint.Port = UNetConfig.Port;
+        var endpoint = NetworkEndpoint.AnyIpv4.WithPort(UNetConfig.Port);
         if (m_Driver.Bind(endpoint) != 0)
             Debug.Log("Failed to bind to port " + UNetConfig.Port);
         else
@@ -116,7 +116,7 @@ public class UNetHost
             m_Connections.Add(c);
             Debug.Log("Accepted a connection");
             var player = FindFreePlayerId();
-            _connId2playerId[c.InternalId] = player;
+            _connId2playerId[c] = player;
             _playerId2connId[player] = c;
             SendReliableToPlayer(new WelcomeToRoomMsg() { PlayerIdx = player }, player);
         }
@@ -142,7 +142,7 @@ public class UNetHost
                     }
                     else
                     {
-                        dispatch.Dispatch(msgId, new NDeserializer(ref strm), _connId2playerId[m_Connections[i].InternalId]);
+                        dispatch.Dispatch(msgId, new NDeserializer(ref strm), _connId2playerId[m_Connections[i]]);
                     }
                 }
                 else if (cmd == NetworkEvent.Type.Disconnect)
@@ -184,7 +184,7 @@ public class UNetHost
         {
             fixed (byte* pointerToFirst = _sendBuffer)
             {
-                writer.WriteBytes(pointerToFirst, (int)_writerStream.Position);
+                writer.WriteBytesUnsafe(pointerToFirst, (int)_writerStream.Position);
             }
         }
         m_Driver.EndSend(writer);

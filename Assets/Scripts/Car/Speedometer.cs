@@ -30,7 +30,7 @@ public class Speedometer : MonoBehaviour
 
     private void Update()
     {
-        float v = carBody.velocity.magnitude * SpeedConvertion.Mps2Kmph;
+        float v = carBody.linearVelocity.magnitude * SpeedConvertion.Mps2Kmph;
 
         if (lastUpdate + 0.5f < Time.time)
         {

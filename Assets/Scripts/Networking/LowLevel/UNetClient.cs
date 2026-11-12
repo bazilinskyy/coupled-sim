@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Sockets;
 
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using Unity.Networking.Transport;
 
 //low level UNET networking client implementation - message sending and handling
@@ -39,13 +40,12 @@ public class UNetClient
     public void Connect(string ip)
     {
         Assert.IsNotNull(ip);
-        var endpoint = NetworkEndPoint.LoopbackIpv4;
-        IPAddress ipAddress;
-        if (IPAddress.TryParse(ip, out ipAddress)) {
-            var ipOut = new NativeArray<byte>(ipAddress.GetAddressBytes(), Allocator.Temp);
-            endpoint.SetRawAddressBytes(ipOut);
+        NetworkEndpoint endpoint;
+        if (!NetworkEndpoint.TryParse(ip, UNetConfig.Port, out endpoint))
+        {
+            Debug.LogWarning($"Could not parse host address '{ip}', connecting to localhost");
+            endpoint = NetworkEndpoint.LoopbackIpv4.WithPort(UNetConfig.Port);
         }
-        endpoint.Port = UNetConfig.Port;
         m_Connection = m_Driver.Connect(endpoint);
     }
 
@@ -131,7 +131,7 @@ public class UNetClient
         {
             fixed (byte* pointerToFirst = _sendBuffer)
             {
-                writer.WriteBytes(pointerToFirst, (int)_writerStream.Position);
+                writer.WriteBytesUnsafe(pointerToFirst, (int)_writerStream.Position);
             }
         }
         m_Driver.EndSend(writer);
