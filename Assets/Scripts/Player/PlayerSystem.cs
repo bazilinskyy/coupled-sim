@@ -56,7 +56,7 @@ public class PlayerSystem : MonoBehaviour
     HMIManager _hmiManager;
     void Awake()
     {
-        _hmiManager = FindObjectOfType<HMIManager>();
+        _hmiManager = FindAnyObjectByType<HMIManager>();
     }
 
     public void ActivatePlayerAICar()

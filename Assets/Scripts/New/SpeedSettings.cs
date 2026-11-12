@@ -105,7 +105,7 @@ public class SpeedSettings : MonoBehaviour
             {
                 result += "%";
             }
-            result += (cbd.name + "#" + cbd.GetInstanceID());
+            result += (cbd.name + "#" + EntityId.ToULong(cbd.GetEntityId()));
         }
         return result;
     }

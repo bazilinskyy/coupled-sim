@@ -159,7 +159,7 @@ public class AICar : MonoBehaviour, IVehicle
                 speed = set_speed;
             }
 
-            theRigidbody.velocity = rotationAxis.forward * speed / conversion; // Application of calculated velocity to Rigidbody
+            theRigidbody.linearVelocity = rotationAxis.forward * speed / conversion; // Application of calculated velocity to Rigidbody
 
         }
 
@@ -225,7 +225,7 @@ public class AICar : MonoBehaviour, IVehicle
                 }
 
                 speed = 0f;
-                theRigidbody.velocity = new Vector3(0, 0, 0); // Apply zero velocity 
+                theRigidbody.linearVelocity = new Vector3(0, 0, 0); // Apply zero velocity 
             }
 
             if (speed <= 0 && delta_distance > 16f)  // If car is standing still, change pitch back to zero.
@@ -267,7 +267,7 @@ public class AICar : MonoBehaviour, IVehicle
                     }
                 }
             }
-            theRigidbody.velocity = rotationAxis.forward * speed / conversion; // Application of calculated velocity to Rigidbody 
+            theRigidbody.linearVelocity = rotationAxis.forward * speed / conversion; // Application of calculated velocity to Rigidbody 
         }
         // This statement is applied when the car stood still and is resetting its speed.
         else if ((braking == false) && (reset == true))
@@ -295,7 +295,7 @@ public class AICar : MonoBehaviour, IVehicle
             {
                 speed = 2f;
             }
-            theRigidbody.velocity = rotationAxis.forward * speed / conversion; // Application of calculated velocity to Rigidbody 
+            theRigidbody.linearVelocity = rotationAxis.forward * speed / conversion; // Application of calculated velocity to Rigidbody 
 
             if (speed >= 10f)
             {

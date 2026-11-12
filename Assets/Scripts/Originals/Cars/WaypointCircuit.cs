@@ -390,7 +390,7 @@ namespace UnityStandardAssets.Utility.Inspector
                     for (int j = 0; j < ids.Length; j++)
                     {
                         var id = ids[j].Split("#")[1];
-                        speedSettings.customBehaviourData[j] = EditorUtility.InstanceIDToObject(int.Parse(id)) as CustomBehaviourData;
+                        speedSettings.customBehaviourData[j] = EditorUtility.EntityIdToObject(EntityId.FromULong(ulong.Parse(id))) as CustomBehaviourData;
                     }
                 }
 
