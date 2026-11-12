@@ -6,7 +6,9 @@ public enum SpawnPointType
 {
     PlayerControlledPedestrian,
     PlayerControlingCar,
-    PlayerInAIControlledCar
+    PlayerInAIControlledCar,
+    // cyclist, e-scooter or moped rider: the prefab is ExperimentRoleDefinition.twoWheelerIdx in PlayerSystem's two-wheeler list
+    PlayerRidingTwoWheeler,
 }
 [Serializable]
 public struct SpawnPoint
@@ -36,6 +38,9 @@ public struct ExperimentRoleDefinition
     // - for Passenger - PassengerAvatarPrefabPassenger list
     // - for Driver - AvatarPrefabDriver list
     public int carIdx;
+
+    //for two-wheeler riders: index in PlayerSystem's Avatar Prefab Two Wheeler list (bicycle, e-scooter, moped)
+    public int twoWheelerIdx;
 
     public SpawnPoint SpawnPoint;
 

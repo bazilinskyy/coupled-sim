@@ -335,6 +335,10 @@ MonoBehaviour:
   _AvatarPrefabDriver:
   - {fileID: 8938021727904404209, guid: 1baf460ab026f1247ab4696be569ffae, type: 3}
   - {fileID: 8938021727904404209, guid: ebd3970cf96c84fdb90d5b8e3e55ddbc, type: 3}
+  _AvatarPrefabTwoWheeler:
+  - {fileID: 1370668443068417308, guid: 380bf7858b41f42cfa7e71e913eace09, type: 3}
+  - {fileID: 7362791846293831567, guid: 6c61f09e01e9741548998bfefc3091e9, type: 3}
+  - {fileID: 7157026266776420747, guid: 90700bf08f369465eb04510837a67c46, type: 3}
 --- !u!114 &301934535
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -549,6 +553,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1531541353}
   - component: {fileID: 1531541352}
+  - component: {fileID: 1531541354}
   m_Layer: 0
   m_Name: Directional Light
   m_TagString: Untagged
@@ -636,6 +641,35 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
+--- !u!114 &1531541354
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1531541351}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 474bcb49853aa07438625e644c072ee6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.UniversalAdditionalLightData
+  m_UsePipelineSettings: 1
+  m_AdditionalLightsShadowResolutionTier: 2
+  m_CustomShadowLayers: 0
+  m_LightCookieSize: {x: 1, y: 1}
+  m_LightCookieOffset: {x: 0, y: 0}
+  m_SoftShadowQuality: 0
+  m_RenderingLayersMask:
+    serializedVersion: 0
+    m_Bits: 1
+  m_ShadowRenderingLayersMask:
+    serializedVersion: 0
+    m_Bits: 1
+  m_Version: 4
+  m_LightLayerMask: 1
+  m_ShadowLayerMask: 1
+  m_RenderingLayers: 1
+  m_ShadowRenderingLayers: 1
 --- !u!1 &2060822768
 GameObject:
   m_ObjectHideFlags: 0

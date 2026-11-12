@@ -36,17 +36,22 @@ The source code of the coupled simulator is released under the [MIT License](LIC
 
 ## Features
 - Up to **4 human participants** in one scene (a host and three clients) over a local network.
-- Roles: driver of a manual car, passenger of an AV (controls its eHMI), pedestrian.
+- Roles: driver of a manual car, passenger of an AV (controls its eHMI), pedestrian, cyclist, e-scooter rider, moped rider.
 - Input: keyboard, gaming steering wheel (tested with Logitech G27), Xsens MVN motion suit for pedestrians.
 - Output: flat screen or head-mounted display (Oculus Rift CV1 through the Oculus XR plug-in).
 - AI cars that follow waypoint paths with configurable speed, acceleration, yielding, blinkers and driver eye contact.
 - Background traffic with a choice of car-following models (IDM, Gipps, Krauss) that follows other cars, stops at red lights, slows down for bends and yields to pedestrians.
+- Participants can also be cyclists, e-scooter riders or moped riders, with two-wheeler dynamics (power, legal speed limits, lean and steering).
+- Time of day (solar position) and weather (clouds, rain with wet roads, fog), set per trial; URP graphics with post-processing and ambient occlusion.
 - Coupling with [SUMO](https://eclipse.dev/sumo/) over TraCI: SUMO traffic in the scene, participants' cars and the AV in SUMO.
 - AI pedestrians with individual walking speeds, gap-acceptance crossing decisions that react to yielding cars and eHMIs, collision avoidance (social force model), traffic-aware head movements, and 12 realistic avatars.
 - eHMIs on the hood, roof and windshield of AVs, switched by the passenger or the host.
 - Traffic lights with programmable sequences; day and night versions of the town.
 - Logging of all agents (cars, pedestrian skeletons, traffic lights, eye contact) to binary files, conversion to CSV, and live streaming over UDP.
 - Automatic trial sequences with per-trial parameters and video recording.
+
+## Graphics
+The simulator uses the **Universal Render Pipeline** (URP 17.6): the pipeline asset is `Assets/URPDefaultResources/Fantastic.asset` (HDR, 4× MSAA, soft shadows up to 150 m, Forward+ for many lights) with its renderer `Default_Forward_Renderer` (screen-space ambient occlusion). Post-processing (ACES tonemapping, bloom, colour grading, vignette) comes from the global volume `Post-processing (URP)` in the environment scenes with `Assets/Settings/Rendering/SimulatorVolumeProfile.asset`; every participant camera gets post-processing and SMAA anti-aliasing when it starts rendering (`UrpCameraSetup`). Materials were converted with the Render Pipeline Converter; `Assets/Editor/Graphics/GraphicsSetup.cs` holds the conversion steps (including baking the Tree Creator trees to normal meshes).
 
 ## Installation
 The simulator runs on **Unity 6.6 (6000.6.9f1)**.
@@ -336,6 +341,13 @@ A trigger `BoxCollider` with a `SpeedSettings` component on a waypoint changes t
 
 4. `BoxCollider`: `collider_enabled`, `isTrigger` (True/False), `centerX`, `centerY`, `centerZ`, `sizeX`, `sizeY`, `sizeZ`.
 
+### Cyclists, e-scooter and moped riders
+Roles with `SpawnPoint.Type` = `PlayerRidingTwoWheeler` let a participant ride a bicycle, an e-scooter or a moped (`twoWheelerIdx` 0, 1, 2 in `PlayerSystem` ➡️ `Avatar Prefab Two Wheeler`). `Base` and the example experiments have the roles `Cyclist`, `E-scooter rider` and `Moped rider`.
+- **Physics** (`TwoWheelerDynamics`, with tests): force balance of the rider's pedalling power (city bike: about 18-25 km/h on the flat at full effort) or motor power with the legal cut-off speed (e-bike and e-scooter 25 km/h, moped 25 or 45 km/h), rolling resistance, air drag, slope and braking (bicycle: about 3 m from 20 km/h); a bicycle model for the yaw, with the steering range narrowing with speed and the rider leaning into turns (equilibrium lean, reached with a lag). The vehicle follows the ground, can mount kerbs up to 18 cm and stops when it hits something. Presets are in `TwoWheelerParameters.Preset`.
+- **Controls**: the car's axes: `W`/`↑` pedal or throttle, `S`/`↓` or `Space` brake, `A`/`D` steer; steering wheel and pedals work the same.
+- **Models**: the bicycle (Dutch city bike), e-scooter and moped are built from code by `Coupled Sim` ➡️ `Two-wheelers` ➡️ `Build avatar prefabs` (`TwoWheelerPrefabBuilder`): wheels spin, the handlebar turns on its head tube, frame and rider lean, the cranks turn when pedalling; the rider is a Rocketbox avatar whose hands and feet are placed on the grips and pedals (or footboard) by IK (`RiderIK`). The camera is at the rider's eyes and follows only part of the lean (`CameraLeanFactor`) for comfort in VR.
+- Riders are logged and synchronised like vehicles (position, rotation, velocity; lean, steering and wheels as synced parts); AI pedestrians, model-driven traffic and SUMO (as a bicycle or moped) react to them.
+
 ### Configuration of background traffic
 A `TrafficSpawner` in an experiment's `Car Spawners` list fills one or more lanes with AI cars that drive with a car-following model instead of the `SpeedSettings` script:
 - `Lanes`: `WaypointCircuit`s (usually closed loops) and the number of cars on each; cars are spread along the lane and start tracking from where they are placed;
@@ -379,6 +391,13 @@ The driver looks at the closest object tagged `Pedestrian` within that range, if
 - `EyeContactAfterYielding`: behaviour after the car drives on again (overwrites `EyeContact.Tracking` once the car has stopped);
 - `YieldingEyeContactSince`: seconds after stopping before the driver makes eye contact;
 - `YieldingEyeContactUntil`: seconds after stopping when the driver stops making eye contact.
+
+### Time of day and weather
+Every experiment has an `EnvironmentController` (child object `Environment (time of day, weather)`) that sets:
+- **time of day** (`TimeOfDay`, clock time; `Latitude`, `Longitude`, `UtcOffset`, `DayOfYear`): the sun's position from a solar model, its colour and strength, a physically based sky, ambient light and the street lights (a light under each `StreetLamp`, the nearest 24 to the viewer switched on at dusk); `TimeSpeed` lets time run (e.g. 60 = one minute per second);
+- **weather** (`Clear`, `PartlyCloudy`, `Overcast`, `LightRain`, `HeavyRain`, `Fog`): clouds (sky colour, softer and weaker sunlight), fog, rain around the viewer and wet, darker, shinier roads and pavements; `ExtraFog` and `RainOverride` fine-tune it.
+
+They can be set per trial with the experiment parameters `time` (`17:30` or `17.5`), `weather`, `fog`, `rain`, `timeSpeed`, `dayOfYear`, `latitude`. The host sends the conditions to all clients. With `UseBakedLighting` on (the experiments of earlier studies), the scene keeps its baked lightmaps and sun and only the weather effects apply; with it off (Base and the new examples), the sun follows the time of day with realtime lighting.
 
 ### Configuration of daylight conditions
 ![](ReadmeFiles/day_night_control.png)

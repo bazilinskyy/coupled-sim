@@ -80,6 +80,19 @@ public class RocketboxImporter : AssetPostprocessor
         }
         var color = Find("color");
         if (color != null && material.HasProperty("_MainTex")) material.SetTexture("_MainTex", color);
+        // URP Lit reads _BaseMap/_BaseColor (the importer makes URP materials when URP is active)
+        if (color != null && material.HasProperty("_BaseMap")) material.SetTexture("_BaseMap", color);
+        if (material.HasProperty("_BaseColor")) material.SetColor("_BaseColor", Color.white);
+        if (material.HasProperty("_Smoothness")) material.SetFloat("_Smoothness", 0.25f);
+        if (material.name.ToLower().Contains("opacity") && material.HasProperty("_AlphaClip"))
+        {
+            // hair and eyelashes: alpha-tested, double-sided
+            material.SetFloat("_AlphaClip", 1f);
+            material.SetFloat("_Cutoff", 0.4f);
+            material.EnableKeyword("_ALPHATEST_ON");
+            material.SetFloat("_Cull", 0f);
+            material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.AlphaTest;
+        }
         var normal = Find("normal");
         if (normal != null && material.HasProperty("_BumpMap"))
         {
