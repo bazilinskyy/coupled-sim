@@ -158,13 +158,13 @@ public class WorldLogger
                 var rb = driver.GetComponent<Rigidbody>();
                 Assert.IsNotNull(rb);
                 Assert.IsFalse(rb.isKinematic);
-                writer.Write(rb.velocity);
+                writer.Write(rb.linearVelocity);
             } else if (_aiCarSystem.Cars.Contains(driver))
             {
                 var rb = driver.GetComponent<Rigidbody>();
                 Assert.IsNotNull(rb);
                 //Assert.IsFalse(rb.isKinematic);
-                writer.Write(rb.velocity);
+                writer.Write(rb.linearVelocity);
                 var ai = driver.GetComponent<AICar>();
                 Assert.IsNotNull(ai);
                 writer.Write(ai.speed);

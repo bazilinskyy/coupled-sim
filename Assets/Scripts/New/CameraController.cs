@@ -20,7 +20,7 @@ public class CameraController : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.R))
         {
-            UnityEngine.XR.InputTracking.Recenter();
+            XRRecenter.Recenter();
         }
     }
     // Update is called once per frame

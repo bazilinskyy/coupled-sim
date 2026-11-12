@@ -9,7 +9,7 @@ public class TreeColor : MonoBehaviour
     {
         MeshRenderer meshRenderer = GetComponent<MeshRenderer>();
         var materials = meshRenderer.materials;
-        Random.InitState(GetInstanceID());
+        Random.InitState(GetEntityId().GetHashCode());
         materials[1].color = Color.HSVToRGB(variance.x * Random.value, variance.y * Random.value, 1f - variance.z * Random.value);
         meshRenderer.materials = materials;
     }

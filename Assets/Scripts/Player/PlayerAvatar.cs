@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.Serialization;
 using UnityEngine.Assertions;
 using VehicleBehaviour;
-using Unity.Networking.Transport;
+
 
 public enum HMISlot
 {
@@ -33,7 +33,7 @@ public struct AvatarPose : INetSubMessage
         FrontLights = reader.ReadBoolean();
         StopLights = reader.ReadBoolean();
     }
-    public void DeserializeFrom(ref DataStreamReader reader)
+    public void DeserializeFrom(ref Unity.Collections.DataStreamReader reader)
     {
         LocalPositions = reader.ReadListVector3();
         LocalRotations = reader.ReadListQuaternion();

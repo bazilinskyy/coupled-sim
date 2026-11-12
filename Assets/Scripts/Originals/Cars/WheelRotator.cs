@@ -39,7 +39,7 @@ public class WheelRotator : MonoBehaviour {
 
     void Update () {
         
-        speed = Mathf.Clamp(GetComponent<Rigidbody>().velocity.magnitude,-30,30); // Not Needed but might be useful, if rotation looks weird because of framerate
+        speed = Mathf.Clamp(GetComponent<Rigidbody>().linearVelocity.magnitude,-30,30); // Not Needed but might be useful, if rotation looks weird because of framerate
         if (speed < 0.05f && speed < 0.05f)
         {
             speed = 0f;

@@ -25,9 +25,16 @@ public class LiveLogger : IDisposable
         _writer = new BinaryWriter(_stream);
     }
 
+    // Live logging is best effort: with nobody listening, UDP sends fail with "connection refused".
     public void Flush()
     {
-        _socket.Send(_buffer, (int)_stream.Position);
+        try
+        {
+            _socket.Send(_buffer, (int)_stream.Position);
+        }
+        catch (SocketException)
+        {
+        }
         _stream.Position = 0;
     }
 
