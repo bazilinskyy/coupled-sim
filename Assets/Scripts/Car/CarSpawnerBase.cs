@@ -11,13 +11,16 @@ public abstract class CarSpawnerBase : MonoBehaviour
     public void Init(AICarSyncSystem syncSystem)
     {
         _syncSystem = syncSystem;
-        if (spawnParams.SpawnPoint == null || spawnParams.Track == null || spawnParams.Car == null)
+        if (!HasValidSpawnParams)
         {
             Debug.LogWarning($"Car spawner '{name}' has no spawn point, track or car prefab set; it spawns nothing.", this);
             return;
         }
         StartCoroutine(SpawnCoroutine());
     }
+
+    /// <summary>Whether this spawner is set up well enough to spawn; override for spawners that do not use spawnParams' spawn point and track.</summary>
+    protected virtual bool HasValidSpawnParams => spawnParams.SpawnPoint != null && spawnParams.Track != null && spawnParams.Car != null;
 
     protected abstract IEnumerator SpawnCoroutine();
     protected AICar Spawn(CarSpawnParams parameters, bool yielding) 

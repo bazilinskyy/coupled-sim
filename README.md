@@ -40,6 +40,7 @@ The source code of the coupled simulator is released under the [MIT License](LIC
 - Input: keyboard, gaming steering wheel (tested with Logitech G27), Xsens MVN motion suit for pedestrians.
 - Output: flat screen or head-mounted display (Oculus Rift CV1 through the Oculus XR plug-in).
 - AI cars that follow waypoint paths with configurable speed, acceleration, yielding, blinkers and driver eye contact.
+- Background traffic with a choice of car-following models (IDM, Gipps, Krauss) that follows other cars, stops at red lights, slows down for bends and yields to pedestrians.
 - AI pedestrians with individual walking speeds, gap-acceptance crossing decisions that react to yielding cars and eHMIs, collision avoidance (social force model), traffic-aware head movements, and 12 realistic avatars.
 - eHMIs on the hood, roof and windshield of AVs, switched by the passenger or the host.
 - Traffic lights with programmable sequences; day and night versions of the town.
@@ -333,6 +334,20 @@ A trigger `BoxCollider` with a `SpeedSettings` component on a waypoint changes t
 | customBehaviourData | customBehaviourDataString | `%`-separated `{asset name}#{entity id}` pairs (valid within one editor session) |
 
 4. `BoxCollider`: `collider_enabled`, `isTrigger` (True/False), `centerX`, `centerY`, `centerZ`, `sizeX`, `sizeY`, `sizeZ`.
+
+### Configuration of background traffic
+A `TrafficSpawner` in an experiment's `Car Spawners` list fills one or more lanes with AI cars that drive with a car-following model instead of the `SpeedSettings` script:
+- `Lanes`: `WaypointCircuit`s (usually closed loops) and the number of cars on each; cars are spread along the lane and start tracking from where they are placed;
+- `Model`: **IDM** (Intelligent Driver Model; Treiber, Hennecke & Helbing, 2000), **Gipps** (1981) or **Krauss** (1998; SUMO's default, with random "dawdling");
+- `DesiredSpeedKmh` and `DesiredSpeedSdKmh`: each car draws its own desired speed from this normal distribution (seeded by `Seed`);
+- `CarPrefabs` and `Colors` to pick from (prefabs must be in `NetworkingManager` ➡️ `AI Car System` ➡️ `Prefabs`);
+- `YieldToPedestrians`, `ObeyTrafficLights`, `KeepClearOfPlayers` (m).
+
+Each car gets a `TrafficCar` component that looks ahead along its own lane for the nearest car (also player cars, the AV and SUMO cars), a pedestrian on the road, or a red or yellow traffic light (stopping only if it can stop comfortably at yellow), slows down before bends (lateral acceleration up to `MaxLateralAcceleration`, 2.5 m/s²), and gives the speed to `AICar`, which steers along the waypoints and shows brake lights. Scripted AI cars in the same experiment, such as the AV, keep their script but get a collision-avoidance supervisor that caps their speed when a car is close ahead (it does not react to pedestrians or lights, which stay part of the experiment's script). The models and the MOBIL lane-change rule (Kesting, Treiber & Helbing, 2007) are in `Assets/Scripts/Traffic/Models` and have edit-mode tests.
+
+The `Traffic` example experiment (`Coupled Sim` ➡️ `Examples` ➡️ `Create Traffic experiment`) adds IDM traffic in both directions on the roads around the central block (6 cars per direction, Smart and hatchback cars) to `Base`.
+
+AI cars removed by a `Delete` waypoint are now hidden on all agents instead of destroyed, so networked pose updates keep working.
 
 ### Configuration of driver's eye contact
 The `EyeContact` component on a car's driver sets the initial eye-contact behaviour:
