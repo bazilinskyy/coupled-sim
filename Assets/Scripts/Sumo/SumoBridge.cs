@@ -62,6 +62,7 @@ public class SumoBridge : CarSpawnerBase
     struct EgoPose
     {
         public string Id;
+        public string TypeId;
         public double X, Y, Angle, Speed;
     }
 
@@ -183,7 +184,7 @@ public class SumoBridge : CarSpawnerBase
                 }
                 foreach (var e in egos)
                 {
-                    if (addedEgos.Add(e.Id)) client.AddExternalVehicle(e.Id);
+                    if (addedEgos.Add(e.Id)) client.AddExternalVehicle(e.Id, e.TypeId);
                     client.MoveToXY(e.Id, e.X, e.Y, e.Angle);
                     client.SetSpeed(e.Id, e.Speed);
                 }
@@ -405,7 +406,15 @@ public class SumoBridge : CarSpawnerBase
             UnityToSumo(front, t.eulerAngles.y, out var x, out var y, out var angle);
             float speed = avatar.TryGetComponent<Rigidbody>(out var rb) && !rb.isKinematic ? rb.linearVelocity.magnitude : 0f;
             if (avatar.TryGetComponent<TrafficCar>(out var tc) && !tc.SafetyOnly) speed = tc.Speed;
-            _egoBuffer.Add(new EgoPose { Id = id, X = x, Y = y, Angle = angle, Speed = speed });
+            // riders are bicycles/mopeds in SUMO (its default types), so SUMO drivers treat them as such
+            var typeId = "DEFAULT_VEHTYPE";
+            if (avatar.TryGetComponent<TwoWheelerController>(out var tw))
+            {
+                speed = tw.Speed;
+                typeId = tw.Type == CoupledSim.TwoWheelers.TwoWheelerType.Bicycle || tw.Type == CoupledSim.TwoWheelers.TwoWheelerType.EBike
+                    || tw.Type == CoupledSim.TwoWheelers.TwoWheelerType.EScooter ? "DEFAULT_BIKETYPE" : "DEFAULT_VEHTYPE";
+            }
+            _egoBuffer.Add(new EgoPose { Id = id, TypeId = typeId, X = x, Y = y, Angle = angle, Speed = speed });
         }
         return _egoBuffer;
     }

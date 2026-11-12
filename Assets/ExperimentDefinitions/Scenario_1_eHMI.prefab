@@ -23,15 +23,16 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 935614563}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1311683245}
   - {fileID: 9168689610437224543}
   - {fileID: 571469619656576747}
   m_Father: {fileID: 7609667120526454229}
-  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1311683244
 GameObject:
@@ -56,13 +57,81 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1311683244}
+  serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.7071068, z: -0, w: 0.7071068}
   m_LocalPosition: {x: -74.4, y: -0.06, z: 5}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 935614564}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
+--- !u!1 &435411946720548545
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1832363029865504317}
+  - component: {fileID: 8596274428975956346}
+  m_Layer: 0
+  m_Name: Environment (time of day, weather)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1832363029865504317
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 435411946720548545}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7609667120526454229}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8596274428975956346
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 435411946720548545}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b2a39153b231c4fbc8dc5534278d1da3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnvironmentController
+  TimeOfDay: 14
+  Latitude: 51.44
+  DayOfYear: 172
+  TimeSpeed: 0
+  NorthOffset: 0
+  Weather: 0
+  ExtraFog: 0
+  RainOverride: -1
+  UseBakedLighting: 1
+  Sun: {fileID: 0}
+  StreetLights: []
+  WetSurfaceKeywords:
+  - road
+  - asphalt
+  - lane
+  - street
+  - sidewalk
+  - pavement
+  - crossing
+  - tile
+  SunElevation: 0
+  Rain: 0
+  StreetLightsOn: 0
 --- !u!1 &732286849548543705
 GameObject:
   m_ObjectHideFlags: 0
@@ -88,12 +157,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 732286849548543705}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
   m_LocalPosition: {x: -53.68, y: 0, z: 132.51}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 4312964457461756476}
-  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
 --- !u!65 &4226246758786607400
 BoxCollider:
@@ -103,9 +173,17 @@ BoxCollider:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 732286849548543705}
   m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
   m_IsTrigger: 1
+  m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 2
+  serializedVersion: 3
   m_Size: {x: 10, y: 10, z: 10}
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &5705364660260622457
@@ -146,12 +224,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 974523487678434872}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -108, y: 0, z: -69.7}
   m_LocalScale: {x: 1.0000002, y: 1, z: 1.0000002}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7492252986797691323}
-  m_RootOrder: 11
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!65 &6021055651500117220
 BoxCollider:
@@ -161,9 +240,17 @@ BoxCollider:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 974523487678434872}
   m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
   m_IsTrigger: 1
+  m_ProvidesContacts: 0
   m_Enabled: 0
-  serializedVersion: 2
+  serializedVersion: 3
   m_Size: {x: 8, y: 4, z: 0}
   m_Center: {x: 0, y: 1, z: 0}
 --- !u!114 &4465267272527213256
@@ -178,9 +265,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointType: 1
+  targetAICar: {fileID: 0}
+  Type: 1
   speed: 30
   acceleration: 2
+  BlinkerState: 0
   jerk: 5
   causeToYield: 0
   EyeContactWhileYielding: 0
@@ -189,6 +278,7 @@ MonoBehaviour:
   brakingAcceleration: 0
   YieldingEyeContactSince: 0
   YieldingEyeContactUntil: 0
+  customBehaviourData: []
 --- !u!1 &1347554377648128217
 GameObject:
   m_ObjectHideFlags: 0
@@ -214,12 +304,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1347554377648128217}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0.7071068, z: -0, w: -0.7071068}
   m_LocalPosition: {x: 3.9, y: 0, z: -87}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7492252986797691323}
-  m_RootOrder: 7
   m_LocalEulerAnglesHint: {x: 0, y: 270, z: 0}
 --- !u!65 &6214040643236662428
 BoxCollider:
@@ -229,9 +320,17 @@ BoxCollider:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1347554377648128217}
   m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
   m_IsTrigger: 1
+  m_ProvidesContacts: 0
   m_Enabled: 0
-  serializedVersion: 2
+  serializedVersion: 3
   m_Size: {x: 8, y: 4, z: 0}
   m_Center: {x: 0, y: 1, z: 0}
 --- !u!114 &8812417634353776199
@@ -246,9 +345,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointType: 1
+  targetAICar: {fileID: 0}
+  Type: 1
   speed: 30
   acceleration: 2
+  BlinkerState: 0
   jerk: 5
   causeToYield: 0
   EyeContactWhileYielding: 0
@@ -257,6 +358,7 @@ MonoBehaviour:
   brakingAcceleration: 0
   YieldingEyeContactSince: 0
   YieldingEyeContactUntil: 0
+  customBehaviourData: []
 --- !u!1 &1407012411489170591
 GameObject:
   m_ObjectHideFlags: 0
@@ -282,12 +384,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1407012411489170591}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
   m_LocalPosition: {x: 6.79, y: 0, z: -5.96}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7492252986797691323}
-  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
 --- !u!65 &8216420104978694174
 BoxCollider:
@@ -297,9 +400,17 @@ BoxCollider:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1407012411489170591}
   m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
   m_IsTrigger: 1
+  m_ProvidesContacts: 0
   m_Enabled: 0
-  serializedVersion: 2
+  serializedVersion: 3
   m_Size: {x: 8, y: 4, z: 0}
   m_Center: {x: 0, y: 1, z: 0}
 --- !u!114 &4114292271632863332
@@ -314,9 +425,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointType: 1
+  targetAICar: {fileID: 0}
+  Type: 1
   speed: 30
   acceleration: 2
+  BlinkerState: 0
   jerk: 5
   causeToYield: 0
   EyeContactWhileYielding: 0
@@ -325,6 +438,7 @@ MonoBehaviour:
   brakingAcceleration: 0
   YieldingEyeContactSince: 0
   YieldingEyeContactUntil: 0
+  customBehaviourData: []
 --- !u!1 &2238133849682696540
 GameObject:
   m_ObjectHideFlags: 0
@@ -350,12 +464,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2238133849682696540}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -108, y: 0, z: -12.8}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7492252986797691323}
-  m_RootOrder: 12
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!65 &7768359353353208933
 BoxCollider:
@@ -365,9 +480,17 @@ BoxCollider:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2238133849682696540}
   m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
   m_IsTrigger: 1
+  m_ProvidesContacts: 0
   m_Enabled: 0
-  serializedVersion: 2
+  serializedVersion: 3
   m_Size: {x: 8, y: 4, z: 0}
   m_Center: {x: 0, y: 1, z: 0}
 --- !u!114 &4994280904050861110
@@ -382,9 +505,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointType: 1
+  targetAICar: {fileID: 0}
+  Type: 1
   speed: 30
   acceleration: 2
+  BlinkerState: 0
   jerk: 5
   causeToYield: 0
   EyeContactWhileYielding: 0
@@ -393,6 +518,7 @@ MonoBehaviour:
   brakingAcceleration: 0
   YieldingEyeContactSince: 0
   YieldingEyeContactUntil: 0
+  customBehaviourData: []
 --- !u!1 &2362279868406790923
 GameObject:
   m_ObjectHideFlags: 0
@@ -416,12 +542,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2362279868406790923}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0.22246248, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 935614564}
-  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2493461222612804694
 GameObject:
@@ -448,12 +575,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2493461222612804694}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0.92387956, z: 0, w: 0.38268343}
   m_LocalPosition: {x: 5.54, y: 0, z: 4.58}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7492252986797691323}
-  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 135, z: 0}
 --- !u!65 &2059241967336909485
 BoxCollider:
@@ -463,9 +591,17 @@ BoxCollider:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2493461222612804694}
   m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
   m_IsTrigger: 1
+  m_ProvidesContacts: 0
   m_Enabled: 0
-  serializedVersion: 2
+  serializedVersion: 3
   m_Size: {x: 8, y: 4, z: 0}
   m_Center: {x: 0, y: 1, z: 0}
 --- !u!114 &407380825292621916
@@ -480,9 +616,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointType: 1
+  targetAICar: {fileID: 0}
+  Type: 1
   speed: 15
   acceleration: 2
+  BlinkerState: 0
   jerk: 5
   causeToYield: 0
   EyeContactWhileYielding: 0
@@ -491,6 +629,7 @@ MonoBehaviour:
   brakingAcceleration: 0
   YieldingEyeContactSince: 0
   YieldingEyeContactUntil: 0
+  customBehaviourData: []
 --- !u!1 &2625880461856167286
 GameObject:
   m_ObjectHideFlags: 0
@@ -516,12 +655,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2625880461856167286}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
   m_LocalPosition: {x: -20.3, y: 0, z: 7.6}
   m_LocalScale: {x: 10, y: 10, z: 0}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 4312964457461756476}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
 --- !u!65 &8580895363139460111
 BoxCollider:
@@ -531,9 +671,17 @@ BoxCollider:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2625880461856167286}
   m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
   m_IsTrigger: 1
+  m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 2
+  serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 0}
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &1160295187152206713
@@ -548,9 +696,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointType: 1
+  targetAICar: {fileID: 0}
+  Type: 1
   speed: 0
   acceleration: -2
+  BlinkerState: 0
   jerk: -6
   causeToYield: 0
   EyeContactWhileYielding: 0
@@ -559,6 +709,7 @@ MonoBehaviour:
   brakingAcceleration: 0
   YieldingEyeContactSince: 0
   YieldingEyeContactUntil: 0
+  customBehaviourData: []
 --- !u!1 &2744958542238208056
 GameObject:
   m_ObjectHideFlags: 0
@@ -584,12 +735,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2744958542238208056}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
   m_LocalPosition: {x: -74.4, y: 0, z: 5}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7492252986797691323}
-  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
 --- !u!65 &2710552958447762115
 BoxCollider:
@@ -599,9 +751,17 @@ BoxCollider:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2744958542238208056}
   m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
   m_IsTrigger: 1
+  m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 2
+  serializedVersion: 3
   m_Size: {x: 8, y: 4, z: 0}
   m_Center: {x: 0, y: 1, z: 0}
 --- !u!114 &6735881099392193315
@@ -616,9 +776,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointType: 1
+  targetAICar: {fileID: 0}
+  Type: 1
   speed: 30
   acceleration: 3
+  BlinkerState: 0
   jerk: 0
   causeToYield: 0
   EyeContactWhileYielding: 0
@@ -627,6 +789,7 @@ MonoBehaviour:
   brakingAcceleration: 0
   YieldingEyeContactSince: 0
   YieldingEyeContactUntil: 0
+  customBehaviourData: []
 --- !u!1 &2876006939872120056
 GameObject:
   m_ObjectHideFlags: 0
@@ -652,12 +815,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2876006939872120056}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0.3826836, z: -0, w: -0.92387944}
   m_LocalPosition: {x: -108.8, y: 0, z: -84.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7492252986797691323}
-  m_RootOrder: 10
   m_LocalEulerAnglesHint: {x: 0, y: 315, z: 0}
 --- !u!65 &6288255365530357228
 BoxCollider:
@@ -667,9 +831,17 @@ BoxCollider:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2876006939872120056}
   m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
   m_IsTrigger: 1
+  m_ProvidesContacts: 0
   m_Enabled: 0
-  serializedVersion: 2
+  serializedVersion: 3
   m_Size: {x: 8, y: 4, z: 0}
   m_Center: {x: 0, y: 1, z: 0}
 --- !u!114 &3810810830290150397
@@ -684,9 +856,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointType: 1
+  targetAICar: {fileID: 0}
+  Type: 1
   speed: 30
   acceleration: 2
+  BlinkerState: 0
   jerk: 5
   causeToYield: 0
   EyeContactWhileYielding: 0
@@ -695,6 +869,7 @@ MonoBehaviour:
   brakingAcceleration: 0
   YieldingEyeContactSince: 0
   YieldingEyeContactUntil: 0
+  customBehaviourData: []
 --- !u!1 &3126405494846408547
 GameObject:
   m_ObjectHideFlags: 0
@@ -720,12 +895,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3126405494846408547}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
   m_LocalPosition: {x: -11.74, y: 0, z: 4.92}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7492252986797691323}
-  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
 --- !u!65 &518756924651706915
 BoxCollider:
@@ -735,9 +911,17 @@ BoxCollider:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3126405494846408547}
   m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
   m_IsTrigger: 1
+  m_ProvidesContacts: 0
   m_Enabled: 0
-  serializedVersion: 2
+  serializedVersion: 3
   m_Size: {x: 8, y: 4, z: 0}
   m_Center: {x: 0, y: 1, z: 0}
 --- !u!114 &5328788294938483194
@@ -752,9 +936,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointType: 1
+  targetAICar: {fileID: 0}
+  Type: 1
   speed: 5
   acceleration: 2
+  BlinkerState: 0
   jerk: 0
   causeToYield: 0
   EyeContactWhileYielding: 0
@@ -763,6 +949,7 @@ MonoBehaviour:
   brakingAcceleration: 0
   YieldingEyeContactSince: 0
   YieldingEyeContactUntil: 0
+  customBehaviourData: []
 --- !u!1 &3351333559071132778
 GameObject:
   m_ObjectHideFlags: 0
@@ -787,12 +974,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3351333559071132778}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
   m_LocalPosition: {x: -103.7, y: 0, z: 5}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7492252986797691323}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
 --- !u!65 &6576572150712907853
 BoxCollider:
@@ -802,9 +990,17 @@ BoxCollider:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3351333559071132778}
   m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
   m_IsTrigger: 1
+  m_ProvidesContacts: 0
   m_Enabled: 0
-  serializedVersion: 2
+  serializedVersion: 3
   m_Size: {x: 8, y: 4, z: 0}
   m_Center: {x: 0, y: 1, z: 0}
 --- !u!1 &3851620885151820159
@@ -831,9 +1027,11 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3851620885151820159}
+  serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 6647674374682419703}
   - {fileID: 6750191569094715530}
@@ -850,7 +1048,6 @@ Transform:
   - {fileID: 6871671385291334899}
   - {fileID: 1006282605009764861}
   m_Father: {fileID: 7609667120526454229}
-  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &8043761391078894673
 MonoBehaviour:
@@ -906,12 +1103,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4845196738854411470}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7609667120526454229}
-  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &5011273892947168113
 GameObject:
@@ -938,12 +1136,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5011273892947168113}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0.7071068, z: -0, w: -0.7071068}
   m_LocalPosition: {x: -23.3, y: 0, z: -86.2}
   m_LocalScale: {x: 1.0000005, y: 1, z: 1.0000005}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7492252986797691323}
-  m_RootOrder: 8
   m_LocalEulerAnglesHint: {x: 0, y: 270, z: 0}
 --- !u!65 &4081382493185203315
 BoxCollider:
@@ -953,9 +1152,17 @@ BoxCollider:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5011273892947168113}
   m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
   m_IsTrigger: 1
+  m_ProvidesContacts: 0
   m_Enabled: 0
-  serializedVersion: 2
+  serializedVersion: 3
   m_Size: {x: 8, y: 4, z: 0}
   m_Center: {x: 0, y: 1, z: 0}
 --- !u!114 &3129672934970818973
@@ -970,9 +1177,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointType: 1
+  targetAICar: {fileID: 0}
+  Type: 1
   speed: 30
   acceleration: 2
+  BlinkerState: 0
   jerk: 5
   causeToYield: 0
   EyeContactWhileYielding: 0
@@ -981,6 +1190,7 @@ MonoBehaviour:
   brakingAcceleration: 0
   YieldingEyeContactSince: 0
   YieldingEyeContactUntil: 0
+  customBehaviourData: []
 --- !u!1 &5597209167454210445
 GameObject:
   m_ObjectHideFlags: 0
@@ -1006,12 +1216,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5597209167454210445}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0.2588191, z: 0, w: 0.9659258}
   m_LocalPosition: {x: -108.63, y: 0, z: 1.88}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7492252986797691323}
-  m_RootOrder: 13
   m_LocalEulerAnglesHint: {x: 0, y: 30, z: 0}
 --- !u!65 &4037793589989318157
 BoxCollider:
@@ -1021,9 +1232,17 @@ BoxCollider:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5597209167454210445}
   m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
   m_IsTrigger: 1
+  m_ProvidesContacts: 0
   m_Enabled: 0
-  serializedVersion: 2
+  serializedVersion: 3
   m_Size: {x: 8, y: 4, z: 0}
   m_Center: {x: 0, y: 1, z: 0}
 --- !u!114 &5381445116670314387
@@ -1038,9 +1257,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointType: 1
+  targetAICar: {fileID: 0}
+  Type: 1
   speed: 30
   acceleration: 2
+  BlinkerState: 0
   jerk: 5
   causeToYield: 0
   EyeContactWhileYielding: 0
@@ -1049,6 +1270,7 @@ MonoBehaviour:
   brakingAcceleration: 0
   YieldingEyeContactSince: 0
   YieldingEyeContactUntil: 0
+  customBehaviourData: []
 --- !u!1 &5967787751095999991
 GameObject:
   m_ObjectHideFlags: 0
@@ -1074,12 +1296,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5967787751095999991}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
   m_LocalPosition: {x: 8.22, y: 0, z: -43.1}
   m_LocalScale: {x: 1.0000002, y: 1, z: 1.0000002}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7492252986797691323}
-  m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
 --- !u!65 &3670719839147556711
 BoxCollider:
@@ -1089,9 +1312,17 @@ BoxCollider:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5967787751095999991}
   m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
   m_IsTrigger: 1
+  m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 2
+  serializedVersion: 3
   m_Size: {x: 8, y: 4, z: 0}
   m_Center: {x: 0, y: 1, z: 0}
 --- !u!114 &8325789752718549814
@@ -1106,9 +1337,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointType: 1
+  targetAICar: {fileID: 0}
+  Type: 1
   speed: 30
   acceleration: 2
+  BlinkerState: 0
   jerk: 5
   causeToYield: 0
   EyeContactWhileYielding: 0
@@ -1117,6 +1350,7 @@ MonoBehaviour:
   brakingAcceleration: 0
   YieldingEyeContactSince: 0
   YieldingEyeContactUntil: 0
+  customBehaviourData: []
 --- !u!1 &6061505013740183001
 GameObject:
   m_ObjectHideFlags: 0
@@ -1142,12 +1376,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6061505013740183001}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -108, y: 0, z: -22.5}
   m_LocalScale: {x: 10, y: 10, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 4312964457461756476}
-  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!65 &6597846817291527216
 BoxCollider:
@@ -1157,9 +1392,17 @@ BoxCollider:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6061505013740183001}
   m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
   m_IsTrigger: 1
+  m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 2
+  serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 0}
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &4106876388775024722
@@ -1174,9 +1417,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointType: 1
+  targetAICar: {fileID: 0}
+  Type: 1
   speed: 0
   acceleration: -2
+  BlinkerState: 0
   jerk: -6
   causeToYield: 0
   EyeContactWhileYielding: 0
@@ -1185,6 +1430,7 @@ MonoBehaviour:
   brakingAcceleration: 0
   YieldingEyeContactSince: 0
   YieldingEyeContactUntil: 0
+  customBehaviourData: []
 --- !u!1 &6160369970805395860
 GameObject:
   m_ObjectHideFlags: 0
@@ -1210,12 +1456,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6160369970805395860}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0.7071068, z: -0, w: -0.7071068}
   m_LocalPosition: {x: -94.7, y: 0, z: -86.1}
   m_LocalScale: {x: 1.0000005, y: 1, z: 1.0000005}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7492252986797691323}
-  m_RootOrder: 9
   m_LocalEulerAnglesHint: {x: 0, y: 270, z: 0}
 --- !u!65 &9037052849098984882
 BoxCollider:
@@ -1225,9 +1472,17 @@ BoxCollider:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6160369970805395860}
   m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
   m_IsTrigger: 1
+  m_ProvidesContacts: 0
   m_Enabled: 0
-  serializedVersion: 2
+  serializedVersion: 3
   m_Size: {x: 8, y: 4, z: 0}
   m_Center: {x: 0, y: 1, z: 0}
 --- !u!114 &4016054981085874454
@@ -1242,9 +1497,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointType: 1
+  targetAICar: {fileID: 0}
+  Type: 1
   speed: 30
   acceleration: 2
+  BlinkerState: 0
   jerk: 5
   causeToYield: 0
   EyeContactWhileYielding: 0
@@ -1253,6 +1510,7 @@ MonoBehaviour:
   brakingAcceleration: 0
   YieldingEyeContactSince: 0
   YieldingEyeContactUntil: 0
+  customBehaviourData: []
 --- !u!1 &6254439588831975017
 GameObject:
   m_ObjectHideFlags: 0
@@ -1278,12 +1536,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6254439588831975017}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
   m_LocalPosition: {x: 8, y: 0, z: -80.6}
   m_LocalScale: {x: 1.0000005, y: 1, z: 1.0000005}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7492252986797691323}
-  m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
 --- !u!65 &3044082470448281221
 BoxCollider:
@@ -1293,9 +1552,17 @@ BoxCollider:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6254439588831975017}
   m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
   m_IsTrigger: 1
+  m_ProvidesContacts: 0
   m_Enabled: 0
-  serializedVersion: 2
+  serializedVersion: 3
   m_Size: {x: 8, y: 4, z: 0}
   m_Center: {x: 0, y: 1, z: 0}
 --- !u!114 &8238115782121093928
@@ -1310,9 +1577,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aafac7d9fa55df845bcba1182540f596, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaypointType: 1
+  targetAICar: {fileID: 0}
+  Type: 1
   speed: 30
   acceleration: 2
+  BlinkerState: 0
   jerk: 5
   causeToYield: 0
   EyeContactWhileYielding: 0
@@ -1321,6 +1590,7 @@ MonoBehaviour:
   brakingAcceleration: 0
   YieldingEyeContactSince: 0
   YieldingEyeContactUntil: 0
+  customBehaviourData: []
 --- !u!1 &6692014269374732414
 GameObject:
   m_ObjectHideFlags: 0
@@ -1345,9 +1615,11 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6692014269374732414}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 6395839017716348911}
   - {fileID: 935614564}
@@ -1355,8 +1627,8 @@ Transform:
   - {fileID: 7613172863951723817}
   - {fileID: 4312964457461756476}
   - {fileID: 5091369192103512573}
+  - {fileID: 1832363029865504317}
   m_Father: {fileID: 0}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &8692043556341430772
 MonoBehaviour:
@@ -1370,19 +1642,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 59c48fb28c5ea2548ac5dacf3ce11ad7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ShortName: 
   Name: Scenario_1_eHMI
   Scene: MainScene
   Roles:
   - Name: Automated - Passenger
     TopHMI: {fileID: 114674626593462642, guid: 9eaaf159fd53e9043a6a0f42f3729fa0, type: 3}
-    WindshieldHMI: {fileID: 114674626593462642, guid: 9eaaf159fd53e9043a6a0f42f3729fa0,
-      type: 3}
-    HoodHMI: {fileID: 114674626593462642, guid: 9eaaf159fd53e9043a6a0f42f3729fa0,
-      type: 3}
+    WindshieldHMI: {fileID: 114674626593462642, guid: 9eaaf159fd53e9043a6a0f42f3729fa0, type: 3}
+    HoodHMI: {fileID: 114674626593462642, guid: 9eaaf159fd53e9043a6a0f42f3729fa0, type: 3}
     carIdx: 0
     SpawnPoint:
       Point: {fileID: 1311683245}
       Type: 2
+      CameraIndex: 0
+      VehicleType: 0
     AutonomousPath: {fileID: 8043761391078894673}
     AutonomousIsYielding: 1
   - Name: Pedestrian
@@ -1393,6 +1666,8 @@ MonoBehaviour:
     SpawnPoint:
       Point: {fileID: 9168689610437224543}
       Type: 0
+      CameraIndex: 0
+      VehicleType: 0
     AutonomousPath: {fileID: 0}
     AutonomousIsYielding: 0
   - Name: Driver
@@ -1403,6 +1678,8 @@ MonoBehaviour:
     SpawnPoint:
       Point: {fileID: 571469619656576747}
       Type: 1
+      CameraIndex: 0
+      VehicleType: 0
     AutonomousPath: {fileID: 0}
     AutonomousIsYielding: 0
   PointsOfInterest: []
@@ -1434,12 +1711,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6731739411145890886}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
   m_LocalPosition: {x: -122, y: 0, z: 6}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7609667120526454229}
-  m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
 --- !u!114 &5290746757051337082
 MonoBehaviour:
@@ -1459,6 +1737,10 @@ MonoBehaviour:
     SpawnDriver: 0
     SpawnPassenger: 1
     Car: {fileID: 7713759469045616529, guid: 1baf460ab026f1247ab4696be569ffae, type: 3}
+    VehicleType: 0
+    color: {r: 0, g: 0, b: 0, a: 0}
+    Labeled: 0
+    customBehaviours: []
 --- !u!1 &7005373354728422933
 GameObject:
   m_ObjectHideFlags: 0
@@ -1482,15 +1764,16 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7005373354728422933}
+  serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 2815826181675721001}
   - {fileID: 8609029755401214846}
   - {fileID: 8181388126871438445}
   m_Father: {fileID: 7609667120526454229}
-  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &7533570759686457814
 GameObject:
@@ -1515,90 +1798,81 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7533570759686457814}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0.7071068, z: 0, w: 0.7071068}
   m_LocalPosition: {x: -120.3, y: 0.22246248, z: 9.7}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 935614564}
-  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: -90, z: 0}
 --- !u!1001 &4378731297564923715
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Modification:
+    serializedVersion: 3
     m_TransformParent: {fileID: 7609667120526454229}
     m_Modifications:
-    - target: {fileID: 7207718017691476130, guid: 132bebb0650c6984a9b02d142e538bde,
-        type: 3}
+    - target: {fileID: 7207718017691476130, guid: 132bebb0650c6984a9b02d142e538bde, type: 3}
       propertyPath: m_Name
       value: LightSet
       objectReference: {fileID: 0}
-    - target: {fileID: 7207718017691476130, guid: 132bebb0650c6984a9b02d142e538bde,
-        type: 3}
+    - target: {fileID: 7207718017691476130, guid: 132bebb0650c6984a9b02d142e538bde, type: 3}
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 7207718017691476140, guid: 132bebb0650c6984a9b02d142e538bde,
-        type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7207718017691476140, guid: 132bebb0650c6984a9b02d142e538bde,
-        type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7207718017691476140, guid: 132bebb0650c6984a9b02d142e538bde,
-        type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7207718017691476140, guid: 132bebb0650c6984a9b02d142e538bde,
-        type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7207718017691476140, guid: 132bebb0650c6984a9b02d142e538bde,
-        type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7207718017691476140, guid: 132bebb0650c6984a9b02d142e538bde,
-        type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7207718017691476140, guid: 132bebb0650c6984a9b02d142e538bde,
-        type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 7207718017691476140, guid: 132bebb0650c6984a9b02d142e538bde,
-        type: 3}
+    - target: {fileID: 7207718017691476140, guid: 132bebb0650c6984a9b02d142e538bde, type: 3}
       propertyPath: m_RootOrder
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 7207718017691476140, guid: 132bebb0650c6984a9b02d142e538bde,
-        type: 3}
+    - target: {fileID: 7207718017691476140, guid: 132bebb0650c6984a9b02d142e538bde, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7207718017691476140, guid: 132bebb0650c6984a9b02d142e538bde, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7207718017691476140, guid: 132bebb0650c6984a9b02d142e538bde, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7207718017691476140, guid: 132bebb0650c6984a9b02d142e538bde, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7207718017691476140, guid: 132bebb0650c6984a9b02d142e538bde, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7207718017691476140, guid: 132bebb0650c6984a9b02d142e538bde, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7207718017691476140, guid: 132bebb0650c6984a9b02d142e538bde, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7207718017691476140, guid: 132bebb0650c6984a9b02d142e538bde, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 7207718017691476140, guid: 132bebb0650c6984a9b02d142e538bde,
-        type: 3}
+    - target: {fileID: 7207718017691476140, guid: 132bebb0650c6984a9b02d142e538bde, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 7207718017691476140, guid: 132bebb0650c6984a9b02d142e538bde,
-        type: 3}
+    - target: {fileID: 7207718017691476140, guid: 132bebb0650c6984a9b02d142e538bde, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 132bebb0650c6984a9b02d142e538bde, type: 3}
 --- !u!4 &6395839017716348911 stripped
 Transform:
-  m_CorrespondingSourceObject: {fileID: 7207718017691476140, guid: 132bebb0650c6984a9b02d142e538bde,
-    type: 3}
+  m_CorrespondingSourceObject: {fileID: 7207718017691476140, guid: 132bebb0650c6984a9b02d142e538bde, type: 3}
   m_PrefabInstance: {fileID: 4378731297564923715}
   m_PrefabAsset: {fileID: 0}
