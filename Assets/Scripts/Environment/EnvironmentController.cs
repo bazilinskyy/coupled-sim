@@ -95,6 +95,14 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
     {
         if (_initialised) return;
         _initialised = true;
+        // in a city map: that city's location and time zone
+        var map = OsmMap.Current;
+        if (map != null && map.Generator != null)
+        {
+            Latitude = (float)map.Info.Latitude;
+            Longitude = (float)map.Info.Longitude;
+            UtcOffset = map.Info.UtcOffsetJune;
+        }
         if (Sun == null)
         {
             Sun = RenderSettings.sun;

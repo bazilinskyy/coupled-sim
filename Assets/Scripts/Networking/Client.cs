@@ -84,6 +84,10 @@ public class Client : NetworkSystem
     {
         _msgDispatcher.ClearLevelMessageHandlers();
         var msg = NetMsg.Read<StartGameMsg>(sync);
+        _lvlManager.MapOverride = msg.Map; // the host decides the map
+        _lvlManager.LocationOverride = msg.LocationRadius > 0
+            ? string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:R},{1:R},{2:R}", msg.LocationLat, msg.LocationLon, msg.LocationRadius)
+            : null;
         _lvlManager.LoadLevelWithLocalPlayer(msg.Experiment, _client.MyPlayerId, msg.Roles, null);
         _roles = msg.Roles;
         _transitionPhase = TransitionPhase.LoadingLevel;
