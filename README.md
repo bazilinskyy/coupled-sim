@@ -39,7 +39,8 @@ The source code of the coupled simulator is released under the [MIT License](LIC
 - Roles: driver of a manual car, passenger of an AV (controls its eHMI), pedestrian.
 - Input: keyboard, gaming steering wheel (tested with Logitech G27), Xsens MVN motion suit for pedestrians.
 - Output: flat screen or head-mounted display (Oculus Rift CV1 through the Oculus XR plug-in).
-- AI cars that follow waypoint paths with configurable speed, acceleration, yielding, blinkers and driver eye contact; AI pedestrians that follow waypoint paths.
+- AI cars that follow waypoint paths with configurable speed, acceleration, yielding, blinkers and driver eye contact.
+- AI pedestrians with individual walking speeds, gap-acceptance crossing decisions that react to yielding cars and eHMIs, collision avoidance (social force model), traffic-aware head movements, and 12 realistic avatars.
 - eHMIs on the hood, roof and windshield of AVs, switched by the passenger or the host.
 - Traffic lights with programmable sequences; day and night versions of the town.
 - Logging of all agents (cars, pedestrian skeletons, traffic lights, eye contact) to binary files, conversion to CSV, and live streaming over UDP.
@@ -278,6 +279,21 @@ A trigger `BoxCollider` with a `PedestrianWaypoint` component on a waypoint chan
 
 ![](ReadmeFiles/pedestrian_waypoint.png)
 
+#### Pedestrian behaviour models
+By default (`Behaviour` = `WaypointsOnly`) AI pedestrians walk their path at the set speed, exactly as in earlier experiments. With `Behaviour` = `BehaviourModels` on the `AIPedestrian` component they behave like individuals:
+- **Individual parameters**, drawn per pedestrian from a seeded random generator (`Seed`, or derived from the object name, so trials repeat exactly) for its `AgeGroup` (adult, child, older): free walking speed N(1.34, 0.26) m/s (Weidmann, 1993), a slightly higher speed on the road, critical gap (log-normal, median 4.5 s; Brewer et al., 2006), reaction time, the deceleration at which a car is seen as yielding, trust in eHMIs and patience. Children and older people walk slower; older people choose larger gaps.
+- **Crossing decisions (gap acceptance)** at `PedestrianCrossing`s: the pedestrian stops at the kerb, looks for at least 0.8 s and crosses when every approaching car either arrives later than the required gap (the larger of the critical gap and the time to clear that car's lane plus a safety margin) or is seen to yield: it is stopped, brakes hard enough to stop before the crossing, or shows `WALK` on its eHMI (trusted with the pedestrian's `EhmiTrust` probability). A `STOP` eHMI makes pedestrians more careful. The accepted gap shrinks the longer one waits (impatience). Pedestrians step off after their reaction time and hurry when a non-yielding car gets close while they are on the road.
+- **Collision avoidance** between pedestrians (including player pedestrians) with the social force model (Helbing & Molnár, 1995) with anticipation (Johansson et al., 2007).
+- **Animation**: the walk animation follows the actual speed (no foot sliding), the head and eyes follow approaching traffic at the kerb (or scan left and right) and while crossing, and the feet are placed on kerbs (foot IK). Turn these off with `MatchAnimationToSpeed`, `LookAtTraffic` and `FootIK`.
+
+A `PedestrianCrossing` is a trigger collider at the near kerb with a `FarKerb` target on the other side; `Zebra` marks zebra crossings (pedestrians accept 15% smaller gaps there). `VehicleTracker` estimates speed and acceleration of every car for the pedestrians (it also works for remote, player-driven cars).
+
+Every decision is written to `ExperimentLogs/PedestrianDecisions-{date}.csv` (time, pedestrian, event `arrived at kerb` / `start crossing` / `crossed`, waiting time, number of approaching and yielding vehicles, smallest time to arrival, critical gap, walking speed, reason).
+
+**More pedestrians.** `Assets/Prefabs/AIPedestrians/Rocketbox` contains 12 pedestrians (women, men, children, business and sports outfits) made from the [Microsoft Rocketbox](https://github.com/microsoft/Microsoft-Rocketbox) avatars (MIT). `Coupled Sim` ➡️ `Pedestrians` ➡️ `Build pedestrian prefabs from Rocketbox avatars` rebuilds them; to add more, copy an avatar folder (FBX and textures) from the Rocketbox repository into `Assets/ThirdParty/Rocketbox` and run the menu item again. The logged bones of these prefabs are the same humanoid bones as those of the other pedestrians, but bone rotations depend on each rig.
+
+**Example.** The `PedestrianCrossings` experiment (made with `Coupled Sim` ➡️ `Examples` ➡️ `Create PedestrianCrossings experiment`) adds eight of these pedestrians to `Base`, walking a loop that crosses the road south of the central block twice where the AV of the `Automated - Passenger` role drives. `ExperimentPedestrianTools` has the helpers it uses (create a path, a crossing, add a group of pedestrians to an experiment).
+
 #### AI cars
 A trigger `BoxCollider` with a `SpeedSettings` component on a waypoint changes the car's behaviour when it reaches it:
 - `Type`: `InitialSetSpeed` (at the spawn point; sets the initial speed to `speed`, or to 0 if `causeToYield`), `SetSpeedTarget` (regular waypoint) or `Delete` (removes the car);
@@ -368,7 +384,9 @@ Other components on car prefabs: `CarConfigurator` (colour, driver and passenger
 Unity -batchmode -projectPath . -executeMethod SmokeTest.Run -smokeSeconds 30 -smokeOut SmokeTest -logFile smoke.log
 ```
 
-Options: `-smokeTrial N` (index in `Trials`), `-smokeScene <path>` (scene to start from). On Windows, `Unity` is `"C:\Program Files\Unity\Hub\Editor\6000.6.9f1\Editor\Unity.exe"`; on macOS `/Applications/Unity/Hub/Editor/6000.6.9f1/Unity.app/Contents/MacOS/Unity`.
+Options: `-smokeTrial N` (index in `Trials`), `-smokeExperiment N` and `-smokeRole N` (override the trial's experiment and role), `-smokeShot "x,y,z,yaw,pitch;..."` (extra screenshots from these camera poses), `-smokeScene <path>` (scene to start from).
+
+The pedestrian models have edit-mode tests (`Assets/Tests/EditMode`): run them in `Window` ➡️ `General` ➡️ `Test Runner`, or with `Unity -batchmode -projectPath . -runTests -testPlatform EditMode -testResults results.xml`. On Windows, `Unity` is `"C:\Program Files\Unity\Hub\Editor\6000.6.9f1\Editor\Unity.exe"`; on macOS `/Applications/Unity/Hub/Editor/6000.6.9f1/Unity.app/Contents/MacOS/Unity`.
 
 ## Troubleshooting
 ### Xsens MVN motion suit
@@ -421,4 +439,5 @@ Install the wheel's software (Logitech G HUB or Logitech Gaming Software for the
 | [Vehicle - Essentials](https://assetstore.unity.com/packages/audio/sound-fx/transportation/vehicle-essentials-194951) | Nox Sound | Unity Asset Store EULA |
 | [Road System](https://assetstore.unity.com/packages/tools/level-design/road-system-192818) | Maxi Barmetler | Unity Asset Store EULA |
 | [Kajaman's Roads](https://assetstore.unity.com/packages/3d/environments/roadways/kajaman-s-roads-free-52628) | Kajaman | Unity Asset Store EULA |
+| [Microsoft Rocketbox avatars](https://github.com/microsoft/Microsoft-Rocketbox) (12 avatars, textures reduced to 1024 px) | Microsoft | MIT |
 | [HD Low Poly Racing Car No.1201](https://assetstore.unity.com/packages/3d/vehicles/land/hd-low-poly-racing-car-no-1201-118603) | Azerilo | Unity Asset Store EULA (free at time of download) |
