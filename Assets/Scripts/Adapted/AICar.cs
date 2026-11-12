@@ -115,6 +115,35 @@ public class AICar : MonoBehaviour, IVehicle
         }
     }
 
+    /// <summary>
+    /// When set (e.g. by TrafficCar), the speed comes from outside: AICar only steers along the
+    /// waypoints, pitches the body and shows brake lights; waypoint speed settings are ignored.
+    /// </summary>
+    [NonSerialized] public bool ExternalSpeedControl;
+    /// <summary>Speed (m/s) and acceleration (m/s²) set by the external controller.</summary>
+    [NonSerialized] public float ExternalSpeed;
+    [NonSerialized] public float ExternalAcceleration;
+    /// <summary>
+    /// Upper limit (m/s) on the scripted speed, set by a collision-avoidance supervisor
+    /// (TrafficCar in SafetyOnly mode) when a car or pedestrian is close ahead; +inf otherwise.
+    /// </summary>
+    [NonSerialized] public float SpeedCap = float.PositiveInfinity;
+
+    void FixedUpdateExternal()
+    {
+        speed = ExternalSpeed * conversion;
+        acceleration = ExternalAcceleration;
+        bool brakingNow = ExternalAcceleration < -0.5f;
+        state = ExternalSpeed < 0.1f ? CarState.STOPPED : brakingNow ? CarState.BRAKING : CarState.DRIVING;
+        braking = brakingNow;
+        if (playerAvatar != null && playerAvatar.stopLights != null)
+            playerAvatar.SetBreakLights(brakingNow || ExternalSpeed < 0.1f);
+        // a little pitch: nose down when braking, up when accelerating
+        pitch = Mathf.Clamp(-ExternalAcceleration * 0.4f, -1.5f, 1.5f) * HasPitch;
+        modelLocalRotation = Quaternion.Slerp(modelLocalRotation, Quaternion.Euler(pitch, 0, 0), 0.1f);
+        theRigidbody.linearVelocity = rotationAxis.forward * ExternalSpeed + Vector3.up * theRigidbody.linearVelocity.y;
+    }
+
     void FixedUpdate()
     {
         // Every physics calculation involves the orientation and speed of the object.
@@ -126,6 +155,23 @@ public class AICar : MonoBehaviour, IVehicle
 
         //  Change of Ambient Traffic rotations based on current heading and target position
         theRigidbody.angularVelocity = new Vector3(0f, psi * turn_rate_degree * Mathf.PI / 360f, 0f);
+
+        if (ExternalSpeedControl)
+        {
+            FixedUpdateExternal();
+            return;
+        }
+        FixedUpdateScripted();
+        if (speed / conversion > SpeedCap)
+        {
+            speed = SpeedCap * conversion;
+            theRigidbody.linearVelocity = rotationAxis.forward * SpeedCap;
+            if (playerAvatar != null && playerAvatar.stopLights != null) playerAvatar.SetBreakLights(true);
+        }
+    }
+
+    void FixedUpdateScripted()
+    {
 
         if (shouldYield && speed == 0.0f)
         {
@@ -307,10 +353,24 @@ public class AICar : MonoBehaviour, IVehicle
         }
     }
 
-    // If gameObject is set invisible, destroy gameObject.
+    // If gameObject is set invisible, remove the car.
     void OnBecameInvisible()
     {
-        Destroy(gameObject);
+        Despawn();
+    }
+
+    // Cars are hidden rather than destroyed, so the networked pose list keeps its indices.
+    void Despawn()
+    {
+        var sync = AICarSyncSystem.HostInstance;
+        if (sync != null && playerAvatar != null)
+        {
+            sync.SetCarActive(playerAvatar, false);
+        }
+        else
+        {
+            gameObject.SetActive(false);
+        }
     }
 
     void OnTriggerEnter(Collider other)
@@ -356,9 +416,7 @@ public class AICar : MonoBehaviour, IVehicle
             }
             else if (speedSettings.Type == SpeedSettings.WaypointType.Delete)
             {
-                gameObject.SetActive(false);
-                Destroy(gameObject);
-                Destroy(target.gameObject);
+                Despawn();
             }
         }
 

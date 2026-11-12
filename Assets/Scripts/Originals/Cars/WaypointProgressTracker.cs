@@ -46,6 +46,8 @@ namespace UnityStandardAssets.Utility
         public Transform target;
 
         private float progressDistance; // The progress round the route, used in smooth mode.
+        /// <summary>Distance (m) travelled along the circuit (smooth mode).</summary>
+        public float ProgressDistance => progressDistance;
         private int progressNum; // the current waypoint number, used in point-to-point mode.
         private Vector3 lastPosition; // Used to calculate current speed (since we may not have a rigidbody component)
         private float speed; // current speed of this object (calculated from delta since last frame)
@@ -70,6 +72,21 @@ namespace UnityStandardAssets.Utility
 
 
         // reset the object to sensible values
+        /// <summary>
+        /// Starts tracking from `distance` metres along the circuit (smooth mode), for objects that
+        /// are placed in the middle of a route rather than at its start.
+        /// </summary>
+        public void SetProgress(float distance)
+        {
+            progressDistance = distance;
+            lastPosition = transform.position;
+            if (target != null && circuit != null)
+            {
+                target.position = circuit.GetRoutePoint(progressDistance + lookAheadForTargetOffset).position;
+                target.rotation = Quaternion.LookRotation(circuit.GetRoutePoint(progressDistance + lookAheadForSpeedOffset).direction);
+            }
+        }
+
         public void Reset()
         {
             // Unity also calls Reset() when the component is added in the editor: nothing to reset yet

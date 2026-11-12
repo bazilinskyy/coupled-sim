@@ -192,6 +192,7 @@ public static class ExperimentPedestrianTools
         if (nm.Experiments.Contains(exp)) return;
         nm.Experiments = nm.Experiments.Append(exp).ToArray();
         EditorUtility.SetDirty(nm);
+        EditorSceneManager.MarkSceneDirty(scene);
         EditorSceneManager.SaveScene(scene);
     }
 }
