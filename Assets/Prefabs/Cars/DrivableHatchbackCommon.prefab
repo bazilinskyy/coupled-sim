@@ -3953,6 +3953,7 @@ GameObject:
   - component: {fileID: 2478723328460268675}
   - component: {fileID: 2673223769286998360}
   - component: {fileID: 9145836946652966720}
+  - component: {fileID: 6968475236200784588}
   m_Layer: 9
   m_Name: DrivableHatchbackCommon
   m_TagString: ManualCar
@@ -4543,6 +4544,29 @@ MonoBehaviour:
   minPitch: 1
   pitchSpeed: 0.07
   volume: 1
+--- !u!114 &6968475236200784588
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1783928687406872520}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9626bbdf16baf44199dcad00cc485dc8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RealisticVehicleDynamics
+  Car: 1
+  WetGrip: 0.7
+  AntiRollFront: 6000
+  AntiRollRear: 4000
+  SuspensionFrequency: 1.6
+  DampingRatio: 0.35
+  Abs: 1
+  Gear: 0
+  Rpm: 0
+  SpeedKmh: 0
+  Grip: 1
 --- !u!1 &1783933988476021450
 GameObject:
   m_ObjectHideFlags: 0

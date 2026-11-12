@@ -128,8 +128,13 @@ public static class VehicleInput
     }
 
     /// <summary>Axis value: "Horizontal" (steer -1..1), "Throttle" (-1..1, negative = back), "Break"/"Brake" (0..1).</summary>
+    /// <summary>Input from a script or external device (tests, a motion platform, a bicycle trainer): return null to use the normal inputs.</summary>
+    public static System.Func<string, float?> Override;
+
     public static float GetAxis(string axis)
     {
+        var o = Override?.Invoke(axis);
+        if (o.HasValue) return o.Value;
         float key = Keyboard(axis);
         var wheel = WheelProfile.Active;
         if (wheel == null) return key;

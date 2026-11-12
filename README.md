@@ -41,6 +41,7 @@ The source code of the coupled simulator is released under the [MIT License](LIC
 - Input: keyboard, gamepads and steering wheels with pedals (Logitech, Thrustmaster, Fanatec, Moza; profiles and in-simulator calibration; force feedback on Logitech wheels), Xsens MVN motion suit for pedestrians.
 - Output: flat screens or head-mounted displays through OpenXR (Meta Quest, Varjo, HTC Vive, Valve Index, HP Reverb, Pico), with eye-tracking logs on headsets that have eye tracking.
 - AI cars that follow waypoint paths with configurable speed, acceleration, yielding, blinkers and driver eye contact.
+- Realistic car physics: engine and automatic gearbox, brakes with ABS, tyre grip that drops in the rain, suspension and anti-roll bars, matched to the real cars.
 - Background traffic with a choice of car-following models (IDM, Gipps, Krauss) that follows other cars, stops at red lights, slows down for bends and yields to pedestrians.
 - Participants can also be cyclists, e-scooter riders or moped riders, with two-wheeler dynamics (power, legal speed limits, lean and steering).
 - Time of day (solar position) and weather (clouds, rain with wet roads, fog), set per trial; URP graphics with post-processing and ambient occlusion.
@@ -198,6 +199,8 @@ The repository contains these drivable car prefabs in `Assets/Prefabs/Cars`:
 Only the Smart prefabs are in the `Avatar Prefab Driver` list of `Managers` ➡️ `PlayerSystem` by default. To use another car for a role, add its prefab to that list and point the role's `carIdx` to it. AI cars spawned by car spawners must also be in the `Prefabs` list of `NetworkingManager` ➡️ `AI Car System`.
 
 AI cars follow a defined path (see [waypoints](#configuration-of-waypoints)) or can be programmed to react at runtime to other road users.
+
+**Driving physics.** The participant's car drives with `RealisticVehicleDynamics` (on the drivable car prefabs; `Car` = `SmartFortwo` or `Hatchback`): the real mass, centre of mass and inertia of the car; suspension tuned to its mass (`SuspensionFrequency`, `DampingRatio`); tyre grip for asphalt that drops on wet roads (`WetGrip`, with the rain of the [weather](#time-of-day-and-weather)); an engine with torque curve and maximum power, an automatic gearbox (early shifts when driving gently, kick-down), engine braking and an auto-hold at standstill; front/rear brake balance with ABS; anti-roll bars; Ackermann steering geometry; with the keyboard, steering is reduced at speed. The Smart (52 kW) reaches 60 km/h in about 6 s and stops from 70 km/h in under 2 s, as the real car. The models are in `Assets/Scripts/Vehicles/Models` with tests against the manufacturers' acceleration and top speed figures. Remove the component to drive with the original arcade physics.
 
 ## Networking
 - Agents communicate over UDP with Unity Transport on **port 7770**. Allow this port (or the Unity editor / the built simulator) through the firewall on every PC.
