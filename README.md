@@ -41,6 +41,7 @@ The source code of the coupled simulator is released under the [MIT License](LIC
 - Output: flat screen or head-mounted display (Oculus Rift CV1 through the Oculus XR plug-in).
 - AI cars that follow waypoint paths with configurable speed, acceleration, yielding, blinkers and driver eye contact.
 - Background traffic with a choice of car-following models (IDM, Gipps, Krauss) that follows other cars, stops at red lights, slows down for bends and yields to pedestrians.
+- Coupling with [SUMO](https://eclipse.dev/sumo/) over TraCI: SUMO traffic in the scene, participants' cars and the AV in SUMO.
 - AI pedestrians with individual walking speeds, gap-acceptance crossing decisions that react to yielding cars and eHMIs, collision avoidance (social force model), traffic-aware head movements, and 12 realistic avatars.
 - eHMIs on the hood, roof and windshield of AVs, switched by the passenger or the host.
 - Traffic lights with programmable sequences; day and night versions of the town.
@@ -348,6 +349,17 @@ Each car gets a `TrafficCar` component that looks ahead along its own lane for t
 The `Traffic` example experiment (`Coupled Sim` ➡️ `Examples` ➡️ `Create Traffic experiment`) adds IDM traffic in both directions on the roads around the central block (6 cars per direction, Smart and hatchback cars) to `Base`.
 
 AI cars removed by a `Delete` waypoint are now hidden on all agents instead of destroyed, so networked pose updates keep working.
+
+### Traffic from SUMO
+[Eclipse SUMO](https://eclipse.dev/sumo/) can run the background traffic instead: for large networks, imported scenarios, or traffic studied with SUMO's own models. A `SumoBridge` in an experiment's `Car Spawners` list connects to SUMO over TraCI (no extra Unity packages):
+- SUMO's vehicles appear as AI cars on all agents, interpolated between SUMO steps, placed on the road surface, with SUMO's colours, blinkers and brake lights; vehicles that leave SUMO are hidden and reused;
+- the participants' cars and the AV are put into SUMO every step (`SendUnityCars`), so SUMO traffic follows and yields to them;
+- SUMO cars stop for pedestrians (AI and players) on the road in front of them (`StopForPedestrians`);
+- SUMO runs on its own thread in lockstep with Unity's clock, so the frame rate does not depend on SUMO.
+
+Set-up: install SUMO (1.20 or newer; tested with 1.28) and set `SUMO_HOME`; the bridge then starts `$SUMO_HOME/bin/sumo` with `Sumo Config` (a `.sumocfg`, relative to `Assets/StreamingAssets`). Set `Sumo Binary` to `sumo-gui` to watch SUMO's view as well, or turn `Launch Sumo` off to connect to a SUMO already started with `--remote-port` (`Host`, `Port`; the command line option `-sumoConnect host:port` does the same, also for a SUMO on another PC). `Network Origin` places SUMO's coordinates in the scene (SUMO x along the transform's x, SUMO y along its z).
+
+`Coupled Sim` ➡️ `Examples` ➡️ `Create SumoTraffic experiment` makes the `SumoTraffic` example: SUMO traffic in both directions around the central block of MainScene. `SumoTools.ExportLanes` writes the scene's lanes (`WaypointCircuit`s) as a SUMO network with looping routes and flows to `Assets/StreamingAssets/Sumo/MainScene` (SUMO coordinates = Unity x and z); after changing lanes, rebuild the network with the `netconvert` command in the README of that folder.
 
 ### Configuration of driver's eye contact
 The `EyeContact` component on a car's driver sets the initial eye-contact behaviour:
