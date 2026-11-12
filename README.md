@@ -1,462 +1,424 @@
-# Coupled simulator for research on driver-pedestrian interactions made in Unity.
-## Usage of the simulator
-The simulator is open-source and free to use. It is aimed for, but not limited to, academic research. We welcome forking of this repository, pull requests, and any contributions in the spirit of open science and open-source code 😍😄 For enquiries about collaboration, you may contact p.bazilinskyy@tue.nl.
+# Coupled simulator for research on driver-pedestrian interactions made in Unity
+
+The coupled simulator lets several people take part in the same traffic scene at the same time: one or more drivers of manual cars, passengers of automated vehicles (AVs) who control an external human-machine interface (eHMI), and pedestrians who walk with a keyboard or a motion suit, on flat screens or in head-mounted displays. AI-controlled cars and pedestrians fill the scene. Everything that happens is logged for analysis.
+
+The simulator is open source and free to use. It is aimed at, but not limited to, academic research. Forks, pull requests and other contributions in the spirit of open science are welcome 😍. For enquiries about collaboration, contact p.bazilinskyy@tue.nl.
+
+📺 Demo of the simulator with 3 agents:
+
+[![demo video](ReadmeFiles/thumbnail_demo_video.png)](https://www.youtube.com/watch?v=W2VWLYnTYrM)
+
+## Contents
+- [Citation](#citation) · [Examples of use](#examples-of-use) · [License](#license)
+- [Features](#features)
+- [Installation](#installation)
+- [Running the simulator](#running-the-simulator): [host](#running-as-a-host), [client](#running-as-a-client), [several agents on one machine](#several-agents-on-one-machine), [automatic trials](#running-trials-automatically), [recording videos](#recording-trial-videos)
+- [Controls](#controls)
+- [Environment and vehicles](#environment-and-vehicles)
+- [Networking](#networking)
+- [Data logging](#data-logging)
+- [Configuration](#configuration): [experiments](#experiment-definitions), [agents](#configuration-of-agents), [waypoints](#configuration-of-waypoints), [eye contact](#configuration-of-drivers-eye-contact), [daylight](#configuration-of-daylight-conditions), [traffic lights](#configuration-of-traffic-lights), [eHMIs](#configuration-of-ehmis), [car prefabs](#details-on-editing-car-prefabs)
+- [Testing](#testing)
+- [Troubleshooting](#troubleshooting)
+- [Used assets](#used-assets)
+
+## Citation
+If you use the coupled simulator for academic work, please cite:
+
+> Bazilinskyy, P., Kooijman, L., Dodou, D., & De Winter, J. C. F. (2020). Coupled simulator for research on the interaction between pedestrians and (automated) vehicles. 19th Driving Simulation Conference (DSC). Antibes, France.
+
+## Examples of use
+1. Get out of the way! Examining eHMIs in critical driver-pedestrian encounters in a coupled simulator - [repo](https://github.com/bazilinskyy/coupled-sim-evasive), [paper](https://doi.org/10.1145/3543174.3546849).
+1. Stopping by looking: A driver-pedestrian interaction study in a coupled simulator using head-mounted displays with eye-tracking - [paper](http://doi.org/10.1016/j.apergo.2022.103825).
 
 ## License
 The source code of the coupled simulator is released under the [MIT License](LICENSE). Third-party assets included in this repository (see [Used assets](#used-assets)) are not covered by this license. They remain under the license of their developers, such as the Unity Asset Store EULA, the Oculus SDK License or CC0.
 
-## Citation
-If you use the coupled sim for academic work please cite the following paper:
+## Features
+- Up to **4 human participants** in one scene (a host and three clients) over a local network.
+- Roles: driver of a manual car, passenger of an AV (controls its eHMI), pedestrian.
+- Input: keyboard, gaming steering wheel (tested with Logitech G27), Xsens MVN motion suit for pedestrians.
+- Output: flat screen or head-mounted display (Oculus Rift CV1 through the Oculus XR plug-in).
+- AI cars that follow waypoint paths with configurable speed, acceleration, yielding, blinkers and driver eye contact; AI pedestrians that follow waypoint paths.
+- eHMIs on the hood, roof and windshield of AVs, switched by the passenger or the host.
+- Traffic lights with programmable sequences; day and night versions of the town.
+- Logging of all agents (cars, pedestrian skeletons, traffic lights, eye contact) to binary files, conversion to CSV, and live streaming over UDP.
+- Automatic trial sequences with per-trial parameters and video recording.
 
-> Bazilinskyy, P., Kooijman, L., Dodou, D., & De Winter, J. C. F. (2020). Coupled simulator for research on the interaction between pedestrians and (automated) vehicles. 19th Driving Simulation Conference (DSC). Antibes, France. 
+## Installation
+The simulator runs on **Unity 6.6 (6000.6.9f1)**.
 
-## Examples of use of the simulator
-1. Get out of the way! Examining eHMIs in critical driver-pedestrian encounters in a coupled simulator - [repo](https://github.com/bazilinskyy/coupled-sim-evasive), [paper](https://doi.org/10.1145/3543174.3546849).
-1. Stopping by looking: A driver-pedestrian interaction study in a coupled simulator using head-mounted displays with eye-tracking - [paper](http://doi.org/10.1016/j.apergo.2022.103825).
+1. Install [Unity Hub](https://unity.com/download) and sign in with a Unity account (a free Personal license is enough).
+2. Clone this repository: `git clone https://github.com/bazilinskyy/coupled-sim.git`
+3. In Unity Hub, choose `Add` ➡️ `Add project from disk` and select the cloned folder. Unity Hub offers to install 6000.6.9f1 if it is missing; add **Windows Build Support (Mono)** to build the simulator for the lab PCs.
+4. Open the project. The first import takes a while (the project is about 2 GB).
 
-## Description of the simulator
-📺 These days, a video is worth more than a million words. The image below points to a YouTube video of the recording of a demo of the simulator with 3 agents:
+Platforms: the simulator is developed and used on Windows 10 and 11, and also runs on macOS (tested on macOS 15). Input and output devices (steering wheel, motion suit, HMD) are supported on Windows only. Note that Unity stops providing the editor for Intel Macs after Unity 6.7 LTS.
 
-[![demo video](ReadmeFiles/thumbnail_demo_video.png)](https://www.youtube.com/watch?v=W2VWLYnTYrM)
+The previous version of the simulator for Unity 2022.3.5f1 is available in the git history before the Unity 6 upgrade.
 
-## Environment
+## Running the simulator
+Open `Assets/_Scenes/StartScene.unity`. All settings for a run are on the `Managers` game object, mainly in its `NetworkingManager` and `PlayerSystem` components.
+
+![](ReadmeFiles/running.png)
+
+### Running as a host
+1. Make sure that `Hide GUI`, `Run Trial Sequence Automatically` and `Record Videos` on `Managers` ➡️ `NetworkingManager` are unchecked.
+2. Press Play to enter `Play Mode`.
+3. Press `Start host`. The console shows `Listening on <ip address>`: clients connect to this address.
+4. Wait for the clients to connect, if any.
+5. Select an experiment under `Experiment`.
+6. Assign a role to each participant under `Role binding`. A participant without a role runs "headless" (no avatar).
+7. Select the display/control mode of the host: `Suite mode`, `HMD mode` or `Keyboard mode`.
+8. Press `Initialise experiment`: all agents load the experiment scene.
+9. When every agent is ready (the scene is loaded everywhere), press `Start simulation`.
+
+### Running as a client
+1. Make sure that `Hide GUI`, `Run Trial Sequence Automatically` and `Record Videos` are unchecked.
+2. Press Play to enter `Play Mode`.
+3. Press `Start client`, enter the IP address of the host (default 192.168.1.11) and press `Connect`.
+4. Select a mode (`Suite mode`, `HMD mode`, `Keyboard mode`).
+5. Wait until the host starts the simulation.
+
+### Several agents on one machine
+For testing and debugging only:
+1. Run the host inside the Unity editor as described above and note the IP address it logs.
+2. Build the simulator (`File` ➡️ `Build And Run`) and start one or more builds as clients, connecting to that address (127.0.0.1 also works).
+
+Only the window that has focus receives keyboard input.
+
+### Running trials automatically
+![](ReadmeFiles/instant.png)
+
+When one participant is controlled on the host, a sequence of trials can be set up in advance and run without clicking through the GUI. This is also how trial videos are recorded (next section).
+
+1. Fill in the `Trials` list (`StartScene` ➡️ `Managers` ➡️ `NetworkingManager` ➡️ `Trials`). Each entry has:
+   - `Experiment Index`: zero-based index in the `Experiments` list of `NetworkingManager`.
+   - `Role Index`: zero-based index in the `Roles` list of that experiment.
+   - `Input Mode`: `Flat` (screen with keyboard, gamepad or steering wheel), `VR` (HMD with keyboard, gamepad or steering wheel), `Suite` (HMD with the Xsens suit; pedestrians only) or `None`.
+   - `Experiment Parameters`: name-value pairs passed to every enabled component in the experiment prefab that implements `IExperimentModifier`, right after the experiment is loaded and before the simulation starts. `EnableAVLabel` and `EnableAVLabelForLocalPlayer` are example implementations (they show an "AV" label on cars); they only have an effect when added to the experiment prefab.
+   - `Recording Start Time` and `Recording Duration`: see [Recording trial videos](#recording-trial-videos).
+2. Check `Run Trial Sequence Automatically`, and usually `Hide GUI` as well.
+3. Press Play. The first trial starts by itself. `Esc` ends the current trial and starts the next one, or quits after the last one. `Tab` shows or hides the GUI.
+
+### Recording trial videos
+Trial videos for "offline" use (for example online questionnaires) are recorded with Unity Recorder, in the editor only:
+1. Set up the trials as described above and also check `Record Videos`.
+2. Give each trial a `Recording Start Time` (seconds after the trial starts) and a `Recording Duration` (seconds). When the recording ends, the next trial starts.
+3. Set the output on `Managers` ➡️ `Recorder`:
+   - `Directory`: output folder relative to `Application.dataPath` (the `Assets` folder in the editor). The default `../../videos` is a `videos` folder next to the project folder.
+   - `Resolution` and `Framerate` of the videos.
+
+![](ReadmeFiles/recorder.png)
+
+Videos are named `{trial index}_{ExperimentDefinition.ShortName}_roleIdx-{role index}_{parameter name}-{value}_..._{yy-MM-dd_hh-mm}`, where `hh` is the hour on a 12-hour clock.
+
+## Controls
+| Who | Action | Keyboard | Steering wheel / gamepad |
+| --- | --- | --- | --- |
+| Driver | Throttle / brake | `W`/`S` or `↑`/`↓` (axis `Throttle`) | pedals |
+| Driver | Steer | `A`/`D` or `←`/`→` | wheel |
+| Driver | Brake (axis `Break`) | `Space` | pedal |
+| Driver | Forward / reverse gear | `F` / `R` | button 6 / 7 |
+| Driver | Blinker left / right / off | `Q` / `E` / `2` | button 5 / 4 / 16 |
+| AV passenger | eHMI disabled / stop / walk | `1` / `2` / `3` | |
+| AV passenger | Resume driving where the AV waits for input (`WaitInputX`) | `Space` | |
+| Pedestrian (keyboard mode) | Walk forward / back, sideways, turn | `W`/`S`, `A`/`D`, `Q`/`E` | |
+| Pedestrian (HMD) | Recenter the headset | `R` | |
+| Host | Next trial (automatic trials) / show-hide GUI | `Esc` / `Tab` | |
+
+Bindings are set in `Edit` ➡️ `Project Settings` ➡️ `Input Manager`. The host can also switch eHMIs and trigger [visual syncing](#data-logging) from its GUI during the simulation.
+
+## Environment and vehicles
 ![](ReadmeFiles/night_mode_view.png)
 
-The coupled simulator supports both day and night-time settings. Figure above shows a view of the night mode. Figures below shows the top view of the environment. It is a model of a US-like city containing:
-- Network of 2-lane roads.
-- Loop of 4-lane road (partially surrounded by buildings).
-- Loop of 6-lane road (partially surrounded by buildings).
-- Half-clover interchange for the motorway.
-- 10 intersections with traffic lights that can be turned on and off before the experiment or programmatically in real-time.
-- 34 zebra crossings.
-- Static objects (buildings, parked cars, trees).
+The town (`MainScene`, with a night version `MainScene-night`) is a model of a US-like city with:
+- a network of 2-lane roads, a loop of 4-lane road and a loop of 6-lane road (partially surrounded by buildings);
+- a half-clover interchange for the motorway;
+- 10 intersections with traffic lights that can be turned on and off before the experiment or programmatically at runtime;
+- 34 zebra crossings;
+- static objects (buildings, parked cars, trees).
 
-<!-- ![](ReadmeFiles/world_top_view.png) -->
+`DriverTestScene` is a small scene for trying out the driven car.
+
 ![](ReadmeFiles/world_all.png)
 ![](ReadmeFiles/world_centre.png)
 
-### Drivable cars
-1. small (similar to Smart Fortwo) - *DrivableSmartCommon* object.
-2. medium (similar to Ford Focus 2011) - *DrivableHatchbackCommon* object.
-3. medium (similar to Pontiac GTO) - *DrivableFireGTOCommon* object.
-4. large (similar to Nissan Datsun) - *DrivableNissanCommon* object.
+### Vehicles
+The repository contains these drivable car prefabs in `Assets/Prefabs/Cars`:
+1. small (similar to a Smart Fortwo): `DrivableSmartCommon` (and `DrivableSmartCommon-no_driver`);
+2. medium (similar to a 2011 Ford Focus): `DrivableHatchbackCommon`;
+3. medium (similar to a Pontiac GTO): `DrivableFireGTOCommon`;
+4. large (similar to a Nissan Datsun): `DrivableNissanCommon`.
 
-Cars that are not controlled by the human participants can be instructed to follow a defined trajectory or can be programmed to respond at runtime to other road users. Adding new vehicles can be done by new importing assets (easy).
+Only the Smart prefabs are in the `Avatar Prefab Driver` list of `Managers` ➡️ `PlayerSystem` by default. To use another car for a role, add its prefab to that list and point the role's `carIdx` to it. AI cars spawned by car spawners must also be in the `Prefabs` list of `NetworkingManager` ➡️ `AI Car System`.
 
-## Input
-The coupled simulator supports a keyboard and a gaming steering wheel as input sources for the driver of the manual car, a keyboard for the passenger of the AV to control the external human-machine interface, and a motion suit or a keyboard for the pedestrian. At the moment, supported motion suit is Xsens Motion Suit.
+AI cars follow a defined path (see [waypoints](#configuration-of-waypoints)) or can be programmed to react at runtime to other road users.
 
-## Output
-The simulator supports giving output to both a computer screen and a head-mounted display (HMD). It has been tested with Oculus Rift CV1, Varjo VR-2 Pro.
+## Networking
+- Agents communicate over UDP with Unity Transport on **port 7770**. Allow this port (or the Unity editor / the built simulator) through the firewall on every PC.
+- The number of agents is fixed in code to 4 (`UNetConfig.MaxPlayers`): the host plus three clients.
+- The host runs the simulation (AI cars, AI pedestrians, traffic lights) and sends poses to the clients; each client sends the pose of its own avatar to the host.
+- `Visual syncing` (host GUI, during the simulation) shows a red bar on all agents for 1 s, to synchronise screen recordings afterwards.
 
-## Networking and data logging
-The current number of human participants supported by the coupled simulator is four (host and three clients). However, this number can be expanded up to the number of agents supported by the network. Synchronization in a local network is handled by a custom-made network manager designed to support the exchange of information between agents with low latency and real-time data logging at 50 Hz for variables from the Unity environment and up to 700Hz from the motion suit. The data that are logged include the three-dimensional position and rotation of the manual car and the AV, the use of blinkers, high-beam, stop light, and 150 position and angular variables from the motion suit. The data are stored in binary format, and the coupled simulator contains a function to convert the saved data into a CSV file (`Convert log to csv` button in `Play Mode`).
+## Data logging
+Every agent writes binary logs to the `ExperimentLogs` folder in the project folder (next to `Assets`):
+- `HostLog-{role}-{yyyy_MM_dd_HH_mm_ss}.binLog` / `ClientLog-...`: one frame per rendered frame;
+- `HostFixedTimeLog-{role}-...` / `ClientFixedTimeLog-...`: one frame per physics step, at a fixed 50 Hz (`Fixed Timestep` 0.02 s).
 
-Besides logging data to the binary file, the same set of frame data (in a very similar binary format) is being sent with requested intervals (that can be set with `NetworkingManger.RealtimeLogInterval` property) during the simulation to UDP port 40131 on localhost. The data can be used to monitor the simulation with external tools at runtime. `Tools/log_receiver.py` file contains an example python script that consumes binary data and assembles it into a structure that is easy to interact with. It should be started before starting the simulation with `python log_receiver.py` (with Python 3) from within the `Tools` folder.
+Each frame contains the time, the position and rotation of every car with its blinkers, front lights and stop lights, AI-car state (speed, braking, stopped, take-off, eye contact), the position and rotation of every bone of every pedestrian (players and AI; with the Xsens suit, the suit's pose at the time of the frame), and the state of every traffic light. Experiment `Points of Interest` are stored in the log header.
 
-The structure of the frame object (with example data) is as follows:
+**Convert to CSV.** In `Play Mode`, before pressing `Start host` or `Start client`, press `Convert log to csv`, pick a log and a reference frame (the world origin, a point of interest of the experiment, or a custom point). The result is a semicolon-separated file `ExperimentLogs/{reference}-{log name}.csv` with positions relative to that reference.
+
+**Live data.** The per-frame logger of each agent also sends its frames over UDP to `localhost:40131`, every `NetworkingManager` ➡️ `Realtime Log Interval` seconds (default 0.2 s; read when the simulator starts), so experiments can be monitored with external tools. `Tools/log_receiver.py` is an example receiver: start it with `python log_receiver.py` (Python 3) from the `Tools` folder before starting the simulation. Packets start with a type (`1` = begin, `2` = frame). A received frame looks like this:
 ```
 {
    "timestamp":1.711700439453125,
    "roundtrip":0.0,
-   "Driver [car index]":{ # single integer-indexed entry for a player controlled car avatar
-      "position":(-94.58521270751953, -0.056745946407318115, 64.8435287475586),
-      "rotation":(0.5252280235290527, 90.8692626953125, 359.9905700683594),
+   "Driver [car index]":{ # the car of the local player
+      "position":(-94.58, -0.06, 64.84),
+      "rotation":(0.53, 90.87, 359.99),
       "blinker":0,
       "front":false,
       "stop":false,
-      "rigidbody":(3.1246094703674316, -0.0026992361526936293, -0.046936508268117905)
+      "rigidbody":(3.12, -0.003, -0.047)
    },
-   "Driver [car index]":{ # multiple integer-indexed entries for each AI-controlled car avatars
-      "position":(-112.08060455322266, -0.056995689868927, 21.383098602294922),
-      "rotation":(0.5083497762680054, 157.48184204101562, -0.0032447741832584143),
+   "Driver [car index]":{ # one entry per AI car
+      "position":(-112.08, -0.06, 21.38),
+      "rotation":(0.51, 157.48, -0.003),
       "blinker":0,
       "front":false,
       "stop":false,
-      "rigidbody":(0.5082536935806274, -0.0017757670721039176, -1.2219140529632568),
-      "speed":5.904001235961914,
+      "rigidbody":(0.51, -0.002, -1.22),
+      "speed":5.90,
       "braking":false,
       "stopped":false,
       "takeoff":false,
       "eyecontact":false
    },
-   "Pedestrian [pedestrian index]":{ # multiple integer-indexed entries for each player or AI-controlled pedestrian avatars
-       "bone  [bone index]":{ # multiple integer-indexed entries for each bone of pedestrian rig
-          "position":(-94.58521270751953, -0.056745946407318115, 64.8435287475586),
-          "rotation":(0.5252280235290527, 90.8692626953125, 359.9905700683594)
+   "Pedestrian [pedestrian index]":{ # one entry per player or AI pedestrian
+       "bone [bone index]":{ # one entry per bone of the pedestrian rig
+          "position":(-94.58, -0.06, 64.84),
+          "rotation":(0.53, 90.87, 359.99)
        }
    },
-   "CarLight [car traffic light index]":{ # multiple integer-indexed entries for each car's traffic light
-      "state":"b""\\x00"
-   },
-   "PedestrianLight [pedestrian traffic light index]":{ # multiple integer-indexed entries for each pedestrain's traffic light
-      "state":"b""\\x02"
-   },
+   "CarLight [index]":{ "state":"b""\\x00" },        # one entry per car traffic light
+   "PedestrianLight [index]":{ "state":"b""\\x02" }  # one entry per pedestrian traffic light
 }
 ```
 
-The host agent may use `Visual syncing` button to display a red bar across all clients and the host for 1 s to allow for visual synchronization in case screen capture software is used.
-
-## Installation
-The simulator was tested on Windows 11 and macOS Ventura 13.5. All functionality is supported by both platforms. However, support for input and output devices was tested only on Windows 10.
-
-After checking out this project, launch Unity Hub to run the simulator with the correct version of Unity (currently **2022.3.5f1**).
-
-## Running a project
- When opening this project for the first time, click `Add` and select your entire downloaded folder containing all the project files. In case you have already used this project before, select the project from the Unity Hub projects list. Wait until the project loads in.
-
-Once the project is loaded into the Unity editor open StartScene scene. You do this by going to the project tab, and clicking on the StartScene icon in the Scenes folder. Now, we will explain three different ways to run scenes, the locations for the first three steps for running as a host or client correlate with the numbers in the picture below. 
-
-![](ReadmeFiles/running.png)
-
-### Running simulation as a host
-1. Make sure that all three checkboxes (`Hide GUI`, `Run Trial Sequence Automatically`, `Record Videos`) in `NetworkingManager` component on `Managers` game object are unchecked.
-2. Press the Play button to run enter `Play Mode`.
-3. Once in `Play Mode`, press `Start Host` button. 
-4. If needed, wait for clients to join.
-5. Once all clients have connected to the host or in case the host is handling the only participant, select one of the experiments listed under `Experiment` section.
-6. Assign roles to participants in `Role binding` section. If no role is selected, the participant will run a "headless" mode.
-7. Select one of control modes listed under `Mode` section.
-8. Start an experiment with the `Initialise experiment` button - all clients will load selected experiment.
-9. Once all connected clients are ready - the experiment scene is fully loaded on each client, press `Start simulation` button.
-
-### Running simulation as a client
-1. Make sure that all three checkboxes - `Hide GUI`, `Run trial sequence automatically`, `Record videos` (`Managers` (game object) ➡️ `NetworkingManager` (component)), are unchecked.
-2. Press the Play button to run enter `Play mode`.
-3. Once in `Play Mode`, press `Start client` button.
-4. Enter the host IP address. 
-5. Press `Connect`.
-6. Once connected, select one of control modes listed under `Mode` section.
-7. Wait until host starts the simulation.
-
-### Running simulation with multiple agents on one machine
-1. Run host agent inside of Unity (as described above).
-2. Note the IP address in the console of Unity.
-3. Run other  agents after building them `File` ➡️ `Build And Run`. Connect using the IP address from the (1).
-
-Providing input for multiple agents on one machine is not supported. Input is provided only to the agent, the window of which is selected. This mode is intended for testing/debugging.
-
-### Running simulation trials automatically
-![](ReadmeFiles/instant.png)
-
-If the simulation only has one participant that is controlled on a host machine, simulation trials can be set up beforehand and run automatically. It is especially useful when using simulator to record videos for trials which is described in next section. Most of a times user should have any GUI disabled, which can be done by checking `Hide GUI` checkbox. GUI can be enabled at runtime by pressing `Tab` button on the keyboard.
-
-To run simulation trials automatically, both `Run Trial Sequence Automatically` has to be checked and trial sequence has to be set up. Once it is done, press Play button to enter `Play Mode` - first trial in the sequence should start automatically. To finish current trial and either start next one or exit simulator (if currently played trial the last one), press `Escape` button on the keyboard.
-
-In order to set up trial sequence, user has to define entries on the `Trials` list (`StartScene` (scene) ➡️ `Managers` (game object) ➡️ `NetworkingManager` (component) ➡️ `Trials` (click arrow to open the field)). Each entry consists of the following fields:
-- `ExperimentIndex`: int variable which indicates a zero-based index of a selected experiment in `Experiments` list (`NetworkingManager` (component) ➡️ `Experiments` (field)).
-- `RoleIndex`: int variable which indicates a zero-based index of a selected role in `Roles` list (`ExperimentDefinition` (component) ➡️ `Roles` (field)) of a selected experiment prefab.
-- `InputMode`: enum variable, that sets participants display/controller pair for the trial. Available values are:
-	- `Flat`: use a flat-screen to display simulation and mouse&keyboard/gamepad/steering wheel to control it.
-	- `VR`: use virtual reality headset to display simulation and mouse&keyboard/gamepad/steering wheel to control it.  
-	- `Suite`: use virtual reality headset to display simulation and XSense suite to control it (only pedestrian avatar).
-
-Additional experiment parameters can be defined for each trial that would modify baseline scenario implemented in experiment. Parameters take form of name-value pair defined in `ExperimentParameters` list. Those parameters are consumed by any enabled scripts contained in experiment prefab that implement `IExperimentModifier` interface right after experiment is loaded and before simulation has started. An example of such a script is `EnableAVLabel`.
-
-### Recording trial videos
-Simulator is able to record trial videos for "offline" use. Most of the setup is the same as for running trials automatically as described above. There are three additional steps that need to be taken to set up automatic trials recording.
-
-1. `Record Videos` checkbox has to be checked.
-2. Each trial in `Trials` list has to have `Recording Start Time` and `Recording Duration` defined. `Recording Start Time` defines at which second after the trial has started video recording should start. `Recording Duration` defines how long the recording will last. After recording is finished simulator will proceed to the next trial in the sequence.
-3. Following video output parameters can be set up in `Managers` (game object) ➡️ `Recorder` (component):
--- `Directory` - output directory relative to Application.dataPath (when running from Unity Editor it is `Assets` folder).
--- `Resolution` - videos output resolution
--- `Framerate` - videos output frame rate
-
-![](ReadmeFiles/recorder.png)
-
-Filenames of recorded videos conform following naming scheme: 
-```{trial index}\`{ExperimentDefinition.ShortName}\`roleIdx-{role index}\`{multiple "\`" separated " paremeter name-value pairs}\`{date and time in "yy-MM-dd\`hh-mm" format}```
-
 ## Configuration
-The central point for simulators configuration are two major components on `Managers` game object from the `StartScene` scene:
-- `PlayerSystem`: gathering references to player avatar prefabs,
-- `NetworkingManager`: gathering references to experiment definitions and elements spawned during networked experiment runtime (currently only waypoint-tracking cars - `AICar`).
+### Experiment definitions
+The central configuration is on the `Managers` game object in `StartScene`:
+- `PlayerSystem`: the player avatar prefabs (pedestrian avatar and the `Avatar Prefab Driver` list of cars);
+- `NetworkingManager`: the list of experiments, the trial sequence, and the prefabs of AI cars that can be spawned during an experiment (`AI Car System` ➡️ `Prefabs`).
 
 ![](ReadmeFiles/player_system.png)
 
-The experiment is defined solely with prefab containing the `ExperimentDefinition` component in the root object.
-To make newly created experiment selectable you have to add its prefab to `Experiments` list on `NetworkingManager` component.
+An experiment is a prefab with an `ExperimentDefinition` component on its root object. To make a new experiment selectable, add its prefab to the `Experiments` list of `NetworkingManager`. `Assets/ExperimentDefinitions` contains `Base` (the example used by default, showing most features) and the experiments of earlier studies: `2Pedestrian`, `EvasiveManeuvers`, `Scenario_1_eHMI`, `SoloAuto`, `SoloPedestrian`, `SoloPedestrianWithNPCs-Nighttime` and `TrolleyProblem`.
 
 ![](ReadmeFiles/networking_manager.png)
 
-To edit the experiment definition, double click the experiment prefab in the `Project` window.
+To edit an experiment, double-click its prefab in the `Project` window.
 
 ![](ReadmeFiles/project.png)
 
-Prefab will be opened in edit mode along with the currently defined `Regular Prefab Editing Environment`. When defining the experiment it is worth setting `Regular Prefab Editing Environment` variable to the Unity scene defined in the experiment (`Edit` ➡️ `Project Settings` ➡️ `Editor` ➡️ `Prefab Editing Environments` ➡️ `Regular Environment`).
+The prefab opens in prefab mode with the `Regular Prefab Editing Environment`. It helps to set this environment to the experiment's scene (`Edit` ➡️ `Project Settings` ➡️ `Editor` ➡️ `Prefab Editing Environments` ➡️ `Regular Environment`).
 
 ![](ReadmeFiles/project_settings.png)
 
-`ExperimentDefinition` component defines the following fields:
-- `ShortName`: the short name of the experiment used in video recording output filenames
-- `Name`: the name of the experiment
-- `Scene`: Unity scene name to be loaded as an experiment environment
-- `Roles`: list defining roles that can be taken during an experiment by participants
-- `Points of Interest`: static points that are logged in experiment logs to be used in the log processing and analysis
-- `Car Spawners`: references to game objects spawning AI-controlled cars
-- `AI Pedestrians`: defines AI-controlled pedestrians behaviour with a list of `PedestrianDesc` structures containing a pair of an `AIPedestrian` (the game object that defines an AI-controlled pedestrian avatar) and `WaypointCircuit` (defining a path of waypoints for the linked avatar) 
-
-`Points of interest` is a list of `Transform` references.
-`CarSpawners` list references game objects containing component inheriting from `CarSpawnerBase`. It defines, with overridden `IEnumerator SpawnCoroutine()`  method, spawn sequence (see `BaseSyncedCarSpawner` for reference implementation). Car prefabs spawned by the coroutine with `AICar Spawn(CarSpawnParams parameters, bool yielding)` method must be one of the referenced prefabs in `AvatarPrefabDriver` list on `NetworkManager` component. 
-
-`Base.prefab` from `ExperimentDefinitions` folder is an example experiment definition showcasing most of simulator features.
+`ExperimentDefinition` has these fields:
+- `ShortName`: short name, used in video file names;
+- `Name`: name shown in the host GUI;
+- `Scene`: the Unity scene loaded as the environment (it must be in the build settings);
+- `Roles`: the roles participants can take (see below);
+- `Points of Interest`: `Transform`s whose positions are stored in the logs, for analysis and as CSV reference frames;
+- `Car Spawners`: objects with a component derived from `CarSpawnerBase` that spawn AI cars. The spawn sequence is the `IEnumerator SpawnCoroutine()` of the component (see `BaseSyncedCarSpawner`). Spawned prefabs must be in `NetworkingManager` ➡️ `AI Car System` ➡️ `Prefabs`. A spawner without spawn point, track or car prefab logs a warning and spawns nothing;
+- `AI Pedestrians`: pairs of an `AIPedestrian` (the pedestrian avatar in the prefab) and a `WaypointCircuit` (its path).
 
 ![](ReadmeFiles/experiment_definition.png)
 
 ### Configuration of agents
 ![](ReadmeFiles/roles.png)
 
-`Roles` field is a list of `ExperimentRoleDefinition` structures defining experiment roles with the following base data fields:
- - `Name`: short name/description of the role
- - `SpawnPoint.Point`: defines where player avatar will be spawned
- - `SpawnPoint.Type`: a type of player avatar. It may be:
--- `PlayerControlledPedestrian`, 
--- `PlayerControlingCar`,
--- `PlayerInAIControlledCar`.
-
-#### Adding and removing agents
-To add a new agent either increase the size of `Roles` array or duplicate existing role by right-clicking on the role name and selecting Duplicate from the context menu.
-
-To remove the agent right click on the role name and select Delete from the context menu or decrease the list size removing end entries that don't fit the resized list.
-
-#### Configuration of starting location of agents
-Add a new game object to the prefab and set its position and rotation.
-Drag the newly created game object object to the `SpawnPoint.Point` field in role definition.
-
-#### Configuration of agent camera 
-Avatar prefab can have multiple cameras defined (`PlayerAvatar` (component) ➡️ `Cameras` (field)), for example for a driver and passenger position. Camera that will displaying world for the avatar is defined by providing `SpawnPoint.CameraIndex`.
-Additionally to the location, additional camera settings can be provided for a spawned agent with  `CameraSetup` component. The component can be added to the `SpawnPoint.Point` game object.
-The component exposes two fields:
-- `FieldOfView`: value which is set at spawn-time to `Camera.fieldOfView` property.
-- `Rotation`: value which is set at spawn-time to `Transform.localRotation` of a game object hosting `Camera` component.
-
-![](ReadmeFiles/camera_setup.png)
-
-#### Configuration for pedestrian agents (`PlayerControlledPedestrian`) 
-No additional configuration is needed for pedestrian type agents.
-
-#### Common configuration for car (`PlayerControlingCar` and `PlayerInAIControlledCar`) agents
-Following additional fields has to be defined:
-- `CarIdx` - indicates car prefab that will be spawned for this role. Selected prefab is the one on the indicated index on `AvatarPrefabDriver` list (field on `PlayerSystem` component)
-- `VehicleType` - indicates how spawned car will be configured. It may be either `AV` or `MDV`. This parameter corresponds to `AV` and `MDV` sections in `PlayerAvatar` component.
-
-#### Configuration for agents `PlayerInAIControlledCar` 
-Following additional fields has to be defined:
-- `TopHMI`, `WindshieldHMI` (see image below), `HoodHMI` fields - defines which eHMI prefab to spawn on corresponding spots. Spots are defined in player avatar prefabs (`PlayerAvatar` (component) ➡️ `HMI Slots` (field)).
-- `AutonomusPath` - references game object defining waypoints for the autonomous car via `WaypointCirciut` component
+`Roles` is a list of `ExperimentRoleDefinition`s with these fields:
+- `Name`: short name of the role;
+- `SpawnPoint.Point`: where the avatar is spawned;
+- `SpawnPoint.Type`: the kind of avatar: `PlayerControlledPedestrian`, `PlayerControlingCar` (driver of a manual car) or `PlayerInAIControlledCar` (passenger of an AV);
+- `SpawnPoint.CameraIndex`: which camera of the avatar is used (see below);
+- `SpawnPoint.VehicleType`: for cars, `AV` or `MDV` (manually driven vehicle); it enables the matching `AV` or `MDV` elements of the car's `PlayerAvatar`;
+- `carIdx`: for cars, the index of the car prefab in `PlayerSystem` ➡️ `Avatar Prefab Driver`;
+- `TopHMI`, `WindshieldHMI`, `HoodHMI`: for AV passengers, the eHMI prefab spawned on each slot (slots are set on the car's `PlayerAvatar` ➡️ `HMI Slots`);
+- `AutonomousPath`: for AV passengers, the `WaypointCircuit` the AV follows;
+- `AutonomousIsYielding`: puts the AV on the `Yielding` layer instead of `Car`.
 
 ![](ReadmeFiles/windshield_ehmi.png)
 
-### Configuration of waypoints 
+**Adding and removing agents.** Increase the size of `Roles`, or right-click a role and choose `Duplicate`. To remove one, right-click it and choose `Delete`.
+
+**Starting location.** Add a game object to the experiment prefab, place and rotate it, and drag it to `SpawnPoint.Point`.
+
+**Camera.** An avatar prefab can have several cameras (`PlayerAvatar` ➡️ `cameras`), for example for the driver's and the passenger's seat; `SpawnPoint.CameraIndex` selects one. A `CameraSetup` component on the `SpawnPoint.Point` object sets `Field Of View` and `Rotation` (local rotation) of the avatar's cameras at spawn time.
+
+![](ReadmeFiles/camera_setup.png)
+
+### Configuration of waypoints
 ![](ReadmeFiles/traffic_circuit.png)
 
-Paths that can be followed both by non-playable pedestrians and vehicles are defined with the `WaypointCircuit` component.
+Paths of AI pedestrians and cars are `WaypointCircuit` components with a list of waypoint `Transform`s:
+- add a waypoint: press `+` below the list and drag a `Transform` into the new field;
+- remove a waypoint: select it in the list and press `−`;
+- reorder: drag an item in the list;
+- move: select the waypoint object and move it in the scene.
 
-To add waypoint  - press + sign at the bottom of the list and drag waypoint Transform into the newly added field.
+#### AI pedestrians
+A trigger `BoxCollider` with a `PedestrianWaypoint` component on a waypoint changes how the pedestrian walks from there on:
+- `targetSpeed`: walking speed (m/s);
+- `targetBlendFactor`: animation blend between standing (0) and full walking (1).
 
-To remove waypoint - select waypoint on the `Items` list and press + sign at the bottom of the list.
-To reorder waypoint - drag selected list item to the new position on the list.
-To change position of a waypoint - select waypoint transform (by double clicking on the reference from the `Items` list) and move it do the desired position.
-
-#### Configuration of movement of AI-controlled pedestrians
-Additionally, for pedestrians, `PedestrianWaypoint` along with trigger `BoxCollider` component might be used to further configure agents behaviour on a tracked path.
-
-##### `PedestrianWaypoint` component
 ![](ReadmeFiles/pedestrian_waypoint.png)
 
-`PedestrianWaypoint` component allows to change walking speed when pedestrian avatar enters `BoxCollider` with following parameters:
-- `targetSpeed` - controls movement speed
-- `targetBlendFactor` - controls animation speed, by blending between idle and full speed walk
+#### AI cars
+A trigger `BoxCollider` with a `SpeedSettings` component on a waypoint changes the car's behaviour when it reaches it:
+- `Type`: `InitialSetSpeed` (at the spawn point; sets the initial speed to `speed`, or to 0 if `causeToYield`), `SetSpeedTarget` (regular waypoint) or `Delete` (removes the car);
+- `speed`: target speed (km/h);
+- `acceleration`: acceleration to reach the target speed (m/s²; negative to slow down);
+- `jerk`: rate of change of acceleration;
+- `BlinkerState`: blinker to switch on;
+- `causeToYield`: the car brakes with `brakingAcceleration` (negative) to a stop, waits `yieldTime` seconds and drives on with `acceleration` up to `speed`;
+- eye-contact fields, see [eye contact](#configuration-of-drivers-eye-contact);
+- `customBehaviourData`: triggers custom behaviour (below).
 
-#### Configuration of the movement AI-controlled cars
-Additionally, for vehicles, `SpeedSettings` along with trigger `BoxCollider` component might be used to further configure agents behaviour on a tracked path.
-
-##### `SpeedSettings` component
 ![](ReadmeFiles/speed_settings.png)
 
-- `SpeedSettings` component allows to change car behaviour when car avatar enters `BoxCollider`.
-- `Type` - Indicates what kind of waypoint is it
---  InitialSetSpeed - Waypoint placed at the spawn point that sets up initial speed to `speed` or to 0 if `causeToYield` is set to true.
--- SetSpeedTarget - Regular waypoint that changes car behaviour according to rest of parameters.
--- Delete - Destroys car avatar.
-- `speed` - Indicates target speed that car will be trying to reach.
-- `acceleration` - Indicates acceleration that will be used to reach target speed (If target speed is lower than current speed, value has to be negative.)
-- `BlinkerState` - Indicates whether car should have any of turn indicator blinking.
-- `causeToYield` - If checked, car will decelerate with `breakingAcceleration`, wait `yieldTime` and resume driving by accelerating with `acceleration` until car reaches `speed`.
-- `yieldTime` - Indicates how long car should stay in place after making a full stop.
-- `brakingAcceleration` - If `causeToYield` is true, this value needs to be negative.
-Eye contact related parameters are described in "Configuration of driver's eye-contact behaviour" section.
+**Custom behaviour.** A waypoint can trigger custom behaviour of an `AICar` by referencing a `ScriptableObject` derived from `CustomBehaviourData`; the car needs a matching `CustomBehaviour` component, linked at spawn time (see `BlinkWithFrontLights`, `BlinkPatternData` and `BaseSyncedCarSpawner`).
 
-##### Custom behaviour
-Waypoint can trigger custom behaviour, on `AICar` with linked `CustomBehaviour` derived component, by providing `ScriptableObject` deriving form `CustomBehaviourData` (See reference implementation in `BlinkWithFrontLights` and `BlinkPatternData`). `CustomBehaviour` components should be linked to `AICar` at spawn time (See reference implementation in `BaseSyncedCarSpawner`).
+#### Exporting and importing waypoint circuits
+`WaypointCircuit` has `Export to file` and `Import from file` buttons. The file is a semicolon-separated CSV whose first line is `Smooth: True` or `Smooth: False`, followed by a header and one row per waypoint. Importing replaces all waypoints of the circuit. The columns are:
 
-####  Exporting and importing WaypointCircuit's
-`WaypointCirciut` can be serialized into CSV format (semicolon separated) with an `Export to file` button. 
+1. `GameObject`: `name`, `tag`, `layer` (layer index).
+2. `Transform`: `x`, `y`, `z` (position, m), `rotX`, `rotY`, `rotZ` (Euler angles, degrees), `scaleX`, `scaleY`, `scaleZ`.
+3. `SpeedSettings`:
 
-CSV file can be modified in any external editor and then imported with an `Import from file` button. Importing files will remove all current waypoint objects and replace them with newly created ones according to the data in the imported CSV file. Following parameters are serialized to and de serialized from CSV files:
+| Field | CSV column | Values |
+| --- | --- | --- |
+| Type | waypointType | 0 InitialSetSpeed, 1 SetSpeedTarget, 2 Delete |
+| speed | speed | km/h |
+| acceleration | acceleration | m/s² |
+| jerk | jerk | m/s³ |
+| BlinkerState | blinkerState | 0 none, 1 left, 2 right |
+| causeToYield | causeToYield | True/False |
+| EyeContactWhileYielding | lookAtPlayerWhileYielding | True/False |
+| EyeContactAfterYielding | lookAtPlayerAfterYielding | True/False |
+| yieldTime | yieldTime | s |
+| brakingAcceleration | brakingAcceleration | m/s² |
+| YieldingEyeContactSince | lookAtPedFromSeconds | s |
+| YieldingEyeContactUntil | lookAtPedToSeconds | s |
+| customBehaviourData | customBehaviourDataString | `%`-separated `{asset name}#{entity id}` pairs (valid within one editor session) |
 
-1. `GameObject` properties
+4. `BoxCollider`: `collider_enabled`, `isTrigger` (True/False), `centerX`, `centerY`, `centerZ`, `sizeX`, `sizeY`, `sizeZ`.
 
-| Property name | CSV column | Type | Description
-| --- | --- | --- | ---
-| [name](https://docs.unity3d.com/ScriptReference/Object-name.html) | name | string | name
-| [tag](https://docs.unity3d.com/ScriptReference/GameObject-tag.html) | tag | string | tag
-| [layer](https://docs.unity3d.com/ScriptReference/GameObject-layer.html) | layer | integer | unity layer index
+### Configuration of driver's eye contact
+The `EyeContact` component on a car's driver sets the initial eye-contact behaviour:
+- `Tracking`: whether the driver looks at pedestrians while the car moves (changes at runtime);
+- `TrackingWhileYielding`: the same while the car is stopped;
+- `MinTrackingDistance`, `MaxTrackingDistance` (m): range in which the driver can look at a pedestrian, measured horizontally between the driver's head and the pedestrian's root;
+- `MaxHeadRotation` (degrees): limit of the head rotation around the vertical axis.
 
-2. `Transform` properties
-
-| Property name | CSV columns | Units| Description
-| --- | --- | --- | ---
-| [position](https://docs.unity3d.com/ScriptReference/Transform-position.html) | x; y; z | meters | position
-| [eulerAngles](https://docs.unity3d.com/ScriptReference/Transform-eulerAngles.html) | rotX; rotY; rotZ | degrees | rotation in euler angles
-| [localScale](https://docs.unity3d.com/ScriptReference/Transform-localScale.html) | scaleX; scaleY; scaleZ | - | local scale
-
-3. `SpeedSettings` properties
-
-| Property name | CSV column | Type | CSV values
-| --- | --- | --- | ---
-| Type | waypointType | WaypointType enum | 0 for InitialSetSpeed, 1 for SetSpeedTarget, 2 for Delete
-| speed | speed | km/h | -
-| acceleration | acceleration | m/s<sup>2</sup> | - | 
-| BlinkerState | blinkerState | BlinkerState enum | (0 for None, 1 for Left, 2 for Right)
-| causeToYield | causeToYield | boolean | True/False
-| EyeContactWhileYielding | lookAtPlayerWhileYielding | boolean | True/False
-| EyeContactAfterYielding | lookAtPlayerAfterYielding | boolean | True/False
-| yieldTime | yieldTime | seconds | -
-| brakingAcceleration | brakingAcceleration | m/s<sup>2</sup> | -
-| YieldingEyeContactSince | lookAtPedFromSeconds | seconds | -
-| YieldingEyeContactUntil | lookAtPedToSeconds | seconds | -
-| customBehaviourData | customBehaviourDataString | any class derived from CustomBehaviourData | multiple entries of % separated {scriptable object name}#{scriptable object instance id} pairs
-
-4. `BoxCollider` properties
-
-| Property name | CSV column(s) | CSV values | Description
-| --- | --- | --- | ---
-| [enabled](https://docs.unity3d.com/ScriptReference/Collider-enabled.html) | collider`enabled | (True/False) | is component enabled
-| [isTrigger](https://docs.unity3d.com/ScriptReference/Collider-isTrigger.html) | isTrigger | (True/False) | is collider a trigger
-| [center](https://docs.unity3d.com/ScriptReference/BoxCollider-center.html) | centerX; centerY; centerZ | - | box collider center
-| [size](https://docs.unity3d.com/ScriptReference/BoxCollider-size.html) | sizeX; sizeY; sizeZ | - | box collider size
-
-### Configuration of driver's eye-contact behaviour
-Initial eye contact tracking state and base tracking parameters are defined with fields in the `EyeContact` component.
-`EyeContactTracking` defines the initial (and current at runtime) driver's eye contact behaviour while the car is not fully stopped.
-- `MinTrackingDistance` and `MaxTrackingDistance` define (in meters) the range of distances at which eye contact tracking is possible. Distance is measured between the driver's head position and the pedestrian's root position (ignoring a distance on a vertical axis).
-- `MaxHeadRotation` (in degrees) limits head movement on a vertical axis.
-`EyeContact`, if tracking is enabled, selects as the target the closest game object tagged with a `"Pedestrian"` tag that is within the distance range, if it meets rotation constraint (this constrain is checked when the closest object is already selected).
+The driver looks at the closest object tagged `Pedestrian` within that range, if the rotation limit allows it. `EyeContactRigControl` animates the driver's head towards that target.
 
 ![](ReadmeFiles/pedestrian.png)
 
-`EyeContactRigControl` is a component that consumes tracking target provided by `EyeContact` component and animates drivers head movement.
-
 ![](ReadmeFiles/eye_contact.png)
 
-Eye contact behaviour tracking state can be changed when the car reaches the waypoint. Behaviour change is defined by the `SpeedSettings` - the component embedded on waypoint objects. The following four fields control those changes:
-- `EyeContactWhileYielding`: defines how the driver will behave while the car is fully stopped
-- `EyeContactAfterYielding`: defines how the driver will behave when the car resumes driving after a full stop. This value simply overwrites the current value of `EyeContact.EyeContactTracking` if the car has fully stopped.
-- `YieldingEyeContactSince`: defines how many seconds need to pass before the driver will make eye contact (starting from the moment the car has fully stopped)
-- `YieldingEyeContactUntil`: defines how many seconds need to pass before the driver ceases to maintain eye contact (starting from the moment the car has fully stopped)
+`SpeedSettings` on waypoints change eye contact when the car reaches them:
+- `EyeContactWhileYielding`: behaviour while the car is stopped;
+- `EyeContactAfterYielding`: behaviour after the car drives on again (overwrites `EyeContact.Tracking` once the car has stopped);
+- `YieldingEyeContactSince`: seconds after stopping before the driver makes eye contact;
+- `YieldingEyeContactUntil`: seconds after stopping when the driver stops making eye contact.
 
-#### Configuration of daylight conditions
+### Configuration of daylight conditions
 ![](ReadmeFiles/day_night_control.png)
 
-`DayNightControl` component helps to define different experiment daylight conditions. It gathers lighting-related objects and allows defining two lightings presets - Day and Night, that can be quickly switched for a scene. This component is intended to be used at the experiment definition setup stage. When the development of the environment is complete, it is advised, to save the environment into two separate scenes (with different light setups) and bake lightmaps.
+`DayNightControl` collects the lighting-related objects of a scene and holds two presets, Day and Night, to switch between while building an environment. When the environment is finished, save it as two scenes with different lighting and bake the lightmaps (as done for `MainScene` and `MainScene-night`). `LightProbePlacer` fills the map with a regular grid of light probes for baking (`Place Light Probes` button).
 
-#### Configuration of traffic lights
+### Configuration of traffic lights
 ![](ReadmeFiles/street_light_manager.png)
 
-Creating a traffic street lights system is best started with creating an instance of `ExampleStreetLightCrossSection` prefab and adjusting it. 
-`TrafficLightsManager` component manages state of `CarSection` and `PedestrainSection` objects that group respectively `CarTrafficLight` and `PedestrianTrafficLight` instances that share common behaviour.
-Traffic light initial state is defined with list of `TrafficLightEvent` structures stored in `initialStreetLightSetup` field. This events are triggered once before simulation has started.
-Traffic light initial state is defined with list of `TrafficLightEvent` structures stored in `streetLightEvents` field. This events are triggered sequentially in a loop. 
-Each event is defined with the following fields:
-- `Name`: descriptive name of an event
-- `Delta Time`: relative time that has to pass since previous event to activate the event
-- `CarSections`: cars traffic light group that the event applies to
-- `PedestrianSections`: pedestrian traffic light group that the event applies to
-- `State`: state to be set on the lights specified by sections
+Start from an instance of the `ExampleStreetLightCrossSection` prefab. `TrafficLightsManager` controls `CarSection` and `PedestrianSection` objects, which group `CarTrafficLight` and `PedestrianTrafficLight`s that switch together.
+- `initialStreetLightSetup`: list of `TrafficLightEvent`s applied once, before the simulation starts;
+- `streetLightEvents`: list of `TrafficLightEvent`s that run one after another in a loop.
 
-`CurrentIndex` and `CurrentTimer` allow to skip certain parts of sequence. 
-- `CurrentIndex` selects `TrafficLightEvent` that the sequence will start from. 
-- `CurrentTimer` sets time offset from the start of the selected `TrafficLightEvent`.
+Each event has a `Name`, a `Delta Time` (seconds after the previous event), the `CarSections` and `PedestrianSections` it applies to, and the `State` to set. `CurrentIndex` and `CurrentTimer` let the loop start at a given event and time offset.
+
+### Configuration of eHMIs
+eHMIs are prefabs with a component derived from `HMI` that shows one of three states: `DISABLED`, `STOP` (do not cross) or `WALK` (you may cross). `AnimatorHMI` switches textures and animator triggers, `SpriteHMI` switches sprites; `StaticHMI` and `DynamicHMI` in `Assets/Prefabs/HMI` are examples. The AV passenger switches the state with `1`/`2`/`3`, the host with buttons in its GUI; `HMIManager` keeps all agents in sync.
 
 ### Details on editing car prefabs
-`Speedometer` component controls a speed indicator. 
-To use digital display, set the `Speedometer Text` field in order to do that.
-To use analog display, set the following fields:
-- `Pivot` - the pivot of an arrow
-- `PivotMinSpeedAngle` - the inclination of an arrow for 0 speed
-- `PivotMaxSpeedAngle` - the inclination of an arrow for max speed
-- `MaxSpeed` - max speed displayed on the analog display
+The `Speedometer` component shows the speed:
+- digital: set `Speedometer Text`;
+- analog: set `Pivot` (pivot of the needle), `PivotMinSpeedAngle` and `PivotMaxSpeedAngle` (needle angle at 0 and at maximum speed) and `MaxSpeed`.
+
+Other components on car prefabs: `CarConfigurator` (colour, driver and passenger visibility of AI cars), `SteeringWheel` (turns the steering wheel model), `RearMirrorsReflection` (mirror cameras), `CarBlinkers`, `DriverIKSetup` (driver's hands on the wheel) and the engine sound managers.
+
+## Testing
+`SmokeTest` runs a whole trial without a screen and checks that it works: it opens `StartScene`, starts a host that runs the first trial in keyboard mode, plays for the given time once the experiment runs, and writes a report with errors and exceptions, how far each car and pedestrian moved, and screenshots of the active cameras. It exits with code 0 when no errors occurred.
+
+```
+Unity -batchmode -projectPath . -executeMethod SmokeTest.Run -smokeSeconds 30 -smokeOut SmokeTest -logFile smoke.log
+```
+
+Options: `-smokeTrial N` (index in `Trials`), `-smokeScene <path>` (scene to start from). On Windows, `Unity` is `"C:\Program Files\Unity\Hub\Editor\6000.6.9f1\Editor\Unity.exe"`; on macOS `/Applications/Unity/Hub/Editor/6000.6.9f1/Unity.app/Contents/MacOS/Unity`.
 
 ## Troubleshooting
-### Troubleshooting of the MVN suit
-#### Running the simulation
-Connect the ASUS Router with the USB Adapter to the PC and plug the Ethernet in a yellow port of the router. Let it boot up for some time while you prepare the software and the suit. Connect the Oculus Rift HDMI and USB 3.0 to the computer.
-
-Plug in the black MVN dongle in a USB 3.0 port of the computer Run the latest version of MVN Analyze. Fill out the anthropometric data and participant name by creating a new recording (1).
-
-Check under `Options ➡️ Preferences ➡️ Miscellaneous ➡️ Network Streamer` that the data streamer is set to `Unity3D`.
-
-Note: if you find out later on that somehow the avatar looks buggy in Unity, play around with the down sampling skip factor in the `Network Streamer` overview to improve rendering.
-
-Turn on the Body Pack with all the sensors connected. This will sound like one beep. Wait for 30 seconds and press the WPS button on the router. When the Body Pack of the suit beeps again, continuously press the button for 2 seconds until you hear two sequential beeps. Look if the light of the button becomes a strobe light. If this does not happen within a minute or 5, you’ve got a problem named Windows.
-
-##### The problem named Windows
-Delete the following software from the pc and re-install the latest version of MVN Analyze. This will re-install also the *bonjour print* services.
+### Xsens MVN motion suit
+1. Connect the router of the suit with its USB adapter to the PC and plug the Ethernet cable into a yellow port of the router. Let it boot while you prepare the software and the suit. Connect the HMD.
+2. Plug the MVN dongle into a USB 3.0 port and start MVN Analyze. Create a new recording with the participant's name and body measurements.
+3. Under `Options` ➡️ `Preferences` ➡️ `Miscellaneous` ➡️ `Network Streamer`, enable streaming to this PC on **port 9763** (the port `XsStreamReader` listens on). The old `Unity3D` datagram type is not supported anymore; use the default pose datagrams. If the avatar looks jittery in Unity, change the down-sampling skip factor in the Network Streamer.
+4. Turn on the body pack (one beep). Wait 30 s and press the WPS button on the router. When the body pack beeps again, hold its button for 2 s until it beeps twice and the light blinks. If this does not happen within a few minutes, uninstall the MVN software including the Bonjour print services (figure below) and install the latest MVN Analyze again.
 
 ![](ReadmeFiles/mvn_windows.png)
- 
-##### The post era of having problems with Windows
-If you have an avatar in MVN Analyze and all the sensors are working, boot Unity for the simulation. See figure below: press play to launch the simulation, use the dropdown menu to select a participant and press the trial button to launch a trial.
+
+5. When the avatar moves in MVN Analyze, start the simulator in `Suite mode` (host GUI or trial `Input Mode` = `Suite`). The pedestrian avatar prefabs for the suit are in `Assets/Prefabs/Xsens`. To align the HMD with the avatar's head, click in the game view and press `R`; repeat until the participant confirms the view is aligned. Do this again for every trial.
 
 ![](ReadmeFiles/mvn_unity.png)
 
-**Note.** If you want to match the orientation of the Oculus to the orientation of the avatar’s head, make sure you have left-clicked the game screen in Unity and press the R-key on your keyboard. Pressing the R-key to match the visuals with the head orientation is an iterative process which requires feedback from the participants.
-
-If you want to start a new trial, click play again at the top of the Unity screen to end the simulation. Also match the head orientations again with the R-key loop.
-
-### Troubleshooting Oculus Rift
-Always run Oculus Home software when using Oculus Rift. Otherwise you will encounter black screens. Make sure your graphics driver and USB 3.0 connections are up to date. If Oculus gives a critical hardware error, disconnect Rift and set Oculus Home software to Beta (Public Test Channel, 1st figure below) and check if Oculus Home setting is set to allow Unknown apps (2nd figure below).
+### Oculus Rift
+Keep the Oculus app running when using the Rift, otherwise the screen stays black. Keep the graphics driver and USB 3.0 drivers up to date. If the Oculus app reports a critical hardware error, disconnect the Rift, switch the Oculus app to the Public Test Channel (first figure) and allow unknown sources (second figure).
 
 ![](ReadmeFiles/troubleshooting_rift_1.png)
 
 ![](ReadmeFiles/troubleshooting_rift_2.png)
 
-### Troubleshooting connection
-The agent PCs need to be connected via a local network. If you cannot reach the host machine, try to ping it.
+### Connection
+All agents must be in the same local network. If a client cannot connect, ping the host, check the IP address the host logs, and check that UDP port 7770 is allowed.
 
-#### Windows firewall
+On Windows, allow the Unity editor version you use (and the built simulator) in the firewall's inbound rules:
+
 ![](ReadmeFiles/windows_firewall.png)
-
-Inbound rules: Set correct Unity Editor version to allow all connections.
 
 ![](ReadmeFiles/inbound_rules.png)
 
-### Troubleshooting steering wheel
-Check if supporting software is installed (e.g., Logitech gaming software G27 is used in our case). In Unity, you can check which button corresponds to your specific wheel. You can find this out by using the following asset in an empty project: https://assetstore.unity.com/packages/tools/input-management/controller-tester-43621.
-
-Then make sure you assign the correct inputs in Unity under `Edit ➡️ Project Settings ➡️ Input` (see figure below).
+### Steering wheel
+Install the wheel's software (Logitech G HUB or Logitech Gaming Software for the G27). Check which button numbers your wheel sends (for example with a controller tester from the Asset Store) and map them in `Edit` ➡️ `Project Settings` ➡️ `Input Manager` (see [Controls](#controls)):
 
 ![](ReadmeFiles/wheel_inputs.png)
 
 ## Used assets
-We have used the following free assets:
-
-| Name | Developer | License
-| --- | --- | ---
-| [ACP](https://github.com/Saarg/Arcade`Car`Physics) | Saarg | MIT
-| [Textures](https://cc0textures.com) | Various | Creative Commons CC0
-| [Oculus Integration](https://assetstore.unity.com/packages/tools/integration/oculus-integration-82022) | Oculus | Oculus SDK License
-| [Simple modular street Kit](https://assetstore.unity.com/packages/3d/environments/urban/simple-modular-street-kit-13811) | Jacek Jankowski | Unity asset
-| [Realistic Tree 10](https://assetstore.unity.com/packages/3d/vegetation/trees/realistic-tree-10-54724) | Rakshi Games | Unity asset
-| [Small Town America - Streets](https://assetstore.unity.com/packages/3d/small-town-america-streets-free-59759) | MultiFlagStudios | Unity asset
-| [Cars Free - Muscle Car Pack](https://assetstore.unity.com/packages/3d/small-town-america-streets-free-59759) | Super Icon LTD | Depricated, Unity asset
-| [Mini Cargo Truck](https://assetstore.unity.com/packages/3d/vehicles/land/mini-cargo-truck-68663) | Marcobian Games | Unity asset
-| [Street Bench](https://assetstore.unity.com/packages/3d/props/exterior/street-bench-656) | Rakshi Games | Unity asset
-| [Waste bin](https://assetstore.unity.com/packages/3d/waste-bin-73303) | Lowpoly`Master | Unity asset
-| [Smart fortwo](https://grabcad.com/library/smart-fortwo-1) | Filippo Citati | MIT
-| [Vehicle - Essentials](https://assetstore.unity.com/packages/audio/sound-fx/transportation/vehicle-essentials-194951) | Nox Sound | Unity asset
-| [Road System](https://assetstore.unity.com/packages/tools/level-design/road-system-192818) | Maxi Barmetler | Unity asset
-| [Kajaman's Roads](https://assetstore.unity.com/packages/3d/environments/roadways/kajaman-s-roads-free-52628) | Kajaman | Unity asset
-| [HD Low Poly Racing Car No.1201](https://assetstore.unity.com/packages/3d/vehicles/land/hd-low-poly-racing-car-no-1201-118603) | Azerilo | Unity asset (free at time of download)
+| Name | Developer | License |
+| --- | --- | --- |
+| [ACP (Arcade Car Physics)](https://github.com/Saarg/Arcade_Car_Physics) | Saarg | MIT |
+| [Textures](https://ambientcg.com) (formerly cc0textures.com) | Various | CC0 |
+| [Oculus Integration](https://assetstore.unity.com/packages/tools/integration/oculus-integration-82022) | Oculus | Oculus SDK License |
+| [Simple modular street kit](https://assetstore.unity.com/packages/3d/environments/urban/simple-modular-street-kit-13811) | Jacek Jankowski | Unity Asset Store EULA |
+| [Realistic Tree 10](https://assetstore.unity.com/packages/3d/vegetation/trees/realistic-tree-10-54724) | Rakshi Games | Unity Asset Store EULA |
+| [Small Town America - Streets](https://assetstore.unity.com/packages/3d/small-town-america-streets-free-59759) | MultiFlagStudios | Unity Asset Store EULA |
+| Cars Free - Muscle Car Pack (no longer on the Asset Store) | Super Icon LTD | Unity Asset Store EULA |
+| [Mini Cargo Truck](https://assetstore.unity.com/packages/3d/vehicles/land/mini-cargo-truck-68663) | Marcobian Games | Unity Asset Store EULA |
+| [Street Bench](https://assetstore.unity.com/packages/3d/props/exterior/street-bench-656) | Rakshi Games | Unity Asset Store EULA |
+| [Waste bin](https://assetstore.unity.com/packages/3d/waste-bin-73303) | Lowpoly_Master | Unity Asset Store EULA |
+| [Smart fortwo](https://grabcad.com/library/smart-fortwo-1) | Filippo Citati | MIT |
+| [Vehicle - Essentials](https://assetstore.unity.com/packages/audio/sound-fx/transportation/vehicle-essentials-194951) | Nox Sound | Unity Asset Store EULA |
+| [Road System](https://assetstore.unity.com/packages/tools/level-design/road-system-192818) | Maxi Barmetler | Unity Asset Store EULA |
+| [Kajaman's Roads](https://assetstore.unity.com/packages/3d/environments/roadways/kajaman-s-roads-free-52628) | Kajaman | Unity Asset Store EULA |
+| [HD Low Poly Racing Car No.1201](https://assetstore.unity.com/packages/3d/vehicles/land/hd-low-poly-racing-car-no-1201-118603) | Azerilo | Unity Asset Store EULA (free at time of download) |
