@@ -37,6 +37,17 @@ public class HMIManager : MonoBehaviour
         _hmis.Add(hmi);
     }
 
+    public int Count => _hmis.Count;
+    public HMIState GetState(int i) => _hmis[i] != null ? _hmis[i].CurrentState : HMIState.DISABLED;
+
+    /// <summary>Host: sets eHMI i on all agents (as the host's eHMI buttons).</summary>
+    public void HostSetHMI(Host host, int i, HMIState state)
+    {
+        if (i < 0 || i >= _hmis.Count || _hmis[i] == null) return;
+        _hmis[i].Display(state);
+        host.BroadcastMessage(new ChangeHMI { HMI = i, State = (int)state });
+    }
+
     //host GUI displaying controls for all HMI present in the game session
     public void DoHostGUI(Host host)
     {
