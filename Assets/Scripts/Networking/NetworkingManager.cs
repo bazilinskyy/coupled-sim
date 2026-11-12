@@ -71,7 +71,7 @@ public class NetworkingManager : MonoBehaviour
         Destroy(gameObject);
         if (CurrentTrialIndex < trials.Length)
         {
-            (_netSystem as Host).Shutdown();
+            (_netSystem as Host)?.Shutdown();
             SceneManager.LoadScene(0);
         } else
         {
@@ -94,8 +94,16 @@ public class NetworkingManager : MonoBehaviour
         {
             hideGui = !hideGui;
         }
+        if (RunTrialSequenceAutomatically && _netSystem == null && trials != null && trials.Length > 0)
+        {
+            _netSystem = new Host(_levelManager, _playerSystem, _aiCarSystem, _logger, _fixedLogger, trials[CurrentTrialIndex]);
+        }
         if (_netSystem != null)
         {
+            if (RunTrialSequenceAutomatically && _netSystem is Host host)
+            {
+                host.UpdateAutomatic();
+            }
             _netSystem.Update();
         }
     }
@@ -115,10 +123,7 @@ public class NetworkingManager : MonoBehaviour
         {
             if (_netSystem == null)
             {
-                if (RunTrialSequenceAutomatically)
-                {
-                    _netSystem = new Host(_levelManager, _playerSystem, _aiCarSystem, _logger, _fixedLogger, trials[CurrentTrialIndex]);
-                }
+                // automatic trials are started from Update()
             } else
             {
                 _netSystem.OnGUI(RunTrialSequenceAutomatically);
@@ -128,9 +133,10 @@ public class NetworkingManager : MonoBehaviour
         {
             if (_netSystem == null)
             {
-                if (RunTrialSequenceAutomatically || GUILayout.Button("Start host"))
+                if (!RunTrialSequenceAutomatically && GUILayout.Button("Start host"))
                 {
-                    _netSystem = new Host(_levelManager, _playerSystem, _aiCarSystem, _logger, _fixedLogger, trials[CurrentTrialIndex]);
+                    var trial = trials != null && trials.Length > 0 ? trials[CurrentTrialIndex] : new Trial { experimentParameters = new ExperimentParameter[0] };
+                    _netSystem = new Host(_levelManager, _playerSystem, _aiCarSystem, _logger, _fixedLogger, trial);
                 }
                 if (!RunTrialSequenceAutomatically && GUILayout.Button("Start client"))
                 {

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
-using Unity.Networking.Transport;
+
 
 public interface ISynchronizer
 {
@@ -55,8 +55,8 @@ public struct Serializer : ISynchronizer
 
 public class NDeserializer : ISynchronizer
 {
-    DataStreamReader _reader;
-    public NDeserializer(ref DataStreamReader reader) { _reader = reader; }
+    Unity.Collections.DataStreamReader _reader;
+    public NDeserializer(ref Unity.Collections.DataStreamReader reader) { _reader = reader; }
     public void Sync(ref bool val) { val = _reader.ReadBoolean(); }
     public void Sync(ref int val) { val = _reader.ReadInt(); }
     public void Sync(ref float val) { val = _reader.ReadFloat(); }
@@ -73,7 +73,7 @@ public class NDeserializer : ISynchronizer
 
 public static class SerializationHelpers
 {
-    public static bool ReadBoolean(this ref DataStreamReader reader)
+    public static bool ReadBoolean(this ref Unity.Collections.DataStreamReader reader)
     {
         return reader.ReadByte() != 0;
     }
@@ -94,7 +94,7 @@ public static class SerializationHelpers
         return v;
     }
 
-    public static Vector3 ReadVector3(this ref DataStreamReader reader)
+    public static Vector3 ReadVector3(this ref Unity.Collections.DataStreamReader reader)
     {
         Vector3 v;
         v.x = reader.ReadFloat();
@@ -126,10 +126,10 @@ public static class SerializationHelpers
         return buffer;
     }
 
-    public static List<Vector3> ReadListVector3(this ref DataStreamReader reader)
+    public static List<Vector3> ReadListVector3(this ref Unity.Collections.DataStreamReader reader)
         => ReadListVector3(ref reader, new List<Vector3>());
 
-    public static List<Vector3> ReadListVector3(this ref DataStreamReader reader, List<Vector3> buffer)
+    public static List<Vector3> ReadListVector3(this ref Unity.Collections.DataStreamReader reader, List<Vector3> buffer)
     {
         var count = reader.ReadInt();
         buffer.Capacity = Math.Max(buffer.Capacity, count);
@@ -163,10 +163,10 @@ public static class SerializationHelpers
         return buffer;
     }
 
-    public static List<Quaternion> ReadListQuaternion(this ref DataStreamReader reader)
+    public static List<Quaternion> ReadListQuaternion(this ref Unity.Collections.DataStreamReader reader)
         => ReadListQuaternion(ref reader, new List<Quaternion>());
 
-    public static List<Quaternion> ReadListQuaternion(this ref DataStreamReader reader, List<Quaternion> buffer)
+    public static List<Quaternion> ReadListQuaternion(this ref Unity.Collections.DataStreamReader reader, List<Quaternion> buffer)
     {
         var count = reader.ReadInt();
         buffer.Capacity = Math.Max(buffer.Capacity, count);
@@ -194,7 +194,7 @@ public static class SerializationHelpers
         return Quaternion.Euler(q);
     }
 
-    public static Quaternion ReadQuaternion(this ref DataStreamReader reader)
+    public static Quaternion ReadQuaternion(this ref Unity.Collections.DataStreamReader reader)
     {
         Vector3 q;
         q.x = reader.ReadFloat();
@@ -254,10 +254,10 @@ public static class SerializationHelpers
         return buffer;
     }
 
-    public static List<TMsg> ReadListNetSubmessage<TMsg>(this ref DataStreamReader reader)
+    public static List<TMsg> ReadListNetSubmessage<TMsg>(this ref Unity.Collections.DataStreamReader reader)
         where TMsg : INetSubMessage
         => ReadListNetSubmessage<TMsg>(ref reader, new List<TMsg>());
-    public static List<TMsg> ReadListNetSubmessage<TMsg>(this ref DataStreamReader reader, List<TMsg> buffer)
+    public static List<TMsg> ReadListNetSubmessage<TMsg>(this ref Unity.Collections.DataStreamReader reader, List<TMsg> buffer)
         where TMsg : INetSubMessage
     {
         int count = reader.ReadInt();
@@ -270,12 +270,12 @@ public static class SerializationHelpers
         return buffer;
     }
 
-    public static List<int> ReadListInt(this ref DataStreamReader reader)
+    public static List<int> ReadListInt(this ref Unity.Collections.DataStreamReader reader)
     {
         return ReadListInt(ref reader, new List<int>());
     }
 
-    public static List<int> ReadListInt(this ref DataStreamReader reader, List<int> buffer)
+    public static List<int> ReadListInt(this ref Unity.Collections.DataStreamReader reader, List<int> buffer)
     {
         var count = reader.ReadInt();
         buffer.Capacity = Math.Max(buffer.Capacity, count);

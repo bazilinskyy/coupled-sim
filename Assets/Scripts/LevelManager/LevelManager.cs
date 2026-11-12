@@ -51,9 +51,11 @@ public class LevelManager
                     }
                 }
             }
+            // Clients have no trial definition (trial == null): parameters only apply on the host.
+            var parameters = trial?.experimentParameters ?? new NetworkingManager.ExperimentParameter[0];
             foreach(IExperimentModifier em in ActiveExperiment.GetComponentsInChildren(typeof(IExperimentModifier)))
             {
-                em.SetParameter(trial.experimentParameters);
+                em.SetParameter(parameters);
             }
             _mainLoadOp = null;
         };

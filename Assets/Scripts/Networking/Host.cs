@@ -38,9 +38,9 @@ public class Host : NetworkSystem
         _host = new UNetHost();
         _host.Init();
 
-        _hmiManager = GameObject.FindObjectOfType<HMIManager>();
+        _hmiManager = GameObject.FindAnyObjectByType<HMIManager>();
         Assert.IsNotNull(_hmiManager, "Missing HMI manager");
-        _visualSyncManager = GameObject.FindObjectOfType<VisualSyncManager>();
+        _visualSyncManager = GameObject.FindAnyObjectByType<VisualSyncManager>();
         Assert.IsNotNull(_visualSyncManager, "Missing VS manager");
 
         _currentState = NetState.Lobby;
@@ -118,7 +118,7 @@ public class Host : NetworkSystem
                         _playerReadyStatus[Host.PlayerId] = true;
                         if (AllReady())
                         {
-                            _lights = GameObject.FindObjectOfType<TrafficLightsSystem>();
+                            _lights = GameObject.FindAnyObjectByType<TrafficLightsSystem>();
                             foreach (var carSpawner in _lvlManager.ActiveExperiment.CarSpawners)
                             {
                                 carSpawner.Init(_aiCarSystem);
@@ -283,17 +283,49 @@ public class Host : NetworkSystem
         return !failRoleCheck;
     }
 
+    // Runs a trial without anyone clicking: binds the roles from the trial definition, loads the
+    // experiment and starts the simulation as soon as the level is up. Called every frame from
+    // NetworkingManager.Update, so it also works in batch mode, with the GUI hidden or minimised.
+    public void UpdateAutomatic()
+    {
+        _selectedExperiment = currentTrial.experimentIndex;
+        if (_currentState != NetState.Lobby)
+        {
+            return;
+        }
+        if (_transitionPhase == TransitionPhase.WaitingForAwakes)
+        {
+            if (!startSimulation)
+            {
+                NetworkingManager.Instance.StartRecording();
+                startSimulation = true;
+            }
+        }
+        else if (_transitionPhase == TransitionPhase.None && !started)
+        {
+            // bind roles before StartGameMsg is broadcast, so clients get them too
+            _playerRoles[Host.PlayerId] = currentTrial.roleIndex;
+            _playerSys.SelectMode(currentTrial.InputMode);
+            PrepareSimulation();
+        }
+    }
+
     //displays host GUI
     public override void OnGUI(bool RunTrialSequenceAutomatically)
     {
-        if (!RunTrialSequenceAutomatically)
+        if (RunTrialSequenceAutomatically)
         {
-            GUILayout.Label($"Host mode: {_currentState}");
-            GUILayout.Label("Connected: " + _host.NumRemotePlayers);
-        } else
-        {
-            _selectedExperiment = currentTrial.experimentIndex;
+            // everything happens in UpdateAutomatic(); only show the state
+            GUILayout.Label($"Automatic trial: {_currentState}");
+            if (_currentState == NetState.InGame)
+            {
+                _hmiManager.DoHostGUI(this);
+                _visualSyncManager.DoHostGUI(this);
+            }
+            return;
         }
+        GUILayout.Label($"Host mode: {_currentState}");
+        GUILayout.Label("Connected: " + _host.NumRemotePlayers);
         switch (_currentState)
         {
             case NetState.Lobby:
@@ -309,7 +341,7 @@ public class Host : NetworkSystem
                         }
                         GUILayout.Label(playerReadyStr);
                         GUILayout.Label(playerRolesStr);
-                        if (GUILayout.Button("Start simulation") || RunTrialSequenceAutomatically)
+                        if (GUILayout.Button("Start simulation"))
                         {
                             if (!startSimulation) {
                                 NetworkingManager.Instance.StartRecording();
@@ -319,31 +351,20 @@ public class Host : NetworkSystem
                     }
                     else
                     {
-                        if (RunTrialSequenceAutomatically)
+                        if (GUILayout.Button("Initialise experiment"))
                         {
                             PrepareSimulation();
-                            PlayerRolesGUI(RunTrialSequenceAutomatically);
-                            _playerSys.SelectMode(currentTrial.InputMode);
                         }
-                        else
+                        GUILayout.Label("Experiment:");
+                        for (int i = 0; i < _lvlManager.Experiments.Length; i++)
                         {
-                            //GUI.enabled = AllRolesSelected();
-                            if (GUILayout.Button("Initialise experiment"))
+                            if (GUILayout.Button(_lvlManager.Experiments[i].Name + (i == _selectedExperiment ? " <--" : "")))
                             {
-                                PrepareSimulation();
+                                _selectedExperiment = i;
                             }
-                            GUI.enabled = true;
-                            GUILayout.Label("Experiment:");
-                            for (int i = 0; i < _lvlManager.Experiments.Length; i++)
-                            {
-                                if (GUILayout.Button(_lvlManager.Experiments[i].Name + (i == _selectedExperiment ? " <--" : "")))
-                                {
-                                    _selectedExperiment = i;
-                                }
-                            }
-                            PlayerRolesGUI(RunTrialSequenceAutomatically);
-                            _playerSys.SelectModeGUI();
                         }
+                        PlayerRolesGUI(false);
+                        _playerSys.SelectModeGUI();
                     }
                 break;
             }
