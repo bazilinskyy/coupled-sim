@@ -243,15 +243,15 @@ namespace VehicleBehaviour {
             // Get all the inputs!
             if (isPlayer)
             {
-                if (Input.GetButtonDown("forward"))
+                if (VehicleInput.GetButtonDown("forward"))
                 {
                     reverse = false;
-                } else if (Input.GetButtonDown("reverse"))
+                } else if (VehicleInput.GetButtonDown("reverse"))
                 {
                     reverse = true;
                 }
 
-                if (Input.GetButtonDown("blinker_left"))
+                if (VehicleInput.GetButtonDown("blinker_left"))
                 {
                     if (blinkers.State != BlinkerState.Left)
                     {
@@ -262,7 +262,7 @@ namespace VehicleBehaviour {
                         blinkers.Stop();
                     }
                 }
-                else if (Input.GetButtonDown("blinker_right"))
+                else if (VehicleInput.GetButtonDown("blinker_right"))
                 {
                     if (blinkers.State != BlinkerState.Right)
                     {
@@ -273,7 +273,7 @@ namespace VehicleBehaviour {
                         blinkers.Stop();
                     }
                 }
-                else if (Input.GetButtonDown("blinker_clear"))
+                else if (VehicleInput.GetButtonDown("blinker_clear"))
                 {
                     blinkers.Stop();
                 }
@@ -299,6 +299,12 @@ namespace VehicleBehaviour {
                 playerAvatar.SetBreakLights(breaking > 0);
                 // Turn
                 steering = turnInputCurve.Evaluate(GetInput(turnInput)) * steerAngle;
+            }
+
+            if (isPlayer)
+            {
+                SteeringFeedback.Update(speed, _collided);
+                _collided = false;
             }
 
             steeringWheelAngle = Mathf.Lerp(steeringWheelAngle, steering * steeringWheelMul, steerSpeed);
@@ -429,8 +435,15 @@ namespace VehicleBehaviour {
 #if MULTIOSCONTROLS
         return MultiOSControls.GetValue(input, playerId);
 #else
-        return Input.GetAxis(input);
+        // keyboard and steering wheel (WheelProfile)
+        return VehicleInput.GetAxis(input);
 #endif
+        }
+
+        bool _collided;
+        void OnCollisionEnter(Collision c)
+        {
+            if (isPlayer && c.relativeVelocity.magnitude > 2f) _collided = true;
         }
     }
 }
