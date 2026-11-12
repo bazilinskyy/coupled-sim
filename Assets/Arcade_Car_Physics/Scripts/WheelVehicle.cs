@@ -215,6 +215,8 @@ namespace VehicleBehaviour {
             }
 
             wheels = GetComponentsInChildren<WheelCollider>();
+            _dynamics = GetComponent<RealisticVehicleDynamics>();
+            if (_dynamics != null && _dynamics.enabled) _dynamics.Configure();
 
             // Set the motor torque to a non null value because 0 means the wheels won't turn no matter what
             foreach (WheelCollider wheel in wheels)
@@ -224,6 +226,7 @@ namespace VehicleBehaviour {
         }
 
         bool reverse = false;
+        RealisticVehicleDynamics _dynamics;
 
         // Visual feedbacks and boost regen
         void Update()
@@ -310,6 +313,22 @@ namespace VehicleBehaviour {
             steeringWheelAngle = Mathf.Lerp(steeringWheelAngle, steering * steeringWheelMul, steerSpeed);
             if (steeringWheel != null) {
                 steeringWheel.localRotation = Quaternion.AngleAxis(steeringWheelAngle, Vector3.forward);
+            }
+
+            // realistic physics (RealisticVehicleDynamics): engine, gearbox, brakes with ABS, Ackermann steering
+            if (isPlayer && _dynamics != null && _dynamics.enabled)
+            {
+                float rawThrottle = GetInput(throttleInput);
+                // keyboard: steer less at speed, as drivers do with a wheel
+                float steer = steering;
+                if (WheelProfile.Active == null) steer /= 1f + Mathf.Abs(speed) / 60f;
+                _dynamics.Steer(Mathf.Lerp(_lastSteer, steer, steerSpeed));
+                _lastSteer = Mathf.Lerp(_lastSteer, steer, steerSpeed);
+                // the car's "Throttle" axis is negative for back (S): that brakes
+                _dynamics.Drive(Mathf.Clamp01(rawThrottle), Mathf.Max(breaking, Mathf.Clamp01(-rawThrottle)), reverse);
+                playerAvatar.SetBreakLights(breaking > 0.05f || rawThrottle < -0.05f);
+                _rb.AddForce(-transform.up * speed * downforce);
+                return;
             }
 
             // Direction
@@ -441,6 +460,7 @@ namespace VehicleBehaviour {
         }
 
         bool _collided;
+        float _lastSteer;
         void OnCollisionEnter(Collision c)
         {
             if (isPlayer && c.relativeVelocity.magnitude > 2f) _collided = true;
