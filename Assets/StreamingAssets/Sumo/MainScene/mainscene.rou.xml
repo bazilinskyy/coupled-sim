@@ -1,0 +1,7 @@
+<routes>
+  <vType id="car" vClass="passenger" length="4.5" accel="2.6" decel="4.5" sigma="0.5" color="0.8,0.8,0.8"/>
+  <route id="lane0" edges="l0e0 l0e1 l0e2 l0e3 l0e4 l0e5 l0e6 l0e7 l0e8 l0e9 l0e10 l0e11" repeat="100"/>
+  <flow id="flow0" type="car" route="lane0" begin="0" end="3600" vehsPerHour="240" departLane="best" departSpeed="max" departPos="random_free"/>
+  <route id="lane1" edges="l1e0 l1e1 l1e2 l1e3 l1e4 l1e5 l1e6 l1e7 l1e8 l1e9 l1e10 l1e11" repeat="100"/>
+  <flow id="flow1" type="car" route="lane1" begin="0" end="3600" vehsPerHour="240" departLane="best" departSpeed="max" departPos="random_free"/>
+</routes>
