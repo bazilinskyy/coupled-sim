@@ -81,8 +81,7 @@ public class TwoWheelerController : MonoBehaviour
 
     static float Axis(string name)
     {
-        try { return string.IsNullOrEmpty(name) ? 0f : UnityEngine.Input.GetAxis(name); }
-        catch (System.ArgumentException) { return 0f; }
+        return string.IsNullOrEmpty(name) ? 0f : VehicleInput.GetAxis(name); // keyboard and steering wheel
     }
 
     void FixedUpdate()

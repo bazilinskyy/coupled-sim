@@ -19,7 +19,8 @@ The simulator is open source and free to use. It is aimed at, but not limited to
 - [Data logging](#data-logging)
 - [Configuration](#configuration): [experiments](#experiment-definitions), [agents](#configuration-of-agents), [waypoints](#configuration-of-waypoints), [eye contact](#configuration-of-drivers-eye-contact), [daylight](#configuration-of-daylight-conditions), [traffic lights](#configuration-of-traffic-lights), [eHMIs](#configuration-of-ehmis), [car prefabs](#details-on-editing-car-prefabs)
 - [Testing](#testing)
-- [Troubleshooting](#troubleshooting)
+- [Hardware](#hardware): [headsets](#head-mounted-displays-vr), [wheels](#steering-wheels-pedals-and-gamepads), [motion suit](#xsens-mvn-motion-suit), [network](#network)
+- [FAQ](#faq)
 - [Used assets](#used-assets)
 
 ## Citation
@@ -37,8 +38,8 @@ The source code of the coupled simulator is released under the [MIT License](LIC
 ## Features
 - Up to **4 human participants** in one scene (a host and three clients) over a local network.
 - Roles: driver of a manual car, passenger of an AV (controls its eHMI), pedestrian, cyclist, e-scooter rider, moped rider.
-- Input: keyboard, gaming steering wheel (tested with Logitech G27), Xsens MVN motion suit for pedestrians.
-- Output: flat screen or head-mounted display (Oculus Rift CV1 through the Oculus XR plug-in).
+- Input: keyboard, gamepads and steering wheels with pedals (Logitech, Thrustmaster, Fanatec, Moza; profiles and in-simulator calibration; force feedback on Logitech wheels), Xsens MVN motion suit for pedestrians.
+- Output: flat screens or head-mounted displays through OpenXR (Meta Quest, Varjo, HTC Vive, Valve Index, HP Reverb, Pico), with eye-tracking logs on headsets that have eye tracking.
 - AI cars that follow waypoint paths with configurable speed, acceleration, yielding, blinkers and driver eye contact.
 - Background traffic with a choice of car-following models (IDM, Gipps, Krauss) that follows other cars, stops at red lights, slows down for bends and yields to pedestrians.
 - Participants can also be cyclists, e-scooter riders or moped riders, with two-wheeler dynamics (power, legal speed limits, lean and steering).
@@ -139,15 +140,16 @@ It needs no internet and no installation (a plain web page from the simulator). 
 | Driver | Throttle / brake | `W`/`S` or `↑`/`↓` (axis `Throttle`) | pedals |
 | Driver | Steer | `A`/`D` or `←`/`→` | wheel |
 | Driver | Brake (axis `Break`) | `Space` | pedal |
-| Driver | Forward / reverse gear | `F` / `R` | button 6 / 7 |
-| Driver | Blinker left / right / off | `Q` / `E` / `2` | button 5 / 4 / 16 |
+| Driver | Forward / reverse gear | `F` / `R` | buttons of the wheel profile (G27: 6 / 7) |
+| Driver | Blinker left / right / off | `Q` / `E` / `2` | buttons of the wheel profile (G27: 5 / 4 / 16) |
 | AV passenger | eHMI disabled / stop / walk | `1` / `2` / `3` | |
 | AV passenger | Resume driving where the AV waits for input (`WaitInputX`) | `Space` | |
 | Pedestrian (keyboard mode) | Walk forward / back, sideways, turn | `W`/`S`, `A`/`D`, `Q`/`E` | |
 | Pedestrian (HMD) | Recenter the headset | `R` | |
 | Host | Next trial (automatic trials) / show-hide GUI | `Esc` / `Tab` | |
+| Experimenter | Steering wheel calibration window | `F2` | |
 
-Bindings are set in `Edit` ➡️ `Project Settings` ➡️ `Input Manager`. The host can also switch eHMIs and trigger [visual syncing](#data-logging) from its GUI during the simulation.
+Keyboard bindings are set in `Edit` ➡️ `Project Settings` ➡️ `Input Manager`; wheels and pedals through their profile and calibration (see [Hardware](#steering-wheels-pedals-and-gamepads)). The host can also switch eHMIs and trigger [visual syncing](#data-logging) from its GUI during the simulation.
 
 ## Environment and vehicles
 ![](ReadmeFiles/night_mode_view.png)
@@ -468,39 +470,98 @@ Options: `-smokeTrial N` (index in `Trials`), `-smokeExperiment N` and `-smokeRo
 
 The pedestrian models have edit-mode tests (`Assets/Tests/EditMode`): run them in `Window` ➡️ `General` ➡️ `Test Runner`, or with `Unity -batchmode -projectPath . -runTests -testPlatform EditMode -testResults results.xml`. On Windows, `Unity` is `"C:\Program Files\Unity\Hub\Editor\6000.6.9f1\Editor\Unity.exe"`; on macOS `/Applications/Unity/Hub/Editor/6000.6.9f1/Unity.app/Contents/MacOS/Unity`.
 
-## Troubleshooting
+## Hardware
+### Head-mounted displays (VR)
+The simulator uses **OpenXR**, so it works with the PC VR headsets whose runtime supports OpenXR (Windows):
+
+| Headset | Runtime to install and run | Notes |
+| --- | --- | --- |
+| Meta Quest 2 / 3 / 3S / Pro, Rift, Rift S | Meta Quest Link app ("Meta Horizon Link"); Quest via Link cable or Air Link | set Meta Quest Link as the active OpenXR runtime (Settings ➡️ General) |
+| Varjo Aero, VR-3, XR-3, XR-4 | Varjo Base | eye tracking: enable it in Varjo Base |
+| HTC Vive, Vive Pro (Eye), Vive Pro 2, Cosmos | SteamVR (or VIVE Console) | set SteamVR as the OpenXR runtime (SteamVR ➡️ Settings ➡️ OpenXR) |
+| Valve Index, Pimax, Bigscreen Beyond | SteamVR | as above |
+| HP Reverb G2 and other WMR headsets | Mixed Reality Portal / OpenXR Tools for WMR, or SteamVR | Windows Mixed Reality was removed in Windows 11 24H2 |
+| Pico 4 / Neo 3 | Pico Connect (streaming) with SteamVR | |
+
+1. Install the headset's runtime, connect the headset and check that its own home environment works.
+2. Make that runtime the **active OpenXR runtime** (there can be only one; installing SteamVR or Meta Quest Link may switch it).
+3. Start the simulator and choose `HMD mode` (host GUI, dashboard, or trial `Input Mode` = `VR`; the Xsens suit uses `Suite`). VR starts when the participant's avatar is spawned, so flat-screen PCs need no VR software at all (`XRSession`).
+4. Press `R` (pedestrian) to recenter the view, with the participant looking straight ahead.
+
+If the console says `XR: no headset found`: the runtime is not running, the headset is asleep or disconnected, or another OpenXR runtime is active. A black or frozen view usually means the runtime lost the headset: restart the runtime first, then the simulator. VR runs on Windows only (there are no OpenXR runtimes for macOS).
+
+**Eye tracking.** With headsets that offer eye gaze through OpenXR (`XR_EXT_eye_gaze_interaction`: Varjo, Meta Quest Pro, HTC Vive Pro Eye with VIVE Console, Pico 4 Pro, HP Reverb G2 Omnicept), the participant's gaze is logged to `ExperimentLogs/EyeGaze-{date}.csv`: time, gaze origin and direction in world coordinates, and the object looked at with its distance (`EyeGazeLogger`). Turn eye tracking on in the headset's software and calibrate it there first.
+
+### Steering wheels, pedals and gamepads
+Any wheel that Windows sees as a game controller works: Logitech G25 / G27 / G29 / G920 / G923, Thrustmaster T150 / T248 / T300 / TX / T-GT, Fanatec CSL DD / ClubSport / Podium, Moza, and gamepads.
+1. Install the wheel's driver software (Logitech G HUB, Thrustmaster drivers, Fanatec driver, Moza Pit House) and connect the wheel **before** starting the simulator (it detects wheels every few seconds, but some drivers only show up at start).
+2. In the driver software, set the rotation range: 900° is realistic for cars, 450-540° is easier for unexperienced participants. Turn off "combined pedals" (Logitech) so throttle and brake are separate axes.
+3. The simulator picks a profile by the wheel's name (`WheelProfile`; the G27 layout is the default for unknown wheels). **Calibrate** once per PC: press `F2` in the simulator, turn the wheel fully left and right, press each pedal fully and release it, press the buttons for gear forward/reverse and the blinkers, and save. The calibration window also shows the live axes and buttons, to check a wheel. The profile is saved in the simulator's data folder (`%USERPROFILE%\AppData\LocalLow\<company>\<product>\wheel-profile.json` on Windows).
+
+The car (and the bicycle, e-scooter and moped) then reads steering, throttle and brake from the wheel, combined with the keyboard.
+
+**Force feedback** (Logitech wheels): download the *Steering Wheel SDK* from Logitech's developer site and copy `LogitechSteeringWheelEnginesWrapper.dll` (64-bit) to `Assets/Plugins/x86_64` (it is not included in this repository because of its license). The simulator then adds a self-centring force that gets firmer with speed, damping, and a jolt in collisions (`SteeringFeedback`); without the DLL, the wheel uses its driver's own centring spring. Other brands: use the driver software's centring/spring settings.
+
+**Gamepads** (Xbox, PlayStation): calibrate them like a wheel (`F2`): the left stick steers and the triggers act as pedals.
+
 ### Xsens MVN motion suit
-1. Connect the router of the suit with its USB adapter to the PC and plug the Ethernet cable into a yellow port of the router. Let it boot while you prepare the software and the suit. Connect the HMD.
-2. Plug the MVN dongle into a USB 3.0 port and start MVN Analyze. Create a new recording with the participant's name and body measurements.
-3. Under `Options` ➡️ `Preferences` ➡️ `Miscellaneous` ➡️ `Network Streamer`, enable streaming to this PC on **port 9763** (the port `XsStreamReader` listens on). The old `Unity3D` datagram type is not supported anymore; use the default pose datagrams. If the avatar looks jittery in Unity, change the down-sampling skip factor in the Network Streamer.
-4. Turn on the body pack (one beep). Wait 30 s and press the WPS button on the router. When the body pack beeps again, hold its button for 2 s until it beeps twice and the light blinks. If this does not happen within a few minutes, uninstall the MVN software including the Bonjour print services (figure below) and install the latest MVN Analyze again.
+1. Connect the suit's router to the PC (Ethernet in a yellow port) and plug the MVN dongle into a USB 3.0 port. Start MVN Analyze and create a recording with the participant's body measurements.
+2. In `Options` ➡️ `Preferences` ➡️ `Miscellaneous` ➡️ `Network Streamer`, stream to this PC on **UDP port 9763** (the port `XsStreamReader` listens on) with the default pose datagrams (the old `Unity3D` datagram is not supported). If the avatar is jittery, raise the down-sampling skip factor.
+3. Turn on the body pack (one beep), wait 30 s, press WPS on the router; when the body pack beeps again, hold its button for 2 s until it beeps twice and the light blinks. If it does not connect within a few minutes, reinstall MVN Analyze including the Bonjour print services.
 
 ![](ReadmeFiles/mvn_windows.png)
 
-5. When the avatar moves in MVN Analyze, start the simulator in `Suite mode` (host GUI or trial `Input Mode` = `Suite`). The pedestrian avatar prefabs for the suit are in `Assets/Prefabs/Xsens`. To align the HMD with the avatar's head, click in the game view and press `R`; repeat until the participant confirms the view is aligned. Do this again for every trial.
+4. When the avatar moves in MVN Analyze, start the simulator in `Suite mode` (pedestrian roles; the prefabs are in `Assets/Prefabs/Xsens`). Align the HMD with the avatar's head with `R`, repeated until the participant confirms, for every trial.
 
 ![](ReadmeFiles/mvn_unity.png)
 
-### Oculus Rift
-Keep the Oculus app running when using the Rift, otherwise the screen stays black. Keep the graphics driver and USB 3.0 drivers up to date. If the Oculus app reports a critical hardware error, disconnect the Rift, switch the Oculus app to the Public Test Channel (first figure) and allow unknown sources (second figure).
+### Network
+All agents must be in the same local network; the host's IP address is in its console. Allow these ports through the firewall of each PC (on Windows: inbound rules for the Unity editor of the version you use, and for the built simulator):
 
-![](ReadmeFiles/troubleshooting_rift_1.png)
-
-![](ReadmeFiles/troubleshooting_rift_2.png)
-
-### Connection
-All agents must be in the same local network. If a client cannot connect, ping the host, check the IP address the host logs, and check that UDP port 7770 is allowed.
-
-On Windows, allow the Unity editor version you use (and the built simulator) in the firewall's inbound rules:
+| Port | Protocol | Used for |
+| --- | --- | --- |
+| 7770 | UDP | agents (host and clients) |
+| 8080 | TCP | experimenter dashboard (host) |
+| 40131 | UDP, localhost | live data for external tools |
+| 9763 | UDP | Xsens MVN stream |
+| 8813 | TCP, localhost | SUMO (TraCI) |
 
 ![](ReadmeFiles/windows_firewall.png)
 
 ![](ReadmeFiles/inbound_rules.png)
 
-### Steering wheel
-Install the wheel's software (Logitech G HUB or Logitech Gaming Software for the G27). Check which button numbers your wheel sends (for example with a controller tester from the Asset Store) and map them in `Edit` ➡️ `Project Settings` ➡️ `Input Manager` (see [Controls](#controls)):
+## FAQ
+**Which Unity version do I need?** Unity 6.6 (6000.6.9f1). Newer 6.x versions will probably open the project but are not tested; older versions cannot open it. Versions of the simulator for Unity 2022.3 are in the git history.
 
-![](ReadmeFiles/wheel_inputs.png)
+**Which computer do I need?** Windows 10/11 with a recent GPU: a GeForce RTX 3060 or better for screens, RTX 3070/4070 or better for VR at 90 Hz, 16 GB of RAM. The editor also runs on macOS (no VR, no force feedback). One PC per participant; several agents on one PC are for testing only.
+
+**How many participants can take part?** Four (host and three clients). The limit is `UNetConfig.MaxPlayers`; raising it works in principle but is not tested.
+
+**Do I need SUMO?** Only for SUMO traffic (`SumoTraffic`, city maps). Install SUMO 1.20 or newer and set `SUMO_HOME`. Without it, the hand-built town has the built-in traffic models (`Traffic`) and city maps run without traffic.
+
+**How do I make a new experiment?** Copy an experiment prefab in `Assets/ExperimentDefinitions` (e.g. `Base` or `CityMap`), change it in prefab mode (roles, spawn points, paths, traffic, pedestrians, conditions) and add it to `NetworkingManager` ➡️ `Experiments` in `StartScene` (see [Configuration](#configuration)). The examples `PedestrianCrossings`, `Traffic`, `SumoTraffic` and `CityMap` show the newer features.
+
+**Where are the data?** In `ExperimentLogs` next to the `Assets` folder (in builds: next to the executable): binary logs of all agents per frame and at 50 Hz, pedestrian decisions and eye gaze as CSV. Convert the binary logs to CSV in the start screen (`Convert log to csv`). See [Data logging](#data-logging).
+
+**How do I keep videos and logs in sync?** Use `Visual syncing` (host GUI or dashboard): a red bar on every screen for 1 s, visible in screen recordings, logged as an event.
+
+**How do I set weather, time of day and the city per trial?** With trial parameters, e.g. `time=21:30`, `weather=HeavyRain`, `map=Tokyo` or `location=52.0116,4.3571,400`; or in the dashboard.
+
+**How do I add a city?** Use `location=lat,lon[,radius]` for any place, or add it to the catalogue (see [City maps](#city-maps-openstreetmap)).
+
+**Some objects are pink.** A material uses a shader of the old Built-in render pipeline. Imported assets need converting to URP: `Window` ➡️ `Rendering` ➡️ `Render Pipeline Converter`, or `GraphicsSetup.ConvertToUrp` (see [Graphics](#graphics)).
+
+**The headset is not found / shows black.** See [Head-mounted displays](#head-mounted-displays-vr): the right OpenXR runtime must be active and running before the simulator starts.
+
+**The wheel does nothing, or the pedals are swapped.** Press `F2`: if the wheel is not listed, check the USB connection and its driver; if axes are wrong, run the calibration.
+
+**The frame rate is low.** Run a build rather than the editor; in the editor, close the Scene view and use `Play Maximized`. Lower `Assets/URPDefaultResources/Fantastic.asset` (shadow distance, MSAA, render scale) or remove SSAO from `Default_Forward_Renderer`; reduce `EnvironmentController` ➡️ `MaxActiveStreetLights` at night; use a smaller city map or radius. On laptops, make sure the simulator runs on the dedicated GPU (NVIDIA Control Panel ➡️ Manage 3D settings). In VR, the headset's refresh rate (72-90 Hz) is the target.
+
+**Cars drive on the left in London, but the car is left-hand drive.** Yes: maps with left-hand traffic place participants and SUMO traffic on the left, but there is no right-hand drive car model yet.
+
+**Can I use my own avatars or cars?** Pedestrians: any humanoid character; `Coupled Sim` ➡️ `Pedestrians` ➡️ `Build pedestrian prefabs` makes AI pedestrians from Rocketbox-style models. Cars: copy a drivable car prefab and replace the model; AI cars need to be in `NetworkingManager` ➡️ `AI Car System` ➡️ `Prefabs`.
+
+**Is there a way to test the simulator without screens and people?** Yes: the smoke test and the edit-mode tests (see [Testing](#testing)).
 
 ## Used assets
 | Name | Developer | License |
