@@ -31,6 +31,8 @@ public static class SmokeTest
     const string KeyShot = "SmokeTest.Shot";
     const string KeyParams = "SmokeTest.Params";
     const string KeyRide = "SmokeTest.Ride";
+    const string KeyDrive = "SmokeTest.Drive";
+    static int _lastDriveLog = -1;
 
     static double _startTime = -1;
     static double _inGameSince = -1;
@@ -62,6 +64,7 @@ public static class SmokeTest
         SessionState.SetString(KeyShot, Arg("-smokeShot", ""));
         SessionState.SetString(KeyParams, Arg("-smokeParams", ""));
         SessionState.SetString(KeyRide, Arg("-smokeRide", ""));
+        SessionState.SetString(KeyDrive, Arg("-smokeDrive", ""));
         SessionState.SetString(KeyErrors, "");
         Directory.CreateDirectory(SessionState.GetString(KeyOut, "SmokeTest"));
 
@@ -139,6 +142,23 @@ public static class SmokeTest
             return;
         }
         double elapsed = EditorApplication.timeSinceStartup - _inGameSince;
+        // -smokeDrive seconds: full throttle for that long, then full brake (participant's car)
+        var drive = SessionState.GetString(KeyDrive, "");
+        if (drive.Length > 0)
+        {
+            float accelFor = float.Parse(drive, System.Globalization.CultureInfo.InvariantCulture);
+            double tIn = elapsed;
+            VehicleInput.Override = axis =>
+                axis == "Throttle" ? (tIn < accelFor ? 1f : 0f) :
+                axis == "Break" || axis == "Brake" ? (tIn < accelFor ? 0f : 1f) :
+                axis == "Horizontal" ? 0f : (float?)null;
+            var dyn = UnityEngine.Object.FindObjectsByType<RealisticVehicleDynamics>().FirstOrDefault(d => d.GetComponentInParent<PlayerAvatar>() == NetworkingManager.Instance.PlayerSystem.LocalPlayer);
+            if (dyn != null && (int)(elapsed * 2) != _lastDriveLog)
+            {
+                _lastDriveLog = (int)(elapsed * 2);
+                Debug.Log($"SmokeTest drive: t={elapsed:F1}s {dyn.SpeedKmh:F1} km/h gear {dyn.Gear} {dyn.Rpm:F0} rpm grip {dyn.Grip:F2}");
+            }
+        }
         // -smokeRide drive,steer: ride the participant's two-wheeler (if any) with fixed input
         var ride = SessionState.GetString(KeyRide, "");
         if (ride.Length > 0)
