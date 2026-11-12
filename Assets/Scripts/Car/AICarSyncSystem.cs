@@ -123,7 +123,7 @@ public class AICarSyncSystem
         var tracker = aiCar.GetComponent<WaypointProgressTracker>();
         if (tracker != null) tracker.enabled = false;
         var parameters = new CarSpawnParams { Car = prefab, VehicleType = vehicleType, color = color, SpawnDriver = true };
-        aiCar.GetComponent<CarConfigurator>()?.ChangeParameters(parameters);
+        if (aiCar.TryGetComponent<CarConfigurator>(out var configurator)) configurator.ChangeParameters(parameters);
         var avatar = aiCar.GetComponent<PlayerAvatar>();
         avatar.Initialize(false, PlayerSystem.InputMode.None, PlayerSystem.ControlMode.HostAI, vehicleType);
         var rb = aiCar.GetComponent<Rigidbody>();
@@ -191,7 +191,7 @@ public class AICarSyncSystem
         var go = GameObject.Instantiate(Prefabs[msg.PrefabIdx], msg.Position, msg.Rotation);
         var avatar = go.GetComponent<PlayerAvatar>();
         var color = msg.Color;
-        avatar.GetComponent<CarConfigurator>().ChangeParameters(msg);
+        if (avatar.TryGetComponent<CarConfigurator>(out var configurator)) configurator.ChangeParameters(msg); // two-wheelers have none
         avatar.Initialize(true, PlayerSystem.InputMode.None, PlayerSystem.ControlMode.HostAI, (PlayerSystem.VehicleType)msg.VehicleType);
         Cars.Add(avatar);
     }

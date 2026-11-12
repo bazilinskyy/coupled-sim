@@ -17,6 +17,8 @@ namespace CoupledSim.TraCI
         public const byte CMD_SUBSCRIBE_VEHICLE_VARIABLE = 0xd4;
         public const byte RESPONSE_SUBSCRIBE_VEHICLE_VARIABLE = 0xe4;
 
+        public const byte CMD_GET_LANE_VARIABLE = 0xa3;
+        public const byte LANE_ALLOWED = 0x34;
         public const byte CMD_GET_EDGE_VARIABLE = 0xaa;
         public const byte RESPONSE_GET_EDGE_VARIABLE = 0xba;
 

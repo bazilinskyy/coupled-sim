@@ -56,6 +56,9 @@ public class ExperimentDefinition : MonoBehaviour
     public string Name;
     //Unity scene name to be loaded as an experiment environment
     public string Scene;
+    //city map (MapCatalog name) built in the OsmMap scene; empty for hand-built scenes.
+    //The trial parameter "map" or the host's choice can override it.
+    public string Map;
     //list defining roles that can be taken during an experiment by participants
     public ExperimentRoleDefinition[] Roles;
     //static points that are logged in experiment logs to be used in the log processing and analysis
