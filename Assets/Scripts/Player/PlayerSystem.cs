@@ -98,6 +98,8 @@ public class PlayerSystem : MonoBehaviour
 
     public void SpawnLocalPlayer(SpawnPoint spawnPoint, int player, ExperimentRoleDefinition role)
     {
+        // headset roles: start OpenXR now (flat-screen PCs never need a VR runtime)
+        if (PlayerInputMode == InputMode.VR || PlayerInputMode == InputMode.Suite) XRSession.Start();
         bool isPassenger = spawnPoint.Type == SpawnPointType.PlayerInAIControlledCar;
         LocalPlayer = SpawnAvatar(spawnPoint, GetAvatarPrefab(spawnPoint.Type, role.carIdx, role.twoWheelerIdx), player, role);
         LocalPlayer.Initialize(false, PlayerInputMode, isPassenger ? ControlMode.Passenger : ControlMode.Driver, spawnPoint.VehicleType, spawnPoint.CameraIndex);

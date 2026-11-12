@@ -258,6 +258,7 @@ GameObject:
   - component: {fileID: 301934535}
   - component: {fileID: 301934536}
   - component: {fileID: 301934537}
+  - component: {fileID: 301934538}
   m_Layer: 0
   m_Name: Managers
   m_TagString: Untagged
@@ -385,6 +386,19 @@ MonoBehaviour:
   AllowRemote: 1
   UpdateInterval: 0.2
   MapResolution: 1024
+--- !u!114 &301934538
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 301934531}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 80d111b545a0e4ef6a9ae23ddbaa9ad7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WheelCalibration
+  ToggleKey: 283
 --- !u!1 &1256699364
 GameObject:
   m_ObjectHideFlags: 0
