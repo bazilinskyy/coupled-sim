@@ -32,7 +32,10 @@ public static class TrafficTools
     /// <summary>Adds car prefabs to NetworkingManager ➡️ AI Car System ➡️ Prefabs in StartScene.</summary>
     public static void RegisterAICarPrefabs(IEnumerable<AICar> prefabs)
     {
+        var paths = prefabs.Where(p => p != null).Select(p => AssetDatabase.GetAssetPath(p)).ToList();
         var scene = EditorSceneManager.OpenScene("Assets/_Scenes/StartScene.unity", OpenSceneMode.Single);
+        // reload after opening the scene (opening it may unload assets nothing referenced)
+        prefabs = paths.Select(p => AssetDatabase.LoadAssetAtPath<GameObject>(p).GetComponent<AICar>()).ToList();
         var nm = Object.FindAnyObjectByType<NetworkingManager>();
         var so = new SerializedObject(nm);
         var list = so.FindProperty("_aiCarSystem").FindPropertyRelative("Prefabs");
