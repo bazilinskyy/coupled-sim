@@ -32,6 +32,9 @@ Transform:
   - {fileID: 1311683245}
   - {fileID: 9168689610437224543}
   - {fileID: 571469619656576747}
+  - {fileID: 4662620101107842954}
+  - {fileID: 132334113306461747}
+  - {fileID: 6280278628713410859}
   m_Father: {fileID: 7609667120526454229}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1311683244
@@ -1018,6 +1021,37 @@ MonoBehaviour:
   YieldingEyeContactSince: 0
   YieldingEyeContactUntil: 0
   customBehaviourData: []
+--- !u!1 &3299625201144689507
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 132334113306461747}
+  m_Layer: 0
+  m_Name: E-scooter rider spawn
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &132334113306461747
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3299625201144689507}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: 0.7071068, z: -0, w: -0.7071068}
+  m_LocalPosition: {x: -15.5, y: 0, z: 11.6}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 935614564}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &3842060335943783383
 GameObject:
   m_ObjectHideFlags: 0
@@ -1152,6 +1186,37 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 3524111389921439119}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &4468396558884777654
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6280278628713410859}
+  m_Layer: 0
+  m_Name: Moped rider spawn
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6280278628713410859
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4468396558884777654}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: 0.7071068, z: -0, w: -0.7071068}
+  m_LocalPosition: {x: -9.5, y: 0, z: 11.6}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 935614564}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &4845196738854411470
 GameObject:
@@ -1770,6 +1835,7 @@ Transform:
   - {fileID: 1254850277491099203}
   - {fileID: 6519749865735157834}
   - {fileID: 9004334388317054639}
+  - {fileID: 5645766761557725108}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &8692043556341430772
@@ -1793,6 +1859,7 @@ MonoBehaviour:
     WindshieldHMI: {fileID: 0}
     HoodHMI: {fileID: 0}
     carIdx: 0
+    twoWheelerIdx: 0
     SpawnPoint:
       Point: {fileID: 571469619656576747}
       Type: 1
@@ -1805,6 +1872,7 @@ MonoBehaviour:
     WindshieldHMI: {fileID: 114674626593462642, guid: 9eaaf159fd53e9043a6a0f42f3729fa0, type: 3}
     HoodHMI: {fileID: 114674626593462642, guid: 9eaaf159fd53e9043a6a0f42f3729fa0, type: 3}
     carIdx: 1
+    twoWheelerIdx: 0
     SpawnPoint:
       Point: {fileID: 1311683245}
       Type: 2
@@ -1817,9 +1885,49 @@ MonoBehaviour:
     WindshieldHMI: {fileID: 0}
     HoodHMI: {fileID: 0}
     carIdx: 0
+    twoWheelerIdx: 0
     SpawnPoint:
       Point: {fileID: 9168689610437224543}
       Type: 0
+      CameraIndex: 0
+      VehicleType: 0
+    AutonomousPath: {fileID: 0}
+    AutonomousIsYielding: 0
+  - Name: Cyclist
+    TopHMI: {fileID: 0}
+    WindshieldHMI: {fileID: 0}
+    HoodHMI: {fileID: 0}
+    carIdx: 0
+    twoWheelerIdx: 0
+    SpawnPoint:
+      Point: {fileID: 4662620101107842954}
+      Type: 3
+      CameraIndex: 0
+      VehicleType: 0
+    AutonomousPath: {fileID: 0}
+    AutonomousIsYielding: 0
+  - Name: E-scooter rider
+    TopHMI: {fileID: 0}
+    WindshieldHMI: {fileID: 0}
+    HoodHMI: {fileID: 0}
+    carIdx: 0
+    twoWheelerIdx: 1
+    SpawnPoint:
+      Point: {fileID: 132334113306461747}
+      Type: 3
+      CameraIndex: 0
+      VehicleType: 0
+    AutonomousPath: {fileID: 0}
+    AutonomousIsYielding: 0
+  - Name: Moped rider
+    TopHMI: {fileID: 0}
+    WindshieldHMI: {fileID: 0}
+    HoodHMI: {fileID: 0}
+    carIdx: 0
+    twoWheelerIdx: 2
+    SpawnPoint:
+      Point: {fileID: 6280278628713410859}
+      Type: 3
       CameraIndex: 0
       VehicleType: 0
     AutonomousPath: {fileID: 0}
@@ -1911,6 +2019,37 @@ Transform:
   - {fileID: 8609029755401214846}
   - {fileID: 8181388126871438445}
   m_Father: {fileID: 7609667120526454229}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &7147765540853612470
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4662620101107842954}
+  m_Layer: 0
+  m_Name: Cyclist spawn
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4662620101107842954
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7147765540853612470}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: 0.7071068, z: -0, w: -0.7071068}
+  m_LocalPosition: {x: -21.5, y: 0, z: 11.6}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 935614564}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &7209473399203130726
 GameObject:
@@ -2005,6 +2144,79 @@ Transform:
   m_Children: []
   m_Father: {fileID: 3524111389921439119}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &7646609186528239002
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5645766761557725108}
+  - component: {fileID: 1759433229248802921}
+  m_Layer: 0
+  m_Name: Environment (time of day, weather)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5645766761557725108
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7646609186528239002}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7609667120526454229}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1759433229248802921
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7646609186528239002}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b2a39153b231c4fbc8dc5534278d1da3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnvironmentController
+  TimeOfDay: 14
+  Latitude: 51.44
+  Longitude: 5.48
+  UtcOffset: 2
+  DayOfYear: 172
+  TimeSpeed: 0
+  NorthOffset: 0
+  Weather: 1
+  ExtraFog: 0
+  RainOverride: -1
+  UseBakedLighting: 0
+  Sun: {fileID: 0}
+  StreetLights: []
+  LampNamePrefix: StreetLamp
+  LampIntensity: 4
+  LampRange: 18
+  MaxActiveStreetLights: 24
+  WetSurfaceKeywords:
+  - road
+  - asphalt
+  - lane
+  - street
+  - sidewalk
+  - pavement
+  - crossing
+  - tile
+  SunElevation: 0
+  Rain: 0
+  StreetLightsOn: 0
 --- !u!1 &7947078609750007415
 GameObject:
   m_ObjectHideFlags: 0

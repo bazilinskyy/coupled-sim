@@ -34,6 +34,9 @@ public class PlayerSystem : MonoBehaviour
     PlayerAvatar _AvatarPrefab;
     [SerializeField]
     PlayerAvatar[] _AvatarPrefabDriver;
+    [SerializeField]
+    [Tooltip("Bicycle, e-scooter and moped avatars for PlayerRidingTwoWheeler roles.")]
+    PlayerAvatar[] _AvatarPrefabTwoWheeler;
 
 
     [NonSerialized]
@@ -76,10 +79,12 @@ public class PlayerSystem : MonoBehaviour
         }
     }
 
-    PlayerAvatar GetAvatarPrefab(SpawnPointType type, int carIdx)
+    PlayerAvatar GetAvatarPrefab(SpawnPointType type, int carIdx, int twoWheelerIdx = 0)
     {
         switch (type)
         {
+            case SpawnPointType.PlayerRidingTwoWheeler:
+                return _AvatarPrefabTwoWheeler[twoWheelerIdx];
             case SpawnPointType.PlayerControlledPedestrian:
                 return _AvatarPrefab;
             case SpawnPointType.PlayerControlingCar:
@@ -94,7 +99,7 @@ public class PlayerSystem : MonoBehaviour
     public void SpawnLocalPlayer(SpawnPoint spawnPoint, int player, ExperimentRoleDefinition role)
     {
         bool isPassenger = spawnPoint.Type == SpawnPointType.PlayerInAIControlledCar;
-        LocalPlayer = SpawnAvatar(spawnPoint, GetAvatarPrefab(spawnPoint.Type, role.carIdx), player, role);
+        LocalPlayer = SpawnAvatar(spawnPoint, GetAvatarPrefab(spawnPoint.Type, role.carIdx, role.twoWheelerIdx), player, role);
         LocalPlayer.Initialize(false, PlayerInputMode, isPassenger ? ControlMode.Passenger : ControlMode.Driver, spawnPoint.VehicleType, spawnPoint.CameraIndex);
         if (isPassenger)
         {
@@ -110,7 +115,7 @@ public class PlayerSystem : MonoBehaviour
 
     public void SpawnRemotePlayer(SpawnPoint spawnPoint, int player, ExperimentRoleDefinition role)
     {
-        var remotePlayer = SpawnAvatar(spawnPoint, GetAvatarPrefab(spawnPoint.Type, role.carIdx), player, role);
+        var remotePlayer = SpawnAvatar(spawnPoint, GetAvatarPrefab(spawnPoint.Type, role.carIdx, role.twoWheelerIdx), player, role);
         remotePlayer.Initialize(true, InputMode.None, ControlMode.HostAI, spawnPoint.VehicleType);
     }
 

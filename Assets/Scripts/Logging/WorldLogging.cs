@@ -150,15 +150,13 @@ public class WorldLogger
         {
             writer.Write(driver.transform.position);
             writer.Write(driver.transform.rotation);
-            writer.Write((int)driver.CarBlinkers.State);
-            writer.Write(driver.frontLights.gameObject.activeSelf);
-            writer.Write(driver.stopLights.gameObject.activeSelf);
+            // two-wheelers have no blinkers or car lights: logged as off
+            writer.Write((int)(driver.CarBlinkers != null ? driver.CarBlinkers.State : BlinkerState.None));
+            writer.Write(driver.frontLights != null && driver.frontLights.gameObject.activeSelf);
+            writer.Write(driver.stopLights != null && driver.stopLights.gameObject.activeSelf);
             if ( driver == _playerSystem.LocalPlayer)
             {
-                var rb = driver.GetComponent<Rigidbody>();
-                Assert.IsNotNull(rb);
-                Assert.IsFalse(rb.isKinematic);
-                writer.Write(rb.linearVelocity);
+                writer.Write(VelocityOf(driver));
             } else if (_aiCarSystem.Cars.Contains(driver))
             {
                 var rb = driver.GetComponent<Rigidbody>();
@@ -191,6 +189,15 @@ public class WorldLogger
                 writer.Write((byte)light.State);
             }
         }
+    }
+
+    // velocity of a participant's vehicle: physics for cars, the model's speed for two-wheelers
+    static Vector3 VelocityOf(PlayerAvatar driver)
+    {
+        var twoWheeler = driver.GetComponent<TwoWheelerController>();
+        if (twoWheeler != null) return driver.transform.forward * twoWheeler.Speed;
+        var rb = driver.GetComponent<Rigidbody>();
+        return rb != null && !rb.isKinematic ? rb.linearVelocity : Vector3.zero;
     }
 
     //cleans up after logging has ended

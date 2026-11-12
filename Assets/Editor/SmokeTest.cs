@@ -29,6 +29,8 @@ public static class SmokeTest
     const string KeyExperiment = "SmokeTest.Experiment";
     const string KeyRole = "SmokeTest.Role";
     const string KeyShot = "SmokeTest.Shot";
+    const string KeyParams = "SmokeTest.Params";
+    const string KeyRide = "SmokeTest.Ride";
 
     static double _startTime = -1;
     static double _inGameSince = -1;
@@ -58,6 +60,8 @@ public static class SmokeTest
         SessionState.SetInt(KeyExperiment, int.Parse(Arg("-smokeExperiment", "-1")));
         SessionState.SetInt(KeyRole, int.Parse(Arg("-smokeRole", "-1")));
         SessionState.SetString(KeyShot, Arg("-smokeShot", ""));
+        SessionState.SetString(KeyParams, Arg("-smokeParams", ""));
+        SessionState.SetString(KeyRide, Arg("-smokeRide", ""));
         SessionState.SetString(KeyErrors, "");
         Directory.CreateDirectory(SessionState.GetString(KeyOut, "SmokeTest"));
 
@@ -74,6 +78,7 @@ public static class SmokeTest
         // Not from our code or harmless in batch mode without devices
         if (condition.Contains("XR") || condition.Contains("Oculus") || condition.Contains("OVR")) return;
         if (stackTrace != null && stackTrace.Contains("UnityEditor.Search")) return; // editor indexer, not the simulator
+        if (condition.StartsWith("ImportFBX Errors")) return; // asset re-import messages, not the simulator
         lock (_lock)
         {
             var s = SessionState.GetString(KeyErrors, "");
@@ -102,6 +107,11 @@ public static class SmokeTest
             t.InputMode = PlayerSystem.InputMode.Flat;
             if (SessionState.GetInt(KeyExperiment, -1) >= 0) t.experimentIndex = SessionState.GetInt(KeyExperiment, 0);
             if (SessionState.GetInt(KeyRole, -1) >= 0) t.roleIndex = SessionState.GetInt(KeyRole, 0);
+            // -smokeParams "name=value,name=value": extra experiment parameters for the trial
+            var extra = SessionState.GetString(KeyParams, "").Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(kv => kv.Split('=')).Where(kv => kv.Length == 2)
+                .Select(kv => new NetworkingManager.ExperimentParameter { name = kv[0].Trim(), value = kv[1].Trim() });
+            t.experimentParameters = (t.experimentParameters ?? new NetworkingManager.ExperimentParameter[0]).Concat(extra).ToArray();
             nm.trials = new[] { t };
             nm.recordVideos = false;
             nm.RunTrialSequenceAutomatically = true;
@@ -129,6 +139,22 @@ public static class SmokeTest
             return;
         }
         double elapsed = EditorApplication.timeSinceStartup - _inGameSince;
+        // -smokeRide drive,steer: ride the participant's two-wheeler (if any) with fixed input
+        var ride = SessionState.GetString(KeyRide, "");
+        if (ride.Length > 0)
+        {
+            var parts = ride.Split(',');
+            foreach (var tw in UnityEngine.Object.FindObjectsByType<TwoWheelerController>())
+            {
+                if (!tw.enabled) continue;
+                tw.UseExternalInput = true;
+                tw.Input = new CoupledSim.TwoWheelers.TwoWheelerInput
+                {
+                    Drive = float.Parse(parts[0], System.Globalization.CultureInfo.InvariantCulture),
+                    Steer = parts.Length > 1 ? float.Parse(parts[1], System.Globalization.CultureInfo.InvariantCulture) : 0f,
+                };
+            }
+        }
         // agents spawned later (traffic) are measured from when they first appear
         foreach (var a in UnityEngine.Object.FindObjectsByType<PlayerAvatar>())
         {
@@ -164,7 +190,9 @@ public static class SmokeTest
             float moved = 0;
             if (_startPositions.TryGetValue(a.GetInstanceIDSafe(), out var s)) moved = Vector3.Distance(s.start, a.transform.position);
             if (moved > 1f) { if (isCar) movedCars++; else movedPeds++; }
-            sb.AppendLine($"  {(isCar ? "car" : "pedestrian")} {a.name}: moved {moved:F1} m, at {a.transform.position}");
+            var twc = a.GetComponent<TwoWheelerController>();
+            var extra = twc != null ? $", two-wheeler {twc.Type}: {twc.SpeedKmh:F1} km/h, lean {twc.LeanDeg:F1}°, collided {twc.Collided}" : "";
+            sb.AppendLine($"  {(isCar ? "car" : "pedestrian")} {a.name}: moved {moved:F1} m, at {a.transform.position}{extra}");
         }
         foreach (var p in UnityEngine.Object.FindObjectsByType<AIPedestrian>())
         {
@@ -183,11 +211,28 @@ public static class SmokeTest
         // extra views: -smokeShot "x,y,z,yaw,pitch;x,y,z,yaw,pitch"
         foreach (var view in SessionState.GetString(KeyShot, "").Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
         {
-            var v = view.Split(',').Select(x => float.Parse(x, System.Globalization.CultureInfo.InvariantCulture)).ToArray();
             var camGo = new GameObject("SmokeTestCamera");
             var c = camGo.AddComponent<Camera>();
             c.fieldOfView = 50;
-            camGo.transform.SetPositionAndRotation(new Vector3(v[0], v[1], v[2]), Quaternion.Euler(v.Length > 4 ? v[4] : 0, v[3], 0));
+            var local = NetworkingManager.Instance != null ? NetworkingManager.Instance.PlayerSystem.LocalPlayer : null;
+            if (view.Trim() == "chase" && local != null)
+            {
+                // behind and beside the participant's vehicle or avatar
+                var t = local.transform;
+                camGo.transform.position = t.position - t.forward * 4.5f - t.right * 1.8f + Vector3.up * 1.9f; // road side (left, right-hand traffic)
+                camGo.transform.LookAt(t.position + Vector3.up * 0.9f + t.forward * 1.5f);
+            }
+            else if (view.Trim() == "chase")
+            {
+                UnityEngine.Object.DestroyImmediate(camGo);
+                sb.AppendLine("Screenshot 'chase' skipped: no local player");
+                continue;
+            }
+            else
+            {
+                var v = view.Split(',').Select(x => float.Parse(x, System.Globalization.CultureInfo.InvariantCulture)).ToArray();
+                camGo.transform.SetPositionAndRotation(new Vector3(v[0], v[1], v[2]), Quaternion.Euler(v.Length > 4 ? v[4] : 0, v[3], 0));
+            }
             var path = Path.Combine(outDir, $"view{shot++}.png");
             SaveCamera(c, path, 1600, 900);
             sb.AppendLine($"Screenshot: {path}");
