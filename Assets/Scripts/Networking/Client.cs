@@ -47,6 +47,7 @@ public class Client : NetworkSystem
         _msgDispatcher.AddStaticHandler((int)MsgId.S_AllReady, OnAllReady);
         _msgDispatcher.AddStaticHandler((int)MsgId.S_VisualSync, OnCustomMessage);
         _msgDispatcher.AddStaticHandler((int)MsgId.B_Ping, HandlePing);
+        _msgDispatcher.AddStaticHandler((int)MsgId.S_Environment, EnvironmentController.ClientHandleState);
         _hmiManager.InitClient(_client, _msgDispatcher);
         aiCarSystem.InitClient(_msgDispatcher);
         _msgDispatcher.HandleConnect = () =>

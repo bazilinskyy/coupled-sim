@@ -17,6 +17,7 @@ enum MsgId
     S_UpdateAICarPoses = 7,
     S_UpdateAIPedestrianPoses = 8,
     S_SetAICarActive = 9,
+    S_Environment = 10,
 
     S_VisualSync = 123,
 
