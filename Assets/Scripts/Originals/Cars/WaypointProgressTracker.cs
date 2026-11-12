@@ -72,6 +72,11 @@ namespace UnityStandardAssets.Utility
         // reset the object to sensible values
         public void Reset()
         {
+            // Unity also calls Reset() when the component is added in the editor: nothing to reset yet
+            if (circuit == null || target == null || circuit.Waypoints == null || circuit.Waypoints.Length == 0)
+            {
+                return;
+            }
             progressDistance = 4;
             progressNum = 0;
             lastPosition = transform.position;
