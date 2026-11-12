@@ -143,4 +143,36 @@ public static class MapSetup
     }
 
     static string[] prefabsToRegister = new string[0];
+
+    /// <summary>Builds every map of the catalogue once and reports its size (and any errors).</summary>
+    [MenuItem("Coupled Sim/Maps/Check all maps")]
+    public static void CheckAll()
+    {
+        int failed = 0;
+        foreach (var info in MapCatalog.Maps)
+        {
+            var go = new GameObject("check " + info.Name);
+            try
+            {
+                var map = go.AddComponent<OsmMap>();
+                var sw = System.Diagnostics.Stopwatch.StartNew();
+                map.Load(info.Name);
+                var g = map.Generator;
+                bool sumo = System.IO.File.Exists($"Assets/StreamingAssets/Sumo/Maps/{info.Name}/{info.Name}.sumocfg");
+                bool spawns = map.FindSpawn(OsmMap.SpawnKind.RoadLane, 0, out _, out _) && map.FindSpawn(OsmMap.SpawnKind.Pavement, 0, out _, out _);
+                Debug.Log($"MAPCHECK {info.Name}: {sw.ElapsedMilliseconds} ms, {g.Roads.Count} roads, {g.CyclePaths.Count} cycle paths, {g.BuildingCount} buildings, {g.Crossings.Count / 2} crossings, spawns {(spawns ? "ok" : "MISSING")}, SUMO {(sumo ? "ok" : "MISSING")}");
+                if (!spawns || !sumo || g.Roads.Count == 0) failed++;
+            }
+            catch (System.Exception e)
+            {
+                failed++;
+                Debug.LogError($"MAPCHECK {info.Name}: {e}");
+            }
+            finally
+            {
+                Object.DestroyImmediate(go);
+            }
+        }
+        Debug.Log($"MAPCHECK done: {MapCatalog.Maps.Length - failed}/{MapCatalog.Maps.Length} maps ok");
+    }
 }
