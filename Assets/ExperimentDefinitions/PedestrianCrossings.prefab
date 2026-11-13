@@ -1837,6 +1837,7 @@ Transform:
   - {fileID: 9004334388317054639}
   - {fileID: 5645766761557725108}
   - {fileID: 1781103103481621218}
+  - {fileID: 6180050025559345423}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &8692043556341430772
@@ -2520,6 +2521,67 @@ Transform:
   m_Children: []
   m_Father: {fileID: 3524111389921439119}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &9194759079822691302
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6180050025559345423}
+  - component: {fileID: 7956056097672122062}
+  m_Layer: 0
+  m_Name: Auditory eHMI
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6180050025559345423
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9194759079822691302}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7609667120526454229}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7956056097672122062
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9194759079822691302}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 16a30e6be709f4ab7b54b1919d0ea14f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AuditoryEhmiSettings
+  Enabled: 0
+  Cues:
+  - Trigger: 1
+    Sound: 0
+    Clip: {fileID: 0}
+    Volume: 0.8
+    Value: 0
+    Repeat: 0
+  - Trigger: 0
+    Sound: 1
+    Clip: {fileID: 0}
+    Volume: 0.8
+    Value: 0
+    Repeat: 0
+  Avas: 0
+  AvasVolume: 0.5
+  AllCars: 0
 --- !u!1001 &550460706042894086
 PrefabInstance:
   m_ObjectHideFlags: 0
