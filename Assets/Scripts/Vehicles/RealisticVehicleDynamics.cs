@@ -24,6 +24,12 @@ public class RealisticVehicleDynamics : MonoBehaviour
     public float SuspensionFrequency = 1.6f, DampingRatio = 0.35f;
     public bool Abs = true;
 
+    [Header("Tyres (Magic Formula)")]
+    [Tooltip("Set the tyre curves from Pacejka Magic Formula coefficients (e.g. from tyre data) instead of the built-in asphalt curves.")]
+    public bool UseMagicFormula;
+    public MagicFormula Longitudinal = MagicFormula.DryLongitudinal;
+    public MagicFormula Lateral = MagicFormula.DryLateral;
+
     [Header("State (read only)")]
     public int Gear;
     public float Rpm;
@@ -41,6 +47,7 @@ public class RealisticVehicleDynamics : MonoBehaviour
 
     void Awake()
     {
+        if (System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-magicFormulaTyres") >= 0) UseMagicFormula = true;
         Spec = Car == CarPreset.Hatchback ? CarSpec.Hatchback : CarSpec.SmartFortwo;
         Powertrain = new Powertrain(Spec);
     }
@@ -93,6 +100,16 @@ public class RealisticVehicleDynamics : MonoBehaviour
     void SetGrip(float grip)
     {
         Grip = grip;
+        if (UseMagicFormula && Longitudinal.IsSet && Lateral.IsSet)
+        {
+            // slips: longitudinal slip ratio up to 1, lateral slip angle up to ~30 degrees (0.5 rad)
+            foreach (var wc in _wheels)
+            {
+                wc.forwardFriction = Longitudinal.ToWheelFriction(wc.forwardFriction, 1f, grip);
+                wc.sidewaysFriction = Lateral.ToWheelFriction(wc.sidewaysFriction, 0.5f, grip);
+            }
+            return;
+        }
         foreach (var wc in _wheels)
         {
             // asphalt: peak friction at ~10-15% slip, sliding friction ~75% of the peak
