@@ -137,6 +137,7 @@ public class PlayerSystem : MonoBehaviour
     PlayerAvatar SpawnAvatar(SpawnPoint spawnPoint, PlayerAvatar prefab, int player, ExperimentRoleDefinition role)
     {
         var avatar = GameObject.Instantiate(prefab);
+        if ((spawnPoint.Type == SpawnPointType.PlayerControlingCar || spawnPoint.Type == SpawnPointType.PlayerInAIControlledCar) && RightHandDrive.Wanted(role.Steering)) RightHandDrive.Apply(avatar.gameObject);
         avatar.transform.position = spawnPoint.position;
         avatar.transform.rotation = spawnPoint.rotation;
         var cameraSetup = spawnPoint.Point.GetComponent<CameraSetup>();
