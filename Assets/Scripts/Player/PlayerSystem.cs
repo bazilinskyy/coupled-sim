@@ -110,6 +110,7 @@ public class PlayerSystem : MonoBehaviour
         LocalPlayer.Initialize(false, PlayerInputMode, isPassenger ? ControlMode.Passenger : ControlMode.Driver, spawnPoint.VehicleType, spawnPoint.CameraIndex);
         var response = ResponseInput.WithCommandLine(role.Response);
         if (response.Button || response.Slider) LocalPlayer.gameObject.AddComponent<ResponseInput>().Init(response, role.Name);
+        Soundscape.Ensure();
         // in-car displays for the participant's own car (driver or AV passenger)
         if (spawnPoint.Type == SpawnPointType.PlayerControlingCar || spawnPoint.Type == SpawnPointType.PlayerInAIControlledCar)
         {

@@ -290,6 +290,9 @@ public static class SmokeTest
         }
         sb.AppendLine($"Cars: {cars} ({movedCars} moved), pedestrians: {peds} ({movedPeds} moved)");
 
+        if (Soundscape.Current != null && Soundscape.Current.VehicleSounds)
+            foreach (var v in Soundscape.Current.Voices().Take(5))
+                sb.AppendLine($"Sound: {v.car} at {v.kmh:F0} km/h, tyre volume {v.tyre:F4}, engine volume {v.engine:F4}");
         int shot = 0;
         // extra views: -smokeShot "x,y,z,yaw,pitch;x,y,z,yaw,pitch", "chase" (behind the participant) or "front" (ahead, looking back)
         foreach (var view in SessionState.GetString(KeyShot, "").Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries))

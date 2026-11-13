@@ -64,7 +64,7 @@ public static class Haptics
             if (_log == null)
             {
                 Directory.CreateDirectory("ExperimentLogs");
-                _log = new StreamWriter($"ExperimentLogs/Haptics-{DateTime.Now:yyyy_MM_dd_HH_mm_ss}.csv") { AutoFlush = true };
+                _log = new StreamWriter($"ExperimentLogs/Haptics-{NetworkingManager.LogPrefix}{DateTime.Now:yyyy_MM_dd_HH_mm_ss}.csv") { AutoFlush = true };
                 _log.WriteLine("utc;time;cue;intensity;duration;pattern");
             }
             _log.WriteLine(string.Join(";", DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fff", ci), Time.time.ToString("F3", ci), name, intensity.ToString("F2", ci), duration.ToString("F2", ci), pattern));
