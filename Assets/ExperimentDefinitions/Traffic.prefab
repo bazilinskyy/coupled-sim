@@ -972,6 +972,63 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1525080599680829542}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &3079956319946835335
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3061199845034022378}
+  - component: {fileID: 2216174787826932696}
+  m_Layer: 0
+  m_Name: Animals
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3061199845034022378
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3079956319946835335}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7609667120526454229}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2216174787826932696
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3079956319946835335}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5304bda39bf5f4dec9fefa0ac8751dcd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AnimalSpawner
+  Animals:
+  - Species: 3
+    Count: 12
+  - Species: 0
+    Count: 2
+  - Species: 2
+    Count: 2
+  - Species: 4
+    Count: 1
+  Centre: {fileID: 0}
+  Radius: 60
+  Seed: 1
+  LogInterval: 0.1
 --- !u!1 &3126405494846408547
 GameObject:
   m_ObjectHideFlags: 0
@@ -1878,6 +1935,7 @@ Transform:
   - {fileID: 6519749865735157834}
   - {fileID: 6503961672705057369}
   - {fileID: 2905195194134766607}
+  - {fileID: 3061199845034022378}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &8692043556341430772
@@ -1895,6 +1953,7 @@ MonoBehaviour:
   ShortName: Traffic
   Name: Traffic (car-following models)
   Scene: MainScene
+  Map: 
   Roles:
   - Name: Driver
     TopHMI: {fileID: 0}

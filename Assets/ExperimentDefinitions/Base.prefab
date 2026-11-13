@@ -1649,6 +1649,7 @@ Transform:
   - {fileID: 1254850277491099203}
   - {fileID: 6519749865735157834}
   - {fileID: 7559090979148185271}
+  - {fileID: 8052707431672309817}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &8692043556341430772
@@ -1666,6 +1667,7 @@ MonoBehaviour:
   ShortName: 
   Name: Demo with 3 agents
   Scene: MainScene
+  Map: 
   Roles:
   - Name: Driver
     TopHMI: {fileID: 0}
@@ -1786,6 +1788,63 @@ Transform:
   - {fileID: 8181388126871438445}
   m_Father: {fileID: 7609667120526454229}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &7052975115162203938
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8052707431672309817}
+  - component: {fileID: 1219163312978830090}
+  m_Layer: 0
+  m_Name: Animals
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8052707431672309817
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7052975115162203938}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7609667120526454229}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1219163312978830090
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7052975115162203938}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5304bda39bf5f4dec9fefa0ac8751dcd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AnimalSpawner
+  Animals:
+  - Species: 3
+    Count: 12
+  - Species: 0
+    Count: 2
+  - Species: 2
+    Count: 2
+  - Species: 4
+    Count: 1
+  Centre: {fileID: 0}
+  Radius: 60
+  Seed: 1
+  LogInterval: 0.1
 --- !u!1 &7533570759686457814
 GameObject:
   m_ObjectHideFlags: 0
