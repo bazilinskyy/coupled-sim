@@ -115,6 +115,13 @@ public class SumoBridge : CarSpawnerBase
             if (parts.Length > 1 && int.TryParse(parts[1], out var port)) Port = port;
             LaunchSumo = false;
         }
+        // a map built from a road network: the network is centred on the scene origin
+        if (OsmMap.Current != null && OsmMap.Current.RoadNetwork != null && NetworkOrigin == null)
+        {
+            var origin = new GameObject("SUMO network origin").transform;
+            origin.position = new Vector3(-OsmMap.Current.RoadNetworkOffset.x, 0f, -OsmMap.Current.RoadNetworkOffset.y);
+            NetworkOrigin = origin;
+        }
         if (LaunchSumo && !StartSumo()) yield break;
         _running = true;
         _startTime = Time.time;
@@ -127,7 +134,8 @@ public class SumoBridge : CarSpawnerBase
         if (UseMapScenario && OsmMap.Current != null)
         {
             var name = OsmMap.Current.Info.Name;
-            SumoConfig = name == "Location" ? BuildLocationScenario(OsmMap.Current.Info) : $"Sumo/Maps/{name}/{name}.sumocfg";
+            SumoConfig = OsmMap.Current.RoadNetwork != null ? BuildNetworkScenario(OsmMap.Current.RoadNetwork)
+                : name == "Location" ? BuildLocationScenario(OsmMap.Current.Info) : $"Sumo/Maps/{name}/{name}.sumocfg";
             if (SumoConfig == null) return false;
         }
         var cfg = Path.IsPathRooted(SumoConfig) ? SumoConfig : Path.Combine(Application.streamingAssetsPath, SumoConfig);
@@ -203,6 +211,47 @@ public class SumoBridge : CarSpawnerBase
         var python = win ? "python" : "python3";
         Run(python, $"\"{Path.Combine(home, "tools", "randomTrips.py")}\" -n location.net.xml -r location.rou.xml -e 3600 -p 2.0 --fringe-factor 5 --validate --seed 1");
         File.WriteAllText(cfg, "<configuration><input><net-file value=\"location.net.xml\"/><route-files value=\"location.rou.xml\"/></input>" +
+                               "<time><step-length value=\"0.05\"/></time><processing><ignore-route-errors value=\"true\"/><time-to-teleport value=\"120\"/></processing></configuration>");
+        return cfg;
+    }
+
+    /// <summary>
+    /// SUMO scenario for a map from a road network (OpenDRIVE or SUMO file, #40): that network with
+    /// random traffic (randomTrips: cars, and bicycles where there are cycle lanes), built once and cached.
+    /// </summary>
+    public static string BuildNetworkScenario(string netFile)
+    {
+        var home = Environment.GetEnvironmentVariable("SUMO_HOME");
+        if (string.IsNullOrEmpty(home))
+        {
+            Debug.LogWarning("SumoBridge: no SUMO traffic for this road network: install SUMO and set SUMO_HOME");
+            return null;
+        }
+        var stamp = (File.GetLastWriteTimeUtc(netFile).Ticks ^ new FileInfo(netFile).Length) & 0xffffffff;
+        var dir = Path.Combine(Application.persistentDataPath, "Sumo", $"{Path.GetFileName(netFile).Split('.')[0]}-{stamp:x8}");
+        var cfg = Path.Combine(dir, "network.sumocfg");
+        if (File.Exists(cfg)) return cfg;
+        Directory.CreateDirectory(dir);
+        bool win = Application.platform == RuntimePlatform.WindowsPlayer || Application.platform == RuntimePlatform.WindowsEditor;
+        var python = win ? "python" : "python3";
+        var tool = Path.Combine(home, "tools", "randomTrips.py");
+        bool Run(string args)
+        {
+            try
+            {
+                var p = Process.Start(new ProcessStartInfo(python, $"\"{tool}\" {args}") { WorkingDirectory = dir, UseShellExecute = false, CreateNoWindow = true });
+                p.WaitForExit(180000);
+                return p.ExitCode == 0;
+            }
+            catch (Exception e) { Debug.LogWarning($"SumoBridge: randomTrips failed: {e.Message}"); return false; }
+        }
+        if (!Run($"-n \"{netFile}\" -r cars.rou.xml -o cars.trips.xml -e 3600 -p 2.0 --fringe-factor 5 --validate --seed 1 --vehicle-class passenger --prefix car"))
+        {
+            Debug.LogWarning("SumoBridge: randomTrips could not make traffic for " + netFile);
+            return null;
+        }
+        bool bikes = Run($"-n \"{netFile}\" -r bikes.rou.xml -o bikes.trips.xml -e 3600 -p 6.0 --validate --seed 2 --vehicle-class bicycle --prefix bike") && File.Exists(Path.Combine(dir, "bikes.rou.xml"));
+        File.WriteAllText(cfg, $"<configuration><input><net-file value=\"{netFile}\"/><route-files value=\"cars.rou.xml{(bikes ? ",bikes.rou.xml" : "")}\"/></input>" +
                                "<time><step-length value=\"0.05\"/></time><processing><ignore-route-errors value=\"true\"/><time-to-teleport value=\"120\"/></processing></configuration>");
         return cfg;
     }
