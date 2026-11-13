@@ -811,7 +811,31 @@ Unity -batchmode -projectPath . -executeMethod SmokeTest.Run -smokeSeconds 30 -s
 
 Options: `-smokeTrial N` (index in `Trials`), `-smokeExperiment N` and `-smokeRole N` (override the trial's experiment and role), `-smokeShot "x,y,z,yaw,pitch;..."` (extra screenshots from these camera poses), `-smokeScene <path>` (scene to start from).
 
-The models (pedestrians, traffic, two-wheelers, vehicles, maps, trial files) have edit-mode tests (`Assets/Tests/EditMode`, 66 tests): run them in `Window` ➡️ `General` ➡️ `Test Runner`, or with `Unity -batchmode -projectPath . -runTests -testPlatform EditMode -testResults results.xml`. On Windows, `Unity` is `"C:\Program Files\Unity\Hub\Editor\6000.6.9f1\Editor\Unity.exe"`; on macOS `/Applications/Unity/Hub/Editor/6000.6.9f1/Unity.app/Contents/MacOS/Unity`.
+The models (pedestrians, traffic, two-wheelers, vehicles, maps, trial files) have edit-mode tests (`Assets/Tests/EditMode`, 70 tests): run them in `Window` ➡️ `General` ➡️ `Test Runner`, or with `Unity -batchmode -projectPath . -runTests -testPlatform EditMode -testResults results.xml`. On Windows, `Unity` is `"C:\Program Files\Unity\Hub\Editor\6000.6.9f1\Editor\Unity.exe"`; on macOS `/Applications/Unity/Hub/Editor/6000.6.9f1/Unity.app/Contents/MacOS/Unity`.
+
+**Automatic tests on GitHub.** `.github/workflows/tests.yml` runs the edit-mode tests on every pull request and push to `master` with [GameCI](https://game.ci) (a Linux runner with Unity 6000.6.9f1 in Docker; the first run imports the project for about an hour, later runs use a cached `Library`). Unity needs a license there, given as repository secrets (only people with admin rights to the repository can add them; GitHub never shows them again, also not in the logs). Until they are added, the check passes with the note "Tests skipped". With the [GitHub CLI](https://cli.github.com) (`gh auth login` once), in the `coupled-sim` folder:
+
+```bash
+gh secret set UNITY_EMAIL --repo bazilinskyy/coupled-sim
+```
+
+```bash
+gh secret set UNITY_PASSWORD --repo bazilinskyy/coupled-sim
+```
+
+Each asks for the value (typed text is not shown). Then one of these two:
+- **Unity Personal:** the license file that Unity Hub wrote when it activated the license, `Unity_lic.ulf` (Windows `C:\ProgramData\Unity\Unity_lic.ulf`, macOS `/Library/Application Support/Unity/Unity_lic.ulf`, Linux `~/.local/share/unity3d/Unity/Unity_lic.ulf`):
+
+  ```bash
+  gh secret set UNITY_LICENSE --repo bazilinskyy/coupled-sim < "/Library/Application Support/Unity/Unity_lic.ulf"
+  ```
+- **Unity Pro, Plus or an education seat with a serial number:**
+
+  ```bash
+  gh secret set UNITY_SERIAL --repo bazilinskyy/coupled-sim
+  ```
+
+Without the GitHub CLI: on github.com open the repository ➡️ **Settings** ➡️ **Secrets and variables** ➡️ **Actions** ➡️ **New repository secret**, and add the same names with the values (for `UNITY_LICENSE` paste the whole content of the `.ulf` file). The account must sign in with e-mail and password: an account that only signs in through the university (single sign-on) needs a password set in its Unity ID settings; a separate lab account for the tests is better than a personal one. A license used here counts as one of the account's activations. Then run the workflow by hand once (**Actions** ➡️ **Tests** ➡️ **Run workflow**) to see it work.
 
 **Two agents.** A second editor on an instant copy of the project can be a client: on macOS `cp -cR coupled-sim coupled-sim-client` (APFS copies in seconds; delete its `Temp` folder), then run the host with `-clients 1` and the client with `SmokeTest.Run -connect 127.0.0.1`. The reports list what each agent saw.
 
