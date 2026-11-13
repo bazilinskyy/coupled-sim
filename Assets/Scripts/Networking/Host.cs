@@ -51,6 +51,16 @@ public class Host : NetworkSystem
         _msgDispatcher.AddStaticHandler((int)MsgId.C_UpdatePose, OnClientPoseUpdate);
         _msgDispatcher.AddStaticHandler((int)MsgId.C_Ready, OnClientReady);
         _msgDispatcher.AddStaticHandler((int)MsgId.B_Ping, OnPing);
+        // voice: a client's packet is played here and relayed to every client (each ignores its own)
+        _msgDispatcher.AddStaticHandler((int)MsgId.C_Voice, (sync, player) =>
+        {
+            var v = NetMsg.Read<VoiceMsg>(sync);
+            v.Player = player;
+            VoiceChat.Receive(v);
+            v.FromHost = true;
+            _host.BroadcastUnreliable(v);
+        });
+        VoiceChat.Setup(v => { v.FromHost = true; v.Player = 0; _host.BroadcastUnreliable(v); }, () => 0);
         _hmiManager.InitHost(_host, _msgDispatcher);
         aiCarSystem.InitHost(_host);
         for (int i = 0; i < UNetConfig.MaxPlayers; i++)
