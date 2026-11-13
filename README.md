@@ -272,6 +272,7 @@ Only the window that has focus receives keyboard input.
 | `-quality Fantastic\|Balanced\|Performance` | [graphics quality](#graphics) for slower PCs |
 | `-sumoConnect <host:port>` | connect to a running [SUMO](#traffic-from-sumo) |
 | `-views "LeftScreen:2,RightScreen:3,RearMirror:1"` | [extra monitors and mirrors](#several-monitors-and-mirrors) |
+| `-benchmark <seconds> <file>` | measure the frame rate once the simulation runs (average and 1% low), write it to the file and quit; with `-autoRun` |
 | `-screenshot <seconds> <file>`, `-quitAfter <seconds>` | a screenshot after that time; quit after that time (tests, documentation) |
 
 For example, a driver (host) and a pedestrian (client) on two PCs, run without anyone at the host:
