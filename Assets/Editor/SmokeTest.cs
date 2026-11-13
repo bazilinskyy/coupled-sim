@@ -329,6 +329,10 @@ public static class SmokeTest
             }
             sb.AppendLine($"View: {path}");
         }
+        var signs = UnityEngine.Object.FindObjectsByType<TrafficSign>();
+        if (signs.Length > 0)
+            sb.AppendLine($"Traffic signs: {signs.Length}; " + string.Join("; ", signs.GroupBy(s => s.Kind).Select(g =>
+                $"{g.Key} x{g.Count()} e.g. at {g.First().transform.position} facing {g.First().transform.eulerAngles.y:F0}")));
         // what the participant's screen shows: the cameras on display 1, in depth order
         var screenCams = UnityEngine.Object.FindObjectsByType<Camera>()
             .Where(c => c.isActiveAndEnabled && c.targetTexture == null && c.targetDisplay == 0).OrderBy(c => c.depth).ToList();

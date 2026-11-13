@@ -51,7 +51,7 @@ The source code of the coupled simulator is released under the [MIT License](LIC
 - AI pedestrians with individual walking speeds, gap-acceptance crossing decisions that react to yielding cars and eHMIs, collision avoidance (social force model), traffic-aware head movements, and 12 realistic avatars.
 - eHMIs on the hood, roof and windshield of AVs, switched by the passenger or the host; auditory eHMIs (cues on eHMI states and on yielding, stopping, driving off) and AVAS sounds.
 - Automated driving with take-over requests (visual and auditory warning, reaction times logged) and hand-back to the automation; AVs that follow waypoints, a car-following model or a path file (speed profiles, recorded trajectories).
-- Traffic lights with programmable sequences; day and night versions of the town.
+- Traffic lights with programmable sequences; traffic signs (stop, give way, speed limits, crossings, one way, ...), placed from OpenStreetMap on city maps; day and night versions of the town.
 - Logging of all agents (cars, pedestrian skeletons, traffic lights, eye contact) to binary files, conversion to CSV, and live streaming over UDP.
 - Automatic trial sequences with per-trial parameters and video recording; trial files (CSV/JSON) with counterbalancing per participant (balanced Latin square).
 - An experiment setup window: new experiments from templates on any map, a check of the whole set-up before Play.
@@ -243,6 +243,11 @@ Besides the hand-built town, experiments can take place in real city centres, bu
 Limitations: building shapes and heights are as good as the OSM data (buildings without a height get 3.5 floors), roofs are flat and façades generic; traffic lights in the map are not shown (SUMO runs its own signals); roads have no elevation (bridges are only slightly raised).
 
 Map data © OpenStreetMap contributors, available under the [Open Database License](https://www.openstreetmap.org/copyright).
+
+### Traffic signs
+`TrafficSign` draws a sign on a pole: stop, give way, speed limit (any number), pedestrian crossing, no entry, one way, priority road, children; in the style of the Vienna Convention used in Europe, made from code (no third-party assets). Add one with `GameObject` ➡️ `Coupled Sim` ➡️ `Traffic sign` and turn its blue (forward) axis towards the traffic it is for. City maps place them from OpenStreetMap: stop and give-way signs where mapped, pedestrian crossing signs at zebra crossings, speed limits at the start of longer roads (`maxspeed`), one-way and no-entry signs at one-way streets; on the left of the road where traffic drives on the left.
+
+![Traffic signs on the Delft map](ReadmeFiles/traffic_signs.jpg)
 
 ### Vehicles
 The repository contains these drivable car prefabs in `Assets/Prefabs/Cars`:
