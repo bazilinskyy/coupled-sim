@@ -126,6 +126,27 @@ namespace CoupledSim.Maps
                                                + (61 - 58 * T + T * T + 600 * C - 330 * ep2) * Math.Pow(Ac, 6) / 720);
         }
 
+        /// <summary>x (east), z (north) in metres back to latitude/longitude (degrees), by Newton iteration on <see cref="ToLocal"/>.</summary>
+        public void ToGeo(double x, double z, out double lat, out double lon)
+        {
+            lat = Lat0 + z / 111320.0;
+            lon = Lon0 + x / (111320.0 * Math.Cos(Lat0 * Math.PI / 180));
+            for (int i = 0; i < 8; i++)
+            {
+                ToLocal(lat, lon, out var x0, out var z0);
+                double ex = x - x0, ez = z - z0;
+                if (Math.Abs(ex) < 1e-5 && Math.Abs(ez) < 1e-5) break;
+                const double h = 1e-6;
+                ToLocal(lat + h, lon, out var xa, out var za);
+                ToLocal(lat, lon + h, out var xb, out var zb);
+                double a = (xa - x0) / h, b = (xb - x0) / h, c = (za - z0) / h, d = (zb - z0) / h;
+                double det = a * d - b * c;
+                if (Math.Abs(det) < 1e-12) break;
+                lat += (d * ex - b * ez) / det;
+                lon += (-c * ex + a * ez) / det;
+            }
+        }
+
         static double Meridian(double phi, double e2)
         {
             double e4 = e2 * e2, e6 = e4 * e2;
