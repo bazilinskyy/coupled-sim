@@ -97,6 +97,17 @@ public class NetworkingManager : MonoBehaviour
             SessionParticipant = int.TryParse(Arg(args, "-participant"), out var p) ? p : Participant;
             TrialOrder? order = TrialTable.TryParseOrder(Arg(args, "-order"), out var o) && Arg(args, "-order") != null ? o : (TrialOrder?)null;
             if (args.Contains("-autoRun")) _autoRun = true;
+            if (int.TryParse(Arg(args, "-clients"), out var c)) ExpectedClients = Math.Max(0, c);
+            else ExpectedClients = WaitForClients;
+            _connectTo = Arg(args, "-connect");
+            if (args.Contains("-host")) _startHost = true;
+            // -screenshot <seconds> <file>: a screenshot that long after the start (tests, documentation); -quitAfter <seconds>
+            if (float.TryParse(Arg(args, "-screenshot"), NumberStyles.Float, CultureInfo.InvariantCulture, out var sAt))
+            {
+                int i = Array.IndexOf(args, "-screenshot");
+                _screenshotAt = sAt; _screenshotFile = i + 2 < args.Length ? args[i + 2] : "screenshot.png";
+            }
+            if (float.TryParse(Arg(args, "-quitAfter"), NumberStyles.Float, CultureInfo.InvariantCulture, out var qAt)) _quitAt = qAt;
             if (!string.IsNullOrEmpty(file))
             {
                 _sessionTrials = TrialSequence.Load(file, Experiments, SessionParticipant, order, Order, GetComponent<PlayerSystem>().PlayerInputMode, TrialFileErrors);
@@ -109,7 +120,15 @@ public class NetworkingManager : MonoBehaviour
         if (_autoRun) RunTrialSequenceAutomatically = true;
     }
 
-    static bool _autoRun;
+    static bool _autoRun, _startHost;
+    static float _screenshotAt = -1f, _quitAt = -1f;
+    static string _screenshotFile;
+    static string _connectTo;
+
+    [Tooltip("Automatic trials: wait until this many clients are connected, then give them roles (trial parameter clientRoles, e.g. \"Pedestrian,2\"; else the next free roles). Command line: -clients <n>.")]
+    public int WaitForClients;
+    /// <summary>Clients the host waits for in automatic trials.</summary>
+    public static int ExpectedClients { get; private set; }
 
     // ExperimentLogs/Session-P03-{date}.csv: the order of the trials this participant got
     void WriteSessionFile(Trial[] list)
@@ -187,6 +206,21 @@ public class NetworkingManager : MonoBehaviour
         {
             hideGui = !hideGui;
         }
+        if (_screenshotAt > 0f && Time.realtimeSinceStartup >= _screenshotAt)
+        {
+            _screenshotAt = -1f;
+            ScreenCapture.CaptureScreenshot(_screenshotFile);
+            Debug.Log("Screenshot: " + _screenshotFile);
+        }
+        if (_quitAt > 0f && Time.realtimeSinceStartup >= _quitAt) Application.Quit();
+        // -connect <ip>: start as a client and connect; -host: start as host
+        if (_netSystem == null && !string.IsNullOrEmpty(_connectTo))
+        {
+            var client = new Client(_levelManager, _playerSystem, _aiCarSystem, _logger, _fixedLogger);
+            _netSystem = client;
+            client.Connect(_connectTo);
+        }
+        if (_netSystem == null && _startHost && !RunTrialSequenceAutomatically) StartHost();
         if (RunTrialSequenceAutomatically && _netSystem == null && trials != null && trials.Length > 0)
         {
             _netSystem = new Host(_levelManager, _playerSystem, _aiCarSystem, _logger, _fixedLogger, trials[CurrentTrialIndex]);

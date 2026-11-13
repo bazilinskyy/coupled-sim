@@ -97,9 +97,29 @@ Open `Assets/_Scenes/StartScene.unity`. All settings for a run are on the `Manag
 ### Several agents on one machine
 For testing and debugging only:
 1. Run the host inside the Unity editor as described above and note the IP address it logs.
-2. Build the simulator (`File` ➡️ `Build And Run`) and start one or more builds as clients, connecting to that address (127.0.0.1 also works).
+2. Build the simulator (`Coupled Sim` ➡️ `Build`) and start one or more builds as clients, connecting to that address (127.0.0.1 also works; `-connect 127.0.0.1` connects at once).
 
 Only the window that has focus receives keyboard input.
+
+### Builds and command-line options
+`Coupled Sim` ➡️ `Build` ➡️ `Windows` / `macOS` / `Linux` builds the simulator into `Builds/{platform}` (in batch mode: `-executeMethod BuildTools.Build -buildTarget Win64`); the experiment scenes are added to the build settings first. The first build compiles all shader variants and takes a while (about an hour on a slow PC); later builds reuse them. A build (or the editor in batch mode) takes these options:
+
+| Option | Meaning |
+| --- | --- |
+| `-host` | start as host (manual mode: roles and start from the GUI or the [dashboard](#experimenter-dashboard)) |
+| `-connect <ip>` | start as client and connect to the host at that address |
+| `-autoRun` | run the trials automatically (`Run Trial Sequence Automatically`) |
+| `-clients <n>` | automatic trials: wait for n clients; they get the roles of the trial parameter `clientRoles` (e.g. `Pedestrian,Cyclist`), else the next free roles |
+| `-trials <file>`, `-participant <n>`, `-order latin\|random\|none` | [trial file and counterbalancing](#trial-files-and-counterbalancing) |
+| `-sumoConnect <host:port>` | connect to a running [SUMO](#traffic-from-sumo) |
+| `-screenshot <seconds> <file>`, `-quitAfter <seconds>` | a screenshot after that time; quit after that time (tests, documentation) |
+
+For example, a driver (host) and a pedestrian (client) on two PCs, run without anyone at the host:
+```
+"Coupled Simulator.exe" -autoRun -clients 1 -trials pedestrian_study.csv -participant 4
+"Coupled Simulator.exe" -connect 192.168.1.11
+```
+The host starts the simulation once every connected agent has loaded the level.
 
 ### Running trials automatically
 ![](ReadmeFiles/instant.png)

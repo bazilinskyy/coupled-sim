@@ -36,16 +36,26 @@ public class MessageDispatcher
         }
     }
 
+    // messages that arrive before their handler is registered (e.g. AI poses while this agent is
+    // still loading the level) are dropped: the next update brings the current state anyway
+    readonly HashSet<int> _reportedUnhandled = new HashSet<int>();
+
+    bool Handled(int msgId)
+    {
+        if (_dispatchIndex.ContainsKey(msgId)) return true;
+        if (_reportedUnhandled.Add(msgId))
+            UnityEngine.Debug.LogWarning($"Network: message {msgId} ({(MsgId)msgId}) arrived before its handler was registered; dropped");
+        return false;
+    }
+
     public void Dispatch(int msgId, Deserializer reader, int playerId)
     {
-        Assert.IsTrue(_dispatchIndex.ContainsKey(msgId), "The message handler was not registered in the dispatcher");
-        _dispatchIndex[msgId](reader, playerId);
+        if (Handled(msgId)) _dispatchIndex[msgId](reader, playerId);
     }
-    
+
     public void Dispatch(int msgId, NDeserializer reader, int playerId)
     {
-        Assert.IsTrue(_dispatchIndex.ContainsKey(msgId), "The message handler was not registered in the dispatcher");
-        _dispatchIndex[msgId](reader, playerId);
+        if (Handled(msgId)) _dispatchIndex[msgId](reader, playerId);
     }
 
     public Action HandleConnect;

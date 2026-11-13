@@ -82,11 +82,23 @@ public static class SmokeTest
         if (condition.Contains("XR") || condition.Contains("Oculus") || condition.Contains("OVR")) return;
         if (stackTrace != null && stackTrace.Contains("UnityEditor.Search")) return; // editor indexer, not the simulator
         if (condition.StartsWith("ImportFBX Errors")) return; // asset re-import messages, not the simulator
+        // may run on a job thread: SessionState only on the main thread (FlushErrors)
         lock (_lock)
         {
+            if (_pendingErrors.Length < 20000) _pendingErrors.Append($"[{type}] {condition}\n{FirstLines(stackTrace, 4)}\n");
+        }
+    }
+
+    static readonly StringBuilder _pendingErrors = new StringBuilder();
+
+    static void FlushErrors()
+    {
+        lock (_lock)
+        {
+            if (_pendingErrors.Length == 0) return;
             var s = SessionState.GetString(KeyErrors, "");
-            if (s.Length < 20000)
-                SessionState.SetString(KeyErrors, s + $"[{type}] {condition}\n{FirstLines(stackTrace, 4)}\n");
+            if (s.Length < 20000) SessionState.SetString(KeyErrors, s + _pendingErrors);
+            _pendingErrors.Clear();
         }
     }
 
@@ -94,12 +106,21 @@ public static class SmokeTest
 
     static void Tick()
     {
+        FlushErrors();
         if (!EditorApplication.isPlaying) return;
 
         if (!_configured)
         {
             var nm = UnityEngine.Object.FindAnyObjectByType<NetworkingManager>();
             if (nm == null) return;
+            // a client (-connect <host>): the host decides the trial and the role
+            if (Environment.GetCommandLineArgs().Contains("-connect"))
+            {
+                _configured = true;
+                _startTime = EditorApplication.timeSinceStartup;
+                Debug.Log("SmokeTest: running as a client");
+                return;
+            }
             int trial = SessionState.GetInt(KeyTrial, 0);
             if (nm.trials == null || nm.trials.Length == 0)
             {
@@ -202,6 +223,7 @@ public static class SmokeTest
 
     static void Finish()
     {
+        FlushErrors();
         var outDir = SessionState.GetString(KeyOut, "SmokeTest");
         var sb = new StringBuilder();
         sb.AppendLine($"Unity {Application.unityVersion}, scenes loaded: " +
@@ -272,6 +294,15 @@ public static class SmokeTest
             sb.AppendLine($"Screenshot: {path}");
             if (shot >= 4) break;
         }
+        // what the participant's screen shows: the cameras on display 1, in depth order
+        var screenCams = UnityEngine.Object.FindObjectsByType<Camera>()
+            .Where(c => c.isActiveAndEnabled && c.targetTexture == null && c.targetDisplay == 0).OrderBy(c => c.depth).ToList();
+        sb.AppendLine("Cameras on the screen (back to front): " + string.Join("; ", screenCams.Select(c =>
+            $"{PathOf(c.transform)} depth {c.depth} clear {c.clearFlags} mask {c.cullingMask}")));
+        // a camera that clears the screen at the same depth as the participant's makes the view depend on the render order
+        foreach (var g in screenCams.Where(c => c.clearFlags == CameraClearFlags.SolidColor || c.clearFlags == CameraClearFlags.Skybox).GroupBy(c => c.depth).Where(g => g.Count() > 1))
+            Debug.LogError($"SmokeTest: cameras {string.Join(", ", g.Select(c => PathOf(c.transform)))} clear the screen at the same depth {g.Key}");
+        FlushErrors();
 
         var errors = SessionState.GetString(KeyErrors, "");
         int errorCount = errors.Split(new[] { "\n[" }, StringSplitOptions.None).Length - (errors.Length == 0 ? 1 : 0);
@@ -286,6 +317,8 @@ public static class SmokeTest
     }
 
     static string San(string s) => new string(s.Select(c => char.IsLetterOrDigit(c) ? c : '_').ToArray());
+
+    static string PathOf(Transform t) => t.parent == null ? t.name : PathOf(t.parent) + "/" + t.name;
 
     public static void SaveCamera(Camera cam, string path, int w, int h)
     {
