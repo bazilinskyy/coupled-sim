@@ -161,6 +161,7 @@ public class AutomatedDriving : MonoBehaviour
         _stopAccel = 0f;
         Log("request", source);
         ShowWarning(true);
+        Haptics.Cue("takeover", 1f, 1.2f, "triple");
     }
 
     void TakeOver(string how)

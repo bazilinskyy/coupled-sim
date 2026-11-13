@@ -1,0 +1,17 @@
+{
+  "name": "Centre screen: automation status with a coloured band",
+  "width": 0.24, "height": 0.15, "background": "#0B0F14",
+  "states": [
+    { "state": "AUTOMATED", "elements": [
+      { "type": "rect", "color": "#00B8D4", "x": 0, "y": 0.82, "w": 1, "h": 0.18 },
+      { "type": "text", "text": "Automated driving", "color": "#FFFFFF", "x": 0.05, "y": 0.45, "w": 0.9, "h": 0.25 },
+      { "type": "text", "text": "{speed} km/h", "color": "#B0BEC5", "x": 0.05, "y": 0.12, "w": 0.9, "h": 0.22 } ] },
+    { "state": "TAKEOVER", "elements": [
+      { "type": "rect", "color": "#FF3B30", "x": 0, "y": 0, "w": 1, "h": 1, "animation": "blink", "period": 0.6 },
+      { "type": "text", "text": "Take over now", "color": "#FFFFFF", "x": 0.05, "y": 0.4, "w": 0.9, "h": 0.3 } ] },
+    { "state": "MANUAL", "elements": [
+      { "type": "rect", "color": "#455A64", "x": 0, "y": 0.82, "w": 1, "h": 0.18 },
+      { "type": "text", "text": "Manual driving", "color": "#FFFFFF", "x": 0.05, "y": 0.45, "w": 0.9, "h": 0.25 },
+      { "type": "text", "text": "{speed} km/h", "color": "#B0BEC5", "x": 0.05, "y": 0.12, "w": 0.9, "h": 0.22 } ] }
+  ]
+}
