@@ -38,6 +38,22 @@ public class OsmMap : MonoBehaviour
         if (Current == this) Current = null;
     }
 
+    float _nextLights = -1f, _lights = -1f;
+
+    // windows light up at dusk: full brightness from 4° below the horizon, off from 2° above it
+    void Update()
+    {
+        if (Time.unscaledTime < _nextLights) return;
+        _nextLights = Time.unscaledTime + 1f;
+        var env = EnvironmentController.Instance;
+        float elevation = env != null ? env.SunElevation : 45f;
+        float level = Mathf.Clamp01((2f - elevation) / 6f);
+        if (Mathf.Abs(level - _lights) < 0.01f) return;
+        _lights = level;
+        var c = Color.white * (1.4f * level);
+        foreach (var m in OsmMapGenerator.NightMaterials) if (m != null) m.SetColor("_EmissionColor", c);
+    }
+
     /// <summary>"lat,lon" or "lat,lon,radius" (degrees, metres; default radius 400 m).</summary>
     public static bool TryParseLocation(string s, out double lat, out double lon, out float radius)
     {

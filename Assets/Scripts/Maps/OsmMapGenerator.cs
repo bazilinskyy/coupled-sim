@@ -38,6 +38,8 @@ public class OsmMapGenerator
     public bool Real3DBuildings { get; private set; }
     readonly MapAssets _assets;
     Func<int, Material> _facadeMat;
+    /// <summary>Façade materials whose windows light up at night (OsmMap sets their emission from the sun).</summary>
+    public static readonly List<Material> NightMaterials = new List<Material>();
     static readonly int Styles = Enum.GetValues(typeof(WindowStyle)).Length;
     readonly Dictionary<long, V2> _pos = new Dictionary<long, V2>();
     readonly Dictionary<string, Material> _mats = new Dictionary<string, Material>();
@@ -104,8 +106,48 @@ public class OsmMapGenerator
         Glass,    // glass curtain wall with mullions and dark spandrels (offices, towers)
     }
 
-    /// <summary>One façade tile: one window bay (3 m) by one floor (3 m).</summary>
-    static Texture2D Facade(string name, Color wall, Color frame, bool brick, WindowStyle style = WindowStyle.Classic) => Tex(name, 256, (x, y, r) =>
+    /// <summary>Bays per side of a façade texture: it holds 4 x 4 window bays (3 m by one floor of 3 m each),
+    /// so lights can differ from window to window at night (the material's tiling is 1/4).</summary>
+    public const int FacadeBays = 4;
+    const int BayPx = 160;
+
+    static Texture2D Facade(string name, Color wall, Color frame, bool brick, WindowStyle style = WindowStyle.Classic) =>
+        Tex(name, BayPx * FacadeBays, (x, y, r) => FacadeTile(x % BayPx * 256 / BayPx, y % BayPx * 256 / BayPx, r, wall, frame, brick, style));
+
+    /// <summary>Lit windows of a façade texture at night: warm light in about a third of the windows (random per bay), black elsewhere.</summary>
+    static Texture2D FacadeLights(string name, WindowStyle style)
+    {
+        var rng = new System.Random(name.GetHashCode() ^ 0x5bd1e995);
+        var lit = new Color[FacadeBays * FacadeBays];
+        for (int i = 0; i < lit.Length; i++)
+        {
+            double p = rng.NextDouble();
+            lit[i] = p < 0.38 ? Color.Lerp(new Color(1f, 0.78f, 0.5f), new Color(0.85f, 0.9f, 1f), (float)rng.NextDouble() * (p < 0.08 ? 1f : 0.3f)) * (0.55f + 0.45f * (float)rng.NextDouble()) : Color.black;
+        }
+        return Tex(name, BayPx * FacadeBays, (x, y, r) =>
+        {
+            var c = lit[y / BayPx * FacadeBays + x / BayPx];
+            if (c.maxColorComponent <= 0f) return Color.black;
+            float u = x % BayPx / (float)BayPx, v = y % BayPx / (float)BayPx;
+            return InWindow(u, v, style) ? c : Color.black;
+        });
+    }
+
+    // the glass of a window bay (as drawn by FacadeTile)
+    static bool InWindow(float u, float v, WindowStyle style)
+    {
+        switch (style)
+        {
+            case WindowStyle.Tall: return u > 0.34f && u < 0.66f && v > 0.18f && v < 0.88f;
+            case WindowStyle.Ribbon: return v > 0.4f && v < 0.8f && u > 0.03f && u < 0.97f;
+            case WindowStyle.Pair: return (Mathf.Abs(u - 0.28f) < 0.15f || Mathf.Abs(u - 0.72f) < 0.15f) && v > 0.32f && v < 0.84f;
+            case WindowStyle.Glass: return u > 0.02f && u < 0.98f && v > 0.2f;
+            default: return u > 0.3f && u < 0.7f && v > 0.3f && v < 0.85f;
+        }
+    }
+
+    /// <summary>One window bay (3 m) by one floor (3 m), in 256 x 256 coordinates.</summary>
+    static Color FacadeTile(int x, int y, System.Random r, Color wall, Color frame, bool brick, WindowStyle style)
     {
         float u = x / 256f, v = y / 256f;
         Color Glass(float vv) { float sky = 0.18f + 0.25f * vv; return Noise(new Color(sky * 0.8f, sky * 0.9f, sky), r, 0.05f); }
@@ -160,7 +202,7 @@ public class OsmMapGenerator
             return Noise(wall, r, 0.18f) * (0.9f + 0.2f * ((course * 7 + (x + offset) / 24 * 13) % 10) / 10f);
         }
         return Noise(wall, r, 0.05f);
-    });
+    }
 
     /// <summary>The window style of a building: from its construction year (3D BAG), height and OSM type.</summary>
     public static WindowStyle StyleFor(int year, float height, string type, uint seed)
@@ -363,8 +405,15 @@ public class OsmMapGenerator
             if (facades[k] != null) return facades[k];
             var (name, wall, frame, brick) = wallKinds[k / styles];
             var style = (WindowStyle)(k % styles);
-            return facades[k] = Mat($"Facade {name} {style}", Color.white, style == WindowStyle.Glass ? 0.55f : 0.1f,
+            var m = Mat($"Facade {name} {style}", Color.white, style == WindowStyle.Glass ? 0.55f : 0.1f,
                 Facade($"facade_{name.Replace(' ', '_')}_{style}", wall, frame, brick, style));
+            m.mainTextureScale = Vector2.one / FacadeBays;
+            m.SetTexture("_EmissionMap", FacadeLights($"facade_lights_{name.Replace(' ', '_')}_{style}", style));
+            m.SetColor("_EmissionColor", Color.black);
+            m.EnableKeyword("_EMISSION");
+            m.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None;
+            NightMaterials.Add(m);
+            return facades[k] = m;
         };
         // brick-heavy palettes for the Netherlands, Belgium and the UK; more plaster/concrete elsewhere
         bool brickCountry = _map.Country == "Netherlands" || _map.Country == "Belgium" || _map.Country == "United Kingdom";
