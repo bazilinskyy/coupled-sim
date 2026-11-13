@@ -101,6 +101,14 @@ public class NetworkingManager : MonoBehaviour
             else ExpectedClients = WaitForClients;
             _connectTo = Arg(args, "-connect");
             if (args.Contains("-host")) _startHost = true;
+            // -quality Fantastic|Balanced|Performance: graphics quality for slower PCs
+            var quality = Arg(args, "-quality");
+            if (quality != null)
+            {
+                int q = Array.FindIndex(QualitySettings.names, n => string.Equals(n, quality, StringComparison.OrdinalIgnoreCase));
+                if (q >= 0) { QualitySettings.SetQualityLevel(q, true); Debug.Log("Quality: " + QualitySettings.names[q]); }
+                else Debug.LogWarning($"Quality level '{quality}' not found ({string.Join(", ", QualitySettings.names)})");
+            }
             // -screenshot <seconds> <file>: a screenshot that long after the start (tests, documentation); -quitAfter <seconds>
             if (float.TryParse(Arg(args, "-screenshot"), NumberStyles.Float, CultureInfo.InvariantCulture, out var sAt))
             {
