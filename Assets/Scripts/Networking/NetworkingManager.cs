@@ -207,6 +207,8 @@ public class NetworkingManager : MonoBehaviour
     public PlayerSystem Players => _playerSystem;
     public AICarSyncSystem AICars => _aiCarSystem;
     string[] _recordings;
+    string _replayPick, _replayError;
+    ExperimentDefinition _replayExp;
     static bool _replayChecked;
 
     void Update()
@@ -216,7 +218,14 @@ public class NetworkingManager : MonoBehaviour
         {
             _replayChecked = true;
             var replay = ReplayPlayer.CommandLineReplay();
-            if (replay != null) { ReplayPlayer.Begin(replay, this); return; }
+            if (replay != null)
+            {
+                // -replayExperiment <short name> [-replayMap <map>]: for recordings without .replay.json
+                var exp = Experiments.FirstOrDefault(e => e != null && e.ShortName == Arg(Environment.GetCommandLineArgs(), "-replayExperiment"));
+                var err = ReplayPlayer.Begin(replay, this, exp, Arg(Environment.GetCommandLineArgs(), "-replayMap"));
+                if (err != null) Debug.LogError("Replay: " + err);
+                return;
+            }
         }
         if (Input.GetKeyDown(KeyCode.Escape))
         {
@@ -299,18 +308,54 @@ public class NetworkingManager : MonoBehaviour
 
                 // replay of a recorded trial (recordings made since the replay exists have a .replay.json next to them)
                 if (_recordings == null && GUILayout.Button("Replay a recording"))
+                {
                     _recordings = System.IO.Directory.Exists("ExperimentLogs")
-                        ? System.IO.Directory.GetFiles("ExperimentLogs", "*.binLog").Where(f => System.IO.File.Exists(ReplayInfo.PathFor(f)))
-                            .OrderByDescending(System.IO.File.GetLastWriteTime).ToArray()
+                        ? System.IO.Directory.GetFiles("ExperimentLogs", "*.binLog").OrderByDescending(System.IO.File.GetLastWriteTime).ToArray()
                         : new string[0];
+                    _replayPick = null; _replayExp = null; _replayError = null;
+                }
                 if (_recordings != null)
                 {
                     if (GUILayout.Button("Close")) _recordings = null;
-                    else
+                    else if (_replayPick == null)
                     {
                         if (_recordings.Length == 0) GUILayout.Label("No recordings to replay yet: run an experiment first.");
-                        foreach (var f in _recordings.Take(30))
-                            if (GUILayout.Button(System.IO.Path.GetFileNameWithoutExtension(f))) { ReplayPlayer.Begin(f, this); _recordings = null; break; }
+                        if (_replayError != null) GUILayout.Label(_replayError);
+                        foreach (var f in _recordings.Take(40))
+                        {
+                            bool known = System.IO.File.Exists(ReplayInfo.PathFor(f));
+                            if (!GUILayout.Button(System.IO.Path.GetFileNameWithoutExtension(f) + (known ? "" : "  (older: choose the experiment)"))) continue;
+                            if (known) { _replayError = ReplayPlayer.Begin(f, this); if (_replayError == null) _recordings = null; }
+                            else _replayPick = f;
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        // a recording without .replay.json: which experiment (and city map) was it?
+                        GUILayout.Label(System.IO.Path.GetFileName(_replayPick) + ": in which experiment was it recorded?");
+                        if (GUILayout.Button("Back")) { _replayPick = null; _replayExp = null; }
+                        else if (_replayExp == null)
+                        {
+                            foreach (var e in Experiments.Where(e => e != null))
+                                if (GUILayout.Button(e.Name))
+                                {
+                                    if (string.IsNullOrEmpty(e.Map)) Start(e, null); else _replayExp = e;
+                                    break;
+                                }
+                        }
+                        else
+                        {
+                            GUILayout.Label("Which city map?");
+                            foreach (var m in MapCatalog.Maps)
+                                if (GUILayout.Button(m.City + " (" + m.Country + ")")) { Start(_replayExp, m.Name); break; }
+                        }
+                        void Start(ExperimentDefinition e, string map)
+                        {
+                            _replayError = ReplayPlayer.Begin(_replayPick, this, e, map);
+                            _replayPick = null; _replayExp = null;
+                            if (_replayError == null) _recordings = null;
+                        }
                     }
                 }
             }
