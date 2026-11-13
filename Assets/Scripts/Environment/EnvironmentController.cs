@@ -62,6 +62,14 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
     [Tooltip("Material name parts of surfaces that get wet in the rain.")]
     public string[] WetSurfaceKeywords = { "road", "asphalt", "lane", "street", "sidewalk", "pavement", "crossing", "tile" };
 
+    [Header("Reflections")]
+    [Tooltip("A realtime reflection probe above the viewer, renewed when the time of day or weather changes or the viewer has moved: reflections in car paint, windows and wet roads show the actual sky and surroundings (dark at night, with the street lights). The scene's own reflection probes still apply inside their areas.")]
+    public bool LiveReflections = true;
+    [Tooltip("Size of each face of the live reflection cube (pixels): 64 to 256.")]
+    public int LiveReflectionResolution = 128;
+    [Tooltip("The live reflections are renewed when the viewer has moved this far (metres).")]
+    public float LiveReflectionDistance = 30f;
+
     [Header("State (read only)")]
     public float SunElevation;
     public float Rain;
@@ -172,6 +180,46 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
             }
         }
         CreateRain();
+        if (LiveReflections) CreateLiveReflections();
+    }
+
+    ReflectionProbe _live;
+    int _liveRender = -1;
+    Vector3 _liveAt = new Vector3(1e9f, 0f, 0f);
+    bool _liveDirty = true;
+    float _nextLiveCheck;
+
+    void CreateLiveReflections()
+    {
+        var go = new GameObject("Live reflections");
+        go.transform.SetParent(transform, false);
+        _live = go.AddComponent<ReflectionProbe>();
+        _live.mode = UnityEngine.Rendering.ReflectionProbeMode.Realtime;
+        _live.refreshMode = UnityEngine.Rendering.ReflectionProbeRefreshMode.ViaScripting;
+        _live.timeSlicingMode = UnityEngine.Rendering.ReflectionProbeTimeSlicingMode.IndividualFaces;
+        _live.resolution = Mathf.ClosestPowerOfTwo(Mathf.Clamp(LiveReflectionResolution, 64, 256));
+        _live.hdr = true;
+        _live.size = new Vector3(4000f, 1000f, 4000f);   // everywhere; the scene's probes (more important) win inside their boxes
+        _live.boxProjection = false;
+        _live.importance = 0;
+        _live.nearClipPlane = 0.5f;
+        _live.farClipPlane = 800f;
+        _live.shadowDistance = 60f;
+        _live.clearFlags = UnityEngine.Rendering.ReflectionProbeClearFlags.Skybox;
+    }
+
+    // above the viewer (out of their own car), when the light changed or the viewer moved on
+    void UpdateLiveReflections()
+    {
+        if (_live == null || Time.unscaledTime < _nextLiveCheck) return;
+        _nextLiveCheck = Time.unscaledTime + 0.5f;
+        if (_liveRender >= 0 && !_live.IsFinishedRendering(_liveRender)) return;
+        var viewer = ViewerPosition();
+        if (!_liveDirty && (viewer - _liveAt).sqrMagnitude < LiveReflectionDistance * LiveReflectionDistance) return;
+        _live.transform.position = viewer + Vector3.up * 3.5f;
+        _liveAt = viewer;
+        _liveDirty = false;
+        _liveRender = _live.RenderProbe();
     }
 
     void Update()
@@ -183,6 +231,7 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
         Apply(false);
         FollowCamera();
         UpdateStreetLights(false);
+        UpdateLiveReflections();
     }
 
     float _nextLampUpdate;
@@ -402,6 +451,7 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
         SetRain(rain);
         SetWetness(rain > 0 ? Mathf.Clamp01(0.4f + rain) : 0f);
         DynamicGI.UpdateEnvironment();
+        _liveDirty = true;
     }
 
     // A spot light under the head of each street lamp model (the highest part, at the end of the arm).
