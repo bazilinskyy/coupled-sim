@@ -291,7 +291,7 @@ public static class SmokeTest
         sb.AppendLine($"Cars: {cars} ({movedCars} moved), pedestrians: {peds} ({movedPeds} moved)");
 
         int shot = 0;
-        // extra views: -smokeShot "x,y,z,yaw,pitch;x,y,z,yaw,pitch"
+        // extra views: -smokeShot "x,y,z,yaw,pitch;x,y,z,yaw,pitch", "chase" (behind the participant) or "front" (ahead, looking back)
         foreach (var view in SessionState.GetString(KeyShot, "").Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
         {
             var camGo = new GameObject("SmokeTestCamera");
@@ -305,10 +305,17 @@ public static class SmokeTest
                 camGo.transform.position = t.position - t.forward * 4.5f - t.right * 1.8f + Vector3.up * 1.9f; // road side (left, right-hand traffic)
                 camGo.transform.LookAt(t.position + Vector3.up * 0.9f + t.forward * 1.5f);
             }
-            else if (view.Trim() == "chase")
+            else if (view.Trim() == "front" && local != null)
+            {
+                // in front of the participant's vehicle, at a pedestrian's eye height, looking back at it
+                var t = local.transform;
+                camGo.transform.position = t.position + t.forward * 7f + t.right * 1.2f + Vector3.up * 1.6f;
+                camGo.transform.LookAt(t.position + Vector3.up * 0.8f + t.forward * 1.5f);
+            }
+            else if (view.Trim() == "chase" || view.Trim() == "front")
             {
                 UnityEngine.Object.DestroyImmediate(camGo);
-                sb.AppendLine("Screenshot 'chase' skipped: no local player");
+                sb.AppendLine($"Screenshot '{view.Trim()}' skipped: no local player");
                 continue;
             }
             else
