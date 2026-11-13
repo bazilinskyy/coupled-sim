@@ -446,6 +446,8 @@ public class OsmMapGenerator
         }
         Emit(world, "Zebra crossings", zebras, marking, false);
 
+        PlaceSigns(root, roadWays);
+
         // buildings
         var buildingMbs = facades.Select(_ => new MeshBuilder()).ToArray();
         var roofs = new MeshBuilder();
@@ -489,6 +491,100 @@ public class OsmMapGenerator
             {
                 if (!_pos.TryGetValue(n.Id, out var p) || !Inside(p)) continue;
                 UnityEngine.Object.Instantiate(_assets.Trees[rng.Next(_assets.Trees.Length)], P(p, 0.1f), Quaternion.Euler(0, (float)rng.NextDouble() * 360f, 0), props);
+            }
+        }
+    }
+
+    // ------------------------------------------------------------------ traffic signs
+
+    public int SignCount;
+    const int MaxSigns = 600;
+
+    static int SpeedNumber(string maxspeed)
+    {
+        if (string.IsNullOrEmpty(maxspeed)) return 0;
+        var digits = new string(maxspeed.TakeWhile(char.IsDigit).ToArray());
+        return int.TryParse(digits, out var v) ? v : 0;
+    }
+
+    /// <summary>
+    /// Signs from OSM: stop and give-way nodes (for the traffic approaching them, or the
+    /// direction tag), pedestrian crossing signs at marked crossings, speed limits (maxspeed) at
+    /// the start of longer roads, one-way and no-entry signs at the ends of one-way roads. On the
+    /// right side of the road (left where traffic drives on the left), facing the traffic.
+    /// </summary>
+    void PlaceSigns(Transform root, List<(OsmWay way, List<V2> line, float width)> roadWays)
+    {
+        var signs = new GameObject("Traffic signs").transform;
+        signs.SetParent(root, false);
+        float sideSign = _map.LeftHandTraffic ? -1f : 1f;
+        var used = new HashSet<string>();
+        void Sign(TrafficSignKind kind, V2 at, V2 travel, float width, int limit = 0)
+        {
+            if (SignCount >= MaxSigns || travel.LengthSquared() < 1e-6f) return;
+            travel = V2.Normalize(travel);
+            var right = new V2(travel.Y, -travel.X) * sideSign;
+            var p = at + right * (width / 2f + 0.7f);
+            if (!Inside(p)) return;
+            // one sign of a kind per 3 m cell
+            var key = $"{kind}{limit}:{Math.Round(p.X / 3f)}:{Math.Round(p.Y / 3f)}";
+            if (!used.Add(key)) return;
+            var go = new GameObject($"Sign {kind}{(limit > 0 ? " " + limit : "")}");
+            go.transform.SetParent(signs, false);
+            // the picture faces the oncoming traffic
+            go.transform.SetPositionAndRotation(P(p, PavementHeight), Quaternion.LookRotation(new Vector3(-travel.X, 0f, -travel.Y), Vector3.up));
+            go.SetActive(false);
+            var s = go.AddComponent<TrafficSign>();
+            s.Kind = kind; s.SpeedLimit = limit;
+            s.Size = width >= 7f ? 0.75f : 0.6f;
+            go.SetActive(true);
+            SignCount++;
+        }
+        foreach (var (w, line, width) in roadWays)
+        {
+            var ids = w.NodeIds.Where(_pos.ContainsKey).ToList();
+            if (ids.Count < 2) continue;
+            bool oneWay = IsOneWay(w);
+            float total = Geometry2D.Length(line);
+            for (int i = 0; i < ids.Count; i++)
+            {
+                if (!_data.Nodes.TryGetValue(ids[i], out var node)) continue;
+                var hw = node.Tag("highway");
+                var p = _pos[ids[i]];
+                V2 prev = _pos[ids[Math.Max(0, i - 1)]], next = _pos[ids[Math.Min(ids.Count - 1, i + 1)]];
+                if (hw == "stop" || hw == "give_way")
+                {
+                    var kind = hw == "stop" ? TrafficSignKind.Stop : TrafficSignKind.GiveWay;
+                    var dirTag = node.Tag("direction");
+                    // traffic towards the node: along the way when the node is in its second half
+                    bool forward = dirTag == "forward" || (dirTag != "backward" && i >= ids.Count / 2);
+                    var travel = forward ? p - prev : p - next;
+                    Sign(kind, p - V2.Normalize(travel) * 1.5f, travel, width);
+                }
+                else if (hw == "crossing")
+                {
+                    var c = node.Tag("crossing"); var cr = node.Tag("crossing_ref") ?? node.Tag("crossing:markings");
+                    bool zebra = cr == "zebra" || c == "zebra" || c == "marked" || c == "uncontrolled";
+                    if (!zebra) continue;
+                    var dir = next - prev;
+                    if (dir.LengthSquared() < 1e-6f) continue;
+                    Sign(TrafficSignKind.PedestrianCrossing, p - V2.Normalize(dir) * 2.5f, dir, width);
+                    if (!oneWay) Sign(TrafficSignKind.PedestrianCrossing, p + V2.Normalize(dir) * 2.5f, -dir, width);
+                }
+            }
+            int limit = SpeedNumber(w.Tag("maxspeed"));
+            if (limit > 0 && total > 120f)
+            {
+                var (a, da) = Geometry2D.PointAt(line, 12f);
+                Sign(TrafficSignKind.SpeedLimit, a, da, width, limit);
+                if (!oneWay) { var (b, db) = Geometry2D.PointAt(line, total - 12f); Sign(TrafficSignKind.SpeedLimit, b, -db, width, limit); }
+            }
+            if (oneWay && total > 30f && w.Tag("junction") != "roundabout" && !(w.Tag("highway") ?? "").StartsWith("motorway"))
+            {
+                var (a, da) = Geometry2D.PointAt(line, 6f);
+                Sign(TrafficSignKind.OneWay, a, da, width);
+                var (b, db) = Geometry2D.PointAt(line, total - 3f);
+                Sign(TrafficSignKind.NoEntry, b, -db, width);
             }
         }
     }
