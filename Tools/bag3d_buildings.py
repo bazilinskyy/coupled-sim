@@ -47,13 +47,17 @@ def normal(pts):
         nx += (y1 - y2) * (z1 + z2); ny += (z1 - z2) * (x1 + x2); nz += (x1 - x2) * (y1 + y2)
     return nx, ny, nz
 
+FALLBACKS = [0]   # rings that could not be ear-clipped completely (fanned)
+
 def ear_clip(pts2):
     n = len(pts2)
     if n < 3: return []
     area = sum(pts2[i][0] * pts2[(i+1) % n][1] - pts2[(i+1) % n][0] * pts2[i][1] for i in range(n))
     idx = list(range(n)) if area > 0 else list(range(n))[::-1]
     tris = []
+    def cross(a, b, c): return (b[0]-a[0])*(c[1]-a[1]) - (b[1]-a[1])*(c[0]-a[0])
     def inside(p, a, b, c):
+        if p == a or p == b or p == c: return False   # a repeated corner is not in the way
         def s(p1, p2, p3): return (p1[0]-p3[0])*(p2[1]-p3[1]) - (p2[0]-p3[0])*(p1[1]-p3[1])
         d1, d2, d3 = s(p, a, b), s(p, b, c), s(p, c, a)
         return not ((d1 < 0 or d2 < 0 or d3 < 0) and (d1 > 0 or d2 > 0 or d3 > 0))
@@ -63,11 +67,17 @@ def ear_clip(pts2):
         for k in range(len(idx)):
             i0, i1, i2 = idx[k-1], idx[k], idx[(k+1) % len(idx)]
             a, b, c = pts2[i0], pts2[i1], pts2[i2]
-            if (b[0]-a[0])*(c[1]-a[1]) - (b[1]-a[1])*(c[0]-a[0]) <= 1e-12: continue
+            if cross(a, b, c) <= 1e-12: continue
             if any(inside(pts2[j], a, b, c) for j in idx if j not in (i0, i1, i2)): continue
             tris.append((i0, i1, i2)); del idx[k]; break
         else:
-            break  # degenerate: fan the rest
+            # no ear: drop a corner without area (repeated point, straight line or spike) and go on
+            for k in range(len(idx)):
+                a, b, c = pts2[idx[k-1]], pts2[idx[k]], pts2[idx[(k+1) % len(idx)]]
+                if abs(cross(a, b, c)) <= 1e-9 * max(1.0, abs(area)): del idx[k]; break
+            else:
+                FALLBACKS[0] += 1
+                break  # still stuck (self-intersecting ring): fan the rest
     for k in range(1, len(idx) - 1): tris.append((idx[0], idx[k], idx[k+1]))
     return tris
 

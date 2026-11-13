@@ -424,13 +424,24 @@ Besides the hand-built town, experiments can take place in real city centres, bu
 python3 Tools/bag3d_buildings.py Delft
 ```
 
-**Real 3D buildings (Japan).** Tokyo's buildings come from [Project PLATEAU](https://www.mlit.go.jp/plateau/), the open 3D city models of Japan's Ministry of Land, Infrastructure, Transport and Tourism (MLIT): LoD2 roofs and walls where PLATEAU has them, else LoD1 blocks with their measured height, up to the 229 m of Shibuya Scramble Square. Buildings over a road (station buildings, passages) are raised 5 m, so the road under them stays open. To make the file for another Japanese map, give the CityGML zip of its ward from the dataset page on [geospatial.jp](https://www.geospatial.jp/ckan/dataset?q=plateau) (only the 1 km tiles of the map are downloaded):
+**Real 3D buildings (Tokyo, New York, Montreal).** These maps use the cities' open 3D city models (CityGML) instead of the OpenStreetMap buildings:
+- Tokyo: [Project PLATEAU](https://www.mlit.go.jp/plateau/), the open 3D city models of Japan's Ministry of Land, Infrastructure, Transport and Tourism (MLIT), up to the 229 m of Shibuya Scramble Square;
+- New York: the [NYC 3-D Building Model](https://catalog.data.gov/dataset/3-d-building-model) of the City of New York (Office of Technology and Innovation), with Midtown's towers and their setbacks;
+- Montreal: the [3D buildings](https://donnees.montreal.ca/dataset/68f256ec-6dac-4921-98f9-9826db1a15fa) of the Ville de Montréal (LoD2, 2009).
+
+They have LoD2 roofs and walls where the model has them, else LoD1 blocks with their measured height. Buildings over a road (station buildings, passages) are raised 5 m, so the road under them stays open. `Tools/citygml_buildings.py` makes the file from a CityGML zip (or `.gml`) of any city: it downloads only the CityGML files the map needs (for PLATEAU only the 1 km tiles of the map), not the textures. The coordinate system is read from the file (PLATEAU, New York's EPSG:2263) or given with `--crs` (Montreal: `EPSG:2950`); others can be added in `crs_of()`:
 
 ```bash
-python3 Tools/plateau_buildings.py Tokyo https://assets.cms.plateau.reearth.io/assets/e5/29b4f5-f0bf-433d-8f98-deb594bfbebd/13113_shibuya-ku_pref_2023_citygml_2_op.zip
+python3 Tools/citygml_buildings.py Tokyo https://assets.cms.plateau.reearth.io/assets/e5/29b4f5-f0bf-433d-8f98-deb594bfbebd/13113_shibuya-ku_pref_2023_citygml_2_op.zip
+python3 Tools/citygml_buildings.py NewYork https://s-media.nyc.gov/agencies/oti/DA_WISE_GML.zip --member DA12_
+python3 Tools/citygml_buildings.py Montreal <the zips of tiles VM03, VM04, VM07, VM08 and VM12 from donnees.montreal.ca> --crs EPSG:2950
 ```
 
+For another Japanese map, take the CityGML zip of its ward from the dataset page on [geospatial.jp](https://www.geospatial.jp/ckan/dataset?q=plateau).
+
 ![Tokyo (Shibuya) with PLATEAU buildings](ReadmeFiles/tokyo_plateau.jpg)
+
+![New York (Midtown, left) and Montreal (right) from their open 3D city models](ReadmeFiles/citygml_newyork_montreal.jpg)
 
 Maps without such a file use the OpenStreetMap buildings.
 
@@ -446,7 +457,7 @@ Maps without such a file use the OpenStreetMap buildings.
 
 Limitations: outside the Netherlands, building shapes and heights are as good as the OSM data (buildings without a height get 3.5 floors), roofs are flat; façades come from five window styles, not the real buildings; traffic lights in the map are not shown (SUMO runs its own signals); roads have no elevation (bridges are only slightly raised).
 
-Map data © OpenStreetMap contributors, available under the [Open Database License](https://www.openstreetmap.org/copyright). Dutch buildings: [3D BAG](https://3dbag.nl) by the 3D geoinformation group of TU Delft and 3DGI, under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Tokyo's buildings: source 3D都市モデル（Project PLATEAU）渋谷区（2023年度）([G空間情報センター](https://www.geospatial.jp/ckan/dataset/plateau-13113-shibuya-ku-2023)), converted to the simulator's format; used under the Public Data License 1.0 ([PLATEAU site policy](https://www.mlit.go.jp/plateau/site-policy/), compatible with CC BY 4.0).
+Map data © OpenStreetMap contributors, available under the [Open Database License](https://www.openstreetmap.org/copyright). Dutch buildings: [3D BAG](https://3dbag.nl) by the 3D geoinformation group of TU Delft and 3DGI, under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Tokyo's buildings: source 3D都市モデル（Project PLATEAU）渋谷区（2023年度）([G空間情報センター](https://www.geospatial.jp/ckan/dataset/plateau-13113-shibuya-ku-2023)), converted to the simulator's format; used under the Public Data License 1.0 ([PLATEAU site policy](https://www.mlit.go.jp/plateau/site-policy/), compatible with CC BY 4.0). New York's buildings: 3-D Building Model, City of New York, Office of Technology and Innovation ([NYC Open Data](https://opendata.cityofnewyork.us/overview/#termsofuse)), converted to the simulator's format. Montreal's buildings: Ville de Montréal, Bâtiment 3D 2009 (Maquette CityGML LOD2 avec textures), [Données ouvertes de la Ville de Montréal](https://donnees.montreal.ca), licence [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); converted to the simulator's format (geometry only, without textures).
 
 ![Eindhoven, Tokyo, Sydney and New York](ReadmeFiles/city_maps.jpg)
 
