@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Example: a car approaches along x and brakes to a stop; a pedestrian crosses in front of it.
+     World coordinates of the scene (for the town: relative to its origin). -->
+<OpenSCENARIO>
+  <FileHeader revMajor="1" revMinor="1" date="2026-11-13T00:00:00" description="Car yields to a crossing pedestrian" author="coupled-sim"/>
+  <ParameterDeclarations>
+    <ParameterDeclaration name="CarSpeed" parameterType="double" value="11.1"/>
+    <ParameterDeclaration name="BrakeAt" parameterType="double" value="3.0"/>
+  </ParameterDeclarations>
+  <CatalogLocations/>
+  <RoadNetwork/>
+  <Entities>
+    <ScenarioObject name="Car">
+      <Vehicle name="car" vehicleCategory="car"><ParameterDeclarations/><Performance maxSpeed="50" maxAcceleration="5" maxDeceleration="8"/>
+        <BoundingBox><Center x="1.4" y="0" z="0.8"/><Dimensions width="1.8" length="4.2" height="1.5"/></BoundingBox>
+        <Axles><FrontAxle maxSteering="0.5" wheelDiameter="0.6" trackWidth="1.6" positionX="2.8" positionZ="0.3"/><RearAxle maxSteering="0" wheelDiameter="0.6" trackWidth="1.6" positionX="0" positionZ="0.3"/></Axles><Properties/></Vehicle>
+    </ScenarioObject>
+    <ScenarioObject name="Walker">
+      <Pedestrian name="walker" model="adult" mass="75" pedestrianCategory="pedestrian"><ParameterDeclarations/>
+        <BoundingBox><Center x="0" y="0" z="0.9"/><Dimensions width="0.5" length="0.5" height="1.8"/></BoundingBox><Properties/></Pedestrian>
+    </ScenarioObject>
+  </Entities>
+  <Storyboard>
+    <Init><Actions>
+      <Private entityRef="Car"><PrivateAction><TeleportAction><Position><WorldPosition x="-60" y="-3.5" z="0" h="0"/></Position></TeleportAction></PrivateAction>
+        <PrivateAction><LongitudinalAction><SpeedAction><SpeedActionDynamics dynamicsShape="step" value="0" dynamicsDimension="time"/><SpeedActionTarget><AbsoluteTargetSpeed value="$CarSpeed"/></SpeedActionTarget></SpeedAction></LongitudinalAction></PrivateAction></Private>
+      <Private entityRef="Walker"><PrivateAction><TeleportAction><Position><WorldPosition x="-15" y="-8" z="0" h="1.5708"/></Position></TeleportAction></PrivateAction></Private>
+    </Actions></Init>
+    <Story name="Yield">
+      <Act name="Act">
+        <ManeuverGroup maximumExecutionCount="1" name="CarGroup"><Actors selectTriggeringEntities="false"><EntityRef entityRef="Car"/></Actors>
+          <Maneuver name="Brake"><Event name="Brake" priority="override"><Action name="Brake"><PrivateAction><LongitudinalAction><SpeedAction>
+            <SpeedActionDynamics dynamicsShape="linear" value="3.5" dynamicsDimension="rate"/><SpeedActionTarget><AbsoluteTargetSpeed value="0"/></SpeedActionTarget></SpeedAction></LongitudinalAction></PrivateAction></Action>
+            <StartTrigger><ConditionGroup><Condition name="t" delay="0" conditionEdge="rising"><ByValueCondition><SimulationTimeCondition value="$BrakeAt" rule="greaterThan"/></ByValueCondition></Condition></ConditionGroup></StartTrigger></Event></Maneuver>
+        </ManeuverGroup>
+        <ManeuverGroup maximumExecutionCount="1" name="WalkerGroup"><Actors selectTriggeringEntities="false"><EntityRef entityRef="Walker"/></Actors>
+          <Maneuver name="Cross"><Event name="Cross" priority="override"><Action name="Walk"><PrivateAction><LongitudinalAction><SpeedAction>
+            <SpeedActionDynamics dynamicsShape="linear" value="0.8" dynamicsDimension="time"/><SpeedActionTarget><AbsoluteTargetSpeed value="1.4"/></SpeedActionTarget></SpeedAction></LongitudinalAction></PrivateAction></Action>
+            <StartTrigger><ConditionGroup><Condition name="t" delay="0" conditionEdge="rising"><ByValueCondition><SimulationTimeCondition value="4.5" rule="greaterThan"/></ByValueCondition></Condition></ConditionGroup></StartTrigger></Event></Maneuver>
+        </ManeuverGroup>
+        <StartTrigger><ConditionGroup><Condition name="start" delay="0" conditionEdge="rising"><ByValueCondition><SimulationTimeCondition value="0" rule="greaterThan"/></ByValueCondition></Condition></ConditionGroup></StartTrigger>
+      </Act>
+    </Story>
+    <StopTrigger/>
+  </Storyboard>
+</OpenSCENARIO>
