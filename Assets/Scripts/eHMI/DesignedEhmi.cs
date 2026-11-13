@@ -56,19 +56,28 @@ public class DesignedEhmi : HMI
     float _stateSince;
     int _w, _h;
 
-    public static string PathOf(string design) => Path.Combine(Application.streamingAssetsPath, "eHMI", design.EndsWith(".json") ? design : design + ".json");
+    public static string PathOf(string design, string folder = "eHMI") => Path.Combine(Application.streamingAssetsPath, folder, design.EndsWith(".json") ? design : design + ".json");
 
-    public static DesignFile Load(string design)
+    public static DesignFile Load(string design, string folder = "eHMI")
     {
-        var path = PathOf(design);
+        var path = PathOf(design, folder);
         if (!File.Exists(path)) { Debug.LogWarning("DesignedEhmi: no design file " + path); return null; }
         try { return JsonUtility.FromJson<DesignFile>(File.ReadAllText(path)); }
         catch (Exception e) { Debug.LogWarning($"DesignedEhmi: cannot read {path}: {e.Message}"); return null; }
     }
 
-    void Start()
+    /// <summary>Folder of the design files in StreamingAssets.</summary>
+    protected virtual string Folder => "eHMI";
+    /// <summary>Name of the state whose elements are shown (elements of the state "ANY" are always shown).</summary>
+    protected virtual string StateKey => CurrentState.ToString();
+    /// <summary>Text of a text element with its placeholders filled in.</summary>
+    protected virtual string FillText(string text) => text;
+
+    string _lastKey;
+
+    protected virtual void Start()
     {
-        Loaded = Load(Design) ?? new DesignFile();
+        Loaded = Load(Design, Folder) ?? new DesignFile();
         _manager = FindAnyObjectByType<HMIManager>();
         Build();
         // -ehmiState WALK|STOP|DISABLED on the command line: start in that state (previews, screenshots)
@@ -80,7 +89,6 @@ public class DesignedEhmi : HMI
 
     public override void Display(HMIState state)
     {
-        if (state != CurrentState) _stateSince = Time.time;
         base.Display(state);
     }
 
@@ -112,16 +120,17 @@ public class DesignedEhmi : HMI
         rt.anchorMin = new Vector2(x0, y0); rt.anchorMax = new Vector2(x1, y1); rt.offsetMin = rt.offsetMax = Vector2.zero;
     }
 
-    void Update()
+    protected virtual void Update()
     {
         if (_tex == null) return;
         if (FollowEhmi >= 0 && _manager != null && FollowEhmi < _manager.Count) Display(_manager.GetState(FollowEhmi));
+        var key = StateKey;
+        if (key != _lastKey) { _lastKey = key; _stateSince = Time.time; }
         Draw(Time.time - _stateSince);
     }
 
-    StateDesign Current()
+    StateDesign Find(string name)
     {
-        var name = CurrentState.ToString();
         foreach (var s in Loaded.states) if (string.Equals(s.state, name, StringComparison.OrdinalIgnoreCase)) return s;
         return null;
     }
@@ -133,9 +142,10 @@ public class DesignedEhmi : HMI
         var bg = ParseColor(Loaded.background, new Color(0, 0, 0, 1));
         var bg32 = (Color32)bg;
         for (int i = 0; i < _pixels.Length; i++) _pixels[i] = bg32;
-        var state = Current();
         int ti = 0;
-        if (state != null)
+        foreach (var state in new[] { Find("ANY"), Find(_lastKey ?? StateKey) })
+        {
+            if (state == null) continue;
             foreach (var e in state.elements)
             {
                 var c = ParseColor(e.color, Color.cyan);
@@ -149,6 +159,7 @@ public class DesignedEhmi : HMI
                     default: Shape(e, c, t, (u, v) => true); break;
                 }
             }
+        }
         for (int i = ti; i < _texts.Count; i++) _texts[i].enabled = false;
         _tex.SetPixels32(_pixels);
         _tex.Apply(false);
@@ -256,16 +267,19 @@ public class DesignedEhmi : HMI
             var txt = go.AddComponent<Text>();
             txt.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             txt.alignment = TextAnchor.MiddleCenter;
-            txt.horizontalOverflow = HorizontalWrapMode.Overflow;
-            txt.verticalOverflow = VerticalWrapMode.Overflow;
+            // shrink long text to fit its box
+            txt.horizontalOverflow = HorizontalWrapMode.Wrap;
+            txt.verticalOverflow = VerticalWrapMode.Truncate;
+            txt.resizeTextForBestFit = true;
+            txt.resizeTextMinSize = 1;
             txt.fontStyle = FontStyle.Bold;
             _texts.Add(txt);
         }
         var tx = _texts[i];
         tx.enabled = true;
         Stretch((RectTransform)tx.transform, e.x, e.y, e.x + e.w, e.y + e.h);
-        tx.text = e.text;
-        tx.fontSize = Mathf.Max(1, Mathf.RoundToInt(e.h * Loaded.height * 1000f * 0.8f));
+        tx.text = FillText(e.text);
+        tx.fontSize = tx.resizeTextMaxSize = Mathf.Max(1, Mathf.RoundToInt(e.h * Loaded.height * 1000f * 0.8f));
         c.a *= Level(e, t, 0.5f);
         tx.color = c;
     }

@@ -1,0 +1,93 @@
+{
+  "name": "HUD: speed, automation mode, take-over warning with time left",
+  "width": 1.1,
+  "height": 0.3,
+  "background": "#00000000",
+  "states": [
+    {
+      "state": "ANY",
+      "elements": [
+        {
+          "type": "text",
+          "text": "{speed}",
+          "color": "#E8FFFFDD",
+          "x": 0.0,
+          "y": 0.45,
+          "w": 0.3,
+          "h": 0.5
+        },
+        {
+          "type": "text",
+          "text": "km/h",
+          "color": "#E8FFFF99",
+          "x": 0.0,
+          "y": 0.2,
+          "w": 0.3,
+          "h": 0.22
+        }
+      ]
+    },
+    {
+      "state": "AUTOMATED",
+      "elements": [
+        {
+          "type": "lightbar",
+          "segments": 8,
+          "color": "#00E5FFAA",
+          "x": 0.35,
+          "y": 0.75,
+          "w": 0.6,
+          "h": 0.12,
+          "animation": "steady"
+        },
+        {
+          "type": "text",
+          "text": "Automated",
+          "color": "#00E5FFDD",
+          "x": 0.35,
+          "y": 0.3,
+          "w": 0.6,
+          "h": 0.35
+        }
+      ]
+    },
+    {
+      "state": "TAKEOVER",
+      "elements": [
+        {
+          "type": "rect",
+          "color": "#FF3B3088",
+          "x": 0.33,
+          "y": 0.05,
+          "w": 0.65,
+          "h": 0.9,
+          "animation": "blink",
+          "period": 0.6
+        },
+        {
+          "type": "text",
+          "text": "TAKE OVER {time_left} s",
+          "color": "#FFFFFF",
+          "x": 0.35,
+          "y": 0.3,
+          "w": 0.6,
+          "h": 0.4
+        }
+      ]
+    },
+    {
+      "state": "MANUAL",
+      "elements": [
+        {
+          "type": "text",
+          "text": "Manual",
+          "color": "#FFFFFFAA",
+          "x": 0.35,
+          "y": 0.3,
+          "w": 0.6,
+          "h": 0.35
+        }
+      ]
+    }
+  ]
+}

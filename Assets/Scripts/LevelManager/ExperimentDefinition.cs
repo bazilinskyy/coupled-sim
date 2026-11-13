@@ -56,6 +56,12 @@ public struct ExperimentRoleDefinition
     [Tooltip("Where the steering wheel of this role's car is. Auto: on the right in cities with left-hand traffic (London, Tokyo, Sydney, ...), else on the left.")]
     public SteeringSide Steering;
 
+    [Header("In-car displays")]
+    [Tooltip("Head-up display from StreamingAssets/InCar/<name>.json (see InCarDisplay); empty: none.")]
+    public string HudDesign;
+    [Tooltip("Centre screen on the dashboard from StreamingAssets/InCar/<name>.json; empty: none.")]
+    public string CentreScreenDesign;
+
     [Header("Participant responses")]
     [Tooltip("A hold-to-respond button and/or a 0-100 slider, logged every frame to ExperimentLogs/Responses-*.csv.")]
     public ResponseSettings Response;
