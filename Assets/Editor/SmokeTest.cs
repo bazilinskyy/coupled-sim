@@ -184,6 +184,13 @@ public static class SmokeTest
                 Debug.Log($"SmokeTest drive: t={elapsed:F1}s {dyn.SpeedKmh:F1} km/h gear {dyn.Gear} {dyn.Rpm:F0} rpm grip {dyn.Grip:F2}");
             }
         }
+        // -smokeTakeOver seconds: the driver brakes then (to take over from the automation)
+        float takeOverAt = Arg2("-smokeTakeOver", -1f);
+        if (takeOverAt >= 0f && drive.Length == 0)
+        {
+            double tIn = elapsed;
+            VehicleInput.Override = axis => (axis == "Brake" || axis == "Break") && tIn >= takeOverAt && tIn < takeOverAt + 1.5 ? 0.6f : (float?)null;
+        }
         // -smokeRide drive,steer: ride the participant's two-wheeler (if any) with fixed input
         var ride = SessionState.GetString(KeyRide, "");
         if (ride.Length > 0)
@@ -210,6 +217,10 @@ public static class SmokeTest
         {
             _lastSnapshot = elapsed;
             Debug.Log($"SmokeTest: t={elapsed:F0}s scene={SceneManager.GetActiveScene().name} fps={1f / Mathf.Max(1e-4f, Time.smoothDeltaTime):F0}");
+            if (AutomatedDriving.Local != null)
+                Debug.Log($"SmokeTest automation: {AutomatedDriving.Local.State}, reaction {AutomatedDriving.Local.LastReactionTime:F2} s, at {AutomatedDriving.Local.transform.position}, heading {AutomatedDriving.Local.transform.eulerAngles.y:F0}");
+            foreach (var d in UnityEngine.Object.FindObjectsByType<ScriptedPathDriver>())
+                Debug.Log($"SmokeTest path: {d.name} at {d.Distance:F1} m, {d.Speed * 3.6f:F1} km/h, finished {d.Finished}, position {d.transform.position}");
             foreach (var s in UnityEngine.Object.FindObjectsByType<ObservedSteering>())
                 Debug.Log($"SmokeTest steering: {s.name} road wheels {s.SteerAngle:F1}°, steering wheel {s.SteerAngle * s.SteeringRatio:F0}°");
         }
@@ -217,6 +228,13 @@ public static class SmokeTest
         {
             Finish();
         }
+    }
+
+    static float Arg2(string name, float def)
+    {
+        var args = Environment.GetCommandLineArgs();
+        int i = Array.IndexOf(args, name);
+        return i >= 0 && i + 1 < args.Length && float.TryParse(args[i + 1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var v) ? v : def;
     }
 
     static int GetInstanceIDSafe(this UnityEngine.Object o) => o.GetEntityId().GetHashCode();

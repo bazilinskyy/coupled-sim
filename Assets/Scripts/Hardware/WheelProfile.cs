@@ -33,6 +33,8 @@ public class WheelProfile
     public int GearForward = 6, GearReverse = 7;
     public int BlinkerLeft = 5, BlinkerRight = 4, BlinkerClear = 16;
     public int Horn = -1;
+    [Tooltip("Take over from / hand back to the automation (AutomatedDriving).")]
+    public int Automation = 3;
 
     public static readonly WheelProfile[] BuiltIn =
     {
@@ -169,6 +171,7 @@ public static class VehicleInput
             case "blinker_right": return WheelProfile.ButtonDown(wheel.BlinkerRight);
             case "blinker_clear": return WheelProfile.ButtonDown(wheel.BlinkerClear);
             case "horn": return WheelProfile.ButtonDown(wheel.Horn);
+            case "automation": return WheelProfile.ButtonDown(wheel.Automation);
             default: return false;
         }
     }
