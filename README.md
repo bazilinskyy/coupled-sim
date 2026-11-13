@@ -2,22 +2,24 @@
 
 The coupled simulator lets several people take part in the same traffic scene at the same time: one or more drivers of manual cars, passengers of automated vehicles (AVs) who control an external human-machine interface (eHMI), and pedestrians who walk with a keyboard or a motion suit, on flat screens or in head-mounted displays. AI-controlled cars and pedestrians fill the scene. Everything that happens is logged for analysis.
 
+![Driving in the town, a city map (Eindhoven), cycling, heavy rain, night, animals](ReadmeFiles/overview.jpg)
+
 The simulator is open source and free to use. It is aimed at, but not limited to, academic research. Forks, pull requests and other contributions in the spirit of open science are welcome 😍. For enquiries about collaboration, contact p.bazilinskyy@tue.nl.
 
 📺 Demo of the simulator with 3 agents:
 
-[![demo video](ReadmeFiles/thumbnail_demo_video.png)](https://www.youtube.com/watch?v=W2VWLYnTYrM)
+[![demo video](ReadmeFiles/thumbnail_demo_video.jpg)](https://www.youtube.com/watch?v=W2VWLYnTYrM)
 
 ## Contents
 - [Citation](#citation) · [Examples of use](#examples-of-use) · [License](#license)
-- [Features](#features)
+- [Features](#features) · [Graphics](#graphics)
 - [Installation](#installation)
-- [Running the simulator](#running-the-simulator): [host](#running-as-a-host), [client](#running-as-a-client), [several agents on one machine](#several-agents-on-one-machine), [automatic trials](#running-trials-automatically), [trial files and counterbalancing](#trial-files-and-counterbalancing), [recording videos](#recording-trial-videos)
+- [Running the simulator](#running-the-simulator): [host](#running-as-a-host), [client](#running-as-a-client), [several agents on one machine](#several-agents-on-one-machine), [builds and command line](#builds-and-command-line-options), [automatic trials](#running-trials-automatically), [trial files and counterbalancing](#trial-files-and-counterbalancing), [recording videos](#recording-trial-videos), [dashboard](#experimenter-dashboard)
 - [Controls](#controls)
-- [Environment and vehicles](#environment-and-vehicles)
+- [Environment and vehicles](#environment-and-vehicles): [city maps](#city-maps-openstreetmap), [traffic signs](#traffic-signs), [vehicles](#vehicles)
 - [Networking](#networking)
-- [Data logging](#data-logging)
-- [Configuration](#configuration): [experiments](#experiment-definitions), [agents](#configuration-of-agents), [waypoints](#configuration-of-waypoints), [eye contact](#configuration-of-drivers-eye-contact), [daylight](#configuration-of-daylight-conditions), [traffic lights](#configuration-of-traffic-lights), [eHMIs](#configuration-of-ehmis), [car prefabs](#details-on-editing-car-prefabs)
+- [Data logging](#data-logging), [road network export](#exporting-the-road-network)
+- [Configuration](#configuration): [experiments](#experiment-definitions), [new experiments](#setting-up-a-new-experiment), [agents](#configuration-of-agents), [waypoints](#configuration-of-waypoints), [AI pedestrians](#ai-pedestrians), [AI cars](#ai-cars), [cyclists and riders](#cyclists-e-scooter-and-moped-riders), [automated driving and take-over](#automated-driving-and-take-over-requests), [scripted paths](#scripted-paths), [background traffic](#configuration-of-background-traffic), [SUMO](#traffic-from-sumo), [animals](#animals), [time of day and weather](#time-of-day-and-weather), [eye contact](#configuration-of-drivers-eye-contact), [daylight](#configuration-of-daylight-conditions), [traffic lights](#configuration-of-traffic-lights), [eHMIs](#configuration-of-ehmis), [auditory eHMIs](#auditory-ehmis), [car prefabs](#details-on-editing-car-prefabs)
 - [Testing](#testing)
 - [Hardware](#hardware): [monitors](#several-monitors-and-mirrors), [headsets](#head-mounted-displays-vr), [wheels](#steering-wheels-pedals-and-gamepads), [motion suit](#xsens-mvn-motion-suit), [network](#network)
 - [FAQ](#faq)
@@ -33,7 +35,7 @@ If you use the coupled simulator for academic work, please cite:
 1. Stopping by looking: A driver-pedestrian interaction study in a coupled simulator using head-mounted displays with eye-tracking - [paper](http://doi.org/10.1016/j.apergo.2022.103825).
 
 ## License
-The source code of the coupled simulator is released under the [MIT License](LICENSE). Third-party assets included in this repository (see [Used assets](#used-assets)) are not covered by this license. They remain under the license of their developers, such as the Unity Asset Store EULA, the Oculus SDK License or CC0.
+The source code of the coupled simulator is released under the [MIT License](LICENSE). Third-party assets included in this repository (see [Used assets](#used-assets)) are not covered by this license. They remain under the license of their developers, such as the Unity Asset Store EULA, MIT or CC0.
 
 ## Features
 - Up to **4 human participants** in one scene (a host and three clients) over a local network.
@@ -219,7 +221,6 @@ With a steering wheel, the car's steering wheel turns as far as the real one, wi
 Keyboard bindings are set in `Edit` ➡️ `Project Settings` ➡️ `Input Manager`; wheels and pedals through their profile and calibration (see [Hardware](#steering-wheels-pedals-and-gamepads)). The host can also switch eHMIs and trigger [visual syncing](#data-logging) from its GUI during the simulation.
 
 ## Environment and vehicles
-![](ReadmeFiles/night_mode_view.png)
 
 The town (`MainScene`, with a night version `MainScene-night`) is a model of a US-like city with:
 - a network of 2-lane roads, a loop of 4-lane road and a loop of 6-lane road (partially surrounded by buildings);
@@ -230,8 +231,8 @@ The town (`MainScene`, with a night version `MainScene-night`) is a model of a U
 
 `DriverTestScene` is a small scene for trying out the driven car.
 
-![](ReadmeFiles/world_all.png)
-![](ReadmeFiles/world_centre.png)
+![The town from above](ReadmeFiles/world.jpg)
+![The town at night](ReadmeFiles/night_view.jpg)
 
 ### City maps (OpenStreetMap)
 Besides the hand-built town, experiments can take place in real city centres, built from [OpenStreetMap](https://www.openstreetmap.org) data while the scene loads (in 1-2 s), much like CARLA's towns: roads with their real widths and markings, red cycle paths, raised pavements with kerbs, zebra crossings (with `PedestrianCrossing`s for AI pedestrians), buildings at their mapped height with brick, plaster or concrete façades, parks, water, mapped trees and street lamps. Every agent builds the same map from the same data. Each map has a SUMO scenario with cars and bicycles on the same streets (`Assets/StreamingAssets/Sumo/Maps`).
@@ -254,6 +255,8 @@ Besides the hand-built town, experiments can take place in real city centres, bu
 Limitations: building shapes and heights are as good as the OSM data (buildings without a height get 3.5 floors), roofs are flat and façades generic; traffic lights in the map are not shown (SUMO runs its own signals); roads have no elevation (bridges are only slightly raised).
 
 Map data © OpenStreetMap contributors, available under the [Open Database License](https://www.openstreetmap.org/copyright).
+
+![Eindhoven, Tokyo, Sydney and New York](ReadmeFiles/city_maps.jpg)
 
 ### Traffic signs
 `TrafficSign` draws a sign on a pole: stop, give way, speed limit (any number), pedestrian crossing, no entry, one way, priority road, children; in the style of the Vienna Convention used in Europe, made from code (no third-party assets). Add one with `GameObject` ➡️ `Coupled Sim` ➡️ `Traffic sign` and turn its blue (forward) axis towards the traffic it is for. City maps place them from OpenStreetMap: stop and give-way signs where mapped, pedestrian crossing signs at zebra crossings, speed limits at the start of longer roads (`maxspeed`), one-way and no-entry signs at one-way streets; on the left of the road where traffic drives on the left.
@@ -389,7 +392,7 @@ The same check runs when you press Play in `StartScene` (and adds missing experi
 - `AutonomousPath`: for AV passengers, the `WaypointCircuit` the AV follows;
 - `AutonomousIsYielding`: puts the AV on the `Yielding` layer instead of `Car`.
 
-![](ReadmeFiles/windshield_ehmi.png)
+![](ReadmeFiles/windshield_ehmi.jpg)
 
 **Adding and removing agents.** Increase the size of `Roles`, or right-click a role and choose `Duplicate`. To remove one, right-click it and choose `Delete`.
 
@@ -477,6 +480,9 @@ Roles with `SpawnPoint.Type` = `PlayerRidingTwoWheeler` let a participant ride a
 - **Models**: the bicycle (Dutch city bike), e-scooter and moped are built from code by `Coupled Sim` ➡️ `Two-wheelers` ➡️ `Build avatar prefabs` (`TwoWheelerPrefabBuilder`): wheels spin, the handlebar turns on its head tube, frame and rider lean, the cranks turn when pedalling; the rider is a Rocketbox avatar whose hands and feet are placed on the grips and pedals (or footboard) by IK (`RiderIK`). The camera is at the rider's eyes and follows only part of the lean (`CameraLeanFactor`) for comfort in VR.
 - Riders are logged and synchronised like vehicles (position, rotation, velocity; lean, steering and wheels as synced parts); AI pedestrians, model-driven traffic and SUMO (as a bicycle or moped) react to them.
 
+
+![A cyclist and the rider's view](ReadmeFiles/cyclist.jpg)
+
 ### Automated driving and take-over requests
 The AV of a role with `SpawnPoint.Type` = `PlayerInAIControlledCar` gets an `AutomatedDriving` component when the participant is spawned. It drives in one of two modes (trial parameter `automation`):
 - `Waypoints` (default): the speeds, accelerations and yielding set on the waypoints of its `AutonomousPath` (`SpeedSettings`, see [AI cars](#ai-cars));
@@ -562,6 +568,9 @@ Every experiment has an `EnvironmentController` (child object `Environment (time
 - **weather** (`Clear`, `PartlyCloudy`, `Overcast`, `LightRain`, `HeavyRain`, `Fog`): clouds (sky colour, softer and weaker sunlight), fog, rain around the viewer and wet, darker, shinier roads and pavements; `ExtraFog` and `RainOverride` fine-tune it.
 
 They can be set per trial with the experiment parameters `time` (`17:30` or `17.5`), `weather`, `fog`, `rain`, `timeSpeed`, `dayOfYear`, `latitude`. The host sends the conditions to all clients. With `UseBakedLighting` on (the experiments of earlier studies), the scene keeps its baked lightmaps and sun and only the weather effects apply; with it off (Base and the new examples), the sun follows the time of day with realtime lighting.
+
+
+![The same street on a clear day, overcast, in heavy rain, fog and at night](ReadmeFiles/weather.jpg)
 
 ### Configuration of daylight conditions
 ![](ReadmeFiles/day_night_control.png)
@@ -711,7 +720,13 @@ All agents must be in the same local network; the host's IP address is in its co
 | --- | --- | --- |
 | [ACP (Arcade Car Physics)](https://github.com/Saarg/Arcade_Car_Physics) | Saarg | MIT |
 | [Textures](https://ambientcg.com) (formerly cc0textures.com) | Various | CC0 |
-| [Oculus Integration](https://assetstore.unity.com/packages/tools/integration/oculus-integration-82022) | Oculus | Oculus SDK License |
+| [PBR Bark Materials #1](https://assetstore.unity.com/packages/2d/textures-materials/pbr-bark-materials-1-86713) | John's Junkyard | Unity Asset Store EULA |
+| Stylized Grass Texture | LowlyPoly | Unity Asset Store EULA |
+| Suit Pack (participant avatar) | StudioNewPunch | Unity Asset Store EULA |
+| Distance Tool (editor measuring tool) | Wes McDermott | Unity Asset Store EULA |
+| Traffic light model | TurboSquid artist | TurboSquid Standard License |
+| Claudia and Eric (pedestrian models) | Renderpeople | Renderpeople free license |
+| [X Bot](https://www.mixamo.com) idle and walking animations | Adobe Mixamo | Mixamo terms |
 | [Simple modular street kit](https://assetstore.unity.com/packages/3d/environments/urban/simple-modular-street-kit-13811) | Jacek Jankowski | Unity Asset Store EULA |
 | [Realistic Tree 10](https://assetstore.unity.com/packages/3d/vegetation/trees/realistic-tree-10-54724) | Rakshi Games | Unity Asset Store EULA |
 | [Small Town America - Streets](https://assetstore.unity.com/packages/3d/small-town-america-streets-free-59759) | MultiFlagStudios | Unity Asset Store EULA |
