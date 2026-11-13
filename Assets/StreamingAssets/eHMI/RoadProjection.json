@@ -1,0 +1,14 @@
+{
+  "name": "Projection on the road: crossing stripes and an arrow while yielding",
+  "width": 3.0, "height": 2.4, "background": "#00000000",
+  "states": [
+    { "state": "WALK", "elements": [
+      { "type": "rect", "color": "#E0FFFFCC", "x": 0.05, "y": 0.1, "w": 0.12, "h": 0.8, "animation": "steady" },
+      { "type": "rect", "color": "#E0FFFFCC", "x": 0.29, "y": 0.1, "w": 0.12, "h": 0.8, "animation": "steady" },
+      { "type": "rect", "color": "#E0FFFFCC", "x": 0.53, "y": 0.1, "w": 0.12, "h": 0.8, "animation": "steady" },
+      { "type": "rect", "color": "#E0FFFFCC", "x": 0.77, "y": 0.1, "w": 0.12, "h": 0.8, "animation": "steady" } ] },
+    { "state": "STOP", "elements": [
+      { "type": "arrow", "direction": "up", "color": "#FF3B30AA", "x": 0.35, "y": 0.05, "w": 0.3, "h": 0.9, "animation": "pulse", "period": 1.0 } ] },
+    { "state": "DISABLED", "elements": [] }
+  ]
+}
