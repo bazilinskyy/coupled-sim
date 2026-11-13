@@ -51,9 +51,33 @@ public struct ExperimentRoleDefinition
     //side of the steering wheel of the role's car: Auto = on the right on maps with left-hand traffic
     [Tooltip("Where the steering wheel of this role's car is. Auto: on the right in cities with left-hand traffic (London, Tokyo, Sydney, ...), else on the left.")]
     public SteeringSide Steering;
+
+    [Header("Participant responses")]
+    [Tooltip("A hold-to-respond button and/or a 0-100 slider, logged every frame to ExperimentLogs/Responses-*.csv.")]
+    public ResponseSettings Response;
 }
 
 public enum SteeringSide { Auto, Left, Right }
+
+/// <summary>
+/// Continuous responses of a participant, logged every frame (ResponseInput): a button held while
+/// e.g. it feels safe to cross, and a slider (0-100) for e.g. trust or perceived risk.
+/// </summary>
+[Serializable]
+public struct ResponseSettings
+{
+    [Tooltip("Hold-to-respond button (keyboard key below, gamepad right shoulder or trigger, headset controller trigger), logged with its analog value.")]
+    public bool Button;
+    [Tooltip("Shown above the button state, e.g. 'Hold B while you feel safe to cross'. Empty: no text.")]
+    public string ButtonLabel;
+    [Tooltip("Slider from 0 to 100 (keys below, gamepad d-pad up/down, headset thumbstick), e.g. trust in the AV.")]
+    public bool Slider;
+    [Tooltip("Shown next to the slider, e.g. 'Trust'.")]
+    public string SliderLabel;
+    [Range(0, 100)] public float SliderStart;
+    [Tooltip("Log the responses but show nothing on the screen.")]
+    public bool Hidden;
+}
 
 public class ExperimentDefinition : MonoBehaviour
 {
