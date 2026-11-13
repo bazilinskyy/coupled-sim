@@ -50,6 +50,7 @@ The source code of the coupled simulator is released under the [MIT License](LIC
 - Coupling with [SUMO](https://eclipse.dev/sumo/) over TraCI: SUMO traffic in the scene, participants' cars and the AV in SUMO.
 - AI pedestrians with individual walking speeds, gap-acceptance crossing decisions that react to yielding cars and eHMIs, collision avoidance (social force model), traffic-aware head movements, and 12 realistic avatars.
 - eHMIs on the hood, roof and windshield of AVs, switched by the passenger or the host.
+- Automated driving with take-over requests (visual and auditory warning, reaction times logged) and hand-back to the automation; AVs that follow waypoints, a car-following model or a path file (speed profiles, recorded trajectories).
 - Traffic lights with programmable sequences; day and night versions of the town.
 - Logging of all agents (cars, pedestrian skeletons, traffic lights, eye contact) to binary files, conversion to CSV, and live streaming over UDP.
 - Automatic trial sequences with per-trial parameters and video recording; trial files (CSV/JSON) with counterbalancing per participant (balanced Latin square).
@@ -193,6 +194,8 @@ It needs no internet and no installation (a plain web page from the simulator). 
 | Driver | Blinker left / right / off | `Q` / `E` / `2` | buttons of the wheel profile (G27: 5 / 4 / 16) |
 | AV passenger | eHMI disabled / stop / walk | `1` / `2` / `3` | |
 | AV passenger | Resume driving where the AV waits for input (`WaitInputX`) | `Space` | |
+| AV driver | Take over after a take-over request / hand back to the automation | `Enter` (or steer, brake, accelerate) | profile button (G27: 3), wheel, pedals |
+| Experimenter | Take-over request | `T` | |
 | Pedestrian (keyboard mode) | Walk forward / back, sideways, turn; run | `W`/`S`, `A`/`D`, `Q`/`E` (or arrows); hold `Shift` | |
 | Pedestrian (keyboard mode) | Look around | hold the right mouse button and move the mouse | |
 | Pedestrian (HMD) | Recenter the headset | `R` | |
@@ -447,6 +450,30 @@ Roles with `SpawnPoint.Type` = `PlayerRidingTwoWheeler` let a participant ride a
 - **Controls**: the car's axes: `W`/`↑` pedal or throttle, `S`/`↓` or `Space` brake, `A`/`D` steer; steering wheel and pedals work the same.
 - **Models**: the bicycle (Dutch city bike), e-scooter and moped are built from code by `Coupled Sim` ➡️ `Two-wheelers` ➡️ `Build avatar prefabs` (`TwoWheelerPrefabBuilder`): wheels spin, the handlebar turns on its head tube, frame and rider lean, the cranks turn when pedalling; the rider is a Rocketbox avatar whose hands and feet are placed on the grips and pedals (or footboard) by IK (`RiderIK`). The camera is at the rider's eyes and follows only part of the lean (`CameraLeanFactor`) for comfort in VR.
 - Riders are logged and synchronised like vehicles (position, rotation, velocity; lean, steering and wheels as synced parts); AI pedestrians, model-driven traffic and SUMO (as a bicycle or moped) react to them.
+
+### Automated driving and take-over requests
+The AV of a role with `SpawnPoint.Type` = `PlayerInAIControlledCar` gets an `AutomatedDriving` component when the participant is spawned. It drives in one of two modes (trial parameter `automation`):
+- `Waypoints` (default): the speeds, accelerations and yielding set on the waypoints of its `AutonomousPath` (`SpeedSettings`, see [AI cars](#ai-cars));
+- `TrafficModel`: smooth car following with a [car-following model](#configuration-of-background-traffic) (IDM by default) at `avSpeed` km/h: it adapts its speed to the vehicle ahead, slows down for bends, and stops at red lights and for pedestrians and animals on the road.
+
+A **take-over request** (TOR) hands the car to the participant: a red "TAKE OVER" warning in front of the driver's eyes (also in VR) and three beeps per second. The driver takes over by steering, braking or pressing the throttle (thresholds `SteerThreshold`, `PedalThreshold`) or with the `automation` button (`Enter`; on a wheel the profile's `Automation` button, G27: 3), and then drives with the full [vehicle physics](#vehicles). Without a reaction within `TimeBudget` seconds (trial parameter `takeOverBudget`, default 7 s), the AV brakes to a stop (minimal-risk manoeuvre; `WhenNoReaction` = `KeepDriving` lets it drive on). The `automation` button hands the car back to the automation, which continues from the nearest point of its path.
+
+Requests come from:
+- the trial parameter `takeOverAt` (seconds after the start; host);
+- a `TakeOverPoint` on the road (a trigger collider; the AV issues the request when it drives into it);
+- the experimenter: `T` on the machine of the participant, or `Take-over request` on the [dashboard](#experimenter-dashboard).
+
+`ExperimentLogs/TakeOver-{date}.csv` lists the events (automation mode, request with its source, take-over with the input used and the reaction time, no reaction, engaged) with the time, speed and position.
+
+### Scripted paths
+A car can follow a path from a file instead of waypoints in the scene: a CSV with the columns `x` and `z` (scene coordinates in metres, as in the logs; `y` optional) and optionally `speed` (km/h) and `t` (seconds):
+- with `t`, the car is where the file says at each moment (for example a trajectory recorded in an earlier trial or in naturalistic data);
+- with `speed`, it follows that speed profile along the path and brakes in time (up to `MaxDeceleration`) for slower points ahead;
+- otherwise it drives at `DefaultSpeedKmh`.
+
+It slows down for bends (at most 2.5 m/s² sideways) and stops at the last point. Scripted cars do not yield to pedestrians or stop at lights: the file decides.
+
+Files are looked up as given, then in `Assets/StreamingAssets/Paths`. A `ScriptedPathSpawner` (a car spawner: add it to the experiment's `Car Spawners`, with a car prefab from `AI Car System` ➡️ `Prefabs`) spawns a car at the start of the path after `Delay` seconds; the trial parameter `avPath` makes the participant's AV follow a path file. Example: `Assets/StreamingAssets/Paths/example_path.csv`.
 
 ### Configuration of background traffic
 A `TrafficSpawner` in an experiment's `Car Spawners` list fills one or more lanes with AI cars that drive with a car-following model instead of the `SpeedSettings` script:
