@@ -1,0 +1,14 @@
+# Example trial sequence: a practice trial, then four conditions (blocks A-D) whose order is
+# counterbalanced over participants with a balanced Latin square, then a final trial.
+# Use: NetworkingManager > Trial File = example.csv (and Participant), or a build with
+#   -trials example.csv -participant 3
+# Columns: experiment and role (names or indices), block, and one column per experiment
+# parameter (empty = not set). See README > Trial sequences.
+#order=latin
+experiment,role,block,weather,time,animals,notes
+Base,Driver,,PartlyCloudy,13:00,1,practice
+Base,Driver,A,Clear,13:00,1,day clear
+Base,Driver,B,HeavyRain,13:00,1,day rain
+Base,Driver,C,Clear,22:30,1,night clear
+Base,Driver,D,Fog,13:00,0,fog without animals
+CityMap,Driver,,PartlyCloudy,17:30,1,city map (Eindhoven)
