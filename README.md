@@ -398,9 +398,21 @@ Besides the hand-built town, experiments can take place in real city centres, bu
 
 **Driving anywhere.** The trial parameter `location=lat,lon[,radius]` (e.g. `location=51.4479,5.4904,350` for the TU/e campus) builds a map of any place: the OpenStreetMap data (radius 100-1000 m, default 400 m) is downloaded the first time (internet needed) and cached in the simulator's data folder; with SUMO installed, a SUMO network and random traffic for the place are built too. The host sends the location to the clients. To add a place to the catalogue for good, save its `.osm.gz` in `Assets/StreamingAssets/Maps` and add it to `MapCatalog`.
 
-Limitations: building shapes and heights are as good as the OSM data (buildings without a height get 3.5 floors), roofs are flat and façades generic; traffic lights in the map are not shown (SUMO runs its own signals); roads have no elevation (bridges are only slightly raised).
+**Real 3D buildings (Netherlands).** For Dutch maps the buildings come from the [3D BAG](https://3dbag.nl) instead of OpenStreetMap: every building's measured shape with its real roof (gabled canal houses in Delft, flat-roofed blocks in Eindhoven), placed at its real position. Roofs get red or anthracite roof tiles, walls the same brick and plaster façades as before. The data is in `Assets/StreamingAssets/Maps/<Map>.buildings.bin.gz` (Delft and Eindhoven); to make it for another Dutch map in the catalogue (internet needed, about a minute):
 
-Map data © OpenStreetMap contributors, available under the [Open Database License](https://www.openstreetmap.org/copyright).
+```bash
+python3 Tools/bag3d_buildings.py Delft
+```
+
+Maps without this file use the OpenStreetMap buildings.
+
+**Street furniture and parked vehicles.** From the OpenStreetMap data the map also gets benches, waste bins, bicycle racks with parked bicycles, bollards, bus stops (sign, and shelter with bench where mapped), café terraces, recycling containers, street cabinets, garden walls, fences and hedges, and parked cars in parking lots, parking spaces and along streets with street-side parking (at most 250 cars and 400 bicycles, those nearest the centre, so the frame rate stays up). Placement is the same on every agent. The parked bicycle and car prefabs are in `Assets/Prefabs/Props`; to rebuild them after changing the bicycle or car models use `Coupled Sim` ➡️ `Maps` ➡️ `Build street props`.
+
+![Delft from the 3D BAG, a parking lot with bicycle racks, bicycles on a square, a bus stop in Eindhoven](ReadmeFiles/city_maps_3dbag.jpg)
+
+Limitations: outside the Netherlands, building shapes and heights are as good as the OSM data (buildings without a height get 3.5 floors), roofs are flat; façades are generic; traffic lights in the map are not shown (SUMO runs its own signals); roads have no elevation (bridges are only slightly raised).
+
+Map data © OpenStreetMap contributors, available under the [Open Database License](https://www.openstreetmap.org/copyright). Dutch buildings: [3D BAG](https://3dbag.nl) by the 3D geoinformation group of TU Delft and 3DGI, under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
 
 ![Eindhoven, Tokyo, Sydney and New York](ReadmeFiles/city_maps.jpg)
 

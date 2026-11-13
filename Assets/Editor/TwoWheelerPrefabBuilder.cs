@@ -452,6 +452,41 @@ public static class TwoWheelerPrefabBuilder
     /// AIBicycle: the bicycle with a different rider, as an externally driven AI vehicle (for SUMO's
     /// bicycles): an AICar component (disabled) so it can be spawned and synced like AI cars.
     /// </summary>
+    /// <summary>Static bicycles in several colours for city maps (no rider, no scripts), leaning slightly as on a kickstand.</summary>
+    public static GameObject[] BuildParkedBicycles(string folder)
+    {
+        var colours = new[] { new Color(0.05f, 0.05f, 0.06f), new Color(0.1f, 0.2f, 0.45f), new Color(0.45f, 0.08f, 0.08f), new Color(0.75f, 0.75f, 0.72f), new Color(0.15f, 0.3f, 0.18f) };
+        // the shared paint (and lights) of the rideable bicycle must keep their settings
+        var keep = new[] { "BikePaint", "HeadLight", "RearLight" }
+            .Select(n => AssetDatabase.LoadAssetAtPath<Material>($"{MatDir}/{n}.mat")).Where(m => m != null)
+            .ToDictionary(m => m, m => new Material(m));
+        var shared = Mat("BikePaint", Color.black, 0.6f, 0.3f);
+        var result = new System.Collections.Generic.List<GameObject>();
+        for (int i = 0; i < colours.Length; i++)
+        {
+            var root = new GameObject("ParkedBicycle " + i);
+            try
+            {
+                var rig = BuildBicycle(root.transform, colours[i]);
+                var paintPath = $"{folder}/ParkedBikePaint_{i}.mat";
+                var paint = AssetDatabase.LoadAssetAtPath<Material>(paintPath);
+                if (paint == null) { paint = new Material(shared); AssetDatabase.CreateAsset(paint, paintPath); }
+                paint.CopyPropertiesFromMaterial(shared);
+                paint.SetColor("_BaseColor", colours[i]);
+                foreach (var r in root.GetComponentsInChildren<MeshRenderer>())
+                    r.sharedMaterials = r.sharedMaterials.Select(m => m == shared ? paint : m).ToArray();
+                rig.Lean.localRotation = Quaternion.Euler(0, 0, 7f);
+                foreach (var c in root.GetComponentsInChildren<Collider>()) Object.DestroyImmediate(c);
+                var path = $"{folder}/ParkedBicycle_{i}.prefab";
+                result.Add(PrefabUtility.SaveAsPrefabAsset(root, path));
+            }
+            finally { Object.DestroyImmediate(root); }
+        }
+        foreach (var kv in keep) { kv.Key.CopyPropertiesFromMaterial(kv.Value); EditorUtility.SetDirty(kv.Key); }
+        AssetDatabase.SaveAssets();
+        return result.ToArray();
+    }
+
     public static void BuildAIBicycle()
     {
         var root = PrefabUtility.LoadPrefabContents($"{Dir}/Bicycle.prefab");
