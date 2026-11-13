@@ -208,6 +208,7 @@ Transform:
   - {fileID: 8268997310008627352}
   - {fileID: 4074373686528259598}
   - {fileID: 8868225042934192711}
+  - {fileID: 2328396113636596722}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &4508130044032702980
@@ -356,6 +357,65 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::OsmSpawnPoint
   Kind: 2
   Index: 0
+--- !u!1 &4315785990321902568
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2328396113636596722}
+  - component: {fileID: 5498700058065216803}
+  m_Layer: 0
+  m_Name: Animals
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2328396113636596722
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4315785990321902568}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 688831363954450875}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5498700058065216803
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4315785990321902568}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5304bda39bf5f4dec9fefa0ac8751dcd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AnimalSpawner
+  Animals:
+  - Species: 3
+    Count: 20
+  - Species: 0
+    Count: 3
+  - Species: 1
+    Count: 1
+  - Species: 2
+    Count: 3
+  - Species: 4
+    Count: 1
+  Centre: {fileID: 0}
+  Radius: 120
+  Seed: 1
+  LogInterval: 0.1
 --- !u!1 &6229933110440926417
 GameObject:
   m_ObjectHideFlags: 0
