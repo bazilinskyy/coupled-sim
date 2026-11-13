@@ -118,7 +118,7 @@ public class OsmMap : MonoBehaviour
         root.SetParent(transform, false);
         Generator.Build(root);
         new GameObject("Map data © OpenStreetMap contributors (ODbL)").transform.SetParent(transform, false);
-        Debug.Log($"OsmMap: built {info} in {sw.ElapsedMilliseconds} ms: {Generator.Roads.Count} roads, {Generator.BuildingCount} buildings, {Generator.Crossings.Count / 2} crossings, {Generator.SignCount} traffic signs");
+        Debug.Log($"OsmMap: built {info} in {sw.ElapsedMilliseconds} ms: {Generator.Roads.Count} roads, {Generator.BuildingCount} buildings, {Generator.Crossings.Count / 2} crossings, {Generator.SignCount} traffic signs, {Generator.PropCount} street props, {Generator.ParkedCarCount} parked cars, {Generator.ParkedBicycleCount} parked bicycles");
         // the road network for analysis, once per map (ExperimentLogs/RoadNetwork-{map}.geojson)
         try
         {
