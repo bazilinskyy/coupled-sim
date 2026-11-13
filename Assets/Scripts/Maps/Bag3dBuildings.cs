@@ -5,10 +5,13 @@ using CoupledSim.Maps;
 using UnityEngine;
 
 /// <summary>
-/// Real 3D buildings of Dutch maps from 3D BAG (LoD 2.2: walls and roof shapes from laser scans;
-/// © 3D BAG by tudelft3d and 3DGI, CC BY 4.0), prepared by Tools/bag3d_buildings.py into
-/// StreamingAssets/Maps/{map}.buildings.bin.gz. Vertices are converted from the Dutch grid to the
-/// scene (the same projection as the OpenStreetMap data, so they line up with the roads).
+/// Real 3D buildings of a map, in StreamingAssets/Maps/{map}.buildings.bin.gz:
+/// - Dutch maps from 3D BAG (LoD 2.2: walls and roof shapes from laser scans; © 3D BAG by tudelft3d
+///   and 3DGI, CC BY 4.0), made by Tools/bag3d_buildings.py ("B3D1", vertices in the Dutch grid);
+/// - Japanese maps from Project PLATEAU (MLIT; LoD2 or LoD1), made by Tools/plateau_buildings.py
+///   ("B3DL", vertices in local metres around the map centre).
+/// Vertices are converted to the scene (the same projection as the OpenStreetMap data, so they
+/// line up with the roads).
 /// </summary>
 public static class Bag3dBuildings
 {
@@ -30,8 +33,12 @@ public static class Bag3dBuildings
         using (var gz = new GZipStream(File.OpenRead(path), CompressionMode.Decompress))
         using (var r = new BinaryReader(new BufferedStream(gz)))
         {
-            if (new string(r.ReadChars(4)) != "B3D1") { Debug.LogWarning("Bag3dBuildings: unknown file " + path); return null; }
-            double ox = r.ReadDouble(), oy = r.ReadDouble();
+            var magic = new string(r.ReadChars(4));
+            if (magic != "B3D1" && magic != "B3DL") { Debug.LogWarning("Bag3dBuildings: unknown file " + path); return null; }
+            bool rd = magic == "B3D1";
+            double ox = r.ReadDouble(), oy = r.ReadDouble();   // RD origin, or the local projection's centre (lat, lon)
+            var local = new GeoProjection(ox, oy);
+            bool same = !rd && System.Math.Abs(ox - proj.Lat0) < 1e-9 && System.Math.Abs(oy - proj.Lon0) < 1e-9;
             int n = r.ReadInt32();
             for (int b = 0; b < n; b++)
             {
@@ -41,8 +48,13 @@ public static class Bag3dBuildings
                 for (int i = 0; i < nv; i++)
                 {
                     double dx = r.ReadSingle(), dy = r.ReadSingle(); float h = r.ReadSingle();
-                    RdProjection.ToWgs(ox + dx, oy + dy, out var lat, out var lon);
-                    proj.ToLocal(lat, lon, out var x, out var z);
+                    double x = dx, z = dy, lat, lon;
+                    if (!same)
+                    {
+                        if (rd) RdProjection.ToWgs(ox + dx, oy + dy, out lat, out lon);
+                        else local.ToGeo(dx, dy, out lat, out lon);
+                        proj.ToLocal(lat, lon, out x, out z);
+                    }
                     bld.V[i] = new Vector3((float)x, h, (float)z);
                 }
                 bld.Walls = ReadInts(r);
