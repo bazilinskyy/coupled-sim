@@ -190,14 +190,20 @@ public class AICar : MonoBehaviour, IVehicle
                 modelLocalRotation = Quaternion.Slerp(modelLocalRotation, Quaternion.Euler(-pitch, 0, 0), 0.5f);
             }
 
-            if (set_acceleration > 0f && set_speed > speed || set_acceleration < 0f && set_speed < speed)
+            // towards the target speed at the waypoint's acceleration, whatever its sign (#55:
+            // a positive acceleration with a lower target speed used to be ignored)
+            float accelMagnitude = Mathf.Abs(set_acceleration);
+            if (accelMagnitude > 0f && Mathf.Abs(set_speed - speed) > 1e-4f)
             {
-                speed = speed + set_acceleration * Time.fixedDeltaTime * conversion;
+                float dir = Mathf.Sign(set_speed - speed);
+                float step = accelMagnitude * Time.fixedDeltaTime * conversion;
+                speed = Mathf.Abs(set_speed - speed) <= step ? set_speed : speed + dir * step;
+                acceleration = dir * accelMagnitude;
                 pitch = acceleration / 3 * HasPitch;
                 modelLocalRotation = Quaternion.Slerp(modelLocalRotation, Quaternion.Euler(-pitch, 0, 0), 0.5f);
             }
 
-            playerAvatar.SetBreakLights(set_acceleration < 0f && (set_speed < speed || speed < 0.1f));
+            playerAvatar.SetBreakLights(set_speed < speed - 0.01f || speed < 0.1f);
 
             if (acceleration != 0 && Mathf.Abs(speed) < Mathf.Abs(set_speed) * (1 + tolerance) + tolerance * 10 && Mathf.Abs(speed) > Mathf.Abs(set_speed) * (1 - tolerance) - tolerance * 10)
             {
@@ -380,7 +386,8 @@ public class AICar : MonoBehaviour, IVehicle
         {
             return;
         }
-        if (other.gameObject.CompareTag("WP"))
+        // waypoints are tagged "WP"; untagged waypoints with speed settings work too
+        if (other.gameObject.CompareTag("WP") || other.gameObject.CompareTag("Untagged"))
         {
             GetComponent<PlayerAvatar>().CarBlinkers.SwitchToState(speedSettings.BlinkerState);
 
