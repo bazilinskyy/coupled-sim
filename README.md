@@ -52,7 +52,7 @@ The source code of the coupled simulator is released under the [MIT License](LIC
 - eHMIs on the hood, roof and windshield of AVs, switched by the passenger or the host; auditory eHMIs (cues on eHMI states and on yielding, stopping, driving off) and AVAS sounds.
 - Automated driving with take-over requests (visual and auditory warning, reaction times logged) and hand-back to the automation; AVs that follow waypoints, a car-following model or a path file (speed profiles, recorded trajectories).
 - Traffic lights with programmable sequences; traffic signs (stop, give way, speed limits, crossings, one way, ...), placed from OpenStreetMap on city maps; day and night versions of the town.
-- Logging of all agents (cars, pedestrian skeletons, traffic lights, eye contact) to binary files, conversion to CSV, and live streaming over UDP.
+- Logging of all agents (cars, pedestrian skeletons, traffic lights, eye contact) to binary files, conversion to CSV, and live streaming over UDP; export of the road network (GeoJSON, OBJ) for analysis.
 - Automatic trial sequences with per-trial parameters and video recording; trial files (CSV/JSON) with counterbalancing per participant (balanced Latin square).
 - An experiment setup window: new experiments from templates on any map, a check of the whole set-up before Play.
 - A web dashboard for the experimenter: run the session, switch eHMIs, weather and time from any device, and watch a live map of all agents.
@@ -313,6 +313,15 @@ Each frame contains the time, the position and rotation of every car with its bl
    "PedestrianLight [index]":{ "state":"b""\\x02" }  # one entry per pedestrian traffic light
 }
 ```
+
+### Exporting the road network
+`Coupled Sim` ➡️ `Maps` ➡️ `Export road network` writes the road network of the loaded world to `ExperimentLogs` (city maps: in Play mode), for analysis together with the logs:
+- `RoadNetwork-{name}.geojson`: roads (OSM type, width, one-way), cycle paths, pavements, pedestrian crossings, traffic lights, traffic signs and the waypoint paths of AI cars and pedestrians; in longitude/latitude on city maps (with the scene coordinates of every point in `scene_xz`), in scene coordinates otherwise;
+- `RoadNetwork-{name}.obj`: the road, pavement and crossing surfaces as meshes, in scene coordinates.
+
+City maps write these files by themselves the first time they are built.
+
+For the hand-built town (`MainScene`) in batch mode: `Unity -batchmode -quit -projectPath . -executeMethod RoadNetworkMenu.ExportScene -scene Assets/_Scenes/MainScene.unity` (the experiments in that scene add their paths, crossings and lights).
 
 ## Configuration
 ### Experiment definitions
