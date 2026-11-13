@@ -119,6 +119,12 @@ public class OsmMap : MonoBehaviour
         Generator.Build(root);
         new GameObject("Map data © OpenStreetMap contributors (ODbL)").transform.SetParent(transform, false);
         Debug.Log($"OsmMap: built {info} in {sw.ElapsedMilliseconds} ms: {Generator.Roads.Count} roads, {Generator.BuildingCount} buildings, {Generator.Crossings.Count / 2} crossings, {Generator.SignCount} traffic signs");
+        // the road network for analysis, once per map (ExperimentLogs/RoadNetwork-{map}.geojson)
+        try
+        {
+            if (!System.IO.File.Exists($"ExperimentLogs/RoadNetwork-{info.Name.Replace(' ', '_')}.geojson")) RoadNetworkExport.Export("ExperimentLogs", info.Name);
+        }
+        catch (System.Exception e) { Debug.LogWarning("RoadNetworkExport: " + e.Message); }
     }
 
     public enum SpawnKind

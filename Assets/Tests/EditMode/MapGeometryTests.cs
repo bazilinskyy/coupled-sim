@@ -85,5 +85,18 @@ namespace CoupledSim.Tests
             Assert.AreEqual(51.44, d.MinLat, 1e-9);
         }
 
+
+        [Test]
+        public void ProjectionRoundTrip()
+        {
+            var proj = new GeoProjection(51.4483, 5.4908);
+            foreach (var (x, z) in new[] { (0.0, 0.0), (850.0, -420.0), (-1500.0, 2200.0) })
+            {
+                proj.ToGeo(x, z, out var lat, out var lon);
+                proj.ToLocal(lat, lon, out var x2, out var z2);
+                Assert.AreEqual(x, x2, 1e-3);
+                Assert.AreEqual(z, z2, 1e-3);
+            }
+        }
     }
 }
