@@ -49,6 +49,8 @@ public class Client : NetworkSystem
         _msgDispatcher.AddStaticHandler((int)MsgId.B_Ping, HandlePing);
         _msgDispatcher.AddStaticHandler((int)MsgId.S_Environment, EnvironmentController.ClientHandleState);
         _msgDispatcher.AddStaticHandler((int)MsgId.S_AnimalPoses, AnimalSpawner.ClientHandlePoses);
+        _msgDispatcher.AddStaticHandler((int)MsgId.S_Voice, (sync, src) => VoiceChat.Receive(NetMsg.Read<VoiceMsg>(sync)));
+        VoiceChat.Setup(v => { if (_client.InRoom) _client.SendUnreliable(v); }, () => _client.MyPlayerId);
         _hmiManager.InitClient(_client, _msgDispatcher);
         aiCarSystem.InitClient(_msgDispatcher);
         _msgDispatcher.HandleConnect = () =>

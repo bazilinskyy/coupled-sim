@@ -165,6 +165,24 @@ public class PlayerSystem : MonoBehaviour
         Avatars.Add(avatar);
         GetAvatarsOfType(avatar.Type).Add(avatar);
         Player2Avatar[player] = avatar;
+        SeatedPassenger.RoleNames[player] = role.Name;
+        // -seatRole "Role:Car role:Seat" (give it to every agent) seats a role without editing the experiment
+        var seatArg = Arg("-seatRole");
+        if (seatArg != null)
+        {
+            var parts = seatArg.Split(':');
+            if (parts.Length >= 2 && parts[0] == role.Name)
+            {
+                role.RideInCarOf = parts[1];
+                if (parts.Length > 2 && Enum.TryParse<CarSeat>(parts[2], true, out var seat)) role.Seat = seat;
+            }
+        }
+        if (!string.IsNullOrEmpty(role.RideInCarOf))
+        {
+            var seated = avatar.gameObject.AddComponent<SeatedPassenger>();
+            seated.CarRole = role.RideInCarOf;
+            seated.Seat = role.Seat;
+        }
         if (role.HoodHMI != null)
         {
             _hmiManager.AddHMI(avatar.HMISlots.Spawn(HMISlot.Hood, role.HoodHMI));
