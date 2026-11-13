@@ -98,5 +98,19 @@ namespace CoupledSim.Tests
                 Assert.AreEqual(z, z2, 1e-3);
             }
         }
+
+        [Test]
+        public void RdProjectionMatchesReferenceAndRoundTrips()
+        {
+            // reference from the same polynomials (Tools/bag3d_buildings.py)
+            RdProjection.FromWgs(52.0, 5.0, out var x, out var y);
+            Assert.AreEqual(128409.900, x, 0.01);
+            Assert.AreEqual(445806.276, y, 0.01);
+            // Delft Markt: back and forth within a few centimetres
+            RdProjection.FromWgs(52.0116, 4.3586, out var dx, out var dy);
+            RdProjection.ToWgs(dx, dy, out var lat, out var lon);
+            Assert.AreEqual(52.0116, lat, 1e-6);
+            Assert.AreEqual(4.3586, lon, 1e-6);
+        }
     }
 }

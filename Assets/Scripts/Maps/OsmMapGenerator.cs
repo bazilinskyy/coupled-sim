@@ -33,6 +33,9 @@ public class OsmMapGenerator
 
     readonly MapInfo _map;
     readonly OsmData _data;
+    readonly GeoProjection _proj;
+    /// <summary>True when the buildings are real 3D models (3D BAG) instead of extruded footprints.</summary>
+    public bool Real3DBuildings { get; private set; }
     readonly MapAssets _assets;
     readonly Dictionary<long, V2> _pos = new Dictionary<long, V2>();
     readonly Dictionary<string, Material> _mats = new Dictionary<string, Material>();
@@ -45,6 +48,7 @@ public class OsmMapGenerator
         _data = data;
         _assets = assets;
         var proj = new GeoProjection(map.Latitude, map.Longitude);
+        _proj = proj;
         foreach (var n in data.Nodes.Values)
         {
             proj.ToLocal(n.Lat, n.Lon, out var x, out var z);
@@ -154,6 +158,20 @@ public class OsmMapGenerator
             int b = V.Count;
             foreach (var p in poly) { V.Add(P(p, y)); UV.Add(new Vector2(p.X / uvScale, p.Y / uvScale)); }
             for (int i = 0; i < tris.Count; i += 3) { T.Add(b + tris[i]); T.Add(b + tris[i + 2]); T.Add(b + tris[i + 1]); }
+        }
+
+        /// <summary>A box with its bottom centre at <paramref name="p"/>, turned by <paramref name="yaw"/> degrees.</summary>
+        public void Box(Vector3 p, Vector3 size, float yaw)
+        {
+            var q = Quaternion.Euler(0, yaw, 0);
+            Vector3 hx = q * new Vector3(size.x / 2, 0, 0), hz = q * new Vector3(0, 0, size.z / 2), h = new Vector3(0, size.y, 0);
+            Vector3 a = p - hx - hz, b = p + hx - hz, c = p + hx + hz, d = p - hx + hz;
+            Vector2 u0 = Vector2.zero, u1 = new Vector2(0, size.y), u2 = new Vector2(1, size.y), u3 = Vector2.right;
+            Quad(a, a + h, b + h, b, u0, u1, u2, u3);
+            Quad(b, b + h, c + h, c, u0, u1, u2, u3);
+            Quad(c, c + h, d + h, d, u0, u1, u2, u3);
+            Quad(d, d + h, a + h, a, u0, u1, u2, u3);
+            Quad(a + h, d + h, c + h, b + h, u0, u1, u2, u3);
         }
 
         public Mesh Build(string name)
@@ -448,10 +466,24 @@ public class OsmMapGenerator
 
         PlaceSigns(root, roadWays);
 
-        // buildings
+        // buildings: real 3D models where available (3D BAG, the Netherlands), else OSM footprints extruded
         var buildingMbs = facades.Select(_ => new MeshBuilder()).ToArray();
         var roofs = new MeshBuilder();
-        foreach (var w in _data.Ways.Where(w => w.IsClosed && w.Tag("building") != null))
+        var tileRoofs = new[] { new MeshBuilder(), new MeshBuilder() };
+        var tileMats = new[]
+        {
+            Mat("Roof tiles red", Color.white, 0.25f, RoofTiles("roof_tiles_red", new Color(0.46f, 0.2f, 0.13f))),
+            Mat("Roof tiles anthracite", Color.white, 0.3f, RoofTiles("roof_tiles_grey", new Color(0.2f, 0.21f, 0.22f))),
+        };
+        List<Bag3dBuildings.Building> bag = null;
+        try { bag = Bag3dBuildings.Load(_map.Name ?? "", _proj); }
+        catch (Exception e) { Debug.LogWarning("Bag3dBuildings: " + e.Message); }
+        if (bag != null)
+        {
+            Real3DBuildings = true;
+            AddRealBuildings(bag, buildingMbs, palette, roofs, tileRoofs);
+        }
+        foreach (var w in bag != null ? Enumerable.Empty<OsmWay>() : _data.Ways.Where(w => w.IsClosed && w.Tag("building") != null))
         {
             var poly = Line(w);
             if (poly.Count < 4 || !poly.Any(Inside)) continue;
@@ -477,6 +509,9 @@ public class OsmMapGenerator
         buildings.SetParent(world, false);
         for (int i = 0; i < facades.Length; i++) Emit(buildings, "Buildings " + facades[i].name, buildingMbs[i], facades[i], true);
         Emit(buildings, "Roofs", roofs, roof, false);
+        for (int i = 0; i < tileRoofs.Length; i++) Emit(buildings, "Roofs " + tileMats[i].name, tileRoofs[i], tileMats[i], false);
+
+        PlaceStreetFurniture(root);
 
         // street lamps (EnvironmentController lights them at dusk) and mapped trees
         var props = new GameObject("Street furniture").transform;
@@ -586,6 +621,275 @@ public class OsmMapGenerator
                 var (b, db) = Geometry2D.PointAt(line, total - 3f);
                 Sign(TrafficSignKind.NoEntry, b, -db, width);
             }
+        }
+    }
+
+    // ------------------------------------------------------------------ street furniture and parked vehicles
+
+    public int PropCount, ParkedCarCount, ParkedBicycleCount;
+    const int MaxParkedCars = 250, MaxParkedBicycles = 400;
+
+    // the nearest car road: its direction there and the distance from its centre line
+    bool NearestRoad(V2 p, out V2 dir, out float distance, out float width)
+    {
+        dir = new V2(1, 0); distance = float.MaxValue; width = 6f;
+        foreach (var r in Roads)
+            for (int i = 0; i + 1 < r.Line.Count; i++)
+            {
+                var a = new V2(r.Line[i].x, r.Line[i].z); var b = new V2(r.Line[i + 1].x, r.Line[i + 1].z);
+                var ab = b - a; float len2 = ab.LengthSquared(); if (len2 < 1e-6f) continue;
+                float t = Math.Clamp(V2.Dot(p - a, ab) / len2, 0f, 1f);
+                float d = V2.Distance(p, a + ab * t);
+                if (d < distance) { distance = d; dir = V2.Normalize(ab); width = r.Width; }
+            }
+        return distance < 60f;
+    }
+
+    // ground height under a point (pavement, square or road), ignoring roofs
+    static float GroundAt(V2 p, float fallback)
+    {
+        var o = new Vector3(p.X, 30f, p.Y);
+        foreach (var hit in Physics.RaycastAll(o, Vector3.down, 40f).OrderBy(h => h.distance))
+            if (hit.point.y < 0.6f) return hit.point.y;
+        return fallback;
+    }
+
+    static float Yaw(V2 dir) => Mathf.Atan2(dir.X, dir.Y) * Mathf.Rad2Deg;
+
+    /// <summary>
+    /// From OpenStreetMap: benches, waste bins, bicycle racks with bicycles, bollards, bus stops
+    /// (sign, shelter, bench), café terraces, recycling containers, street cabinets, walls, fences
+    /// and hedges, cars in parking lots and spaces and along streets with street-side parking.
+    /// Deterministic (seeded with the map name), so every agent has the same.
+    /// </summary>
+    void PlaceStreetFurniture(Transform root)
+    {
+        Physics.SyncTransforms();
+        var props = new GameObject("Street furniture (OSM)").transform;
+        props.SetParent(root, false);
+        var rng = new System.Random((_map.Name ?? "").Length * 7919 + 17);
+        var metal = Mat("Street metal", new Color(0.28f, 0.29f, 0.3f), 0.45f);
+        var green = Mat("Hedge", Color.white, 0.05f, Tex("hedge", 128, (x, y, r) => Noise(new Color(0.16f, 0.3f, 0.12f), r, 0.6f)));
+        var containerMat = Mat("Containers", new Color(0.18f, 0.32f, 0.22f), 0.3f);
+        var glass = Mat("Shelter glass", new Color(0.55f, 0.65f, 0.7f), 0.9f);
+        var wood = Mat("Terrace furniture", new Color(0.42f, 0.3f, 0.2f), 0.3f);
+        var brickWall = Mat("Garden wall", Color.white, 0.1f, Tex("garden_wall", 128, (x, y, r) => (y % 16 < 2 || (x + (y / 16 % 2) * 16) % 32 < 2) ? new Color(0.5f, 0.47f, 0.43f) : Noise(new Color(0.5f, 0.25f, 0.18f), r, 0.25f)));
+        MeshBuilder bollards = new MeshBuilder(), racks = new MeshBuilder(), hedges = new MeshBuilder(), walls = new MeshBuilder(),
+            fences = new MeshBuilder(), containers = new MeshBuilder(), shelters = new MeshBuilder(), furniture = new MeshBuilder(), cabinets = new MeshBuilder(), busSigns = new MeshBuilder();
+        var assets = _assets;
+
+        void Place(GameObject prefab, V2 p, float yaw, string name)
+        {
+            if (prefab == null) return;
+            // keep the prefab's own rotation (models imported lying on their back are turned upright there)
+            var go = UnityEngine.Object.Instantiate(prefab, new Vector3(p.X, GroundAt(p, PavementHeight), p.Y), Quaternion.Euler(0, yaw, 0) * prefab.transform.rotation, props);
+            go.name = name;
+            go.isStatic = true;
+            PropCount++;
+        }
+        // parked vehicles are collected first and the ones nearest the centre placed (the caps keep the frame rate)
+        var cars = new List<(V2 p, float yaw)>(); var bikes = new List<(V2 p, float yaw)>();
+        void Car(V2 p, float yaw) { if (Inside(p)) cars.Add((p, yaw + (rng.Next(2) == 0 ? 0 : 180))); }
+        void Bike(V2 p, float yaw) { if (Inside(p)) bikes.Add((p, yaw + (float)(rng.NextDouble() * 10 - 5))); }
+
+        foreach (var node in _data.Nodes.Values)
+        {
+            if (node.Tags.Count == 0 || !_pos.TryGetValue(node.Id, out var p) || !Inside(p)) continue;
+            var amenity = node.Tag("amenity"); var barrier = node.Tag("barrier"); var hw = node.Tag("highway");
+            NearestRoad(p, out var dir, out var dist, out var width);
+            float along = Yaw(dir);
+            float y = GroundAt(p, PavementHeight);
+            var p3 = new Vector3(p.X, y, p.Y);
+            if (amenity == "bench") Place(assets?.Bench, p, along + 180, "Bench");
+            else if (amenity == "waste_basket") Place(assets?.WasteBin, p, along, "Waste bin");
+            else if (amenity == "bicycle_parking")
+            {
+                int capacity = Math.Clamp(int.TryParse(node.Tag("capacity"), out var c) ? c : 8, 2, 20);
+                var right = new V2(dir.Y, -dir.X);
+                for (int i = 0; i < capacity; i++)
+                {
+                    var q = p + dir * ((i - capacity / 2f) * 0.75f);
+                    var q3 = new Vector3(q.X, y, q.Y);
+                    racks.Box(q3, new Vector3(0.05f, 0.75f, 0.05f), along);              // a staple: two posts and a bar
+                    racks.Box(q3 + new Vector3(right.X, 0, right.Y) * 0.5f, new Vector3(0.05f, 0.75f, 0.05f), along);
+                    if (rng.NextDouble() < 0.7) Bike(q + right * 0.25f, Yaw(right));
+                }
+            }
+            else if (barrier == "bollard") { bollards.Box(p3, new Vector3(0.14f, 0.9f, 0.14f), along); PropCount++; }
+            else if (hw == "bus_stop")
+            {
+                var right = new V2(dir.Y, -dir.X);
+                // a pole with a blue sign
+                bollards.Box(p3, new Vector3(0.07f, 2.6f, 0.07f), along);
+                busSigns.Box(p3 + Vector3.up * 2.1f, new Vector3(0.05f, 0.6f, 0.45f), along);
+                if (node.Tag("shelter") == "yes" || node.Tag("bench") == "yes")
+                {
+                    var c3 = p3 + new Vector3(right.X, 0, right.Y) * 1.5f;
+                    var fwd = Quaternion.Euler(0, along, 0);
+                    shelters.Box(c3 + fwd * new Vector3(0, 0, 0) + Vector3.up * 2.3f, new Vector3(1.6f, 0.08f, 3.2f), along);   // roof
+                    shelters.Box(c3 + fwd * new Vector3(0.75f, 0, 0), new Vector3(0.04f, 2.3f, 3.2f), along);                  // back wall
+                    shelters.Box(c3 + fwd * new Vector3(0, 0, 1.55f), new Vector3(1.5f, 2.3f, 0.04f), along);                  // side
+                    Place(assets?.Bench, new V2(c3.x, c3.z), along - 90, "Bus stop bench");
+                }
+                PropCount++;
+            }
+            else if (node.Tag("leisure") == "outdoor_seating")
+            {
+                for (int t = 0; t < 4; t++)
+                {
+                    var q = p + dir * ((t - 1.5f) * 1.6f);
+                    var q3 = new Vector3(q.X, y, q.Y);
+                    furniture.Box(q3, new Vector3(0.7f, 0.74f, 0.7f) * 1f, along);
+                    furniture.Box(q3 + Quaternion.Euler(0, along, 0) * new Vector3(0.55f, 0, 0), new Vector3(0.4f, 0.45f, 0.4f), along);
+                    furniture.Box(q3 + Quaternion.Euler(0, along, 0) * new Vector3(-0.55f, 0, 0), new Vector3(0.4f, 0.45f, 0.4f), along);
+                }
+                PropCount++;
+            }
+            else if (amenity == "recycling")
+            {
+                for (int k = 0; k < 3; k++) containers.Box(p3 + Quaternion.Euler(0, along, 0) * new Vector3(0, 0, (k - 1) * 1.7f), new Vector3(1.4f, 1.6f, 1.5f), along);
+                PropCount++;
+            }
+            else if (node.Tag("man_made") == "street_cabinet") { cabinets.Box(p3, new Vector3(0.7f, 1.2f, 0.35f), along); PropCount++; }
+            else if (amenity == "parking_space") Car(p, along);
+        }
+
+        foreach (var w in _data.Ways)
+        {
+            var barrier = w.Tag("barrier"); var amenity = w.Tag("amenity");
+            if (barrier == "wall" || barrier == "fence" || barrier == "hedge" || barrier == "retaining_wall")
+            {
+                var line = Line(w);
+                if (line.Count < 2 || !line.Any(Inside)) continue;
+                for (int i = 0; i + 1 < line.Count; i++)
+                {
+                    var a = line[i]; var b = line[i + 1]; float len = V2.Distance(a, b); if (len < 0.2f) continue;
+                    var mid = (a + b) / 2; float yaw = Yaw(V2.Normalize(b - a));
+                    var m3 = new Vector3(mid.X, GroundAt(mid, 0f), mid.Y);
+                    if (barrier == "hedge") hedges.Box(m3, new Vector3(0.9f, 1.3f, len), yaw);
+                    else if (barrier == "fence") fences.Box(m3, new Vector3(0.05f, 1.3f, len), yaw);
+                    else walls.Box(m3, new Vector3(0.3f, barrier == "retaining_wall" ? 0.8f : 1.8f, len), yaw);
+                }
+                PropCount++;
+            }
+            else if (amenity == "parking" && w.IsClosed && w.Tag("parking") != "underground" && w.Tag("parking") != "multi-storey" && w.Tag("parking") != "rooftop" && w.Tag("building") == null)
+            {
+                // rows of cars across the lot, along its longest side, with aisles
+                var poly = Line(w); if (poly.Count < 4 || !poly.Any(Inside)) continue;
+                poly.RemoveAt(poly.Count - 1);
+                int longest = 0; float best = 0;
+                for (int i = 0; i < poly.Count; i++) { float l = V2.Distance(poly[i], poly[(i + 1) % poly.Count]); if (l > best) { best = l; longest = i; } }
+                var ax = V2.Normalize(poly[(longest + 1) % poly.Count] - poly[longest]); var ay = new V2(-ax.Y, ax.X);
+                float minA = float.MaxValue, maxA = float.MinValue, minB = float.MaxValue, maxB = float.MinValue;
+                foreach (var q in poly) { float u = V2.Dot(q, ax), v = V2.Dot(q, ay); minA = Math.Min(minA, u); maxA = Math.Max(maxA, u); minB = Math.Min(minB, v); maxB = Math.Max(maxB, v); }
+                int row = 0;
+                for (float v = minB + 3f; v < maxB - 2.5f; v += (row++ % 2 == 0) ? 5.2f : 6.5f)
+                    for (float u = minA + 1.5f; u < maxA - 1.2f; u += 2.6f)
+                    {
+                        var q = ax * u + ay * v;
+                        if (Geometry2D.PointInPolygon(q, poly) && rng.NextDouble() < 0.75) Car(q, Yaw(ay));
+                    }
+            }
+            else if (amenity == "parking_space" && w.IsClosed)
+            {
+                var poly = Line(w); if (poly.Count < 4) continue;
+                var c = poly.Aggregate(V2.Zero, (s, q) => s + q) / poly.Count;
+                var e = V2.Distance(poly[0], poly[1]) > V2.Distance(poly[1], poly[2]) ? poly[1] - poly[0] : poly[2] - poly[1];
+                Car(c, Yaw(V2.Normalize(e)));
+            }
+            else if (CarRoads.Contains(w.Tag("highway") ?? ""))
+            {
+                // street-side parking: along the kerb, a car every ~6.5 m, not all bays taken
+                foreach (var side in new[] { -1, 1 })
+                {
+                    var tag = w.Tag("parking:both") ?? w.Tag(side < 0 ? "parking:left" : "parking:right") ?? w.Tag("parking:lane:both") ?? w.Tag(side < 0 ? "parking:lane:left" : "parking:lane:right");
+                    if (tag == null || tag == "no" || tag == "separate" || tag == "no_parking" || tag == "no_stopping" || tag == "fire_lane") continue;
+                    var line = Line(w); if (line.Count < 2 || !line.Any(Inside)) continue;
+                    float width = RoadWidth(w), total = Geometry2D.Length(line);
+                    for (float d = 8f; d < total - 8f; d += 6.5f)
+                    {
+                        if (rng.NextDouble() > 0.6) continue;
+                        var (pt, dir) = Geometry2D.PointAt(line, d);
+                        var n = new V2(dir.Y, -dir.X) * side;
+                        Car(pt + n * (width / 2f - 1.0f), Yaw(dir));
+                    }
+                }
+            }
+        }
+        if (assets != null && assets.ParkedCars != null && assets.ParkedCars.Length > 0)
+            foreach (var c in cars.OrderBy(c => c.p.Length()).Take(MaxParkedCars))
+            { Place(assets.ParkedCars[rng.Next(assets.ParkedCars.Length)], c.p, c.yaw, "Parked car"); ParkedCarCount++; }
+        if (assets != null && assets.ParkedBicycles != null && assets.ParkedBicycles.Length > 0)
+            foreach (var b in bikes.OrderBy(b => b.p.Length()).Take(MaxParkedBicycles))
+            { Place(assets.ParkedBicycles[rng.Next(assets.ParkedBicycles.Length)], b.p, b.yaw, "Parked bicycle"); ParkedBicycleCount++; }
+        Emit(props, "Bollards", bollards, metal, true);
+        Emit(props, "Bicycle racks", racks, metal, false);
+        Emit(props, "Hedges", hedges, green, true);
+        Emit(props, "Walls", walls, brickWall, true);
+        Emit(props, "Fences", fences, metal, true);
+        Emit(props, "Recycling containers", containers, containerMat, true);
+        Emit(props, "Bus shelters", shelters, glass, true);
+        Emit(props, "Terrace furniture", furniture, wood, true);
+        Emit(props, "Street cabinets", cabinets, metal, true);
+        Emit(props, "Bus stop signs", busSigns, Mat("Bus stop sign", new Color(0.05f, 0.25f, 0.6f), 0.5f), false);
+    }
+
+    // ------------------------------------------------------------------ real 3D buildings (3D BAG)
+
+    static Texture2D RoofTiles(string name, Color baseColor) => Tex(name, 256, (x, y, r) =>
+    {
+        // rows of overlapping tiles: a dark shadow line under each row, rows offset by half a tile
+        int row = y / 32, ty = y % 32, tx = (x + (row % 2) * 16) % 32;
+        var c = Noise(baseColor, r, 0.18f);
+        if (ty < 3) c *= 0.55f;
+        else if (tx < 2) c *= 0.75f;
+        else c *= 0.9f + 0.1f * ty / 32f;
+        c.a = 1f;
+        return c;
+    });
+
+    void AddRealBuildings(List<Bag3dBuildings.Building> bag, MeshBuilder[] facadeMbs, int[] palette, MeshBuilder flatRoofs, MeshBuilder[] tileRoofs)
+    {
+        for (int bi = 0; bi < bag.Count; bi++)
+        {
+            var b = bag[bi];
+            bool inside = false;
+            var centre = Vector3.zero;
+            foreach (var v in b.V) { centre += v; if (!inside && Inside(new V2(v.x, v.z))) inside = true; }
+            if (!inside || b.V.Length == 0) continue;
+            centre /= b.V.Length;
+            // older buildings are mostly brick; newer ones get the whole palette
+            int pi = (int)((uint)(bi * 2654435761u) % (uint)palette.Length);
+            var wall = facadeMbs[b.Year > 0 && b.Year < 1940 ? palette[pi % 3] : palette[pi]];
+            AddTriangles(wall, b.V, b.Walls, centre, true);
+            AddTriangles(b.RoofKind == 1 ? tileRoofs[bi % 3 == 0 ? 1 : 0] : flatRoofs, b.V, b.Roofs, centre, false);
+            BuildingCount++;
+        }
+    }
+
+    // each triangle on its own vertices (flat shading), turned to face outwards (walls) or up (roofs),
+    // with UVs in metres along the surface (facades 3 m per texture tile, roof tiles 2.5 m)
+    static void AddTriangles(MeshBuilder mb, Vector3[] v, int[] tris, Vector3 centre, bool wall)
+    {
+        for (int i = 0; i + 2 < tris.Length; i += 3)
+        {
+            Vector3 a = v[tris[i]], b = v[tris[i + 1]], c = v[tris[i + 2]];
+            var n = Vector3.Cross(b - a, c - a);
+            if (n.sqrMagnitude < 1e-8f) continue;
+            bool flip = wall ? Vector3.Dot(new Vector3(n.x, 0, n.z), (a + b + c) / 3f - centre) < 0f : n.y < 0f;
+            if (flip) { var t = b; b = c; c = t; n = -n; }
+            n.Normalize();
+            var tan = Vector3.Cross(Vector3.up, n);
+            if (tan.sqrMagnitude < 1e-4f) tan = Vector3.right;
+            tan.Normalize();
+            var bit = Vector3.Cross(n, tan);
+            int k = mb.V.Count;
+            foreach (var p in new[] { a, b, c })
+            {
+                mb.V.Add(p);
+                mb.UV.Add(wall ? new Vector2(Vector3.Dot(p, tan) / 3f, p.y / 3f) : new Vector2(Vector3.Dot(p, tan) / 2.5f, Vector3.Dot(p, bit) / 2.5f));
+            }
+            mb.T.Add(k); mb.T.Add(k + 1); mb.T.Add(k + 2);
         }
     }
 
