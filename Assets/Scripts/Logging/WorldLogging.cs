@@ -22,6 +22,8 @@ public class WorldLogger
     int _lastFrameAICarCount;
     BinaryWriter _fileWriter;
     float _startTime;
+    string _path;
+    ReplayInfo _replay;
 
     LiveLogger _liveLogger;
 
@@ -44,7 +46,8 @@ public class WorldLogger
         {
             Directory.CreateDirectory("ExperimentLogs");
         }
-        _fileWriter = new BinaryWriter(File.Create("ExperimentLogs/" + fileName + DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss") + ".binLog"));
+        _path = "ExperimentLogs/" + fileName + DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss") + ".binLog";
+        _fileWriter = new BinaryWriter(File.Create(_path));
         _startTime = time;
         _fileWriter.Write(DateTime.Now.ToBinary());
         _driverBuffer.Clear();
@@ -52,6 +55,21 @@ public class WorldLogger
         _driverBuffer.AddRange(_playerSystem.Passengers);
         _fileWriter.Write(_driverBuffer.IndexOf(_playerSystem.LocalPlayer));
         _fileWriter.Write(_driverBuffer.Count);
+        // for the replay: which world and avatars
+        var env = EnvironmentController.Instance;
+        _replay = new ReplayInfo
+        {
+            Experiment = experiment.ShortName,
+            Scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name,
+            Map = OsmMap.Current != null ? (string.IsNullOrEmpty(OsmMap.Requested) ? OsmMap.Current.Info.Name : OsmMap.Requested) : null,
+            TimeOfDay = env != null ? env.TimeOfDay : -1f,
+            Weather = env != null ? env.Weather.ToString() : null,
+            LocalDriver = _driverBuffer.IndexOf(_playerSystem.LocalPlayer),
+            Drivers = _driverBuffer.Select(d => d.name).ToArray(),
+            Pedestrians = _playerSystem.Pedestrians.Select(p => p.name).ToArray(),
+        };
+        _replay.Save(_path);
+        _lastFrameAICarCount = 0;
         _fileWriter.Write(_playerSystem.Pedestrians.Count);
         _fileWriter.Write(experiment.PointsOfInterest.Length);
         foreach (var poi in experiment.PointsOfInterest)
@@ -113,6 +131,11 @@ public class WorldLogger
         var newAiCarsCount = aiCars.Count - _lastFrameAICarCount;
 
         LogFrame(ping, time, newAiCarsCount, _fileWriter);
+        if (active && newAiCarsCount > 0 && _replay != null)
+        {
+            for (int i = _lastFrameAICarCount; i < aiCars.Count; i++) _replay.AICars.Add(string.IsNullOrEmpty(aiCars[i].PrefabName) ? aiCars[i].name : aiCars[i].PrefabName);
+            _replay.Save(_path);
+        }
         if (_liveLogger != null)
         {
             if (newAiCarsCount > 0 || (Time.realtimeSinceStartup - lastRealtimeLog > RealtimeLogInterval)) {

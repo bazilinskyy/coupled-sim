@@ -42,6 +42,8 @@ public class PlayerSystem : MonoBehaviour
     [NonSerialized]
     public PlayerAvatar LocalPlayer;
     public PlayerAvatar PedestrianPrefab => _AvatarPrefab;
+    public PlayerAvatar[] DriverPrefabs => _AvatarPrefabDriver;
+    public PlayerAvatar[] TwoWheelerPrefabs => _AvatarPrefabTwoWheeler;
 
     // Avatars contains both Drivers and Pedestrians (in arbitrary order)
     [NonSerialized]
