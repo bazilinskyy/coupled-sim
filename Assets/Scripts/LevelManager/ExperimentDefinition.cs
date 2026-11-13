@@ -56,6 +56,12 @@ public struct ExperimentRoleDefinition
     [Tooltip("Where the steering wheel of this role's car is. Auto: on the right in cities with left-hand traffic (London, Tokyo, Sydney, ...), else on the left.")]
     public SteeringSide Steering;
 
+    [Header("Riding in another role's car")]
+    [Tooltip("Name of the role whose car this participant sits in (e.g. three participants in one shared AV); empty: own avatar. Use a pedestrian spawn type for this role.")]
+    public string RideInCarOf;
+    [Tooltip("Seat in that car (rear seats need a car with them, e.g. the hatchback).")]
+    public CarSeat Seat;
+
     [Header("In-car displays")]
     [Tooltip("Head-up display from StreamingAssets/InCar/<name>.json (see InCarDisplay); empty: none.")]
     public string HudDesign;

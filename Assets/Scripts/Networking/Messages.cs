@@ -19,6 +19,7 @@ enum MsgId
     S_SetAICarActive = 9,
     S_Environment = 10,
     S_AnimalPoses = 11,
+    S_Voice = 12,
 
     S_VisualSync = 123,
 
@@ -27,6 +28,7 @@ enum MsgId
     C_Ready = 1001,
     C_UpdatePose = 1002,
     C_RequestHMIChange = 1003,
+    C_Voice = 1004,
 }
 
 // On Serialization/Deserialization:
