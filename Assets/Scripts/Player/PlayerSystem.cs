@@ -168,6 +168,8 @@ public class PlayerSystem : MonoBehaviour
         {
             _hmiManager.AddHMI(avatar.HMISlots.Spawn(HMISlot.Windshield, role.WindshieldHMI));
         }
+        var design = EhmiDesignFor(role, spawnPoint.Type, out var placement);
+        if (design != null) _hmiManager.AddHMI(SpawnDesignedEhmi(avatar, design, placement));
         return avatar;
     }
 
@@ -216,5 +218,69 @@ public class PlayerSystem : MonoBehaviour
     public void SelectMode(InputMode inputMode)
     {
         PlayerInputMode = inputMode;
+    }
+
+    /// <summary>The role's designed eHMI, or the command line's (-ehmiDesign Name[@Hood|Top|Windshield|Bumper|Road]) for AV roles.</summary>
+    static string EhmiDesignFor(ExperimentRoleDefinition role, SpawnPointType type, out EhmiPlacement placement)
+    {
+        placement = role.EhmiDesignPlacement;
+        var design = string.IsNullOrEmpty(role.EhmiDesign) ? null : role.EhmiDesign;
+        var args = Environment.GetCommandLineArgs();
+        if (type == SpawnPointType.PlayerInAIControlledCar)
+            for (int i = 0; i + 1 < args.Length; i++)
+                if (args[i] == "-ehmiDesign")
+                {
+                    var parts = args[i + 1].Split('@');
+                    design = parts[0];
+                    if (parts.Length > 1 && Enum.TryParse<EhmiPlacement>(parts[1], true, out var pl)) placement = pl;
+                }
+        return design;
+    }
+
+    /// <summary>A DesignedEhmi on a car: at one of its eHMI anchors, on the front bumper or flat on the road ahead.</summary>
+    public static DesignedEhmi SpawnDesignedEhmi(PlayerAvatar avatar, string design, EhmiPlacement placement)
+    {
+        var go = new GameObject("Designed eHMI " + design);
+        var root = avatar.transform;
+        Transform anchor = placement == EhmiPlacement.Hood ? avatar.HMISlots.Hood : placement == EhmiPlacement.Top ? avatar.HMISlots.Top
+            : placement == EhmiPlacement.Windshield ? avatar.HMISlots.Windshield : null;
+        if (anchor != null)
+        {
+            go.transform.SetParent(anchor, false);
+        }
+        else
+        {
+            // the car's front from its solid colliders (renderers include light beams), in its own axes
+            float front = 0f, width = 1.6f;
+            foreach (var col in avatar.GetComponentsInChildren<Collider>())
+            {
+                if (col.isTrigger || col is WheelCollider) continue;
+                var b = col.bounds;
+                for (int c = 0; c < 8; c++)
+                {
+                    var p = root.InverseTransformPoint(new Vector3((c & 1) == 0 ? b.min.x : b.max.x, (c & 2) == 0 ? b.min.y : b.max.y, (c & 4) == 0 ? b.min.z : b.max.z));
+                    front = Mathf.Max(front, p.z); width = Mathf.Max(width, Mathf.Abs(p.x) * 2f);
+                }
+            }
+            if (front <= 0f) front = 2f;
+            Debug.Log($"Designed eHMI {design}: {placement}, car front {front:F2} m ahead of its origin");
+            go.transform.SetParent(root, false);
+            if (placement == EhmiPlacement.Bumper)
+            {
+                go.transform.localPosition = new Vector3(0f, 0.45f, front + 0.02f);
+            }
+            else
+            {
+                // projected on the road 1.8-4.2 m ahead, facing up, its top pointing away from the car
+                var ahead = root.TransformPoint(new Vector3(0f, 0f, front + 3f));
+                float ground = Physics.Raycast(ahead + Vector3.up * 3f, Vector3.down, out var hit, 10f, ~0, QueryTriggerInteraction.Ignore) ? hit.point.y : ahead.y;
+                go.transform.localPosition = new Vector3(0f, root.InverseTransformPoint(new Vector3(ahead.x, ground + 0.03f, ahead.z)).y, front + 3f);
+                go.transform.localRotation = Quaternion.Euler(-90f, 0f, 0f);
+            }
+        }
+        go.layer = avatar.gameObject.layer;
+        var ehmi = go.AddComponent<DesignedEhmi>();
+        ehmi.Design = design;
+        return ehmi;
     }
 }

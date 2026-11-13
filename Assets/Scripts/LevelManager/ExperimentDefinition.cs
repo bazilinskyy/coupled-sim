@@ -33,6 +33,10 @@ public struct ExperimentRoleDefinition
     public HMI TopHMI;
     public HMI WindshieldHMI;
     public HMI HoodHMI;
+    [Tooltip("An eHMI from a design file (StreamingAssets/eHMI/<name>.json, see DesignedEhmi); empty: none.")]
+    public string EhmiDesign;
+    [Tooltip("Where the designed eHMI is: on the hood, the roof, the windshield, the front bumper, or projected on the road ahead.")]
+    public EhmiPlacement EhmiDesignPlacement;
 
     //indicates car prefab that will be spawned for this role. Selected prefab is the one on the indicated index on PlayerSystem component lists 
     // - for Passenger - PassengerAvatarPrefabPassenger list
@@ -58,6 +62,8 @@ public struct ExperimentRoleDefinition
 }
 
 public enum SteeringSide { Auto, Left, Right }
+
+public enum EhmiPlacement { Hood, Top, Windshield, Bumper, Road }
 
 /// <summary>
 /// Continuous responses of a participant, logged every frame (ResponseInput): a button held while
