@@ -11,6 +11,9 @@ using UnityEngine;
 /// - Cross: starts crossing (walks straight ahead Distance m at Speed m/s) Delay s after the start,
 /// - Hesitate: Delay s after the start steps forward 0.7 m, waits, and steps back,
 /// - Stand: stays.
+/// - Llm: waits and asks Claude every few seconds, with a description of the scene (SceneDescriber),
+///   whether to cross now; crosses when the answer is CROSS (needs ANTHROPIC_API_KEY, see LlmClient;
+///   the answers and reasons are logged).
 /// Set it on the experiment prefab (Companions), or with -companions on the command line of every
 /// agent, e.g. -companions "follow:-1.2,0;cross:1.4,0.4,3;hesitate:2.4,0,2" (mode:right,ahead[,delay]).
 /// The host moves them; clients get their poses like other AI pedestrians. Their actions are logged
@@ -18,7 +21,7 @@ using UnityEngine;
 /// </summary>
 public class PedestrianGroup : MonoBehaviour
 {
-    public enum Action { Follow, Cross, Hesitate, Stand }
+    public enum Action { Follow, Cross, Hesitate, Stand, Llm }
 
     [Serializable]
     public struct Companion
@@ -125,7 +128,7 @@ public class PedestrianGroup : MonoBehaviour
             if (avatar != null) sync?.Register(avatar);
             var anim = go.GetComponentInChildren<Animator>();
             if (anim != null) anim.enabled = true;
-            _movers.Add(new Mover(go.transform, anim, c, c.Offset, i + 1));
+            _movers.Add(new Mover(go.transform, anim, c, c.Offset, i + 1) { Host = this });
         }
         Log(0f, "spawned", $"{Companions.Length} companions by {ParticipantRole}");
     }
@@ -155,7 +158,9 @@ public class PedestrianGroup : MonoBehaviour
         readonly int _id;
         Vector3 _origin, _fwd;
         float _speed;
-        bool _started, _done;
+        bool _started, _done, _decided, _asking;
+        float _nextAsk, _t0 = Time.time;
+        public MonoBehaviour Host;
 
         public Mover(Transform t, Animator anim, Companion c, Vector2 offset, int id)
         {
@@ -182,6 +187,25 @@ public class PedestrianGroup : MonoBehaviour
                     {
                         if (!_started) { _started = true; Log(time, $"Companion {_id}", "starts crossing"); }
                         target = _origin + _fwd * (_c.Distance > 0f ? _c.Distance : 12f);
+                    }
+                    break;
+                case Action.Llm:
+                    if (_decided) target = _origin + _fwd * (_c.Distance > 0f ? _c.Distance : 12f);
+                    else if (!_asking && time >= _nextAsk && time >= _c.Delay && Host != null)
+                    {
+                        _asking = true;
+                        _nextAsk = time + 3f;
+                        var desc = SceneDescriber.Describe(_t);
+                        Host.StartCoroutine(LlmClient.Ask(
+                            "You are a pedestrian standing at the kerb, about to cross the road straight ahead of you. You see the scene described by the user. " +
+                            "Decide whether to start crossing now. Answer with CROSS or WAIT as the first word, then one short sentence with your reason.",
+                            desc, answer =>
+                            {
+                                _asking = false;
+                                var a = (answer ?? "").Trim();
+                                Log(Time.time - _t0, $"Companion {_id}", $"LLM: {(a.Length > 0 ? a.Replace(";", ",") : "no answer")} | scene: {desc.Replace(";", ",")}");
+                                if (a.StartsWith("CROSS", StringComparison.OrdinalIgnoreCase)) { _decided = true; Log(Time.time - _t0, $"Companion {_id}", "starts crossing (LLM)"); }
+                            }));
                     }
                     break;
                 case Action.Hesitate:
