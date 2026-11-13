@@ -333,6 +333,48 @@ public static class SmokeTest
         if (signs.Length > 0)
             sb.AppendLine($"Traffic signs: {signs.Length}; " + string.Join("; ", signs.GroupBy(s => s.Kind).Select(g =>
                 $"{g.Key} x{g.Count()} e.g. at {g.First().transform.position} facing {g.First().transform.eulerAngles.y:F0}")));
+        // rendering cost of the participant's view: 30 renders, each waited for (ReadPixels)
+        var viewCam = UnityEngine.Object.FindObjectsByType<Camera>().Where(c => c.isActiveAndEnabled && c.targetTexture == null && c.cullingMask != 0 && c.cullingMask != 32)
+            .OrderByDescending(c => c.depth).FirstOrDefault();
+        if (viewCam != null)
+        {
+            var rt = new RenderTexture(1920, 1080, 24);
+            var tex = new Texture2D(8, 8, TextureFormat.RGB24, false);
+            var prev = viewCam.targetTexture;
+            viewCam.targetTexture = rt;
+            double Bench()
+            {
+                viewCam.Render();
+                var sw = System.Diagnostics.Stopwatch.StartNew();
+                for (int i = 0; i < 20; i++)
+                {
+                    viewCam.Render();
+                    var old = RenderTexture.active; RenderTexture.active = rt;
+                    tex.ReadPixels(new Rect(0, 0, 8, 8), 0, 0);
+                    RenderTexture.active = old;
+                }
+                return sw.Elapsed.TotalMilliseconds / 20;
+            }
+            sb.AppendLine($"Render time of the view ({PathOf(viewCam.transform)}, 1920x1080): {Bench():F1} ms");
+            // -smokeBench: what each feature costs
+            if (Environment.GetCommandLineArgs().Contains("-smokeBench"))
+            {
+                var urp = (UnityEngine.Rendering.Universal.UniversalRenderPipelineAsset)UnityEngine.Rendering.GraphicsSettings.currentRenderPipeline;
+                var data = viewCam.GetComponent<UnityEngine.Rendering.Universal.UniversalAdditionalCameraData>();
+                float sd = urp.shadowDistance; int msaa = urp.msaaSampleCount; int cascades = urp.shadowCascadeCount;
+                urp.shadowDistance = 0f; sb.AppendLine($"  without shadows: {Bench():F1} ms"); urp.shadowDistance = sd;
+                urp.shadowCascadeCount = 2; sb.AppendLine($"  2 shadow cascades: {Bench():F1} ms"); urp.shadowCascadeCount = cascades;
+                urp.shadowDistance = 80f; sb.AppendLine($"  shadows to 80 m: {Bench():F1} ms"); urp.shadowDistance = sd;
+                urp.msaaSampleCount = 1; sb.AppendLine($"  without MSAA: {Bench():F1} ms"); urp.msaaSampleCount = msaa;
+                if (data != null) { bool pp = data.renderPostProcessing; data.renderPostProcessing = false; sb.AppendLine($"  without post-processing: {Bench():F1} ms"); data.renderPostProcessing = pp; }
+                float far = viewCam.farClipPlane; viewCam.farClipPlane = Mathf.Min(far, 300f); sb.AppendLine($"  far plane 300 m (was {far}): {Bench():F1} ms"); viewCam.farClipPlane = far;
+                float rs = urp.renderScale; urp.renderScale = 0.75f; sb.AppendLine($"  render scale 0.75: {Bench():F1} ms"); urp.renderScale = rs;
+                sb.AppendLine($"  again as configured: {Bench():F1} ms");
+            }
+            viewCam.targetTexture = prev;
+            rt.Release();
+            UnityEngine.Object.DestroyImmediate(tex);
+        }
         // what the participant's screen shows: the cameras on display 1, in depth order
         var screenCams = UnityEngine.Object.FindObjectsByType<Camera>()
             .Where(c => c.isActiveAndEnabled && c.targetTexture == null && c.targetDisplay == 0).OrderBy(c => c.depth).ToList();
