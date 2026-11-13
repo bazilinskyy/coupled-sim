@@ -115,6 +115,7 @@ public class NetworkingManager : MonoBehaviour
                 int i = Array.IndexOf(args, "-screenshot");
                 _screenshotAt = sAt; _screenshotFile = i + 2 < args.Length ? args[i + 2] : "screenshot.png";
             }
+            Benchmark.FromCommandLine();
             if (float.TryParse(Arg(args, "-quitAfter"), NumberStyles.Float, CultureInfo.InvariantCulture, out var qAt)) _quitAt = qAt;
             if (!string.IsNullOrEmpty(file))
             {
