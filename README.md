@@ -58,7 +58,17 @@ The source code of the coupled simulator is released under the [MIT License](LIC
 - A web dashboard for the experimenter: run the session, switch eHMIs, weather and time from any device, and watch a live map of all agents.
 
 ## Graphics
-The simulator uses the **Universal Render Pipeline** (URP 17.6): the pipeline asset is `Assets/URPDefaultResources/Fantastic.asset` (HDR, 4× MSAA, soft shadows up to 150 m, Forward+ for many lights) with its renderer `Default_Forward_Renderer` (screen-space ambient occlusion). Post-processing (ACES tonemapping, bloom, colour grading, vignette) comes from the global volume `Post-processing (URP)` in the environment scenes with `Assets/Settings/Rendering/SimulatorVolumeProfile.asset`; every participant camera gets post-processing and SMAA anti-aliasing when it starts rendering (`UrpCameraSetup`). Materials were converted with the Render Pipeline Converter; `Assets/Editor/Graphics/GraphicsSetup.cs` holds the conversion steps (including baking the Tree Creator trees to normal meshes).
+The simulator uses the **Universal Render Pipeline** (URP 17.6): the pipeline asset is `Assets/URPDefaultResources/Fantastic.asset` (HDR, 4× MSAA, soft shadows up to 150 m, forward rendering; the 24 street lamps nearest to the viewer are lit) with its renderer `Default_Forward_Renderer` (screen-space ambient occlusion). Post-processing (ACES tonemapping, bloom, colour grading, vignette) comes from the global volume `Post-processing (URP)` in the environment scenes with `Assets/Settings/Rendering/SimulatorVolumeProfile.asset`; every participant camera gets post-processing and SMAA anti-aliasing when it starts rendering (`UrpCameraSetup`). Materials were converted with the Render Pipeline Converter; `Assets/Editor/Graphics/GraphicsSetup.cs` holds the conversion steps (including baking the Tree Creator trees to normal meshes).
+
+**Quality levels** for slower PCs and VR (`-quality <name>` on the command line, or `Edit` ➡️ `Project Settings` ➡️ `Quality`):
+
+| Level | Shadows | Anti-aliasing | Ambient occlusion | Render scale | 1080p view on an Intel UHD 630 |
+| --- | --- | --- | --- | --- | --- |
+| `Fantastic` (default) | 4 cascades to 150 m, 4096, soft | MSAA 4× | yes | 1 | about 100 ms |
+| `Balanced` | 2 cascades to 100 m, 2048, soft | MSAA 2× | yes | 1 | about 70 ms |
+| `Performance` | 1 cascade to 60 m, 1024, hard | none | no | 0.8 | about 47 ms |
+
+Shadows cost most (about 40% of the frame on that GPU). In the town, the trees have mesh LODs, flat surfaces cast no shadows, and occlusion culling is baked (`Coupled Sim` ➡️ `Graphics` ➡️ `Optimise scenes` redoes this after changing the scenes); the smoke test measures the render time of the participant's view (`-smokeBench` also measures the cost of each feature).
 
 ## Installation
 The simulator runs on **Unity 6.6 (6000.6.9f1)**.
@@ -112,6 +122,7 @@ Only the window that has focus receives keyboard input.
 | `-autoRun` | run the trials automatically (`Run Trial Sequence Automatically`) |
 | `-clients <n>` | automatic trials: wait for n clients; they get the roles of the trial parameter `clientRoles` (e.g. `Pedestrian,Cyclist`), else the next free roles |
 | `-trials <file>`, `-participant <n>`, `-order latin\|random\|none` | [trial file and counterbalancing](#trial-files-and-counterbalancing) |
+| `-quality Fantastic\|Balanced\|Performance` | [graphics quality](#graphics) for slower PCs |
 | `-sumoConnect <host:port>` | connect to a running [SUMO](#traffic-from-sumo) |
 | `-views "LeftScreen:2,RightScreen:3,RearMirror:1"` | [extra monitors and mirrors](#several-monitors-and-mirrors) |
 | `-screenshot <seconds> <file>`, `-quitAfter <seconds>` | a screenshot after that time; quit after that time (tests, documentation) |
@@ -671,7 +682,7 @@ All agents must be in the same local network; the host's IP address is in its co
 
 **Do I need SUMO?** Only for SUMO traffic (`SumoTraffic`, city maps). Install SUMO 1.20 or newer and set `SUMO_HOME`. Without it, the hand-built town has the built-in traffic models (`Traffic`) and city maps run without traffic.
 
-**How do I make a new experiment?** Copy an experiment prefab in `Assets/ExperimentDefinitions` (e.g. `Base` or `CityMap`), change it in prefab mode (roles, spawn points, paths, traffic, pedestrians, conditions) and add it to `NetworkingManager` ➡️ `Experiments` in `StartScene` (see [Configuration](#configuration)). The examples `PedestrianCrossings`, `Traffic`, `SumoTraffic` and `CityMap` show the newer features.
+**How do I make a new experiment?** `Coupled Sim` ➡️ `Experiments` ➡️ `Setup…` copies a template (`Base` for the town, `CityMap` for city maps) with the map, roles, traffic and conditions you choose and registers it (see [Setting up a new experiment](#setting-up-a-new-experiment)); then change it in prefab mode (spawn points, paths, pedestrians). The examples `PedestrianCrossings`, `Traffic`, `SumoTraffic` and `CityMap` show the newer features.
 
 **Where are the data?** In `ExperimentLogs` next to the `Assets` folder (in builds: next to the executable): binary logs of all agents per frame and at 50 Hz, pedestrian decisions and eye gaze as CSV. Convert the binary logs to CSV in the start screen (`Convert log to csv`). See [Data logging](#data-logging).
 
@@ -687,7 +698,7 @@ All agents must be in the same local network; the host's IP address is in its co
 
 **The wheel does nothing, or the pedals are swapped.** Press `F2`: if the wheel is not listed, check the USB connection and its driver; if axes are wrong, run the calibration.
 
-**The frame rate is low.** Run a build rather than the editor; in the editor, close the Scene view and use `Play Maximized`. Lower `Assets/URPDefaultResources/Fantastic.asset` (shadow distance, MSAA, render scale) or remove SSAO from `Default_Forward_Renderer`; reduce `EnvironmentController` ➡️ `MaxActiveStreetLights` at night; use a smaller city map or radius. On laptops, make sure the simulator runs on the dedicated GPU (NVIDIA Control Panel ➡️ Manage 3D settings). In VR, the headset's refresh rate (72-90 Hz) is the target.
+**The frame rate is low.** Start with `-quality Balanced` or `-quality Performance` (see [Graphics](#graphics)): shadows cost most. Run a build rather than the editor; in the editor, close the Scene view and use `Play Maximized`; reduce `EnvironmentController` ➡️ `MaxActiveStreetLights` at night; use a smaller city map or radius. On laptops, make sure the simulator runs on the dedicated GPU (NVIDIA Control Panel ➡️ Manage 3D settings). In VR, the headset's refresh rate (72-90 Hz) is the target.
 
 **Cars drive on the left in London, but the car is left-hand drive.** Yes: maps with left-hand traffic place participants and SUMO traffic on the left, but there is no right-hand drive car model yet.
 
