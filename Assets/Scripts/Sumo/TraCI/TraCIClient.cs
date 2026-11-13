@@ -257,13 +257,14 @@ namespace CoupledSim.TraCI
             IgnoredVehicles.Add(id);
             if (string.IsNullOrEmpty(routeEdge))
             {
-                // the first edge this kind of vehicle may use (footways, rail etc. are not allowed)
+                // the first edge with a lane this kind of vehicle may use (footways, rail etc. are not
+                // allowed; in networks from OpenDRIVE the outer lane 0 is often the pavement)
                 string vClass = typeId == "DEFAULT_BIKETYPE" ? "bicycle" : "passenger";
-                foreach (var e in GetEdgeIds())
+                foreach (var lane in GetStringList(CMD_GET_LANE_VARIABLE, TRACI_ID_LIST, ""))
                 {
-                    if (e.StartsWith(":")) continue;
-                    var allowed = GetStringList(CMD_GET_LANE_VARIABLE, LANE_ALLOWED, e + "_0");
-                    if (allowed.Count == 0 || allowed.Contains(vClass)) { routeEdge = e; break; }
+                    if (lane.StartsWith(":")) continue;
+                    var allowed = GetStringList(CMD_GET_LANE_VARIABLE, LANE_ALLOWED, lane);
+                    if (allowed.Count == 0 || allowed.Contains(vClass)) { routeEdge = lane.Substring(0, lane.LastIndexOf('_')); break; }
                 }
             }
             string routeId = "coupledsim_route_" + id;
