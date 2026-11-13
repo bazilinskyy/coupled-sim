@@ -137,6 +137,10 @@ public class ExperimentDashboard : MonoBehaviour
             sb.Append("\"trial\":{\"index\":").Append(nm.CurrentTrial).Append(",\"count\":").Append(nm.trials != null ? nm.trials.Length : 0)
               .Append(",\"automatic\":").Append(nm.RunTrialSequenceAutomatically ? "true" : "false")
               .Append(",\"participant\":").Append(NetworkingManager.SessionParticipant).Append("},");
+            var ad = AutomatedDriving.Local;
+            if (ad != null)
+                sb.Append("\"automation\":{\"state\":\"").Append(ad.State).Append("\",\"reaction\":")
+                  .Append(ad.LastReactionTime.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)).Append("},");
             sb.Append("\"inputMode\":").Append(S(nm.PlayerSystem != null ? nm.PlayerSystem.PlayerInputMode.ToString() : "")).Append(',');
         }
         if (host != null)
@@ -292,6 +296,10 @@ public class ExperimentDashboard : MonoBehaviour
                 return "ok";
             case "/api/next-trial":
                 nm.RequestNextTrial();
+                return "ok";
+            case "/api/takeover":
+                if (AutomatedDriving.Local == null) return "no automated car on the host";
+                AutomatedDriving.Local.RequestTakeOver("dashboard");
                 return "ok";
             case "/api/ehmi":
             {
