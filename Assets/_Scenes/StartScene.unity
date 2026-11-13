@@ -259,6 +259,7 @@ GameObject:
   - component: {fileID: 301934536}
   - component: {fileID: 301934537}
   - component: {fileID: 301934538}
+  - component: {fileID: 301934539}
   m_Layer: 0
   m_Name: Managers
   m_TagString: Untagged
@@ -310,6 +311,7 @@ MonoBehaviour:
   TrialFile: 
   Participant: 0
   Order: 1
+  WaitForClients: 0
   hideGui: 0
   RunTrialSequenceAutomatically: 0
   recordVideos: 0
@@ -402,6 +404,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WheelCalibration
   ToggleKey: 283
+--- !u!114 &301934539
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 301934531}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad222bcc992de4840aca3097a1575ee0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DisplayViews
+  Views: []
+  ScreenAngle: 0
 --- !u!1 &1256699364
 GameObject:
   m_ObjectHideFlags: 0
