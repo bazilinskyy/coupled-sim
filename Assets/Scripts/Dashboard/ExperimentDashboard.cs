@@ -135,7 +135,8 @@ public class ExperimentDashboard : MonoBehaviour
             for (int i = 0; i < nm.Experiments.Length; i++) sb.Append(i > 0 ? "," : "").Append(S(nm.Experiments[i] != null ? nm.Experiments[i].Name : "?"));
             sb.Append("],");
             sb.Append("\"trial\":{\"index\":").Append(nm.CurrentTrial).Append(",\"count\":").Append(nm.trials != null ? nm.trials.Length : 0)
-              .Append(",\"automatic\":").Append(nm.RunTrialSequenceAutomatically ? "true" : "false").Append("},");
+              .Append(",\"automatic\":").Append(nm.RunTrialSequenceAutomatically ? "true" : "false")
+              .Append(",\"participant\":").Append(NetworkingManager.SessionParticipant).Append("},");
             sb.Append("\"inputMode\":").Append(S(nm.PlayerSystem != null ? nm.PlayerSystem.PlayerInputMode.ToString() : "")).Append(',');
         }
         if (host != null)

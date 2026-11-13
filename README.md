@@ -12,7 +12,7 @@ The simulator is open source and free to use. It is aimed at, but not limited to
 - [Citation](#citation) · [Examples of use](#examples-of-use) · [License](#license)
 - [Features](#features)
 - [Installation](#installation)
-- [Running the simulator](#running-the-simulator): [host](#running-as-a-host), [client](#running-as-a-client), [several agents on one machine](#several-agents-on-one-machine), [automatic trials](#running-trials-automatically), [recording videos](#recording-trial-videos)
+- [Running the simulator](#running-the-simulator): [host](#running-as-a-host), [client](#running-as-a-client), [several agents on one machine](#several-agents-on-one-machine), [automatic trials](#running-trials-automatically), [trial files and counterbalancing](#trial-files-and-counterbalancing), [recording videos](#recording-trial-videos)
 - [Controls](#controls)
 - [Environment and vehicles](#environment-and-vehicles)
 - [Networking](#networking)
@@ -52,7 +52,8 @@ The source code of the coupled simulator is released under the [MIT License](LIC
 - eHMIs on the hood, roof and windshield of AVs, switched by the passenger or the host.
 - Traffic lights with programmable sequences; day and night versions of the town.
 - Logging of all agents (cars, pedestrian skeletons, traffic lights, eye contact) to binary files, conversion to CSV, and live streaming over UDP.
-- Automatic trial sequences with per-trial parameters and video recording.
+- Automatic trial sequences with per-trial parameters and video recording; trial files (CSV/JSON) with counterbalancing per participant (balanced Latin square).
+- An experiment setup window: new experiments from templates on any map, a check of the whole set-up before Play.
 - A web dashboard for the experimenter: run the session, switch eHMIs, weather and time from any device, and watch a live map of all agents.
 
 ## Graphics
@@ -113,6 +114,32 @@ When one participant is controlled on the host, a sequence of trials can be set 
    - `Recording Start Time` and `Recording Duration`: see [Recording trial videos](#recording-trial-videos).
 2. Check `Run Trial Sequence Automatically`, and usually `Hide GUI` as well.
 3. Press Play. The first trial starts by itself. `Esc` ends the current trial and starts the next one, or quits after the last one. `Tab` shows or hides the GUI.
+
+### Trial files and counterbalancing
+Instead of the `Trials` list, a sequence can come from a file, which is easier to write in a spreadsheet and to change without touching the scene. Put a CSV (or JSON) file in `Assets/StreamingAssets/Trials` and set `NetworkingManager` ➡️ `Trial File` (or start a build with `-trials <file>`). One row per trial:
+
+```csv
+#order=latin
+experiment,role,block,weather,time,animals,notes
+Base,Driver,,PartlyCloudy,13:00,1,practice
+Base,Driver,A,Clear,13:00,1,
+Base,Driver,B,HeavyRain,13:00,1,
+Base,Driver,C,Clear,22:30,1,
+Base,Driver,D,Fog,13:00,0,
+CityMap,Driver,,PartlyCloudy,17:30,1,
+```
+
+- `experiment`: the experiment's `ShortName`, `Name`, prefab name or index in `Experiments`; `role`: the role's name or index (default 0); `input`: `Flat`, `VR` or `Suite` (default: `PlayerSystem` ➡️ `Player Input Mode`); `recordingStart`, `recordingDuration`: for [videos](#recording-trial-videos); `notes`: ignored.
+- Every other column is an experiment parameter (`weather`, `time`, `map`, `location`, `animals`, `fog`, `rain`, or your own `IExperimentModifier`'s); empty cells are left out. Commas, semicolons or tabs separate the columns; lines starting with `#` are comments.
+- `block`: trials with the same block stay together, and the order of the blocks changes per participant: `#order=latin` (default) uses row *participant* of a balanced Latin square (Williams design: each block in each position equally often and each block after each other block equally often; for an odd number of blocks over twice as many participants), `#order=random` shuffles the blocks and the trials in them (repeatably per participant), `#order=none` keeps the file's order. Trials without a block before the first block (e.g. practice) run first, the other ones last.
+- The participant number comes from `NetworkingManager` ➡️ `Participant` or `-participant <n>` (0 = the file's order); `-order latin|random|none` overrides the file. With a participant number, the host's logs are named `HostLog-P03-T02-{role}-...`, and `ExperimentLogs/Session-P03-{date}.csv` lists the order this participant got. `-autoRun` runs the trials automatically.
+- JSON: `{"order": "latin", "trials": [{"experiment": "Base", "role": "Driver", "block": "A", "parameters": [{"name": "weather", "value": "Clear"}]}]}`.
+
+For example, a build for participant 7 that runs the whole sequence by itself:
+```
+"Coupled Simulator.exe" -trials example.csv -participant 7 -autoRun
+```
+`Coupled Sim` ➡️ `Experiments` ➡️ `Setup…` ➡️ `Trials` previews the order for any participant, checks the file, and makes a trial file from the `Trials` list. Examples: `Assets/StreamingAssets/Trials/example.csv` and `example.json`.
 
 ### Recording trial videos
 Trial videos for "offline" use (for example online questionnaires) are recorded with Unity Recorder, in the editor only:
@@ -263,7 +290,7 @@ The central configuration is on the `Managers` game object in `StartScene`:
 
 ![](ReadmeFiles/player_system.png)
 
-An experiment is a prefab with an `ExperimentDefinition` component on its root object. To make a new experiment selectable, add its prefab to the `Experiments` list of `NetworkingManager`. `Assets/ExperimentDefinitions` contains `Base` (the example used by default, showing most features) and the experiments of earlier studies: `2Pedestrian`, `EvasiveManeuvers`, `Scenario_1_eHMI`, `SoloAuto`, `SoloPedestrian`, `SoloPedestrianWithNPCs-Nighttime` and `TrolleyProblem`.
+An experiment is a prefab with an `ExperimentDefinition` component on its root object. To make a new experiment selectable, add its prefab to the `Experiments` list of `NetworkingManager` (or right-click it ➡️ `Coupled Sim` ➡️ `Register experiment in StartScene`). `Assets/ExperimentDefinitions` contains `Base` (the example used by default, showing most features) and the experiments of earlier studies: `2Pedestrian`, `EvasiveManeuvers`, `Scenario_1_eHMI`, `SoloAuto`, `SoloPedestrian`, `SoloPedestrianWithNPCs-Nighttime` and `TrolleyProblem`.
 
 ![](ReadmeFiles/networking_manager.png)
 
@@ -275,10 +302,20 @@ The prefab opens in prefab mode with the `Regular Prefab Editing Environment`. I
 
 ![](ReadmeFiles/project_settings.png)
 
+#### Setting up a new experiment
+`Coupled Sim` ➡️ `Experiments` ➡️ `Setup…` creates experiments without editing lists by hand:
+1. `New experiment`: give a name and short name, pick a template (one of the registered experiments: `Base` for the hand-built town, `CityMap` for city maps), where it takes place (the template's scene, one of the [city maps](#city-maps-openstreetmap), or any place by coordinates), the roles to keep, background traffic, animals, time of day and weather. `Create and register` copies the template to `Assets/ExperimentDefinitions`, adds it to `NetworkingManager` ➡️ `Experiments` and its scene to the build settings.
+2. `Open it to place spawn points` opens the experiment in its scene: move the spawn points, waypoint paths and spawners, then apply the overrides to the prefab. On city maps, spawn points (`OsmSpawnPoint`) find a road lane, pavement or crossing near the map centre by themselves.
+3. `Trials`: make a [trial file](#trial-files-and-counterbalancing) and preview each participant's order.
+4. `Check`: lists problems: experiments without roles or spawn points, cars or two-wheelers missing from `PlayerSystem`'s lists, AI car prefabs missing from `AI Car System` ➡️ `Prefabs`, scenes or maps that do not exist, duplicate role names, trials pointing to experiments or roles that do not exist, experiment prefabs that are not registered.
+
+The same check runs when you press Play in `StartScene` (and adds missing experiment scenes to the build settings); it asks before playing when there are errors. Turn it off with `Coupled Sim` ➡️ `Experiments` ➡️ `Check experiments before Play`, or run it with `Coupled Sim` ➡️ `Experiments` ➡️ `Validate`.
+
 `ExperimentDefinition` has these fields:
 - `ShortName`: short name, used in video file names;
 - `Name`: name shown in the host GUI;
-- `Scene`: the Unity scene loaded as the environment (it must be in the build settings);
+- `Scene`: the Unity scene loaded as the environment (it must be in the build settings); empty for city maps;
+- `Map`: the [city map](#city-maps-openstreetmap) (`MapCatalog` name or `lat,lon[,radius]`) built in the `OsmMap` scene; empty for hand-built scenes;
 - `Roles`: the roles participants can take (see below);
 - `Points of Interest`: `Transform`s whose positions are stored in the logs, for analysis and as CSV reference frames;
 - `Car Spawners`: objects with a component derived from `CarSpawnerBase` that spawn AI cars. The spawn sequence is the `IEnumerator SpawnCoroutine()` of the component (see `BaseSyncedCarSpawner`). Spawned prefabs must be in `NetworkingManager` ➡️ `AI Car System` ➡️ `Prefabs`. A spawner without spawn point, track or car prefab logs a warning and spawns nothing;

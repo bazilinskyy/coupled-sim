@@ -72,7 +72,7 @@ $('startHost').disabled=s.mode!=='menu';const lobby=s.mode==='host'&&s.state==='
 $('mapRow').hidden=!s.maps;if(s.maps){fillSelect($('mapSelect'),s.maps,s.currentMapIndex);$('mapSelect').disabled=!lobby;$('setLocation').disabled=!lobby}
 if(s.experiments)fillSelect($('experiment'),s.experiments,s.selectedExperiment);$('experiment').disabled=!lobby;
 if(s.inputMode&&document.activeElement!==$('inputMode'))$('inputMode').value=s.inputMode;
-$('trial').textContent=s.trial?`Trial ${s.trial.index+1} of ${s.trial.count}${s.trial.automatic?' (automatic)':''}`:'';
+$('trial').textContent=s.trial?`${s.trial.participant?'Participant '+s.trial.participant+', t':'T'}rial ${s.trial.index+1} of ${s.trial.count}${s.trial.automatic?' (automatic)':''}`:'';
 const tb=$('players').tBodies[0];tb.innerHTML='';(s.players||[]).forEach(p=>{const tr=document.createElement('tr');const roles=['(none)'].concat(s.roles||[]);
 tr.innerHTML=`<td>${p.id===0?'Host':'Player '+p.id}</td><td class=""${p.connected?'ok':'muted'}"">${p.connected?'yes':'no'}</td><td></td><td class=""${p.ready?'ok':'muted'}"">${p.ready?'yes':'–'}</td>`;
 const sel=document.createElement('select');roles.forEach((r,i)=>{const o=document.createElement('option');o.value=i-1;o.text=r;sel.add(o)});sel.value=p.role;sel.disabled=!lobby||!p.connected;sel.onchange=()=>api(`/api/role?player=${p.id}&role=${sel.value}`);tr.cells[2].appendChild(sel);tb.appendChild(tr)});

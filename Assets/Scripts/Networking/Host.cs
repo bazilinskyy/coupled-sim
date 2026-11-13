@@ -182,8 +182,8 @@ public class Host : NetworkSystem
                             _transitionPhase = TransitionPhase.None;
                             _currentState = NetState.InGame;
                             Time.timeScale = 1f;
-                            _logger.BeginLog($"HostLog-{roleName}-", _lvlManager.ActiveExperiment, _lights, Time.realtimeSinceStartup, true);
-                            _fixedTimeLogger.BeginLog($"HostFixedTimeLog-{roleName}-", _lvlManager.ActiveExperiment, _lights, Time.fixedTime, false);
+                            _logger.BeginLog($"HostLog-{NetworkingManager.LogPrefix}{roleName}-", _lvlManager.ActiveExperiment, _lights, Time.realtimeSinceStartup, true);
+                            _fixedTimeLogger.BeginLog($"HostFixedTimeLog-{NetworkingManager.LogPrefix}{roleName}-", _lvlManager.ActiveExperiment, _lights, Time.fixedTime, false);
                         }
                         break;
                 }

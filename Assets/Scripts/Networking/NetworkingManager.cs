@@ -1,5 +1,10 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using CoupledSim.Experiments;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -58,12 +63,87 @@ public class NetworkingManager : MonoBehaviour
     AICarSyncSystem _aiCarSystem;
     public ExperimentDefinition[] Experiments;
 
+    [Header("Trial sequence from a file")]
+    [Tooltip("CSV or JSON trial file (path, or name in StreamingAssets/Trials). Empty: the Trials list below. Command line: -trials <file>.")]
+    public string TrialFile;
+    [Tooltip("Participant number (1, 2, ...) for counterbalancing and log names; 0 = the file's order. Command line: -participant <n>.")]
+    public int Participant;
+    [Tooltip("Block order when the file does not say (#order=...). Command line: -order latin|random|none.")]
+    public TrialOrder Order = TrialOrder.Latin;
+
+    /// <summary>Participant number of this session (0 = none).</summary>
+    public static int SessionParticipant { get; private set; }
+    /// <summary>"P03-" when a participant number is set, for log file names.</summary>
+    public static string LogPrefix => SessionParticipant > 0 ? $"P{SessionParticipant:D2}-T{CurrentTrialIndex + 1:D2}-" : "";
+    /// <summary>Problems found when loading the trial file (shown on the start screen).</summary>
+    public static readonly List<string> TrialFileErrors = new List<string>();
+    static bool _sessionLoaded;
+    static Trial[] _sessionTrials;
+
+    static string Arg(string[] args, string name)
+    {
+        int i = Array.IndexOf(args, name);
+        return i >= 0 && i + 1 < args.Length ? args[i + 1] : null;
+    }
+
+    // once per session: command-line options and the trial file (the manager is re-created for every trial)
+    void LoadSession()
+    {
+        if (!_sessionLoaded)
+        {
+            _sessionLoaded = true;
+            var args = Environment.GetCommandLineArgs();
+            var file = Arg(args, "-trials") ?? TrialFile;
+            SessionParticipant = int.TryParse(Arg(args, "-participant"), out var p) ? p : Participant;
+            TrialOrder? order = TrialTable.TryParseOrder(Arg(args, "-order"), out var o) && Arg(args, "-order") != null ? o : (TrialOrder?)null;
+            if (args.Contains("-autoRun")) _autoRun = true;
+            if (!string.IsNullOrEmpty(file))
+            {
+                _sessionTrials = TrialSequence.Load(file, Experiments, SessionParticipant, order, Order, GetComponent<PlayerSystem>().PlayerInputMode, TrialFileErrors);
+                foreach (var e in TrialFileErrors) Debug.LogError("Trials: " + e);
+                if (_sessionTrials != null) Debug.Log($"Trials: {_sessionTrials.Length} from {file}" + (SessionParticipant > 0 ? $" for participant {SessionParticipant}" : ""));
+            }
+            if (SessionParticipant > 0 || _sessionTrials != null) WriteSessionFile(_sessionTrials ?? trials);
+        }
+        if (_sessionTrials != null && _sessionTrials.Length > 0) trials = _sessionTrials;
+        if (_autoRun) RunTrialSequenceAutomatically = true;
+    }
+
+    static bool _autoRun;
+
+    // ExperimentLogs/Session-P03-{date}.csv: the order of the trials this participant got
+    void WriteSessionFile(Trial[] list)
+    {
+        try
+        {
+            Directory.CreateDirectory("ExperimentLogs");
+            var name = $"ExperimentLogs/Session-{(SessionParticipant > 0 ? $"P{SessionParticipant:D2}-" : "")}{DateTime.Now:yyyy_MM_dd_HH_mm_ss}.csv";
+            using (var w = new StreamWriter(name))
+            {
+                w.WriteLine("participant,trial,experiment,role,input,parameters");
+                for (int i = 0; i < (list?.Length ?? 0); i++)
+                {
+                    var t = list[i];
+                    var exp = t.experimentIndex >= 0 && t.experimentIndex < Experiments.Length && Experiments[t.experimentIndex] != null ? Experiments[t.experimentIndex] : null;
+                    var role = exp != null && exp.Roles != null && t.roleIndex < exp.Roles.Length ? exp.Roles[t.roleIndex].Name : t.roleIndex.ToString(CultureInfo.InvariantCulture);
+                    var ps = t.experimentParameters == null ? "" : string.Join(";", t.experimentParameters.Select(x => x.name + "=" + x.value));
+                    w.WriteLine($"{SessionParticipant},{i + 1},\"{exp?.ShortName}\",\"{role}\",{t.InputMode},\"{ps.Replace("\"", "'")}\"");
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogWarning("Could not write the session file: " + e.Message);
+        }
+    }
+
     void Awake()
     {
         if (Instance == null) {
             Instance = this;
         }
         DontDestroyOnLoad(gameObject);
+        LoadSession();
         _playerSystem = GetComponent<PlayerSystem>();
         _levelManager = new LevelManager(_playerSystem, Experiments);
         _logger = new WorldLogger(_playerSystem, _aiCarSystem);
@@ -155,6 +235,9 @@ public class NetworkingManager : MonoBehaviour
                 {
                     _netSystem = new Client(_levelManager, _playerSystem, _aiCarSystem, _logger, _fixedLogger);
                 }
+                if (SessionParticipant > 0 || _sessionTrials != null)
+                    GUILayout.Label($"{(SessionParticipant > 0 ? $"Participant {SessionParticipant}, " : "")}trial {CurrentTrialIndex + 1} of {trials.Length}: {TrialSequence.Describe(trials[Mathf.Min(CurrentTrialIndex, trials.Length - 1)], Experiments)}");
+                foreach (var e in TrialFileErrors) GUILayout.Label("Trial file: " + e);
 
                 _logConverter.OnGUI();
             }
