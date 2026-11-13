@@ -1,0 +1,71 @@
+name: Tests
+# EditMode tests (pedestrian, traffic, vehicle and two-wheeler models, maps, trial files, right-hand
+# drive) with GameCI's Unity test runner on every pull request and every push to master.
+# Needs a Unity license as repository secrets (see README > Testing > Automatic tests on GitHub):
+# UNITY_EMAIL, UNITY_PASSWORD and UNITY_LICENSE (Personal) or UNITY_SERIAL (Plus/Pro/education).
+# Without them the job only reports that they are missing.
+on:
+  pull_request:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  editmode:
+    name: EditMode tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      HAS_LICENSE: ${{ secrets.UNITY_EMAIL != '' && (secrets.UNITY_LICENSE != '' || secrets.UNITY_SERIAL != '') }}
+    steps:
+      - name: No Unity license yet
+        if: env.HAS_LICENSE != 'true'
+        run: echo "::notice::Tests skipped - add the Unity license secrets (README > Testing > Automatic tests on GitHub)."
+
+      - name: Free disk space (the Unity image is 5 GB)
+        if: env.HAS_LICENSE == 'true'
+        uses: jlumbroso/free-disk-space@v1.3.1
+        with:
+          tool-cache: true
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: false
+
+      - uses: actions/checkout@v4
+        if: env.HAS_LICENSE == 'true'
+
+      - name: Cache the Library folder (imported assets)
+        if: env.HAS_LICENSE == 'true'
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-${{ hashFiles('Packages/packages-lock.json', 'ProjectSettings/ProjectVersion.txt') }}-${{ github.sha }}
+          restore-keys: |
+            Library-${{ hashFiles('Packages/packages-lock.json', 'ProjectSettings/ProjectVersion.txt') }}-
+            Library-
+
+      - name: Run EditMode tests
+        if: env.HAS_LICENSE == 'true'
+        uses: game-ci/unity-test-runner@v4
+        id: tests
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          testMode: editmode
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+          checkName: EditMode test results
+
+      - name: Upload test results
+        if: always() && env.HAS_LICENSE == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: ${{ steps.tests.outputs.artifactsPath }}
