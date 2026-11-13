@@ -294,6 +294,8 @@ public class PlayerAvatar : MonoBehaviour
     public Camera[] cameras;
     public HMIAnchors HMISlots;
     public AvatarType Type;
+    // the prefab it was made from (for replays: AI cars get other names)
+    [NonSerialized] public string PrefabName;
     public Transform[] SyncTransforms;
     [SerializeField]
     private CarBlinkers _carBlinkers;
