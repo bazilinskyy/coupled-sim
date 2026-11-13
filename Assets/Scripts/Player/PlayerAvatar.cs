@@ -199,6 +199,11 @@ public class PlayerAvatar : MonoBehaviour
             SetupModeElements(modeElements);
         }
 
+        // auditory eHMIs of the experiment (AuditoryEhmiSettings), on every agent
+        var auditory = AuditoryEhmiSettings.Current;
+        if (auditory != null && Type == AvatarType.Driver && (vehicleType == PlayerSystem.VehicleType.AV || auditory.AllCars) && !TryGetComponent<AuditoryEhmi>(out _))
+            gameObject.AddComponent<AuditoryEhmi>().Init(auditory);
+
         // the steering wheel of a car this agent does not drive follows the car's motion (#65)
         bool drivesItself = !isRemote && controlMode == PlayerSystem.ControlMode.Driver;
         if (!drivesItself && TryGetComponent<WheelVehicle>(out var wv) && wv.steeringWheel != null && !TryGetComponent<ObservedSteering>(out _))

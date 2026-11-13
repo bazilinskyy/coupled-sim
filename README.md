@@ -49,7 +49,7 @@ The source code of the coupled simulator is released under the [MIT License](LIC
 - 20 city maps from OpenStreetMap on six continents (Eindhoven, Delft, London, Tokyo, New York, Cairo, São Paulo, Sydney, ...), built at load time, and maps of any place by coordinates.
 - Coupling with [SUMO](https://eclipse.dev/sumo/) over TraCI: SUMO traffic in the scene, participants' cars and the AV in SUMO.
 - AI pedestrians with individual walking speeds, gap-acceptance crossing decisions that react to yielding cars and eHMIs, collision avoidance (social force model), traffic-aware head movements, and 12 realistic avatars.
-- eHMIs on the hood, roof and windshield of AVs, switched by the passenger or the host.
+- eHMIs on the hood, roof and windshield of AVs, switched by the passenger or the host; auditory eHMIs (cues on eHMI states and on yielding, stopping, driving off) and AVAS sounds.
 - Automated driving with take-over requests (visual and auditory warning, reaction times logged) and hand-back to the automation; AVs that follow waypoints, a car-following model or a path file (speed profiles, recorded trajectories).
 - Traffic lights with programmable sequences; day and night versions of the town.
 - Logging of all agents (cars, pedestrian skeletons, traffic lights, eye contact) to binary files, conversion to CSV, and live streaming over UDP.
@@ -553,6 +553,13 @@ Each event has a `Name`, a `Delta Time` (seconds after the previous event), the 
 
 ### Configuration of eHMIs
 eHMIs are prefabs with a component derived from `HMI` that shows one of three states: `DISABLED`, `STOP` (do not cross) or `WALK` (you may cross). `AnimatorHMI` switches textures and animator triggers, `SpriteHMI` switches sprites; `StaticHMI` and `DynamicHMI` in `Assets/Prefabs/HMI` are examples. The AV passenger switches the state with `1`/`2`/`3`, the host with buttons in its GUI; `HMIManager` keeps all agents in sync.
+
+### Auditory eHMIs
+An `AuditoryEhmiSettings` component on the experiment prefab (child `Auditory eHMI` in the example experiments, off by default: tick `Enabled` or set the trial parameter `auditoryEhmi=1`) gives every AV in the experiment sounds, played from the front of the car (3D sound) on every agent:
+- **cues**: a sound (`Chime`, `Beeps`, `Ding` or your own `AudioClip`) when the car's visual eHMI shows `STOP` or `WALK`, when it starts to brake, stops, drives off, when a pedestrian is ahead within a distance, or at a time; optionally repeated while the condition holds;
+- **AVAS**: the acoustic vehicle alerting sound of electric cars (a hum that rises with speed and fades out at 20 km/h, as required in the EU).
+
+Trial parameters `auditoryEhmi` (0/1) and `avas` (0/1) switch them per trial; `AllCars` gives the sounds to manually driven cars too. The cues played are logged to `ExperimentLogs/AuditoryEhmi-{date}.csv`.
 
 ### Details on editing car prefabs
 The `Speedometer` component shows the speed:
