@@ -26,6 +26,11 @@ public class Benchmark : MonoBehaviour
         var b = go.AddComponent<Benchmark>();
         if (i + 1 < args.Length && float.TryParse(args[i + 1], NumberStyles.Float, CultureInfo.InvariantCulture, out var s)) b._seconds = s;
         if (i + 2 < args.Length && !args[i + 2].StartsWith("-")) b._file = args[i + 2];
+        // the size asked with -screen-width/-screen-height, also in a borderless full-screen window
+        // (which otherwise takes the display's size, so runs would not compare)
+        int Int(string name) { int k = Array.IndexOf(args, name); return k >= 0 && k + 1 < args.Length && int.TryParse(args[k + 1], out var v) ? v : 0; }
+        int w = Int("-screen-width"), h = Int("-screen-height");
+        if (w > 0 && h > 0) Screen.SetResolution(w, h, Screen.fullScreenMode);
     }
 
     void Update()
@@ -48,7 +53,7 @@ public class Benchmark : MonoBehaviour
             $"1% low {(1000f / p99).ToString("F1", ci)} fps ({p99.ToString("F2", ci)} ms)\n" +
             $"median {ms[ms.Count / 2].ToString("F2", ci)} ms, worst {ms[ms.Count - 1].ToString("F2", ci)} ms\n" +
             $"gpu {SystemInfo.graphicsDeviceName} ({SystemInfo.graphicsDeviceType}), cpu {SystemInfo.processorType}\n" +
-            $"quality {QualitySettings.names[QualitySettings.GetQualityLevel()]}, resolution {Screen.width}x{Screen.height}, vsync {QualitySettings.vSyncCount}\n");
+            $"quality {QualitySettings.names[QualitySettings.GetQualityLevel()]}, resolution {Screen.width}x{Screen.height} (display {Screen.currentResolution.width}x{Screen.currentResolution.height}, {Screen.fullScreenMode}), vsync {QualitySettings.vSyncCount}\n");
         Debug.Log("Benchmark written to " + Path.GetFullPath(_file));
         Application.Quit();
     }

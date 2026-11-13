@@ -121,9 +121,11 @@ def main(name):
                                 t = None
                                 try: t = stypes[vals[si][fi]]
                                 except Exception: pass
-                                if t == "GroundSurface": continue
                                 ring = surf[0]
                                 if len(ring) < 3: continue
+                                # floors on the ground are never seen; raised ones (the underside of a
+                                # part over a passage or on columns) are, from below: kept, as walls
+                                if t == "GroundSurface" and min(V[k][2] for k in ring) - ground < 1.0: continue
                                 pts = [V[k] for k in ring]
                                 local = []
                                 for k in ring:

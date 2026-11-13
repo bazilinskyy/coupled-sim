@@ -274,7 +274,15 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
         {
             var name = p.name.ToLower();
             if (name == "time" || name == "timeofday") TimeOfDay = ParseTime(p.value);
-            else if (name == "weather" && Enum.TryParse(p.value, true, out Weather w)) Weather = w;
+            else if (name == "weather")
+            {
+                var v = p.value.Trim().ToLower();
+                if (v == "rain" || v == "rainy") v = "LightRain";
+                else if (v == "cloudy") v = "Overcast";
+                else if (v == "foggy") v = "Fog";
+                if (Enum.TryParse(v, true, out Weather w)) Weather = w;
+                else Debug.LogWarning($"Weather '{p.value}' unknown: use {string.Join(", ", Enum.GetNames(typeof(Weather)))}");
+            }
             else if (name == "fog") ExtraFog = ParseFloat(p.value);
             else if (name == "rain") RainOverride = ParseFloat(p.value);
             else if (name == "timespeed") TimeSpeed = ParseFloat(p.value);
