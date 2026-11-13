@@ -38,7 +38,7 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:1}
 <div class=""row"" id=""mapRow"" hidden><label>Map <select id=""mapSelect""></select></label><input id=""location"" placeholder=""or lat,lon[,radius]"" size=""18""><button id=""setLocation"">Use location</button></div>
 <div class=""row""><label>Host mode <select id=""inputMode""><option>Flat</option><option>VR</option><option>Suite</option><option>None</option></select></label></div>
 <table id=""players""><thead><tr><th>Player</th><th>Connected</th><th>Role</th><th>Ready</th></tr></thead><tbody></tbody></table>
-<div class=""row""><button id=""initialise"">Initialise experiment</button><button id=""start"" class=""primary"">Start simulation</button><button id=""next"">Next trial</button></div>
+<div class=""row""><button id=""initialise"">Initialise experiment</button><button id=""start"" class=""primary"">Start simulation</button><button id=""next"">Next trial</button><button id=""tor"">Take-over request</button></div>
 <div class=""row muted"" id=""trial""></div>
 </section>
 <section><h2>eHMI</h2><div class=""row"" id=""hmis""><span class=""muted"">none in this experiment</span></div>
@@ -60,7 +60,7 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:1}
 const $=id=>document.getElementById(id);let state=null,mapImg=null,mapVersion=null,busyExp=false;
 async function api(path){const r=await fetch(path);const t=await r.text();$('msg').textContent=r.ok?'':t;$('msg').className=r.ok?'':'bad';return r.ok}
 $('startHost').onclick=()=>api('/api/start-host');$('initialise').onclick=()=>api('/api/initialise');$('start').onclick=()=>api('/api/start');
-$('next').onclick=()=>{if(confirm('End this trial and go to the next one?'))api('/api/next-trial')};$('sync').onclick=()=>api('/api/visual-sync');
+$('next').onclick=()=>{if(confirm('End this trial and go to the next one?'))api('/api/next-trial')};$('tor').onclick=()=>api('/api/takeover');$('sync').onclick=()=>api('/api/visual-sync');
 $('experiment').onchange=e=>api('/api/experiment?index='+e.target.value);
 $('mapSelect').onchange=e=>api('/api/map?index='+e.target.value);$('setLocation').onclick=()=>api('/api/map?index=-1&location='+encodeURIComponent($('location').value));$('inputMode').onchange=e=>api('/api/mode?mode='+e.target.value);
 document.querySelectorAll('[data-ehmi]').forEach(b=>b.onclick=()=>api('/api/ehmi?state='+b.dataset.ehmi));
@@ -72,7 +72,7 @@ $('startHost').disabled=s.mode!=='menu';const lobby=s.mode==='host'&&s.state==='
 $('mapRow').hidden=!s.maps;if(s.maps){fillSelect($('mapSelect'),s.maps,s.currentMapIndex);$('mapSelect').disabled=!lobby;$('setLocation').disabled=!lobby}
 if(s.experiments)fillSelect($('experiment'),s.experiments,s.selectedExperiment);$('experiment').disabled=!lobby;
 if(s.inputMode&&document.activeElement!==$('inputMode'))$('inputMode').value=s.inputMode;
-$('trial').textContent=s.trial?`${s.trial.participant?'Participant '+s.trial.participant+', t':'T'}rial ${s.trial.index+1} of ${s.trial.count}${s.trial.automatic?' (automatic)':''}`:'';
+$('trial').textContent=(s.trial?`${s.trial.participant?'Participant '+s.trial.participant+', t':'T'}rial ${s.trial.index+1} of ${s.trial.count}${s.trial.automatic?' (automatic)':''}`:'')+(s.automation?` · AV: ${s.automation.state}${s.automation.reaction>=0?', take-over in '+s.automation.reaction+' s':''}`:'');$('tor').hidden=!s.automation;
 const tb=$('players').tBodies[0];tb.innerHTML='';(s.players||[]).forEach(p=>{const tr=document.createElement('tr');const roles=['(none)'].concat(s.roles||[]);
 tr.innerHTML=`<td>${p.id===0?'Host':'Player '+p.id}</td><td class=""${p.connected?'ok':'muted'}"">${p.connected?'yes':'no'}</td><td></td><td class=""${p.ready?'ok':'muted'}"">${p.ready?'yes':'–'}</td>`;
 const sel=document.createElement('select');roles.forEach((r,i)=>{const o=document.createElement('option');o.value=i-1;o.text=r;sel.add(o)});sel.value=p.role;sel.disabled=!lobby||!p.connected;sel.onchange=()=>api(`/api/role?player=${p.id}&role=${sel.value}`);tr.cells[2].appendChild(sel);tb.appendChild(tr)});

@@ -69,6 +69,9 @@ public class PlayerSystem : MonoBehaviour
         Assert.IsNotNull(tracker);
         aiCar.enabled = true;
         tracker.enabled = true;
+        // automation modes and take-over requests (trial parameters automation, avSpeed, avPath, takeOverAt)
+        if (!LocalPlayer.TryGetComponent<AutomatedDriving>(out var automation)) automation = LocalPlayer.gameObject.AddComponent<AutomatedDriving>();
+        automation.Activate();
         foreach(var waypoint in tracker.Circuit.Waypoints)
         {
             var speedSettings = waypoint.GetComponent<SpeedSettings>();
