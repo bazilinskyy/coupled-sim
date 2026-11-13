@@ -68,6 +68,13 @@ public class Client : NetworkSystem
     private void OnAllReady(ISynchronizer sync, int srcPlayerId)
     {
         Debug.Log("AllReady");
+        if (_lvlManager.ActiveExperiment == null)
+        {
+            // still loading (an older host): start once the level is there
+            _pendingAllReady = true;
+            return;
+        }
+        _pendingAllReady = false;
         var lights = GameObject.FindAnyObjectByType<TrafficLightsSystem>();
         lights?.RegisterHandlers(_msgDispatcher);
         ExperimentRoleDefinition experimentRoleDefinition = _lvlManager.ActiveExperiment.Roles[_roles[_client.MyPlayerId]];
@@ -80,6 +87,8 @@ public class Client : NetworkSystem
         _logger.BeginLog($"ClientLog-{roleName}-", _lvlManager.ActiveExperiment, lights, Time.realtimeSinceStartup, true);
         _fixedTimeLogger.BeginLog($"ClientFixedTimeLog-{roleName}-", _lvlManager.ActiveExperiment, lights, Time.fixedTime, false);
     }
+    bool _pendingAllReady;
+
     //handles game configuration message - spawns level and players
     void OnGameStart(ISynchronizer sync, int _)
     {
@@ -133,8 +142,9 @@ public class Client : NetworkSystem
                         break;
                     case TransitionPhase.WaitingForAwakes:
                         _client.SendReliable(new ReadyMsg());
-                        _lvlManager.ActiveExperiment.AIPedestrians.InitClient(_msgDispatcher);
+                        _lvlManager.ActiveExperiment.AIPedestrians?.InitClient(_msgDispatcher);
                         _transitionPhase = TransitionPhase.None;
+                        if (_pendingAllReady) OnAllReady(null, 0);
                         break;
                 }
                 break;
@@ -186,6 +196,16 @@ public class Client : NetworkSystem
     }
 
     string _ip = "192.168.1.11";
+
+    /// <summary>Connects to the host at <paramref name="ip"/> (as the Connect button; -connect on the command line).</summary>
+    public void Connect(string ip)
+    {
+        if (_currentState != NetState.Disconnected) return;
+        _ip = ip;
+        Debug.Log("Client: connecting to " + ip);
+        _client.Connect(ip);
+        _currentState = NetState.Client_Connecting;
+    }
     //displays client GUI
     public override void OnGUI(bool RunTrialSequenceAutomatically)
     {
