@@ -372,8 +372,17 @@ public class OsmMapGenerator
 
         float h = HalfSize + 40;
         var ground = new MeshBuilder();
-        ground.Quad(new Vector3(-h, 0, -h), new Vector3(-h, 0, h), new Vector3(h, 0, h), new Vector3(h, 0, -h),
-            new Vector2(0, 0), new Vector2(0, h / 2), new Vector2(h / 2, h / 2), new Vector2(h / 2, 0));
+        // in tiles of at most 100 m: the physics engine warns about (and handles badly) triangles over 500 m
+        int tiles = Mathf.CeilToInt(2 * h / 100f);
+        float step = 2 * h / tiles;
+        for (int i = 0; i < tiles; i++)
+            for (int j = 0; j < tiles; j++)
+            {
+                float x0 = -h + i * step, x1 = x0 + step, z0 = -h + j * step, z1 = z0 + step;
+                Vector2 Uv(float x, float z) => new Vector2((x + h) / 4f, (z + h) / 4f);
+                ground.Quad(new Vector3(x0, 0, z0), new Vector3(x0, 0, z1), new Vector3(x1, 0, z1), new Vector3(x1, 0, z0),
+                    Uv(x0, z0), Uv(x0, z1), Uv(x1, z1), Uv(x1, z0));
+            }
         Emit(world, "Ground", ground, Mat("Ground", Color.white, 0.12f, pavingTex), true);
 
         var green = new MeshBuilder();
