@@ -118,7 +118,7 @@ public class OsmMap : MonoBehaviour
         root.SetParent(transform, false);
         Generator.Build(root);
         new GameObject("Map data © OpenStreetMap contributors (ODbL)").transform.SetParent(transform, false);
-        Debug.Log($"OsmMap: built {info} in {sw.ElapsedMilliseconds} ms: {Generator.Roads.Count} roads, {Generator.BuildingCount} buildings, {Generator.Crossings.Count / 2} crossings");
+        Debug.Log($"OsmMap: built {info} in {sw.ElapsedMilliseconds} ms: {Generator.Roads.Count} roads, {Generator.BuildingCount} buildings, {Generator.Crossings.Count / 2} crossings, {Generator.SignCount} traffic signs");
     }
 
     public enum SpawnKind
