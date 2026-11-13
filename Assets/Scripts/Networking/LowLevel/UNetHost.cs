@@ -56,12 +56,11 @@ public class UNetHost
         Assert.IsFalse(true);
         return NoPlayer;
     }
-    NetworkPipeline reliablePipeline;
+    NetworkPipeline reliablePipeline, unreliablePipeline;
 
     public void Init()
     {
-        m_Driver = NetworkDriver.Create();
-        reliablePipeline = m_Driver.CreatePipeline(typeof(ReliableSequencedPipelineStage));
+        m_Driver = UNetPipelines.CreateDriver(out unreliablePipeline, out reliablePipeline);
         var endpoint = NetworkEndpoint.AnyIpv4.WithPort(UNetConfig.Port);
         if (m_Driver.Bind(endpoint) != 0)
             Debug.Log("Failed to bind to port " + UNetConfig.Port);
@@ -142,7 +141,8 @@ public class UNetHost
                     }
                     else
                     {
-                        dispatch.Dispatch(msgId, new NDeserializer(ref strm), _connId2playerId[m_Connections[i]]);
+                        try { dispatch.Dispatch(msgId, new NDeserializer(ref strm), _connId2playerId[m_Connections[i]]); }
+                        catch (System.Exception e) { Debug.LogException(e); }
                     }
                 }
                 else if (cmd == NetworkEvent.Type.Disconnect)
@@ -179,7 +179,7 @@ public class UNetHost
 
     void SendDataNoClear(NetworkConnection connId, bool reliable)
     {
-        m_Driver.BeginSend(reliable ? reliablePipeline : NetworkPipeline.Null, connId, out var writer);
+        m_Driver.BeginSend(reliable ? reliablePipeline : unreliablePipeline, connId, out var writer);
         unsafe
         {
             fixed (byte* pointerToFirst = _sendBuffer)
@@ -187,7 +187,7 @@ public class UNetHost
                 writer.WriteBytesUnsafe(pointerToFirst, (int)_writerStream.Position);
             }
         }
-        m_Driver.EndSend(writer);
+        UNetPipelines.Check(m_Driver.EndSend(writer), (int)_writerStream.Position);
     }
 
     void Clear() => _writerStream.Position = 0;

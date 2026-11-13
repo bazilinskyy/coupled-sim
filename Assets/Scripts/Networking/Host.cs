@@ -197,9 +197,14 @@ public class Host : NetworkSystem
     }
 
     bool startSimulation = false;
+    // the simulation starts when the experimenter (or the automatic trial) says so and every
+    // connected agent has loaded the level (its Ready message)
     bool AllReady()
     {
-        return startSimulation;
+        if (!startSimulation) return false;
+        for (int i = 1; i < UNetConfig.MaxPlayers; i++)
+            if (_host.PlayerConnected(i) && !_playerReadyStatus[i]) return false;
+        return true;
     }
 
     void ForEachConnectedPlayer(Action<int, Host> action)
@@ -357,11 +362,37 @@ public class Host : NetworkSystem
         }
         else if (_transitionPhase == TransitionPhase.None && !started)
         {
-            // bind roles before StartGameMsg is broadcast, so clients get them too
+            // wait for the clients (-clients n), then bind roles before StartGameMsg is broadcast, so clients get them too
+            if (_host.NumRemotePlayers < NetworkingManager.ExpectedClients) return;
             _playerRoles[Host.PlayerId] = currentTrial.roleIndex;
+            AssignClientRoles();
             _playerSys.SelectMode(currentTrial.InputMode);
             PrepareSimulation();
         }
+    }
+
+    // automatic trials: clients get the roles of the trial parameter "clientRoles" (names or indices,
+    // in the order the clients connected), else the next roles the host does not have
+    void AssignClientRoles()
+    {
+        var exp = _lvlManager.Experiments[_selectedExperiment];
+        var roles = exp.Roles ?? new ExperimentRoleDefinition[0];
+        var wanted = new List<int>();
+        foreach (var p in currentTrial.experimentParameters ?? new NetworkingManager.ExperimentParameter[0])
+            if (p.name.ToLower() == "clientroles")
+                foreach (var part in p.value.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries))
+                    wanted.Add(TrialSequence.FindRole(exp, part.Trim()));
+        int k = 0;
+        ForEachConnectedPlayer((player, host) =>
+        {
+            int role = k < wanted.Count ? wanted[k] : -1;
+            if (role < 0)
+                for (int r = 0; r < roles.Length; r++)
+                    if (!_playerRoles.Contains(r)) { role = r; break; }
+            _playerRoles[player] = role;
+            Debug.Log($"Host: player {player} gets role {role} ({(role >= 0 && role < roles.Length ? roles[role].Name : "none")})");
+            k++;
+        });
     }
 
     //displays host GUI

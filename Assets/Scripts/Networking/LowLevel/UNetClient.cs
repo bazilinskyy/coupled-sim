@@ -23,13 +23,12 @@ public class UNetClient
     Serializer _serializer;
     BinaryWriter _writer;
     MemoryStream _writerStream;
-    NetworkPipeline reliablePipeline;
+    NetworkPipeline reliablePipeline, unreliablePipeline;
 
     public void Init()
     {
-        m_Driver = NetworkDriver.Create();
+        m_Driver = UNetPipelines.CreateDriver(out unreliablePipeline, out reliablePipeline);
         m_Connection = default(NetworkConnection);
-        reliablePipeline = m_Driver.CreatePipeline(typeof(ReliableSequencedPipelineStage));
 
 
         _writerStream = new MemoryStream(_sendBuffer);
@@ -99,7 +98,10 @@ public class UNetClient
                 }
                 else
                 {
-                    dispatch.Dispatch(msgId, sync, Host.PlayerId);
+                    // a failing handler must not stop the loop: undrained events are dropped
+                    // by the next driver update, which can break the connection
+                    try { dispatch.Dispatch(msgId, sync, Host.PlayerId); }
+                    catch (System.Exception e) { Debug.LogException(e); }
                 }
             }
             else if (cmd == NetworkEvent.Type.Disconnect)
@@ -126,7 +128,7 @@ public class UNetClient
 
     void SendData(bool reliable)
     {
-        m_Driver.BeginSend(reliable ? reliablePipeline : NetworkPipeline.Null, m_Connection, out var writer);
+        m_Driver.BeginSend(reliable ? reliablePipeline : unreliablePipeline, m_Connection, out var writer);
         unsafe
         {
             fixed (byte* pointerToFirst = _sendBuffer)
@@ -134,7 +136,7 @@ public class UNetClient
                 writer.WriteBytesUnsafe(pointerToFirst, (int)_writerStream.Position);
             }
         }
-        m_Driver.EndSend(writer);
+        UNetPipelines.Check(m_Driver.EndSend(writer), (int)_writerStream.Position);
         _writerStream.Position = 0;
     }
 
