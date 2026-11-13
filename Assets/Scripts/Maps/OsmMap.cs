@@ -70,8 +70,95 @@ public class OsmMap : MonoBehaviour
         return cachePath;
     }
 
+    // ------------------------------------------------------------------ road networks (OpenDRIVE, SUMO) (#40)
+
+    /// <summary>An OpenDRIVE (.xodr) or SUMO network (.net.xml, .net.xml.gz) file as a map: its name in StreamingAssets/Maps, or a full path.</summary>
+    public static bool IsRoadNetworkFile(string s) => s != null &&
+        (s.EndsWith(".xodr", StringComparison.OrdinalIgnoreCase) || s.EndsWith(".net.xml", StringComparison.OrdinalIgnoreCase) || s.EndsWith(".net.xml.gz", StringComparison.OrdinalIgnoreCase));
+
+    public static string ResolveRoadNetwork(string name) => Path.IsPathRooted(name) ? name : Path.Combine(Application.streamingAssetsPath, "Maps", name);
+
+    /// <summary>SUMO's netconvert: SUMO_HOME/bin, else on the PATH.</summary>
+    static string Netconvert()
+    {
+        var exe = Application.platform == RuntimePlatform.WindowsPlayer || Application.platform == RuntimePlatform.WindowsEditor ? "netconvert.exe" : "netconvert";
+        var home = Environment.GetEnvironmentVariable("SUMO_HOME");
+        if (!string.IsNullOrEmpty(home) && File.Exists(Path.Combine(home, "bin", exe))) return Path.Combine(home, "bin", exe);
+        return exe;
+    }
+
+    /// <summary>An OpenDRIVE file converted to a SUMO network by netconvert (cached in the simulator's data folder).</summary>
+    static string ConvertOpenDrive(string xodr)
+    {
+        var dir = Path.Combine(Application.persistentDataPath, "Maps");
+        Directory.CreateDirectory(dir);
+        var stamp = File.GetLastWriteTimeUtc(xodr).Ticks ^ new FileInfo(xodr).Length;
+        var net = Path.Combine(dir, $"{Path.GetFileNameWithoutExtension(xodr)}-{stamp & 0xffffffff:x8}.net.xml");
+        if (File.Exists(net)) return net;
+        // SUMO's lane-type maps: driving lanes, and also pavements (sidewalk) and cycle lanes (biking)
+        var types = "";
+        var home = Environment.GetEnvironmentVariable("SUMO_HOME");
+        if (!string.IsNullOrEmpty(home))
+        {
+            var maps = new[] { "opendriveNetconvert.typ.xml", "opendriveNetconvertPedestrians.typ.xml", "opendriveNetconvertBicycle.typ.xml" }
+                .Select(f => Path.Combine(home, "data", "typemap", f)).Where(File.Exists).ToArray();
+            if (maps.Length > 0) types = $" --type-files \"{string.Join(",", maps)}\"";
+        }
+        var psi = new System.Diagnostics.ProcessStartInfo(Netconvert(),
+            $"--opendrive-files \"{xodr}\" -o \"{net}\" --no-turnarounds true --no-warnings true{types}")
+        { UseShellExecute = false, RedirectStandardError = true, RedirectStandardOutput = true, CreateNoWindow = true };
+        using (var p = System.Diagnostics.Process.Start(psi))
+        {
+            var err = p.StandardError.ReadToEnd();
+            p.StandardOutput.ReadToEnd();
+            p.WaitForExit();
+            if (p.ExitCode != 0 || !File.Exists(net)) throw new Exception($"netconvert failed ({p.ExitCode}): {err}");
+        }
+        return net;
+    }
+
+    void LoadRoadNetwork(string name)
+    {
+        var path = ResolveRoadNetwork(name);
+        if (!File.Exists(path)) { Debug.LogError("OsmMap: road network not found: " + path); return; }
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+        string netPath = path;
+        if (path.EndsWith(".xodr", StringComparison.OrdinalIgnoreCase))
+        {
+            try { netPath = ConvertOpenDrive(path); }
+            catch (Exception e)
+            {
+                Debug.LogError($"OsmMap: could not convert the OpenDRIVE file {path} with SUMO's netconvert (install SUMO and set SUMO_HOME): {e.Message}");
+                return;
+            }
+        }
+        string xml;
+        if (netPath.EndsWith(".gz", StringComparison.OrdinalIgnoreCase))
+            using (var gz = new GZipStream(File.OpenRead(netPath), CompressionMode.Decompress))
+            using (var reader = new StreamReader(gz, Encoding.UTF8)) xml = reader.ReadToEnd();
+        else xml = File.ReadAllText(netPath);
+        // a network without geographic reference is placed in Eindhoven's latitude (sun and time zone)
+        if (!SumoNetwork.TryGetCentre(xml, out var lat, out var lon)) { lat = 51.44; lon = 5.48; }
+        var mapName = Path.GetFileName(path);
+        foreach (var ext in new[] { ".gz", ".xml", ".net", ".xodr" })
+            if (mapName.EndsWith(ext, StringComparison.OrdinalIgnoreCase)) mapName = mapName.Substring(0, mapName.Length - ext.Length);
+        var info = new MapInfo
+        {
+            Name = mapName, City = mapName, Country = "", Continent = "", Latitude = lat, Longitude = lon,
+            UtcOffsetJune = Mathf.Round((float)lon / 15f), Area = "road network " + Path.GetFileName(path),
+        };
+        var net = SumoNetwork.Convert(xml, new GeoProjection(lat, lon));
+        Info = info;
+        Generator = new OsmMapGenerator(info, net.Data, MapAssets.Instance);
+        var root = new GameObject(info.City).transform;
+        root.SetParent(transform, false);
+        Generator.Build(root);
+        Debug.Log($"OsmMap: built road network {Path.GetFileName(path)} in {sw.ElapsedMilliseconds} ms: {net.Roads} roads, {net.Junctions} junctions, {Generator.Crossings.Count / 2} crossings, {Generator.SignCount} traffic signs");
+    }
+
     public void Load(string name)
     {
+        if (IsRoadNetworkFile(name)) { LoadRoadNetwork(name); return; }
         string path;
         MapInfo info;
         if (TryParseLocation(name, out var lat, out var lon, out var radius))
