@@ -38,6 +38,7 @@ public class HMIManager : MonoBehaviour
     }
 
     public int Count => _hmis.Count;
+    public HMI Get(int i) => i >= 0 && i < _hmis.Count ? _hmis[i] : null;
     public HMIState GetState(int i) => _hmis[i] != null ? _hmis[i].CurrentState : HMIState.DISABLED;
 
     /// <summary>Host: sets eHMI i on all agents (as the host's eHMI buttons).</summary>

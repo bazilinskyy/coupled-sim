@@ -111,6 +111,9 @@ public class PlayerSystem : MonoBehaviour
         var response = ResponseInput.WithCommandLine(role.Response);
         if (response.Button || response.Slider) LocalPlayer.gameObject.AddComponent<ResponseInput>().Init(response, role.Name);
         Soundscape.Ensure();
+        var args = Environment.GetCommandLineArgs();
+        if (Array.IndexOf(args, "-gaze") >= 0 || Array.IndexOf(args, "-gazeTrigger") >= 0) NetworkGaze.Ensure();
+        if (Array.IndexOf(args, "-companions") >= 0) PedestrianGroup.EnsureFromCommandLine();
         // in-car displays for the participant's own car (driver or AV passenger)
         if (spawnPoint.Type == SpawnPointType.PlayerControlingCar || spawnPoint.Type == SpawnPointType.PlayerInAIControlledCar)
         {

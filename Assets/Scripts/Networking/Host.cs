@@ -60,6 +60,11 @@ public class Host : NetworkSystem
             v.FromHost = true;
             _host.BroadcastUnreliable(v);
         });
+        _msgDispatcher.AddStaticHandler((int)MsgId.C_Gaze, (sync, player) =>
+        {
+            var g = NetMsg.Read<GazeMsg>(sync);
+            NetworkGaze.Receive(player, new NetworkGaze.Sample { Origin = g.Origin, Direction = g.Direction, Eyes = g.Eyes, Time = Time.time });
+        });
         VoiceChat.Setup(v => { v.FromHost = true; v.Player = 0; _host.BroadcastUnreliable(v); }, () => 0);
         _hmiManager.InitHost(_host, _msgDispatcher);
         aiCarSystem.InitHost(_host);
