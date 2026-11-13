@@ -20,6 +20,8 @@ public static class SteeringFeedback
     [DllImport(Dll)] static extern bool LogiPlayDamperForce(int index, int coefficientPercentage);
     [DllImport(Dll)] static extern bool LogiPlayFrontalCollisionForce(int index, int percentage);
     [DllImport(Dll)] static extern void LogiSteeringShutdown();
+    [DllImport(Dll)] static extern bool LogiPlaySurfaceEffect(int index, int type, int magnitudePercentage, int period);
+    [DllImport(Dll)] static extern bool LogiStopSurfaceEffect(int index);
 
     static bool _tried, _available;
 
@@ -59,6 +61,19 @@ public static class SteeringFeedback
             if (collision) LogiPlayFrontalCollisionForce(0, 60);
         }
         catch (Exception) { _available = false; }
+    }
+
+    /// <summary>Vibrates the wheel (haptic cues, see Haptics): intensity 0-1, 0 stops it.</summary>
+    public static void Vibrate(float intensity)
+    {
+        if (!Init()) return;
+        try
+        {
+            if (!LogiIsConnected(0)) return;
+            if (intensity <= 0f) LogiStopSurfaceEffect(0);
+            else LogiPlaySurfaceEffect(0, 0, Mathf.RoundToInt(Mathf.Clamp01(intensity) * 100f), 60);   // sine, 60 ms period
+        }
+        catch (Exception) { }
     }
 
     static void Shutdown()

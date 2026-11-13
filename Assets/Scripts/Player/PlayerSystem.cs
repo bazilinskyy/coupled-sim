@@ -110,6 +110,14 @@ public class PlayerSystem : MonoBehaviour
         LocalPlayer.Initialize(false, PlayerInputMode, isPassenger ? ControlMode.Passenger : ControlMode.Driver, spawnPoint.VehicleType, spawnPoint.CameraIndex);
         var response = ResponseInput.WithCommandLine(role.Response);
         if (response.Button || response.Slider) LocalPlayer.gameObject.AddComponent<ResponseInput>().Init(response, role.Name);
+        // in-car displays for the participant's own car (driver or AV passenger)
+        if (spawnPoint.Type == SpawnPointType.PlayerControlingCar || spawnPoint.Type == SpawnPointType.PlayerInAIControlledCar)
+        {
+            var hud = Arg("-hud") ?? role.HudDesign;
+            var centre = Arg("-centreScreen") ?? role.CentreScreenDesign;
+            if (!string.IsNullOrEmpty(hud)) InCarDisplay.Add(LocalPlayer, hud, InCarDisplay.Kind.Hud);
+            if (!string.IsNullOrEmpty(centre)) InCarDisplay.Add(LocalPlayer, centre, InCarDisplay.Kind.CentreScreen);
+        }
         if (isPassenger)
         {
             var waypointFollow = LocalPlayer.GetComponent<WaypointProgressTracker>();
@@ -282,5 +290,12 @@ public class PlayerSystem : MonoBehaviour
         var ehmi = go.AddComponent<DesignedEhmi>();
         ehmi.Design = design;
         return ehmi;
+    }
+
+    static string Arg(string name)
+    {
+        var args = Environment.GetCommandLineArgs();
+        for (int i = 0; i + 1 < args.Length; i++) if (args[i] == name) return args[i + 1];
+        return null;
     }
 }
