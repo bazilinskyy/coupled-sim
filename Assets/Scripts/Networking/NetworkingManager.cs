@@ -204,8 +204,20 @@ public class NetworkingManager : MonoBehaviour
         }
     }
 
+    public PlayerSystem Players => _playerSystem;
+    public AICarSyncSystem AICars => _aiCarSystem;
+    string[] _recordings;
+    static bool _replayChecked;
+
     void Update()
     {
+        if (ReplayPlayer.Active != null) return;   // a replay runs: it has its own keys
+        if (!_replayChecked)
+        {
+            _replayChecked = true;
+            var replay = ReplayPlayer.CommandLineReplay();
+            if (replay != null) { ReplayPlayer.Begin(replay, this); return; }
+        }
         if (Input.GetKeyDown(KeyCode.Escape))
         {
             //Application.Quit();
@@ -255,6 +267,7 @@ public class NetworkingManager : MonoBehaviour
 
     void OnGUI()
     {
+        if (ReplayPlayer.Active != null) return;
         if (hideGui)
         {
             if (_netSystem == null)
@@ -283,6 +296,23 @@ public class NetworkingManager : MonoBehaviour
                 foreach (var e in TrialFileErrors) GUILayout.Label("Trial file: " + e);
 
                 _logConverter.OnGUI();
+
+                // replay of a recorded trial (recordings made since the replay exists have a .replay.json next to them)
+                if (_recordings == null && GUILayout.Button("Replay a recording"))
+                    _recordings = System.IO.Directory.Exists("ExperimentLogs")
+                        ? System.IO.Directory.GetFiles("ExperimentLogs", "*.binLog").Where(f => System.IO.File.Exists(ReplayInfo.PathFor(f)))
+                            .OrderByDescending(System.IO.File.GetLastWriteTime).ToArray()
+                        : new string[0];
+                if (_recordings != null)
+                {
+                    if (GUILayout.Button("Close")) _recordings = null;
+                    else
+                    {
+                        if (_recordings.Length == 0) GUILayout.Label("No recordings to replay yet: run an experiment first.");
+                        foreach (var f in _recordings.Take(30))
+                            if (GUILayout.Button(System.IO.Path.GetFileNameWithoutExtension(f))) { ReplayPlayer.Begin(f, this); _recordings = null; break; }
+                    }
+                }
             }
             else
             {

@@ -175,6 +175,8 @@ Every run writes its data into the folder **`ExperimentLogs`** inside the `coupl
 
 In Excel, open it with **Data** ➡️ **From Text/CSV** and choose **Semicolon** as the delimiter. The numbers use a decimal point; if Excel shows them as dates or text (computers set to Dutch or German use a decimal comma), choose **Transform Data**, then **Use Locale** "English (United States)" for the number columns.
 
+To watch a run again, press **Replay a recording** on the start screen instead (see [Data logging](#data-logging)).
+
 What is in these files, and the other files there (pedestrian decisions, eye gaze, take-over times, animals), is described under [Data logging](#data-logging).
 
 ### 8. With several participants (several computers)
@@ -285,6 +287,7 @@ Only the window that has focus receives keyboard input.
 | `-quality Fantastic\|Balanced\|Performance` | [graphics quality](#graphics) for slower PCs |
 | `-sumoConnect <host:port>` | connect to a running [SUMO](#traffic-from-sumo) |
 | `-views "LeftScreen:2,RightScreen:3,RearMirror:1"` | [extra monitors and mirrors](#several-monitors-and-mirrors) |
+| `-replay <binLog>` | play a recording back (see [Data logging](#data-logging)) instead of the start screen |
 | `-benchmark <seconds> <file>` | measure the frame rate once the simulation runs (average and 1% low), write it to the file and quit; with `-autoRun` |
 | `-screenshot <seconds> <file>`, `-quitAfter <seconds>` | a screenshot after that time; quit after that time (tests, documentation) |
 
@@ -465,6 +468,10 @@ Every agent writes binary logs to the `ExperimentLogs` folder in the project fol
 Each frame contains the time, the position and rotation of every car with its blinkers, front lights and stop lights, AI-car state (speed, braking, stopped, take-off, eye contact), the position and rotation of every bone of every pedestrian (players and AI; with the Xsens suit, the suit's pose at the time of the frame), and the state of every traffic light. Experiment `Points of Interest` are stored in the log header.
 
 **Convert to CSV.** In `Play Mode`, before pressing `Start host` or `Start client`, press `Convert log to csv`, pick a log and a reference frame (the world origin, a point of interest of the experiment, or a custom point). The result is a semicolon-separated file `ExperimentLogs/{reference}-{log name}.csv` with positions relative to that reference.
+
+**Replay.** Every log has a small `.replay.json` file next to it with the experiment, scene, city map, time of day, weather and the vehicle and pedestrian models. In `Play Mode`, before `Start host` or `Start client`, press **Replay a recording** and pick a recording (newest first): the simulator loads that world and plays the trial back with every participant, AI car and traffic light, without network or new logs. At the bottom: a time slider, play/pause and speed, and buttons to follow a participant. Keys: `Space` play/pause, `←`/`→` 5 s back/forward, `-`/`+` slower/faster (0.1× to 8×), `1`-`9` follow participant 1-9, `C` the participant's own view or from behind, `0` free camera (`W` `A` `S` `D`, `Q`/`E` down/up, `Shift` faster, hold the right mouse button to look around), `T` trails of the participants' paths, `Esc` back to the start screen. Logs from before this version have no `.replay.json` and are not listed. From the command line: `-replay ExperimentLogs/<log>.binLog`.
+
+![Replay: behind the participant, the participant's own view, from above with the trail](ReadmeFiles/replay.jpg)
 
 **Live data.** The per-frame logger of each agent also sends its frames over UDP to `localhost:40131`, every `NetworkingManager` ➡️ `Realtime Log Interval` seconds (default 0.2 s; read when the simulator starts), so experiments can be monitored with external tools. `Tools/log_receiver.py` is an example receiver: start it with `python log_receiver.py` (Python 3) from the `Tools` folder before starting the simulation. Packets start with a type (`1` = begin, `2` = frame). A received frame looks like this:
 ```

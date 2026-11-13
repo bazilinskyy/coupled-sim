@@ -119,6 +119,7 @@ public class AICarSyncSystem
         var prefabIdx = FindPrefabIndex(prefab);
         Assert.AreNotEqual(-1, prefabIdx, $"The prefab {prefab} was not added to NetworkingManager -> AICarSyncSystem -> Prefabs");
         var aiCar = GameObject.Instantiate(Prefabs[prefabIdx], position, rotation);
+        if (aiCar.TryGetComponent<PlayerAvatar>(out var pa1)) pa1.PrefabName = Prefabs[prefabIdx].name;
         aiCar.enabled = false;
         var tracker = aiCar.GetComponent<WaypointProgressTracker>();
         if (tracker != null) tracker.enabled = false;
@@ -157,6 +158,7 @@ public class AICarSyncSystem
         var prefabIdx = FindPrefabIndex(parameters.Car);
         Assert.AreNotEqual(-1, prefabIdx, $"The prefab {parameters.Car} was not added to NetworkingManager -> AICarSyncSystem -> Prefabs");
         var aiCar = GameObject.Instantiate(Prefabs[prefabIdx], parameters.SpawnPoint.position, parameters.SpawnPoint.rotation);
+        if (aiCar.TryGetComponent<PlayerAvatar>(out var pa2)) pa2.PrefabName = Prefabs[prefabIdx].name;
         aiCar.gameObject.layer = LayerMask.NameToLayer(yielding ? "Yielding" : "Car");
         aiCar.enabled = true;
         var waypointProgressTracker = aiCar.GetComponent<WaypointProgressTracker>();
@@ -189,6 +191,7 @@ public class AICarSyncSystem
     {
         var msg = NetMsg.Read<SpawnAICarMsg>(sync);
         var go = GameObject.Instantiate(Prefabs[msg.PrefabIdx], msg.Position, msg.Rotation);
+        if (go.TryGetComponent<PlayerAvatar>(out var pa3)) pa3.PrefabName = Prefabs[msg.PrefabIdx].name;
         var avatar = go.GetComponent<PlayerAvatar>();
         var color = msg.Color;
         if (avatar.TryGetComponent<CarConfigurator>(out var configurator)) configurator.ChangeParameters(msg); // two-wheelers have none
