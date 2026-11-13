@@ -20,8 +20,9 @@ The simulator is open source and free to use. It is aimed at, but not limited to
 - [Networking](#networking)
 - [Data logging](#data-logging), [road network export](#exporting-the-road-network)
 - [Configuration](#configuration): [experiments](#experiment-definitions), [new experiments](#setting-up-a-new-experiment), [agents](#configuration-of-agents), [waypoints](#configuration-of-waypoints), [AI pedestrians](#ai-pedestrians), [AI cars](#ai-cars), [cyclists and riders](#cyclists-e-scooter-and-moped-riders), [automated driving and take-over](#automated-driving-and-take-over-requests), [scripted paths](#scripted-paths), [background traffic](#configuration-of-background-traffic), [SUMO](#traffic-from-sumo), [animals](#animals), [time of day and weather](#time-of-day-and-weather), [eye contact](#configuration-of-drivers-eye-contact), [daylight](#configuration-of-daylight-conditions), [traffic lights](#configuration-of-traffic-lights), [eHMIs](#configuration-of-ehmis), [auditory eHMIs](#auditory-ehmis), [car prefabs](#details-on-editing-car-prefabs)
+- [Study tools](#study-tools): [participant responses](#participant-responses), [designed eHMIs](#designed-ehmis), [in-car displays](#in-car-displays-head-up-display-and-centre-screen), [haptic cues](#haptic-cues), [sound](#sound), [several participants in one car and voice](#several-participants-in-one-car-and-voice), [pedestrian groups](#pedestrian-groups), [gaze over the network](#gaze-over-the-network-and-gaze-triggers), [OpenSCENARIO](#openscenario), [videos from fixed cameras](#videos-from-fixed-cameras), [scene descriptions and AI agents](#scene-descriptions-and-ai-agents)
 - [Testing](#testing)
-- [Hardware](#hardware): [monitors](#several-monitors-and-mirrors), [headsets](#head-mounted-displays-vr), [wheels](#steering-wheels-pedals-and-gamepads), [motion suit](#xsens-mvn-motion-suit), [network](#network)
+- [Hardware](#hardware): [monitors](#several-monitors-and-mirrors), [headsets](#head-mounted-displays-vr), [wheels](#steering-wheels-pedals-and-gamepads), [motion suit](#xsens-mvn-motion-suit), [motion platforms](#motion-platforms), [network](#network)
 - [FAQ](#faq)
 - [Used assets](#used-assets)
 
@@ -40,7 +41,7 @@ If you use the coupled simulator for academic work, please cite:
 The source code of the coupled simulator is released under the [MIT License](LICENSE). Third-party assets included in this repository (see [Used assets](#used-assets)) are not covered by this license. They remain under the license of their developers, such as the Unity Asset Store EULA, MIT or CC0.
 
 ## Features
-- Up to **4 human participants** in one scene (a host and three clients) over a local network.
+- Up to **8 human participants** in one scene (a host and seven clients) over a local network; several of them can sit in one car and talk to each other (voice is recorded).
 - Roles: driver of a manual car, passenger of an AV (controls its eHMI), pedestrian, cyclist, e-scooter rider, moped rider.
 - Input: keyboard, gamepads and steering wheels with pedals (Logitech, Thrustmaster, Fanatec, Moza; profiles and in-simulator calibration; force feedback on Logitech wheels), Xsens MVN motion suit for pedestrians.
 - Output: flat screens (also several monitors side by side, and mirror views) or head-mounted displays through OpenXR (Meta Quest, Varjo, HTC Vive, Valve Index, HP Reverb, Pico), with eye-tracking logs on headsets that have eye tracking.
@@ -50,10 +51,16 @@ The source code of the coupled simulator is released under the [MIT License](LIC
 - Participants can also be cyclists, e-scooter riders or moped riders, with two-wheeler dynamics (power, legal speed limits, lean and steering).
 - Animals moving around the world (pigeons, dogs, cats, foxes, deer, horses) that wander, eat and flee from traffic and people; traffic stops for them.
 - Time of day (solar position) and weather (clouds, rain with wet roads, fog), set per trial; URP graphics with post-processing and ambient occlusion.
-- 20 city maps from OpenStreetMap on six continents (Eindhoven, Delft, London, Tokyo, New York, Cairo, São Paulo, Sydney, ...), built at load time, and maps of any place by coordinates.
+- 20 city maps from OpenStreetMap on six continents (Eindhoven, Delft, London, Tokyo, New York, Cairo, São Paulo, Sydney, ...), built at load time, and maps of any place by coordinates; real 3D buildings in Delft, Eindhoven, Tokyo, New York and Montreal; windows light up at night.
 - Coupling with [SUMO](https://eclipse.dev/sumo/) over TraCI: SUMO traffic in the scene, participants' cars and the AV in SUMO.
 - AI pedestrians with individual walking speeds, gap-acceptance crossing decisions that react to yielding cars and eHMIs, collision avoidance (social force model), traffic-aware head movements, and 12 realistic avatars.
 - eHMIs on the hood, roof and windshield of AVs, switched by the passenger or the host; auditory eHMIs (cues on eHMI states and on yielding, stopping, driving off) and AVAS sounds.
+- Interfaces described in small files instead of prefabs: eHMIs (light bars, text, arrows, chevrons, shapes, animations; on the car, its bumper, projected on the road, on infrastructure or wearables) and in-car displays (head-up display, centre screen with live speed and take-over countdown); haptic cues on gamepads, headset controllers, wheels and external devices (UDP).
+- Continuous responses of every participant (hold a button, e.g. "safe to cross"; a 0-100 slider, e.g. trust), logged every frame.
+- Virtual companion pedestrians that follow, cross or hesitate on cue, or decide with a language model; every participant's gaze on the host, with cars that react to being looked at.
+- Sound with calibrated dB levels: tyre-road and engine sound of every car by speed, the participant's car from inside, cabin music, city ambience.
+- Motion cues for motion platforms over UDP; tyres from Pacejka Magic Formula coefficients.
+- ASAM OpenSCENARIO playback; videos of trials from fixed cameras (also in builds and batch mode) for online studies; text descriptions of the scene for language-model studies.
 - Automated driving with take-over requests (visual and auditory warning, reaction times logged) and hand-back to the automation; AVs that follow waypoints, a car-following model or a path file (speed profiles, recorded trajectories).
 - Traffic lights with programmable sequences; traffic signs (stop, give way, speed limits, crossings, one way, ...), placed from OpenStreetMap on city maps; day and night versions of the town.
 - Logging of all agents (cars, pedestrian skeletons, traffic lights, eye contact) to binary files, conversion to CSV, and live streaming over UDP; export of the road network (GeoJSON, OBJ) for analysis.
@@ -290,6 +297,19 @@ Only the window that has focus receives keyboard input.
 | `-replay <binLog>` | play a recording back (see [Data logging](#data-logging)) instead of the start screen |
 | `-benchmark <seconds> <file>` | measure the frame rate once the simulation runs (average and 1% low), write it to the file and quit; with `-autoRun` |
 | `-screenshot <seconds> <file>`, `-quitAfter <seconds>` | a screenshot after that time; quit after that time (tests, documentation) |
+| `-response button,slider[,hidden]` | [participant responses](#participant-responses) for this agent's role |
+| `-ehmiDesign <name>[@Hood\|Top\|Windshield\|Bumper\|Road]`, `-ehmiState WALK` | a [designed eHMI](#designed-ehmis) on AV roles; its first state |
+| `-hud <name>`, `-centreScreen <name>` | [in-car displays](#in-car-displays-head-up-display-and-centre-screen) |
+| `-hapticsUdp <host:port>[,...]` | [haptic cues](#haptic-cues) to external devices |
+| `-vehicleSounds 1`, `-electricCars 0`, `-ambienceDb <dB>`, `-cabinMusic <file>`, `-cabinMusicDb <dB>`, `-audioReferenceDb <dB>`, `-audioCalibration` | [sound](#sound) |
+| `-seatRole "<role>:<car role>:<seat>"`, `-voice [ptt]`, `-voiceDevice <name>`, `-voiceRecordOnly` | [several participants in one car, voice](#several-participants-in-one-car-and-voice) (give `-seatRole` to every agent) |
+| `-companions "follow:-1.2,0;cross:1.4,0.4,3;..."` | [pedestrian groups](#pedestrian-groups) (every agent) |
+| `-gaze`, `-gazeTrigger "<looker>><car role>:<seconds>:yield,ehmi"` | [gaze over the network](#gaze-over-the-network-and-gaze-triggers) |
+| `-motionUdp <host:port>`, `-motionFormat json\|csv\|flypt`, `-motionRate <Hz>` | [motion platforms](#motion-platforms) |
+| `-magicFormulaTyres` | [tyres from Magic Formula coefficients](#vehicles) |
+| `-openscenario <file.xosc>` | [OpenSCENARIO](#openscenario) playback (every agent) |
+| `-videoCams "<name>=x,y,z,yaw,pitch[,fov];chase;front;driver"`, `-videoSeconds`, `-videoStart`, `-videoFps`, `-videoSize WxH`, `-videoQuit`, `-videoKeepFrames`, `-ffmpeg <path>` | [videos from fixed cameras](#videos-from-fixed-cameras) |
+| `-sceneDescriptions`, `-llmModel`, `-llmEffort`, `-llmEndpoint` | [scene descriptions and AI agents](#scene-descriptions-and-ai-agents) |
 
 For example, a driver (host) and a pedestrian (client) on two PCs, run without anyone at the host:
 ```
@@ -377,6 +397,9 @@ It needs no internet and no installation (a plain web page from the simulator). 
 | Pedestrian (HMD) | Recenter the headset | `R` | |
 | Host | Next trial (automatic trials) / show-hide GUI | `Esc` / `Tab` | |
 | Experimenter | Steering wheel calibration window | `F2` | |
+| Experimenter | Sound calibration tone (1 kHz, full scale) on/off | `F3` | |
+| Any participant with [responses](#participant-responses) | Response button (hold) / slider down, up | `B` / `Z`, `X` | right shoulder or right trigger / d-pad; in a headset: right trigger / right thumbstick |
+| Any participant with [push-to-talk voice](#several-participants-in-one-car-and-voice) | Talk | hold `V` | |
 
 With a steering wheel, the car's steering wheel turns as far as the real one, without smoothing; keyboard steering is smoothed and steers less at speed. The steering wheels of AVs and of other agents' cars follow how those cars turn. The keyboard pedestrian walks at 1.4 m/s (runs at 3.5 m/s) with a walking animation.
 
@@ -451,6 +474,10 @@ Maps without such a file use the OpenStreetMap buildings.
 
 ![Window styles by age and type: Delft (left), London (right)](ReadmeFiles/facade_styles.jpg)
 
+**Lit windows at night.** Every façade texture holds 4 × 4 window bays with their own lights, so at dusk (from 2° sun elevation, full from 4° below the horizon) about a third of the windows light up, mostly warm, some cool white, differently from window to window, on OpenStreetMap and real 3D buildings alike.
+
+![Delft at 23:30: street and aerial view](ReadmeFiles/night_windows.jpg)
+
 **Road networks from OpenDRIVE or SUMO.** A map can also be an [OpenDRIVE](https://www.asam.net/standards/detail/opendrive/) file (`.xodr`) or a SUMO network (`.net.xml` or `.net.xml.gz`): put it in `Assets/StreamingAssets/Maps` and set the trial parameter `map` to its file name (e.g. `map=GridTown.xodr`; a full path also works). The roads are built like those of the city maps: lanes with their widths, markings, pavements and cycle lanes (from the network's pedestrian and bicycle lanes), traffic signals, speed limits, street lamps; spawn points work the same. There are no buildings. With SUMO installed, the `City map` experiment's SUMO traffic runs on these maps too: random cars and bicycles made with SUMO's `randomTrips` the first time (cached). OpenDRIVE files are converted by SUMO's `netconvert`, which must be installed (with `SUMO_HOME` set, as for [traffic from SUMO](#traffic-from-sumo)); the result is cached in the simulator's data folder. The sample `GridTown.xodr` (a 4 × 4 grid) is included, and the same network as `GridTown.net.xml.gz`, which works without SUMO. A network without geographic reference gets Eindhoven's latitude for the sun.
 
 ![The GridTown sample from OpenDRIVE](ReadmeFiles/opendrive_gridtown.jpg)
@@ -479,9 +506,11 @@ AI cars follow a defined path (see [waypoints](#configuration-of-waypoints)) or 
 
 **Driving physics.** The participant's car drives with `RealisticVehicleDynamics` (on the drivable car prefabs; `Car` = `SmartFortwo` or `Hatchback`): the real mass, centre of mass and inertia of the car; suspension tuned to its mass (`SuspensionFrequency`, `DampingRatio`); tyre grip for asphalt that drops on wet roads (`WetGrip`, with the rain of the [weather](#time-of-day-and-weather)); an engine with torque curve and maximum power, an automatic gearbox (early shifts when driving gently, kick-down), engine braking and an auto-hold at standstill; front/rear brake balance with ABS; anti-roll bars; Ackermann steering geometry; with the keyboard, steering is reduced at speed. The Smart (52 kW) reaches 60 km/h in about 6 s and stops from 70 km/h in under 2 s, as the real car. The models are in `Assets/Scripts/Vehicles/Models` with tests against the manufacturers' acceleration and top speed figures. Remove the component to drive with the original arcade physics.
 
+**Tyres from Magic Formula coefficients.** `RealisticVehicleDynamics` ➡️ `Use Magic Formula` (or `-magicFormulaTyres`) sets the tyres from Pacejka Magic Formula coefficients (B, C, D, E for the longitudinal and lateral force, e.g. from tyre data) instead of the built-in asphalt curves; the formula is fitted to Unity's wheel friction curve (the same peak slip and peak, the sliding value at four times the peak slip). The defaults are typical dry asphalt (longitudinal B 10, C 1.9, D 1, E 0.97: peak at 18% slip; lateral B 8, C 1.3, D 1, E -1.6); wet roads still lower the grip.
+
 ## Networking
 - Agents communicate over UDP with Unity Transport on **port 7770**. Allow this port (or the Unity editor / the built simulator) through the firewall on every PC.
-- The number of agents is fixed in code to 4 (`UNetConfig.MaxPlayers`): the host plus three clients.
+- The number of agents is fixed in code to 8 (`UNetConfig.MaxPlayers`): the host plus seven clients (tested with two).
 - The host runs the simulation (AI cars, AI pedestrians, traffic lights) and sends poses to the clients; each client sends the pose of its own avatar to the host.
 - `Visual syncing` (host GUI, during the simulation) shows a red bar on all agents for 1 s, to synchronise screen recordings afterwards.
 
@@ -489,6 +518,8 @@ AI cars follow a defined path (see [waypoints](#configuration-of-waypoints)) or 
 Every agent writes binary logs to the `ExperimentLogs` folder in the project folder (next to `Assets`):
 - `HostLog-{role}-{yyyy_MM_dd_HH_mm_ss}.binLog` / `ClientLog-...`: one frame per rendered frame;
 - `HostFixedTimeLog-{role}-...` / `ClientFixedTimeLog-...`: one frame per physics step, at a fixed 50 Hz (`Fixed Timestep` 0.02 s).
+
+The [study tools](#study-tools) add CSV files there (with the participant and trial at the start of the name in automatic sessions): `Responses-*` (button and slider, every frame), `Haptics-*` (cues), `Voice-*.wav` with `Voice-*.csv` (each agent's microphone), `Companions-*` (virtual pedestrians' actions and language-model answers), `Gaze-*` (on the host: every participant's gaze and the object looked at, gaze triggers), `OpenScenario-*` (scenario events), `SceneDescriptions-*.jsonl`, and `Videos/` (videos from fixed cameras).
 
 Each frame contains the time, the position and rotation of every car with its blinkers, front lights and stop lights, AI-car state (speed, braking, stopped, take-off, eye contact), the position and rotation of every bone of every pedestrian (players and AI; with the Xsens suit, the suit's pose at the time of the frame), and the state of every traffic light. Experiment `Points of Interest` are stored in the log header.
 
@@ -813,6 +844,81 @@ The `Speedometer` component shows the speed:
 
 Other components on car prefabs: `CarConfigurator` (colour, driver and passenger visibility of AI cars), `SteeringWheel` (turns the steering wheel model), `RearMirrorsReflection` (mirror cameras), `CarBlinkers`, `DriverIKSetup` (driver's hands on the wheel) and the engine sound managers.
 
+## Study tools
+
+### Participant responses
+A role can give its participant a **hold-to-respond button** (e.g. "hold while you feel safe to cross") and/or a **slider from 0 to 100** (e.g. trust in the AV, perceived risk): tick `Button` and/or `Slider` in the role's `Response` (`ExperimentDefinitions` ➡️ `Roles`), with the texts shown, the slider's start value, and `Hidden` to log without showing anything (or `-response button,slider` on the agent's command line). A small panel in front of the participant's eyes (on screens and in headsets) shows the text, a light while the button is held and the slider. Keys: `B` for the button, `Z` / `X` for the slider; on a gamepad the right shoulder or right trigger (its analog value is logged too) and the d-pad; in a headset the right controller's trigger and thumbstick. Every frame goes to `ExperimentLogs/Responses-{role}-{date}.csv` (UTC time, game time, frame, button 0/1, analog value, number of presses, slider), on every agent.
+
+### Designed eHMIs
+An eHMI can be described in a file instead of a prefab: `Assets/StreamingAssets/eHMI/<name>.json` gives the panel's size (m), its background and, for each eHMI state (`DISABLED`, `STOP`, `WALK`), the elements shown:
+
+| Element (`type`) | Look | Settings |
+| --- | --- | --- |
+| `lightbar` | a row of lamps | `segments` |
+| `rect`, `circle` | filled shapes | |
+| `arrow`, `chevrons` | an arrow; a row of `>` | `direction` (`left`, `right`, `up`, `down`), `segments` (chevrons) |
+| `text` | text, shrunk to fit | `text` |
+
+Each element has a place in the panel (`x`, `y`, `w`, `h` from 0 to 1, from the bottom left), a `color` (`#RRGGBB` or `#RRGGBBAA`) and an `animation` with its `period` (s): `steady`, `pulse`, `blink`, `sweep` (fills left to right), `sweepleft`, `sweepout` (from the middle out), `sweepin`. Elements of a state named `ANY` show in every state. For example, a cyan light bar that pulses while the AV yields:
+
+```json
+{ "width": 1.2, "height": 0.08, "background": "#101010",
+  "states": [ { "state": "WALK", "elements": [ { "type": "lightbar", "segments": 16, "color": "#00E5FF", "animation": "pulse", "period": 1.2 } ] } ] }
+```
+
+Give a role's AV a designed eHMI with `EhmiDesign` (the file name) and `EhmiDesignPlacement`: `Hood`, `Top`, `Windshield`, `Bumper`, or `Road` (projected on the road 1.8-4.2 m ahead of the car). It is switched and synchronised like the other eHMIs (passenger keys, host, dashboard). On any other object (a pole at a crossing, a pedestrian's wearable) add a `DesignedEhmi` component and set `Follow Ehmi` to the number of the eHMI it should show. Included: `LightBarCyan`, `TextWalk`, `DirectionalChevrons`, `RoadProjection`. To preview one: `-ehmiDesign RoadProjection@Road -ehmiState WALK`.
+
+![Designed eHMIs: light bar on the hood, text on the roof, chevrons on the bumper, a projection on the road](ReadmeFiles/ehmi_designs.jpg)
+
+### In-car displays (head-up display and centre screen)
+The participant's car (driver or AV passenger) can have a **head-up display** (seen about 2.5 m ahead through the windshield) and a **centre screen** on the dashboard, designed like designed eHMIs in `Assets/StreamingAssets/InCar/<name>.json`, set per role (`HudDesign`, `CentreScreenDesign`) or with `-hud` / `-centreScreen`. Their states follow the automation: `AUTOMATED`, `TAKEOVER` (a take-over request), `MANUAL`; text can show live values: `{speed}` (km/h), `{mode}`, `{time_left}` (seconds left to take over), `{reaction}` (the last take-over reaction time) and `{slider}` (the participant's response slider). Included: `HudSpeed`, `CentreScreen`.
+
+![Head-up display and centre screen while driving automated (left) and during a take-over request (right)](ReadmeFiles/incar_displays.jpg)
+
+### Haptic cues
+`Haptics.Cue(name, intensity, duration, pattern)` (pattern `pulse`, `double`, `triple`, `continuous`) plays a cue on gamepads (rumble), headset controllers, Logitech wheels (vibration; with the Logitech SDK, see [wheels](#steering-wheels-pedals-and-gamepads)) and external devices: with `-hapticsUdp host:port` every cue is also sent as JSON, `{"cue":"takeover","intensity":1.0,"duration":1.2,"pattern":"triple","time":12.3}`, e.g. to an Arduino or Raspberry Pi driving a vibrating seat, belt, helmet or handlebar. Take-over requests play a `takeover` cue. Cues are logged to `ExperimentLogs/Haptics-*.csv`.
+
+### Sound
+A `Soundscape` (component on the experiment, or command-line options on every agent) adds:
+- **vehicle sound**: tyre-road noise of the 16 nearest cars that rises with speed (about 30 log10 v; `Tyre Db At 50`: 68 dB at 7.5 m) and, for combustion cars (`-electricCars 0`), an engine whose pitch steps up like gears; 3D sound, -6 dB per doubling of distance;
+- the **participant's own car** heard from inside (quieter, muffled) and **cabin music** (a WAV, OGG or MP3 in `Assets/StreamingAssets/Audio`, at `CabinMusicDb`);
+- **ambience**: distant traffic at `AmbienceDb` at the listener.
+
+Levels are in dB SPL once the sound is **calibrated**: press `F3` (or `-audioCalibration`) to play a 1 kHz tone at full scale, measure it with a sound level meter at the participant's ears (headphones: with a coupler), and enter the reading as `ReferenceDb` (`-audioReferenceDb`). Trial parameters (host): `vehicleSounds`, `electric`, `ambienceDb`, `cabinMusic`, `cabinMusicDb`. It is off by default.
+
+### Several participants in one car, and voice
+A role can sit in another role's car, e.g. three participants in one shared AV: give it a pedestrian spawn type, `RideInCarOf` (the other role's name) and a `Seat` (`FrontPassenger`, `RearLeft`, `RearRight`, `RearMiddle`; rear seats need the hatchback, `carIdx` 1; in AVs the AV passenger role sits in the front passenger seat). The participant then rides in that seat on every agent, with a seated figure for the others to see; their camera, headset, responses and logs work as for a pedestrian. Up to 8 participants can take part.
+
+**Voice.** With `-voice` (open microphone) or `-voice ptt` (push to talk: hold `V`) on each agent, the participants hear each other from their avatars (3D sound, through the host; 16 kHz). Each agent records its own microphone to `ExperimentLogs/Voice-*.wav`, with the UTC time of every chunk in `Voice-*.csv` for synchronisation; `-voiceDevice` picks the microphone, `-voiceRecordOnly` records without sending.
+
+![A participant (client) in the passenger seat of another participant's car: seen by the host (left), and their own view (right)](ReadmeFiles/shared_car.jpg)
+
+### Pedestrian groups
+Virtual pedestrians can stand next to a participant pedestrian, e.g. to study crossing in groups: `PedestrianGroup` on the experiment (or `-companions` on every agent) lists them with an offset (metres to the right and ahead of the participant) and a behaviour:
+- `Follow`: walks along, keeping its offset;
+- `Cross`: starts crossing (straight ahead, 12 m) a delay after the start;
+- `Hesitate`: steps forward 0.7 m, waits and steps back;
+- `Stand`;
+- `Llm`: asks a language model whether to cross (see [AI agents](#scene-descriptions-and-ai-agents)).
+
+For example `-companions "follow:-1.2,0;cross:1.4,0.4,3;hesitate:2.6,0,2"` (behaviour:right,ahead[,delay]). The host moves them and clients see them like other AI pedestrians; their actions are logged to `ExperimentLogs/Companions-*.csv`. Avatars come from `Resources/PedestrianAvatars` (`Coupled Sim` ➡️ `Pedestrians` ➡️ `Build avatar list` after adding avatars).
+
+![A participant (blue) with a following, a crossing and a hesitating companion](ReadmeFiles/pedestrian_group.jpg)
+
+### Gaze over the network and gaze triggers
+With `-gaze` every agent sends its participant's gaze to the host 20 times a second (eye tracking through OpenXR when the headset has it, else the direction of the head), and the host logs all of them together to `ExperimentLogs/Gaze-*.csv` (role, eyes or head, origin, direction, the object looked at). **Gaze triggers** make cars react to being looked at, as in "stopping by looking" studies: `-gazeTrigger "Pedestrian>Automated - Passenger:0.5:yield,ehmi"` (or `NetworkGaze` ➡️ `Triggers`): when the pedestrian has looked at that role's car for 0.5 s, the car brakes to a stop (about 3 m/s²; AVs driven on the host) and/or its eHMIs switch to `WALK`, while it is looked at and for `HoldSeconds` (3 s) after.
+
+### OpenSCENARIO
+`-openscenario <file.xosc>` (in `Assets/StreamingAssets/Scenarios`, or a full path; on every agent) plays the vehicles and pedestrians of an [ASAM OpenSCENARIO](https://www.asam.net/standards/detail/openscenario/) 1.x file in the scene, e.g. scenarios made for esmini or CARLA. Supported: parameter declarations; entities (Vehicle, Pedestrian, catalogue references); `TeleportAction` to a `WorldPosition` and `SpeedAction` to an absolute speed (step, linear or cubic, over a time, a rate or a distance), at the start or at a `SimulationTimeCondition`. Actors move straight along their heading (no lane following); other actions and conditions are logged as unsupported. Positions are the scene's world coordinates (x east, y north; on [OpenDRIVE maps](#city-maps-openstreetmap) those of the .xodr file). Events are logged to `ExperimentLogs/OpenScenario-*.csv`. Example: `CrossingPedestrian.xosc` (a car brakes to a stop, a pedestrian crosses).
+
+### Videos from fixed cameras
+For online (crowdsourced) versions of a study, the same trial can be rendered as videos from fixed cameras, in the editor, in builds and in batch mode: `-videoCams "street=-30,6,-25,60,12;chase;front;driver"` (a camera at x, y, z with yaw and pitch (and field of view), or behind the participant, ahead of it looking back, or the participant's own view), `-videoStart 2 -videoSeconds 10 -videoFps 30 -videoSize 1920x1080`. The simulation runs in step with the frames, so the videos are smooth even on a slow PC. [ffmpeg](https://ffmpeg.org) (on the PATH, or `-ffmpeg path`) joins the frames into `ExperimentLogs/Videos/{camera}.mp4`; without it the JPEG frames stay and the log shows the command to join them. `-videoQuit` quits when done. (The [Unity Recorder set-up](#recording-trial-videos) records the game view in the editor.)
+
+### Scene descriptions and AI agents
+`-sceneDescriptions` logs, once a second, a text description of what is around the participant to `ExperimentLogs/SceneDescriptions-*.jsonl`: place, daylight, every car within 60 m (where, distance, speed, approaching or not, braking, its eHMI state) and the pedestrians nearby, e.g. to compare people's and language models' judgements of the same moments.
+
+**Language-model pedestrians.** A companion with the behaviour `Llm` ([pedestrian groups](#pedestrian-groups)) asks Claude every 3 s, with such a description, whether to cross now, and crosses when the answer is CROSS; the answers and reasons are logged with the scenes. It calls the Anthropic Messages API (model `claude-opus-5-5` at low effort; `-llmModel`, `-llmEffort`) with the API key in the environment variable `ANTHROPIC_API_KEY` (never stored in the project); without a key it sends nothing. Requests send the scene descriptions to Anthropic and are billed to that key.
+
 ## Testing
 `SmokeTest` runs a whole trial without a screen and checks that it works: it opens `StartScene`, starts a host that runs the first trial in keyboard mode, plays for the given time once the experiment runs, and writes a report with errors and exceptions, how far each car and pedestrian moved, and screenshots of the active cameras. It exits with code 0 when no errors occurred.
 
@@ -822,7 +928,7 @@ Unity -batchmode -projectPath . -executeMethod SmokeTest.Run -smokeSeconds 30 -s
 
 Options: `-smokeTrial N` (index in `Trials`), `-smokeExperiment N` and `-smokeRole N` (override the trial's experiment and role), `-smokeShot "x,y,z,yaw,pitch;..."` (extra screenshots from these camera poses), `-smokeScene <path>` (scene to start from), `-smokeInputMode VR` (head-mounted display mode; without a headset it checks the camera set-up). The report also counts jumps of the participant's view of more than 30° between samples (they should be 0).
 
-The models (pedestrians, traffic, two-wheelers, vehicles, maps, trial files) have edit-mode tests (`Assets/Tests/EditMode`, 70 tests): run them in `Window` ➡️ `General` ➡️ `Test Runner`, or with `Unity -batchmode -projectPath . -runTests -testPlatform EditMode -testResults results.xml`. On Windows, `Unity` is `"C:\Program Files\Unity\Hub\Editor\6000.6.9f1\Editor\Unity.exe"`; on macOS `/Applications/Unity/Hub/Editor/6000.6.9f1/Unity.app/Contents/MacOS/Unity`.
+The models (pedestrians, traffic, two-wheelers, vehicles, maps, trial files) have edit-mode tests (`Assets/Tests/EditMode`, 72 tests, including the tyre model): run them in `Window` ➡️ `General` ➡️ `Test Runner`, or with `Unity -batchmode -projectPath . -runTests -testPlatform EditMode -testResults results.xml`. On Windows, `Unity` is `"C:\Program Files\Unity\Hub\Editor\6000.6.9f1\Editor\Unity.exe"`; on macOS `/Applications/Unity/Hub/Editor/6000.6.9f1/Unity.app/Contents/MacOS/Unity`.
 
 **Automatic tests on GitHub.** `.github/workflows/tests.yml` runs the edit-mode tests on every pull request and push to `master` with [GameCI](https://game.ci) (a Linux runner with Unity 6000.6.9f1 in Docker; the first run imports the project for about an hour, later runs use a cached `Library`). Unity needs a license there, given as repository secrets (only people with admin rights to the repository can add them; GitHub never shows them again, also not in the logs). Until they are added, the check passes with the note "Tests skipped". With the [GitHub CLI](https://cli.github.com) (`gh auth login` once), in the `coupled-sim` folder:
 
@@ -905,6 +1011,9 @@ The car (and the bicycle, e-scooter and moped) then reads steering, throttle and
 
 ![](ReadmeFiles/mvn_unity.png)
 
+
+### Motion platforms
+`-motionUdp host:port` sends the motion of the participant's vehicle over UDP at 100 Hz (`-motionRate`), for FlyPT Mover, SimTools or an own controller: the specific force in the vehicle's axes (surge forward, sway right, heave up, in m/s², gravity removed, smoothed over 30 ms), the roll, pitch and yaw rates (°/s), the attitude (°) and the speed (m/s). Formats (`-motionFormat`): `json` (default, named fields), `csv` (`time,surge,sway,heave,roll_rate,pitch_rate,yaw_rate,roll,pitch,yaw,speed`) and `flypt` (the same values without the time, separated by spaces, one line per packet).
 ### Network
 All agents must be in the same local network; the host's IP address is in its console. Allow these ports through the firewall of each PC (on Windows: inbound rules for the Unity editor of the version you use, and for the built simulator):
 
@@ -925,7 +1034,7 @@ All agents must be in the same local network; the host's IP address is in its co
 
 **Which computer do I need?** Windows 10/11 with a recent GPU: a GeForce RTX 3060 or better for screens, RTX 3070/4070 or better for VR at 90 Hz, 16 GB of RAM. The editor also runs on macOS (no VR, no force feedback). One PC per participant; several agents on one PC are for testing only.
 
-**How many participants can take part?** Four (host and three clients). The limit is `UNetConfig.MaxPlayers`; raising it works in principle but is not tested.
+**How many participants can take part?** Eight (host and seven clients); tested with two. The limit is `UNetConfig.MaxPlayers`. Several of them can [sit in one car](#several-participants-in-one-car-and-voice).
 
 **Do I need SUMO?** Only for SUMO traffic (`SumoTraffic`, city maps). Install SUMO 1.20 or newer and set `SUMO_HOME`. Without it, the hand-built town has the built-in traffic models (`Traffic`) and city maps run without traffic.
 
