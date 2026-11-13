@@ -180,6 +180,16 @@ public class TrafficCar : MonoBehaviour
             }
             if (YieldToPedestrians)
             {
+                foreach (var animal in AnimalAgent.All)
+                {
+                    if (animal.Current == AnimalAgent.State.Fly) continue;
+                    var ap = animal.transform.position;
+                    if (Flat2(ap - p) < lw2 * 1.2f && Mathf.Abs(ap.y - p.y) < 1.5f)
+                    {
+                        what = $"{animal.Species} at {along:F0} m";
+                        return Leader.Stationary(Mathf.Max(0.1f, along - VehicleLength / 2f - 1.5f));
+                    }
+                }
                 foreach (var ped in _pedestrians)
                 {
                     if (Flat2(ped.position - p) < lw2 * 1.2f && Mathf.Abs(ped.position.y - p.y) < 1.5f)

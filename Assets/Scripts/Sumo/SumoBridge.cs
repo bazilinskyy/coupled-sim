@@ -521,6 +521,12 @@ public class SumoBridge : CarSpawnerBase
         foreach (var kv in _cars)
         {
             var t = kv.Value.Car.transform;
+            foreach (var animal in AnimalAgent.All)
+            {
+                if (animal.Current == AnimalAgent.State.Fly) continue;
+                var d = t.InverseTransformPoint(animal.transform.position);
+                if (d.z > 1.5f && d.z < PedestrianLookAhead && Mathf.Abs(d.x) < 1.6f) { stop.Add(kv.Key); break; }
+            }
             foreach (var p in _pedestrians)
             {
                 if (p == null) continue;
