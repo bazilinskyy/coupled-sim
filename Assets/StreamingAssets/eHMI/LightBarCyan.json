@@ -1,0 +1,36 @@
+{
+  "name": "Cyan light bar: pulsing while yielding (WALK), sweeping when driving on (STOP)",
+  "width": 1.2,
+  "height": 0.08,
+  "background": "#101010",
+  "states": [
+    {
+      "state": "WALK",
+      "elements": [
+        {
+          "type": "lightbar",
+          "segments": 16,
+          "color": "#00E5FF",
+          "animation": "pulse",
+          "period": 1.2
+        }
+      ]
+    },
+    {
+      "state": "STOP",
+      "elements": [
+        {
+          "type": "lightbar",
+          "segments": 16,
+          "color": "#00E5FF",
+          "animation": "sweep",
+          "period": 0.8
+        }
+      ]
+    },
+    {
+      "state": "DISABLED",
+      "elements": []
+    }
+  ]
+}
