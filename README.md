@@ -752,6 +752,9 @@ The experiment parameter `animals` multiplies the numbers per trial (`0` = no an
 Every experiment has an `EnvironmentController` (child object `Environment (time of day, weather)`) that sets:
 - **time of day** (`TimeOfDay`, clock time; `Latitude`, `Longitude`, `UtcOffset`, `DayOfYear`): the sun's position from a solar model, its colour and strength, a physically based sky, ambient light and the street lights (a light under each `StreetLamp`, the nearest 24 to the viewer switched on at dusk); `TimeSpeed` lets time run (e.g. 60 = one minute per second);
 - **weather** (`Clear`, `PartlyCloudy`, `Overcast`, `LightRain`, `HeavyRain`, `Fog`): clouds (sky colour, softer and weaker sunlight), fog, rain around the viewer and wet, darker, shinier roads and pavements; `ExtraFog` and `RainOverride` fine-tune it.
+- **reflections** (`LiveReflections`, on by default): a realtime reflection probe a few metres above the viewer, renewed when the time of day or weather changes and when the viewer has moved 30 m (`LiveReflectionDistance`; 128 pixels per face, `LiveReflectionResolution`). Car paint, windows and wet roads then reflect the actual sky and streets: dark at night, grey under clouds, the buildings around. The scene's own reflection probes still apply inside their areas.
+
+![Reflections at night without (left) and with live reflections (right)](ReadmeFiles/live_reflections.jpg)
 
 They can be set per trial with the experiment parameters `time` (`17:30` or `17.5`), `weather`, `fog`, `rain`, `timeSpeed`, `dayOfYear`, `latitude`. The host sends the conditions to all clients. With `UseBakedLighting` on (the experiments of earlier studies), the scene keeps its baked lightmaps and sun and only the weather effects apply; with it off (Base and the new examples), the sun follows the time of day with realtime lighting.
 
