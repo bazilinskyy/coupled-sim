@@ -312,6 +312,23 @@ public static class SmokeTest
             sb.AppendLine($"Screenshot: {path}");
             if (shot >= 4) break;
         }
+        // extra views (DisplayViews): cameras on other displays, mirrors rendered to textures
+        foreach (var cam in UnityEngine.Object.FindObjectsByType<Camera>().Where(c => c.isActiveAndEnabled && c.name.StartsWith("View ")))
+        {
+            var path = Path.Combine(outDir, $"{San(cam.name)}.png");
+            if (cam.targetTexture == null) SaveCamera(cam, path, 1280, 720);
+            else
+            {
+                cam.Render();
+                var old = RenderTexture.active; RenderTexture.active = cam.targetTexture;
+                var tex = new Texture2D(cam.targetTexture.width, cam.targetTexture.height, TextureFormat.RGB24, false);
+                tex.ReadPixels(new Rect(0, 0, tex.width, tex.height), 0, 0); tex.Apply();
+                RenderTexture.active = old;
+                File.WriteAllBytes(path, tex.EncodeToPNG());
+                UnityEngine.Object.DestroyImmediate(tex);
+            }
+            sb.AppendLine($"View: {path}");
+        }
         // what the participant's screen shows: the cameras on display 1, in depth order
         var screenCams = UnityEngine.Object.FindObjectsByType<Camera>()
             .Where(c => c.isActiveAndEnabled && c.targetTexture == null && c.targetDisplay == 0).OrderBy(c => c.depth).ToList();
