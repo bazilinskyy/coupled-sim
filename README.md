@@ -97,9 +97,29 @@ Open `Assets/_Scenes/StartScene.unity`. All settings for a run are on the `Manag
 ### Several agents on one machine
 For testing and debugging only:
 1. Run the host inside the Unity editor as described above and note the IP address it logs.
-2. Build the simulator (`File` ➡️ `Build And Run`) and start one or more builds as clients, connecting to that address (127.0.0.1 also works).
+2. Build the simulator (`Coupled Sim` ➡️ `Build`) and start one or more builds as clients, connecting to that address (127.0.0.1 also works; `-connect 127.0.0.1` connects at once).
 
 Only the window that has focus receives keyboard input.
+
+### Builds and command-line options
+`Coupled Sim` ➡️ `Build` ➡️ `Windows` / `macOS` / `Linux` builds the simulator into `Builds/{platform}` (in batch mode: `-executeMethod BuildTools.Build -buildTarget Win64`); the experiment scenes are added to the build settings first. The first build compiles all shader variants and takes a while (about an hour on a slow PC); later builds reuse them. A build (or the editor in batch mode) takes these options:
+
+| Option | Meaning |
+| --- | --- |
+| `-host` | start as host (manual mode: roles and start from the GUI or the [dashboard](#experimenter-dashboard)) |
+| `-connect <ip>` | start as client and connect to the host at that address |
+| `-autoRun` | run the trials automatically (`Run Trial Sequence Automatically`) |
+| `-clients <n>` | automatic trials: wait for n clients; they get the roles of the trial parameter `clientRoles` (e.g. `Pedestrian,Cyclist`), else the next free roles |
+| `-trials <file>`, `-participant <n>`, `-order latin\|random\|none` | [trial file and counterbalancing](#trial-files-and-counterbalancing) |
+| `-sumoConnect <host:port>` | connect to a running [SUMO](#traffic-from-sumo) |
+| `-screenshot <seconds> <file>`, `-quitAfter <seconds>` | a screenshot after that time; quit after that time (tests, documentation) |
+
+For example, a driver (host) and a pedestrian (client) on two PCs, run without anyone at the host:
+```
+"Coupled Simulator.exe" -autoRun -clients 1 -trials pedestrian_study.csv -participant 4
+"Coupled Simulator.exe" -connect 192.168.1.11
+```
+The host starts the simulation once every connected agent has loaded the level.
 
 ### Running trials automatically
 ![](ReadmeFiles/instant.png)
@@ -169,14 +189,17 @@ It needs no internet and no installation (a plain web page from the simulator). 
 | Driver | Throttle / brake | `W`/`S` or `↑`/`↓` (axis `Throttle`) | pedals |
 | Driver | Steer | `A`/`D` or `←`/`→` | wheel |
 | Driver | Brake (axis `Break`) | `Space` | pedal |
-| Driver | Forward / reverse gear | `F` / `R` | buttons of the wheel profile (G27: 6 / 7) |
+| Driver | Forward / reverse gear (reverse engages at standstill; then the throttle drives backwards, up to 25 km/h) | `F` / `R` | buttons of the wheel profile (G27: 6 / 7) |
 | Driver | Blinker left / right / off | `Q` / `E` / `2` | buttons of the wheel profile (G27: 5 / 4 / 16) |
 | AV passenger | eHMI disabled / stop / walk | `1` / `2` / `3` | |
 | AV passenger | Resume driving where the AV waits for input (`WaitInputX`) | `Space` | |
-| Pedestrian (keyboard mode) | Walk forward / back, sideways, turn | `W`/`S`, `A`/`D`, `Q`/`E` | |
+| Pedestrian (keyboard mode) | Walk forward / back, sideways, turn; run | `W`/`S`, `A`/`D`, `Q`/`E` (or arrows); hold `Shift` | |
+| Pedestrian (keyboard mode) | Look around | hold the right mouse button and move the mouse | |
 | Pedestrian (HMD) | Recenter the headset | `R` | |
 | Host | Next trial (automatic trials) / show-hide GUI | `Esc` / `Tab` | |
 | Experimenter | Steering wheel calibration window | `F2` | |
+
+With a steering wheel, the car's steering wheel turns as far as the real one, without smoothing; keyboard steering is smoothed and steers less at speed. The steering wheels of AVs and of other agents' cars follow how those cars turn. The keyboard pedestrian walks at 1.4 m/s (runs at 3.5 m/s) with a walking animation.
 
 Keyboard bindings are set in `Edit` ➡️ `Project Settings` ➡️ `Input Manager`; wheels and pedals through their profile and calibration (see [Hardware](#steering-wheels-pedals-and-gamepads)). The host can also switch eHMIs and trigger [visual syncing](#data-logging) from its GUI during the simulation.
 
@@ -563,7 +586,7 @@ The car (and the bicycle, e-scooter and moped) then reads steering, throttle and
 
 ![](ReadmeFiles/mvn_windows.png)
 
-4. When the avatar moves in MVN Analyze, start the simulator in `Suite mode` (pedestrian roles; the prefabs are in `Assets/Prefabs/Xsens`). Align the HMD with the avatar's head with `R`, repeated until the participant confirms, for every trial.
+4. When the avatar moves in MVN Analyze, start the simulator in `Suite mode` (pedestrian roles; the prefabs are in `Assets/Prefabs/Xsens`). Align the HMD with the avatar's head with `R`, repeated until the participant confirms, for every trial. With a headset, the avatar's head turns with the headset's tracking instead of the suit's head sensor, so the two do not fight (`XsLiveAnimator` ➡️ `Head From Headset`).
 
 ![](ReadmeFiles/mvn_unity.png)
 

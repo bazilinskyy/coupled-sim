@@ -68,6 +68,8 @@ namespace CoupledSim.Vehicles
         public int Gear { get; private set; } = 1;
         public float Rpm { get; private set; }
         public bool Reverse { get; set; }
+        /// <summary>Reverse speed limit (m/s), as automatic cars limit it electronically (about 25 km/h).</summary>
+        public float MaxReverseSpeed = 7f;
         float _shiftTimer;
 
         public Powertrain(CarSpec spec)
@@ -109,6 +111,8 @@ namespace CoupledSim.Vehicles
                 _shiftTimer -= dt;
                 return 0f;
             }
+            // reverse: the throttle fades out towards the reverse speed limit
+            if (Reverse) throttle *= Math.Clamp((MaxReverseSpeed - Math.Abs(speed)) / 1.5f, 0f, 1f);
             float engine = throttle > 0.01f
                 ? throttle * EngineTorque(Rpm)
                 : -EngineBraking(Rpm) * (wheelRpm > Spec.IdleRpm ? 1f : 0f);

@@ -64,6 +64,11 @@ namespace xsens
 
         public bool applyRootMotion = true;         //if true, position will be applied to the root (pelvis)
 
+        [Tooltip("With a headset, the head turns with the headset's tracking, not the suit's head sensor (two sensors make the view shake, #7).")]
+        public bool HeadFromHeadset = true;
+        [Tooltip("The headset camera; empty = the main camera.")]
+        public Transform HeadsetCamera;
+
         public XsProp prop1;
         public XsProp prop2;
         public XsProp prop3;
@@ -988,6 +993,17 @@ namespace xsens
                     }
                     else
                     {
+                        if (HeadFromHeadset && bodySegmentOrder[i] == (int)XsBodyAnimationSegment.Head && UnityEngine.XR.XRSettings.isDeviceActive
+                            && model[bodySegmentOrder[i]] != null)
+                        {
+                            var cam = HeadsetCamera;
+                            if (cam == null && Camera.main != null) cam = Camera.main.transform;
+                            if (cam != null)
+                            {
+                                model[bodySegmentOrder[i]].transform.rotation = cam.rotation * modelRotTP[i];
+                                continue;
+                            }
+                        }
                         if (model[bodySegmentOrder[i]] == null)
                         {
                             Debug.LogError("[xsens] XsLiveAnimator: Missing bone from mvn actor! Did you change MvnLive plugin? Please check if you are using the right actor!");

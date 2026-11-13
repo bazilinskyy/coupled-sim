@@ -310,8 +310,13 @@ namespace VehicleBehaviour {
                 _collided = false;
             }
 
-            steeringWheelAngle = Mathf.Lerp(steeringWheelAngle, steering * steeringWheelMul, steerSpeed);
-            if (steeringWheel != null) {
+            // a steering wheel is the steering: no smoothing (that would add a lag, #6); keyboard steering is smoothed
+            float steerLerp = isPlayer && WheelProfile.Active != null ? 1f : steerSpeed;
+            steeringWheelAngle = Mathf.Lerp(steeringWheelAngle, steering * steeringWheelMul, steerLerp);
+            // with a wheel, the car's steering wheel turns as far as the real one (e.g. 450° to each side)
+            if (isPlayer && WheelProfile.Active != null && steerAngle > 0f)
+                steeringWheelAngle = steering / steerAngle * WheelProfile.Active.SteerRangeDeg / 2f * Mathf.Sign(steeringWheelMul);
+            if (steeringWheel != null && isPlayer) {
                 steeringWheel.localRotation = Quaternion.AngleAxis(steeringWheelAngle, Vector3.forward);
             }
 
@@ -322,8 +327,8 @@ namespace VehicleBehaviour {
                 // keyboard: steer less at speed, as drivers do with a wheel
                 float steer = steering;
                 if (WheelProfile.Active == null) steer /= 1f + Mathf.Abs(speed) / 60f;
-                _dynamics.Steer(Mathf.Lerp(_lastSteer, steer, steerSpeed));
-                _lastSteer = Mathf.Lerp(_lastSteer, steer, steerSpeed);
+                _lastSteer = Mathf.Lerp(_lastSteer, steer, steerLerp);
+                _dynamics.Steer(_lastSteer);
                 // the car's "Throttle" axis is negative for back (S): that brakes
                 _dynamics.Drive(Mathf.Clamp01(rawThrottle), Mathf.Max(breaking, Mathf.Clamp01(-rawThrottle)), reverse);
                 playerAvatar.SetBreakLights(breaking > 0.05f || rawThrottle < -0.05f);
@@ -334,7 +339,7 @@ namespace VehicleBehaviour {
             // Direction
             foreach (WheelCollider wheel in turnWheel)
             {
-                wheel.steerAngle = Mathf.Lerp(wheel.steerAngle, steering, steerSpeed);
+                wheel.steerAngle = Mathf.Lerp(wheel.steerAngle, steering, steerLerp);
             }
 
             foreach (WheelCollider wheel in wheels)
