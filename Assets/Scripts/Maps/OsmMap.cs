@@ -22,6 +22,9 @@ public class OsmMap : MonoBehaviour
     public string DefaultMap = "Eindhoven";
 
     public MapInfo Info { get; private set; }
+    /// <summary>For maps from a road network (OpenDRIVE/SUMO): the SUMO network file it was built from, and the network coordinates of the scene origin.</summary>
+    public string RoadNetwork { get; private set; }
+    public Vector2 RoadNetworkOffset { get; private set; }
     public OsmMapGenerator Generator { get; private set; }
 
     void Awake()
@@ -149,6 +152,8 @@ public class OsmMap : MonoBehaviour
         };
         var net = SumoNetwork.Convert(xml, new GeoProjection(lat, lon));
         Info = info;
+        RoadNetwork = netPath;
+        RoadNetworkOffset = new Vector2((float)net.OffsetX, (float)net.OffsetY);
         Generator = new OsmMapGenerator(info, net.Data, MapAssets.Instance);
         var root = new GameObject(info.City).transform;
         root.SetParent(transform, false);
