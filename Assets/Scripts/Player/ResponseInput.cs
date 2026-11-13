@@ -118,7 +118,7 @@ public class ResponseInput : MonoBehaviour
         {
             Directory.CreateDirectory("ExperimentLogs");
             var role = string.Join("_", RoleName.Split(Path.GetInvalidFileNameChars()));
-            _log = new StreamWriter($"ExperimentLogs/Responses-{(role.Length > 0 ? role + "-" : "")}{DateTime.Now:yyyy_MM_dd_HH_mm_ss}.csv") { AutoFlush = false };
+            _log = new StreamWriter($"ExperimentLogs/Responses-{NetworkingManager.LogPrefix}{(role.Length > 0 ? role + "-" : "")}{DateTime.Now:yyyy_MM_dd_HH_mm_ss}.csv") { AutoFlush = false };
             _log.WriteLine("utc;time;frame;button;button_value;presses;slider");
         }
         _log.WriteLine(string.Join(";", DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fff", ci), Time.time.ToString("F4", ci), Time.frameCount.ToString(ci),
