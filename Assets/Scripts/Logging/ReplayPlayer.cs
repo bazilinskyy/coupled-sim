@@ -37,14 +37,34 @@ public class ReplayPlayer : MonoBehaviour
     List<PlayerAvatar> Participants => _drivers.Take(_info.Drivers.Length).Concat(_pedestrians).ToList();
 
     /// <summary>Starts the replay of a recording (a .binLog with its .replay.json).</summary>
-    public static void Begin(string binLog, NetworkingManager nm)
+    /// <summary>
+    /// Starts the replay of a recording (a .binLog with its .replay.json). Recordings from before the
+    /// replay existed have no .replay.json: then the experiment (and the city map of a map
+    /// experiment) chosen by the user is used, with the experiment's first car and pedestrian models.
+    /// Returns an error message, or null.
+    /// </summary>
+    public static string Begin(string binLog, NetworkingManager nm, ExperimentDefinition chosen = null, string chosenMap = null)
     {
         var info = ReplayInfo.Load(binLog);
-        if (info == null) { Debug.LogError("Replay: no " + ReplayInfo.PathFor(binLog)); return; }
+        if (info == null && chosen == null) return "No .replay.json: choose the experiment";
         ReplayLog log;
         try { log = ReplayLog.Read(binLog); }
-        catch (Exception e) { Debug.LogError($"Replay: cannot read {binLog}: {e.Message}"); return; }
-        if (log.Frames.Count == 0) { Debug.LogError("Replay: the recording has no frames: " + binLog); return; }
+        catch (Exception e) { Debug.LogError($"Replay: cannot read {binLog}: {e.Message}"); return "Cannot read the recording (made by an older version?): " + e.Message; }
+        if (log.Frames.Count == 0) { Debug.LogError("Replay: the recording has no frames: " + binLog); return "The recording has no frames"; }
+        if (info == null)
+        {
+            var car = nm.Players.DriverPrefabs != null && nm.Players.DriverPrefabs.Length > 0 ? nm.Players.DriverPrefabs[0].name : "";
+            info = new ReplayInfo
+            {
+                Experiment = chosen.ShortName,
+                Scene = string.IsNullOrEmpty(chosen.Scene) ? "OsmMap" : chosen.Scene,
+                Map = string.IsNullOrEmpty(chosen.Map) ? null : chosenMap ?? chosen.Map,
+                LocalDriver = log.LocalDriver,
+                Drivers = Enumerable.Repeat(car, log.PersistentDrivers).ToArray(),
+                Pedestrians = Enumerable.Repeat(nm.Players.PedestrianPrefab != null ? nm.Players.PedestrianPrefab.name : "", log.PedestrianCount).ToArray(),
+            };
+            Debug.Log($"Replay: {binLog} has no .replay.json; replayed in {chosen.ShortName}{(info.Map != null ? ", map " + info.Map : "")} with standard models");
+        }
 
         var go = new GameObject("Replay");
         DontDestroyOnLoad(go);
@@ -69,6 +89,7 @@ public class ReplayPlayer : MonoBehaviour
         SceneManager.sceneLoaded += r.OnSceneLoaded;
         OsmMap.Requested = info.Map;
         SceneManager.LoadScene(info.Scene);
+        return null;
     }
 
     ExperimentDefinition _experiment;
