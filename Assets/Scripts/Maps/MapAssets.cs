@@ -10,6 +10,11 @@ public class MapAssets : ScriptableObject
     public Material LitTemplate;
     public GameObject StreetLamp;
     public GameObject[] Trees;
+    [Header("Street furniture and parked vehicles (MapPropBuilder)")]
+    public GameObject Bench;
+    public GameObject WasteBin;
+    public GameObject[] ParkedBicycles;
+    public GameObject[] ParkedCars;
 
     static MapAssets _instance;
     public static MapAssets Instance => _instance != null ? _instance : (_instance = Resources.Load<MapAssets>("MapAssets"));

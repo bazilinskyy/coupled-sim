@@ -7,6 +7,17 @@ namespace CoupledSim.Maps
     /// <summary>2D geometry for map building (x east, y = Unity z north).</summary>
     public static class Geometry2D
     {
+        /// <summary>Whether <paramref name="p"/> lies inside the polygon (even-odd rule).</summary>
+        public static bool PointInPolygon(Vector2 p, IList<Vector2> poly)
+        {
+            bool inside = false;
+            for (int i = 0, j = poly.Count - 1; i < poly.Count; j = i++)
+                if ((poly[i].Y > p.Y) != (poly[j].Y > p.Y) &&
+                    p.X < (poly[j].X - poly[i].X) * (p.Y - poly[i].Y) / (poly[j].Y - poly[i].Y) + poly[i].X)
+                    inside = !inside;
+            return inside;
+        }
+
         public static float SignedArea(IList<Vector2> poly)
         {
             double a = 0;
