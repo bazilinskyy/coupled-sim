@@ -44,6 +44,7 @@ The source code of the coupled simulator is released under the [MIT License](LIC
 - Realistic car physics: engine and automatic gearbox, brakes with ABS, tyre grip that drops in the rain, suspension and anti-roll bars, matched to the real cars.
 - Background traffic with a choice of car-following models (IDM, Gipps, Krauss) that follows other cars, stops at red lights, slows down for bends and yields to pedestrians.
 - Participants can also be cyclists, e-scooter riders or moped riders, with two-wheeler dynamics (power, legal speed limits, lean and steering).
+- Animals moving around the world (pigeons, dogs, cats, foxes, deer, horses) that wander, eat and flee from traffic and people; traffic stops for them.
 - Time of day (solar position) and weather (clouds, rain with wet roads, fog), set per trial; URP graphics with post-processing and ambient occlusion.
 - 20 city maps from OpenStreetMap on six continents (Eindhoven, Delft, London, Tokyo, New York, Cairo, São Paulo, Sydney, ...), built at load time, and maps of any place by coordinates.
 - Coupling with [SUMO](https://eclipse.dev/sumo/) over TraCI: SUMO traffic in the scene, participants' cars and the AV in SUMO.
@@ -431,6 +432,17 @@ The driver looks at the closest object tagged `Pedestrian` within that range, if
 - `YieldingEyeContactSince`: seconds after stopping before the driver makes eye contact;
 - `YieldingEyeContactUntil`: seconds after stopping when the driver stops making eye contact.
 
+### Animals
+Every experiment has an `AnimalSpawner` (child object `Animals`) that places animals around the first role's spawn point (or `Centre`) within `Radius` metres: by default 12 pigeons, 2 dogs, 2 cats and a fox (`CityMap`: 20 pigeons, 4 dogs, 3 cats and a fox); huskies, deer and horses are also available. They are the same on every agent (`Seed`). The host runs their behaviour and sends their poses to the clients:
+- they idle, eat, and wander within `HomeRadius` of where they started, sometimes across the road;
+- they flee from vehicles that would reach them within `FleeTime` seconds or come closer than `FleeDistance`, running sideways out of the car's path; pigeons fly off and land again;
+- cats, pigeons, foxes, deer and horses also keep their distance from pedestrians (`PeopleShyDistance`; dogs are not shy);
+- background traffic and SUMO cars stop for animals on the road (not for flying pigeons).
+
+The experiment parameter `animals` multiplies the numbers per trial (`0` = no animals, `2` = twice as many). Positions and states are logged to `ExperimentLogs/Animals-{date}.csv` (time, animal, species, position, heading, state). The models are low-poly CC0 animals by Quaternius with their walk, run, idle and eating animations, scaled to real body lengths; `Coupled Sim` ➡️ `Animals` ➡️ `Build prefabs and add to experiments` (`AnimalPrefabBuilder`) rebuilds the prefabs.
+
+![Animals](ReadmeFiles/animals.jpg)
+
 ### Time of day and weather
 Every experiment has an `EnvironmentController` (child object `Environment (time of day, weather)`) that sets:
 - **time of day** (`TimeOfDay`, clock time; `Latitude`, `Longitude`, `UtcOffset`, `DayOfYear`): the sun's position from a solar model, its colour and strength, a physically based sky, ambient light and the street lights (a light under each `StreetLamp`, the nearest 24 to the viewer switched on at dusk); `TimeSpeed` lets time run (e.g. 60 = one minute per second);
@@ -583,5 +595,6 @@ All agents must be in the same local network; the host's IP address is in its co
 | [Vehicle - Essentials](https://assetstore.unity.com/packages/audio/sound-fx/transportation/vehicle-essentials-194951) | Nox Sound | Unity Asset Store EULA |
 | [Road System](https://assetstore.unity.com/packages/tools/level-design/road-system-192818) | Maxi Barmetler | Unity Asset Store EULA |
 | [Kajaman's Roads](https://assetstore.unity.com/packages/3d/environments/roadways/kajaman-s-roads-free-52628) | Kajaman | Unity Asset Store EULA |
+| [Animated animals](https://quaternius.com) (pigeon, Shiba Inu, husky, cat, fox, deer, horse; via [Poly Pizza](https://poly.pizza)) | Quaternius | CC0 |
 | [Microsoft Rocketbox avatars](https://github.com/microsoft/Microsoft-Rocketbox) (12 avatars, textures reduced to 1024 px) | Microsoft | MIT |
 | [HD Low Poly Racing Car No.1201](https://assetstore.unity.com/packages/3d/vehicles/land/hd-low-poly-racing-car-no-1201-118603) | Azerilo | Unity Asset Store EULA (free at time of download) |
