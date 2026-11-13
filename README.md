@@ -586,7 +586,7 @@ The car (and the bicycle, e-scooter and moped) then reads steering, throttle and
 
 ![](ReadmeFiles/mvn_windows.png)
 
-4. When the avatar moves in MVN Analyze, start the simulator in `Suite mode` (pedestrian roles; the prefabs are in `Assets/Prefabs/Xsens`). Align the HMD with the avatar's head with `R`, repeated until the participant confirms, for every trial.
+4. When the avatar moves in MVN Analyze, start the simulator in `Suite mode` (pedestrian roles; the prefabs are in `Assets/Prefabs/Xsens`). Align the HMD with the avatar's head with `R`, repeated until the participant confirms, for every trial. With a headset, the avatar's head turns with the headset's tracking instead of the suit's head sensor, so the two do not fight (`XsLiveAnimator` ➡️ `Head From Headset`).
 
 ![](ReadmeFiles/mvn_unity.png)
 
