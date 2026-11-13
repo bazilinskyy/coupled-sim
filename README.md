@@ -405,7 +405,11 @@ Besides the hand-built town, experiments can take place in real city centres, bu
 | South America | São Paulo (11.5M), Montevideo (1.3M), Cusco (430k) |
 | Oceania | Sydney (5.3M)\*, Auckland (1.7M)\*, Wellington (215k)\* |
 
-\* left-hand traffic: spawn points and SUMO traffic keep left (the participant's car is still left-hand drive).
+\* left-hand traffic: spawn points and SUMO traffic keep left, and the participant's car is right-hand drive.
+
+**Right-hand drive.** In cities with left-hand traffic the participant's car (driver and AV passenger roles) has its steering wheel on the right: the body and interior are mirrored, and the driver, passenger, steering wheel, instruments, mirrors and cameras move to the other side; the instrument text stays readable and the driving physics do not change. Each role chooses this with **Steering** in the experiment's role list (`Auto`: right in left-hand-traffic cities; `Left`; `Right`, also in the town). AI cars keep the steering wheel on the left.
+
+![Right-hand drive in London](ReadmeFiles/right_hand_drive.jpg)
 
 **Choosing a map.** Use the `City map (OpenStreetMap)` experiment (`Assets/ExperimentDefinitions/CityMap.prefab`, scene `OsmMap`): the host picks the city in its GUI, or a trial sets it with the parameter `map` (e.g. `map=Tokyo`). The roles (driver, pedestrian, cyclist, e-scooter and moped rider, second driver) use `OsmSpawnPoint`s, which put them on a driving lane, a pavement, a cycle path or the road edge near the map centre, so the experiment works in every city. Time of day uses the city's location and time zone.
 

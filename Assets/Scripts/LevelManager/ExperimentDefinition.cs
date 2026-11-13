@@ -47,7 +47,13 @@ public struct ExperimentRoleDefinition
     //for Passenger agent, references game object defining waypoints for the autonomous car via WaypointCirciut component
     public WaypointCircuit AutonomousPath;
     public bool AutonomousIsYielding;
+
+    //side of the steering wheel of the role's car: Auto = on the right on maps with left-hand traffic
+    [Tooltip("Where the steering wheel of this role's car is. Auto: on the right in cities with left-hand traffic (London, Tokyo, Sydney, ...), else on the left.")]
+    public SteeringSide Steering;
 }
+
+public enum SteeringSide { Auto, Left, Right }
 
 public class ExperimentDefinition : MonoBehaviour
 {
