@@ -19,7 +19,7 @@ The simulator is open source and free to use. It is aimed at, but not limited to
 - [Data logging](#data-logging)
 - [Configuration](#configuration): [experiments](#experiment-definitions), [agents](#configuration-of-agents), [waypoints](#configuration-of-waypoints), [eye contact](#configuration-of-drivers-eye-contact), [daylight](#configuration-of-daylight-conditions), [traffic lights](#configuration-of-traffic-lights), [eHMIs](#configuration-of-ehmis), [car prefabs](#details-on-editing-car-prefabs)
 - [Testing](#testing)
-- [Hardware](#hardware): [headsets](#head-mounted-displays-vr), [wheels](#steering-wheels-pedals-and-gamepads), [motion suit](#xsens-mvn-motion-suit), [network](#network)
+- [Hardware](#hardware): [monitors](#several-monitors-and-mirrors), [headsets](#head-mounted-displays-vr), [wheels](#steering-wheels-pedals-and-gamepads), [motion suit](#xsens-mvn-motion-suit), [network](#network)
 - [FAQ](#faq)
 - [Used assets](#used-assets)
 
@@ -39,7 +39,7 @@ The source code of the coupled simulator is released under the [MIT License](LIC
 - Up to **4 human participants** in one scene (a host and three clients) over a local network.
 - Roles: driver of a manual car, passenger of an AV (controls its eHMI), pedestrian, cyclist, e-scooter rider, moped rider.
 - Input: keyboard, gamepads and steering wheels with pedals (Logitech, Thrustmaster, Fanatec, Moza; profiles and in-simulator calibration; force feedback on Logitech wheels), Xsens MVN motion suit for pedestrians.
-- Output: flat screens or head-mounted displays through OpenXR (Meta Quest, Varjo, HTC Vive, Valve Index, HP Reverb, Pico), with eye-tracking logs on headsets that have eye tracking.
+- Output: flat screens (also several monitors side by side, and mirror views) or head-mounted displays through OpenXR (Meta Quest, Varjo, HTC Vive, Valve Index, HP Reverb, Pico), with eye-tracking logs on headsets that have eye tracking.
 - AI cars that follow waypoint paths with configurable speed, acceleration, yielding, blinkers and driver eye contact.
 - Realistic car physics: engine and automatic gearbox, brakes with ABS, tyre grip that drops in the rain, suspension and anti-roll bars, matched to the real cars.
 - Background traffic with a choice of car-following models (IDM, Gipps, Krauss) that follows other cars, stops at red lights, slows down for bends and yields to pedestrians.
@@ -113,6 +113,7 @@ Only the window that has focus receives keyboard input.
 | `-clients <n>` | automatic trials: wait for n clients; they get the roles of the trial parameter `clientRoles` (e.g. `Pedestrian,Cyclist`), else the next free roles |
 | `-trials <file>`, `-participant <n>`, `-order latin\|random\|none` | [trial file and counterbalancing](#trial-files-and-counterbalancing) |
 | `-sumoConnect <host:port>` | connect to a running [SUMO](#traffic-from-sumo) |
+| `-views "LeftScreen:2,RightScreen:3,RearMirror:1"` | [extra monitors and mirrors](#several-monitors-and-mirrors) |
 | `-screenshot <seconds> <file>`, `-quitAfter <seconds>` | a screenshot after that time; quit after that time (tests, documentation) |
 
 For example, a driver (host) and a pedestrian (client) on two PCs, run without anyone at the host:
@@ -580,6 +581,14 @@ Options: `-smokeTrial N` (index in `Trials`), `-smokeExperiment N` and `-smokeRo
 The pedestrian models have edit-mode tests (`Assets/Tests/EditMode`): run them in `Window` ➡️ `General` ➡️ `Test Runner`, or with `Unity -batchmode -projectPath . -runTests -testPlatform EditMode -testResults results.xml`. On Windows, `Unity` is `"C:\Program Files\Unity\Hub\Editor\6000.6.9f1\Editor\Unity.exe"`; on macOS `/Applications/Unity/Hub/Editor/6000.6.9f1/Unity.app/Contents/MacOS/Unity`.
 
 ## Hardware
+### Several monitors and mirrors
+`Managers` ➡️ `DisplayViews` adds views on extra monitors (or on the main screen) for the participant of that agent:
+- `LeftScreen` / `RightScreen`: the view continued to the left and right, for a panorama of three monitors side by side (`ScreenAngle` = the angle between them; 0 = seamless);
+- `RearMirror`, `LeftMirror`, `RightMirror`: mirror views (shown mirrored); on display 1 they appear at the top of the main view;
+- `Custom`: any offset and rotation from the participant's eyes.
+
+Each view has a `Display` (1 = the main monitor, 2 = the second one, ...) and an optional field of view. In a build, the extra monitors are switched on when the participant's avatar appears; in the editor, show them with Game views set to Display 2, 3, ... The command-line option `-views "LeftScreen:2,RightScreen:3,RearMirror:1"` sets the views without the editor. In VR, views on other monitors are for the experimenter (for example a mirror view of what the participant sees behind).
+
 ### Head-mounted displays (VR)
 The simulator uses **OpenXR**, so it works with the PC VR headsets whose runtime supports OpenXR (Windows):
 
