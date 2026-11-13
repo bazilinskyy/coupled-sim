@@ -209,6 +209,7 @@ Transform:
   - {fileID: 4074373686528259598}
   - {fileID: 8868225042934192711}
   - {fileID: 2328396113636596722}
+  - {fileID: 4846708888230763120}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &4508130044032702980
@@ -416,6 +417,67 @@ MonoBehaviour:
   Radius: 120
   Seed: 1
   LogInterval: 0.1
+--- !u!1 &5152707621493173341
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4846708888230763120}
+  - component: {fileID: 6606222063498781275}
+  m_Layer: 0
+  m_Name: Auditory eHMI
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4846708888230763120
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5152707621493173341}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 688831363954450875}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6606222063498781275
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5152707621493173341}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 16a30e6be709f4ab7b54b1919d0ea14f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AuditoryEhmiSettings
+  Enabled: 0
+  Cues:
+  - Trigger: 1
+    Sound: 0
+    Clip: {fileID: 0}
+    Volume: 0.8
+    Value: 0
+    Repeat: 0
+  - Trigger: 0
+    Sound: 1
+    Clip: {fileID: 0}
+    Volume: 0.8
+    Value: 0
+    Repeat: 0
+  Avas: 0
+  AvasVolume: 0.5
+  AllCars: 0
 --- !u!1 &6229933110440926417
 GameObject:
   m_ObjectHideFlags: 0
