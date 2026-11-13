@@ -142,12 +142,16 @@ public static class SmokeTest
             return;
         }
         double elapsed = EditorApplication.timeSinceStartup - _inGameSince;
-        // -smokeDrive seconds: full throttle for that long, then full brake (participant's car)
+        // -smokeDrive seconds: full throttle for that long, then full brake (participant's car);
+        // negative: select reverse first (as the R key or the wheel's reverse button) and drive backwards
         var drive = SessionState.GetString(KeyDrive, "");
         if (drive.Length > 0)
         {
             float accelFor = float.Parse(drive, System.Globalization.CultureInfo.InvariantCulture);
+            bool backwards = accelFor < 0;
+            accelFor = Mathf.Abs(accelFor);
             double tIn = elapsed;
+            VehicleInput.ButtonOverride = b => backwards && b == "reverse" ? tIn < 0.5 : (bool?)null;
             VehicleInput.Override = axis =>
                 axis == "Throttle" ? (tIn < accelFor ? 1f : 0f) :
                 axis == "Break" || axis == "Brake" ? (tIn < accelFor ? 0f : 1f) :
@@ -185,6 +189,8 @@ public static class SmokeTest
         {
             _lastSnapshot = elapsed;
             Debug.Log($"SmokeTest: t={elapsed:F0}s scene={SceneManager.GetActiveScene().name} fps={1f / Mathf.Max(1e-4f, Time.smoothDeltaTime):F0}");
+            foreach (var s in UnityEngine.Object.FindObjectsByType<ObservedSteering>())
+                Debug.Log($"SmokeTest steering: {s.name} road wheels {s.SteerAngle:F1}°, steering wheel {s.SteerAngle * s.SteeringRatio:F0}°");
         }
         if (elapsed >= SessionState.GetFloat(KeySeconds, 20))
         {

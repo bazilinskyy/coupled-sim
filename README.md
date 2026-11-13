@@ -169,14 +169,17 @@ It needs no internet and no installation (a plain web page from the simulator). 
 | Driver | Throttle / brake | `W`/`S` or `↑`/`↓` (axis `Throttle`) | pedals |
 | Driver | Steer | `A`/`D` or `←`/`→` | wheel |
 | Driver | Brake (axis `Break`) | `Space` | pedal |
-| Driver | Forward / reverse gear | `F` / `R` | buttons of the wheel profile (G27: 6 / 7) |
+| Driver | Forward / reverse gear (reverse engages at standstill; then the throttle drives backwards, up to 25 km/h) | `F` / `R` | buttons of the wheel profile (G27: 6 / 7) |
 | Driver | Blinker left / right / off | `Q` / `E` / `2` | buttons of the wheel profile (G27: 5 / 4 / 16) |
 | AV passenger | eHMI disabled / stop / walk | `1` / `2` / `3` | |
 | AV passenger | Resume driving where the AV waits for input (`WaitInputX`) | `Space` | |
-| Pedestrian (keyboard mode) | Walk forward / back, sideways, turn | `W`/`S`, `A`/`D`, `Q`/`E` | |
+| Pedestrian (keyboard mode) | Walk forward / back, sideways, turn; run | `W`/`S`, `A`/`D`, `Q`/`E` (or arrows); hold `Shift` | |
+| Pedestrian (keyboard mode) | Look around | hold the right mouse button and move the mouse | |
 | Pedestrian (HMD) | Recenter the headset | `R` | |
 | Host | Next trial (automatic trials) / show-hide GUI | `Esc` / `Tab` | |
 | Experimenter | Steering wheel calibration window | `F2` | |
+
+With a steering wheel, the car's steering wheel turns as far as the real one, without smoothing; keyboard steering is smoothed and steers less at speed. The steering wheels of AVs and of other agents' cars follow how those cars turn. The keyboard pedestrian walks at 1.4 m/s (runs at 3.5 m/s) with a walking animation.
 
 Keyboard bindings are set in `Edit` ➡️ `Project Settings` ➡️ `Input Manager`; wheels and pedals through their profile and calibration (see [Hardware](#steering-wheels-pedals-and-gamepads)). The host can also switch eHMIs and trigger [visual syncing](#data-logging) from its GUI during the simulation.
 

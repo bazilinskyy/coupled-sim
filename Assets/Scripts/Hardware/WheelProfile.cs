@@ -130,6 +130,8 @@ public static class VehicleInput
     /// <summary>Axis value: "Horizontal" (steer -1..1), "Throttle" (-1..1, negative = back), "Break"/"Brake" (0..1).</summary>
     /// <summary>Input from a script or external device (tests, a motion platform, a bicycle trainer): return null to use the normal inputs.</summary>
     public static System.Func<string, float?> Override;
+    /// <summary>Buttons from a script ("forward", "reverse", ...): return null to use the normal inputs.</summary>
+    public static System.Func<string, bool?> ButtonOverride;
 
     public static float GetAxis(string axis)
     {
@@ -153,6 +155,8 @@ public static class VehicleInput
     /// <summary>Button pressed this frame: "forward", "reverse", "blinker_left", "blinker_right", "blinker_clear", "horn".</summary>
     public static bool GetButtonDown(string button)
     {
+        var o = ButtonOverride?.Invoke(button);
+        if (o.HasValue) return o.Value;
         bool key = false;
         try { key = Input.GetButtonDown(button); } catch (ArgumentException) { }
         var wheel = WheelProfile.Active;

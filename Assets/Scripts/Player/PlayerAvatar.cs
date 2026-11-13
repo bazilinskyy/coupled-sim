@@ -199,6 +199,10 @@ public class PlayerAvatar : MonoBehaviour
             SetupModeElements(modeElements);
         }
 
+        // the steering wheel of a car this agent does not drive follows the car's motion (#65)
+        bool drivesItself = !isRemote && controlMode == PlayerSystem.ControlMode.Driver;
+        if (!drivesItself && TryGetComponent<WheelVehicle>(out var wv) && wv.steeringWheel != null && !TryGetComponent<ObservedSteering>(out _))
+            gameObject.AddComponent<ObservedSteering>().Setup(wv.steeringWheel, wv.SteerAngle, wv.steeringWheelMul);
     }
 
     private static void SetupModeElements(ModeElements modeElements)

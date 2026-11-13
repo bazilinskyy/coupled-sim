@@ -94,6 +94,21 @@ namespace CoupledSim.Tests
         }
 
         [Test]
+        public void ReverseSpeedIsLimited()
+        {
+            var spec = CarSpec.SmartFortwo;
+            var p = new Powertrain(spec) { Reverse = true };
+            float v = 0f, dt = 0.02f;
+            for (int i = 0; i < 1500; i++)
+            {
+                float force = p.WheelTorque(v, 1f, dt) / spec.WheelRadius;
+                v += (force - 400f * Math.Sign(v)) / spec.Mass * dt;
+            }
+            Assert.Less(v, -5f, "drives backwards");
+            Assert.Greater(v, -p.MaxReverseSpeed - 0.5f, "no faster than the reverse limit");
+        }
+
+        [Test]
         public void AbsReleasesALockingWheelAndReappliesWhenRolling()
         {
             var abs = new AntiLockBrakes();
