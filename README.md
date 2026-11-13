@@ -25,6 +25,8 @@ The simulator is open source and free to use. It is aimed at, but not limited to
 - [FAQ](#faq)
 - [Used assets](#used-assets)
 
+**Note on the git history (November 2026):** the history was rewritten to keep only files that the simulator still uses, which cut a clone from 5.2 GB to 0.7 GB. Clones and forks made before then cannot be merged with the new history: clone the repository again. Older study branches and the full earlier history are kept in an archive repository; ask the maintainer for access.
+
 ## Citation
 If you use the coupled simulator for academic work, please cite:
 
