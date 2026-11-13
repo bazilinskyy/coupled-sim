@@ -1588,6 +1588,63 @@ MonoBehaviour:
   YieldingEyeContactSince: 0
   YieldingEyeContactUntil: 0
   customBehaviourData: []
+--- !u!1 &5603541484352294472
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6430943016275974100}
+  - component: {fileID: 1496006465404527786}
+  m_Layer: 0
+  m_Name: Animals
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6430943016275974100
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5603541484352294472}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7609667120526454229}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1496006465404527786
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5603541484352294472}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5304bda39bf5f4dec9fefa0ac8751dcd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AnimalSpawner
+  Animals:
+  - Species: 3
+    Count: 12
+  - Species: 0
+    Count: 2
+  - Species: 2
+    Count: 2
+  - Species: 4
+    Count: 1
+  Centre: {fileID: 0}
+  Radius: 60
+  Seed: 1
+  LogInterval: 0.1
 --- !u!1 &5805787797847303217
 GameObject:
   m_ObjectHideFlags: 0
@@ -2033,6 +2090,7 @@ Transform:
   - {fileID: 6519749865735157834}
   - {fileID: 4119326893081001012}
   - {fileID: 5889956504896305536}
+  - {fileID: 6430943016275974100}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &8692043556341430772
@@ -2050,6 +2108,7 @@ MonoBehaviour:
   ShortName: Sumo
   Name: SUMO traffic
   Scene: MainScene
+  Map: 
   Roles:
   - Name: Driver
     TopHMI: {fileID: 0}
@@ -2259,6 +2318,7 @@ MonoBehaviour:
     customBehaviours: []
   LaunchSumo: 1
   SumoConfig: Sumo/MainScene/mainscene.sumocfg
+  UseMapScenario: 0
   SumoBinary: 
   Host: 127.0.0.1
   Port: 8813
@@ -2268,6 +2328,7 @@ MonoBehaviour:
   CarPrefabs:
   - {fileID: 7713759469045616529, guid: 1baf460ab026f1247ab4696be569ffae, type: 3}
   - {fileID: 8343856187855894783, guid: 02b8c28a357f14a4b922a9b99b9763ae, type: 3}
+  BicyclePrefabs: []
   UseSumoColors: 1
   SendUnityCars: 1
   StopForPedestrians: 1

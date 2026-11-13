@@ -303,6 +303,7 @@ public class Host : NetworkSystem
         _lights?.UpdateHost(_host);
         _aiCarSystem.UpdateHost();
         _aiPedestrianSyncSystem.UpdateHost();
+        AnimalSpawner.Current?.UpdateHost(_host);
     }
 
     bool failRoleCheck = false;
