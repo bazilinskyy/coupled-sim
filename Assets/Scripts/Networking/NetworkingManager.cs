@@ -39,6 +39,9 @@ public class NetworkingManager : MonoBehaviour
 
     NetworkSystem _netSystem;
     public NetworkSystem NetSystem => _netSystem;
+    public bool IsHost => _netSystem is Host;
+    public LevelManager Levels => _levelManager;
+    public Host HostSystem => _netSystem as Host;
     public int CurrentTrial => CurrentTrialIndex;
 
     /// <summary>Starts the host (as the "Start host" button does).</summary>
