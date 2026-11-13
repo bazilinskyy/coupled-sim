@@ -85,6 +85,39 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
         Instance = this;
     }
 
+    // ---- overcast sky: fog does not apply to the skybox, so under heavy clouds, rain and fog the
+    // procedural sky would stay blue above the horizon. Cameras then clear to the fog colour.
+
+    /// <summary>True when the sky is drawn as a uniform overcast grey (the fog colour).</summary>
+    public bool OvercastSky { get; private set; }
+    readonly HashSet<Camera> _overcastCameras = new HashSet<Camera>();
+
+    void OnEnable()
+    {
+        UnityEngine.Rendering.RenderPipelineManager.beginCameraRendering += BeginCamera;
+        UnityEngine.Rendering.RenderPipelineManager.endCameraRendering += EndCamera;
+    }
+
+    void OnDisable()
+    {
+        UnityEngine.Rendering.RenderPipelineManager.beginCameraRendering -= BeginCamera;
+        UnityEngine.Rendering.RenderPipelineManager.endCameraRendering -= EndCamera;
+    }
+
+    void BeginCamera(UnityEngine.Rendering.ScriptableRenderContext context, Camera cam)
+    {
+        if (!OvercastSky || cam.clearFlags != CameraClearFlags.Skybox || cam.cameraType == CameraType.SceneView) return;
+        cam.clearFlags = CameraClearFlags.SolidColor;
+        cam.backgroundColor = RenderSettings.fogColor;
+        _overcastCameras.Add(cam);
+    }
+
+    void EndCamera(UnityEngine.Rendering.ScriptableRenderContext context, Camera cam)
+    {
+        if (!_overcastCameras.Remove(cam) || cam == null) return;
+        cam.clearFlags = CameraClearFlags.Skybox;
+    }
+
     void Start()
     {
         Init();
@@ -345,7 +378,8 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
         _sky.SetFloat("_Exposure", Mathf.Lerp(0.15f, 1.25f, day) * Mathf.Lerp(1f, 0.8f, clouds));
 
         // ambient light: brighter and bluer by day, grey under clouds, dim blue at night
-        var skyCol = Color.Lerp(new Color(0.07f, 0.08f, 0.12f), Color.Lerp(new Color(0.55f, 0.65f, 0.85f), new Color(0.55f, 0.57f, 0.6f), clouds), day);
+        // night: some sky glow of the city
+        var skyCol = Color.Lerp(new Color(0.1f, 0.11f, 0.16f), Color.Lerp(new Color(0.55f, 0.65f, 0.85f), new Color(0.55f, 0.57f, 0.6f), clouds), day);
         RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Trilight;
         RenderSettings.ambientSkyColor = skyCol;
         RenderSettings.ambientEquatorColor = skyCol * 0.8f;
@@ -356,6 +390,7 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
         RenderSettings.fogMode = FogMode.ExponentialSquared;
         RenderSettings.fogDensity = fog;
         RenderSettings.fogColor = Color.Lerp(new Color(0.05f, 0.06f, 0.08f), Color.Lerp(new Color(0.7f, 0.76f, 0.85f), new Color(0.62f, 0.64f, 0.66f), clouds), day);
+        OvercastSky = clouds >= 0.7f || fog > 0.004f;
 
         // reflection probes were captured in daylight
         foreach (var p in _probes) if (p != null) p.intensity = Mathf.Lerp(0.05f, 1f, day) * Mathf.Lerp(1f, 0.7f, clouds);
