@@ -931,6 +931,41 @@ public class OsmMapGenerator
         return c;
     });
 
+    public int BuildingsOverRoads;
+    const float ClearanceUnderBuildings = 5f;
+
+    /// <summary>Whether a car road runs through the building's footprint (6 m or more of it).</summary>
+    bool OverRoad(Bag3dBuildings.Building b)
+    {
+        float x0 = float.MaxValue, z0 = float.MaxValue, x1 = float.MinValue, z1 = float.MinValue;
+        foreach (var v in b.V) { x0 = Math.Min(x0, v.x); x1 = Math.Max(x1, v.x); z0 = Math.Min(z0, v.z); z1 = Math.Max(z1, v.z); }
+        int hits = 0;
+        foreach (var r in Roads)
+            for (int i = 0; i + 1 < r.Line.Count; i++)
+            {
+                Vector3 a = r.Line[i], c = r.Line[i + 1];
+                if (Math.Max(a.x, c.x) < x0 || Math.Min(a.x, c.x) > x1 || Math.Max(a.z, c.z) < z0 || Math.Min(a.z, c.z) > z1) continue;
+                float len = Vector3.Distance(a, c);
+                for (float d = 0; d <= len; d += 2f)
+                {
+                    var p = Vector3.Lerp(a, c, len > 0 ? d / len : 0);
+                    if (p.x < x0 || p.x > x1 || p.z < z0 || p.z > z1) continue;
+                    for (int t = 0; t + 2 < b.Roofs.Length; t += 3)
+                        if (InTriangle(p, b.V[b.Roofs[t]], b.V[b.Roofs[t + 1]], b.V[b.Roofs[t + 2]])) { if (++hits >= 3) return true; break; }
+                }
+            }
+        return false;
+    }
+
+    static bool InTriangle(Vector3 p, Vector3 a, Vector3 b, Vector3 c)
+    {
+        float d1 = (p.x - b.x) * (a.z - b.z) - (a.x - b.x) * (p.z - b.z);
+        float d2 = (p.x - c.x) * (b.z - c.z) - (b.x - c.x) * (p.z - c.z);
+        float d3 = (p.x - a.x) * (c.z - a.z) - (c.x - a.x) * (p.z - a.z);
+        bool neg = d1 < 0 || d2 < 0 || d3 < 0, pos = d1 > 0 || d2 > 0 || d3 > 0;
+        return !(neg && pos);
+    }
+
     void AddRealBuildings(List<Bag3dBuildings.Building> bag, MeshBuilder[] facadeMbs, int[] palette, MeshBuilder flatRoofs, MeshBuilder[] tileRoofs)
     {
         for (int bi = 0; bi < bag.Count; bi++)
@@ -947,8 +982,21 @@ public class OsmMapGenerator
             int kind = b.Year > 0 && b.Year < 1940 ? palette[pi % 3] : palette[pi];
             if (style == WindowStyle.Glass && kind < 3) kind = 3 + bi % 2;   // glass walls: plaster or concrete frames
             var wall = facadeMbs[kind * Styles + (int)style];
-            AddTriangles(wall, b.V, b.Walls, true);
-            AddTriangles(b.RoofKind == 1 ? tileRoofs[bi % 3 == 0 ? 1 : 0] : flatRoofs, b.V, b.Roofs, false);
+            var verts = b.V;
+            if (OverRoad(b))
+            {
+                // over a car road (a station building, a passage): the road stays open under it, at
+                // least ClearanceUnderBuildings high, with the building's underside as a ceiling
+                if (top < ClearanceUnderBuildings + 2f) continue;
+                verts = b.V.Select(v => v.y < ClearanceUnderBuildings ? new Vector3(v.x, ClearanceUnderBuildings, v.z) : v).ToArray();
+                var under = new int[b.Roofs.Length];
+                for (int i = 0; i + 2 < under.Length; i += 3) { under[i] = b.Roofs[i]; under[i + 1] = b.Roofs[i + 2]; under[i + 2] = b.Roofs[i + 1]; }
+                var flat = b.V.Select(v => new Vector3(v.x, ClearanceUnderBuildings, v.z)).ToArray();
+                AddTriangles(flatRoofs, flat, under, false);
+                BuildingsOverRoads++;
+            }
+            AddTriangles(wall, verts, b.Walls, true);
+            AddTriangles(b.RoofKind == 1 ? tileRoofs[bi % 3 == 0 ? 1 : 0] : flatRoofs, verts, b.Roofs, false);
             BuildingCount++;
         }
     }

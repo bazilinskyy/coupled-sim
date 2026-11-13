@@ -424,7 +424,15 @@ Besides the hand-built town, experiments can take place in real city centres, bu
 python3 Tools/bag3d_buildings.py Delft
 ```
 
-Maps without this file use the OpenStreetMap buildings.
+**Real 3D buildings (Japan).** Tokyo's buildings come from [Project PLATEAU](https://www.mlit.go.jp/plateau/), the open 3D city models of Japan's Ministry of Land, Infrastructure, Transport and Tourism (MLIT): LoD2 roofs and walls where PLATEAU has them, else LoD1 blocks with their measured height, up to the 229 m of Shibuya Scramble Square. Buildings over a road (station buildings, passages) are raised 5 m, so the road under them stays open. To make the file for another Japanese map, give the CityGML zip of its ward from the dataset page on [geospatial.jp](https://www.geospatial.jp/ckan/dataset?q=plateau) (only the 1 km tiles of the map are downloaded):
+
+```bash
+python3 Tools/plateau_buildings.py Tokyo https://assets.cms.plateau.reearth.io/assets/e5/29b4f5-f0bf-433d-8f98-deb594bfbebd/13113_shibuya-ku_pref_2023_citygml_2_op.zip
+```
+
+![Tokyo (Shibuya) with PLATEAU buildings](ReadmeFiles/tokyo_plateau.jpg)
+
+Maps without such a file use the OpenStreetMap buildings.
 
 **Street furniture and parked vehicles.** From the OpenStreetMap data the map also gets benches, waste bins, bicycle racks with parked bicycles, bollards, bus stops (sign, and shelter with bench where mapped), café terraces, recycling containers, street cabinets, garden walls, fences and hedges, and parked cars in parking lots, parking spaces and along streets with street-side parking (at most 250 cars and 400 bicycles, those nearest the centre, so the frame rate stays up). Placement is the same on every agent. The parked bicycle and car prefabs are in `Assets/Prefabs/Props`; to rebuild them after changing the bicycle or car models use `Coupled Sim` ➡️ `Maps` ➡️ `Build street props`.
 
@@ -438,7 +446,7 @@ Maps without this file use the OpenStreetMap buildings.
 
 Limitations: outside the Netherlands, building shapes and heights are as good as the OSM data (buildings without a height get 3.5 floors), roofs are flat; façades come from five window styles, not the real buildings; traffic lights in the map are not shown (SUMO runs its own signals); roads have no elevation (bridges are only slightly raised).
 
-Map data © OpenStreetMap contributors, available under the [Open Database License](https://www.openstreetmap.org/copyright). Dutch buildings: [3D BAG](https://3dbag.nl) by the 3D geoinformation group of TU Delft and 3DGI, under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+Map data © OpenStreetMap contributors, available under the [Open Database License](https://www.openstreetmap.org/copyright). Dutch buildings: [3D BAG](https://3dbag.nl) by the 3D geoinformation group of TU Delft and 3DGI, under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Tokyo's buildings: source 3D都市モデル（Project PLATEAU）渋谷区（2023年度）([G空間情報センター](https://www.geospatial.jp/ckan/dataset/plateau-13113-shibuya-ku-2023)), converted to the simulator's format; used under the Public Data License 1.0 ([PLATEAU site policy](https://www.mlit.go.jp/plateau/site-policy/), compatible with CC BY 4.0).
 
 ![Eindhoven, Tokyo, Sydney and New York](ReadmeFiles/city_maps.jpg)
 
