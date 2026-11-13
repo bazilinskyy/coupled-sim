@@ -25,6 +25,11 @@ public class AIPedestrianSyncSystem
     PedestrianDesc[] AIPedestrians;
 
     List<PlayerAvatar> Pedestrians = new List<PlayerAvatar>();
+    // pedestrians spawned at run time (PedestrianGroup), in the same order on every agent
+    List<PlayerAvatar> Extra = new List<PlayerAvatar>();
+
+    /// <summary>Adds a pedestrian made at run time; every agent must add the same ones in the same order.</summary>
+    public void Register(PlayerAvatar p) => Extra.Add(p);
 
     UNetHost _host;
     public void InitHost(UNetHost host)
@@ -55,7 +60,8 @@ public class AIPedestrianSyncSystem
         var msg = NetMsg.Read<UpdateAIPedestrianPosesMessage>(sync);
         for (int i = 0; i < msg.Poses.Count; i++)
         {
-            Pedestrians[i].ApplyPose(msg.Poses[i]);
+            var p = i < Pedestrians.Count ? Pedestrians[i] : i - Pedestrians.Count < Extra.Count ? Extra[i - Pedestrians.Count] : null;
+            if (p != null) p.ApplyPose(msg.Poses[i]);
         }
     }
 
@@ -67,6 +73,8 @@ public class AIPedestrianSyncSystem
         {
             _poses.Add(ped.GetPose());
         }
+        foreach (var ped in Extra)
+            if (ped != null) _poses.Add(ped.GetPose());
         return _poses;
     }
 

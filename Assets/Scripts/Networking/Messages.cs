@@ -29,6 +29,7 @@ enum MsgId
     C_UpdatePose = 1002,
     C_RequestHMIChange = 1003,
     C_Voice = 1004,
+    C_Gaze = 1005,
 }
 
 // On Serialization/Deserialization:
