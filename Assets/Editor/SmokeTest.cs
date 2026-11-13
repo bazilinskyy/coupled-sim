@@ -128,7 +128,8 @@ public static class SmokeTest
                 return;
             }
             var t = nm.trials[Mathf.Clamp(trial, 0, nm.trials.Length - 1)];
-            t.InputMode = PlayerSystem.InputMode.Flat;
+            // -smokeInputMode Flat|VR|Suite (default Flat): VR without a headset checks the HMD camera set-up (#67)
+            t.InputMode = Enum.TryParse(Environment.GetCommandLineArgs().SkipWhile(a => a != "-smokeInputMode").Skip(1).FirstOrDefault() ?? "", true, out PlayerSystem.InputMode im) ? im : PlayerSystem.InputMode.Flat;
             if (SessionState.GetInt(KeyExperiment, -1) >= 0) t.experimentIndex = SessionState.GetInt(KeyExperiment, 0);
             if (SessionState.GetInt(KeyRole, -1) >= 0) t.roleIndex = SessionState.GetInt(KeyRole, 0);
             // -smokeParams "name=value;name=value": extra experiment parameters for the trial
@@ -209,6 +210,15 @@ public static class SmokeTest
                 };
             }
         }
+        // the participant's view should not jump: count changes of more than 30° between samples (#67)
+        var view = NetworkingManager.Instance != null && NetworkingManager.Instance.PlayerSystem.LocalPlayer != null
+            ? NetworkingManager.Instance.PlayerSystem.LocalPlayer.GetComponentsInChildren<Camera>().FirstOrDefault(c => c.isActiveAndEnabled && c.targetTexture == null) : null;
+        if (view != null)
+        {
+            var q = view.transform.rotation;
+            if (_viewSamples > 0 && Quaternion.Angle(q, _lastView) > 30f) _viewJumps++;
+            _lastView = q; _viewSamples++; _viewName = view.name;
+        }
         // agents spawned later (traffic) are measured from when they first appear
         foreach (var a in UnityEngine.Object.FindObjectsByType<PlayerAvatar>())
         {
@@ -241,6 +251,10 @@ public static class SmokeTest
 
     static int GetInstanceIDSafe(this UnityEngine.Object o) => o.GetEntityId().GetHashCode();
 
+    static Quaternion _lastView;
+    static int _viewSamples, _viewJumps;
+    static string _viewName;
+
     static void Finish()
     {
         FlushErrors();
@@ -249,6 +263,7 @@ public static class SmokeTest
         sb.AppendLine($"Unity {Application.unityVersion}, scenes loaded: " +
                       string.Join(", ", Enumerable.Range(0, SceneManager.sceneCount).Select(i => SceneManager.GetSceneAt(i).name)));
         sb.AppendLine($"Average frame time: {Time.smoothDeltaTime * 1000:F1} ms (batch mode, no vsync)");
+        if (_viewSamples > 0) sb.AppendLine($"Participant's view ({_viewName}, {NetworkingManager.Instance?.PlayerSystem.PlayerInputMode} mode): {_viewJumps} jumps of more than 30° in {_viewSamples} samples");
 
         int movedCars = 0, cars = 0, peds = 0, movedPeds = 0;
         foreach (var a in UnityEngine.Object.FindObjectsByType<PlayerAvatar>())
