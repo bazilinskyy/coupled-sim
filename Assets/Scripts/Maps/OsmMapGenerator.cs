@@ -854,30 +854,30 @@ public class OsmMapGenerator
         {
             var b = bag[bi];
             bool inside = false;
-            var centre = Vector3.zero;
-            foreach (var v in b.V) { centre += v; if (!inside && Inside(new V2(v.x, v.z))) inside = true; }
-            if (!inside || b.V.Length == 0) continue;
-            centre /= b.V.Length;
+            foreach (var v in b.V) if (Inside(new V2(v.x, v.z))) { inside = true; break; }
+            if (!inside) continue;
             // older buildings are mostly brick; newer ones get the whole palette
             int pi = (int)((uint)(bi * 2654435761u) % (uint)palette.Length);
             var wall = facadeMbs[b.Year > 0 && b.Year < 1940 ? palette[pi % 3] : palette[pi]];
-            AddTriangles(wall, b.V, b.Walls, centre, true);
-            AddTriangles(b.RoofKind == 1 ? tileRoofs[bi % 3 == 0 ? 1 : 0] : flatRoofs, b.V, b.Roofs, centre, false);
+            AddTriangles(wall, b.V, b.Walls, true);
+            AddTriangles(b.RoofKind == 1 ? tileRoofs[bi % 3 == 0 ? 1 : 0] : flatRoofs, b.V, b.Roofs, false);
             BuildingCount++;
         }
     }
 
     // each triangle on its own vertices (flat shading), turned to face outwards (walls) or up (roofs),
     // with UVs in metres along the surface (facades 3 m per texture tile, roof tiles 2.5 m)
-    static void AddTriangles(MeshBuilder mb, Vector3[] v, int[] tris, Vector3 centre, bool wall)
+    static void AddTriangles(MeshBuilder mb, Vector3[] v, int[] tris, bool wall)
     {
         for (int i = 0; i + 2 < tris.Length; i += 3)
         {
             Vector3 a = v[tris[i]], b = v[tris[i + 1]], c = v[tris[i + 2]];
             var n = Vector3.Cross(b - a, c - a);
             if (n.sqrMagnitude < 1e-8f) continue;
-            bool flip = wall ? Vector3.Dot(new Vector3(n.x, 0, n.z), (a + b + c) / 3f - centre) < 0f : n.y < 0f;
-            if (flip) { var t = b; b = c; c = t; n = -n; }
+            // the 3D BAG's surfaces face outwards in RD (x east, y north, z up, right-handed); in Unity's
+            // left-handed axes (y up, z north) the same order faces inwards, so every triangle is turned
+            // over (not by the direction to the building's centre: courtyard walls face the centre)
+            { var t = b; b = c; c = t; n = -n; }
             n.Normalize();
             var tan = Vector3.Cross(Vector3.up, n);
             if (tan.sqrMagnitude < 1e-4f) tan = Vector3.right;
