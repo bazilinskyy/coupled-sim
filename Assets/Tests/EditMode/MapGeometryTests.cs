@@ -112,5 +112,55 @@ namespace CoupledSim.Tests
             Assert.AreEqual(52.0116, lat, 1e-6);
             Assert.AreEqual(4.3586, lon, 1e-6);
         }
-    }
+    
+        const string TinyNet = @"<net version=""1.20"">
+    <location netOffset=""0.00,0.00"" convBoundary=""0.00,0.00,200.00,100.00"" origBoundary=""0.00,0.00,200.00,100.00"" projParameter=""!""/>
+    <edge id="":J1_0"" function=""internal""><lane id="":J1_0_0"" index=""0"" speed=""5"" length=""3"" shape=""0,0 1,1""/></edge>
+    <edge id=""ab"" from=""A"" to=""B"" priority=""1"" type=""highway.tertiary"">
+        <lane id=""ab_0"" index=""0"" allow=""pedestrian"" speed=""1.4"" length=""100"" width=""2.00"" shape=""0.00,47.00 100.00,47.00""/>
+        <lane id=""ab_1"" index=""1"" disallow=""pedestrian"" speed=""13.89"" length=""100"" width=""3.20"" shape=""0.00,48.40 100.00,48.40""/>
+    </edge>
+    <edge id=""ba"" from=""B"" to=""A"" priority=""1"" type=""highway.tertiary"">
+        <lane id=""ba_0"" index=""0"" disallow=""pedestrian"" speed=""13.89"" length=""100"" width=""3.20"" shape=""100.00,51.60 0.00,51.60""/>
+    </edge>
+    <edge id=""bc"" from=""B"" to=""C"" priority=""1"">
+        <lane id=""bc_0"" index=""0"" disallow=""pedestrian"" speed=""25.00"" length=""100"" width=""3.50"" shape=""100.00,48.25 200.00,48.25,0.5""/>
+    </edge>
+    <junction id=""A"" type=""dead_end"" x=""0.00"" y=""50.00""/>
+    <junction id=""B"" type=""traffic_light"" x=""100.00"" y=""50.00""/>
+    <junction id=""C"" type=""dead_end"" x=""200.00"" y=""50.00""/>
+    <junction id="":J1_0_0"" type=""internal"" x=""1"" y=""1""/>
+</net>";
+
+        [Test]
+        public void SumoNetworkBecomesRoads()
+        {
+            Assert.IsFalse(SumoNetwork.TryGetCentre(TinyNet, out _, out _));
+            var proj = new GeoProjection(51.44, 5.48);
+            var r = SumoNetwork.Convert(TinyNet, proj);
+            Assert.AreEqual(2, r.Roads);
+            Assert.AreEqual(3, r.Junctions);
+            Assert.AreEqual(100.0, r.OffsetX, 1e-9);
+            var ways = r.Data.Ways;
+            var twoWay = ways.Single(w => w.Tag("name") == "ab" || w.Tag("name") == "ba");
+            Assert.AreEqual("tertiary", twoWay.Tag("highway"));
+            Assert.AreEqual("2", twoWay.Tag("lanes"));
+            Assert.AreEqual("6.4", twoWay.Tag("width"));
+            Assert.IsNull(twoWay.Tag("oneway"));
+            Assert.AreEqual(twoWay.Tag("name") == "ab" ? "right" : "left", twoWay.Tag("sidewalk"));
+            var oneWay = ways.Single(w => w.Tag("name") == "bc");
+            Assert.AreEqual("yes", oneWay.Tag("oneway"));
+            Assert.AreEqual("primary", oneWay.Tag("highway"));   // no type: from the speed (90 km/h)
+            Assert.AreEqual("90", oneWay.Tag("maxspeed"));
+            // the two-way road runs along the middle (y = 50), from junction to junction, centred on the network (x - 100)
+            foreach (var id in twoWay.NodeIds)
+            {
+                var n = r.Data.Nodes[id];
+                proj.ToLocal(n.Lat, n.Lon, out var x, out var z);
+                Assert.AreEqual(0.0, z, 0.05);
+                Assert.That(x, Is.InRange(-100.01, 0.01));
+            }
+            Assert.AreEqual("traffic_signals", r.Data.Nodes[oneWay.NodeIds[0]].Tag("highway"));
+        }
+}
 }

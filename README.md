@@ -430,6 +430,10 @@ Maps without this file use the OpenStreetMap buildings.
 
 ![Delft from the 3D BAG, a parking lot with bicycle racks, bicycles on a square, a bus stop in Eindhoven](ReadmeFiles/city_maps_3dbag.jpg)
 
+**Road networks from OpenDRIVE or SUMO.** A map can also be an [OpenDRIVE](https://www.asam.net/standards/detail/opendrive/) file (`.xodr`) or a SUMO network (`.net.xml` or `.net.xml.gz`): put it in `Assets/StreamingAssets/Maps` and set the trial parameter `map` to its file name (e.g. `map=GridTown.xodr`; a full path also works). The roads are built like those of the city maps: lanes with their widths, markings, pavements and cycle lanes (from the network's pedestrian and bicycle lanes), traffic signals, speed limits, street lamps; spawn points work the same. There are no buildings. OpenDRIVE files are converted by SUMO's `netconvert`, which must be installed (with `SUMO_HOME` set, as for [traffic from SUMO](#traffic-from-sumo)); the result is cached in the simulator's data folder. The sample `GridTown.xodr` (a 4 × 4 grid) is included, and the same network as `GridTown.net.xml.gz`, which works without SUMO. A network without geographic reference gets Eindhoven's latitude for the sun.
+
+![The GridTown sample from OpenDRIVE](ReadmeFiles/opendrive_gridtown.jpg)
+
 Limitations: outside the Netherlands, building shapes and heights are as good as the OSM data (buildings without a height get 3.5 floors), roofs are flat; façades are generic; traffic lights in the map are not shown (SUMO runs its own signals); roads have no elevation (bridges are only slightly raised).
 
 Map data © OpenStreetMap contributors, available under the [Open Database License](https://www.openstreetmap.org/copyright). Dutch buildings: [3D BAG](https://3dbag.nl) by the 3D geoinformation group of TU Delft and 3DGI, under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).

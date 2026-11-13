@@ -41,6 +41,7 @@ public class LevelManager
             foreach (var p in trial.experimentParameters)
             {
                 if (p.name.ToLower() == "map" && MapCatalog.IndexOf(p.value) >= 0) return MapCatalog.Maps[MapCatalog.IndexOf(p.value)].Name;
+                if (p.name.ToLower() == "map" && OsmMap.IsRoadNetworkFile(p.value)) return p.value;
                 if (p.name.ToLower() == "location" && OsmMap.TryParseLocation(p.value, out _, out _, out _)) return p.value;
             }
         if (!string.IsNullOrEmpty(LocationOverride)) return LocationOverride;
