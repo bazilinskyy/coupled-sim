@@ -664,6 +664,7 @@ public class LogConverter
     bool _open;
     List<string> _fileNames = new List<string>();
     string _selectedFileName = "";
+    string _status;
     SerializedPOI[] _pois;
 
     List<SerializedPOI> customPois = new List<SerializedPOI>() {
@@ -744,15 +745,14 @@ public class LogConverter
     {
         if (!_open && GUILayout.Button("Convert log to csv"))
         {
-            var files = Directory.GetFiles("ExperimentLogs/");
             _fileNames.Clear();
-            foreach (var file in files)
-            {
-                if (file.EndsWith("binLog"))
-                {
-                    _fileNames.Add(file.Split('/')[1]);
-                }
-            }
+            _status = null;
+            if (Directory.Exists("ExperimentLogs"))
+                foreach (var file in Directory.GetFiles("ExperimentLogs").OrderByDescending(File.GetLastWriteTime))
+                    if (file.EndsWith("binLog"))
+                        _fileNames.Add(Path.GetFileName(file));
+            if (_fileNames.Count == 0)
+                _status = "No recordings yet: the folder ExperimentLogs is made by the first run of an experiment (" + Path.GetFullPath("ExperimentLogs") + ").";
             _open = true;
         }
         if (_open)
@@ -762,6 +762,7 @@ public class LogConverter
                 _open = false;
                 _selectedFileName = null;
             }
+            if (_status != null) GUILayout.Label(_status, GUILayout.MaxWidth(Screen.width / 2f));
             foreach (var name in _fileNames)
             {
                 if (string.IsNullOrEmpty(_selectedFileName))
@@ -790,6 +791,7 @@ public class LogConverter
                         var fullName = "ExperimentLogs/" + name;
                         var csvName = "ExperimentLogs/" + UNITY_WORLD_ROOT + "-" + name.Replace("binLog", "csv");
                         TranslateBinaryLogToCsv(fullName, csvName, _pedestrianSkeletonNames, UNITY_WORLD_ROOT, default, Quaternion.identity);
+                        _status = "Saved " + Path.GetFullPath(csvName);
                     }
                     foreach (var poi in _pois)
                     {
@@ -798,6 +800,7 @@ public class LogConverter
                             var fullName = "ExperimentLogs/" + name;
                             var csvName = "ExperimentLogs/" + poi.Name + "-" + name.Replace("binLog", "csv");
                             TranslateBinaryLogToCsv(fullName, csvName, _pedestrianSkeletonNames, poi.Name, poi.Position, poi.Rotation);
+                            _status = "Saved " + Path.GetFullPath(csvName);
                         }
                     }
                     GUILayout.EndVertical();
