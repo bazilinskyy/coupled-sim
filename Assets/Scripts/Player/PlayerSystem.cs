@@ -113,6 +113,7 @@ public class PlayerSystem : MonoBehaviour
         Soundscape.Ensure();
         VideoExport.Ensure();
         OpenScenario.Ensure();
+        SceneDescriber.EnsureLoggerFromCommandLine();
         if (spawnPoint.Type != SpawnPointType.PlayerControlledPedestrian) MotionOutput.AddIfAsked(LocalPlayer.gameObject);
         var args = Environment.GetCommandLineArgs();
         if (Array.IndexOf(args, "-gaze") >= 0 || Array.IndexOf(args, "-gazeTrigger") >= 0) NetworkGaze.Ensure();
