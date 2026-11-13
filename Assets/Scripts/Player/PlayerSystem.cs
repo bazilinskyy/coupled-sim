@@ -111,6 +111,8 @@ public class PlayerSystem : MonoBehaviour
         var response = ResponseInput.WithCommandLine(role.Response);
         if (response.Button || response.Slider) LocalPlayer.gameObject.AddComponent<ResponseInput>().Init(response, role.Name);
         Soundscape.Ensure();
+        VideoExport.Ensure();
+        OpenScenario.Ensure();
         if (spawnPoint.Type != SpawnPointType.PlayerControlledPedestrian) MotionOutput.AddIfAsked(LocalPlayer.gameObject);
         var args = Environment.GetCommandLineArgs();
         if (Array.IndexOf(args, "-gaze") >= 0 || Array.IndexOf(args, "-gazeTrigger") >= 0) NetworkGaze.Ensure();
