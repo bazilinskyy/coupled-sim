@@ -418,7 +418,7 @@ Besides the hand-built town, experiments can take place in real city centres, bu
 
 **Driving anywhere.** The trial parameter `location=lat,lon[,radius]` (e.g. `location=51.4479,5.4904,350` for the TU/e campus) builds a map of any place: the OpenStreetMap data (radius 100-1000 m, default 400 m) is downloaded the first time (internet needed) and cached in the simulator's data folder; with SUMO installed, a SUMO network and random traffic for the place are built too. The host sends the location to the clients. To add a place to the catalogue for good, save its `.osm.gz` in `Assets/StreamingAssets/Maps` and add it to `MapCatalog`.
 
-**Real 3D buildings (Netherlands).** For Dutch maps the buildings come from the [3D BAG](https://3dbag.nl) instead of OpenStreetMap: every building's measured shape with its real roof (gabled canal houses in Delft, flat-roofed blocks in Eindhoven), placed at its real position. Roofs get red or anthracite roof tiles, walls the same brick and plaster façades as before. The data is in `Assets/StreamingAssets/Maps/<Map>.buildings.bin.gz` (Delft and Eindhoven); to make it for another Dutch map in the catalogue (internet needed, about a minute):
+**Real 3D buildings (Netherlands).** For Dutch maps the buildings come from the [3D BAG](https://3dbag.nl) instead of OpenStreetMap: every building's measured shape with its real roof (gabled canal houses in Delft, flat-roofed blocks in Eindhoven), placed at its real position. Roofs get red or anthracite roof tiles. The façades (brick, plaster or concrete) have windows in the style of the building's construction year from the 3D BAG: tall sash windows before 1920, ribbon windows on post-war blocks, glass curtain walls on newer offices and towers (on other maps chosen by height and OpenStreetMap building type). The data is in `Assets/StreamingAssets/Maps/<Map>.buildings.bin.gz` (Delft and Eindhoven); to make it for another Dutch map in the catalogue (internet needed, about a minute):
 
 ```bash
 python3 Tools/bag3d_buildings.py Delft
@@ -430,11 +430,13 @@ Maps without this file use the OpenStreetMap buildings.
 
 ![Delft from the 3D BAG, a parking lot with bicycle racks, bicycles on a square, a bus stop in Eindhoven](ReadmeFiles/city_maps_3dbag.jpg)
 
+![Window styles by age and type: Delft (left), London (right)](ReadmeFiles/facade_styles.jpg)
+
 **Road networks from OpenDRIVE or SUMO.** A map can also be an [OpenDRIVE](https://www.asam.net/standards/detail/opendrive/) file (`.xodr`) or a SUMO network (`.net.xml` or `.net.xml.gz`): put it in `Assets/StreamingAssets/Maps` and set the trial parameter `map` to its file name (e.g. `map=GridTown.xodr`; a full path also works). The roads are built like those of the city maps: lanes with their widths, markings, pavements and cycle lanes (from the network's pedestrian and bicycle lanes), traffic signals, speed limits, street lamps; spawn points work the same. There are no buildings. With SUMO installed, the `City map` experiment's SUMO traffic runs on these maps too: random cars and bicycles made with SUMO's `randomTrips` the first time (cached). OpenDRIVE files are converted by SUMO's `netconvert`, which must be installed (with `SUMO_HOME` set, as for [traffic from SUMO](#traffic-from-sumo)); the result is cached in the simulator's data folder. The sample `GridTown.xodr` (a 4 × 4 grid) is included, and the same network as `GridTown.net.xml.gz`, which works without SUMO. A network without geographic reference gets Eindhoven's latitude for the sun.
 
 ![The GridTown sample from OpenDRIVE](ReadmeFiles/opendrive_gridtown.jpg)
 
-Limitations: outside the Netherlands, building shapes and heights are as good as the OSM data (buildings without a height get 3.5 floors), roofs are flat; façades are generic; traffic lights in the map are not shown (SUMO runs its own signals); roads have no elevation (bridges are only slightly raised).
+Limitations: outside the Netherlands, building shapes and heights are as good as the OSM data (buildings without a height get 3.5 floors), roofs are flat; façades come from five window styles, not the real buildings; traffic lights in the map are not shown (SUMO runs its own signals); roads have no elevation (bridges are only slightly raised).
 
 Map data © OpenStreetMap contributors, available under the [Open Database License](https://www.openstreetmap.org/copyright). Dutch buildings: [3D BAG](https://3dbag.nl) by the 3D geoinformation group of TU Delft and 3DGI, under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
 

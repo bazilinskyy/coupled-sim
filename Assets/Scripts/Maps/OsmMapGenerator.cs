@@ -37,6 +37,8 @@ public class OsmMapGenerator
     /// <summary>True when the buildings are real 3D models (3D BAG) instead of extruded footprints.</summary>
     public bool Real3DBuildings { get; private set; }
     readonly MapAssets _assets;
+    Func<int, Material> _facadeMat;
+    static readonly int Styles = Enum.GetValues(typeof(WindowStyle)).Length;
     readonly Dictionary<long, V2> _pos = new Dictionary<long, V2>();
     readonly Dictionary<string, Material> _mats = new Dictionary<string, Material>();
 
@@ -92,18 +94,65 @@ public class OsmMapGenerator
 
     static Color Noise(Color c, System.Random r, float amount) => c * (1f + ((float)r.NextDouble() - 0.5f) * amount);
 
+    /// <summary>Window layouts of the façades, roughly by building age and type.</summary>
+    public enum WindowStyle
+    {
+        Classic,  // one window with a cross, per bay (the default of earlier versions)
+        Tall,     // tall narrow sash windows with small panes and a stone lintel (before ~1920)
+        Ribbon,   // horizontal window bands with a concrete sill (post-war blocks)
+        Pair,     // two windows per bay (later housing)
+        Glass,    // glass curtain wall with mullions and dark spandrels (offices, towers)
+    }
+
     /// <summary>One façade tile: one window bay (3 m) by one floor (3 m).</summary>
-    static Texture2D Facade(string name, Color wall, Color frame, bool brick) => Tex(name, 256, (x, y, r) =>
+    static Texture2D Facade(string name, Color wall, Color frame, bool brick, WindowStyle style = WindowStyle.Classic) => Tex(name, 256, (x, y, r) =>
     {
         float u = x / 256f, v = y / 256f;
-        if (u > 0.3f && u < 0.7f && v > 0.3f && v < 0.85f)
+        Color Glass(float vv) { float sky = 0.18f + 0.25f * vv; return Noise(new Color(sky * 0.8f, sky * 0.9f, sky), r, 0.05f); }
+        const float f = 0.012f; // frame half-width
+        switch (style)
         {
-            if (Mathf.Abs(u - 0.5f) < 0.012f || Mathf.Abs(v - 0.62f) < 0.012f) return frame;
-            float sky = 0.18f + 0.25f * v;
-            return Noise(new Color(sky * 0.8f, sky * 0.9f, sky), r, 0.05f);
+            case WindowStyle.Tall:
+                if (u > 0.34f && u < 0.66f && v > 0.18f && v < 0.88f)
+                {
+                    if (Mathf.Abs(u - 0.5f) < f || Mathf.Abs(v - 0.42f) < f || Mathf.Abs(v - 0.65f) < f) return frame;
+                    return Glass(v);
+                }
+                if (u > 0.31f && u < 0.69f && v > 0.15f && v < 0.91f) return frame;
+                if (u > 0.29f && u < 0.71f && v > 0.91f && v < 0.96f) return Noise(new Color(0.78f, 0.76f, 0.7f), r, 0.06f);   // lintel
+                if (u > 0.3f && u < 0.7f && v > 0.12f && v < 0.15f) return new Color(0.62f, 0.61f, 0.58f);                       // sill
+                break;
+            case WindowStyle.Ribbon:
+                if (v > 0.4f && v < 0.8f)
+                {
+                    if (u < f * 2 || u > 1f - f * 2 || Mathf.Abs(u - 0.5f) < f || Mathf.Abs(v - 0.7f) < f) return frame;
+                    return Glass(v);
+                }
+                if (v > 0.37f && v < 0.83f) return frame;
+                if (v > 0.32f && v < 0.37f) return Noise(new Color(0.66f, 0.66f, 0.63f), r, 0.05f);
+                break;
+            case WindowStyle.Pair:
+                foreach (var c in new[] { 0.28f, 0.72f })
+                {
+                    if (Mathf.Abs(u - c) < 0.15f && v > 0.32f && v < 0.84f) return Mathf.Abs(v - 0.66f) < f ? frame : Glass(v);
+                    if (Mathf.Abs(u - c) < 0.17f && v > 0.3f && v < 0.86f) return frame;
+                }
+                if (v > 0.26f && v < 0.3f && (Mathf.Abs(u - 0.28f) < 0.18f || Mathf.Abs(u - 0.72f) < 0.18f)) return new Color(0.6f, 0.6f, 0.58f);
+                break;
+            case WindowStyle.Glass:
+                if (u < 0.02f || u > 0.98f || Mathf.Abs(u - 0.5f) < 0.008f) return frame;     // mullions
+                if (v < 0.2f) return v < 0.02f || v > 0.18f ? frame : Noise(Color.Lerp(wall, new Color(0.15f, 0.17f, 0.2f), 0.7f), r, 0.04f); // spandrel
+                { var g = Glass(v); return new Color(g.r * 0.85f, g.g, g.b * 1.08f); }
+            default:
+                if (u > 0.3f && u < 0.7f && v > 0.3f && v < 0.85f)
+                {
+                    if (Mathf.Abs(u - 0.5f) < f || Mathf.Abs(v - 0.62f) < f) return frame;
+                    return Glass(v);
+                }
+                if (u > 0.27f && u < 0.73f && v > 0.27f && v < 0.88f) return frame;
+                if (u > 0.25f && u < 0.75f && v > 0.24f && v < 0.27f) return new Color(0.6f, 0.6f, 0.58f);
+                break;
         }
-        if (u > 0.27f && u < 0.73f && v > 0.27f && v < 0.88f) return frame;
-        if (u > 0.25f && u < 0.75f && v > 0.24f && v < 0.27f) return new Color(0.6f, 0.6f, 0.58f);
         if (brick)
         {
             int course = y / 6, offset = course % 2 == 0 ? 0 : 12;
@@ -112,6 +161,27 @@ public class OsmMapGenerator
         }
         return Noise(wall, r, 0.05f);
     });
+
+    /// <summary>The window style of a building: from its construction year (3D BAG), height and OSM type.</summary>
+    public static WindowStyle StyleFor(int year, float height, string type, uint seed)
+    {
+        bool office = type == "office" || type == "commercial" || type == "retail" || type == "hotel" || type == "university";
+        // old buildings and churches keep traditional windows, however tall (church towers)
+        if (type == "church" || type == "cathedral" || type == "chapel") return WindowStyle.Tall;
+        if (year > 0 && year < 1920) return seed % 4 == 0 ? WindowStyle.Classic : WindowStyle.Tall;
+        if (year > 0 && year < 1945) return seed % 3 == 0 ? WindowStyle.Tall : WindowStyle.Classic;
+        if (height > 30f) return seed % 5 < 3 ? WindowStyle.Glass : WindowStyle.Ribbon;
+        if (year > 0)
+        {
+            if (year < 1975) return seed % 3 == 0 ? WindowStyle.Pair : WindowStyle.Ribbon;
+            if (year < 2000) return office ? WindowStyle.Ribbon : seed % 2 == 0 ? WindowStyle.Pair : WindowStyle.Classic;
+            return office || seed % 3 == 0 ? WindowStyle.Glass : WindowStyle.Pair;
+        }
+        if (office) return seed % 2 == 0 ? WindowStyle.Glass : WindowStyle.Ribbon;
+        if (type == "house" || type == "terrace" || type == "detached" || type == "semidetached_house") return seed % 2 == 0 ? WindowStyle.Tall : WindowStyle.Classic;
+        if (type == "apartments") return seed % 2 == 0 ? WindowStyle.Ribbon : WindowStyle.Pair;
+        return (WindowStyle)(seed % 4);   // Classic, Tall, Ribbon or Pair
+    }
 
     // ------------------------------------------------------------------ meshes
 
@@ -277,13 +347,24 @@ public class OsmMapGenerator
         var grass = Mat("Grass", Color.white, 0.05f, Tex("grass", 256, (x, y, r) => Noise(new Color(0.28f, 0.42f, 0.2f), r, 0.4f)));
         var water = Mat("Water", new Color(0.12f, 0.2f, 0.22f), 0.95f);
         var roof = Mat("Roof", new Color(0.27f, 0.27f, 0.28f), 0.2f);
-        var facades = new[]
+        // façades: wall kinds (red, dark and yellow brick, plaster, concrete) × window styles, made when first used
+        var wallKinds = new (string name, Color wall, Color frame, bool brick)[]
         {
-            Mat("Facade red brick", Color.white, 0.1f, Facade("facade_red", new Color(0.52f, 0.23f, 0.17f), new Color(0.93f, 0.93f, 0.9f), true)),
-            Mat("Facade dark brick", Color.white, 0.1f, Facade("facade_dark", new Color(0.33f, 0.18f, 0.14f), new Color(0.9f, 0.9f, 0.88f), true)),
-            Mat("Facade yellow brick", Color.white, 0.1f, Facade("facade_yellow", new Color(0.7f, 0.58f, 0.38f), new Color(0.15f, 0.25f, 0.2f), true)),
-            Mat("Facade plaster", Color.white, 0.1f, Facade("facade_plaster", new Color(0.86f, 0.84f, 0.79f), new Color(0.2f, 0.22f, 0.25f), false)),
-            Mat("Facade concrete", Color.white, 0.1f, Facade("facade_concrete", new Color(0.6f, 0.6f, 0.58f), new Color(0.25f, 0.27f, 0.3f), false)),
+            ("red brick", new Color(0.52f, 0.23f, 0.17f), new Color(0.93f, 0.93f, 0.9f), true),
+            ("dark brick", new Color(0.33f, 0.18f, 0.14f), new Color(0.9f, 0.9f, 0.88f), true),
+            ("yellow brick", new Color(0.7f, 0.58f, 0.38f), new Color(0.15f, 0.25f, 0.2f), true),
+            ("plaster", new Color(0.86f, 0.84f, 0.79f), new Color(0.2f, 0.22f, 0.25f), false),
+            ("concrete", new Color(0.6f, 0.6f, 0.58f), new Color(0.25f, 0.27f, 0.3f), false),
+        };
+        int styles = Styles;
+        var facades = new Material[wallKinds.Length * styles];
+        _facadeMat = k =>
+        {
+            if (facades[k] != null) return facades[k];
+            var (name, wall, frame, brick) = wallKinds[k / styles];
+            var style = (WindowStyle)(k % styles);
+            return facades[k] = Mat($"Facade {name} {style}", Color.white, style == WindowStyle.Glass ? 0.55f : 0.1f,
+                Facade($"facade_{name.Replace(' ', '_')}_{style}", wall, frame, brick, style));
         };
         // brick-heavy palettes for the Netherlands, Belgium and the UK; more plaster/concrete elsewhere
         bool brickCountry = _map.Country == "Netherlands" || _map.Country == "Belgium" || _map.Country == "United Kingdom";
@@ -491,7 +572,8 @@ public class OsmMapGenerator
             float height = BuildingHeight(w);
             float minHeight = ParseMetres(w.Tag("min_height"), 0f);
             if (Geometry2D.SignedArea(poly) < 0) poly.Reverse();
-            var mb = buildingMbs[palette[(int)(Math.Abs(w.Id) % palette.Length)]];
+            var style = StyleFor(0, height, w.Tag("building"), (uint)(Math.Abs(w.Id) * 2654435761L));
+            var mb = buildingMbs[palette[(int)(Math.Abs(w.Id) % palette.Length)] * Styles + (int)style];
             float u = 0;
             for (int i = 0; i < poly.Count; i++)
             {
@@ -507,7 +589,8 @@ public class OsmMapGenerator
         }
         var buildings = new GameObject("Buildings").transform;
         buildings.SetParent(world, false);
-        for (int i = 0; i < facades.Length; i++) Emit(buildings, "Buildings " + facades[i].name, buildingMbs[i], facades[i], true);
+        for (int i = 0; i < facades.Length; i++)
+            if (buildingMbs[i].V.Count > 0) { var m = _facadeMat(i); Emit(buildings, "Buildings " + m.name, buildingMbs[i], m, true); }
         Emit(buildings, "Roofs", roofs, roof, false);
         for (int i = 0; i < tileRoofs.Length; i++) Emit(buildings, "Roofs " + tileMats[i].name, tileRoofs[i], tileMats[i], false);
 
@@ -858,7 +941,12 @@ public class OsmMapGenerator
             if (!inside) continue;
             // older buildings are mostly brick; newer ones get the whole palette
             int pi = (int)((uint)(bi * 2654435761u) % (uint)palette.Length);
-            var wall = facadeMbs[b.Year > 0 && b.Year < 1940 ? palette[pi % 3] : palette[pi]];
+            float top = 0f;
+            foreach (var v in b.V) top = Math.Max(top, v.y);
+            var style = StyleFor(b.Year, top, null, (uint)(bi * 2246822519u));
+            int kind = b.Year > 0 && b.Year < 1940 ? palette[pi % 3] : palette[pi];
+            if (style == WindowStyle.Glass && kind < 3) kind = 3 + bi % 2;   // glass walls: plaster or concrete frames
+            var wall = facadeMbs[kind * Styles + (int)style];
             AddTriangles(wall, b.V, b.Walls, true);
             AddTriangles(b.RoofKind == 1 ? tileRoofs[bi % 3 == 0 ? 1 : 0] : flatRoofs, b.V, b.Roofs, false);
             BuildingCount++;
