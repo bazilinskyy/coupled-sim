@@ -304,6 +304,35 @@ public static class ExperimentSetup
         };
     }
 
+    // Play in an experiment scene (the town, a city map, ...) starts the simulator from StartScene,
+    // as the experiment scenes are loaded by the host and cannot run on their own
+    const string PlayFromStartKey = "CoupledSim.PlayFromStartScene";
+
+    [InitializeOnLoadMethod]
+    static void HookPlayFromStartScene()
+    {
+        EditorApplication.playModeStateChanged += state =>
+        {
+            if (state != PlayModeStateChange.ExitingEditMode) return;
+            EditorSceneManager.playModeStartScene = null;
+            if (!EditorPrefs.GetBool(PlayFromStartKey, true) || SceneManager.GetSceneByPath(StartScenePath).isLoaded) return;
+            var active = SceneManager.GetActiveScene().path;
+            if (!EditorBuildSettings.scenes.Any(s => s.path == active)) return;   // not a simulator scene (e.g. a test scene)
+            EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(StartScenePath);
+            Debug.Log($"Play starts from StartScene ({active} is loaded by the host). Turn this off under Coupled Sim ➡️ Experiments ➡️ Always play from StartScene.");
+        };
+    }
+
+    [MenuItem("Coupled Sim/Experiments/Always play from StartScene", false, 101)]
+    static void TogglePlayFromStart() => EditorPrefs.SetBool(PlayFromStartKey, !EditorPrefs.GetBool(PlayFromStartKey, true));
+
+    [MenuItem("Coupled Sim/Experiments/Always play from StartScene", true)]
+    static bool TogglePlayFromStartValid()
+    {
+        Menu.SetChecked("Coupled Sim/Experiments/Always play from StartScene", EditorPrefs.GetBool(PlayFromStartKey, true));
+        return true;
+    }
+
     [MenuItem("Coupled Sim/Experiments/Check experiments before Play", false, 100)]
     static void ToggleValidateBeforePlay() => EditorPrefs.SetBool(ValidateBeforePlayKey, !EditorPrefs.GetBool(ValidateBeforePlayKey, true));
 
