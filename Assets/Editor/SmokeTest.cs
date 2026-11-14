@@ -368,6 +368,19 @@ public static class SmokeTest
                 camGo.transform.LookAt(p + Vector3.up * 0.4f);
                 sb.AppendLine($"Animal shot: {a.name} at {p}");
             }
+            else if (view.Trim().StartsWith("sign") && local != null)
+            {
+                // "sign" or "sign:CyclePath": the nearest such traffic sign, from 7 m in front of it at eye height
+                var kind = view.Trim().Length > 5 ? view.Trim().Substring(5) : "";
+                var sg = UnityEngine.Object.FindObjectsByType<TrafficSign>(FindObjectsSortMode.None)
+                    .Where(x => kind.Length == 0 || string.Equals(x.Kind.ToString(), kind, StringComparison.OrdinalIgnoreCase))
+                    .OrderBy(x => (x.transform.position - local.transform.position).sqrMagnitude).FirstOrDefault();
+                if (sg == null) { UnityEngine.Object.DestroyImmediate(camGo); sb.AppendLine($"Screenshot '{view.Trim()}' skipped: no sign"); continue; }
+                var p = sg.transform.position;
+                camGo.transform.position = p + sg.transform.forward * 7f + sg.transform.right * 1.5f + Vector3.up * 1.7f;
+                camGo.transform.LookAt(p + Vector3.up * (sg.Height + 0.3f));
+                sb.AppendLine($"Sign shot: {sg.name} at {p}");
+            }
             else if (view.Trim().StartsWith("rel:") && local != null)
             {
                 // rel:x,y,z,yaw,pitch[,fov] relative to the participant (x right, z ahead, yaw from its heading)
