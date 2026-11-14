@@ -314,7 +314,7 @@ Only the window that has focus receives keyboard input.
 | `-motionUdp <host:port>`, `-motionFormat json\|csv\|flypt`, `-motionRate <Hz>` | [motion platforms](#motion-platforms) |
 | `-magicFormulaTyres` | [tyres from Magic Formula coefficients](#vehicles) |
 | `-roadSurface name` | [one road surface everywhere](#vehicles) (grip, roughness, tyre noise) |
-| `-noRealData`, `-flatTerrain`, `-noFacadeRelief`, `-liveReflections 0`, `-noSignals` | city maps from OpenStreetMap alone, flat, with flat façades, without live reflections, without traffic lights ([real-world data](#real-world-data-on-the-city-maps); comparisons, slow PCs) |
+| `-noRealData`, `-flatTerrain`, `-noFacadeRelief`, `-noPhotoTextures`, `-liveReflections 0`, `-noSignals` | city maps from OpenStreetMap alone, flat, with flat façades, with drawn instead of photo wall textures, without live reflections, without traffic lights ([real-world data](#real-world-data-on-the-city-maps); comparisons, slow PCs) |
 | `-openscenario <file.xosc>` | [OpenSCENARIO](#openscenario) playback (every agent) |
 | `-videoCams "<name>=x,y,z,yaw,pitch[,fov];chase;front;driver"`, `-videoSeconds`, `-videoStart`, `-videoFps`, `-videoSize WxH`, `-videoQuit`, `-videoKeepFrames`, `-ffmpeg <path>` | [videos from fixed cameras](#videos-from-fixed-cameras) |
 | `-sceneDescriptions`, `-llmModel`, `-llmEffort`, `-llmEndpoint` | [scene descriptions and AI agents](#scene-descriptions-and-ai-agents) |
@@ -504,6 +504,10 @@ Asphalt gets repair patches and manhole covers, and brick roads get manhole cove
 ![Window styles by age and type: Delft (left), London (right)](ReadmeFiles/facade_styles.jpg)
 
 **Depth in the façades.** Each window style also has a normal map, a height map (parallax) and an ambient occlusion map made from the same layout, so windows sit back in their reveals behind their frames, sills and lintels stand out and brick has mortar joints, and the light, shadows and screen-space ambient occlusion (radius 25 cm) follow that relief. `-noFacadeRelief` draws flat façades (for comparisons or slow PCs).
+
+**Photo textures of the walls.** Up close, the walls show photos of real brick, plaster and concrete (CC0 textures from [ambientCG](https://ambientcg.com): two red bricks, a beige brick, plaster, concrete; with their normal maps, so mortar joints catch the light) instead of drawn bricks. They are URP detail maps over the façade textures, masked by the window layout, so glass, frames, sills and shop fronts stay clean, and each wall kind keeps its colour (the photos are scaled to mid grey; in `Assets/ThirdParty/Textures/Walls`, assigned by `MapSetup.AddWallTextures`). `-noPhotoTextures` draws the bricks of earlier versions.
+
+![Solid buildings with photo textures of brick: London (top) and Delft, up to the shop fronts (bottom)](ReadmeFiles/building_walls.jpg)
 
 ![A canal street in Delft: windows set into the brick façades](ReadmeFiles/facade_relief.jpg)
 
@@ -1244,7 +1248,7 @@ All agents must be in the same local network; the host's IP address is in its co
 | Name | Developer | License |
 | --- | --- | --- |
 | [ACP (Arcade Car Physics)](https://github.com/Saarg/Arcade_Car_Physics) | Saarg | MIT |
-| [Textures](https://ambientcg.com) (formerly cc0textures.com) | Various | CC0 |
+| [Textures](https://ambientcg.com) (formerly cc0textures.com), including the wall photos Bricks101, Bricks059, Bricks105, Plaster001, Concrete034 | Various | CC0 |
 | [PBR Bark Materials #1](https://assetstore.unity.com/packages/2d/textures-materials/pbr-bark-materials-1-86713) | John's Junkyard | Unity Asset Store EULA |
 | Stylized Grass Texture | LowlyPoly | Unity Asset Store EULA |
 | Suit Pack (participant avatar) | StudioNewPunch | Unity Asset Store EULA |
