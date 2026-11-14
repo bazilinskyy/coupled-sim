@@ -38,6 +38,8 @@ public class OsmMapGenerator
     public bool Real3DBuildings { get; private set; }
     readonly MapAssets _assets;
     Func<int, Material> _facadeMat;
+    /// <summary><c>-noFacadeRelief</c>: flat façades (no normal or parallax maps), e.g. for comparisons or slow PCs.</summary>
+    static readonly bool _noRelief = Array.IndexOf(Environment.GetCommandLineArgs(), "-noFacadeRelief") >= 0;
     /// <summary>Façade materials whose windows light up at night (OsmMap sets their emission from the sun).</summary>
     public static readonly List<Material> NightMaterials = new List<Material>();
     static readonly int Styles = Enum.GetValues(typeof(WindowStyle)).Length;
@@ -144,6 +146,118 @@ public class OsmMapGenerator
             case WindowStyle.Glass: return u > 0.02f && u < 0.98f && v > 0.2f;
             default: return u > 0.3f && u < 0.7f && v > 0.3f && v < 0.85f;
         }
+    }
+
+    /// <summary>Relief of a window bay in metres (wall = 0): glass set back in its reveal, frames a little back,
+    /// sills and lintels standing out, mortar joints of brick. Same layout as <see cref="FacadeTile"/>.</summary>
+    static float FacadeHeight(int x, int y, WindowStyle style, bool brick)
+    {
+        float u = x / 256f, v = y / 256f;
+        const float f = 0.012f, glass = -0.14f, frameD = -0.06f, bar = -0.08f, sill = 0.04f;
+        switch (style)
+        {
+            case WindowStyle.Tall:
+                if (u > 0.34f && u < 0.66f && v > 0.18f && v < 0.88f) return Mathf.Abs(u - 0.5f) < f || Mathf.Abs(v - 0.42f) < f || Mathf.Abs(v - 0.65f) < f ? bar : glass;
+                if (u > 0.31f && u < 0.69f && v > 0.15f && v < 0.91f) return frameD;
+                if (u > 0.29f && u < 0.71f && v > 0.91f && v < 0.96f) return sill * 0.7f;
+                if (u > 0.3f && u < 0.7f && v > 0.12f && v < 0.15f) return sill;
+                break;
+            case WindowStyle.Ribbon:
+                if (v > 0.4f && v < 0.8f) return u < f * 2 || u > 1f - f * 2 || Mathf.Abs(u - 0.5f) < f || Mathf.Abs(v - 0.7f) < f ? bar : glass;
+                if (v > 0.37f && v < 0.83f) return frameD;
+                if (v > 0.32f && v < 0.37f) return sill;
+                break;
+            case WindowStyle.Pair:
+                foreach (var c in new[] { 0.28f, 0.72f })
+                {
+                    if (Mathf.Abs(u - c) < 0.15f && v > 0.32f && v < 0.84f) return Mathf.Abs(v - 0.66f) < f ? bar : glass;
+                    if (Mathf.Abs(u - c) < 0.17f && v > 0.3f && v < 0.86f) return frameD;
+                }
+                if (v > 0.26f && v < 0.3f && (Mathf.Abs(u - 0.28f) < 0.18f || Mathf.Abs(u - 0.72f) < 0.18f)) return sill;
+                break;
+            case WindowStyle.Glass:
+                if (u < 0.02f || u > 0.98f || Mathf.Abs(u - 0.5f) < 0.008f) return 0.03f;   // mullions stand out of the glass
+                if (v < 0.2f) return v < 0.02f || v > 0.18f ? 0.03f : 0f;
+                return -0.02f;
+            default:
+                if (u > 0.3f && u < 0.7f && v > 0.3f && v < 0.85f) return Mathf.Abs(u - 0.5f) < f || Mathf.Abs(v - 0.62f) < f ? bar : glass;
+                if (u > 0.27f && u < 0.73f && v > 0.27f && v < 0.88f) return frameD;
+                if (u > 0.25f && u < 0.75f && v > 0.24f && v < 0.27f) return sill;
+                break;
+        }
+        if (brick)
+        {
+            int course = y / 6, offset = course % 2 == 0 ? 0 : 12;
+            if (y % 6 == 0 || (x + offset) % 24 == 0) return -0.008f;
+        }
+        return 0f;
+    }
+
+    static readonly Dictionary<string, (Texture2D normal, Texture2D height, Texture2D occlusion)> _facadeRelief = new Dictionary<string, (Texture2D, Texture2D, Texture2D)>();
+
+    /// <summary>Normal map, height map (for parallax) and ambient occlusion of a façade style: windows look set into the wall.</summary>
+    static (Texture2D normal, Texture2D height, Texture2D occlusion) FacadeRelief(WindowStyle style, bool brick)
+    {
+        var key = style + (brick ? " brick" : "");
+        if (_facadeRelief.TryGetValue(key, out var cached) && cached.normal != null) return cached;
+        int size = BayPx * FacadeBays;
+        var h = new float[size * size];
+        for (int y = 0; y < size; y++)
+            for (int x = 0; x < size; x++)
+                h[y * size + x] = FacadeHeight(x % BayPx * 256 / BayPx, y % BayPx * 256 / BayPx, style, brick);
+        // a little softening, so edges look bevelled rather than aliased
+        var sm = new float[h.Length];
+        for (int y = 0; y < size; y++)
+            for (int x = 0; x < size; x++)
+            {
+                float acc = 0f;
+                for (int dy = -1; dy <= 1; dy++) for (int dx = -1; dx <= 1; dx++) acc += h[((y + dy + size) % size) * size + (x + dx + size) % size];
+                sm[y * size + x] = acc / 9f;
+            }
+        float pixelM = 3f / BayPx;    // one pixel is about 2 cm of wall
+        // occlusion: how far a point lies below its surroundings (about 12 cm around): reveals and glass corners get less sky
+        var wide = new float[h.Length]; var tmp = new float[h.Length]; const int rad = 6;
+        for (int y = 0; y < size; y++)
+            for (int x = 0; x < size; x++)
+            {
+                float acc = 0f;
+                for (int d = -rad; d <= rad; d++) acc += sm[y * size + (x + d + size) % size];
+                tmp[y * size + x] = acc / (2 * rad + 1);
+            }
+        for (int y = 0; y < size; y++)
+            for (int x = 0; x < size; x++)
+            {
+                float acc = 0f;
+                for (int d = -rad; d <= rad; d++) acc += tmp[((y + d + size) % size) * size + x];
+                wide[y * size + x] = acc / (2 * rad + 1);
+            }
+        float min = sm.Min(), max = sm.Max(), range = Mathf.Max(0.001f, max - min);
+        var normal = new Texture2D(size, size, TextureFormat.RGBA32, true, true) { name = "facade_normal_" + key, wrapMode = TextureWrapMode.Repeat, anisoLevel = 8 };
+        var height = new Texture2D(size, size, TextureFormat.RGBA32, true, true) { name = "facade_height_" + key, wrapMode = TextureWrapMode.Repeat, anisoLevel = 8 };
+        var occl = new Texture2D(size, size, TextureFormat.RGBA32, true, true) { name = "facade_occlusion_" + key, wrapMode = TextureWrapMode.Repeat, anisoLevel = 8 };
+        var np = new Color32[h.Length]; var hp = new Color32[h.Length]; var op = new Color32[h.Length];
+        for (int y = 0; y < size; y++)
+            for (int x = 0; x < size; x++)
+            {
+                float dx = (sm[y * size + (x + 1) % size] - sm[y * size + (x - 1 + size) % size]) / (2f * pixelM);
+                float dy = (sm[((y + 1) % size) * size + x] - sm[((y - 1 + size) % size) * size + x]) / (2f * pixelM);
+                var n = new Vector3(-dx, -dy, 1f).normalized;
+                np[y * size + x] = new Color32((byte)((n.x * 0.5f + 0.5f) * 255), (byte)((n.y * 0.5f + 0.5f) * 255), (byte)((n.z * 0.5f + 0.5f) * 255), 255);
+                byte g = (byte)((sm[y * size + x] - min) / range * 255);
+                hp[y * size + x] = new Color32(g, g, g, 255);
+                float cavity = Mathf.Max(0f, wide[y * size + x] - sm[y * size + x]) / 0.1f;
+                float depth = Mathf.Clamp01(-sm[y * size + x] / 0.14f);
+                byte o = (byte)(Mathf.Clamp01(1f - 0.55f * Mathf.Clamp01(cavity) - 0.2f * depth) * 255);
+                op[y * size + x] = new Color32(o, o, o, 255);
+            }
+        normal.SetPixels32(np); normal.Apply(true, false);
+        height.SetPixels32(hp); height.Apply(true, false);
+        occl.SetPixels32(op); occl.Apply(true, false);
+        normal.Compress(true); height.Compress(false); occl.Compress(false);
+        normal.Apply(false, true); height.Apply(false, true); occl.Apply(false, true);
+        var r = (normal, height, occl);
+        _facadeRelief[key] = r;
+        return r;
     }
 
     /// <summary>One window bay (3 m) by one floor (3 m), in 256 x 256 coordinates.</summary>
@@ -425,6 +539,15 @@ public class OsmMapGenerator
             var m = Mat($"Facade {name} {style}", Color.white, style == WindowStyle.Glass ? 0.55f : 0.1f,
                 Facade($"facade_{name.Replace(' ', '_')}_{style}", wall, frame, brick, style));
             m.mainTextureScale = Vector2.one / FacadeBays;
+            // depth: windows set into the wall, sills and mortar (normal map, parallax); the template keeps the shader variant in builds
+            if (_assets != null && _assets.FacadeTemplate != null && !_noRelief)
+            {
+                var (nrm, hgt, occ) = FacadeRelief(style, brick);
+                m.shader = _assets.FacadeTemplate.shader;
+                m.SetTexture("_BumpMap", nrm); m.SetFloat("_BumpScale", 1f); m.EnableKeyword("_NORMALMAP");
+                m.SetTexture("_ParallaxMap", hgt); m.SetFloat("_Parallax", 0.03f); m.EnableKeyword("_PARALLAXMAP");
+                m.SetTexture("_OcclusionMap", occ); m.SetFloat("_OcclusionStrength", 1f); m.EnableKeyword("_OCCLUSIONMAP");
+            }
             m.SetTexture("_EmissionMap", FacadeLights($"facade_lights_{name.Replace(' ', '_')}_{style}", style));
             m.SetColor("_EmissionColor", Color.black);
             m.EnableKeyword("_EMISSION");
