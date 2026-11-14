@@ -184,7 +184,7 @@ public static class SmokeTest
                 _lastDriveLog = (int)(elapsed * 2);
                 var rb = dyn.GetComponent<Rigidbody>();
                 var w = dyn.transform.InverseTransformDirection(rb.angularVelocity);
-                Debug.Log($"SmokeTest drive: t={elapsed:F1}s {dyn.SpeedKmh:F1} km/h gear {dyn.Gear} {dyn.Rpm:F0} rpm grip {dyn.Grip:F2} pitch rate {w.x * Mathf.Rad2Deg:F2}°/s roll rate {w.z * Mathf.Rad2Deg:F2}°/s vertical {rb.linearVelocity.y:F3} m/s");
+                Debug.Log($"SmokeTest drive: t={elapsed:F1}s {dyn.SpeedKmh:F1} km/h gear {dyn.Gear} {dyn.Rpm:F0} rpm grip {dyn.Grip:F2} on {dyn.Surface} shake {dyn.RoughnessRms:F2} m/s2 pitch rate {w.x * Mathf.Rad2Deg:F2}°/s roll rate {w.z * Mathf.Rad2Deg:F2}°/s vertical {rb.linearVelocity.y:F3} m/s");
             }
         }
         // -smokeTakeOver seconds: the driver brakes then (to take over from the automation)

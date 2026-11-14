@@ -9,7 +9,8 @@ using UnityEngine.Networking;
 /// <summary>
 /// Sound of the scene with levels in dB SPL (after calibration):
 /// - vehicle sound: tyre-road noise of every car that rises with speed (about 30 log10 v, as in
-///   road traffic noise models), plus an engine for combustion cars (pitch and level with speed);
+///   road traffic noise models; about 8 dB louder on cobblestones, 4 dB on bricks and gravel, quieter on
+///   grass: RoadSurfaces), plus an engine for combustion cars (pitch and level with speed);
 ///   3D sound with the inverse-distance law (-6 dB per doubling), for the nearest cars;
 /// - the participant's own car: the same sounds as heard inside (quieter, muffled), and optional
 ///   cabin music (a WAV/OGG file in StreamingAssets/Audio);
@@ -203,6 +204,7 @@ public class Soundscape : MonoBehaviour, IExperimentModifier
         Vector3 _last;
         float _speed;   // km/h, smoothed
         bool _first = true;
+        float _surfaceDb, _nextSurface;
 
         public VehicleVoice(Transform car, AudioClip tyre, AudioClip engine)
         {
@@ -239,7 +241,13 @@ public class Soundscape : MonoBehaviour, IExperimentModifier
             _speed = Mathf.Lerp(_speed, v, 1f - Mathf.Exp(-dt * 4f));
             float kmh = Mathf.Max(_speed, 0f);
             // dB at 7.5 m -> at 1 m (+17.5 dB), the reference distance of the 3D sources
-            float tyreDb = kmh < 3f ? -100f : sc.TyreDbAt50 + 30f * Mathf.Log10(Mathf.Max(kmh, 3f) / 50f) + 17.5f;
+            // louder on bricks and cobblestones, quieter on grass (the surface under the car, 4 times a second)
+            if (Time.time >= _nextSurface)
+            {
+                _nextSurface = Time.time + 0.25f;
+                _surfaceDb = CoupledSim.Vehicles.RoadSurfaces.Under(_car).NoiseDb;
+            }
+            float tyreDb = kmh < 3f ? -100f : sc.TyreDbAt50 + 30f * Mathf.Log10(Mathf.Max(kmh, 3f) / 50f) + 17.5f + _surfaceDb;
             float engineDb = sc.ElectricCars ? -100f : sc.EngineDb + 6f * Mathf.Clamp01(kmh / 60f) + 17.5f;
             bool inside = own;
             float reduce = inside ? sc.InteriorReductionDb + 17.5f : 0f;   // inside: at the reference distance, quieter
