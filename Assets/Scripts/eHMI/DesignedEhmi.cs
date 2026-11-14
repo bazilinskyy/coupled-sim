@@ -16,6 +16,9 @@ using UnityEngine.UI;
 /// windshield, or projected on the road ahead). It can also be put on any object (a pole at a
 /// crossing, a pedestrian's wearable): with <see cref="FollowEhmi"/> it shows the state of the
 /// eHMI with that index (0 = the first eHMI spawned on a car).
+/// Also used for displays inside the car (<see cref="InCarDisplay"/>), which add needle gauges and
+/// bars driven by live values ("value": "{speed}"), elements shown only while a condition holds
+/// ("when": "left") and timed messages.
 /// </summary>
 public class DesignedEhmi : HMI
 {
@@ -36,6 +39,28 @@ public class DesignedEhmi : HMI
         public string direction = "right";  // arrow, chevrons: left, right, up, down
         public string animation = "steady"; // steady, pulse, blink, sweep, sweepleft, sweepout, sweepin
         public float period = 1f;           // seconds per cycle
+        public string when = "";            // shown only while this holds (in-car displays: left, right, automated, ...); "!x" = not
+        public string value = "";           // gauge, bar: the number shown, e.g. "{speed}" or "{rpm}"
+        public float min = 0f, max = 100f;  // gauge, bar: range of the value
+        public float startAngle = 225f, endAngle = -45f;   // gauge: degrees (0 = right, 90 = up)
+        public int labels = 0;              // gauge: number of scale labels (min..max), 0 = none
+        public float redFrom = float.MaxValue;   // gauge: red scale from this value (e.g. the rev limit)
+        public float labelScale = 1f;       // gauge: labels show value × labelScale (e.g. 0.001 for rpm × 1000)
+    }
+    /// <summary>A message shown for a while: at a time, a distance driven, or when a state starts (in-car displays).</summary>
+    [Serializable] public class Message
+    {
+        public float at = -1f;              // seconds after the start of the trial (-1: not by time)
+        public float atDistance = -1f;      // metres driven
+        public string onState = "";         // when this state starts (MANUAL, AUTOMATED, TAKEOVER)
+        public float seconds = 5f;          // how long it stays
+        public string display = "";         // schedule files: hud, centre, cluster (empty: every display)
+        public string text = "";
+        public string color = "#FFFFFF";
+        public string background = "#000000B0";
+        public float x = 0.05f, y = 0.05f, w = 0.9f, h = 0.22f;
+        public string animation = "steady";
+        public float period = 1f;
     }
     [Serializable] public class StateDesign { public string state = "WALK"; public Element[] elements = new Element[0]; }
     [Serializable] public class DesignFile
@@ -43,7 +68,9 @@ public class DesignedEhmi : HMI
         public string name = "";
         public float width = 1.2f, height = 0.15f;   // metres
         public string background = "#000000";         // with alpha, e.g. #00000000 for none
+        public float resolution = 0f;                 // pixels per metre (0: the component's)
         public StateDesign[] states = new StateDesign[0];
+        public Message[] messages = new Message[0];
     }
 
     public DesignFile Loaded { get; private set; }
@@ -72,6 +99,10 @@ public class DesignedEhmi : HMI
     protected virtual string StateKey => CurrentState.ToString();
     /// <summary>Text of a text element with its placeholders filled in.</summary>
     protected virtual string FillText(string text) => text;
+    /// <summary>Whether a condition ("when") holds; unknown conditions hold.</summary>
+    protected virtual bool When(string condition) => true;
+    /// <summary>Elements shown on top of the state's (e.g. messages); kept as the same objects while shown.</summary>
+    protected virtual void ExtraElements(List<Element> into) { }
 
     string _lastKey;
 
@@ -94,6 +125,7 @@ public class DesignedEhmi : HMI
 
     void Build()
     {
+        if (Loaded.resolution > 0f) Resolution = Loaded.resolution;
         _w = Mathf.Clamp(Mathf.RoundToInt(Loaded.width * Resolution), 8, 2048);
         _h = Mathf.Clamp(Mathf.RoundToInt(Loaded.height * Resolution), 8, 2048);
         _tex = new Texture2D(_w, _h, TextureFormat.RGBA32, false) { filterMode = FilterMode.Bilinear, wrapMode = TextureWrapMode.Clamp };
@@ -137,16 +169,42 @@ public class DesignedEhmi : HMI
 
     // ------------------------------------------------------------------ drawing
 
+    readonly List<Element> _visible = new List<Element>();
+    readonly List<RectTransform> _dyn = new List<RectTransform>();
+    int _lastSignature = int.MinValue;
+
+    bool Shown(Element e)
+    {
+        if (string.IsNullOrEmpty(e.when)) return true;
+        var w = e.when.Trim();
+        return w.StartsWith("!") ? !When(w.Substring(1).Trim()) : When(w);
+    }
+
     void Draw(float t)
     {
-        var bg = ParseColor(Loaded.background, new Color(0, 0, 0, 1));
-        var bg32 = (Color32)bg;
-        for (int i = 0; i < _pixels.Length; i++) _pixels[i] = bg32;
-        int ti = 0;
+        _visible.Clear();
         foreach (var state in new[] { Find("ANY"), Find(_lastKey ?? StateKey) })
+            if (state != null) foreach (var e in state.elements) if (Shown(e)) _visible.Add(e);
+        ExtraElements(_visible);
+        // the texture holds what changes rarely (shapes, scales); redrawn only when that changes
+        int sig = 17;
+        unchecked
         {
-            if (state == null) continue;
-            foreach (var e in state.elements)
+            foreach (var e in _visible)
+            {
+                var type = (e.type ?? "rect").ToLowerInvariant();
+                if (type == "text") continue;
+                sig = sig * 31 + System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(e);
+                sig = sig * 31 + Mathf.RoundToInt(Level(e, t, 0.5f) * 8f);
+                if (type == "lightbar" || type == "chevrons" || type == "rect") sig = sig * 31 + Mathf.RoundToInt(Mathf.Repeat(t / Mathf.Max(0.05f, e.period), 1f) * 16f) * (e.animation != null && e.animation.StartsWith("sweep") ? 1 : 0);
+            }
+        }
+        if (sig != _lastSignature)
+        {
+            _lastSignature = sig;
+            var bg32 = (Color32)ParseColor(Loaded.background, new Color(0, 0, 0, 1));
+            for (int i = 0; i < _pixels.Length; i++) _pixels[i] = bg32;
+            foreach (var e in _visible)
             {
                 var c = ParseColor(e.color, Color.cyan);
                 switch ((e.type ?? "rect").ToLowerInvariant())
@@ -155,14 +213,127 @@ public class DesignedEhmi : HMI
                     case "circle": Shape(e, c, t, (u, v) => (u - 0.5f) * (u - 0.5f) + (v - 0.5f) * (v - 0.5f) <= 0.25f); break;
                     case "arrow": Shape(e, c, t, (u, v) => InArrow(Orient(e.direction, u, v))); break;
                     case "chevrons": Chevrons(e, c, t); break;
-                    case "text": SetText(ti++, e, c, t); break;
+                    case "gauge": GaugeScale(e, c); break;
+                    case "bar": Shape(e, new Color(c.r, c.g, c.b, c.a * 0.22f), t, (u, v) => true); break;
+                    case "text": break;
                     default: Shape(e, c, t, (u, v) => true); break;
                 }
             }
+            _tex.SetPixels32(_pixels);
+            _tex.Apply(false);
+        }
+        // texts, needles and bar fills: every frame (cheap, drawn by the GPU)
+        int ti = 0, di = 0;
+        foreach (var e in _visible)
+        {
+            var c = ParseColor(e.color, Color.cyan);
+            switch ((e.type ?? "rect").ToLowerInvariant())
+            {
+                case "text": SetText(ti++, e, c, t); break;
+                case "gauge": Gauge(e, c, t, ref ti, ref di); break;
+                case "bar": BarFill(e, c, t, ref di); break;
+            }
         }
         for (int i = ti; i < _texts.Count; i++) _texts[i].enabled = false;
-        _tex.SetPixels32(_pixels);
-        _tex.Apply(false);
+        for (int i = di; i < _dyn.Count; i++) _dyn[i].gameObject.SetActive(false);
+    }
+
+    float Value(Element e)
+    {
+        var s = FillText(e.value);
+        return float.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out var v) ? v : e.min;
+    }
+
+    // the gauge's dial in pixels: centre and radius (round whatever the element's shape)
+    void Dial(Element e, out float cx, out float cy, out float r)
+    {
+        Rect(e, out var x0, out var y0, out var x1, out var y1);
+        cx = (x0 + x1) / 2f; cy = (y0 + y1) / 2f; r = Mathf.Min(x1 - x0, y1 - y0) / 2f;
+    }
+
+    float AngleOf(Element e, float value) => Mathf.Lerp(e.startAngle, e.endAngle, Mathf.InverseLerp(e.min, e.max, value));
+
+    void GaugeScale(Element e, Color c)
+    {
+        Dial(e, out var cx, out var cy, out var r);
+        int majors = Mathf.Max(1, e.segments);
+        float sweep = e.startAngle - e.endAngle;
+        float redF = e.redFrom < e.max ? Mathf.InverseLerp(e.min, e.max, e.redFrom) : 2f;
+        var red = new Color(0.95f, 0.15f, 0.12f, c.a);
+        int x0 = Mathf.FloorToInt(cx - r), x1 = Mathf.CeilToInt(cx + r), y0 = Mathf.FloorToInt(cy - r), y1 = Mathf.CeilToInt(cy + r);
+        float px = 1f / Mathf.Max(1f, r);   // one pixel in dial radii
+        for (int y = y0; y <= y1; y++)
+            for (int x = x0; x <= x1; x++)
+            {
+                float dx = (x + 0.5f - cx) / r, dy = (y + 0.5f - cy) / r, rr = Mathf.Sqrt(dx * dx + dy * dy);
+                if (rr > 1f || rr < 0.7f) { if (rr < 0.09f) Blend(x, y, c, 1f); continue; }   // hub
+                float ang = Mathf.Atan2(dy, dx) * Mathf.Rad2Deg;
+                // fraction along the scale (start -> end, either direction)
+                float f = sweep >= 0f ? Mathf.Repeat(e.startAngle - ang, 360f) / Mathf.Max(1e-3f, sweep)
+                                      : Mathf.Repeat(ang - e.startAngle, 360f) / Mathf.Max(1e-3f, -sweep);
+                if (f > 1f + 0.5f / Mathf.Max(1, majors) * 0.05f) { if (Mathf.Repeat(f * Mathf.Abs(sweep), 360f) > 359.5f) f = 0f; else continue; }
+                float onMajor = Mathf.Abs(f * majors - Mathf.Round(f * majors)) / majors * Mathf.Abs(sweep) * Mathf.Deg2Rad * rr;
+                float onMinor = Mathf.Abs(f * majors * 2f - Mathf.Round(f * majors * 2f)) / (majors * 2f) * Mathf.Abs(sweep) * Mathf.Deg2Rad * rr;
+                var col = f >= redF ? red : c;
+                if (rr >= 0.97f && f >= 0f && f <= 1f) Blend(x, y, f >= redF ? red : new Color(c.r, c.g, c.b, c.a * 0.5f), 1f);   // rim
+                else if (rr >= 0.78f && onMajor < 1.8f * px) Blend(x, y, col, 1f);
+                else if (rr >= 0.86f && onMinor < 1.1f * px) Blend(x, y, col, 0.8f);
+            }
+    }
+
+    RectTransform Dyn(int i)
+    {
+        while (_dyn.Count <= i)
+        {
+            var go = new GameObject("Needle", typeof(RectTransform));
+            go.transform.SetParent(_image.transform.parent, false);
+            go.layer = gameObject.layer;
+            go.AddComponent<Image>();
+            _dyn.Add((RectTransform)go.transform);
+        }
+        var rt = _dyn[i];
+        rt.gameObject.SetActive(true);
+        rt.SetAsLastSibling();
+        return rt;
+    }
+
+    void Gauge(Element e, Color c, float t, ref int ti, ref int di)
+    {
+        Dial(e, out var cx, out var cy, out var r);
+        // scale labels
+        for (int k = 0; k < e.labels; k++)
+        {
+            float v = e.labels > 1 ? Mathf.Lerp(e.min, e.max, k / (float)(e.labels - 1)) : e.min;
+            float a = AngleOf(e, v) * Mathf.Deg2Rad;
+            float lx = cx + Mathf.Cos(a) * r * 0.58f, ly = cy + Mathf.Sin(a) * r * 0.58f, s = r * 0.25f;
+            var label = new Element { type = "text", text = Mathf.RoundToInt(v * e.labelScale).ToString(CultureInfo.InvariantCulture),
+                x = (lx - s) / _w, y = (ly - s * 0.5f) / _h, w = 2f * s / _w, h = s / _h, color = e.color };
+            SetText(ti++, label, c, t);
+        }
+        // needle: from the hub outwards, turned to the value
+        var needle = Dyn(di++);
+        float value = Value(e);
+        needle.anchorMin = needle.anchorMax = new Vector2(cx / _w, cy / _h);
+        float scale = Loaded.width * 1000f / _w;     // canvas units (mm) per pixel
+        needle.sizeDelta = new Vector2(Mathf.Max(1.5f, r * 0.05f) * scale, r * 0.9f * scale);
+        needle.pivot = new Vector2(0.5f, 0.08f);
+        needle.anchoredPosition = Vector2.zero;
+        needle.localRotation = Quaternion.Euler(0f, 0f, AngleOf(e, value) - 90f);
+        needle.GetComponent<Image>().color = e.redFrom < float.MaxValue && value >= e.redFrom ? new Color(1f, 0.25f, 0.2f, c.a) : new Color(1f, 0.42f, 0.1f, c.a);
+    }
+
+    void BarFill(Element e, Color c, float t, ref int di)
+    {
+        var fill = Dyn(di++);
+        float f = Mathf.Clamp01(Mathf.InverseLerp(e.min, e.max, Value(e)));
+        bool vertical = (e.direction ?? "").ToLowerInvariant() == "up";
+        fill.anchorMin = new Vector2(e.x, e.y);
+        fill.anchorMax = vertical ? new Vector2(e.x + e.w, e.y + e.h * f) : new Vector2(e.x + e.w * f, e.y + e.h);
+        fill.pivot = new Vector2(0.5f, 0.5f);
+        fill.offsetMin = fill.offsetMax = Vector2.zero;
+        fill.localRotation = Quaternion.identity;
+        c.a *= Level(e, t, 0.5f);
+        fill.GetComponent<Image>().color = c;
     }
 
     // brightness 0..1 of an animated element at time t; pos = 0..1 along it (for sweeps)

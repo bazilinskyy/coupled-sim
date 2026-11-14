@@ -42,6 +42,62 @@ namespace CoupledSim.Tests
             Assert.That(r.vMax, Is.InRange(180f, 210f), "top speed (spec 196 km/h)");
         }
 
+        // 0 to a speed (km/h), with the published figures
+        static float TimeTo(CarSpec spec, float kmh)
+        {
+            var p = new Powertrain(spec);
+            float v = 0, t = 0; const float dt = 0.01f;
+            for (; t < 120f && v < kmh / 3.6f; t += dt)
+            {
+                float force = Math.Min(p.WheelTorque(v, 1f, dt) / spec.WheelRadius - p.Resistance(v), 0.5f * spec.Mass * 9.81f);
+                v = Math.Max(0, v + force / spec.Mass * dt);
+            }
+            return t;
+        }
+
+        [Test]
+        public void SuvAcceleratesLikeTheRealCar()
+        {
+            Assert.That(TimeTo(CarSpec.Suv, 100f), Is.InRange(6.5f, 9.5f), "0-100 km/h (spec 7.7 s)");
+            Assert.That(Accelerate(CarSpec.Suv).vMax, Is.InRange(190f, 225f), "top speed (spec 208 km/h)");
+        }
+
+        [Test]
+        public void EstateAcceleratesLikeTheRealCar()
+        {
+            Assert.That(TimeTo(CarSpec.Estate, 100f), Is.InRange(7.5f, 10.5f), "0-100 km/h (spec 8.9 s)");
+            Assert.That(Accelerate(CarSpec.Estate).vMax, Is.InRange(200f, 230f), "top speed (spec 216 km/h)");
+        }
+
+        [Test]
+        public void VanAcceleratesLikeTheRealVan()
+        {
+            Assert.That(TimeTo(CarSpec.Van, 100f), Is.InRange(12f, 18f), "0-100 km/h (about 15 s)");
+            Assert.That(Accelerate(CarSpec.Van).vMax, Is.InRange(140f, 165f), "top speed (about 150 km/h)");
+        }
+
+        [Test]
+        public void BusIsSlowAndLimitedTo80()
+        {
+            Assert.That(TimeTo(CarSpec.CityBus, 50f), Is.InRange(10f, 22f), "0-50 km/h (city buses about 12-18 s)");
+            Assert.That(Accelerate(CarSpec.CityBus).vMax, Is.InRange(76f, 81f), "speed limiter 80 km/h");
+        }
+
+        [Test]
+        public void TruckIsLimitedTo90()
+        {
+            Assert.That(TimeTo(CarSpec.Truck, 80f), Is.InRange(25f, 50f), "0-80 km/h (half-loaded 18 t truck)");
+            Assert.That(Accelerate(CarSpec.Truck, 150f).vMax, Is.InRange(86f, 91f), "speed limiter 90 km/h");
+        }
+
+        [Test]
+        public void HeavierVehiclesBrakeTheirWheelsHarder()
+        {
+            Assert.Greater(CarSpec.CityBus.MaxBrakeTorque, CarSpec.Van.MaxBrakeTorque);
+            Assert.Greater(CarSpec.Van.MaxBrakeTorque, CarSpec.Hatchback.MaxBrakeTorque);
+            foreach (var n in new[] { "smart", "hatchback", "suv", "estate", "van", "bus", "truck" }) Assert.IsNotNull(CarSpec.ByName(n), n);
+        }
+
         [Test]
         public void ShiftsThroughGearsWithinTheRevRange()
         {
