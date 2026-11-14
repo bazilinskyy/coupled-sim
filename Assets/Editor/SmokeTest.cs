@@ -300,6 +300,7 @@ public static class SmokeTest
             var camGo = new GameObject("SmokeTestCamera");
             var c = camGo.AddComponent<Camera>();
             c.fieldOfView = 50;
+            c.farClipPlane = 6000f;   // maps with a surroundings photo reach 3 km
             var local = NetworkingManager.Instance != null ? NetworkingManager.Instance.PlayerSystem.LocalPlayer : null;
             if (view.Trim() == "chase" && local != null)
             {

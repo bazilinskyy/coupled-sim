@@ -468,6 +468,27 @@ For another Japanese map, take the CityGML zip of its ward from the dataset page
 
 Maps without such a file use the OpenStreetMap buildings.
 
+**Real aerial photos (ground, roofs and surroundings).** Eight maps have the city's open aerial photo, about 0.2 m per pixel: Delft, Eindhoven, Ghent, Barcelona, Tokyo, New York, Boulder and Sydney. It lies on the ground wherever no road, pavement, grass or water is mapped, so car parks, yards, squares and building sites look as they really are. A fine grain repeats every 2 m on top, so the photo isn't blurry up close. Roofs up to 35 m show their real colours, solar panels and dormers (taller buildings lean in the photo, so their roofs keep plain materials). A coarser photo of the 6 km around the map runs to the horizon for distant and high views, and some haze (always on, also in clear weather) blends it into the sky. The photos are in `Assets/StreamingAssets/Maps/<Map>.aerial.jpg`, `.aerial-far.jpg` and `.aerial.json`. `-noAerial` on the command line turns them off. To make them for a map (internet needed; needs Pillow and numpy; about a minute):
+
+```bash
+python3 Tools/aerial_photo.py Delft
+python3 Tools/aerial_photo.py --list
+```
+
+`--list` shows the sources the tool knows. All are open data without a key: PDOK (the Netherlands), Digitaal Vlaanderen (Flanders), PNOA (Spain), GSI (Japan), NYS ITS (New York State), USGS (the United States, about 1 m per pixel) and NSW Spatial Services (New South Wales). Another source can be added to `SOURCES` and `MAP_SOURCE` in the tool: any XYZ tile server, or a WMS. Tiles are cached in `~/.cache/coupled-sim-aerial`.
+
+![Delft without (top left) and with the aerial photo (top right); Barcelona from 120 m and on a square (bottom)](ReadmeFiles/aerial_photos.jpg)
+
+**Road surfaces and details.** Roads use OpenStreetMap's `surface` tag:
+- brick paving (Dutch "klinkers", `paving_stones` and `bricks`);
+- cobblestones (`sett` and `cobblestone`);
+- gravel (also `unpaved`, `compacted` and `dirt`);
+- asphalt otherwise.
+
+Asphalt gets repair patches and manhole covers, and brick roads get manhole covers too. Every road can get puddles along the kerb, which show only while it rains. All are placed the same way on every agent. At night (sun below 1°), the 8 cars nearest the viewer switch on their headlights, which light the road ahead. These are spot lights without shadows, so they cost little frame time.
+
+![Manhole cover and kerb when dry (left), puddle in rain (middle), headlights at night (right)](ReadmeFiles/road_details.jpg)
+
 **Street furniture and parked vehicles.** From the OpenStreetMap data the map also gets benches, waste bins, bicycle racks with parked bicycles, bollards, bus stops (sign, and shelter with bench where mapped), café terraces, recycling containers, street cabinets, garden walls, fences and hedges, and parked cars in parking lots, parking spaces and along streets with street-side parking (at most 250 cars and 400 bicycles, those nearest the centre, so the frame rate stays up). Placement is the same on every agent. The parked bicycle and car prefabs are in `Assets/Prefabs/Props`; to rebuild them after changing the bicycle or car models use `Coupled Sim` ➡️ `Maps` ➡️ `Build street props`.
 
 ![Delft from the 3D BAG, a parking lot with bicycle racks, bicycles on a square, a bus stop in Eindhoven](ReadmeFiles/city_maps_3dbag.jpg)
@@ -482,9 +503,9 @@ Maps without such a file use the OpenStreetMap buildings.
 
 ![The GridTown sample from OpenDRIVE](ReadmeFiles/opendrive_gridtown.jpg)
 
-Limitations: outside the Netherlands, building shapes and heights are as good as the OSM data (buildings without a height get 3.5 floors), roofs are flat; façades come from five window styles, not the real buildings; traffic lights in the map are not shown (SUMO runs its own signals); roads have no elevation (bridges are only slightly raised).
+Limitations: outside the Netherlands, building shapes and heights are as good as the OSM data (buildings without a height get 3.5 floors), roofs are flat (their colours come from the aerial photo where the map has one); façades come from five window styles, not the real buildings; traffic lights in the map are not shown (SUMO runs its own signals); roads have no elevation (bridges are only slightly raised).
 
-Map data © OpenStreetMap contributors, available under the [Open Database License](https://www.openstreetmap.org/copyright). Dutch buildings: [3D BAG](https://3dbag.nl) by the 3D geoinformation group of TU Delft and 3DGI, under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Tokyo's buildings: source 3D都市モデル（Project PLATEAU）渋谷区（2023年度）([G空間情報センター](https://www.geospatial.jp/ckan/dataset/plateau-13113-shibuya-ku-2023)), converted to the simulator's format; used under the Public Data License 1.0 ([PLATEAU site policy](https://www.mlit.go.jp/plateau/site-policy/), compatible with CC BY 4.0). New York's buildings: 3-D Building Model, City of New York, Office of Technology and Innovation ([NYC Open Data](https://opendata.cityofnewyork.us/overview/#termsofuse)), converted to the simulator's format. Montreal's buildings: Ville de Montréal, Bâtiment 3D 2009 (Maquette CityGML LOD2 avec textures), [Données ouvertes de la Ville de Montréal](https://donnees.montreal.ca), licence [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); converted to the simulator's format (geometry only, without textures).
+Map data © OpenStreetMap contributors, available under the [Open Database License](https://www.openstreetmap.org/copyright). Dutch buildings: [3D BAG](https://3dbag.nl) by the 3D geoinformation group of TU Delft and 3DGI, under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Tokyo's buildings: source 3D都市モデル（Project PLATEAU）渋谷区（2023年度）([G空間情報センター](https://www.geospatial.jp/ckan/dataset/plateau-13113-shibuya-ku-2023)), converted to the simulator's format; used under the Public Data License 1.0 ([PLATEAU site policy](https://www.mlit.go.jp/plateau/site-policy/), compatible with CC BY 4.0). New York's buildings: 3-D Building Model, City of New York, Office of Technology and Innovation ([NYC Open Data](https://opendata.cityofnewyork.us/overview/#termsofuse)), converted to the simulator's format. Montreal's buildings: Ville de Montréal, Bâtiment 3D 2009 (Maquette CityGML LOD2 avec textures), [Données ouvertes de la Ville de Montréal](https://donnees.montreal.ca), licence [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); converted to the simulator's format (geometry only, without textures). Aerial photos: [PDOK Luchtfoto](https://www.pdok.nl/introductie/-/article/pdok-luchtfoto-rgb-open-) (Beeldmateriaal Nederland, CC BY 4.0); [Digitaal Vlaanderen](https://www.vlaanderen.be/digitaal-vlaanderen/onze-oplossingen/geografische-webdiensten/ons-gis-aanbod/orthofotomozaieken) orthophoto (Modellicentie Gratis Hergebruik); [PNOA](https://pnoa.ign.es) © Instituto Geográfico Nacional / CNIG (CC BY 4.0); 出典：国土地理院 ([GSI tiles](https://maps.gsi.go.jp/development/ichiran.html), seamless photo); [NYS ITS Geospatial Services](https://orthos.its.ny.gov) orthoimagery; [USGS The National Map](https://www.usgs.gov/programs/national-geospatial-program/national-map) (public domain); © [Spatial Services NSW](https://www.spatial.nsw.gov.au) (CC BY 4.0).
 
 ![Eindhoven, Tokyo, Sydney and New York](ReadmeFiles/city_maps.jpg)
 
@@ -803,7 +824,7 @@ The experiment parameter `animals` multiplies the numbers per trial (`0` = no an
 ### Time of day and weather
 Every experiment has an `EnvironmentController` (child object `Environment (time of day, weather)`) that sets:
 - **time of day** (`TimeOfDay`, clock time; `Latitude`, `Longitude`, `UtcOffset`, `DayOfYear`): the sun's position from a solar model, its colour and strength, a physically based sky, ambient light and the street lights (a light under each `StreetLamp`, the nearest 24 to the viewer switched on at dusk); `TimeSpeed` lets time run (e.g. 60 = one minute per second);
-- **weather** (`Clear`, `PartlyCloudy`, `Overcast`, `LightRain`, `HeavyRain`, `Fog`): clouds (sky colour, softer and weaker sunlight), fog, rain around the viewer and wet, darker, shinier roads and pavements; `ExtraFog` and `RainOverride` fine-tune it.
+- **weather** (`Clear`, `PartlyCloudy`, `Overcast`, `LightRain`, `HeavyRain`, `Fog`): clouds (sky colour, softer and weaker sunlight), fog, rain around the viewer and wet, darker, shinier roads and pavements, and puddles on city maps; `ExtraFog` and `RainOverride` fine-tune it. Some haze is always there, as in real air: under 1% at 300 m, about half at 3 km (`EnvironmentController.MinHaze`).
 - **reflections** (`LiveReflections`, on by default): a realtime reflection probe a few metres above the viewer, renewed when the time of day or weather changes and when the viewer has moved 30 m (`LiveReflectionDistance`; 128 pixels per face, `LiveReflectionResolution`). Car paint, windows and wet roads then reflect the actual sky and streets: dark at night, grey under clouds, the buildings around. The scene's own reflection probes still apply inside their areas.
 
 ![Reflections at night without (left) and with live reflections (right)](ReadmeFiles/live_reflections.jpg)

@@ -46,6 +46,13 @@ public class OsmMap : MonoBehaviour
         if (Time.unscaledTime < _nextLights) return;
         _nextLights = Time.unscaledTime + 1f;
         var env = EnvironmentController.Instance;
+        // puddles while it rains (and a while after: they stay while the roads are wet)
+        if (Generator != null && Generator.Puddles != null) Generator.Puddles.SetActive(env != null && env.Rain > 0.2f);
+        CarHeadlights.Update(env != null ? env.SunElevation : 45f);
+        // with a surroundings photo: cameras see it to the horizon (it is one flat, cheap mesh)
+        if (Generator != null && Generator.Aerial != null && Generator.Aerial.FarTexture != null)
+            foreach (var cam in Camera.allCameras)
+                if (cam.farClipPlane < Generator.Aerial.FarHalfSize) cam.farClipPlane = Generator.Aerial.FarHalfSize;
         float elevation = env != null ? env.SunElevation : 45f;
         float level = Mathf.Clamp01((2f - elevation) / 6f);
         if (Mathf.Abs(level - _lights) < 0.01f) return;
@@ -226,7 +233,7 @@ public class OsmMap : MonoBehaviour
         root.SetParent(transform, false);
         Generator.Build(root);
         new GameObject("Map data © OpenStreetMap contributors (ODbL)").transform.SetParent(transform, false);
-        Debug.Log($"OsmMap: built {info} in {sw.ElapsedMilliseconds} ms: {Generator.Roads.Count} roads, {Generator.BuildingCount} buildings ({Generator.BuildingsOverRoads} over roads), {Generator.Crossings.Count / 2} crossings, {Generator.SignCount} traffic signs, {Generator.PropCount} street props, {Generator.ParkedCarCount} parked cars, {Generator.ParkedBicycleCount} parked bicycles");
+        Debug.Log($"OsmMap: built {info} in {sw.ElapsedMilliseconds} ms: {Generator.Roads.Count} roads, {Generator.BuildingCount} buildings ({Generator.BuildingsOverRoads} over roads), {Generator.Crossings.Count / 2} crossings, {Generator.SignCount} traffic signs, {Generator.PropCount} street props, {Generator.ParkedCarCount} parked cars, {Generator.ParkedBicycleCount} parked bicycles, {Generator.PatchCount} road patches, {Generator.ManholeCount} manhole covers, {Generator.PuddleCount} puddles{(Generator.Aerial != null ? ", aerial photo (" + Generator.Aerial.Credit + ")" : "")}");
         // the road network for analysis, once per map (ExperimentLogs/RoadNetwork-{map}.geojson)
         try
         {
