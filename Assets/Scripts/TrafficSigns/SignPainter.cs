@@ -44,6 +44,10 @@ public static class SignPainter
         ['T'] = new[] { "11111", "00100", "00100", "00100", "00100", "00100", "00100" },
         ['O'] = new[] { "01110", "10001", "10001", "10001", "10001", "10001", "01110" },
         ['P'] = new[] { "11110", "10001", "10001", "11110", "10000", "10000", "10000" },
+        ['E'] = new[] { "11111", "10000", "10000", "11110", "10000", "10000", "11111" },
+        ['R'] = new[] { "11110", "10001", "10001", "11110", "10100", "10010", "10001" },
+        ['M'] = new[] { "10001", "11011", "10101", "10101", "10001", "10001", "10001" },
+        ['I'] = new[] { "01110", "00100", "00100", "00100", "00100", "00100", "01110" },
     };
 
     // distance to text centred at c with glyph cell height h
@@ -81,6 +85,58 @@ public static class SignPainter
         d = Mathf.Min(d, Segment(p, c + new Vector2(0.02f, 0.5f) * s, c + new Vector2(-0.35f, 0.15f) * s, 0.07f * s));
         d = Mathf.Min(d, Segment(p, c + new Vector2(0.02f, 0.5f) * s, c + new Vector2(0.38f, 0.22f) * s, 0.07f * s));
         return d;
+    }
+
+    static float Bicycle(Vector2 p, Vector2 c, float s)
+    {
+        // two wheels (rings), frame, saddle and handlebar; about 2s wide
+        float d = Mathf.Abs(Circle(p - (c + new Vector2(-0.55f, -0.25f) * s), 0.38f * s)) - 0.06f * s;
+        d = Mathf.Min(d, Mathf.Abs(Circle(p - (c + new Vector2(0.55f, -0.25f) * s), 0.38f * s)) - 0.06f * s);
+        Vector2 rear = c + new Vector2(-0.55f, -0.25f) * s, front = c + new Vector2(0.55f, -0.25f) * s, crank = c + new Vector2(-0.05f, -0.25f) * s,
+            seat = c + new Vector2(-0.22f, 0.3f) * s, head = c + new Vector2(0.42f, 0.32f) * s;
+        float w = 0.055f * s;
+        d = Mathf.Min(d, Segment(p, rear, crank, w)); d = Mathf.Min(d, Segment(p, crank, seat, w)); d = Mathf.Min(d, Segment(p, seat, rear, w));
+        d = Mathf.Min(d, Segment(p, seat, head, w)); d = Mathf.Min(d, Segment(p, crank, head, w)); d = Mathf.Min(d, Segment(p, head, front, w));
+        d = Mathf.Min(d, Segment(p, seat + new Vector2(-0.12f, 0.06f) * s, seat + new Vector2(0.12f, 0.06f) * s, w));
+        d = Mathf.Min(d, Segment(p, head, head + new Vector2(0.1f, 0.12f) * s, w));
+        return d;
+    }
+
+    static float Wheelchair(Vector2 p, Vector2 c, float s)
+    {
+        float d = Mathf.Abs(Circle(p - (c + new Vector2(0f, -0.35f) * s), 0.45f * s)) - 0.07f * s;
+        d = Mathf.Min(d, Circle(p - (c + new Vector2(-0.05f, 0.75f) * s), 0.15f * s));
+        d = Mathf.Min(d, Segment(p, c + new Vector2(-0.05f, 0.5f) * s, c + new Vector2(-0.05f, -0.05f) * s, 0.09f * s));
+        d = Mathf.Min(d, Segment(p, c + new Vector2(-0.05f, -0.05f) * s, c + new Vector2(0.45f, -0.05f) * s, 0.09f * s));
+        d = Mathf.Min(d, Segment(p, c + new Vector2(0.45f, -0.05f) * s, c + new Vector2(0.6f, -0.55f) * s, 0.08f * s));
+        return d;
+    }
+
+    // an arrow from a to b (white on blue signs)
+    static float Arrow(Vector2 p, Vector2 a, Vector2 b, float w)
+    {
+        var dir = (b - a).normalized;
+        float shaft = Segment(p, a, b - dir * w * 2.2f, w);
+        var n = new Vector2(-dir.y, dir.x);
+        // the head: a triangle at b
+        Vector2 t0 = b, t1 = b - dir * w * 3.2f + n * w * 2.6f, t2 = b - dir * w * 3.2f - n * w * 2.6f;
+        float head = Mathf.Max(Mathf.Max(Side(p, t0, t1), Side(p, t1, t2)), Side(p, t2, t0));
+        return Mathf.Min(shaft, head);
+    }
+    static float Side(Vector2 p, Vector2 a, Vector2 b) { var e = b - a; var n = new Vector2(e.y, -e.x).normalized; return Vector2.Dot(p - a, n); }
+
+    static void BlueDisc(Action<Func<Vector2, float>, Color> L, out Func<Vector2, float> outline)
+    {
+        outline = p => Circle(p, 0.98f);
+        L(outline, White);
+        L(p => Circle(p, 0.92f), Blue);
+    }
+
+    static void BlueSquare(Action<Func<Vector2, float>, Color> L, out Func<Vector2, float> outline)
+    {
+        outline = p => Box(p, new Vector2(0.95f, 0.95f)) - 0.03f;
+        L(outline, White);
+        L(p => Box(p, new Vector2(0.89f, 0.89f)) - 0.02f, Blue);
     }
 
     struct Layer { public Func<Vector2, float> D; public Color C; }
@@ -137,6 +193,82 @@ public static class SignPainter
                 L(p => Polygon(p, 4, 0.8f, Mathf.PI / 4f), Black);
                 L(p => Polygon(p, 4, 0.74f, Mathf.PI / 4f), White);
                 L(p => Polygon(p, 4, 0.58f, Mathf.PI / 4f), Yellow);
+                break;
+            case TrafficSignKind.EndSpeedLimit:
+                outline = p => Circle(p, 0.98f);
+                L(outline, White);
+                L(p => Mathf.Abs(Circle(p, 0.9f)) - 0.05f, Grey);
+                L(p => Text(p, Mathf.Clamp(limit, 0, 999).ToString(), Vector2.zero, 0.55f), Grey);
+                L(p => Mathf.Max(Circle(p, 0.9f), Mathf.Abs(Mathf.Repeat(p.x + p.y + 0.06f, 0.24f) - 0.12f) - 0.035f), Black);
+                break;
+            case TrafficSignKind.ClosedToVehicles:
+                outline = p => Circle(p, 0.98f);
+                L(outline, Red);
+                L(p => Circle(p, 0.78f), White);
+                break;
+            case TrafficSignKind.NoParking:
+            case TrafficSignKind.NoStopping:
+                outline = p => Circle(p, 0.98f);
+                L(outline, Red);
+                L(p => Circle(p, 0.8f), Blue);
+                L(p => Mathf.Max(Circle(p, 0.8f), Mathf.Abs((p.x + p.y) * 0.7071f) - 0.12f), Red);
+                if (kind == TrafficSignKind.NoStopping) L(p => Mathf.Max(Circle(p, 0.8f), Mathf.Abs((p.x - p.y) * 0.7071f) - 0.12f), Red);
+                break;
+            case TrafficSignKind.Parking:
+            case TrafficSignKind.DisabledParking:
+            case TrafficSignKind.PermitParking:
+                BlueSquare(L, out outline);
+                if (kind == TrafficSignKind.Parking) L(p => Text(p, "P", new Vector2(0f, 0f), 1.15f), White);
+                else
+                {
+                    L(p => Text(p, "P", new Vector2(0f, 0.32f), 0.8f), White);
+                    if (kind == TrafficSignKind.DisabledParking) L(p => Wheelchair(p, new Vector2(0f, -0.5f), 0.32f), White);
+                    else L(p => Box(p - new Vector2(0f, -0.52f), new Vector2(0.62f, 0.2f)), White);
+                }
+                break;
+            case TrafficSignKind.CyclePath:
+                BlueDisc(L, out outline);
+                L(p => Bicycle(p, new Vector2(0f, 0.08f), 0.72f), White);
+                break;
+            case TrafficSignKind.MopedCyclePath:
+                BlueDisc(L, out outline);
+                L(p => Bicycle(p, new Vector2(0f, 0.38f), 0.45f), White);
+                L(p => Mathf.Min(Bicycle(p, new Vector2(0f, -0.42f), 0.45f), Box(p - new Vector2(-0.05f, -0.45f), new Vector2(0.16f, 0.1f))), White);
+                break;
+            case TrafficSignKind.FootPath:
+                BlueDisc(L, out outline);
+                L(p => Person(p, new Vector2(0f, -0.05f), 0.6f), White);
+                break;
+            case TrafficSignKind.KeepRightDown:
+            case TrafficSignKind.KeepLeftDown:
+                BlueDisc(L, out outline);
+                { float sx = kind == TrafficSignKind.KeepRightDown ? 1f : -1f; L(p => Arrow(p, new Vector2(-0.42f * sx, 0.42f), new Vector2(0.45f * sx, -0.45f), 0.11f), White); }
+                break;
+            case TrafficSignKind.AheadOnly:
+                BlueDisc(L, out outline);
+                L(p => Arrow(p, new Vector2(0f, -0.6f), new Vector2(0f, 0.62f), 0.12f), White);
+                break;
+            case TrafficSignKind.TurnRight:
+            case TrafficSignKind.TurnLeft:
+                BlueDisc(L, out outline);
+                { float sx = kind == TrafficSignKind.TurnRight ? 1f : -1f; L(p => Mathf.Min(Segment(p, new Vector2(-0.25f * sx, -0.6f), new Vector2(-0.25f * sx, 0.1f), 0.12f), Arrow(p, new Vector2(-0.25f * sx, 0.1f), new Vector2(0.6f * sx, 0.1f), 0.12f)), White); }
+                break;
+            case TrafficSignKind.AheadOrRight:
+                BlueDisc(L, out outline);
+                L(p => Mathf.Min(Arrow(p, new Vector2(-0.15f, -0.6f), new Vector2(-0.15f, 0.62f), 0.1f), Arrow(p, new Vector2(-0.15f, -0.1f), new Vector2(0.62f, 0.32f), 0.1f)), White);
+                break;
+            case TrafficSignKind.DeadEnd:
+                BlueSquare(L, out outline);
+                L(p => Box(p - new Vector2(0f, -0.12f), new Vector2(0.17f, 0.6f)), White);
+                L(p => Box(p - new Vector2(0f, 0.55f), new Vector2(0.5f, 0.13f)), Red);
+                break;
+            case TrafficSignKind.ResidentialZone:
+                outline = p => Box(p, new Vector2(0.95f, 0.66f)) - 0.03f;
+                L(outline, White);
+                L(p => Box(p, new Vector2(0.89f, 0.6f)), Blue);
+                // a house, a person and a child playing
+                L(p => Mathf.Min(Box(p - new Vector2(-0.45f, -0.15f), new Vector2(0.28f, 0.25f)), Polygon(p - new Vector2(-0.45f, 0.18f), 3, 0.34f, -Mathf.PI / 2f)), White);
+                L(p => Mathf.Min(Person(p, new Vector2(0.18f, -0.08f), 0.24f), Person(p, new Vector2(0.55f, -0.18f), 0.17f)), White);
                 break;
             default: // Children: warning triangle with two people
                 // warning triangle pointing up

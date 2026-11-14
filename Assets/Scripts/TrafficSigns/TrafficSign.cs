@@ -2,7 +2,14 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum TrafficSignKind { Stop, GiveWay, SpeedLimit, PedestrianCrossing, NoEntry, OneWay, PriorityRoad, Children }
+public enum TrafficSignKind
+{
+    Stop, GiveWay, SpeedLimit, PedestrianCrossing, NoEntry, OneWay, PriorityRoad, Children,
+    // more Dutch (RVV) signs, from the national register of traffic signs (NDW) on Dutch city maps
+    EndSpeedLimit, ClosedToVehicles, NoParking, NoStopping, Parking, DisabledParking, PermitParking,
+    CyclePath, MopedCyclePath, FootPath, KeepRightDown, KeepLeftDown, AheadOnly, TurnRight, TurnLeft, AheadOrRight,
+    DeadEnd, ResidentialZone,
+}
 
 /// <summary>
 /// A traffic sign on a pole (#24), drawn from code in the style of the Vienna Convention used in
