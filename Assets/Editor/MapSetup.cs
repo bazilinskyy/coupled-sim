@@ -41,10 +41,37 @@ public static class MapSetup
             AssetDatabase.CreateAsset(assets, "Assets/Resources/MapAssets.asset");
         }
         assets.LitTemplate = lit;
+        assets.DetailTemplate = DetailTemplate();
         assets.StreetLamp = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/StreetLights/StreetLamp.prefab");
         assets.Trees = new[] { "Tree9_2", "Tree9_3", "Tree9_4", "Tree9_5" }
             .Select(n => AssetDatabase.LoadAssetAtPath<GameObject>($"Assets/Prefabs/Tree/{n}.prefab")).Where(t => t != null).ToArray();
         EditorUtility.SetDirty(assets);
+    }
+
+    /// <summary>Assets/Settings/Rendering/MapLitDetail.mat: URP Lit with the detail map keyword on.</summary>
+    static Material DetailTemplate()
+    {
+        const string path = "Assets/Settings/Rendering/MapLitDetail.mat";
+        var m = AssetDatabase.LoadAssetAtPath<Material>(path);
+        if (m == null)
+        {
+            m = new Material(Shader.Find("Universal Render Pipeline/Lit"));
+            AssetDatabase.CreateAsset(m, path);
+        }
+        m.EnableKeyword("_DETAIL_MULX2");
+        m.SetFloat("_DetailAlbedoMapScale", 1f);
+        EditorUtility.SetDirty(m);
+        return m;
+    }
+
+    /// <summary>Adds the detail template to Resources/MapAssets (batch: -executeMethod MapSetup.AddDetailTemplate).</summary>
+    public static void AddDetailTemplate()
+    {
+        var assets = AssetDatabase.LoadAssetAtPath<MapAssets>("Assets/Resources/MapAssets.asset");
+        assets.DetailTemplate = DetailTemplate();
+        EditorUtility.SetDirty(assets);
+        AssetDatabase.SaveAssets();
+        Debug.Log("MapSetup: detail template " + AssetDatabase.GetAssetPath(assets.DetailTemplate));
     }
 
     static void CreateScene()

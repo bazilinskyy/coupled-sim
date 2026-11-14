@@ -381,6 +381,23 @@ public class OsmMapGenerator
         world.SetParent(root, false);
 
         var asphalt = Mat("Asphalt", Color.white, 0.2f, Tex("asphalt", 256, (x, y, r) => Noise(new Color(0.23f, 0.23f, 0.24f), r, 0.35f)));
+        // road surfaces from OpenStreetMap's surface tag: brick paving (Dutch "klinkers"), cobblestones, gravel
+        var bricks = Mat("Brick paving", Color.white, 0.12f, Tex("bricks", 256, (x, y, r) =>
+        {
+            int row = y / 16, off = row % 2 == 0 ? 0 : 16;
+            if (y % 16 < 1 || (x + off) % 32 < 1) return Noise(new Color(0.3f, 0.29f, 0.27f), r, 0.2f);
+            float tone = 0.85f + 0.3f * (((x + off) / 32 * 7 + row * 13) % 10) / 10f;
+            return Noise(new Color(0.42f, 0.22f, 0.17f) * tone, r, 0.18f);
+        }));
+        var cobbles = Mat("Cobblestones", Color.white, 0.18f, Tex("cobbles", 256, (x, y, r) =>
+        {
+            int cx = x / 21, cy = y / 18;
+            float u = (x % 21) / 21f - 0.5f, v = (y % 18) / 18f - 0.5f;
+            if (u * u + v * v > 0.2f) return Noise(new Color(0.2f, 0.19f, 0.18f), r, 0.3f);
+            float tone = 0.75f + 0.5f * ((cx * 31 + cy * 17) % 10) / 10f;
+            return Noise(new Color(0.45f, 0.44f, 0.42f) * tone * (1f - (u * u + v * v)), r, 0.15f);
+        }));
+        var gravel = Mat("Gravel", Color.white, 0.05f, Tex("gravel", 256, (x, y, r) => Noise(new Color(0.55f, 0.5f, 0.42f), r, 0.6f)));
         var red = Mat("Cycle path", Color.white, 0.2f, Tex("red_asphalt", 256, (x, y, r) => Noise(new Color(0.55f, 0.22f, 0.19f), r, 0.3f)));
         var pavingTex = Tex("paving", 256, (x, y, r) => (x % 64 < 2 || y % 64 < 2) ? new Color(0.45f, 0.44f, 0.42f) : Noise(new Color(0.68f, 0.66f, 0.62f), r, 0.12f));
         var paving = Mat("Pavement", Color.white, 0.15f, pavingTex);
@@ -432,7 +449,50 @@ public class OsmMapGenerator
                 ground.Quad(new Vector3(x0, 0, z0), new Vector3(x0, 0, z1), new Vector3(x1, 0, z1), new Vector3(x1, 0, z0),
                     Uv(x0, z0), Uv(x0, z1), Uv(x1, z1), Uv(x1, z0));
             }
-        Emit(world, "Ground", ground, Mat("Ground", Color.white, 0.12f, pavingTex), true);
+        // the real aerial photo where the map has one (Tools/aerial_photo.py): car parks, yards and
+        // squares as they are; else paving
+        Aerial = AerialPhoto.Load(_map.Name ?? "");
+        if (Aerial != null)
+        {
+            for (int i = 0; i < ground.V.Count; i++) ground.UV[i] = Aerial.Uv(ground.V[i]);
+            var groundMat = Mat("Ground aerial photo", Color.white, 0.08f, Aerial.Texture);
+            if (_assets != null && _assets.DetailTemplate != null)
+            {
+                // fine grain every 2 m over the photo (0.2-0.3 m per pixel), so it is not blurry up close
+                groundMat.shader = _assets.DetailTemplate.shader;
+                groundMat.CopyPropertiesFromMaterial(_assets.DetailTemplate);
+                groundMat.SetTexture("_BaseMap", Aerial.Texture);
+                groundMat.SetColor("_BaseColor", Color.white);
+                groundMat.SetFloat("_Smoothness", 0.08f);
+                groundMat.EnableKeyword("_DETAIL_MULX2");
+                groundMat.SetTexture("_DetailAlbedoMap", Tex("ground_detail", 256, (x, y, r) =>
+                {
+                    float v = 0.5f + ((float)r.NextDouble() - 0.5f) * 0.16f;
+                    if (r.NextDouble() < 0.004) v -= 0.12f;   // grit
+                    return new Color(v, v, v);
+                }));
+                groundMat.SetTextureScale("_DetailAlbedoMap", Vector2.one * (Aerial.HalfSize));
+                groundMat.SetFloat("_DetailAlbedoMapScale", 1f);
+            }
+            Emit(world, "Ground", ground, groundMat, true);
+            if (Aerial.FarTexture != null)
+            {
+                // the surroundings (6 km), just under the map's ground, for distant and high views
+                var far = new MeshBuilder();
+                float fh = Aerial.FarHalfSize; int n = 12; float fs = 2 * fh / n;
+                Vector2 FarUv(float x, float z) => new Vector2((x + fh) / (2 * fh), (z + fh) / (2 * fh));
+                for (int i = 0; i < n; i++)
+                    for (int j = 0; j < n; j++)
+                    {
+                        float x0 = -fh + i * fs, x1 = x0 + fs, z0 = -fh + j * fs, z1 = z0 + fs;
+                        far.Quad(new Vector3(x0, -0.1f, z0), new Vector3(x0, -0.1f, z1), new Vector3(x1, -0.1f, z1), new Vector3(x1, -0.1f, z0),
+                            FarUv(x0, z0), FarUv(x0, z1), FarUv(x1, z1), FarUv(x1, z0));
+                    }
+                var go = Emit(world, "Surroundings aerial photo", far, Mat("Surroundings aerial photo", Color.white, 0.05f, Aerial.FarTexture), false);
+                if (go != null) go.GetComponent<MeshRenderer>().shadowCastingMode = ShadowCastingMode.Off;
+            }
+        }
+        else Emit(world, "Ground", ground, Mat("Ground", Color.white, 0.12f, pavingTex), true);
 
         var green = new MeshBuilder();
         var waterMb = new MeshBuilder();
@@ -445,12 +505,15 @@ public class OsmMapGenerator
             var poly = Line(w);
             if (poly.Count < 4 || !poly.Any(Inside)) continue;
             poly.RemoveAt(poly.Count - 1);
-            if (isGreen) green.Polygon(poly, 0.03f, 4f); else waterMb.Polygon(poly, -0.4f, 10f);
+            if (isGreen) green.Polygon(poly, 0.03f, 4f); else waterMb.Polygon(poly, 0.025f, 10f);   // just above the ground (it has no holes for canals)
         }
         Emit(world, "Green areas", green, grass, true);
         Emit(world, "Water", waterMb, water, false);
 
         var roads = new MeshBuilder();
+        var brickRoads = new MeshBuilder();
+        var cobbleRoads = new MeshBuilder();
+        var gravelRoads = new MeshBuilder();
         var cycles = new MeshBuilder();
         var walks = new MeshBuilder();
         var kerbs = new MeshBuilder();
@@ -484,7 +547,10 @@ public class OsmMapGenerator
                 roadWays.Add((w, line, width));
                 Roads.Add(new Road { Line = line.Select(p => P(p, 0.02f + lift)).ToList(), Width = width, Type = hw, OneWay = IsOneWay(w) });
                 Geometry2D.Strip(line, width, 0, left, right);
-                roads.Strip(left, right, 0.02f + lift, 4f);
+                var surface = SurfaceOf(w);
+                (surface == RoadSurface.Bricks ? brickRoads : surface == RoadSurface.Cobblestones ? cobbleRoads : surface == RoadSurface.Gravel ? gravelRoads : roads)
+                    .Strip(left, right, 0.02f + lift, surface == RoadSurface.Asphalt ? 4f : 1.5f);
+                RoadDetails(line, width, 0.02f + lift, w.Id, surface);
                 // markings, pavements, kerbs and lamps stop short of junctions (otherwise a
                 // pavement would cross the other road)
                 var cuts = new List<(float, float)>();
@@ -548,6 +614,11 @@ public class OsmMapGenerator
             }
         }
         Emit(world, "Roads", roads, asphalt, true);
+        // the collider names tell the car physics the surface (RealisticVehicleDynamics.SurfaceOf)
+        Emit(world, "Roads bricks", brickRoads, bricks, true);
+        Emit(world, "Roads cobblestones", cobbleRoads, cobbles, true);
+        Emit(world, "Roads gravel", gravelRoads, gravel, true);
+        EmitRoadDetails(world);
         Emit(world, "Cycle paths", cycles, red, true);
         Emit(world, "Pavements", walks, paving, true);
         Emit(world, "Kerbs", kerbs, kerb, true);
@@ -649,6 +720,15 @@ public class OsmMapGenerator
         buildings.SetParent(world, false);
         for (int i = 0; i < facades.Length; i++)
             if (buildingMbs[i].V.Count > 0) { var m = _facadeMat(i); Emit(buildings, "Buildings " + m.name, buildingMbs[i], m, true); }
+        if (Aerial != null)
+        {
+            // roofs in the photo's colours (tiles, gravel, solar panels, dormers); roofs over 35 m keep
+            // their materials, as the photo shows tall buildings leaning away from the camera
+            var photoRoofs = new MeshBuilder();
+            roofs = AerialSplit(roofs, photoRoofs);
+            for (int i = 0; i < tileRoofs.Length; i++) tileRoofs[i] = AerialSplit(tileRoofs[i], photoRoofs);
+            Emit(buildings, "Roofs aerial photo", photoRoofs, Mat("Roof aerial photo", Color.white, 0.15f, Aerial.Texture), false);
+        }
         Emit(buildings, "Roofs", roofs, roof, false);
         for (int i = 0; i < tileRoofs.Length; i++) Emit(buildings, "Roofs " + tileMats[i].name, tileRoofs[i], tileMats[i], false);
 
@@ -1085,6 +1165,140 @@ public class OsmMapGenerator
             }
             mb.T.Add(k); mb.T.Add(k + 1); mb.T.Add(k + 2);
         }
+    }
+
+    /// <summary>The map's aerial photo (null when it has none).</summary>
+    public AerialPhoto Aerial { get; private set; }
+    const float AerialRoofMaxHeight = 35f;
+
+    // moves the triangles of src that lie below AerialRoofMaxHeight into photo (with photo UVs); returns the rest
+    MeshBuilder AerialSplit(MeshBuilder src, MeshBuilder photo)
+    {
+        var rest = new MeshBuilder();
+        for (int i = 0; i + 2 < src.T.Count; i += 3)
+        {
+            int a = src.T[i], b = src.T[i + 1], c = src.T[i + 2];
+            bool low = src.V[a].y < AerialRoofMaxHeight && src.V[b].y < AerialRoofMaxHeight && src.V[c].y < AerialRoofMaxHeight;
+            var dst = low ? photo : rest;
+            int k = dst.V.Count;
+            foreach (var j in new[] { a, b, c }) { dst.V.Add(src.V[j]); dst.UV.Add(low ? Aerial.Uv(src.V[j]) : src.UV[j]); }
+            dst.T.Add(k); dst.T.Add(k + 1); dst.T.Add(k + 2);
+        }
+        return rest;
+    }
+
+    public enum RoadSurface { Asphalt, Bricks, Cobblestones, Gravel }
+
+    static RoadSurface SurfaceOf(OsmWay w)
+    {
+        switch (w.Tag("surface") ?? "")
+        {
+            case "paving_stones": case "bricks": case "brick": case "paving_stones:30": return RoadSurface.Bricks;
+            case "sett": case "cobblestone": case "unhewn_cobblestone": case "cobblestone:flattened": return RoadSurface.Cobblestones;
+            case "gravel": case "fine_gravel": case "unpaved": case "compacted": case "dirt": case "ground": case "pebblestone": return RoadSurface.Gravel;
+            default: return RoadSurface.Asphalt;
+        }
+    }
+
+    // repair patches and manhole covers on asphalt roads, and puddles that show in the rain
+    readonly MeshBuilder _patches = new MeshBuilder(), _manholes = new MeshBuilder(), _puddles = new MeshBuilder();
+
+    void RoadDetails(List<V2> line, float width, float y, long seed, RoadSurface surface)
+    {
+        var rng = new System.Random((int)(seed * 2654435761L % int.MaxValue));
+        float len = Geometry2D.Length(line);
+        for (float d = 8f + (float)rng.NextDouble() * 20f; d < len - 4f; d += 18f + (float)rng.NextDouble() * 40f)
+        {
+            var (pt, dir) = Geometry2D.PointAt(line, d);
+            if (!Inside(pt)) continue;
+            var n = new V2(dir.Y, -dir.X);
+            float side = ((float)rng.NextDouble() - 0.5f) * (width - 2f);
+            var c = pt + n * side;
+            double kind = rng.NextDouble();
+            if (surface == RoadSurface.Gravel || surface == RoadSurface.Cobblestones) kind = 1.0;   // no patches or covers
+            else if (surface == RoadSurface.Bricks && kind < 0.35) kind = 0.5;                     // covers, no asphalt patches
+            if (kind < 0.35)
+            {
+                // a rectangular repair patch, along the road
+                float pl = 1.5f + (float)rng.NextDouble() * 4f, pw = 0.8f + (float)rng.NextDouble() * 1.6f;
+                Quad2(_patches, c, dir, n, pl, pw, y + 0.004f, 3f);
+            }
+            else if (kind < 0.6)
+            {
+                Disc(_manholes, c, 0.33f, y + 0.006f);
+            }
+            if (rng.NextDouble() < 0.45)
+            {
+                // puddles near the kerb, where water stays
+                var pc = pt + n * (width / 2 - 0.6f) * (rng.NextDouble() < 0.5 ? -1f : 1f) + dir * (float)rng.NextDouble() * 3f;
+                Blob(_puddles, pc, 0.6f + (float)rng.NextDouble() * 1.4f, y + 0.008f, rng);
+            }
+        }
+    }
+
+    void Quad2(MeshBuilder mb, V2 c, V2 dir, V2 n, float length, float width, float y, float uvScale)
+    {
+        var a = c - dir * (length / 2) - n * (width / 2); var b = c + dir * (length / 2) - n * (width / 2);
+        var e = c + dir * (length / 2) + n * (width / 2); var f = c - dir * (length / 2) + n * (width / 2);
+        mb.Quad(P(a, y), P(f, y), P(e, y), P(b, y), new Vector2(a.X, a.Y) / uvScale, new Vector2(f.X, f.Y) / uvScale, new Vector2(e.X, e.Y) / uvScale, new Vector2(b.X, b.Y) / uvScale);
+    }
+
+    static void Disc(MeshBuilder mb, V2 c, float radius, float y)
+    {
+        int i0 = mb.V.Count;
+        mb.V.Add(P(c, y)); mb.UV.Add(new Vector2(0.5f, 0.5f));
+        const int n = 16;
+        for (int k = 0; k <= n; k++)
+        {
+            float a = k * Mathf.PI * 2f / n;
+            mb.V.Add(P(c + new V2(Mathf.Cos(a), Mathf.Sin(a)) * radius, y));
+            mb.UV.Add(new Vector2(0.5f + 0.5f * Mathf.Cos(a), 0.5f + 0.5f * Mathf.Sin(a)));
+        }
+        for (int k = 1; k <= n; k++) { mb.T.Add(i0); mb.T.Add(i0 + k + 1); mb.T.Add(i0 + k); }
+    }
+
+    static void Blob(MeshBuilder mb, V2 c, float size, float y, System.Random rng)
+    {
+        int i0 = mb.V.Count;
+        mb.V.Add(P(c, y)); mb.UV.Add(Vector2.zero);
+        const int n = 14;
+        var radii = new float[n];
+        for (int k = 0; k < n; k++) radii[k] = size * (0.55f + 0.45f * (float)rng.NextDouble());
+        float stretch = 1.2f + (float)rng.NextDouble();
+        for (int k = 0; k <= n; k++)
+        {
+            float a = k * Mathf.PI * 2f / n, r = radii[k % n];
+            mb.V.Add(P(c + new V2(Mathf.Cos(a) * r * stretch, Mathf.Sin(a) * r), y));
+            mb.UV.Add(Vector2.zero);
+        }
+        for (int k = 1; k <= n; k++) { mb.T.Add(i0); mb.T.Add(i0 + k + 1); mb.T.Add(i0 + k); }
+    }
+
+    public int PatchCount => _patches.T.Count / 6;
+    public int ManholeCount => _manholes.T.Count / 48;
+    public int PuddleCount => _puddles.T.Count / 42;
+
+    /// <summary>The puddles of the map (shown only while it rains: OsmMap).</summary>
+    public GameObject Puddles { get; private set; }
+
+    void EmitRoadDetails(Transform world)
+    {
+        var patch = Mat("Asphalt patch", Color.white, 0.25f, Tex("asphalt_patch", 128, (x, y, r) => Noise(new Color(0.16f, 0.16f, 0.17f), r, 0.3f)));
+        var manhole = Mat("Manhole cover", Color.white, 0.45f, Tex("manhole", 128, (x, y, r) =>
+        {
+            float u = x / 128f - 0.5f, v = y / 128f - 0.5f, d = Mathf.Sqrt(u * u + v * v);
+            if (d > 0.46f) return new Color(0.18f, 0.18f, 0.18f);
+            bool rib = (x / 10 + y / 10) % 2 == 0;
+            return Noise(rib ? new Color(0.3f, 0.29f, 0.28f) : new Color(0.22f, 0.21f, 0.2f), r, 0.15f);
+        }));
+        var puddle = Mat("Puddle", new Color(0.08f, 0.09f, 0.1f), 1f);
+        puddle.SetFloat("_Metallic", 0.3f);
+        // flat shapes on the road: drawn from both sides (their winding differs with the road's direction)
+        foreach (var m in new[] { patch, manhole, puddle }) m.SetFloat("_Cull", 0f);
+        Emit(world, "Road patches", _patches, patch, false);
+        Emit(world, "Manhole covers", _manholes, manhole, false);
+        Puddles = Emit(world, "Puddles", _puddles, puddle, false);
+        if (Puddles != null) Puddles.SetActive(false);
     }
 
     static void Dashes(List<V2> line, MeshBuilder mb, float width, float dash, float gap, float y)
