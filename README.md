@@ -38,7 +38,7 @@ If you use the coupled simulator for academic work, please cite:
 1. Stopping by looking: A driver-pedestrian interaction study in a coupled simulator using head-mounted displays with eye-tracking - [paper](http://doi.org/10.1016/j.apergo.2022.103825).
 
 ## License
-The source code of the coupled simulator is released under the [MIT License](LICENSE). Third-party assets included in this repository (see [Used assets](#used-assets)) are not covered by this license. They remain under the license of their developers, such as the Unity Asset Store EULA, MIT or CC0.
+The source code of the coupled simulator is released under the [MIT License](LICENSE). Third-party assets included in this repository (see [Used assets](#used-assets)) are not covered by this license. They remain under the license of their developers, such as the Unity Asset Store EULA, MIT, CC0 or CC BY 4.0 (with the credits in [Used assets](#used-assets)).
 
 ## Features
 - Up to **8 human participants** in one scene (a host and seven clients) over a local network; several of them can sit in one car and talk to each other (voice is recorded).
@@ -304,6 +304,7 @@ Only the window that has focus receives keyboard input.
 | `-hud <name>`, `-centreScreen <name>` | [in-car displays](#in-car-displays-head-up-display-centre-screen-instrument-cluster-and-timed-messages) |
 | `-cluster <name>\|none`, `-inCarMessages <name>` | [instrument cluster and timed messages](#in-car-displays-head-up-display-centre-screen-instrument-cluster-and-timed-messages) |
 | `-carSpec smart\|hatchback\|suv\|estate\|van\|bus\|truck` | [vehicle physics of another vehicle type](#vehicles) |
+| `-driverCar <name>`, `-passengerCar <name>` | [the vehicle of the drivers or passengers](#vehicles), e.g. `ToyotaCorolla`, `LandRoverDefender`, `DafXF95`, `ArticulatedBus` |
 | `-blinker left\|right` | start with a turn signal on (previews) |
 | `-hapticsUdp <host:port>[,...]` | [haptic cues](#haptic-cues) to external devices |
 | `-vehicleSounds 1`, `-electricCars 0`, `-ambienceDb <dB>`, `-cabinMusic <file>`, `-cabinMusicDb <dB>`, `-audioReferenceDb <dB>`, `-audioCalibration` | [sound](#sound) |
@@ -527,7 +528,7 @@ The repository contains these drivable car prefabs in `Assets/Prefabs/Cars`:
 3. medium (similar to a Pontiac GTO): `DrivableFireGTOCommon`;
 4. large (similar to a Nissan Datsun): `DrivableNissanCommon`.
 
-Only the Smart prefabs are in the `Avatar Prefab Driver` list of `Managers` ➡️ `PlayerSystem` by default. To use another car for a role, add its prefab to that list and point the role's `carIdx` to it. AI cars spawned by car spawners must also be in the `Prefabs` list of `NetworkingManager` ➡️ `AI Car System`.
+The `Avatar Prefab Driver` list of `Managers` ➡️ `PlayerSystem` holds the Smart prefabs and the [detailed vehicles](#detailed-vehicles-with-interiors). A role drives the car its `carIdx` points to; `-driverCar ToyotaCorolla` (or another name from the list: `LandRoverDefender`, `DafXF95`, `ArticulatedBus`) puts the drivers in another vehicle without changing the experiment, and `-passengerCar name` does the same for passengers of automated cars. Give the same option on every PC. To use another car, add its prefab to that list. AI cars spawned by car spawners must also be in the `Prefabs` list of `NetworkingManager` ➡️ `AI Car System`.
 
 AI cars follow a defined path (see [waypoints](#configuration-of-waypoints)) or can be programmed to react at runtime to other road users.
 
@@ -554,6 +555,21 @@ Each type also sets the wheelbase, track, centre-of-mass height, tyre size and w
 
 They are scaled to the real sizes of their types (e.g. a sedan 4.7 × 1.83 × 1.47 m, a delivery van 6 × 2.1 × 2.9 m, a fire truck 9 × 2.55 × 3.3 m), and each drives with the physics of its type (`Estate`, `Hatchback`, `Suv`, `Van` or `Truck`). They take part in background traffic (the traffic model and SUMO) and AI cars, and they park on the city maps. They are simple, stylised models without interiors, so they are meant for traffic; participants drive the Smart, the hatchback or the detailed models below.
 
+#### Detailed vehicles with interiors
+Five detailed models from Sketchfab (CC BY 4.0, [credits](Assets/ThirdParty/Vehicles/CREDITS.md)) are scaled to the real vehicles, drive with the physics of their type and take part in traffic:
+
+| Prefab | Vehicle | Size (length × width with mirrors × height; wheelbase) | Type | Driven by participants |
+|---|---|---|---|---|
+| `DrivableToyotaCorolla` | 2014 Toyota Corolla (E180), 84k triangles | 4.62 × 2.17 × 1.47 m; 2.71 m | `Hatchback` | yes: full interior, turning steering wheel, live instrument cluster in the car's own gauges |
+| `DrivableLandRoverDefender` | Land Rover Defender 110, right-hand drive | 4.64 × 2.31 × 2.35 m (roof rack); 2.85 m | `Suv` | yes |
+| `DrivableDafXF95` | DAF XF 95 tractor unit, 6×2 with a tandem rear axle | 7.45 × 3.07 × 3.53 m; 4.47 m | `Truck` | yes |
+| `DrivableArticulatedBus` | 18 m articulated city bus with full interior | 18.0 × 2.99 × 3.39 m; 5.13 m (front section) | `CityBus` | yes (no passenger figure) |
+| `DrivableBoxTruck` | box truck | 7.4 × 3.0 × 3.33 m; 4.11 m | `Truck` | traffic only |
+
+The articulated bus's rear section is a trailer (`ArticulatedTrailer`): its axle follows the joint, so it cuts corners like a real articulated bus (`DetailedVehicleTests` checks the angle between the sections on a steady circle against the geometry of a trailer). It is moved from the front section's motion on every PC, so it needs no network data. The extra axles of the truck's tandem and the bus's rear section turn with the driven wheels.
+
+![The detailed vehicles (top), the Corolla's and the DAF's driver views with the live instrument cluster (bottom left, middle) and the articulated bus turning (bottom right)](ReadmeFiles/detailed_vehicles.jpg)
+
 `Coupled Sim` ➡️ `Vehicles` ➡️ `Build vehicle prefabs` (`VehicleBuilder`) makes these prefabs from 3D models. It copies the hatchback's prefab with all its parts:
 - physics and AI driving;
 - turn signals and lights;
@@ -562,7 +578,15 @@ They are scaled to the real sizes of their types (e.g. a sedan 4.7 × 1.83 × 1.
 - dashboard and instrument cluster;
 - eHMI slots.
 
-It then puts the model in place of the body and fits the wheel colliders, the seats, the dashboard, the lamps and the eHMI slots to it. A new model needs one line in `VehicleBuilder.Defs`: the model file, the vehicle type, its real size, the driver's eye position and the names of its wheels (and of its steering wheel, if it has an interior). The prefabs are added to the AI car list, background traffic, SUMO and the parked cars automatically. `Coupled Sim` ➡️ `Vehicles` ➡️ `Render line-up` renders all vehicles side by side for a check.
+It then puts the model in place of the body and fits the wheel colliders, the seats, the dashboard, the lamps and the eHMI slots to it. A new model needs one line in `VehicleBuilder.Defs`: the model file (FBX, or glTF/GLB through glTFast), the vehicle type, its real size and the driver's eye position. For a detailed model (`Wheels = null`, `VehicleModelRig`) the builder finds everything else itself:
+- the axles, from where the tyres touch the ground (any number; a tandem drives as one axle in its middle);
+- the wheels, cut out of the meshes by their real tyre radius, even when a model has all four wheels in one mesh;
+- the body, merged into one mesh per material (the DAF had 1,329 parts), saved in compact binary meshes;
+- the lamps, put on the body's own surface at its corners and on the door mirrors;
+- the instrument cluster, on the model's own gauges (`ClusterNode`) or on the dashboard behind the steering wheel;
+- the steering wheel (`SteeringWheel`), turned about its own column, with the driver's hands on it.
+
+Optionally, `ArticulationFromFront` makes an articulated vehicle and `Remove` leaves out parts of the model (helper objects, a seated driver). `Coupled Sim` ➡️ `Vehicles` ➡️ `Build vehicle prefabs` builds all of them (`-vehicleFilter Name` builds some). The prefabs are added to the AI car list, background traffic, SUMO and the parked cars automatically. `Coupled Sim` ➡️ `Vehicles` ➡️ `Render line-up` renders all vehicles side by side for a check, and `VehicleShowcase.RenderDriverViews` renders each driver's view.
 
 ![The vehicles side by side (top), parked in Eindhoven (bottom left) and in traffic in the town (bottom right)](ReadmeFiles/vehicle_range.jpg)
 
@@ -1210,3 +1234,10 @@ All agents must be in the same local network; the host's IP address is in its co
 | [Microsoft Rocketbox avatars](https://github.com/microsoft/Microsoft-Rocketbox) (12 avatars, textures reduced to 1024 px) | Microsoft | MIT |
 | [HD Low Poly Racing Car No.1201](https://assetstore.unity.com/packages/3d/vehicles/land/hd-low-poly-racing-car-no-1201-118603) | Azerilo | Unity Asset Store EULA (free at time of download) |
 | [Car Kit](https://kenney.nl/assets/car-kit) (15 road vehicles: sedans, SUVs, taxi, police car, ambulance, vans, delivery vans, trucks, garbage truck, fire truck; `Assets/ThirdParty/Kenney/CarKit`) | Kenney (www.kenney.nl) | [CC0](https://creativecommons.org/publicdomain/zero/1.0/) |
+| ["2014 Toyota Corolla E180 EU (with interior)"](https://sketchfab.com/3d-models/2014-toyota-corolla-e180-eu-with-interior-36f95efb0585464cae43a25a3b3392e8) (`Assets/ThirdParty/Vehicles/ToyotaCorolla`) | [Armored Wave](https://sketchfab.com/armoredwave) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
+| ["Land Rover Defender 110"](https://sketchfab.com/3d-models/land-rover-defender-110-5773ec04488b46148816b5f7a9f3f44f) (`Assets/ThirdParty/Vehicles/LandRoverDefender`) | [meeww](https://sketchfab.com/meeww) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
+| ["A long City Bus (FULL INTERIOR)"](https://sketchfab.com/3d-models/a-long-city-bus-full-interior-43d21ebcf51f45da9da0ccb0e6aad19a) (`Assets/ThirdParty/Vehicles/CityBus`) | [Mixmamo.studio](https://sketchfab.com/mixmamo.studio) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
+| ["DAF XF 95"](https://sketchfab.com/3d-models/daf-xf-95-1e61dfadf7114ad38076f1a6a871ccf1) (`Assets/ThirdParty/Vehicles/DafXF95`) | [Kabourek Roman](https://sketchfab.com/Krakatit) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
+| ["Box-truck"](https://sketchfab.com/3d-models/box-truck-b0e8788b6b774fe3a18eda1895a2b8fe) (`Assets/ThirdParty/Vehicles/BoxTruck`) | [Cristian Rus](https://sketchfab.com/CristianRus) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
+
+The CC BY 4.0 models are scaled, cut into body and wheels and merged per material for the simulator; the changes are listed in [`Assets/ThirdParty/Vehicles/CREDITS.md`](Assets/ThirdParty/Vehicles/CREDITS.md). Toyota, Corolla, Land Rover, Defender, DAF and Volvo are trademarks of their owners, who do not endorse Coupled Sim.
