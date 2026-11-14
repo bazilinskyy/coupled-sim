@@ -393,7 +393,7 @@ It needs no internet and no installation (a plain web page from the simulator). 
 | Driver | Steer | `A`/`D` or `←`/`→` | wheel |
 | Driver | Brake (axis `Break`) | `Space` | pedal |
 | Driver | Forward / reverse gear (reverse engages at standstill; then the throttle drives backwards, up to 25 km/h) | `F` / `R` | buttons of the wheel profile (G27: 6 / 7) |
-| Driver | Turn signal left / right (the same key again: off; cancels itself when the wheel returns after a turn) | `Q` / `E` | buttons of the wheel profile (G27: 5 / 4; 16: off) |
+| Driver | Turn signal left / right / off (the same key again also switches it off; it cancels itself when the wheel returns after a turn) | `Q` / `E` / `2` | buttons of the wheel profile (G27: 5 / 4 / 16) |
 | AV passenger | eHMI disabled / stop / walk | `1` / `2` / `3` | |
 | AV passenger | Resume driving where the AV waits for input (`WaitInputX`) | `Space` | |
 | AV driver | Take over after a take-over request / hand back to the automation | `Enter` (or steer, brake, accelerate) | profile button (G27: 3), wheel, pedals |
