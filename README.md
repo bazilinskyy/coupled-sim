@@ -71,6 +71,8 @@ The source code of the coupled simulator is released under the [MIT License](LIC
 ## Graphics
 The simulator uses the **Universal Render Pipeline** (URP 17.6): the pipeline asset is `Assets/URPDefaultResources/Fantastic.asset` (HDR, 4× MSAA, soft shadows up to 150 m, forward rendering; the 24 street lamps nearest to the viewer are lit) with its renderer `Default_Forward_Renderer` (screen-space ambient occlusion). Post-processing (ACES tonemapping, bloom, colour grading, vignette) comes from the global volume `Post-processing (URP)` in the environment scenes with `Assets/Settings/Rendering/SimulatorVolumeProfile.asset`; every participant camera gets post-processing and SMAA anti-aliasing when it starts rendering (`UrpCameraSetup`). Materials were converted with the Render Pipeline Converter; `Assets/Editor/Graphics/GraphicsSetup.cs` holds the conversion steps (including baking the Tree Creator trees to normal meshes).
 
+![Barcelona from 120 m with its aerial photo, Delft from above, cobblestones in Ghent, headlights at night in Eindhoven](ReadmeFiles/graphics_overview.jpg)
+
 **Quality levels** for slower PCs and VR (`-quality <name>` on the command line, or `Edit` ➡️ `Project Settings` ➡️ `Quality`):
 
 | Level | Shadows | Anti-aliasing | Ambient occlusion | Render scale | 1080p view on an Intel UHD 630 |
@@ -539,7 +541,11 @@ AI cars follow a defined path (see [waypoints](#configuration-of-waypoints)) or 
 | grass | 0.45 | ×0.7 | 1 m/s² | −4 dB |
 | pavements, kerbs | 0.9 | ×0.9 | light | +2 dB |
 
-Wet grip is the car's `WetGrip` times the extra loss, so wet cobblestones drop to 0.45. The car then takes longer to stop and spins its wheels when pulling away: from 60 km/h it stops in about 1.7 s on asphalt and about 2.7 s on gravel or grass. On a rough surface each wheel gets a smooth random vertical force, which grows with speed and comes faster the smaller the stones (at most 15 Hz). The car shakes, rolls and pitches a little, and [motion platforms](#motion-platforms) get it through the heave signal. The tyre noise of every car follows the surface under it (see [Sound](#sound)). The values are in `Assets/Scripts/Vehicles/RoadSurfaces.cs`. `SurfaceEffects` on `RealisticVehicleDynamics` turns this off, and its `Surface` and `RoughnessRms` fields show the current surface and shaking.
+Wet grip is the car's `WetGrip` times the extra loss, so wet cobblestones drop to 0.45. The car then takes longer to stop and spins its wheels when pulling away: from about 54 km/h it stops in 1.4 s on asphalt, 1.5 s on bricks, 1.6 s on cobblestones and 2.7 s on gravel or grass (chart below). On a rough surface each wheel gets a smooth random vertical force, which grows with speed and comes faster the smaller the stones (at most 15 Hz). The car shakes, rolls and pitches a little, and [motion platforms](#motion-platforms) get it through the heave signal. The tyre noise of every car follows the surface under it (see [Sound](#sound)). The values are in `Assets/Scripts/Vehicles/RoadSurfaces.cs`. `SurfaceEffects` on `RealisticVehicleDynamics` turns this off, and its `Surface` and `RoughnessRms` fields show the current surface and shaking.
+
+![Brick street in Delft (left) and cobblestones in Ghent (middle, right) from OpenStreetMap's surface tags](ReadmeFiles/road_surfaces.jpg)
+
+![Full braking from about 54 km/h on asphalt, bricks, cobblestones, gravel and grass](ReadmeFiles/road_surface_braking.png)
 
 **Tyres from Magic Formula coefficients.** `RealisticVehicleDynamics` ➡️ `Use Magic Formula` (or `-magicFormulaTyres`) sets the tyres from Pacejka Magic Formula coefficients (B, C, D, E for the longitudinal and lateral force, e.g. from tyre data) instead of the built-in asphalt curves; the formula is fitted to Unity's wheel friction curve (the same peak slip and peak, the sliding value at four times the peak slip). The defaults are typical dry asphalt (longitudinal B 10, C 1.9, D 1, E 0.97: peak at 18% slip; lateral B 8, C 1.3, D 1, E -1.6); wet roads still lower the grip.
 
@@ -770,6 +776,8 @@ Requests come from:
 
 `ExperimentLogs/TakeOver-{date}.csv` lists the events (automation mode, request with its source, take-over with the input used and the reaction time, no reaction, engaged) with the time, speed and position.
 
+![A take-over request in the driver's view](ReadmeFiles/take_over_request.jpg)
+
 ### Scripted paths
 A car can follow a path from a file instead of waypoints in the scene: a CSV with the columns `x` and `z` (scene coordinates in metres, as in the logs; `y` optional) and optionally `speed` (km/h) and `t` (seconds):
 - with `t`, the car is where the file says at each moment (for example a trajectory recorded in an earlier trial or in naturalistic data);
@@ -884,6 +892,8 @@ Other components on car prefabs: `CarConfigurator` (colour, driver and passenger
 ### Participant responses
 A role can give its participant a **hold-to-respond button** (e.g. "hold while you feel safe to cross") and/or a **slider from 0 to 100** (e.g. trust in the AV, perceived risk): tick `Button` and/or `Slider` in the role's `Response` (`ExperimentDefinitions` ➡️ `Roles`), with the texts shown, the slider's start value, and `Hidden` to log without showing anything (or `-response button,slider` on the agent's command line). A small panel in front of the participant's eyes (on screens and in headsets) shows the text, a light while the button is held and the slider. Keys: `B` for the button, `Z` / `X` for the slider; on a gamepad the right shoulder or right trigger (its analog value is logged too) and the d-pad; in a headset the right controller's trigger and thumbstick. Every frame goes to `ExperimentLogs/Responses-{role}-{date}.csv` (UTC time, game time, frame, button 0/1, analog value, number of presses, slider), on every agent.
 
+![The response panel (here a slider) in front of the driver; it is drawn over the car's interior](ReadmeFiles/response_panel.jpg)
+
 ### Designed eHMIs
 An eHMI can be described in a file instead of a prefab: `Assets/StreamingAssets/eHMI/<name>.json` gives the panel's size (m), its background and, for each eHMI state (`DISABLED`, `STOP`, `WALK`), the elements shown:
 
@@ -945,6 +955,8 @@ With `-gaze` every agent sends its participant's gaze to the host 20 times a sec
 
 ### OpenSCENARIO
 `-openscenario <file.xosc>` (in `Assets/StreamingAssets/Scenarios`, or a full path; on every agent) plays the vehicles and pedestrians of an [ASAM OpenSCENARIO](https://www.asam.net/standards/detail/openscenario/) 1.x file in the scene, e.g. scenarios made for esmini or CARLA. Supported: parameter declarations; entities (Vehicle, Pedestrian, catalogue references); `TeleportAction` to a `WorldPosition` and `SpeedAction` to an absolute speed (step, linear or cubic, over a time, a rate or a distance), at the start or at a `SimulationTimeCondition`. Actors move straight along their heading (no lane following); other actions and conditions are logged as unsupported. Positions are the scene's world coordinates (x east, y north; on [OpenDRIVE maps](#city-maps-openstreetmap) those of the .xodr file). Events are logged to `ExperimentLogs/OpenScenario-*.csv`. Example: `CrossingPedestrian.xosc` (a car brakes to a stop, a pedestrian crosses).
+
+![CrossingPedestrian.xosc rendered as a video from a fixed street camera (-videoCams): the car brakes to a stop and the pedestrian crosses](ReadmeFiles/openscenario_video.jpg)
 
 ### Videos from fixed cameras
 For online (crowdsourced) versions of a study, the same trial can be rendered as videos from fixed cameras, in the editor, in builds and in batch mode: `-videoCams "street=-30,6,-25,60,12;chase;front;driver"` (a camera at x, y, z with yaw and pitch (and field of view), or behind the participant, ahead of it looking back, or the participant's own view), `-videoStart 2 -videoSeconds 10 -videoFps 30 -videoSize 1920x1080`. The simulation runs in step with the frames, so the videos are smooth even on a slow PC. [ffmpeg](https://ffmpeg.org) (on the PATH, or `-ffmpeg path`) joins the frames into `ExperimentLogs/Videos/{camera}.mp4`; without it the JPEG frames stay and the log shows the command to join them. `-videoQuit` quits when done. (The [Unity Recorder set-up](#recording-trial-videos) records the game view in the editor.)
