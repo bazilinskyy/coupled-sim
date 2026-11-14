@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using CoupledSim.TraCI;
 using UnityEngine;
@@ -51,6 +52,8 @@ public class SumoBridge : CarSpawnerBase
     [Tooltip("Stop SUMO cars for pedestrians (AI and players) on the road in front of them.")]
     public bool StopForPedestrians = true;
     public float PedestrianLookAhead = 15f;
+    [Tooltip("SUMO's traffic lights show what the simulator's lights show (CarTrafficLight heads near SUMO's stop lines), so SUMO cars stop where participants see red. Lights without a head nearby keep SUMO's own programme.")]
+    public bool FollowSimulatorLights = true;
 
     [Header("State (read only)")]
     public string Status = "not started";
@@ -99,6 +102,22 @@ public class SumoBridge : CarSpawnerBase
     readonly Dictionary<PlayerAvatar, string> _egoIds = new Dictionary<PlayerAvatar, string>();
     float _startTime;
     string _error;
+
+    // ---- traffic lights: SUMO's signals follow the simulator's (CarTrafficLight) heads
+    sealed class TlsLink { public Vector2 End, In, Out; }
+    sealed class Tls
+    {
+        public string Id;
+        public TlsLink[] Links;              // per signal index (null: no link)
+        public CarTrafficLight[] Heads;      // matched head per signal index
+        public int[] Borrow;                 // unmatched: the signal index whose state it copies (-1: the opposite of the others)
+        public bool[] Yields;                // turns across oncoming traffic: green without priority ('g')
+        public string Sent;
+    }
+    List<Tls> _tls;                          // from the worker, once
+    bool _tlsMatched;
+    readonly Dictionary<string, string> _tlsCommands = new Dictionary<string, string>();
+    public int SyncedTrafficLights;
 
     protected override bool HasValidSpawnParams => !string.IsNullOrEmpty(SumoConfig) || !LaunchSumo;
 
@@ -267,6 +286,7 @@ public class SumoBridge : CarSpawnerBase
             _deltaT = client.GetDeltaT();
             client.SubscribeSimulation();
             Status = $"connected to {client.SumoVersion}";
+            if (FollowSimulatorLights) ReadTrafficLights(client);
             var addedEgos = new HashSet<string>();
             var egos = new List<EgoPose>();
             var stop = new List<string>();
@@ -312,6 +332,15 @@ public class SumoBridge : CarSpawnerBase
                         _stoppedInSumo.Remove(id);
                     }
                 }
+                lock (_lock)
+                {
+                    foreach (var kv in _tlsCommands)
+                    {
+                        try { client.SetRedYellowGreenState(kv.Key, kv.Value); }
+                        catch (TraCIException ex) { if (_warned.Add("tls " + kv.Key)) Debug.LogWarning($"SumoBridge: traffic light {kv.Key}: {ex.Message}"); }
+                    }
+                    _tlsCommands.Clear();
+                }
                 client.SimulationStep();
                 var snap = new Snapshot { Time = client.SimTime };
                 foreach (var kv in client.Vehicles) snap.Vehicles[kv.Key] = Copy(kv.Value);
@@ -328,6 +357,119 @@ public class SumoBridge : CarSpawnerBase
             _error = e.Message;
             Status = "error: " + e.Message;
             client.Dispose();
+        }
+    }
+
+    // the geometry of SUMO's traffic lights: where each controlled link's incoming lane ends, its direction in and out
+    void ReadTrafficLights(TraCIClient client)
+    {
+        var list = new List<Tls>();
+        try
+        {
+            var shapes = new Dictionary<string, TraCIPosition[]>();
+            TraCIPosition[] Shape(string lane) => shapes.TryGetValue(lane, out var sh) ? sh : shapes[lane] = client.GetLaneShape(lane);
+            foreach (var id in client.GetTrafficLightIds())
+            {
+                var links = client.GetControlledLinks(id);
+                var tls = new Tls { Id = id, Links = new TlsLink[links.Count] };
+                for (int i = 0; i < links.Count; i++)
+                {
+                    if (links[i] == null) continue;
+                    var a = Shape(links[i][0]); var b = Shape(links[i][1]);
+                    if (a.Length < 2 || b.Length < 2) continue;
+                    var end = new Vector2((float)a[a.Length - 1].X, (float)a[a.Length - 1].Y);
+                    var prev = new Vector2((float)a[a.Length - 2].X, (float)a[a.Length - 2].Y);
+                    var o0 = new Vector2((float)b[0].X, (float)b[0].Y); var o1 = new Vector2((float)b[1].X, (float)b[1].Y);
+                    tls.Links[i] = new TlsLink { End = end, In = (end - prev).normalized, Out = (o1 - o0).normalized };
+                }
+                list.Add(tls);
+            }
+        }
+        catch (Exception e) { Debug.LogWarning("SumoBridge: could not read SUMO's traffic lights: " + e.Message); }
+        lock (_lock) _tls = list;
+    }
+
+    // SUMO direction (x, y) -> Unity (x, z), through the network origin
+    Vector3 SumoDir(Vector2 d)
+    {
+        var v = new Vector3(d.x, 0f, d.y);
+        return NetworkOrigin != null ? NetworkOrigin.TransformDirection(v) : v;
+    }
+
+    void MatchTrafficLights()
+    {
+        List<Tls> list;
+        lock (_lock) list = _tls;
+        if (list == null) return;
+        _tlsMatched = true;
+        var heads = FindObjectsByType<CarTrafficLight>(FindObjectsSortMode.InstanceID);
+        bool lht = OsmMap.Current != null && OsmMap.Current.Info.LeftHandTraffic;
+        foreach (var t in list)
+        {
+            int n = t.Links.Length;
+            t.Heads = new CarTrafficLight[n]; t.Borrow = new int[n]; t.Yields = new bool[n];
+            var dirs = new Vector3[n];
+            for (int i = 0; i < n; i++)
+            {
+                var l = t.Links[i];
+                if (l == null) continue;
+                var end = SumoToUnity(l.End.x, l.End.y); end.y = 0f;
+                var d = SumoDir(l.In); dirs[i] = d;
+                var o = SumoDir(l.Out);
+                float turn = d.x * o.z - d.z * o.x;           // > 0: to the left
+                t.Yields[i] = lht ? turn < -0.3f : turn > 0.3f;
+                // the head over this approach: facing the traffic, near the end of the lane (its stop line)
+                float best = float.MaxValue;
+                foreach (var h in heads)
+                {
+                    var f = Vector3.ProjectOnPlane(TrafficCar.LightFacing(h.transform), Vector3.up).normalized;
+                    if (Vector3.Dot(f, d) > -0.7f) continue;
+                    var r = h.transform.position - end; r.y = 0f;
+                    float along = Vector3.Dot(r, d), side = Mathf.Abs(d.x * r.z - d.z * r.x);
+                    if (along < -18f || along > 12f || side > 9f) continue;
+                    float score = Mathf.Abs(along) + side;
+                    if (score < best) { best = score; t.Heads[i] = h; }
+                }
+            }
+            if (!t.Heads.Any(h => h != null)) { t.Heads = null; continue; }
+            // links without a head: as the matched link most along the same axis, else the opposite of the others
+            for (int i = 0; i < n; i++)
+            {
+                t.Borrow[i] = -1;
+                if (t.Heads[i] != null || t.Links[i] == null) continue;
+                float best = 0.7f;
+                for (int j = 0; j < n; j++)
+                    if (t.Heads[j] != null && Mathf.Abs(Vector3.Dot(dirs[i], dirs[j])) > best) { best = Mathf.Abs(Vector3.Dot(dirs[i], dirs[j])); t.Borrow[i] = j; }
+            }
+            SyncedTrafficLights++;
+        }
+        Debug.Log($"SumoBridge: {SyncedTrafficLights} of {list.Count} SUMO traffic lights follow the simulator's lights");
+    }
+
+    static char SignalChar(LightState s, bool yields) => s == LightState.GREEN ? (yields ? 'g' : 'G') : s == LightState.YELLOW ? 'y' : s == LightState.RED_AND_YELLOW ? 'u' : 'r';
+
+    void UpdateTrafficLights()
+    {
+        if (!_tlsMatched) MatchTrafficLights();
+        if (_tls == null) return;
+        foreach (var t in _tls)
+        {
+            if (t.Heads == null) continue;
+            int n = t.Links.Length;
+            var c = new char[n];
+            bool othersMoving = false;   // a matched head not red: the crossing direction stays red
+            for (int i = 0; i < n; i++) if (t.Heads[i] != null && t.Heads[i].State != LightState.RED) othersMoving = true;
+            for (int i = 0; i < n; i++)
+            {
+                if (t.Heads[i] != null) c[i] = SignalChar(t.Heads[i].State, t.Yields[i]);
+                else if (t.Borrow[i] >= 0) c[i] = SignalChar(t.Heads[t.Borrow[i]].State, t.Yields[i]);
+                else if (t.Links[i] == null) c[i] = 'O';                           // nothing to control
+                else c[i] = othersMoving ? 'r' : (t.Yields[i] ? 'g' : 'G');        // the crossing direction: green while the others are red
+            }
+            var state = new string(c);
+            if (state == t.Sent) continue;
+            t.Sent = state;
+            lock (_lock) _tlsCommands[t.Id] = state;
         }
     }
 
@@ -349,6 +491,7 @@ public class SumoBridge : CarSpawnerBase
             _running = false;
             return;
         }
+        if (FollowSimulatorLights) UpdateTrafficLights();
         var egos = SendUnityCars ? CollectEgoPoses() : null;
         lock (_lock)
         {

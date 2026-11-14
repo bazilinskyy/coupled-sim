@@ -14,7 +14,7 @@ using V2 = System.Numerics.Vector2;
 /// green areas, water, mapped trees and street lamps; with colliders. Deterministic: every agent
 /// builds the same map from the same data.
 /// </summary>
-public class OsmMapGenerator
+public partial class OsmMapGenerator
 {
     public sealed class Road
     {
@@ -949,7 +949,19 @@ public class OsmMapGenerator
                 if (V2.DistanceSquared(a, b) < 1e-4f) continue;
                 var dir = V2.Normalize(b - a);
                 var nrm = new V2(dir.Y, -dir.X);
-                if (marked)
+                // signalised crossings without zebra stripes (as in the Netherlands): two dashed lines
+                bool signalDashes = (c == "traffic_signals" || node.Tag("crossing:signals") == "yes") && cr != "zebra" && c != "zebra";
+                if (signalDashes)
+                {
+                    foreach (var along in new[] { -2f, 2f })
+                        for (float o = -width / 2 + 0.25f; o < width / 2 - 0.3f; o += 1.0f)
+                        {
+                            var c0 = p + nrm * o + dir * (along - 0.15f); var c1 = p + nrm * o + dir * (along + 0.15f);
+                            var c2 = p + nrm * (o + 0.5f) + dir * (along + 0.15f); var c3 = p + nrm * (o + 0.5f) + dir * (along - 0.15f);
+                            zebras.Quad(P(c0, 0.04f), P(c1, 0.04f), P(c2, 0.04f), P(c3, 0.04f), Vector2.zero, Vector2.up, Vector2.one, Vector2.right);
+                        }
+                }
+                else if (marked)
                 {
                     for (float o = -width / 2 + 0.5f; o < width / 2 - 0.3f; o += 1.0f)
                     {
@@ -983,6 +995,7 @@ public class OsmMapGenerator
         Emit(world, "Zebra crossings", zebras, marking, false);
 
         PlaceSigns(root, roadWays);
+        PlaceTrafficSignals(root, roadWays, marking);
 
         // buildings: real 3D models where available (3D BAG, the Netherlands), else OSM footprints extruded
         var buildingMbs = facades.Select(_ => new MeshBuilder()).ToArray();
