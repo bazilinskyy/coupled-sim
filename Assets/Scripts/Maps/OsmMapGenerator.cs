@@ -41,6 +41,9 @@ public partial class OsmMapGenerator
     Func<int, Material> _groundMat;
     /// <summary><c>-noFacadeRelief</c>: flat façades (no normal or parallax maps), e.g. for comparisons or slow PCs.</summary>
     static readonly bool _noRelief = Array.IndexOf(Environment.GetCommandLineArgs(), "-noFacadeRelief") >= 0;
+    /// <summary>Photo textures of brick, plaster and concrete on the walls (MapAssets.WallDetail); <c>-noPhotoTextures</c>: the drawn bricks of earlier versions.</summary>
+    static bool _photoWalls;
+    static readonly bool _noPhotoWalls = Array.IndexOf(Environment.GetCommandLineArgs(), "-noPhotoTextures") >= 0;
     /// <summary>Façade materials whose windows light up at night (OsmMap sets their emission from the sun).</summary>
     public static readonly List<Material> NightMaterials = new List<Material>();
     static readonly int Styles = Enum.GetValues(typeof(WindowStyle)).Length;
@@ -324,6 +327,7 @@ public partial class OsmMapGenerator
                 case 4: return Noise(fascia, r, 0.05f);
                 case 5: return Noise(new Color(0.5f, 0.5f, 0.48f), r, 0.08f);
             }
+            if (_photoWalls) return Noise(wall, r, 0.02f);
             if (brick)
             {
                 int course = y / 6, offset = course % 2 == 0 ? 0 : 12;
@@ -424,6 +428,7 @@ public partial class OsmMapGenerator
                 if (u > 0.25f && u < 0.75f && v > 0.24f && v < 0.27f) return new Color(0.6f, 0.6f, 0.58f);
                 break;
         }
+        if (_photoWalls) return Noise(wall, r, 0.02f);   // the photo detail map draws the bricks
         if (brick)
         {
             int course = y / 6, offset = course % 2 == 0 ? 0 : 12;
@@ -432,6 +437,33 @@ public partial class OsmMapGenerator
         }
         return Noise(wall, r, 0.05f);
     }
+
+    /// <summary>A photo of the wall kind (MapAssets.WallDetail) as the material's detail map, where <paramref name="mask"/>'s alpha is 1;
+    /// <paramref name="metresPerUv"/>: metres of wall per unit of the material's (tiled) texture coordinates.</summary>
+    void WallPhoto(Material m, int kind, Texture2D mask, Vector2 metresPerUv)
+    {
+        if (kind >= _assets.WallDetail.Length || _assets.WallDetail[kind] == null) return;
+        var size = _assets.WallDetailSize != null && kind < _assets.WallDetailSize.Length ? _assets.WallDetailSize[kind] : new Vector2(1.5f, 1.5f);
+        m.SetTexture("_DetailMask", mask);
+        m.SetTexture("_DetailAlbedoMap", _assets.WallDetail[kind]);
+        m.SetFloat("_DetailAlbedoMapScale", 1f);
+        m.SetTextureScale("_DetailAlbedoMap", new Vector2(metresPerUv.x / size.x, metresPerUv.y / size.y));
+        if (_assets.WallNormal != null && kind < _assets.WallNormal.Length && _assets.WallNormal[kind] != null)
+        {
+            m.SetTexture("_DetailNormalMap", _assets.WallNormal[kind]);
+            m.SetFloat("_DetailNormalMapScale", 1f);
+        }
+        m.EnableKeyword("_DETAIL_MULX2");
+    }
+
+    /// <summary>Where a façade texture is wall (alpha 1), not window, frame, sill or lintel.</summary>
+    static Texture2D FacadeMask(WindowStyle style) =>
+        Tex("facade_mask_" + style, BayPx * FacadeBays, (x, y, r) =>
+            FacadeHeight(x % BayPx * 256 / BayPx, y % BayPx * 256 / BayPx, style, false) == 0f ? Color.white : new Color(1f, 1f, 1f, 0f));
+
+    static Texture2D GroundMask(GroundStyle style) =>
+        TexRect("ground_mask_" + style, BayPx * GroundBays, BayPx, (x, y, r) =>
+            GroundPart(x % BayPx / (float)BayPx, x / BayPx, y / (float)BayPx, style) == 0 ? Color.white : new Color(1f, 1f, 1f, 0f));
 
     /// <summary>The window style of a building: from its construction year (3D BAG), height and OSM type.</summary>
     public static WindowStyle StyleFor(int year, float height, string type, uint seed)
@@ -624,6 +656,7 @@ public partial class OsmMapGenerator
         var world = new GameObject("World").transform;
         world.SetParent(root, false);
         _emitted.Clear();
+        _photoWalls = !_noPhotoWalls && !_noRelief && _assets != null && _assets.FacadeTemplate != null && _assets.WallDetail != null && _assets.WallDetail.Length >= 5;
         try { Terrain = TerrainHeight.Load(_map.Name, _proj); }
         catch (Exception e) { Debug.LogWarning("TerrainHeight: " + e.Message); Terrain = null; }
 
@@ -656,9 +689,9 @@ public partial class OsmMapGenerator
         // façades: wall kinds (red, dark and yellow brick, plaster, concrete) × window styles, made when first used
         var wallKinds = new (string name, Color wall, Color frame, bool brick)[]
         {
-            ("red brick", new Color(0.52f, 0.23f, 0.17f), new Color(0.93f, 0.93f, 0.9f), true),
-            ("dark brick", new Color(0.33f, 0.18f, 0.14f), new Color(0.9f, 0.9f, 0.88f), true),
-            ("yellow brick", new Color(0.7f, 0.58f, 0.38f), new Color(0.15f, 0.25f, 0.2f), true),
+            ("red brick", _photoWalls ? new Color(0.6f, 0.38f, 0.29f) : new Color(0.52f, 0.23f, 0.17f), new Color(0.93f, 0.93f, 0.9f), true),
+            ("dark brick", _photoWalls ? new Color(0.5f, 0.32f, 0.26f) : new Color(0.33f, 0.18f, 0.14f), new Color(0.9f, 0.9f, 0.88f), true),
+            ("yellow brick", _photoWalls ? new Color(0.72f, 0.58f, 0.42f) : new Color(0.7f, 0.58f, 0.38f), new Color(0.15f, 0.25f, 0.2f), true),
             ("plaster", new Color(0.86f, 0.84f, 0.79f), new Color(0.2f, 0.22f, 0.25f), false),
             ("concrete", new Color(0.6f, 0.6f, 0.58f), new Color(0.25f, 0.27f, 0.3f), false),
         };
@@ -675,11 +708,13 @@ public partial class OsmMapGenerator
             // depth: windows set into the wall, sills and mortar (normal map, parallax); the template keeps the shader variant in builds
             if (_assets != null && _assets.FacadeTemplate != null && !_noRelief)
             {
-                var (nrm, hgt, occ) = FacadeRelief(style, brick);
+                var (nrm, hgt, occ) = FacadeRelief(style, brick && !_photoWalls);
                 m.shader = _assets.FacadeTemplate.shader;
                 m.SetTexture("_BumpMap", nrm); m.SetFloat("_BumpScale", 1f); m.EnableKeyword("_NORMALMAP");
                 m.SetTexture("_ParallaxMap", hgt); m.SetFloat("_Parallax", 0.03f); m.EnableKeyword("_PARALLAXMAP");
                 m.SetTexture("_OcclusionMap", occ); m.SetFloat("_OcclusionStrength", 1f); m.EnableKeyword("_OCCLUSIONMAP");
+                // the photo of the wall up close, not on windows, frames and sills; 12 m of wall per façade texture
+                if (_photoWalls && style != WindowStyle.Glass) WallPhoto(m, k / styles, FacadeMask(style), new Vector2(12f, 12f));
             }
             m.SetTexture("_EmissionMap", FacadeLights($"facade_lights_{name.Replace(' ', '_')}_{style}", style));
             m.SetColor("_EmissionColor", Color.black);
@@ -701,11 +736,13 @@ public partial class OsmMapGenerator
             m.mainTextureScale = new Vector2(1f / GroundBays, 1f);
             if (_assets != null && _assets.FacadeTemplate != null && !_noRelief)
             {
-                var (nrm, hgt, occ) = Relief("ground " + gs + (brick ? " brick" : ""), BayPx * GroundBays, BayPx, 3f / BayPx, (x, y) => GroundHeight(x, y, gs, brick));
+                bool mortar = brick && !_photoWalls;
+                var (nrm, hgt, occ) = Relief("ground " + gs + (mortar ? " brick" : ""), BayPx * GroundBays, BayPx, 3f / BayPx, (x, y) => GroundHeight(x, y, gs, mortar));
                 m.shader = _assets.FacadeTemplate.shader;
                 m.SetTexture("_BumpMap", nrm); m.SetFloat("_BumpScale", 1f); m.EnableKeyword("_NORMALMAP");
                 m.SetTexture("_ParallaxMap", hgt); m.SetFloat("_Parallax", 0.02f); m.EnableKeyword("_PARALLAXMAP");
                 m.SetTexture("_OcclusionMap", occ); m.SetFloat("_OcclusionStrength", 1f); m.EnableKeyword("_OCCLUSIONMAP");
+                if (_photoWalls) WallPhoto(m, k / groundStyles, GroundMask(gs), new Vector2(3f * GroundBays, GroundFloorHeight));
             }
             m.SetTexture("_EmissionMap", GroundLights("ground_lights_" + gs, gs));
             m.SetColor("_EmissionColor", Color.black);
@@ -1038,12 +1075,13 @@ public partial class OsmMapGenerator
                 var a = poly[i]; var b = poly[(i + 1) % poly.Count];
                 float len = V2.Distance(a, b);
                 var gmb = groundMbs[kindO * GroundStyleCount + (int)(NearShop((a + b) / 2f, shopPoints) ? GroundStyle.Shop : gsBase)];
+                // facing out of the building (the polygon is counter-clockwise: the outside is to the right of a->b)
                 if (split > minHeight)
-                    gmb.Quad(P(b, minHeight), P(b, split), P(a, split), P(a, minHeight),
-                        new Vector2((u + len) / 3f, 0f), new Vector2((u + len) / 3f, 1f), new Vector2(u / 3f, 1f), new Vector2(u / 3f, 0f));
-                mb.Quad(P(b, split), P(b, height), P(a, height), P(a, split),
-                    new Vector2((u + len) / 3f, split / 3f), new Vector2((u + len) / 3f, height / 3f),
-                    new Vector2(u / 3f, height / 3f), new Vector2(u / 3f, split / 3f));
+                    gmb.Quad(P(a, minHeight), P(a, split), P(b, split), P(b, minHeight),
+                        new Vector2(u / 3f, 0f), new Vector2(u / 3f, 1f), new Vector2((u + len) / 3f, 1f), new Vector2((u + len) / 3f, 0f));
+                mb.Quad(P(a, split), P(a, height), P(b, height), P(b, split),
+                    new Vector2(u / 3f, split / 3f), new Vector2(u / 3f, height / 3f),
+                    new Vector2((u + len) / 3f, height / 3f), new Vector2((u + len) / 3f, split / 3f));
                 u += len;
             }
             if (height > 6f) Cornice(cornices, poly, height);
