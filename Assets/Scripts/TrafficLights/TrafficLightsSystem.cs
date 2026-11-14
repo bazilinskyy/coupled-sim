@@ -49,7 +49,8 @@ public class TrafficLightsSystem : MonoBehaviour
                 host.BroadcastReliable(new ChangeLightsMsg
                 {
                     SystemIdx = i,
-                    EventIdx = trigger
+                    EventIdx = trigger,
+                    InitialSetup = true,
                 });
             }
             foreach (var trigger in _triggeredEventsBuffer)

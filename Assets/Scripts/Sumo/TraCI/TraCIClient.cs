@@ -232,6 +232,38 @@ namespace CoupledSim.TraCI
             return (TraCIPosition)GetVariable(CMD_GET_SIM_VARIABLE, POSITION_CONVERSION, "", param);
         }
 
+        // ------------------------------------------------------------------ traffic lights
+
+        public List<string> GetTrafficLightIds() => GetStringList(CMD_GET_TL_VARIABLE, TRACI_ID_LIST, "");
+
+        /// <summary>The link of each signal index of a traffic light: incoming lane, outgoing lane, internal lane (null: none).</summary>
+        public List<string[]> GetControlledLinks(string tls)
+        {
+            var items = (object[])GetVariable(CMD_GET_TL_VARIABLE, TL_CONTROLLED_LINKS, tls);
+            var links = new List<string[]>();
+            int k = 0;
+            int signals = (int)items[k++];
+            for (int s = 0; s < signals; s++)
+            {
+                int count = (int)items[k++];
+                string[] first = null;
+                for (int j = 0; j < count; j++)
+                {
+                    var l = (List<string>)items[k++];
+                    if (first == null && l.Count >= 2) first = l.ToArray();
+                }
+                links.Add(first);
+            }
+            return links;
+        }
+
+        public TraCIPosition[] GetLaneShape(string lane) => (TraCIPosition[])GetVariable(CMD_GET_LANE_VARIABLE, VAR_SHAPE, lane);
+        public string GetRedYellowGreenState(string tls) => (string)GetVariable(CMD_GET_TL_VARIABLE, TL_RED_YELLOW_GREEN_STATE, tls);
+
+        /// <summary>Sets the state of every signal of a traffic light ("GrryG..."); SUMO keeps it until the next call.</summary>
+        public void SetRedYellowGreenState(string tls, string state) =>
+            Set(CMD_SET_TL_VARIABLE, TL_RED_YELLOW_GREEN_STATE, tls, new TraCIWriter().TypedString(state));
+
         List<string> GetStringList(byte cmd, byte var, string id) => (List<string>)GetVariable(cmd, var, id);
 
         object GetVariable(byte cmd, byte var, string id, TraCIWriter param = null)

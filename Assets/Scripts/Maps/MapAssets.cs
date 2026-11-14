@@ -19,6 +19,9 @@ public class MapAssets : ScriptableObject
     public GameObject WasteBin;
     public GameObject[] ParkedBicycles;
     public GameObject[] ParkedCars;
+    [Header("Traffic lights on city maps")]
+    public GameObject CarSignal;
+    public GameObject PedestrianSignal;
 
     static MapAssets _instance;
     public static MapAssets Instance => _instance != null ? _instance : (_instance = Resources.Load<MapAssets>("MapAssets"));
