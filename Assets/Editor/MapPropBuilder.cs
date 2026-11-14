@@ -33,6 +33,12 @@ public static class MapPropBuilder
             for (int k = 0; k < 3; k++, ci++)
                 cars.Add(ParkedCar(prefab, colours[ci % colours.Length], $"{Folder}/ParkedCar_{Path.GetFileNameWithoutExtension(src).Replace("Drivable", "").Replace("Common", "")}_{k}.prefab"));
         }
+        // more models and sizes (Kenney Car Kit, CC0; built by VehicleBuilder), in their own colours
+        foreach (var n in new[] { "Sedan", "SedanSports", "HatchbackSports", "Suv", "SuvLuxury", "Taxi", "Van", "Delivery" })
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>($"Assets/Prefabs/Cars/Vehicles/DrivableKenney{n}.prefab");
+            if (prefab != null) cars.Add(ParkedCar(prefab, Color.white, $"{Folder}/ParkedCar_Kenney{n}.prefab"));
+        }
         assets.ParkedCars = cars.Where(c => c != null).ToArray();
         EditorUtility.SetDirty(assets);
         AssetDatabase.SaveAssets();
