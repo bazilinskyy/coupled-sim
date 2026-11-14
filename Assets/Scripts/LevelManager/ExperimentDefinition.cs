@@ -67,6 +67,10 @@ public struct ExperimentRoleDefinition
     public string HudDesign;
     [Tooltip("Centre screen on the dashboard from StreamingAssets/InCar/<name>.json; empty: none.")]
     public string CentreScreenDesign;
+    [Tooltip("Instrument cluster behind the steering wheel from StreamingAssets/InCar/<name>.json; empty: Cluster (live speed, rpm, gear, turn signals); \"none\": the car's own.")]
+    public string ClusterDesign;
+    [Tooltip("Messages at set times, distances or states on the in-car displays: StreamingAssets/InCar/Messages/<name>.csv; empty: none.")]
+    public string InCarMessages;
 
     [Header("Participant responses")]
     [Tooltip("A hold-to-respond button and/or a 0-100 slider, logged every frame to ExperimentLogs/Responses-*.csv.")]

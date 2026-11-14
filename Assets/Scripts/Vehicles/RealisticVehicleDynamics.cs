@@ -14,7 +14,7 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody))]
 public class RealisticVehicleDynamics : MonoBehaviour
 {
-    public enum CarPreset { SmartFortwo, Hatchback }
+    public enum CarPreset { SmartFortwo, Hatchback, Suv, Estate, Van, CityBus, Truck }
 
     public CarPreset Car = CarPreset.SmartFortwo;
     [Tooltip("Tyre grip on wet roads relative to dry (rain from EnvironmentController).")]
@@ -53,6 +53,7 @@ public class RealisticVehicleDynamics : MonoBehaviour
     bool _configured;
     float[] _wheelGrip;
     float _accSq;
+    float _radiusScale = 1f;   // real wheel radius / the spec's (forces stay right on a body with other wheels)
     float[] _phase;
     readonly float[] _vyHistory = new float[5];
     int _vyIndex;
@@ -60,8 +61,26 @@ public class RealisticVehicleDynamics : MonoBehaviour
     void Awake()
     {
         if (System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-magicFormulaTyres") >= 0) UseMagicFormula = true;
-        Spec = Car == CarPreset.Hatchback ? CarSpec.Hatchback : CarSpec.SmartFortwo;
+        Spec = SpecOf(Car);
+        // -carSpec suv|estate|van|bus|truck|hatchback|smart: another vehicle's physics on this car
+        var args = System.Environment.GetCommandLineArgs();
+        int ci = System.Array.IndexOf(args, "-carSpec");
+        if (ci >= 0 && ci + 1 < args.Length && CarSpec.ByName(args[ci + 1]) is CarSpec forced) Spec = forced;
         Powertrain = new Powertrain(Spec);
+    }
+
+    public static CarSpec SpecOf(CarPreset p)
+    {
+        switch (p)
+        {
+            case CarPreset.Hatchback: return CarSpec.Hatchback;
+            case CarPreset.Suv: return CarSpec.Suv;
+            case CarPreset.Estate: return CarSpec.Estate;
+            case CarPreset.Van: return CarSpec.Van;
+            case CarPreset.CityBus: return CarSpec.CityBus;
+            case CarPreset.Truck: return CarSpec.Truck;
+            default: return CarSpec.SmartFortwo;
+        }
     }
 
     public void Configure()
@@ -90,8 +109,14 @@ public class RealisticVehicleDynamics : MonoBehaviour
         float frontZ = _front.Average(w => transform.InverseTransformPoint(w.transform.position).z);
         float rearZ = _rear.Average(w => transform.InverseTransformPoint(w.transform.position).z);
         float frontShare = Spec.RearWheelDrive ? 0.42f : 0.6f;
-        _rb.centerOfMass = new Vector3(0f, groundY + Spec.CentreOfMassHeight, Mathf.Lerp(rearZ, frontZ, frontShare));
-        float l = Spec.Wheelbase + 1.2f, w = Spec.TrackWidth + 0.3f, h = 1.4f;
+        // a spec on a body of another size (-carSpec): keep the centre of mass as high, relative to the
+        // wheelbase, as on the real vehicle (else a bus spec on a small car tips over), and the forces
+        // at the tyres as the spec's despite other wheel sizes
+        float wheelbase = Mathf.Abs(frontZ - rearZ);
+        float comHeight = Spec.CentreOfMassHeight * Mathf.Min(1f, wheelbase / Mathf.Max(0.5f, Spec.Wheelbase));
+        _radiusScale = _wheels.Average(wc => wc.radius) / Mathf.Max(0.1f, Spec.WheelRadius);
+        _rb.centerOfMass = new Vector3(0f, groundY + comHeight, Mathf.Lerp(rearZ, frontZ, frontShare));
+        float l = Spec.Wheelbase + 1.2f, w = Spec.TrackWidth + 0.3f, h = Mathf.Max(1.4f, Spec.CentreOfMassHeight * 2.4f);
         _rb.inertiaTensor = new Vector3(w * w + h * h, l * l + w * w, l * l + h * h) * (Spec.Mass / 12f);
         _rb.inertiaTensorRotation = Quaternion.identity;
 
@@ -105,7 +130,7 @@ public class RealisticVehicleDynamics : MonoBehaviour
             spring.damper = 2f * DampingRatio * Mathf.Sqrt(k * quarterMass);
             spring.targetPosition = 0.5f;
             wc.suspensionSpring = spring;
-            wc.mass = 18f;
+            wc.mass = Spec.WheelMass > 0f ? Spec.WheelMass : 18f;
             wc.wheelDampingRate = 0.5f;
         }
         SetGrip(1f);
@@ -164,7 +189,7 @@ public class RealisticVehicleDynamics : MonoBehaviour
         float torque = Powertrain.WheelTorque(speed, throttle, dt);
         Gear = Powertrain.Reverse ? -1 : Powertrain.Gear;
         Rpm = Powertrain.Rpm;
-        foreach (var wc in _driven) wc.motorTorque = torque / _driven.Length + 0.0001f;
+        foreach (var wc in _driven) wc.motorTorque = torque * _radiusScale / _driven.Length + 0.0001f;
         foreach (var wc in _wheels) if (!_driven.Contains(wc)) wc.motorTorque = 0.0001f;
 
         // hold the car at standstill without throttle (like an automatic with auto-hold)
@@ -174,7 +199,7 @@ public class RealisticVehicleDynamics : MonoBehaviour
             var wc = _wheels[i];
             bool front = _front.Contains(wc);
             float bias = front ? Spec.FrontBrakeBias : 1f - Spec.FrontBrakeBias;
-            float requested = brake * Spec.MaxBrakeTorque * bias * 2f;
+            float requested = brake * Spec.MaxBrakeTorque * bias * 2f * _radiusScale;
             float slip = wc.GetGroundHit(out var hit) ? hit.forwardSlip * Mathf.Sign(speed) : 0f;
             wc.brakeTorque = Abs ? _abs[i].Modulate(requested, slip, dt) : requested;
         }
