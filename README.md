@@ -547,6 +547,25 @@ AI cars follow a defined path (see [waypoints](#configuration-of-waypoints)) or 
 
 Each type also sets the wheelbase, track, centre-of-mass height, tyre size and wheel mass, drag, gear ratios, brake torque and the speed limiter of buses and trucks. The suspension is tuned to the mass, so a bus rolls and pitches like a heavy vehicle. `-carSpec bus` (or another type) gives any drivable car that physics without changing the prefab, e.g. to try a truck's braking distance in the Smart.
 
+**More vehicles.** Besides the Smart and the hatchback there are 15 more vehicles, from the [Kenney Car Kit](https://kenney.nl/assets/car-kit) (CC0):
+- cars: a sedan, a sports sedan, a sports hatchback, two SUVs, a taxi and a police car;
+- vans: a van, an ambulance and two delivery vans;
+- trucks: two trucks, a garbage truck and a fire truck.
+
+They are scaled to the real sizes of their types (e.g. a sedan 4.7 × 1.83 × 1.47 m, a delivery van 6 × 2.1 × 2.9 m, a fire truck 9 × 2.55 × 3.3 m), and each drives with the physics of its type (`Estate`, `Hatchback`, `Suv`, `Van` or `Truck`). They take part in background traffic (the traffic model and SUMO) and AI cars, and they park on the city maps. They are simple, stylised models without interiors, so they are meant for traffic; participants drive the Smart, the hatchback or the detailed models below.
+
+`Coupled Sim` ➡️ `Vehicles` ➡️ `Build vehicle prefabs` (`VehicleBuilder`) makes these prefabs from 3D models. It copies the hatchback's prefab with all its parts:
+- physics and AI driving;
+- turn signals and lights;
+- driver's and passenger's cameras;
+- driver and passenger figures;
+- dashboard and instrument cluster;
+- eHMI slots.
+
+It then puts the model in place of the body and fits the wheel colliders, the seats, the dashboard, the lamps and the eHMI slots to it. A new model needs one line in `VehicleBuilder.Defs`: the model file, the vehicle type, its real size, the driver's eye position and the names of its wheels (and of its steering wheel, if it has an interior). The prefabs are added to the AI car list, background traffic, SUMO and the parked cars automatically. `Coupled Sim` ➡️ `Vehicles` ➡️ `Render line-up` renders all vehicles side by side for a check.
+
+![The vehicles side by side (top), parked in Eindhoven (bottom left) and in traffic in the town (bottom right)](ReadmeFiles/vehicle_range.jpg)
+
 **Road surfaces under each wheel.** Each wheel gets the grip and roughness of the surface it is on. On city maps the surface comes from the road meshes, which follow OpenStreetMap's `surface` tag. In other scenes everything counts as asphalt unless `-roadSurface name` sets one surface everywhere (`asphalt`, `bricks`, `cobblestones`, `gravel`, `grass`, `paving` or `unpaved`).
 
 | Surface | Grip (dry asphalt = 1) | Extra loss when wet | Body shaking at 70 km/h | Tyre noise |
@@ -1190,3 +1209,4 @@ All agents must be in the same local network; the host's IP address is in its co
 | [Animated animals](https://quaternius.com) (pigeon, Shiba Inu, husky, cat, fox, deer, horse; via [Poly Pizza](https://poly.pizza)) | Quaternius | CC0 |
 | [Microsoft Rocketbox avatars](https://github.com/microsoft/Microsoft-Rocketbox) (12 avatars, textures reduced to 1024 px) | Microsoft | MIT |
 | [HD Low Poly Racing Car No.1201](https://assetstore.unity.com/packages/3d/vehicles/land/hd-low-poly-racing-car-no-1201-118603) | Azerilo | Unity Asset Store EULA (free at time of download) |
+| [Car Kit](https://kenney.nl/assets/car-kit) (15 road vehicles: sedans, SUVs, taxi, police car, ambulance, vans, delivery vans, trucks, garbage truck, fire truck; `Assets/ThirdParty/Kenney/CarKit`) | Kenney (www.kenney.nl) | [CC0](https://creativecommons.org/publicdomain/zero/1.0/) |

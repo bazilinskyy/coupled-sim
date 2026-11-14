@@ -1953,6 +1953,9 @@ MonoBehaviour:
   - pavement
   - crossing
   - tile
+  LiveReflections: 1
+  LiveReflectionResolution: 128
+  LiveReflectionDistance: 30
   SunElevation: 0
   Rain: 0
   StreetLightsOn: 0
@@ -2021,6 +2024,8 @@ MonoBehaviour:
     TopHMI: {fileID: 0}
     WindshieldHMI: {fileID: 0}
     HoodHMI: {fileID: 0}
+    EhmiDesign: 
+    EhmiDesignPlacement: 0
     carIdx: 0
     twoWheelerIdx: 0
     SpawnPoint:
@@ -2030,10 +2035,26 @@ MonoBehaviour:
       VehicleType: 0
     AutonomousPath: {fileID: 0}
     AutonomousIsYielding: 0
+    Steering: 0
+    RideInCarOf: 
+    Seat: 0
+    HudDesign: 
+    CentreScreenDesign: 
+    ClusterDesign: 
+    InCarMessages: 
+    Response:
+      Button: 0
+      ButtonLabel: 
+      Slider: 0
+      SliderLabel: 
+      SliderStart: 0
+      Hidden: 0
   - Name: Automated - Passenger
     TopHMI: {fileID: 114674626593462642, guid: 9eaaf159fd53e9043a6a0f42f3729fa0, type: 3}
     WindshieldHMI: {fileID: 114674626593462642, guid: 9eaaf159fd53e9043a6a0f42f3729fa0, type: 3}
     HoodHMI: {fileID: 114674626593462642, guid: 9eaaf159fd53e9043a6a0f42f3729fa0, type: 3}
+    EhmiDesign: 
+    EhmiDesignPlacement: 0
     carIdx: 1
     twoWheelerIdx: 0
     SpawnPoint:
@@ -2043,10 +2064,26 @@ MonoBehaviour:
       VehicleType: 1
     AutonomousPath: {fileID: 8043761391078894673}
     AutonomousIsYielding: 1
+    Steering: 0
+    RideInCarOf: 
+    Seat: 0
+    HudDesign: 
+    CentreScreenDesign: 
+    ClusterDesign: 
+    InCarMessages: 
+    Response:
+      Button: 0
+      ButtonLabel: 
+      Slider: 0
+      SliderLabel: 
+      SliderStart: 0
+      Hidden: 0
   - Name: Pedestrian
     TopHMI: {fileID: 0}
     WindshieldHMI: {fileID: 0}
     HoodHMI: {fileID: 0}
+    EhmiDesign: 
+    EhmiDesignPlacement: 0
     carIdx: 0
     twoWheelerIdx: 0
     SpawnPoint:
@@ -2056,10 +2093,26 @@ MonoBehaviour:
       VehicleType: 0
     AutonomousPath: {fileID: 0}
     AutonomousIsYielding: 0
+    Steering: 0
+    RideInCarOf: 
+    Seat: 0
+    HudDesign: 
+    CentreScreenDesign: 
+    ClusterDesign: 
+    InCarMessages: 
+    Response:
+      Button: 0
+      ButtonLabel: 
+      Slider: 0
+      SliderLabel: 
+      SliderStart: 0
+      Hidden: 0
   - Name: Cyclist
     TopHMI: {fileID: 0}
     WindshieldHMI: {fileID: 0}
     HoodHMI: {fileID: 0}
+    EhmiDesign: 
+    EhmiDesignPlacement: 0
     carIdx: 0
     twoWheelerIdx: 0
     SpawnPoint:
@@ -2069,10 +2122,26 @@ MonoBehaviour:
       VehicleType: 0
     AutonomousPath: {fileID: 0}
     AutonomousIsYielding: 0
+    Steering: 0
+    RideInCarOf: 
+    Seat: 0
+    HudDesign: 
+    CentreScreenDesign: 
+    ClusterDesign: 
+    InCarMessages: 
+    Response:
+      Button: 0
+      ButtonLabel: 
+      Slider: 0
+      SliderLabel: 
+      SliderStart: 0
+      Hidden: 0
   - Name: E-scooter rider
     TopHMI: {fileID: 0}
     WindshieldHMI: {fileID: 0}
     HoodHMI: {fileID: 0}
+    EhmiDesign: 
+    EhmiDesignPlacement: 0
     carIdx: 0
     twoWheelerIdx: 1
     SpawnPoint:
@@ -2082,10 +2151,26 @@ MonoBehaviour:
       VehicleType: 0
     AutonomousPath: {fileID: 0}
     AutonomousIsYielding: 0
+    Steering: 0
+    RideInCarOf: 
+    Seat: 0
+    HudDesign: 
+    CentreScreenDesign: 
+    ClusterDesign: 
+    InCarMessages: 
+    Response:
+      Button: 0
+      ButtonLabel: 
+      Slider: 0
+      SliderLabel: 
+      SliderStart: 0
+      Hidden: 0
   - Name: Moped rider
     TopHMI: {fileID: 0}
     WindshieldHMI: {fileID: 0}
     HoodHMI: {fileID: 0}
+    EhmiDesign: 
+    EhmiDesignPlacement: 0
     carIdx: 0
     twoWheelerIdx: 2
     SpawnPoint:
@@ -2095,6 +2180,20 @@ MonoBehaviour:
       VehicleType: 0
     AutonomousPath: {fileID: 0}
     AutonomousIsYielding: 0
+    Steering: 0
+    RideInCarOf: 
+    Seat: 0
+    HudDesign: 
+    CentreScreenDesign: 
+    ClusterDesign: 
+    InCarMessages: 
+    Response:
+      Button: 0
+      ButtonLabel: 
+      Slider: 0
+      SliderLabel: 
+      SliderStart: 0
+      Hidden: 0
   PointsOfInterest: []
   CarSpawners:
   - {fileID: 8156635355818172248}
@@ -2327,6 +2426,21 @@ MonoBehaviour:
   CarPrefabs:
   - {fileID: 7713759469045616529, guid: 1baf460ab026f1247ab4696be569ffae, type: 3}
   - {fileID: 8343856187855894783, guid: 02b8c28a357f14a4b922a9b99b9763ae, type: 3}
+  - {fileID: 1112872903906493275, guid: 7eee377c198504658adc19d06aeea3a6, type: 3}
+  - {fileID: 1914198306095677338, guid: a922840fb6af04bb28905531a901e786, type: 3}
+  - {fileID: 8507330575134155724, guid: a509816120a624d4db8bc53254ad2b16, type: 3}
+  - {fileID: 6135877877078801456, guid: 34e22bdef479944e48f74d66264233d8, type: 3}
+  - {fileID: 785552722636688880, guid: 6442d76346e3b45d980492f1ef58717e, type: 3}
+  - {fileID: 7013644143162781370, guid: 8f8ceaaf3f41d40fa82646a2c135f959, type: 3}
+  - {fileID: 2440890576180122594, guid: 164cfa0b469994e928d64665e1facacd, type: 3}
+  - {fileID: 4614958080875036374, guid: f570b5fab03874aaaa570fc87da9ad67, type: 3}
+  - {fileID: 6142562147565489759, guid: 3b7e2439249a54b62bbad8430c072c1e, type: 3}
+  - {fileID: 278007271823935509, guid: 11bb200f0ed46412cb9dd7302c0af914, type: 3}
+  - {fileID: 6807206396607768590, guid: 88894f030305b43b98dc67e455640afe, type: 3}
+  - {fileID: 3118596737004381213, guid: 434f54f3e59be4b35a9494343f7537fc, type: 3}
+  - {fileID: 6812705790690221616, guid: daef60e529c13424baa238edcf9cac69, type: 3}
+  - {fileID: 8355439152079196593, guid: cbd86dccada754e69981d3e1daf365e7, type: 3}
+  - {fileID: 253088742079190393, guid: 282a19014dcd74c57a2e6eb6418a8a3f, type: 3}
   Colors:
   - {r: 1, g: 1, b: 1, a: 1}
   - {r: 0, g: 0, b: 0, a: 1}

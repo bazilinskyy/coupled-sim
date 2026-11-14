@@ -215,14 +215,14 @@ public class PlayerAvatar : MonoBehaviour
         if (modeElements.gameObjects != null) {
             foreach (var go in modeElements.gameObjects)
             {
-                go.SetActive(true);
+                if (go != null) go.SetActive(true);
             }
         }
         if (modeElements.monoBehaviours != null)
         {
             foreach (var mb in modeElements.monoBehaviours)
             {
-                mb.enabled = true;
+                if (mb != null) mb.enabled = true;
             }
         }
         if (modeElements.collider != null)
