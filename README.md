@@ -2,7 +2,7 @@
 
 The coupled simulator lets several people take part in the same traffic scene at the same time: one or more drivers of manual cars, passengers of automated vehicles (AVs) who control an external human-machine interface (eHMI), and pedestrians who walk with a keyboard or a motion suit, on flat screens or in head-mounted displays. AI-controlled cars and pedestrians fill the scene. Everything that happens is logged for analysis.
 
-![Driving in the town, a city map (Eindhoven), cycling, heavy rain, night, animals](ReadmeFiles/overview.jpg)
+![City maps: a Toyota Corolla in Eindhoven, a street in Tokyo, cycling in Ghent (top); heavy rain in London, night in Barcelona, an articulated bus in Eindhoven (bottom)](ReadmeFiles/overview.jpg)
 
 The simulator is open source and free to use. It is aimed at, but not limited to, academic research. Forks, pull requests and other contributions in the spirit of open science are welcome 😍. For enquiries about collaboration, contact p.bazilinskyy@tue.nl.
 
@@ -494,7 +494,7 @@ python3 Tools/aerial_photo.py --list
 
 Asphalt gets repair patches and manhole covers, and brick roads get manhole covers too. Every road can get puddles along the kerb, which show only while it rains. All are placed the same way on every agent. At night (sun below 1°), the 8 cars nearest the viewer switch on their headlights, which light the road ahead. These are spot lights without shadows, so they cost little frame time.
 
-![Manhole cover and kerb when dry (left), puddle in rain (middle), headlights at night (right)](ReadmeFiles/road_details.jpg)
+![Eindhoven: manhole cover and kerb when dry (left), puddle in rain (middle), headlights at night (right)](ReadmeFiles/road_details.jpg)
 
 **Street furniture and parked vehicles.** From the OpenStreetMap data the map also gets benches, waste bins, bicycle racks with parked bicycles, bollards, bus stops (sign, and shelter with bench where mapped), café terraces, recycling containers, street cabinets, garden walls, fences and hedges, and parked cars in parking lots, parking spaces and along streets with street-side parking (at most 250 cars and 400 bicycles, those nearest the centre, so the frame rate stays up). Placement is the same on every agent. The parked bicycle and car prefabs are in `Assets/Prefabs/Props`; to rebuild them after changing the bicycle or car models use `Coupled Sim` ➡️ `Maps` ➡️ `Build street props`.
 
@@ -502,9 +502,15 @@ Asphalt gets repair patches and manhole covers, and brick roads get manhole cove
 
 ![Window styles by age and type: Delft (left), London (right)](ReadmeFiles/facade_styles.jpg)
 
+**Depth in the façades.** Each window style also has a normal map, a height map (parallax) and an ambient occlusion map made from the same layout, so windows sit back in their reveals behind their frames, sills and lintels stand out and brick has mortar joints, and the light, shadows and screen-space ambient occlusion (radius 25 cm) follow that relief. `-noFacadeRelief` draws flat façades (for comparisons or slow PCs).
+
+![A canal street in Delft: windows set into the brick façades](ReadmeFiles/facade_relief.jpg)
+
 **Lit windows at night.** Every façade texture holds 4 × 4 window bays with their own lights, so at dusk (from 2° sun elevation, full from 4° below the horizon) about a third of the windows light up, mostly warm, some cool white, differently from window to window, on OpenStreetMap and real 3D buildings alike.
 
 ![Delft at 23:30: street and aerial view](ReadmeFiles/night_windows.jpg)
+
+![New York at 22:30 (left) and Sydney at 22:00 (right)](ReadmeFiles/city_night.jpg)
 
 **Road networks from OpenDRIVE or SUMO.** A map can also be an [OpenDRIVE](https://www.asam.net/standards/detail/opendrive/) file (`.xodr`) or a SUMO network (`.net.xml` or `.net.xml.gz`): put it in `Assets/StreamingAssets/Maps` and set the trial parameter `map` to its file name (e.g. `map=GridTown.xodr`; a full path also works). The roads are built like those of the city maps: lanes with their widths, markings, pavements and cycle lanes (from the network's pedestrian and bicycle lanes), traffic signals, speed limits, street lamps; spawn points work the same. There are no buildings. With SUMO installed, the `City map` experiment's SUMO traffic runs on these maps too: random cars and bicycles made with SUMO's `randomTrips` the first time (cached). OpenDRIVE files are converted by SUMO's `netconvert`, which must be installed (with `SUMO_HOME` set, as for [traffic from SUMO](#traffic-from-sumo)); the result is cached in the simulator's data folder. The sample `GridTown.xodr` (a 4 × 4 grid) is included, and the same network as `GridTown.net.xml.gz`, which works without SUMO. A network without geographic reference gets Eindhoven's latitude for the sun.
 
@@ -514,12 +520,12 @@ Limitations: outside the Netherlands, building shapes and heights are as good as
 
 Map data © OpenStreetMap contributors, available under the [Open Database License](https://www.openstreetmap.org/copyright). Dutch buildings: [3D BAG](https://3dbag.nl) by the 3D geoinformation group of TU Delft and 3DGI, under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Tokyo's buildings: source 3D都市モデル（Project PLATEAU）渋谷区（2023年度）([G空間情報センター](https://www.geospatial.jp/ckan/dataset/plateau-13113-shibuya-ku-2023)), converted to the simulator's format; used under the Public Data License 1.0 ([PLATEAU site policy](https://www.mlit.go.jp/plateau/site-policy/), compatible with CC BY 4.0). New York's buildings: 3-D Building Model, City of New York, Office of Technology and Innovation ([NYC Open Data](https://opendata.cityofnewyork.us/overview/#termsofuse)), converted to the simulator's format. Montreal's buildings: Ville de Montréal, Bâtiment 3D 2009 (Maquette CityGML LOD2 avec textures), [Données ouvertes de la Ville de Montréal](https://donnees.montreal.ca), licence [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); converted to the simulator's format (geometry only, without textures). Aerial photos: [PDOK Luchtfoto](https://www.pdok.nl/introductie/-/article/pdok-luchtfoto-rgb-open-) (Beeldmateriaal Nederland, CC BY 4.0); [Digitaal Vlaanderen](https://www.vlaanderen.be/digitaal-vlaanderen/onze-oplossingen/geografische-webdiensten/ons-gis-aanbod/orthofotomozaieken) orthophoto (Modellicentie Gratis Hergebruik); [PNOA](https://pnoa.ign.es) © Instituto Geográfico Nacional / CNIG (CC BY 4.0); 出典：国土地理院 ([GSI tiles](https://maps.gsi.go.jp/development/ichiran.html), seamless photo); [NYS ITS Geospatial Services](https://orthos.its.ny.gov) orthoimagery; [USGS The National Map](https://www.usgs.gov/programs/national-geospatial-program/national-map) (public domain); © [Spatial Services NSW](https://www.spatial.nsw.gov.au) (CC BY 4.0).
 
-![Eindhoven, Tokyo, Sydney and New York](ReadmeFiles/city_maps.jpg)
+![Eindhoven and Tokyo (top), New York and Sydney (bottom) from about 100 m](ReadmeFiles/city_maps.jpg)
 
 ### Traffic signs
 `TrafficSign` draws a sign on a pole: stop, give way, speed limit (any number), pedestrian crossing, no entry, one way, priority road, children; in the style of the Vienna Convention used in Europe, made from code (no third-party assets). Add one with `GameObject` ➡️ `Coupled Sim` ➡️ `Traffic sign` and turn its blue (forward) axis towards the traffic it is for. City maps place them from OpenStreetMap: stop and give-way signs where mapped, pedestrian crossing signs at zebra crossings, speed limits at the start of longer roads (`maxspeed`), one-way and no-entry signs at one-way streets; on the left of the road where traffic drives on the left.
 
-![Traffic signs on the Delft map](ReadmeFiles/traffic_signs.jpg)
+![Traffic signs in Montreal (no entry and one-way signs at a crossing, left) and Eindhoven (no entry and a pedestrian crossing sign, right)](ReadmeFiles/traffic_signs.jpg)
 
 ### Vehicles
 The repository contains these drivable car prefabs in `Assets/Prefabs/Cars`:
@@ -568,7 +574,7 @@ Five detailed models from Sketchfab (CC BY 4.0, [credits](Assets/ThirdParty/Vehi
 
 The articulated bus's rear section is a trailer (`ArticulatedTrailer`): its axle follows the joint, so it cuts corners like a real articulated bus (`DetailedVehicleTests` checks the angle between the sections on a steady circle against the geometry of a trailer). It is moved from the front section's motion on every PC, so it needs no network data. The extra axles of the truck's tandem and the bus's rear section turn with the driven wheels.
 
-![The detailed vehicles (top), the Corolla's and the DAF's driver views with the live instrument cluster (bottom left, middle) and the articulated bus turning (bottom right)](ReadmeFiles/detailed_vehicles.jpg)
+![The detailed vehicles parked in a street in Montreal (top), the Corolla's and the DAF's driver views with the live instrument cluster in Eindhoven (bottom left, middle) and the articulated bus turning in Eindhoven (bottom right)](ReadmeFiles/detailed_vehicles.jpg)
 
 `Coupled Sim` ➡️ `Vehicles` ➡️ `Build vehicle prefabs` (`VehicleBuilder`) makes these prefabs from 3D models. It copies the hatchback's prefab with all its parts:
 - physics and AI driving;
@@ -588,7 +594,7 @@ It then puts the model in place of the body and fits the wheel colliders, the se
 
 Optionally, `ArticulationFromFront` makes an articulated vehicle and `Remove` leaves out parts of the model (helper objects, a seated driver). `Coupled Sim` ➡️ `Vehicles` ➡️ `Build vehicle prefabs` builds all of them (`-vehicleFilter Name` builds some). The prefabs are added to the AI car list, background traffic, SUMO and the parked cars automatically. `Coupled Sim` ➡️ `Vehicles` ➡️ `Render line-up` renders all vehicles side by side for a check, and `VehicleShowcase.RenderDriverViews` renders each driver's view.
 
-![The vehicles side by side (top), parked in Eindhoven (bottom left) and in traffic in the town (bottom right)](ReadmeFiles/vehicle_range.jpg)
+![The Kenney cars in Boulder (left), the vans and trucks in São Paulo (middle) and parked cars in Eindhoven (right)](ReadmeFiles/vehicle_range.jpg)
 
 **Road surfaces under each wheel.** Each wheel gets the grip and roughness of the surface it is on. On city maps the surface comes from the road meshes, which follow OpenStreetMap's `surface` tag. In other scenes everything counts as asphalt unless `-roadSurface name` sets one surface everywhere (`asphalt`, `bricks`, `cobblestones`, `gravel`, `grass`, `paving` or `unpaved`).
 
@@ -628,7 +634,7 @@ Each frame contains the time, the position and rotation of every car with its bl
 
 **Replay.** Every log has a small `.replay.json` file next to it with the experiment, scene, city map, time of day, weather and the vehicle and pedestrian models. In `Play Mode`, before `Start host` or `Start client`, press **Replay a recording** and pick a recording (newest first): the simulator loads that world and plays the trial back with every participant, AI car and traffic light, without network or new logs. At the bottom: a time slider, play/pause and speed, and buttons to follow a participant. Keys: `Space` play/pause, `←`/`→` 5 s back/forward, `-`/`+` slower/faster (0.1× to 8×), `1`-`9` follow participant 1-9, `C` the participant's own view or from behind, `0` free camera (`W` `A` `S` `D`, `Q`/`E` down/up, `Shift` faster, hold the right mouse button to look around), `T` trails of the participants' paths, `Esc` back to the start screen. Logs from before the replay existed have no `.replay.json`: they are listed as "older"; after clicking one, choose the experiment it was recorded in (and the city map, for map experiments), and the replay uses the standard car and pedestrian models. Logs from much older versions of the simulator may be in a different format and cannot be read. From the command line: `-replay ExperimentLogs/<log>.binLog` (for older logs add `-replayExperiment <short name>` and, for map experiments, `-replayMap <map>`).
 
-![Replay: behind the participant, the participant's own view, from above with the trail](ReadmeFiles/replay.jpg)
+![Replay of a drive in Delft: behind the participant, the participant's own view, from above with the trail](ReadmeFiles/replay.jpg)
 
 **Live data.** The per-frame logger of each agent also sends its frames over UDP to `localhost:40131`, every `NetworkingManager` ➡️ `Realtime Log Interval` seconds (default 0.2 s; read when the simulator starts), so experiments can be monitored with external tools. `Tools/log_receiver.py` is an example receiver: start it with `python log_receiver.py` (Python 3) from the `Tools` folder before starting the simulation. Packets start with a type (`1` = begin, `2` = frame). A received frame looks like this:
 ```
@@ -731,7 +737,7 @@ The roles are in `ExperimentDefinition` ➡️ `Roles` (see the picture above).
 - `AutonomousPath`: for AV passengers, the `WaypointCircuit` the AV follows;
 - `AutonomousIsYielding`: puts the AV on the `Yielding` layer instead of `Car`.
 
-![](ReadmeFiles/windshield_ehmi.jpg)
+![A windshield eHMI seen from the driver's seat (the town)](ReadmeFiles/windshield_ehmi.jpg)
 
 **Adding and removing agents.** Increase the size of `Roles`, or right-click a role and choose `Duplicate`. To remove one, right-click it and choose `Delete`.
 
@@ -820,7 +826,7 @@ Roles with `SpawnPoint.Type` = `PlayerRidingTwoWheeler` let a participant ride a
 - Riders are logged and synchronised like vehicles (position, rotation, velocity; lean, steering and wheels as synced parts); AI pedestrians, model-driven traffic and SUMO (as a bicycle or moped) react to them.
 
 
-![A cyclist and the rider's view](ReadmeFiles/cyclist.jpg)
+![Cycling in Ghent: behind the rider (left) and from ahead (right)](ReadmeFiles/cyclist.jpg)
 
 ### Automated driving and take-over requests
 The AV of a role with `SpawnPoint.Type` = `PlayerInAIControlledCar` gets an `AutomatedDriving` component when the participant is spawned. It drives in one of two modes (trial parameter `automation`):
@@ -836,7 +842,7 @@ Requests come from:
 
 `ExperimentLogs/TakeOver-{date}.csv` lists the events (automation mode, request with its source, take-over with the input used and the reaction time, no reaction, engaged) with the time, speed and position.
 
-![A take-over request in the driver's view](ReadmeFiles/take_over_request.jpg)
+![A take-over request in the driver's view (the town)](ReadmeFiles/take_over_request.jpg)
 
 ### Scripted paths
 A car can follow a path from a file instead of waypoints in the scene: a CSV with the columns `x` and `z` (scene coordinates in metres, as in the logs; `y` optional) and optionally `speed` (km/h) and `t` (seconds):
@@ -901,20 +907,20 @@ Every experiment has an `AnimalSpawner` (child object `Animals`) that places ani
 
 The experiment parameter `animals` multiplies the numbers per trial (`0` = no animals, `2` = twice as many). Positions and states are logged to `ExperimentLogs/Animals-{date}.csv` (time, animal, species, position, heading, state). The models are low-poly CC0 animals by Quaternius with their walk, run, idle and eating animations, scaled to real body lengths; `Coupled Sim` ➡️ `Animals` ➡️ `Build prefabs and add to experiments` (`AnimalPrefabBuilder`) rebuilds the prefabs.
 
-![Animals](ReadmeFiles/animals.jpg)
+![Animals on the city maps: a dog in Boulder (top left); a dog, a cat and a fox in Ghent](ReadmeFiles/animals.jpg)
 
 ### Time of day and weather
 Every experiment has an `EnvironmentController` (child object `Environment (time of day, weather)`) that sets:
 - **time of day** (`TimeOfDay`, clock time; `Latitude`, `Longitude`, `UtcOffset`, `DayOfYear`): the sun's position from a solar model, its colour and strength, a physically based sky, ambient light and the street lights (a light under each `StreetLamp`, the nearest 24 to the viewer switched on at dusk); `TimeSpeed` lets time run (e.g. 60 = one minute per second);
 - **weather** (`Clear`, `PartlyCloudy`, `Overcast`, `LightRain`, `HeavyRain`, `Fog`): clouds (sky colour, softer and weaker sunlight), fog, rain around the viewer and wet, darker, shinier roads and pavements, and puddles on city maps; `ExtraFog` and `RainOverride` fine-tune it. Some haze is always there, as in real air: under 1% at 300 m, about half at 3 km (`EnvironmentController.MinHaze`).
-- **reflections** (`LiveReflections`, on by default): a realtime reflection probe a few metres above the viewer, renewed when the time of day or weather changes and when the viewer has moved 30 m (`LiveReflectionDistance`; 128 pixels per face, `LiveReflectionResolution`). Car paint, windows and wet roads then reflect the actual sky and streets: dark at night, grey under clouds, the buildings around. The scene's own reflection probes still apply inside their areas.
+- **reflections** (`LiveReflections`, on by default; `-liveReflections 0` turns them off): a realtime reflection probe a few metres above the viewer, renewed when the time of day or weather changes and when the viewer has moved 30 m (`LiveReflectionDistance`; 128 pixels per face, `LiveReflectionResolution`). Car paint, windows and wet roads then reflect the actual sky and streets: dark at night, grey under clouds, the buildings around. The scene's own reflection probes still apply inside their areas. The viewer's own vehicle is left out of it (its roof would show up as a smear of its colour in the windscreen); a small probe inside the cabin instead makes the windscreen reflect the dashboard, as a real one does.
 
-![Reflections at night without (left) and with live reflections (right)](ReadmeFiles/live_reflections.jpg)
+![Delft at night without (left) and with live reflections (right)](ReadmeFiles/live_reflections.jpg)
 
 They can be set per trial with the experiment parameters `time` (`17:30` or `17.5`), `weather`, `fog`, `rain`, `timeSpeed`, `dayOfYear`, `latitude`. The host sends the conditions to all clients. With `UseBakedLighting` on (the experiments of earlier studies), the scene keeps its baked lightmaps and sun and only the weather effects apply; with it off (Base and the new examples), the sun follows the time of day with realtime lighting.
 
 
-![The same street on a clear day, overcast, in heavy rain, fog and at night](ReadmeFiles/weather.jpg)
+![The same street in Delft on a clear day, overcast, in heavy rain, in fog and at night](ReadmeFiles/weather.jpg)
 
 ### Configuration of daylight conditions
 ![](ReadmeFiles/day_night_control.png)
@@ -952,7 +958,7 @@ Other components on car prefabs: `CarConfigurator` (colour, driver and passenger
 ### Participant responses
 A role can give its participant a **hold-to-respond button** (e.g. "hold while you feel safe to cross") and/or a **slider from 0 to 100** (e.g. trust in the AV, perceived risk): tick `Button` and/or `Slider` in the role's `Response` (`ExperimentDefinitions` ➡️ `Roles`), with the texts shown, the slider's start value, and `Hidden` to log without showing anything (or `-response button,slider` on the agent's command line). A small panel in front of the participant's eyes (on screens and in headsets) shows the text, a light while the button is held and the slider. Keys: `B` for the button, `Z` / `X` for the slider; on a gamepad the right shoulder or right trigger (its analog value is logged too) and the d-pad; in a headset the right controller's trigger and thumbstick. Every frame goes to `ExperimentLogs/Responses-{role}-{date}.csv` (UTC time, game time, frame, button 0/1, analog value, number of presses, slider), on every agent.
 
-![The response panel (here a slider) in front of the driver; it is drawn over the car's interior](ReadmeFiles/response_panel.jpg)
+![The response panel (here a slider) in front of the driver in Montreal; it is drawn over the car's interior](ReadmeFiles/response_panel.jpg)
 
 ### Designed eHMIs
 An eHMI can be described in a file instead of a prefab: `Assets/StreamingAssets/eHMI/<name>.json` gives the panel's size (m), its background and, for each eHMI state (`DISABLED`, `STOP`, `WALK`), the elements shown:
@@ -973,7 +979,7 @@ Each element has a place in the panel (`x`, `y`, `w`, `h` from 0 to 1, from the 
 
 Give a role's AV a designed eHMI with `EhmiDesign` (the file name) and `EhmiDesignPlacement`: `Hood`, `Top`, `Windshield`, `Bumper`, or `Road` (projected on the road 1.8-4.2 m ahead of the car). It is switched and synchronised like the other eHMIs (passenger keys, host, dashboard). On any other object (a pole at a crossing, a pedestrian's wearable) add a `DesignedEhmi` component and set `Follow Ehmi` to the number of the eHMI it should show. Included: `LightBarCyan`, `TextWalk`, `DirectionalChevrons`, `RoadProjection`. To preview one: `-ehmiDesign RoadProjection@Road -ehmiState WALK`.
 
-![Designed eHMIs: light bar on the hood, text on the roof, chevrons on the bumper, a projection on the road](ReadmeFiles/ehmi_designs.jpg)
+![Designed eHMIs on the automated car in the town: light bar on the hood, text on the roof, chevrons on the bumper, a projection on the road](ReadmeFiles/ehmi_designs.jpg)
 
 ### In-car displays (head-up display, centre screen, instrument cluster) and timed messages
 The participant's car (driver or AV passenger) can have three displays, each designed like a [designed eHMI](#designed-ehmis) in `Assets/StreamingAssets/InCar/<name>.json`:
@@ -1014,9 +1020,9 @@ Columns:
 
 Messages can also be put in a design's own `"messages"` list, with their place on the panel (`x`, `y`, `w`, `h`). Every message shown is logged to `ExperimentLogs/InCarMessages-*.csv`, with the time, the display, the text and the distance driven. `Example.csv` is included.
 
-![The live instrument cluster at 51 km/h in D2 with a scheduled message (left); the driver’s view with the head-up display and its own scheduled message (right)](ReadmeFiles/instrument_cluster.jpg)
+![The Toyota Corolla's live instrument cluster at 62 km/h in D2 with a scheduled message (left); the driver’s view with the head-up display, in Eindhoven (right)](ReadmeFiles/instrument_cluster.jpg)
 
-![Head-up display and centre screen while driving automated (left) and during a take-over request (right)](ReadmeFiles/incar_displays.jpg)
+![Head-up display and centre screen while driving automated (left) and during a take-over request (right), in the town](ReadmeFiles/incar_displays.jpg)
 
 ### Haptic cues
 `Haptics.Cue(name, intensity, duration, pattern)` (pattern `pulse`, `double`, `triple`, `continuous`) plays a cue on gamepads (rumble), headset controllers, Logitech wheels (vibration; with the Logitech SDK, see [wheels](#steering-wheels-pedals-and-gamepads)) and external devices: with `-hapticsUdp host:port` every cue is also sent as JSON, `{"cue":"takeover","intensity":1.0,"duration":1.2,"pattern":"triple","time":12.3}`, e.g. to an Arduino or Raspberry Pi driving a vibrating seat, belt, helmet or handlebar. Take-over requests play a `takeover` cue. Cues are logged to `ExperimentLogs/Haptics-*.csv`.
@@ -1034,7 +1040,7 @@ A role can sit in another role's car, e.g. three participants in one shared AV: 
 
 **Voice.** With `-voice` (open microphone) or `-voice ptt` (push to talk: hold `V`) on each agent, the participants hear each other from their avatars (3D sound, through the host; 16 kHz). Each agent records its own microphone to `ExperimentLogs/Voice-*.wav`, with the UTC time of every chunk in `Voice-*.csv` for synchronisation; `-voiceDevice` picks the microphone, `-voiceRecordOnly` records without sending.
 
-![A participant (client) in the passenger seat of another participant's car: seen by the host (left), and their own view (right)](ReadmeFiles/shared_car.jpg)
+![A participant (client) in the passenger seat of another participant's car in the town: seen by the host (left), and their own view (right)](ReadmeFiles/shared_car.jpg)
 
 ### Pedestrian groups
 Virtual pedestrians can stand next to a participant pedestrian, e.g. to study crossing in groups: `PedestrianGroup` on the experiment (or `-companions` on every agent) lists them with an offset (metres to the right and ahead of the participant) and a behaviour:
@@ -1046,7 +1052,7 @@ Virtual pedestrians can stand next to a participant pedestrian, e.g. to study cr
 
 For example `-companions "follow:-1.2,0;cross:1.4,0.4,3;hesitate:2.6,0,2"` (behaviour:right,ahead[,delay]). The host moves them and clients see them like other AI pedestrians; their actions are logged to `ExperimentLogs/Companions-*.csv`. Avatars come from `Resources/PedestrianAvatars` (`Coupled Sim` ➡️ `Pedestrians` ➡️ `Build avatar list` after adding avatars).
 
-![A participant (blue) with a following, a crossing and a hesitating companion](ReadmeFiles/pedestrian_group.jpg)
+![A participant (blue) with a following, a crossing and a hesitating companion at a crossing in Tokyo](ReadmeFiles/pedestrian_group.jpg)
 
 ### Gaze over the network and gaze triggers
 With `-gaze` every agent sends its participant's gaze to the host 20 times a second (eye tracking through OpenXR when the headset has it, else the direction of the head), and the host logs all of them together to `ExperimentLogs/Gaze-*.csv` (role, eyes or head, origin, direction, the object looked at). **Gaze triggers** make cars react to being looked at, as in "stopping by looking" studies: `-gazeTrigger "Pedestrian>Automated - Passenger:0.5:yield,ehmi"` (or `NetworkGaze` ➡️ `Triggers`): when the pedestrian has looked at that role's car for 0.5 s, the car brakes to a stop (about 3 m/s²; AVs driven on the host) and/or its eHMIs switch to `WALK`, while it is looked at and for `HoldSeconds` (3 s) after.
@@ -1054,7 +1060,7 @@ With `-gaze` every agent sends its participant's gaze to the host 20 times a sec
 ### OpenSCENARIO
 `-openscenario <file.xosc>` (in `Assets/StreamingAssets/Scenarios`, or a full path; on every agent) plays the vehicles and pedestrians of an [ASAM OpenSCENARIO](https://www.asam.net/standards/detail/openscenario/) 1.x file in the scene, e.g. scenarios made for esmini or CARLA. Supported: parameter declarations; entities (Vehicle, Pedestrian, catalogue references); `TeleportAction` to a `WorldPosition` and `SpeedAction` to an absolute speed (step, linear or cubic, over a time, a rate or a distance), at the start or at a `SimulationTimeCondition`. Actors move straight along their heading (no lane following); other actions and conditions are logged as unsupported. Positions are the scene's world coordinates (x east, y north; on [OpenDRIVE maps](#city-maps-openstreetmap) those of the .xodr file). Events are logged to `ExperimentLogs/OpenScenario-*.csv`. Example: `CrossingPedestrian.xosc` (a car brakes to a stop, a pedestrian crosses).
 
-![CrossingPedestrian.xosc rendered as a video from a fixed street camera (-videoCams): the car brakes to a stop and the pedestrian crosses](ReadmeFiles/openscenario_video.jpg)
+![CrossingPedestrian.xosc in the town rendered as a video from a fixed street camera (-videoCams): the car brakes to a stop and the pedestrian crosses](ReadmeFiles/openscenario_video.jpg)
 
 ### Videos from fixed cameras
 For online (crowdsourced) versions of a study, the same trial can be rendered as videos from fixed cameras, in the editor, in builds and in batch mode: `-videoCams "street=-30,6,-25,60,12;chase;front;driver"` (a camera at x, y, z with yaw and pitch (and field of view), or behind the participant, ahead of it looking back, or the participant's own view), `-videoStart 2 -videoSeconds 10 -videoFps 30 -videoSize 1920x1080`. The simulation runs in step with the frames, so the videos are smooth even on a slow PC. [ffmpeg](https://ffmpeg.org) (on the PATH, or `-ffmpeg path`) joins the frames into `ExperimentLogs/Videos/{camera}.mp4`; without it the JPEG frames stay and the log shows the command to join them. `-videoQuit` quits when done. (The [Unity Recorder set-up](#recording-trial-videos) records the game view in the editor.)
@@ -1071,7 +1077,7 @@ For online (crowdsourced) versions of a study, the same trial can be rendered as
 Unity -batchmode -projectPath . -executeMethod SmokeTest.Run -smokeSeconds 30 -smokeOut SmokeTest -logFile smoke.log
 ```
 
-Options: `-smokeTrial N` (index in `Trials`), `-smokeExperiment N` and `-smokeRole N` (override the trial's experiment and role), `-smokeShot "x,y,z,yaw,pitch;..."` (extra screenshots from these camera poses), `-smokeScene <path>` (scene to start from), `-smokeInputMode VR` (head-mounted display mode; without a headset it checks the camera set-up). The report also counts jumps of the participant's view of more than 30° between samples (they should be 0).
+Options: `-smokeTrial N` (index in `Trials`), `-smokeExperiment N` and `-smokeRole N` (override the trial's experiment and role), `-smokeShot "x,y,z,yaw,pitch;..."` (extra screenshots from these camera poses; also `chase`, `front`, `rel:x,y,z,yaw,pitch[,fov]` relative to the participant, which works on every map, `animal[:Dog]` at the nearest animal, and `lineup`/`lineupside`), `-smokeDrive seconds` and `-smokeSteer -1..1` (drive the participant's car), `-smokeLineup "ToyotaCorolla,DafXF95,..."` (park those vehicles in a row ahead of the participant, for pictures of vehicles in a real street), `-smokeScene <path>` (scene to start from), `-smokeInputMode VR` (head-mounted display mode; without a headset it checks the camera set-up). The report also counts jumps of the participant's view of more than 30° between samples (they should be 0).
 
 The models (pedestrians, traffic, two-wheelers, vehicles, maps, trial files) have edit-mode tests (`Assets/Tests/EditMode`, 72 tests, including the tyre model): run them in `Window` ➡️ `General` ➡️ `Test Runner`, or with `Unity -batchmode -projectPath . -runTests -testPlatform EditMode -testResults results.xml`. On Windows, `Unity` is `"C:\Program Files\Unity\Hub\Editor\6000.6.9f1\Editor\Unity.exe"`; on macOS `/Applications/Unity/Hub/Editor/6000.6.9f1/Unity.app/Contents/MacOS/Unity`.
 

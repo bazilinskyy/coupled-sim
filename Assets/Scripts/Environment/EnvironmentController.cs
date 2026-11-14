@@ -185,6 +185,10 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
             }
         }
         CreateRain();
+        // -liveReflections 0: off (comparisons, slow PCs)
+        var args = System.Environment.GetCommandLineArgs();
+        int li = System.Array.IndexOf(args, "-liveReflections");
+        if (li >= 0 && li + 1 < args.Length) LiveReflections = args[li + 1] != "0";
         if (LiveReflections) CreateLiveReflections();
     }
 
@@ -211,6 +215,109 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
         _live.farClipPlane = 800f;
         _live.shadowDistance = 60f;
         _live.clearFlags = UnityEngine.Rendering.ReflectionProbeClearFlags.Skybox;
+        UnityEngine.Rendering.RenderPipelineManager.beginCameraRendering += HideOwnVehicle;
+        UnityEngine.Rendering.RenderPipelineManager.endCameraRendering += ShowOwnVehicle;
+    }
+
+    // the viewer's own vehicle (or body) is left out of the live reflections: seen from just above, its roof would
+    // fill the probe's lower half and show up as a smear of its own colour in its windscreen
+    Transform _ownRoot;
+    readonly List<Renderer> _own = new List<Renderer>();
+    readonly List<Renderer> _hidden = new List<Renderer>();
+
+    // the viewer's cabin has its own small probe, rendered with the car in it: from the driver's seat the
+    // windscreen then reflects the dashboard, as a real one does, instead of the road far below the outdoor probe
+    ReflectionProbe _cabin;
+    int _cabinRender = -1;
+    bool _cabinDirty = true;
+    bool CabinRendering => _cabin != null && _cabinRender >= 0 && !_cabin.IsFinishedRendering(_cabinRender);
+
+    static readonly Collider[] _around = new Collider[8];
+
+    /// <summary>The vehicle (or body) the viewer sits in: the camera's own root, or (replays, external cameras)
+    /// the vehicle whose collider holds the camera. Null when the viewer is in none.</summary>
+    static Transform ViewerVehicle(Camera main)
+    {
+        if (main == null) return null;
+        var root = main.transform.root;
+        if (root != main.transform && root.GetComponent<Rigidbody>() != null) return root;
+        int n = Physics.OverlapSphereNonAlloc(main.transform.position, 0.2f, _around, ~0, QueryTriggerInteraction.Ignore);
+        for (int i = 0; i < n; i++)
+            if (_around[i].attachedRigidbody != null) return _around[i].attachedRigidbody.transform.root;
+        // replays: the vehicles are moved without physics; the nearest participant vehicle around the camera
+        Transform best = null; float bestD = 9f;
+        foreach (var a in FindObjectsByType<PlayerAvatar>(FindObjectsSortMode.None))
+        {
+            float d = (a.transform.position - main.transform.position).sqrMagnitude;
+            if (d < bestD) { bestD = d; best = a.transform; }
+        }
+        if (best != null) return best;
+        return root != main.transform ? root : null;
+    }
+
+    void UpdateCabinReflections()
+    {
+        var main = Camera.main;
+        var root = ViewerVehicle(main);
+        bool inVehicle = root != null && (root.GetComponent<Rigidbody>() != null || root.GetComponent<PlayerAvatar>() != null);
+        if (!inVehicle) { if (_cabin != null) _cabin.gameObject.SetActive(false); return; }
+        if (_cabin == null)
+        {
+            var go = new GameObject("Cabin reflections");
+            _cabin = go.AddComponent<ReflectionProbe>();
+            _cabin.mode = UnityEngine.Rendering.ReflectionProbeMode.Realtime;
+            _cabin.refreshMode = UnityEngine.Rendering.ReflectionProbeRefreshMode.ViaScripting;
+            _cabin.timeSlicingMode = UnityEngine.Rendering.ReflectionProbeTimeSlicingMode.NoTimeSlicing;
+            _cabin.resolution = 64;
+            _cabin.hdr = true;
+            _cabin.size = new Vector3(2.6f, 1.8f, 3.2f);   // about a car's cabin around the eyes
+            _cabin.boxProjection = true;
+            _cabin.importance = 10;                        // wins over the outdoor probe inside the cabin
+            _cabin.blendDistance = 0.1f;
+            _cabin.nearClipPlane = 0.05f;
+            _cabin.farClipPlane = 300f;
+            _cabin.shadowDistance = 20f;
+            _cabin.clearFlags = UnityEngine.Rendering.ReflectionProbeClearFlags.Skybox;
+            _cabinDirty = true;
+        }
+        _cabin.gameObject.SetActive(true);
+        if (_cabin.transform.parent != root) { _cabin.transform.SetParent(root, false); _cabinDirty = true; }
+        _cabin.transform.position = main.transform.position;
+        _cabin.transform.rotation = root.rotation;
+        if (_cabinDirty && !(_liveRender >= 0 && !_live.IsFinishedRendering(_liveRender)) && !CabinRendering)
+        {
+            _cabinDirty = false;
+            _cabinRender = _cabin.RenderProbe();
+        }
+    }
+
+    void HideOwnVehicle(UnityEngine.Rendering.ScriptableRenderContext ctx, Camera cam)
+    {
+        if (cam.cameraType != CameraType.Reflection || _live == null || CabinRendering) return;
+        var root = _cabin != null && _cabin.gameObject.activeSelf && _cabin.transform.parent != null ? _cabin.transform.parent : ViewerVehicle(Camera.main);
+        if (root == null) return;
+        if (root != _ownRoot) { _ownRoot = root; _own.Clear(); root.GetComponentsInChildren(true, _own); }
+        _hidden.Clear();
+        foreach (var r in _own)
+            if (r != null && !r.forceRenderingOff) { r.forceRenderingOff = true; _hidden.Add(r); }
+    }
+
+    void ShowOwnVehicle(UnityEngine.Rendering.ScriptableRenderContext ctx, Camera cam)
+    {
+        if (cam != null && cam.cameraType == CameraType.Reflection) RestoreOwnVehicle();
+    }
+
+    void RestoreOwnVehicle()
+    {
+        foreach (var r in _hidden) if (r != null) r.forceRenderingOff = false;
+        _hidden.Clear();
+    }
+
+    void OnDestroy()
+    {
+        UnityEngine.Rendering.RenderPipelineManager.beginCameraRendering -= HideOwnVehicle;
+        UnityEngine.Rendering.RenderPipelineManager.endCameraRendering -= ShowOwnVehicle;
+        RestoreOwnVehicle();
     }
 
     // above the viewer (out of their own car), when the light changed or the viewer moved on
@@ -219,11 +326,14 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
         if (_live == null || Time.unscaledTime < _nextLiveCheck) return;
         _nextLiveCheck = Time.unscaledTime + 0.5f;
         if (_liveRender >= 0 && !_live.IsFinishedRendering(_liveRender)) return;
+        UpdateCabinReflections();
+        if (CabinRendering) return;
         var viewer = ViewerPosition();
         if (!_liveDirty && (viewer - _liveAt).sqrMagnitude < LiveReflectionDistance * LiveReflectionDistance) return;
         _live.transform.position = viewer + Vector3.up * 3.5f;
         _liveAt = viewer;
         _liveDirty = false;
+        _cabinDirty = true;    // the light outside changed or the viewer moved on: the cabin's view out too
         _liveRender = _live.RenderProbe();
     }
 
