@@ -133,7 +133,7 @@ public class ResponseInput : MonoBehaviour
         var cam = ViewCamera();
         if (cam == null) return;
         if (_canvas == null || _canvas.transform.parent != cam.transform) Build(cam);
-        if (_buttonLight != null) _buttonLight.color = Pressed ? new Color(0.2f, 0.85f, 0.3f, 0.95f) : new Color(0.25f, 0.25f, 0.25f, 0.8f);
+        if (_buttonLight != null) _buttonLight.color = Pressed ? new Color(0.2f, 0.85f, 0.3f, 0.95f) : new Color(0.55f, 0.55f, 0.55f, 0.9f);
         if (_sliderFill != null) _sliderFill.rectTransform.anchorMax = new Vector2(SliderValue / 100f, 1f);
         if (_label != null)
         {
@@ -161,7 +161,7 @@ public class ResponseInput : MonoBehaviour
         _canvas.renderMode = RenderMode.WorldSpace;
         go.transform.SetParent(cam.transform, false);
         // 0.7 m ahead, low in the view; 1 canvas unit = 1 mm
-        go.transform.localPosition = new Vector3(0f, -0.16f, 0.7f);
+        go.transform.localPosition = new Vector3(0f, -0.13f, 0.7f);
         go.transform.localRotation = Quaternion.Euler(10f, 0f, 0f);
         go.transform.localScale = Vector3.one * 0.001f;
         var rt = (RectTransform)go.transform;
@@ -189,6 +189,10 @@ public class ResponseInput : MonoBehaviour
             _sliderFill.color = new Color(0.3f, 0.6f, 1f, 0.95f);
         }
         foreach (var t in go.GetComponentsInChildren<Transform>()) t.gameObject.layer = go.layer;
+        // drawn over the car's interior (the dashboard and steering wheel are nearer than 0.7 m)
+        var onTop = new Material(Graphic.defaultGraphicMaterial) { name = "Response panel (on top)", renderQueue = 4000 };
+        onTop.SetInt("unity_GUIZTestMode", (int)UnityEngine.Rendering.CompareFunction.Always);
+        foreach (var g in go.GetComponentsInChildren<Graphic>()) g.material = onTop;
     }
 
     static GameObject Child(Transform parent, string name, Vector2 min, Vector2 max)
