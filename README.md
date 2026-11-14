@@ -20,7 +20,7 @@ The simulator is open source and free to use. It is aimed at, but not limited to
 - [Networking](#networking)
 - [Data logging](#data-logging), [road network export](#exporting-the-road-network)
 - [Configuration](#configuration): [experiments](#experiment-definitions), [new experiments](#setting-up-a-new-experiment), [agents](#configuration-of-agents), [waypoints](#configuration-of-waypoints), [AI pedestrians](#ai-pedestrians), [AI cars](#ai-cars), [cyclists and riders](#cyclists-e-scooter-and-moped-riders), [automated driving and take-over](#automated-driving-and-take-over-requests), [scripted paths](#scripted-paths), [background traffic](#configuration-of-background-traffic), [SUMO](#traffic-from-sumo), [animals](#animals), [time of day and weather](#time-of-day-and-weather), [eye contact](#configuration-of-drivers-eye-contact), [daylight](#configuration-of-daylight-conditions), [traffic lights](#configuration-of-traffic-lights), [eHMIs](#configuration-of-ehmis), [auditory eHMIs](#auditory-ehmis), [car prefabs](#details-on-editing-car-prefabs)
-- [Study tools](#study-tools): [participant responses](#participant-responses), [designed eHMIs](#designed-ehmis), [in-car displays](#in-car-displays-head-up-display-and-centre-screen), [haptic cues](#haptic-cues), [sound](#sound), [several participants in one car and voice](#several-participants-in-one-car-and-voice), [pedestrian groups](#pedestrian-groups), [gaze over the network](#gaze-over-the-network-and-gaze-triggers), [OpenSCENARIO](#openscenario), [videos from fixed cameras](#videos-from-fixed-cameras), [scene descriptions and AI agents](#scene-descriptions-and-ai-agents)
+- [Study tools](#study-tools): [participant responses](#participant-responses), [designed eHMIs](#designed-ehmis), [in-car displays](#in-car-displays-head-up-display-centre-screen-instrument-cluster-and-timed-messages), [haptic cues](#haptic-cues), [sound](#sound), [several participants in one car and voice](#several-participants-in-one-car-and-voice), [pedestrian groups](#pedestrian-groups), [gaze over the network](#gaze-over-the-network-and-gaze-triggers), [OpenSCENARIO](#openscenario), [videos from fixed cameras](#videos-from-fixed-cameras), [scene descriptions and AI agents](#scene-descriptions-and-ai-agents)
 - [Testing](#testing)
 - [Hardware](#hardware): [monitors](#several-monitors-and-mirrors), [headsets](#head-mounted-displays-vr), [wheels](#steering-wheels-pedals-and-gamepads), [motion suit](#xsens-mvn-motion-suit), [motion platforms](#motion-platforms), [network](#network)
 - [FAQ](#faq)
@@ -301,7 +301,10 @@ Only the window that has focus receives keyboard input.
 | `-screenshot <seconds> <file>`, `-quitAfter <seconds>` | a screenshot after that time; quit after that time (tests, documentation) |
 | `-response button,slider[,hidden]` | [participant responses](#participant-responses) for this agent's role |
 | `-ehmiDesign <name>[@Hood\|Top\|Windshield\|Bumper\|Road]`, `-ehmiState WALK` | a [designed eHMI](#designed-ehmis) on AV roles; its first state |
-| `-hud <name>`, `-centreScreen <name>` | [in-car displays](#in-car-displays-head-up-display-and-centre-screen) |
+| `-hud <name>`, `-centreScreen <name>` | [in-car displays](#in-car-displays-head-up-display-centre-screen-instrument-cluster-and-timed-messages) |
+| `-cluster <name>\|none`, `-inCarMessages <name>` | [instrument cluster and timed messages](#in-car-displays-head-up-display-centre-screen-instrument-cluster-and-timed-messages) |
+| `-carSpec smart\|hatchback\|suv\|estate\|van\|bus\|truck` | [vehicle physics of another vehicle type](#vehicles) |
+| `-blinker left\|right` | start with a turn signal on (previews) |
 | `-hapticsUdp <host:port>[,...]` | [haptic cues](#haptic-cues) to external devices |
 | `-vehicleSounds 1`, `-electricCars 0`, `-ambienceDb <dB>`, `-cabinMusic <file>`, `-cabinMusicDb <dB>`, `-audioReferenceDb <dB>`, `-audioCalibration` | [sound](#sound) |
 | `-seatRole "<role>:<car role>:<seat>"`, `-voice [ptt]`, `-voiceDevice <name>`, `-voiceRecordOnly` | [several participants in one car, voice](#several-participants-in-one-car-and-voice) (give `-seatRole` to every agent) |
@@ -390,7 +393,7 @@ It needs no internet and no installation (a plain web page from the simulator). 
 | Driver | Steer | `A`/`D` or `←`/`→` | wheel |
 | Driver | Brake (axis `Break`) | `Space` | pedal |
 | Driver | Forward / reverse gear (reverse engages at standstill; then the throttle drives backwards, up to 25 km/h) | `F` / `R` | buttons of the wheel profile (G27: 6 / 7) |
-| Driver | Blinker left / right / off | `Q` / `E` / `2` | buttons of the wheel profile (G27: 5 / 4 / 16) |
+| Driver | Turn signal left / right (the same key again: off; cancels itself when the wheel returns after a turn) | `Q` / `E` | buttons of the wheel profile (G27: 5 / 4; 16: off) |
 | AV passenger | eHMI disabled / stop / walk | `1` / `2` / `3` | |
 | AV passenger | Resume driving where the AV waits for input (`WaitInputX`) | `Space` | |
 | AV driver | Take over after a take-over request / hand back to the automation | `Enter` (or steer, brake, accelerate) | profile button (G27: 3), wheel, pedals |
@@ -528,7 +531,21 @@ Only the Smart prefabs are in the `Avatar Prefab Driver` list of `Managers` ➡�
 
 AI cars follow a defined path (see [waypoints](#configuration-of-waypoints)) or can be programmed to react at runtime to other road users.
 
-**Driving physics.** The participant's car drives with `RealisticVehicleDynamics` (on the drivable car prefabs; `Car` = `SmartFortwo` or `Hatchback`): the real mass, centre of mass and inertia of the car; suspension tuned to its mass (`SuspensionFrequency`, `DampingRatio`); tyre grip for asphalt that drops on wet roads (`WetGrip`, with the rain of the [weather](#time-of-day-and-weather)); an engine with torque curve and maximum power, an automatic gearbox (early shifts when driving gently, kick-down), engine braking and an auto-hold at standstill; front/rear brake balance with ABS; anti-roll bars; Ackermann steering geometry; with the keyboard, steering is reduced at speed. The Smart (52 kW) reaches 60 km/h in about 6 s and stops from 70 km/h in under 2 s, as the real car. The models are in `Assets/Scripts/Vehicles/Models` with tests against the manufacturers' acceleration and top speed figures. Remove the component to drive with the original arcade physics.
+**Driving physics.** The participant's car drives with `RealisticVehicleDynamics` (on the drivable car prefabs; `Car` = `SmartFortwo`, `Hatchback`, `Suv`, `Estate`, `Van`, `CityBus` or `Truck`): the real mass, centre of mass and inertia of the car; suspension tuned to its mass (`SuspensionFrequency`, `DampingRatio`); tyre grip for asphalt that drops on wet roads (`WetGrip`, with the rain of the [weather](#time-of-day-and-weather)); an engine with torque curve and maximum power, an automatic gearbox (early shifts when driving gently, kick-down), engine braking and an auto-hold at standstill; front/rear brake balance with ABS; anti-roll bars; Ackermann steering geometry; with the keyboard, steering is reduced at speed. The Smart (52 kW) reaches 60 km/h in about 6 s and stops from 70 km/h in under 2 s, as the real car. The models are in `Assets/Scripts/Vehicles/Models` with tests against the manufacturers' acceleration and top speed figures. Remove the component to drive with the original arcade physics.
+
+**Vehicle types.** `Car` selects the physics of a vehicle type, with the published figures of a real model. The tests in `VehicleModelTests` check each one against those figures.
+
+| `Car` | Model | Mass | Power, torque | Published | Simulated |
+|---|---|---|---|---|---|
+| `SmartFortwo` | Smart Fortwo 451 | 900 kg | 52 kW, 92 Nm | 0-100 km/h 13.3 s, 145 km/h | in range |
+| `Hatchback` | Ford Focus 1.6 | 1350 kg | 92 kW, 159 Nm | 0-100 km/h 10.9 s, 196 km/h | in range |
+| `Suv` | VW Tiguan 2.0 TSI | 1750 kg | 132 kW, 320 Nm | 0-100 km/h 7.7 s, 208 km/h | 6.5-9.5 s, 190-225 km/h |
+| `Estate` | VW Passat Variant 2.0 TDI | 1625 kg | 110 kW, 340 Nm (diesel) | 0-100 km/h 8.9 s, 216 km/h | 7.5-10.5 s, 200-230 km/h |
+| `Van` | Ford Transit 2.0 EcoBlue | 2300 kg | 96 kW, 385 Nm (diesel, RWD) | 0-100 km/h about 15 s, about 150 km/h | 12-18 s, 140-165 km/h |
+| `CityBus` | Mercedes Citaro, 12 m | 14 t with passengers | 260 kW, 1400 Nm | 0-50 km/h about 12-18 s, limited to 80 km/h | 10-22 s, 76-81 km/h |
+| `Truck` | DAF LF 18 t box truck | 12 t half loaded | 191 kW, 1000 Nm, 10 gears | limited to 90 km/h | 0-80 km/h 25-50 s, 86-91 km/h |
+
+Each type also sets the wheelbase, track, centre-of-mass height, tyre size and wheel mass, drag, gear ratios, brake torque and the speed limiter of buses and trucks. The suspension is tuned to the mass, so a bus rolls and pitches like a heavy vehicle. `-carSpec bus` (or another type) gives any drivable car that physics without changing the prefab, e.g. to try a truck's braking distance in the Smart.
 
 **Road surfaces under each wheel.** Each wheel gets the grip and roughness of the surface it is on. On city maps the surface comes from the road meshes, which follow OpenStreetMap's `surface` tag. In other scenes everything counts as asphalt unless `-roadSurface name` sets one surface everywhere (`asphalt`, `bricks`, `cobblestones`, `gravel`, `grass`, `paving` or `unpaved`).
 
@@ -915,8 +932,46 @@ Give a role's AV a designed eHMI with `EhmiDesign` (the file name) and `EhmiDesi
 
 ![Designed eHMIs: light bar on the hood, text on the roof, chevrons on the bumper, a projection on the road](ReadmeFiles/ehmi_designs.jpg)
 
-### In-car displays (head-up display and centre screen)
-The participant's car (driver or AV passenger) can have a **head-up display** (seen about 2.5 m ahead through the windshield) and a **centre screen** on the dashboard, designed like designed eHMIs in `Assets/StreamingAssets/InCar/<name>.json`, set per role (`HudDesign`, `CentreScreenDesign`) or with `-hud` / `-centreScreen`. Their states follow the automation: `AUTOMATED`, `TAKEOVER` (a take-over request), `MANUAL`; text can show live values: `{speed}` (km/h), `{mode}`, `{time_left}` (seconds left to take over), `{reaction}` (the last take-over reaction time) and `{slider}` (the participant's response slider). Included: `HudSpeed`, `CentreScreen`.
+### In-car displays (head-up display, centre screen, instrument cluster) and timed messages
+The participant's car (driver or AV passenger) can have three displays, each designed like a [designed eHMI](#designed-ehmis) in `Assets/StreamingAssets/InCar/<name>.json`:
+- a **head-up display**, seen about 2.5 m ahead through the windshield (`HudDesign` of the role, or `-hud name`);
+- a **centre screen** on the dashboard (`CentreScreenDesign`, `-centreScreen name`);
+- the **instrument cluster** behind the steering wheel. It takes the place and size of the car's own dashboard panel and is on by default with the design `Cluster` (`ClusterDesign`, `-cluster name`; `none` keeps the car's old speedometer).
+
+The default cluster shows real data from the car's physics:
+- a speedometer and a rev counter with needles (red from 6000 rpm);
+- the digital speed and the gear (`P`, `R`, `D1`…);
+- the clock (the scene's time of day);
+- turn signal arrows that flash with the car's indicators;
+- the headlight lamp, the automation status and the take-over request with the seconds left.
+
+**Designing a display.** A design has a size in metres, a background and the elements of each state. States follow the automation: `MANUAL`, `AUTOMATED`, `TAKEOVER`, and `ANY` for elements that are always shown. Elements are placed with `x`, `y`, `w`, `h` from 0 to 1 (from the bottom left):
+- `rect`, `circle`, `arrow`, `chevrons`, `lightbar` and `text`, optionally animated (`pulse`, `blink`, `sweep`…);
+- `gauge`: a dial with a needle, with `value` (e.g. `"{speed}"`), `min`, `max`, `segments` (major ticks), `labels`, `labelScale`, `redFrom`, `startAngle` and `endAngle`;
+- `bar`: a fill bar of a `value` between `min` and `max` (`"direction": "up"` for a vertical one).
+
+Live values, for text and for gauges and bars: `{speed}` (km/h), `{rpm}`, `{gear}`, `{mode}`, `{time_left}`, `{reaction}`, `{slider}`, `{clock}`, `{trial_time}`, `{distance}` (km driven), `{surface}` and `{message}`.
+
+Any element can have a condition, `"when"`: `left`, `right`, `blinkers`, `automated`, `manual`, `takeover`, `braking`, `reverse`, `headlights`, `wet`, `rough` or `message`. `!` negates it, e.g. `"when": "!message"`. Gauges and bars are drawn by the GPU, and the rest of the panel is redrawn only when something on it changes, so a cluster costs little frame time. Included designs: `Cluster`, `HudSpeed`, `CentreScreen`.
+
+**Messages at set times.** Text can be shown on these displays at a time after the start of the trial, after a distance driven, or when the automation state starts. Each message stays for a set number of seconds. The easiest way is a schedule file, `Assets/StreamingAssets/InCar/Messages/<name>.csv`, which can be edited in Excel. Choose it per role (`InCarMessages`) or with `-inCarMessages name`:
+
+```csv
+at;seconds;display;text;color;atDistance;onState
+2;4;hud;Please drive to the end of the street;#FFFFFF;;
+6;5;cluster;Pedestrian ahead;#FFD60A;;
+;5;centre;Turn right at the next junction;#FFFFFF;150;
+;4;all;Automation engaged;#00E5FF;;AUTOMATED
+```
+
+Columns:
+- `display`: `hud`, `centre`, `cluster` or `all`;
+- `color`: optional;
+- a `background` column is also read.
+
+Messages can also be put in a design's own `"messages"` list, with their place on the panel (`x`, `y`, `w`, `h`). Every message shown is logged to `ExperimentLogs/InCarMessages-*.csv`, with the time, the display, the text and the distance driven. `Example.csv` is included.
+
+![The live instrument cluster at 51 km/h in D2 with a scheduled message (left); the driver’s view with the head-up display and its own scheduled message (right)](ReadmeFiles/instrument_cluster.jpg)
 
 ![Head-up display and centre screen while driving automated (left) and during a take-over request (right)](ReadmeFiles/incar_displays.jpg)
 

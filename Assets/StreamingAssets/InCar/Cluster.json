@@ -1,0 +1,27 @@
+{
+  "name": "Instrument cluster: speedometer and rev counter with live needles, gear, digital speed, clock, turn signals, headlights, automation and take-over",
+  "width": 0.18, "height": 0.09, "background": "#0A0D12", "resolution": 3000,
+  "states": [
+    { "state": "ANY", "elements": [
+      { "type": "gauge", "value": "{speed}", "min": 0, "max": 160, "segments": 8, "labels": 9, "color": "#E8EEF2", "x": 0.01, "y": 0.04, "w": 0.36, "h": 0.92 },
+      { "type": "text", "text": "km/h", "color": "#8A949C", "x": 0.14, "y": 0.2, "w": 0.1, "h": 0.08 },
+      { "type": "gauge", "value": "{rpm}", "min": 0, "max": 7000, "segments": 7, "labels": 8, "labelScale": 0.001, "redFrom": 6000, "color": "#E8EEF2", "x": 0.63, "y": 0.04, "w": 0.36, "h": 0.92 },
+      { "type": "text", "text": "x1000 rpm", "color": "#8A949C", "x": 0.74, "y": 0.2, "w": 0.14, "h": 0.07 },
+      { "type": "text", "text": "{speed}", "color": "#FFFFFF", "x": 0.38, "y": 0.5, "w": 0.24, "h": 0.24 },
+      { "type": "text", "text": "{gear}", "color": "#9AD0FF", "x": 0.42, "y": 0.3, "w": 0.16, "h": 0.17 },
+      { "type": "text", "text": "{clock}", "when": "!message", "color": "#8A949C", "x": 0.42, "y": 0.04, "w": 0.16, "h": 0.09 },
+      { "type": "arrow", "direction": "left", "when": "left", "color": "#2ECC40", "x": 0.385, "y": 0.8, "w": 0.06, "h": 0.15 },
+      { "type": "arrow", "direction": "right", "when": "right", "color": "#2ECC40", "x": 0.555, "y": 0.8, "w": 0.06, "h": 0.15 },
+      { "type": "circle", "when": "headlights", "color": "#2ECC40", "x": 0.483, "y": 0.83, "w": 0.034, "h": 0.09 }
+    ] },
+    { "state": "AUTOMATED", "elements": [
+      { "type": "rect", "color": "#00B8D433", "x": 0.38, "y": 0.15, "w": 0.24, "h": 0.12 },
+      { "type": "text", "text": "AUTOMATED", "color": "#00E5FF", "x": 0.39, "y": 0.16, "w": 0.22, "h": 0.1 }
+    ] },
+    { "state": "TAKEOVER", "elements": [
+      { "type": "rect", "color": "#FF3B30", "x": 0.38, "y": 0.15, "w": 0.24, "h": 0.12, "animation": "blink", "period": 0.6 },
+      { "type": "text", "text": "TAKE OVER {time_left}", "color": "#FFFFFF", "x": 0.39, "y": 0.16, "w": 0.22, "h": 0.1 }
+    ] }
+  ],
+  "messages": []
+}

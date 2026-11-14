@@ -13,6 +13,8 @@ public enum BlinkerState
 public class CarBlinkers : MonoBehaviour
 {
     public BlinkerState State;
+    /// <summary>Whether the blinking lamps are lit right now (for the instrument cluster's arrows and the tick sound).</summary>
+    public bool LampOn { get; private set; }
     [SerializeField]
     float blinkInterval = 0.25f;
 
@@ -56,6 +58,7 @@ public class CarBlinkers : MonoBehaviour
     public void Stop()
     {
         State = BlinkerState.None;
+        LampOn = false;
         StopAllCoroutines();
         ResetBlinkers();
     }
@@ -88,6 +91,7 @@ public class CarBlinkers : MonoBehaviour
         while(true)
         {
             yield return new WaitForSeconds(blinkInterval);
+            LampOn = true;
             foreach (MeshRenderer rend in blinkerRenderers)
             {
                 rend.material = lightOn;
@@ -97,6 +101,7 @@ public class CarBlinkers : MonoBehaviour
                 obj.SetActive(true);
             }
             yield return new WaitForSeconds(blinkInterval);
+            LampOn = false;
             foreach (MeshRenderer rend in blinkerRenderers)
             {
                 rend.material = lightOff;

@@ -125,6 +125,15 @@ public class PlayerSystem : MonoBehaviour
             var centre = Arg("-centreScreen") ?? role.CentreScreenDesign;
             if (!string.IsNullOrEmpty(hud)) InCarDisplay.Add(LocalPlayer, hud, InCarDisplay.Kind.Hud);
             if (!string.IsNullOrEmpty(centre)) InCarDisplay.Add(LocalPlayer, centre, InCarDisplay.Kind.CentreScreen);
+            // live instrument cluster on cars with a dashboard (default "Cluster"; "none" keeps the car's own)
+            var cluster = Arg("-cluster") ?? role.ClusterDesign;
+            if (string.IsNullOrEmpty(cluster)) cluster = "Cluster";
+            if (!string.Equals(cluster, "none", StringComparison.OrdinalIgnoreCase) && LocalPlayer.GetComponentInChildren<RealisticVehicleDynamics>(true) != null)
+                InCarDisplay.Add(LocalPlayer, cluster, InCarDisplay.Kind.Cluster);
+            var messages = Arg("-inCarMessages") ?? role.InCarMessages;
+            if (!string.IsNullOrEmpty(messages)) InCarDisplay.LoadSchedule(messages);
+            if (spawnPoint.Type == SpawnPointType.PlayerControlingCar && LocalPlayer.GetComponentInChildren<CarBlinkers>(true) != null)
+                LocalPlayer.gameObject.AddComponent<ParticipantBlinkers>();
         }
         if (isPassenger)
         {
