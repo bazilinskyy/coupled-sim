@@ -84,6 +84,21 @@ public class PlayerSystem : MonoBehaviour
         }
     }
 
+    // -driverCar / -passengerCar Name: the vehicle of the roles that drive or ride in a car, by prefab
+    // name (e.g. ToyotaCorolla for DrivableToyotaCorolla; give the same option on every PC)
+    PlayerAvatar VehicleByName(string option)
+    {
+        var args = System.Environment.GetCommandLineArgs();
+        int i = System.Array.IndexOf(args, option);
+        if (i < 0 || i + 1 >= args.Length) return null;
+        var name = args[i + 1];
+        foreach (var p in _AvatarPrefabDriver)
+            if (p != null && (string.Equals(p.name, name, System.StringComparison.OrdinalIgnoreCase) || string.Equals(p.name, "Drivable" + name, System.StringComparison.OrdinalIgnoreCase)))
+                return p;
+        Debug.LogWarning($"{option} {name}: no such vehicle; available: {string.Join(", ", System.Linq.Enumerable.Select(System.Linq.Enumerable.Where(_AvatarPrefabDriver, x => x != null), x => x.name))}");
+        return null;
+    }
+
     PlayerAvatar GetAvatarPrefab(SpawnPointType type, int carIdx, int twoWheelerIdx = 0)
     {
         switch (type)
@@ -94,7 +109,7 @@ public class PlayerSystem : MonoBehaviour
                 return _AvatarPrefab;
             case SpawnPointType.PlayerControlingCar:
             case SpawnPointType.PlayerInAIControlledCar:
-                return _AvatarPrefabDriver[carIdx];
+                return VehicleByName(type == SpawnPointType.PlayerControlingCar ? "-driverCar" : "-passengerCar") ?? _AvatarPrefabDriver[carIdx];
             default:
                 Assert.IsFalse(true, $"Invalid SpawnPointType: {type}");
                 return null;

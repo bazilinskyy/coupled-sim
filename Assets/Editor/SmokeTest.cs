@@ -175,17 +175,19 @@ public static class SmokeTest
             accelFor = Mathf.Abs(accelFor);
             double tIn = elapsed;
             VehicleInput.ButtonOverride = b => backwards && b == "reverse" ? tIn < 0.5 : (bool?)null;
+            float steer = Arg2("-smokeSteer", 0f);   // -smokeSteer -1..1: the steering axis held while driving (-0.8 turns the cars right)
             VehicleInput.Override = axis =>
                 axis == "Throttle" ? (tIn < accelFor ? 1f : 0f) :
                 axis == "Break" || axis == "Brake" ? (tIn < accelFor ? 0f : 1f) :
-                axis == "Horizontal" ? 0f : (float?)null;
+                axis == "Horizontal" ? steer : (float?)null;
             var dyn = UnityEngine.Object.FindObjectsByType<RealisticVehicleDynamics>().FirstOrDefault(d => d.GetComponentInParent<PlayerAvatar>() == NetworkingManager.Instance.PlayerSystem.LocalPlayer);
             if (dyn != null && (int)(elapsed * 5) != _lastDriveLog)
             {
                 _lastDriveLog = (int)(elapsed * 5);
                 var rb = dyn.GetComponent<Rigidbody>();
                 var w = dyn.transform.InverseTransformDirection(rb.angularVelocity);
-                Debug.Log($"SmokeTest drive: t={elapsed:F1}s {dyn.SpeedKmh:F1} km/h gear {dyn.Gear} {dyn.Rpm:F0} rpm grip {dyn.Grip:F2} on {dyn.Surface} shake {dyn.RoughnessRms:F2} m/s2 pitch rate {w.x * Mathf.Rad2Deg:F2}°/s roll rate {w.z * Mathf.Rad2Deg:F2}°/s vertical {rb.linearVelocity.y:F3} m/s");
+                var art = dyn.GetComponent<ArticulatedTrailer>();
+                Debug.Log($"SmokeTest drive: t={elapsed:F1}s {dyn.SpeedKmh:F1} km/h" + (art != null ? $" articulation {art.Angle:F1}°" : "") + $" gear {dyn.Gear} {dyn.Rpm:F0} rpm grip {dyn.Grip:F2} on {dyn.Surface} shake {dyn.RoughnessRms:F2} m/s2 pitch rate {w.x * Mathf.Rad2Deg:F2}°/s roll rate {w.z * Mathf.Rad2Deg:F2}°/s vertical {rb.linearVelocity.y:F3} m/s");
             }
         }
         // -smokePress button@seconds: that VehicleInput button is pressed for one frame (e.g. blinker_left@2)
