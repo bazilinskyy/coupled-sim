@@ -324,7 +324,9 @@ public static class VehicleBuilder
                         if (hit != null) { look = dir; break; }
                     }
                     var place = cluster ?? ((hit ?? head + look * 0.8f) - look * 0.01f, look, new Vector2(0.24f, 0.09f));
-                    dash.SetPositionAndRotation(root.TransformPoint(place.centre), Quaternion.LookRotation(root.TransformDirection(place.normal), root.up));
+                    // a little in front of the model's panel (towards the driver): gauge faces are curved, a flat display
+                    // right on them is cut by the curve (the lower lines of a message lost their tops)
+                    dash.SetPositionAndRotation(root.TransformPoint(place.centre - place.normal * 0.012f), Quaternion.LookRotation(root.TransformDirection(place.normal), root.up));
                     dash.sizeDelta = place.size / Mathf.Max(1e-6f, dash.lossyScale.x);
                     // the hatchback's own speedometer (a mesh) is not part of this model
                     foreach (var mr in dash.GetComponentsInChildren<MeshRenderer>(true)) mr.enabled = false;

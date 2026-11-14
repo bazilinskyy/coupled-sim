@@ -232,8 +232,14 @@ public class OsmMap : MonoBehaviour
         var root = new GameObject(info.City).transform;
         root.SetParent(transform, false);
         Generator.Build(root);
+        // onto the real terrain, where the map has heights (Tools/terrain_height.py)
+        if (Generator.Terrain != null)
+        {
+            try { Generator.Terrain.Apply(root, Generator); Generator.RealDataCredits.Add($"terrain {Generator.Terrain.Min:F0} to {Generator.Terrain.Max:F0} m: {Generator.Terrain.Credit}"); }
+            catch (Exception e) { Debug.LogWarning("TerrainHeight: " + e); }
+        }
         new GameObject("Map data © OpenStreetMap contributors (ODbL)").transform.SetParent(transform, false);
-        Debug.Log($"OsmMap: built {info} in {sw.ElapsedMilliseconds} ms: {Generator.Roads.Count} roads, {Generator.BuildingCount} buildings ({Generator.BuildingsOverRoads} over roads), {Generator.Crossings.Count / 2} crossings, {Generator.SignCount} traffic signs, {Generator.PropCount} street props, {Generator.ParkedCarCount} parked cars, {Generator.ParkedBicycleCount} parked bicycles, {Generator.PatchCount} road patches, {Generator.ManholeCount} manhole covers, {Generator.PuddleCount} puddles{(Generator.Aerial != null ? ", aerial photo (" + Generator.Aerial.Credit + ")" : "")}");
+        Debug.Log($"OsmMap: built {info} in {sw.ElapsedMilliseconds} ms: {Generator.Roads.Count} roads, {Generator.BuildingCount} buildings ({Generator.BuildingsOverRoads} over roads), {Generator.Crossings.Count / 2} crossings, {Generator.SignCount} traffic signs, {Generator.PropCount} street props, {Generator.ParkedCarCount} parked cars, {Generator.ParkedBicycleCount} parked bicycles, {Generator.PatchCount} road patches, {Generator.ManholeCount} manhole covers, {Generator.PuddleCount} puddles{(Generator.Aerial != null ? ", aerial photo (" + Generator.Aerial.Credit + ")" : "")}{(Generator.RealDataCredits.Count > 0 ? "; real data: " + string.Join("; ", Generator.RealDataCredits) : "")}");
         // the road network for analysis, once per map (ExperimentLogs/RoadNetwork-{map}.geojson)
         try
         {

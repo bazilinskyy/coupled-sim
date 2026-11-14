@@ -38,6 +38,7 @@ public class OsmMapGenerator
     public bool Real3DBuildings { get; private set; }
     readonly MapAssets _assets;
     Func<int, Material> _facadeMat;
+    Func<int, Material> _groundMat;
     /// <summary><c>-noFacadeRelief</c>: flat façades (no normal or parallax maps), e.g. for comparisons or slow PCs.</summary>
     static readonly bool _noRelief = Array.IndexOf(Environment.GetCommandLineArgs(), "-noFacadeRelief") >= 0;
     /// <summary>Façade materials whose windows light up at night (OsmMap sets their emission from the sun).</summary>
@@ -196,51 +197,54 @@ public class OsmMapGenerator
     static readonly Dictionary<string, (Texture2D normal, Texture2D height, Texture2D occlusion)> _facadeRelief = new Dictionary<string, (Texture2D, Texture2D, Texture2D)>();
 
     /// <summary>Normal map, height map (for parallax) and ambient occlusion of a façade style: windows look set into the wall.</summary>
-    static (Texture2D normal, Texture2D height, Texture2D occlusion) FacadeRelief(WindowStyle style, bool brick)
+    static (Texture2D normal, Texture2D height, Texture2D occlusion) FacadeRelief(WindowStyle style, bool brick) =>
+        Relief(style + (brick ? " brick" : ""), BayPx * FacadeBays, BayPx * FacadeBays, 3f / BayPx,
+            (x, y) => FacadeHeight(x % BayPx * 256 / BayPx, y % BayPx * 256 / BayPx, style, brick));
+
+    /// <summary>Relief maps from a height field in metres (width x height pixels, pixelM metres per pixel).</summary>
+    static (Texture2D normal, Texture2D height, Texture2D occlusion) Relief(string key, int sizeX, int sizeY, float pixelM, Func<int, int, float> heightAt)
     {
-        var key = style + (brick ? " brick" : "");
         if (_facadeRelief.TryGetValue(key, out var cached) && cached.normal != null) return cached;
-        int size = BayPx * FacadeBays;
-        var h = new float[size * size];
-        for (int y = 0; y < size; y++)
-            for (int x = 0; x < size; x++)
-                h[y * size + x] = FacadeHeight(x % BayPx * 256 / BayPx, y % BayPx * 256 / BayPx, style, brick);
+        int size = sizeX;   // row length
+        var h = new float[sizeX * sizeY];
+        for (int y = 0; y < sizeY; y++)
+            for (int x = 0; x < sizeX; x++)
+                h[y * size + x] = heightAt(x, y);
         // a little softening, so edges look bevelled rather than aliased
         var sm = new float[h.Length];
-        for (int y = 0; y < size; y++)
+        for (int y = 0; y < sizeY; y++)
             for (int x = 0; x < size; x++)
             {
                 float acc = 0f;
-                for (int dy = -1; dy <= 1; dy++) for (int dx = -1; dx <= 1; dx++) acc += h[((y + dy + size) % size) * size + (x + dx + size) % size];
+                for (int dy = -1; dy <= 1; dy++) for (int dx = -1; dx <= 1; dx++) acc += h[((y + dy + sizeY) % sizeY) * size + (x + dx + size) % size];
                 sm[y * size + x] = acc / 9f;
             }
-        float pixelM = 3f / BayPx;    // one pixel is about 2 cm of wall
         // occlusion: how far a point lies below its surroundings (about 12 cm around): reveals and glass corners get less sky
         var wide = new float[h.Length]; var tmp = new float[h.Length]; const int rad = 6;
-        for (int y = 0; y < size; y++)
+        for (int y = 0; y < sizeY; y++)
             for (int x = 0; x < size; x++)
             {
                 float acc = 0f;
                 for (int d = -rad; d <= rad; d++) acc += sm[y * size + (x + d + size) % size];
                 tmp[y * size + x] = acc / (2 * rad + 1);
             }
-        for (int y = 0; y < size; y++)
+        for (int y = 0; y < sizeY; y++)
             for (int x = 0; x < size; x++)
             {
                 float acc = 0f;
-                for (int d = -rad; d <= rad; d++) acc += tmp[((y + d + size) % size) * size + x];
+                for (int d = -rad; d <= rad; d++) acc += tmp[((y + d + sizeY) % sizeY) * size + x];
                 wide[y * size + x] = acc / (2 * rad + 1);
             }
         float min = sm.Min(), max = sm.Max(), range = Mathf.Max(0.001f, max - min);
-        var normal = new Texture2D(size, size, TextureFormat.RGBA32, true, true) { name = "facade_normal_" + key, wrapMode = TextureWrapMode.Repeat, anisoLevel = 8 };
-        var height = new Texture2D(size, size, TextureFormat.RGBA32, true, true) { name = "facade_height_" + key, wrapMode = TextureWrapMode.Repeat, anisoLevel = 8 };
-        var occl = new Texture2D(size, size, TextureFormat.RGBA32, true, true) { name = "facade_occlusion_" + key, wrapMode = TextureWrapMode.Repeat, anisoLevel = 8 };
+        var normal = new Texture2D(sizeX, sizeY, TextureFormat.RGBA32, true, true) { name = "facade_normal_" + key, wrapMode = TextureWrapMode.Repeat, anisoLevel = 8 };
+        var height = new Texture2D(sizeX, sizeY, TextureFormat.RGBA32, true, true) { name = "facade_height_" + key, wrapMode = TextureWrapMode.Repeat, anisoLevel = 8 };
+        var occl = new Texture2D(sizeX, sizeY, TextureFormat.RGBA32, true, true) { name = "facade_occlusion_" + key, wrapMode = TextureWrapMode.Repeat, anisoLevel = 8 };
         var np = new Color32[h.Length]; var hp = new Color32[h.Length]; var op = new Color32[h.Length];
-        for (int y = 0; y < size; y++)
+        for (int y = 0; y < sizeY; y++)
             for (int x = 0; x < size; x++)
             {
                 float dx = (sm[y * size + (x + 1) % size] - sm[y * size + (x - 1 + size) % size]) / (2f * pixelM);
-                float dy = (sm[((y + 1) % size) * size + x] - sm[((y - 1 + size) % size) * size + x]) / (2f * pixelM);
+                float dy = (sm[((y + 1) % sizeY) * size + x] - sm[((y - 1 + sizeY) % sizeY) * size + x]) / (2f * pixelM);
                 var n = new Vector3(-dx, -dy, 1f).normalized;
                 np[y * size + x] = new Color32((byte)((n.x * 0.5f + 0.5f) * 255), (byte)((n.y * 0.5f + 0.5f) * 255), (byte)((n.z * 0.5f + 0.5f) * 255), 255);
                 byte g = (byte)((sm[y * size + x] - min) / range * 255);
@@ -258,6 +262,117 @@ public class OsmMapGenerator
         var r = (normal, height, occl);
         _facadeRelief[key] = r;
         return r;
+    }
+
+    // ------------------------------------------------------------------ ground floors
+
+    /// <summary>Ground floor kinds: shops and cafés (shop windows, a fascia and a glass door), office lobbies
+    /// (floor-to-ceiling glass), houses and flats (a front door between windows).</summary>
+    public enum GroundStyle { Shop, Lobby, Door }
+    public const float GroundFloorHeight = 3.2f;
+    const int GroundBays = 4;   // a ground floor texture: 4 bays of 3 m, one storey of 3.2 m
+
+    // classification of a ground floor pixel: 0 wall, 1 glass, 2 frame, 3 door, 4 fascia, 5 step/plinth
+    static int GroundPart(float u, int bay, float v, GroundStyle style)
+    {
+        const float f = 0.02f;
+        switch (style)
+        {
+            case GroundStyle.Shop:
+                if (v > 0.84f && v < 0.97f) return 4;                                   // fascia above the windows
+                if (v < 0.05f) return 5;
+                if (bay == 1)                                                            // the shop door
+                {
+                    if (u > 0.32f && u < 0.68f && v < 0.78f) return Mathf.Abs(u - 0.5f) < f * 0.6f ? 2 : (v > 0.05f && u > 0.35f && u < 0.65f ? 3 : 2);
+                }
+                if (u > 0.04f && u < 0.96f && v > 0.08f && v < 0.8f)
+                    return u < 0.07f || u > 0.93f || v < 0.11f || v > 0.77f ? 2 : 1;
+                return 0;
+            case GroundStyle.Lobby:
+                if (v < 0.03f) return 5;
+                if (u < 0.025f || u > 0.975f || Mathf.Abs(v - 0.88f) < 0.012f) return 2;
+                if (bay == 2 && u > 0.3f && u < 0.7f && v < 0.8f) return Mathf.Abs(u - 0.5f) < 0.008f ? 2 : 3;
+                return 1;
+            default:
+                if (v < 0.04f) return 5;
+                if (bay % 2 == 0)                                                        // front door with a transom light
+                {
+                    if (u > 0.36f && u < 0.64f && v < 0.72f) return v > 0.6f ? (Mathf.Abs(v - 0.6f) < 0.012f ? 2 : 1) : (u < 0.385f || u > 0.615f ? 2 : 3);
+                    if (u > 0.34f && u < 0.66f && v < 0.75f) return 2;
+                }
+                else if (u > 0.25f && u < 0.75f && v > 0.25f && v < 0.8f)
+                    return u < 0.28f || u > 0.72f || v < 0.28f || v > 0.77f || Mathf.Abs(u - 0.5f) < f ? 2 : 1;
+                return 0;
+        }
+    }
+
+    static Texture2D GroundTexture(string name, Color wall, Color frame, bool brick, GroundStyle style, int seed)
+    {
+        var rng = new System.Random(seed);
+        // shop fascias and doors in a few typical colours
+        var fascias = new[] { new Color(0.12f, 0.16f, 0.22f), new Color(0.45f, 0.1f, 0.1f), new Color(0.1f, 0.25f, 0.18f), new Color(0.2f, 0.2f, 0.2f) };
+        var doors = new[] { new Color(0.15f, 0.22f, 0.32f), new Color(0.32f, 0.12f, 0.1f), new Color(0.12f, 0.24f, 0.15f), new Color(0.3f, 0.22f, 0.14f) };
+        var fascia = fascias[rng.Next(fascias.Length)]; var door = doors[rng.Next(doors.Length)];
+        return TexRect(name, BayPx * GroundBays, BayPx, (x, y, r) =>
+        {
+            int bay = x / BayPx; float u = x % BayPx / (float)BayPx, v = y / (float)BayPx;
+            switch (GroundPart(u, bay, v, style))
+            {
+                case 1: { float sky = 0.16f + 0.2f * v; return Noise(new Color(sky * 0.8f, sky * 0.9f, sky), r, 0.05f); }
+                case 2: return style == GroundStyle.Door ? frame : new Color(0.18f, 0.19f, 0.2f);
+                case 3: return style == GroundStyle.Door ? Noise(door, r, 0.08f) : Noise(new Color(0.16f, 0.2f, 0.24f), r, 0.05f);
+                case 4: return Noise(fascia, r, 0.05f);
+                case 5: return Noise(new Color(0.5f, 0.5f, 0.48f), r, 0.08f);
+            }
+            if (brick)
+            {
+                int course = y / 6, offset = course % 2 == 0 ? 0 : 12;
+                if (y % 6 == 0 || (x + offset) % 24 == 0) return Noise(new Color(0.72f, 0.7f, 0.66f), r, 0.1f);
+                return Noise(wall, r, 0.18f) * (0.9f + 0.2f * ((course * 7 + (x + offset) / 24 * 13) % 10) / 10f);
+            }
+            return Noise(wall, r, 0.05f);
+        });
+    }
+
+    static float GroundHeight(int x, int y, GroundStyle style, bool brick)
+    {
+        int bay = x / BayPx; float u = x % BayPx / (float)BayPx, v = y / (float)BayPx;
+        switch (GroundPart(u, bay, v, style))
+        {
+            case 1: return style == GroundStyle.Lobby ? -0.03f : -0.12f;
+            case 2: return style == GroundStyle.Lobby ? 0.02f : -0.05f;
+            case 3: return -0.1f;
+            case 4: return 0.06f;
+            case 5: return 0.03f;
+        }
+        if (brick) { int course = y / 6, offset = course % 2 == 0 ? 0 : 12; if (y % 6 == 0 || (x + offset) % 24 == 0) return -0.008f; }
+        return 0f;
+    }
+
+    /// <summary>Shop windows lit warm at night (lobbies cool white); doors and houses dark.</summary>
+    static Texture2D GroundLights(string name, GroundStyle style) =>
+        TexRect(name, BayPx * GroundBays, BayPx, (x, y, r) =>
+        {
+            int bay = x / BayPx; float u = x % BayPx / (float)BayPx, v = y / (float)BayPx;
+            int part = GroundPart(u, bay, v, style);
+            if (part != 1 && part != 3) return Color.black;
+            // shops lit softly at night, one bay in four dark (closed, shutters down)
+            if (style == GroundStyle.Shop) return bay == 3 ? Color.black : new Color(1f, 0.84f, 0.62f) * (0.32f + 0.12f * v);
+            if (style == GroundStyle.Lobby) return bay == 1 ? Color.black : new Color(0.85f, 0.9f, 1f) * 0.3f;
+            return part == 1 && bay % 2 == 0 ? new Color(1f, 0.8f, 0.55f) * 0.5f : Color.black;   // a light in the transom
+        });
+
+    static Texture2D TexRect(string name, int w, int h, Func<int, int, System.Random, Color> pixel)
+    {
+        if (_textures.TryGetValue(name, out var t) && t != null) return t;
+        var rng = new System.Random(name.GetHashCode());
+        t = new Texture2D(w, h, TextureFormat.RGBA32, true) { name = name, wrapMode = TextureWrapMode.Repeat, anisoLevel = 8 };
+        var px = new Color[w * h];
+        for (int y = 0; y < h; y++) for (int x = 0; x < w; x++) px[y * w + x] = pixel(x, y, rng);
+        t.SetPixels(px);
+        t.Apply(true, true);
+        _textures[name] = t;
+        return t;
     }
 
     /// <summary>One window bay (3 m) by one floor (3 m), in 256 x 256 coordinates.</summary>
@@ -426,6 +541,7 @@ public class OsmMapGenerator
         r.sharedMaterial = mat;
         if (collider) go.AddComponent<MeshCollider>().sharedMesh = mesh;
         go.isStatic = true;
+        _emitted.Add(go);
         return go;
     }
 
@@ -473,7 +589,21 @@ public class OsmMapGenerator
     }
     static int Layer(OsmWay w) => int.TryParse(w.Tag("layer"), out var l) ? l : 0;
 
-    List<V2> Line(OsmWay w) => w.NodeIds.Where(_pos.ContainsKey).Select(id => _pos[id]).ToList();
+    List<V2> Line(OsmWay w)
+    {
+        var line = w.NodeIds.Where(_pos.ContainsKey).Select(id => _pos[id]).ToList();
+        if (Terrain == null || line.Count < 2) return line;
+        // on terrain: a point every 8 m at most, so streets and walls follow the slope between OSM's nodes
+        var dense = new List<V2>(line.Count * 2) { line[0] };
+        for (int i = 1; i < line.Count; i++)
+        {
+            float d = V2.Distance(line[i - 1], line[i]);
+            int n = (int)(d / 8f);
+            for (int k = 1; k <= n; k++) dense.Add(V2.Lerp(line[i - 1], line[i], k / (n + 1f)));
+            dense.Add(line[i]);
+        }
+        return dense;
+    }
     bool Inside(V2 p) => Math.Abs(p.X) < HalfSize + 30 && Math.Abs(p.Y) < HalfSize + 30;
 
     static float BuildingHeight(OsmWay w)
@@ -493,6 +623,9 @@ public class OsmMapGenerator
     {
         var world = new GameObject("World").transform;
         world.SetParent(root, false);
+        _emitted.Clear();
+        try { Terrain = TerrainHeight.Load(_map.Name, _proj); }
+        catch (Exception e) { Debug.LogWarning("TerrainHeight: " + e.Message); Terrain = null; }
 
         var asphalt = Mat("Asphalt", Color.white, 0.2f, Tex("asphalt", 256, (x, y, r) => Noise(new Color(0.23f, 0.23f, 0.24f), r, 0.35f)));
         // road surfaces from OpenStreetMap's surface tag: brick paving (Dutch "klinkers"), cobblestones, gravel
@@ -555,6 +688,32 @@ public class OsmMapGenerator
             NightMaterials.Add(m);
             return facades[k] = m;
         };
+        // ground floors: wall kind × ground style (shop, lobby, door)
+        int groundStyles = Enum.GetValues(typeof(GroundStyle)).Length;
+        var grounds = new Material[wallKinds.Length * groundStyles];
+        _groundMat = k =>
+        {
+            if (grounds[k] != null) return grounds[k];
+            var (name, wall, frame, brick) = wallKinds[k / groundStyles];
+            var gs = (GroundStyle)(k % groundStyles);
+            var tag = $"{name.Replace(' ', '_')}_{gs}";
+            var m = Mat($"Ground floor {name} {gs}", Color.white, gs == GroundStyle.Door ? 0.1f : 0.4f, GroundTexture("ground_" + tag, wall, frame, brick, gs, k));
+            m.mainTextureScale = new Vector2(1f / GroundBays, 1f);
+            if (_assets != null && _assets.FacadeTemplate != null && !_noRelief)
+            {
+                var (nrm, hgt, occ) = Relief("ground " + gs + (brick ? " brick" : ""), BayPx * GroundBays, BayPx, 3f / BayPx, (x, y) => GroundHeight(x, y, gs, brick));
+                m.shader = _assets.FacadeTemplate.shader;
+                m.SetTexture("_BumpMap", nrm); m.SetFloat("_BumpScale", 1f); m.EnableKeyword("_NORMALMAP");
+                m.SetTexture("_ParallaxMap", hgt); m.SetFloat("_Parallax", 0.02f); m.EnableKeyword("_PARALLAXMAP");
+                m.SetTexture("_OcclusionMap", occ); m.SetFloat("_OcclusionStrength", 1f); m.EnableKeyword("_OCCLUSIONMAP");
+            }
+            m.SetTexture("_EmissionMap", GroundLights("ground_lights_" + gs, gs));
+            m.SetColor("_EmissionColor", Color.black);
+            m.EnableKeyword("_EMISSION");
+            m.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None;
+            NightMaterials.Add(m);
+            return grounds[k] = m;
+        };
         // brick-heavy palettes for the Netherlands, Belgium and the UK; more plaster/concrete elsewhere
         bool brickCountry = _map.Country == "Netherlands" || _map.Country == "Belgium" || _map.Country == "United Kingdom";
         int[] palette = brickCountry ? new[] { 0, 0, 1, 1, 2, 3 } : new[] { 3, 3, 4, 4, 2, 0 };
@@ -562,7 +721,7 @@ public class OsmMapGenerator
         float h = HalfSize + 40;
         var ground = new MeshBuilder();
         // in tiles of at most 100 m: the physics engine warns about (and handles badly) triangles over 500 m
-        int tiles = Mathf.CeilToInt(2 * h / 100f);
+        int tiles = Mathf.CeilToInt(2 * h / (Terrain != null ? 10f : 100f));   // 10 m on terrain, so the ground follows it
         float step = 2 * h / tiles;
         for (int i = 0; i < tiles; i++)
             for (int j = 0; j < tiles; j++)
@@ -632,6 +791,29 @@ public class OsmMapGenerator
         }
         Emit(world, "Green areas", green, grass, true);
         Emit(world, "Water", waterMb, water, false);
+        // the national large-scale topography (the Netherlands: BGT) as the ground's surfaces: every carriageway,
+        // footpath, cycle path, parking bay, verge and green area at its exact outline, just under the generated
+        // streets (which stay on top); the names give the tyres their grip (bricks, paving, grass, gravel)
+        var surfaces = MapExtras.LoadSurfaces(_map.Name, _proj, out var surfaceCredit);
+        if (surfaces != null)
+        {
+            var kinds = new Dictionary<string, (string name, Material mat)>
+            {
+                ["road"] = ("BGT roads", asphalt), ["road_bricks"] = ("BGT roads bricks", bricks), ["footway"] = ("BGT pavements", paving),
+                ["footway_asphalt"] = ("BGT pavements asphalt", asphalt), ["parking"] = ("BGT parking bricks", bricks), ["cycleway"] = ("BGT cycle paths", red),
+                ["grass"] = ("BGT green areas", grass), ["gravel"] = ("BGT gravel", gravel),
+            };
+            var builders = kinds.Keys.ToDictionary(k => k, _ => new MeshBuilder());
+            foreach (var (kind, ring) in surfaces)
+            {
+                if (!builders.TryGetValue(kind, out var mb) || ring.Count < 3) continue;
+                var poly = ring.Select(q => new V2(q.x, q.y)).ToList();
+                if (!poly.Any(Inside)) continue;
+                mb.Polygon(poly, 0.012f, kind == "grass" ? 4f : kind == "road" || kind == "footway_asphalt" ? 4f : kind == "cycleway" ? 4f : 1.5f);
+            }
+            foreach (var kv in kinds) if (builders[kv.Key].V.Count > 0) Emit(world, kv.Value.name, builders[kv.Key], kv.Value.mat, true);
+            RealDataCredits.Add($"{surfaces.Count} surfaces: {surfaceCredit}");
+        }
 
         var roads = new MeshBuilder();
         var brickRoads = new MeshBuilder();
@@ -664,6 +846,9 @@ public class OsmMapGenerator
             var line = Line(w);
             if (line.Count < 2 || !line.Any(Inside)) continue;
             float lift = Math.Max(0, Layer(w)) * 0.02f;
+            var bridgeTag = w.Tag("bridge");
+            if (Terrain != null && bridgeTag != null && bridgeTag != "no")
+                Terrain.AddBridge(line.Select(q => new Vector2(q.X, q.Y)).ToList(), RoadWidth(w));
             if (CarRoads.Contains(hw))
             {
                 float width = RoadWidth(w);
@@ -801,6 +986,11 @@ public class OsmMapGenerator
 
         // buildings: real 3D models where available (3D BAG, the Netherlands), else OSM footprints extruded
         var buildingMbs = facades.Select(_ => new MeshBuilder()).ToArray();
+        var groundMbs = grounds.Select(_ => new MeshBuilder()).ToArray();
+        var cornices = new MeshBuilder();
+        // shops, cafés and other businesses (OSM points): the buildings they are in get shop fronts
+        var shopPoints = _data.Nodes.Values.Where(n => (n.Tag("shop") != null && n.Tag("shop") != "vacant") || ShopAmenities.Contains(n.Tag("amenity") ?? ""))
+            .Select(n => _pos.TryGetValue(n.Id, out var q) ? q : new V2(float.NaN, 0)).Where(q => !float.IsNaN(q.X)).ToList();
         var roofs = new MeshBuilder();
         var tileRoofs = new[] { new MeshBuilder(), new MeshBuilder() };
         var tileMats = new[]
@@ -814,7 +1004,7 @@ public class OsmMapGenerator
         if (bag != null)
         {
             Real3DBuildings = true;
-            AddRealBuildings(bag, buildingMbs, palette, roofs, tileRoofs);
+            AddRealBuildings(bag, buildingMbs, palette, roofs, tileRoofs, groundMbs, shopPoints, cornices);
         }
         foreach (var w in bag != null ? Enumerable.Empty<OsmWay>() : _data.Ways.Where(w => w.IsClosed && w.Tag("building") != null))
         {
@@ -825,17 +1015,25 @@ public class OsmMapGenerator
             float minHeight = ParseMetres(w.Tag("min_height"), 0f);
             if (Geometry2D.SignedArea(poly) < 0) poly.Reverse();
             var style = StyleFor(0, height, w.Tag("building"), (uint)(Math.Abs(w.Id) * 2654435761L));
-            var mb = buildingMbs[palette[(int)(Math.Abs(w.Id) % palette.Length)] * Styles + (int)style];
+            int kindO = palette[(int)(Math.Abs(w.Id) % palette.Length)];
+            var mb = buildingMbs[kindO * Styles + (int)style];
+            var gsBase = GroundStyleFor(style, w.Tag("building"));
+            float split = minHeight < 0.5f && height > GroundFloorHeight + 1.5f ? GroundFloorHeight : minHeight;
             float u = 0;
             for (int i = 0; i < poly.Count; i++)
             {
                 var a = poly[i]; var b = poly[(i + 1) % poly.Count];
                 float len = V2.Distance(a, b);
-                mb.Quad(P(b, minHeight), P(b, height), P(a, height), P(a, minHeight),
-                    new Vector2((u + len) / 3f, minHeight / 3f), new Vector2((u + len) / 3f, height / 3f),
-                    new Vector2(u / 3f, height / 3f), new Vector2(u / 3f, minHeight / 3f));
+                var gmb = groundMbs[kindO * GroundStyleCount + (int)(NearShop((a + b) / 2f, shopPoints) ? GroundStyle.Shop : gsBase)];
+                if (split > minHeight)
+                    gmb.Quad(P(b, minHeight), P(b, split), P(a, split), P(a, minHeight),
+                        new Vector2((u + len) / 3f, 0f), new Vector2((u + len) / 3f, 1f), new Vector2(u / 3f, 1f), new Vector2(u / 3f, 0f));
+                mb.Quad(P(b, split), P(b, height), P(a, height), P(a, split),
+                    new Vector2((u + len) / 3f, split / 3f), new Vector2((u + len) / 3f, height / 3f),
+                    new Vector2(u / 3f, height / 3f), new Vector2(u / 3f, split / 3f));
                 u += len;
             }
+            if (height > 6f) Cornice(cornices, poly, height);
             roofs.Polygon(poly, height, 5f);
             BuildingCount++;
         }
@@ -843,6 +1041,9 @@ public class OsmMapGenerator
         buildings.SetParent(world, false);
         for (int i = 0; i < facades.Length; i++)
             if (buildingMbs[i].V.Count > 0) { var m = _facadeMat(i); Emit(buildings, "Buildings " + m.name, buildingMbs[i], m, true); }
+        for (int i = 0; i < grounds.Length; i++)
+            if (groundMbs[i].V.Count > 0) { var m = _groundMat(i); Emit(buildings, "Buildings " + m.name, groundMbs[i], m, true); }
+        Emit(buildings, "Cornices", cornices, Mat("Cornice", new Color(0.72f, 0.7f, 0.66f), 0.15f), false);
         if (Aerial != null)
         {
             // roofs in the photo's colours (tiles, gravel, solar panels, dormers); roofs over 35 m keep
@@ -860,18 +1061,232 @@ public class OsmMapGenerator
         // street lamps (EnvironmentController lights them at dusk) and mapped trees
         var props = new GameObject("Street furniture").transform;
         props.SetParent(root, false);
+        // the city's own register of street lights, where there is one: every real pole, at its real height,
+        // turned to the nearest road; else one every 25 m along streets with pavements
+        var realLamps = MapExtras.Load(_map.Name, "lamps", _proj, out var lampCredit);
+        if (realLamps != null && _assets != null && _assets.StreetLamp != null)
+        {
+            float lampHeight = PrefabHeight(_assets.StreetLamp, 6f);
+            int n = 0;
+            foreach (var r in realLamps)
+            {
+                var p = new V2(r.X, r.Z);
+                if (!Inside(p)) continue;
+                var (near, dist) = NearestRoad(p, roadWays);
+                float yaw = dist < 40f ? Mathf.Atan2(near.X - p.X, near.Y - p.Y) * Mathf.Rad2Deg : 0f;
+                var go = UnityEngine.Object.Instantiate(_assets.StreetLamp, P(p, dist < 12f ? PavementHeight : 0.05f), Quaternion.Euler(0, yaw, 0), props);
+                go.name = "StreetLamp (register)";
+                CullWhenSmall(go, 0.008f);
+                go.transform.localScale *= Mathf.Clamp(r.Float("height", lampHeight) / lampHeight, 0.4f, 2.2f);
+                n++;
+            }
+            RealDataCredits.Add($"{n} street lights: {lampCredit}");
+            lamps.Clear();
+        }
         if (_assets != null && _assets.StreetLamp != null)
             foreach (var (p, yaw) in lamps)
-                UnityEngine.Object.Instantiate(_assets.StreetLamp, p, Quaternion.Euler(0, yaw, 0), props).name = "StreetLamp";
+            {
+                var go = UnityEngine.Object.Instantiate(_assets.StreetLamp, p, Quaternion.Euler(0, yaw, 0), props);
+                go.name = "StreetLamp";
+                CullWhenSmall(go, 0.008f);
+            }
         if (_assets != null && _assets.Trees != null && _assets.Trees.Length > 0)
         {
             var rng = new System.Random(_map.Name.GetHashCode());
+            // the city's tree register, where there is one: every street and park tree it manages, at its height
+            var realTrees = MapExtras.Load(_map.Name, "trees", _proj, out var treeCredit);
+            if (realTrees != null)
+            {
+                float treeHeight = PrefabHeight(_assets.Trees[0], 12f);
+                int n = 0;
+                foreach (var r in realTrees)
+                {
+                    var p = new V2(r.X, r.Z);
+                    if (!Inside(p) || n >= MaxRealTrees) continue;
+                    var go = UnityEngine.Object.Instantiate(_assets.Trees[rng.Next(_assets.Trees.Length)], P(p, 0.1f), Quaternion.Euler(0, (float)rng.NextDouble() * 360f, 0), props);
+                    float s = Mathf.Clamp(r.Float("height", treeHeight) / treeHeight, 0.25f, 2.2f) * (0.9f + 0.2f * (float)rng.NextDouble());
+                    // conifers narrow and pointed, palms slender: from the deciduous models, as no others are included
+                    var kind = r["kind"];
+                    float spread = kind == "conifer" ? 0.55f : kind == "palm" ? 0.45f : 1f;
+                    go.transform.localScale = Vector3.Scale(go.transform.localScale, new Vector3(s * spread, s, s * spread));
+                    CullWhenSmall(go, 0.02f);
+                    n++;
+                }
+                RealDataCredits.Add($"{n} trees: {treeCredit}");
+            }
+            // OpenStreetMap's trees (all of them, or those a partial register leaves out: not within 4 m of a registered tree)
+            var registered = new HashSet<(int, int)>();
+            if (realTrees != null) foreach (var r in realTrees) registered.Add(((int)Math.Floor(r.X / 4f), (int)Math.Floor(r.Z / 4f)));
+            bool NearRegistered(V2 q)
+            {
+                int cx = (int)Math.Floor(q.X / 4f), cz = (int)Math.Floor(q.Y / 4f);
+                for (int dx = -1; dx <= 1; dx++) for (int dz = -1; dz <= 1; dz++) if (registered.Contains((cx + dx, cz + dz))) return true;
+                return false;
+            }
             foreach (var n in _data.Nodes.Values.Where(n => n.Tag("natural") == "tree"))
             {
                 if (!_pos.TryGetValue(n.Id, out var p) || !Inside(p)) continue;
-                UnityEngine.Object.Instantiate(_assets.Trees[rng.Next(_assets.Trees.Length)], P(p, 0.1f), Quaternion.Euler(0, (float)rng.NextDouble() * 360f, 0), props);
+                if (registered.Count > 0 && NearRegistered(p)) continue;
+                CullWhenSmall(UnityEngine.Object.Instantiate(_assets.Trees[rng.Next(_assets.Trees.Length)], P(p, 0.1f), Quaternion.Euler(0, (float)rng.NextDouble() * 360f, 0), props), 0.02f);
             }
         }
+    }
+
+    /// <summary>Not drawn once smaller than this fraction of the screen's height (thousands of register trees and lamps).</summary>
+    static void CullWhenSmall(GameObject go, float screenFraction)
+    {
+        if (!go.TryGetComponent<LODGroup>(out var lod)) lod = go.AddComponent<LODGroup>();
+        lod.SetLODs(new[] { new LOD(screenFraction, go.GetComponentsInChildren<Renderer>(true)) });
+        lod.RecalculateBounds();
+    }
+
+
+    /// <summary>The RVV code of a Dutch sign (with its number or arrow) as one of the signs drawn here; false if none.</summary>
+    public static bool RvvKind(string code, string text, out TrafficSignKind kind, out int limit)
+    {
+        limit = 0; kind = TrafficSignKind.Stop;
+        int.TryParse(new string((text ?? "").TakeWhile(char.IsDigit).ToArray()), out var number);
+        switch ((code ?? "").ToUpperInvariant())
+        {
+            case "A1": kind = TrafficSignKind.SpeedLimit; limit = number > 0 ? number : 50; return true;
+            case "A2": kind = TrafficSignKind.EndSpeedLimit; limit = number > 0 ? number : 50; return true;
+            case "B1": kind = TrafficSignKind.PriorityRoad; return true;
+            case "B6": kind = TrafficSignKind.GiveWay; return true;
+            case "B7": kind = TrafficSignKind.Stop; return true;
+            case "C1": kind = TrafficSignKind.ClosedToVehicles; return true;
+            case "C2": kind = TrafficSignKind.NoEntry; return true;
+            case "C3": kind = TrafficSignKind.NoEntry; return true;
+            case "D2": kind = (text ?? "").ToUpperInvariant().StartsWith("L") ? TrafficSignKind.KeepLeftDown : TrafficSignKind.KeepRightDown; return true;
+            case "D4": kind = TrafficSignKind.AheadOnly; return true;
+            case "D5": kind = (text ?? "").ToUpperInvariant().StartsWith("L") ? TrafficSignKind.TurnLeft : TrafficSignKind.TurnRight; return true;
+            case "D6": kind = TrafficSignKind.AheadOrRight; return true;
+            case "E1": kind = TrafficSignKind.NoParking; return true;
+            case "E2": kind = TrafficSignKind.NoStopping; return true;
+            case "E4": kind = TrafficSignKind.Parking; return true;
+            case "E6": kind = TrafficSignKind.DisabledParking; return true;
+            case "E9": kind = TrafficSignKind.PermitParking; return true;
+            case "G5": kind = TrafficSignKind.ResidentialZone; return true;
+            case "G7": kind = TrafficSignKind.FootPath; return true;
+            case "G11": kind = TrafficSignKind.CyclePath; return true;
+            case "G12A": kind = TrafficSignKind.MopedCyclePath; return true;
+            case "H1": return false;
+            case "J21": kind = TrafficSignKind.Children; return true;
+            case "L2": kind = TrafficSignKind.PedestrianCrossing; return true;
+            case "L8": kind = TrafficSignKind.DeadEnd; return true;
+            case "F1": return false;
+        }
+        return false;
+    }
+
+    /// <summary>Signs from the map's register ({map}.signs.csv: lat, lon, bearing = the direction of the traffic they are
+    /// for, RVV code, number/arrow): at their real place (moved to the road edge if they stood on the carriageway),
+    /// facing that traffic along the nearest road; signs on one pole stacked. False when the map has no register.</summary>
+    bool PlaceRegisteredSigns(Transform signs, List<(OsmWay way, List<V2> line, float width)> roadWays)
+    {
+        var reg = MapExtras.Load(_map.Name, "signs", _proj, out var credit);
+        if (reg == null) return false;
+        var poles = new Dictionary<(int, int), int>();
+        int skipped = 0;
+        foreach (var r in reg)
+        {
+            if (SignCount >= MaxRegisteredSigns) break;
+            if (!RvvKind(r["code"], r["text"], out var kind, out var limit)) { skipped++; continue; }
+            var p = new V2(r.X, r.Z);
+            if (!Inside(p)) continue;
+            // traffic direction from the bearing (compass: 0 north = +z, 90 east = +x); the face looks back at it
+            float brg = r.Float("bearing", 0f) * Mathf.Deg2Rad;
+            var travel = new V2(Mathf.Sin(brg), Mathf.Cos(brg));
+            var (near, dist) = NearestRoad(p, roadWays, out var along, out float width);
+            if (dist < 30f && along.LengthSquared() > 1e-6f)
+            {
+                along = V2.Normalize(along);
+                travel = V2.Dot(along, travel) >= 0f ? along : -along;
+                // on the carriageway (data a little off): to the edge on the side it is nearer
+                if (dist < width / 2f + 0.3f)
+                {
+                    var off = p - near;
+                    var side = off.LengthSquared() > 1e-6f ? V2.Normalize(off) : new V2(travel.Y, -travel.X);
+                    p = near + side * (width / 2f + 0.7f);
+                }
+            }
+            var cell = ((int)Math.Round(p.X / 0.6f), (int)Math.Round(p.Y / 0.6f));
+            poles.TryGetValue(cell, out var stacked);
+            poles[cell] = stacked + 1;
+            var go = new GameObject($"Sign {kind}{(limit > 0 ? " " + limit : "")} ({r["code"]})");
+            go.transform.SetParent(signs, false);
+            go.transform.SetPositionAndRotation(P(p, PavementHeight), Quaternion.LookRotation(new Vector3(-travel.X, 0f, -travel.Y), Vector3.up));
+            go.SetActive(false);
+            var s = go.AddComponent<TrafficSign>();
+            s.Kind = kind; s.SpeedLimit = limit; s.Size = 0.6f;
+            s.Height = 2.2f + stacked * 0.68f;          // the next sign on the same pole above the first
+            go.SetActive(true);
+            SignCount++;
+        }
+        RealDataCredits.Add($"{SignCount} traffic signs ({skipped} of kinds not drawn): {credit}");
+        return true;
+    }
+    const int MaxRegisteredSigns = 1500;
+
+    /// <summary>The nearest point on a road centre line, its distance, the road's direction there and width.</summary>
+    static (V2 point, float dist) NearestRoad(V2 p, List<(OsmWay way, List<V2> line, float width)> roads, out V2 along, out float width)
+    {
+        V2 best = p; float bestD = float.MaxValue; along = default; width = 6f;
+        foreach (var (_, line, wd) in roads)
+            for (int i = 0; i + 1 < line.Count; i++)
+            {
+                var a = line[i]; var ab = line[i + 1] - a;
+                float t = ab.LengthSquared() > 1e-6f ? Mathf.Clamp01(V2.Dot(p - a, ab) / ab.LengthSquared()) : 0f;
+                var q = a + ab * t;
+                float d = V2.DistanceSquared(p, q);
+                if (d < bestD) { bestD = d; best = q; along = ab; width = wd; }
+            }
+        return (best, Mathf.Sqrt(bestD));
+    }
+
+    /// <summary>Sources of real-world data used for this map (logged and shown in the build report).</summary>
+    public readonly List<string> RealDataCredits = new List<string>();
+
+    /// <summary>The surfaces built by this generator (each with its own mesh), as opposed to placed prefabs.</summary>
+    public HashSet<GameObject> EmittedMeshes => _emitted;
+    static readonly HashSet<GameObject> _emitted = new HashSet<GameObject>();
+
+    /// <summary>The map's terrain (null: flat). Ground and ways get finer vertices so the lift follows it.</summary>
+    public TerrainHeight Terrain { get; private set; }
+    const int MaxRealTrees = 4000;
+
+    static readonly Dictionary<GameObject, float> _prefabHeights = new Dictionary<GameObject, float>();
+
+    /// <summary>Height of a prefab's drawn parts (measured once).</summary>
+    static float PrefabHeight(GameObject prefab, float fallback)
+    {
+        if (_prefabHeights.TryGetValue(prefab, out var h)) return h;
+        var go = UnityEngine.Object.Instantiate(prefab);
+        go.SetActive(true);
+        var rs = go.GetComponentsInChildren<Renderer>(true);
+        h = fallback;
+        if (rs.Length > 0)
+        {
+            var b = rs[0].bounds; foreach (var r in rs) b.Encapsulate(r.bounds);
+            h = Mathf.Max(0.5f, b.max.y - go.transform.position.y);
+        }
+        UnityEngine.Object.DestroyImmediate(go);
+        return _prefabHeights[prefab] = h;
+    }
+
+    /// <summary>The nearest point on a road centre line and its distance.</summary>
+    static (V2 point, float dist) NearestRoad(V2 p, List<(OsmWay way, List<V2> line, float width)> roads)
+    {
+        V2 best = p; float bestD = float.MaxValue;
+        foreach (var (_, line, _) in roads)
+            for (int i = 0; i + 1 < line.Count; i++)
+            {
+                var a = line[i]; var ab = line[i + 1] - a;
+                float t = ab.LengthSquared() > 1e-6f ? Mathf.Clamp01(V2.Dot(p - a, ab) / ab.LengthSquared()) : 0f;
+                var q = a + ab * t;
+                float d = V2.DistanceSquared(p, q);
+                if (d < bestD) { bestD = d; best = q; }
+            }
+        return (best, Mathf.Sqrt(bestD));
     }
 
     // ------------------------------------------------------------------ traffic signs
@@ -896,6 +1311,8 @@ public class OsmMapGenerator
     {
         var signs = new GameObject("Traffic signs").transform;
         signs.SetParent(root, false);
+        // the national register of traffic signs, where there is one (the Netherlands: NDW): every real sign
+        if (PlaceRegisteredSigns(signs, roadWays)) return;
         float sideSign = _map.LeftHandTraffic ? -1f : 1f;
         var used = new HashSet<string>();
         void Sign(TrafficSignKind kind, V2 at, V2 travel, float width, int limit = 0)
@@ -1227,7 +1644,8 @@ public class OsmMapGenerator
         return !(neg && pos);
     }
 
-    void AddRealBuildings(List<Bag3dBuildings.Building> bag, MeshBuilder[] facadeMbs, int[] palette, MeshBuilder flatRoofs, MeshBuilder[] tileRoofs)
+    void AddRealBuildings(List<Bag3dBuildings.Building> bag, MeshBuilder[] facadeMbs, int[] palette, MeshBuilder flatRoofs, MeshBuilder[] tileRoofs,
+        MeshBuilder[] groundMbs, List<V2> shopPoints, MeshBuilder cornices)
     {
         for (int bi = 0; bi < bag.Count; bi++)
         {
@@ -1256,9 +1674,146 @@ public class OsmMapGenerator
                 AddTriangles(flatRoofs, flat, under, false);
                 BuildingsOverRoads++;
             }
-            AddTriangles(wall, verts, b.Walls, true);
+            // ground floor below GroundFloorHeight (shop fronts where OSM has businesses), the rest as before
+            var gsBase = GroundStyleFor(style, null);
+            if (top > GroundFloorHeight + 1.5f && verts.Any(v => v.y < 0.5f))
+            {
+                SplitWalls(verts, b.Walls, GroundFloorHeight, out var below, out var above);
+                foreach (var poly in below)
+                {
+                    var c = poly.Aggregate(Vector3.zero, (acc, q) => acc + q) / poly.Length;
+                    var gs = NearShop(new V2(c.x, c.z), shopPoints) ? GroundStyle.Shop : gsBase;
+                    AddPolys(groundMbs[kind * GroundStyleCount + (int)gs], new List<Vector3[]> { poly }, true, GroundFloorHeight);
+                }
+                AddPolys(wall, above, true, 0f);
+            }
+            else AddTriangles(wall, verts, b.Walls, true);
+            if (b.RoofKind != 1 && top > 6f) CorniceFromWalls(cornices, verts, b.Walls, top);
             AddTriangles(b.RoofKind == 1 ? tileRoofs[bi % 3 == 0 ? 1 : 0] : flatRoofs, verts, b.Roofs, false);
             BuildingCount++;
+        }
+    }
+
+
+    static readonly HashSet<string> ShopAmenities = new HashSet<string> { "restaurant", "cafe", "bar", "pub", "fast_food", "bank", "pharmacy", "ice_cream" };
+    static readonly int GroundStyleCount = Enum.GetValues(typeof(GroundStyle)).Length;
+
+    /// <summary>The ground floor of a building without a business at it: whole shops by type, lobbies under glass façades, else front doors.</summary>
+    static GroundStyle GroundStyleFor(WindowStyle style, string type)
+    {
+        if (type == "retail" || type == "kiosk" || type == "supermarket") return GroundStyle.Shop;
+        return style == WindowStyle.Glass ? GroundStyle.Lobby : GroundStyle.Door;
+    }
+
+    /// <summary>A shop front for the stretch of wall at p: an OSM business (shop, café, bank, ...) within 6 m.</summary>
+    static bool NearShop(V2 p, List<V2> shops)
+    {
+        foreach (var q in shops) if (V2.DistanceSquared(p, q) < 36f) return true;
+        return false;
+    }
+
+    /// <summary>A stone cornice along the top of a flat-roofed wall: 25 cm out, 40 cm tall.</summary>
+    static void Cornice(MeshBuilder mb, List<V2> poly, float top)
+    {
+        // poly is counter-clockwise (positive area): the outside of an edge a->b is to its right
+        for (int i = 0; i < poly.Count; i++)
+        {
+            var a = poly[i]; var b = poly[(i + 1) % poly.Count];
+            CorniceEdge(mb, a, b, top);
+        }
+    }
+
+    static void CorniceEdge(MeshBuilder mb, V2 a, V2 b, float top)
+    {
+        var d = b - a; float len = d.Length();
+        if (len < 0.5f) return;
+        d /= len;
+        var outN = new V2(d.Y, -d.X) * 0.25f;
+        Vector3 A = P(a, top - 0.4f), B = P(b, top - 0.4f), A2 = P(a + outN, top - 0.4f), B2 = P(b + outN, top - 0.4f);
+        Vector3 At = P(a + outN, top + 0.05f), Bt = P(b + outN, top + 0.05f), Ai = P(a, top + 0.05f), Bi = P(b, top + 0.05f);
+        mb.Quad(A2, At, Bt, B2, Vector2.zero, Vector2.up, Vector2.one, Vector2.right);     // front
+        mb.Quad(A, A2, B2, B, Vector2.zero, Vector2.up, Vector2.one, Vector2.right);       // underside
+        mb.Quad(At, Ai, Bi, Bt, Vector2.zero, Vector2.up, Vector2.one, Vector2.right);     // top
+    }
+
+    /// <summary>Cornices along the top edges of a 3D BAG building's walls (edges whose ends are both at the roof).</summary>
+    static void CorniceFromWalls(MeshBuilder mb, Vector3[] v, int[] walls, float top)
+    {
+        var done = new HashSet<long>();
+        for (int i = 0; i + 2 < walls.Length; i += 3)
+            for (int e = 0; e < 3; e++)
+            {
+                int ia = walls[i + e], ib = walls[i + (e + 1) % 3];
+                Vector3 a = v[ia], b = v[ib];
+                if (a.y < top - 0.3f || b.y < top - 0.3f) continue;
+                long key = Math.Min(ia, ib) * 1000003L + Math.Max(ia, ib);
+                if (!done.Add(key)) continue;
+                // outward: the wall triangle's normal (after the RD flip in AddTriangles: the reversed order)
+                var c = v[walls[i + (e + 2) % 3]];
+                var n = -Vector3.Cross(b - a, c - a); n.y = 0f;
+                if (n.sqrMagnitude < 1e-6f) continue;
+                n.Normalize();
+                var a2 = new V2(a.x, a.z); var b2 = new V2(b.x, b.z);
+                // CorniceEdge puts the outside to the right of a->b
+                var right = new V2((b2 - a2).Y, -(b2 - a2).X);
+                if (right.X * n.x + right.Y * n.z < 0f) { var t = a2; a2 = b2; b2 = t; }
+                CorniceEdge(mb, a2, b2, Mathf.Min(a.y, b.y));
+            }
+    }
+
+    /// <summary>Wall triangles cut at height y into the polygons below and above it.</summary>
+    static void SplitWalls(Vector3[] v, int[] tris, float y, out List<Vector3[]> below, out List<Vector3[]> above)
+    {
+        below = new List<Vector3[]>(); above = new List<Vector3[]>();
+        for (int i = 0; i + 2 < tris.Length; i += 3)
+        {
+            var t = new[] { v[tris[i]], v[tris[i + 1]], v[tris[i + 2]] };
+            var lo = new List<Vector3>(); var hi = new List<Vector3>();
+            for (int k = 0; k < 3; k++)
+            {
+                Vector3 p = t[k], q = t[(k + 1) % 3];
+                bool pIn = p.y <= y, qIn = q.y <= y;
+                if (pIn) lo.Add(p); else hi.Add(p);
+                if (pIn != qIn)
+                {
+                    var x = Vector3.Lerp(p, q, (y - p.y) / (q.y - p.y));
+                    lo.Add(x); hi.Add(x);
+                }
+            }
+            if (lo.Count >= 3) below.Add(lo.ToArray());
+            if (hi.Count >= 3) above.Add(hi.ToArray());
+        }
+    }
+
+    /// <summary>Convex polygons (from SplitWalls) as wall triangles; groundTop &gt; 0: ground floor UVs (v 0..1 over that height).</summary>
+    static void AddPolys(MeshBuilder mb, List<Vector3[]> polys, bool wall, float groundTop)
+    {
+        foreach (var poly in polys)
+        {
+            var verts = poly;
+            var idx = new List<int>();
+            for (int k = 1; k + 1 < verts.Length; k++) { idx.Add(0); idx.Add(k); idx.Add(k + 1); }
+            if (groundTop > 0f) AddTrianglesGround(mb, verts, idx.ToArray(), groundTop);
+            else AddTriangles(mb, verts, idx.ToArray(), wall);
+        }
+    }
+
+    // like AddTriangles for walls, with the ground floor texture's UVs (3 m per bay, one storey tall)
+    static void AddTrianglesGround(MeshBuilder mb, Vector3[] v, int[] tris, float storey)
+    {
+        for (int i = 0; i + 2 < tris.Length; i += 3)
+        {
+            Vector3 a = v[tris[i]], b = v[tris[i + 1]], c = v[tris[i + 2]];
+            var n = Vector3.Cross(b - a, c - a);
+            if (n.sqrMagnitude < 1e-8f) continue;
+            { var t = b; b = c; c = t; n = -n; }
+            n.Normalize();
+            var tan = Vector3.Cross(Vector3.up, n);
+            if (tan.sqrMagnitude < 1e-4f) tan = Vector3.right;
+            tan.Normalize();
+            int k = mb.V.Count;
+            foreach (var p in new[] { a, b, c }) { mb.V.Add(p); mb.UV.Add(new Vector2(Vector3.Dot(p, tan) / 3f, p.y / storey)); }
+            mb.T.Add(k); mb.T.Add(k + 1); mb.T.Add(k + 2);
         }
     }
 

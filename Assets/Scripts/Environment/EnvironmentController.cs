@@ -20,7 +20,8 @@ public enum Weather
 ///
 /// Settable per trial as experiment parameters (it is an IExperimentModifier):
 /// time ("17:30" or 17.5), weather (Clear, PartlyCloudy, Overcast, LightRain, HeavyRain, Fog),
-/// fog (density, e.g. 0.02), rain (0..1), timeSpeed (multiplier of real time; 0 = fixed).
+/// fog (density, e.g. 0.02), rain (0..1), timeSpeed (multiplier of real time; 0 = fixed),
+/// realWeather (a date and local time, e.g. 2025-06-01T14:00: the weather that really was there then, see RealWeather).
 /// The host sends the state to all clients, so every participant sees the same conditions.
 /// </summary>
 public class EnvironmentController : MonoBehaviour, IExperimentModifier
@@ -403,6 +404,13 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
             else if (name == "timespeed") TimeSpeed = ParseFloat(p.value);
             else if (name == "dayofyear") DayOfYear = (int)ParseFloat(p.value);
             else if (name == "latitude") Latitude = ParseFloat(p.value);
+            else if (name == "realweather")
+            {
+                // the weather that really was then and there (the city map's place, if it is built already)
+                var map = OsmMap.Current;
+                if (map != null && map.Generator != null) { Latitude = (float)map.Info.Latitude; Longitude = (float)map.Info.Longitude; UtcOffset = map.Info.UtcOffsetJune; }
+                RealWeather.Apply(this, p.value);
+            }
         }
     }
 
