@@ -86,6 +86,9 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
     Weather _appliedWeather;
     float _appliedFog = -1, _appliedRain = -2;
 
+    /// <summary>The least fog density (exponential squared): the haze of clear air.</summary>
+    public const float MinHaze = 0.00028f;
+
     public static EnvironmentController Instance { get; private set; }
 
     void Awake()
@@ -176,6 +179,8 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
                 var n = m.name.ToLower();
                 bool wet = false;
                 foreach (var k in WetSurfaceKeywords) if (n.Contains(k)) { wet = true; break; }
+                // city-map road surfaces (OsmMapGenerator)
+                if (n.Contains("paving") || n.Contains("cobble") || n.Contains("manhole") || n.Contains("patch") || n.Contains("kerb")) wet = true;
                 if (wet && m.HasProperty("_Smoothness")) { _wetRenderers.Add(r); break; }
             }
         }
@@ -415,9 +420,11 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
         if (UseBakedLighting)
         {
             // only weather: keep sky, sun and ambient of the scene
-            RenderSettings.fog = fog > 0.0006f;
+            // always some haze (aerial perspective): under 1% at 300 m, about half at 3 km, so the
+            // distant city and the surroundings photo fade into the sky instead of ending at a line
+            RenderSettings.fog = true;
             RenderSettings.fogMode = FogMode.ExponentialSquared;
-            RenderSettings.fogDensity = fog;
+            RenderSettings.fogDensity = Mathf.Max(fog, MinHaze);
             Rain = rain;
             SetRain(rain);
             SetWetness(rain > 0 ? Mathf.Clamp01(0.4f + rain) : 0f);
@@ -431,7 +438,8 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
         // a dark blue night sky instead of the procedural sky's brownish twilight
         var dayTint = Color.Lerp(new Color(0.5f, 0.55f, 0.6f), new Color(0.75f, 0.76f, 0.78f), clouds);
         _sky.SetColor("_SkyTint", Color.Lerp(new Color(0.18f, 0.24f, 0.42f), dayTint, Mathf.Clamp01((elevation + 8f) / 10f)));
-        _sky.SetColor("_GroundColor", Color.Lerp(new Color(0.05f, 0.06f, 0.08f), Color.Lerp(new Color(0.37f, 0.35f, 0.33f), new Color(0.45f, 0.45f, 0.47f), clouds), day));
+        // below the horizon (seen past the edge of the map from high up): the haze, not brown earth
+        _sky.SetColor("_GroundColor", Color.Lerp(new Color(0.05f, 0.06f, 0.08f), Color.Lerp(new Color(0.52f, 0.56f, 0.62f), new Color(0.5f, 0.51f, 0.53f), clouds), day));
         _sky.SetFloat("_Exposure", Mathf.Lerp(0.15f, 1.25f, day) * Mathf.Lerp(1f, 0.8f, clouds));
 
         // ambient light: brighter and bluer by day, grey under clouds, dim blue at night
@@ -443,9 +451,11 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
         RenderSettings.ambientGroundColor = skyCol * 0.45f;
 
         // fog
-        RenderSettings.fog = fog > 0.0006f;
+        // always some haze (aerial perspective): under 1% at 300 m, about half at 3 km, so the
+        // distant city and the surroundings photo fade into the sky instead of ending at a line
+        RenderSettings.fog = true;
         RenderSettings.fogMode = FogMode.ExponentialSquared;
-        RenderSettings.fogDensity = fog;
+        RenderSettings.fogDensity = Mathf.Max(fog, MinHaze);
         RenderSettings.fogColor = Color.Lerp(new Color(0.05f, 0.06f, 0.08f), Color.Lerp(new Color(0.7f, 0.76f, 0.85f), new Color(0.62f, 0.64f, 0.66f), clouds), day);
         OvercastSky = clouds >= 0.7f || fog > 0.004f;
 

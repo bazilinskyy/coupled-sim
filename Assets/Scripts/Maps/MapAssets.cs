@@ -8,6 +8,8 @@ using UnityEngine;
 public class MapAssets : ScriptableObject
 {
     public Material LitTemplate;
+    [Tooltip("URP Lit with a detail map (_DETAIL_MULX2), so the variant is in builds: the aerial photo's fine grain up close.")]
+    public Material DetailTemplate;
     public GameObject StreetLamp;
     public GameObject[] Trees;
     [Header("Street furniture and parked vehicles (MapPropBuilder)")]
