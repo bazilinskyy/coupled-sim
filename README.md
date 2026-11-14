@@ -307,6 +307,7 @@ Only the window that has focus receives keyboard input.
 | `-gaze`, `-gazeTrigger "<looker>><car role>:<seconds>:yield,ehmi"` | [gaze over the network](#gaze-over-the-network-and-gaze-triggers) |
 | `-motionUdp <host:port>`, `-motionFormat json\|csv\|flypt`, `-motionRate <Hz>` | [motion platforms](#motion-platforms) |
 | `-magicFormulaTyres` | [tyres from Magic Formula coefficients](#vehicles) |
+| `-roadSurface name` | [one road surface everywhere](#vehicles) (grip, roughness, tyre noise) |
 | `-openscenario <file.xosc>` | [OpenSCENARIO](#openscenario) playback (every agent) |
 | `-videoCams "<name>=x,y,z,yaw,pitch[,fov];chase;front;driver"`, `-videoSeconds`, `-videoStart`, `-videoFps`, `-videoSize WxH`, `-videoQuit`, `-videoKeepFrames`, `-ffmpeg <path>` | [videos from fixed cameras](#videos-from-fixed-cameras) |
 | `-sceneDescriptions`, `-llmModel`, `-llmEffort`, `-llmEndpoint` | [scene descriptions and AI agents](#scene-descriptions-and-ai-agents) |
@@ -526,6 +527,19 @@ Only the Smart prefabs are in the `Avatar Prefab Driver` list of `Managers` ➡�
 AI cars follow a defined path (see [waypoints](#configuration-of-waypoints)) or can be programmed to react at runtime to other road users.
 
 **Driving physics.** The participant's car drives with `RealisticVehicleDynamics` (on the drivable car prefabs; `Car` = `SmartFortwo` or `Hatchback`): the real mass, centre of mass and inertia of the car; suspension tuned to its mass (`SuspensionFrequency`, `DampingRatio`); tyre grip for asphalt that drops on wet roads (`WetGrip`, with the rain of the [weather](#time-of-day-and-weather)); an engine with torque curve and maximum power, an automatic gearbox (early shifts when driving gently, kick-down), engine braking and an auto-hold at standstill; front/rear brake balance with ABS; anti-roll bars; Ackermann steering geometry; with the keyboard, steering is reduced at speed. The Smart (52 kW) reaches 60 km/h in about 6 s and stops from 70 km/h in under 2 s, as the real car. The models are in `Assets/Scripts/Vehicles/Models` with tests against the manufacturers' acceleration and top speed figures. Remove the component to drive with the original arcade physics.
+
+**Road surfaces under each wheel.** Each wheel gets the grip and roughness of the surface it is on. On city maps the surface comes from the road meshes, which follow OpenStreetMap's `surface` tag. In other scenes everything counts as asphalt unless `-roadSurface name` sets one surface everywhere (`asphalt`, `bricks`, `cobblestones`, `gravel`, `grass`, `paving` or `unpaved`).
+
+| Surface | Grip (dry asphalt = 1) | Extra loss when wet | Body shaking at 70 km/h | Tyre noise |
+|---|---|---|---|---|
+| asphalt | 1.0 | none | 0.15 m/s² | reference |
+| bricks (klinkers) | 0.95 | ×0.9 | 0.6 m/s² | +4 dB |
+| cobblestones (setts) | 0.85 | ×0.75 | about 2 m/s² | +8 dB |
+| gravel | 0.6 | ×0.95 | about 1.7 m/s² | +4 dB |
+| grass | 0.45 | ×0.7 | 1 m/s² | −4 dB |
+| pavements, kerbs | 0.9 | ×0.9 | light | +2 dB |
+
+Wet grip is the car's `WetGrip` times the extra loss, so wet cobblestones drop to 0.45. The car then takes longer to stop and spins its wheels when pulling away: from 60 km/h it stops in about 1.7 s on asphalt and about 2.7 s on gravel or grass. On a rough surface each wheel gets a smooth random vertical force, which grows with speed and comes faster the smaller the stones (at most 15 Hz). The car shakes, rolls and pitches a little, and [motion platforms](#motion-platforms) get it through the heave signal. The tyre noise of every car follows the surface under it (see [Sound](#sound)). The values are in `Assets/Scripts/Vehicles/RoadSurfaces.cs`. `SurfaceEffects` on `RealisticVehicleDynamics` turns this off, and its `Surface` and `RoughnessRms` fields show the current surface and shaking.
 
 **Tyres from Magic Formula coefficients.** `RealisticVehicleDynamics` ➡️ `Use Magic Formula` (or `-magicFormulaTyres`) sets the tyres from Pacejka Magic Formula coefficients (B, C, D, E for the longitudinal and lateral force, e.g. from tyre data) instead of the built-in asphalt curves; the formula is fitted to Unity's wheel friction curve (the same peak slip and peak, the sliding value at four times the peak slip). The defaults are typical dry asphalt (longitudinal B 10, C 1.9, D 1, E 0.97: peak at 18% slip; lateral B 8, C 1.3, D 1, E -1.6); wet roads still lower the grip.
 

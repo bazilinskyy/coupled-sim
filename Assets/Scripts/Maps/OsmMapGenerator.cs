@@ -614,7 +614,7 @@ public class OsmMapGenerator
             }
         }
         Emit(world, "Roads", roads, asphalt, true);
-        // the collider names tell the car physics the surface (RealisticVehicleDynamics.SurfaceOf)
+        // the collider names tell the car physics the surface (CoupledSim.Vehicles.RoadSurfaces)
         Emit(world, "Roads bricks", brickRoads, bricks, true);
         Emit(world, "Roads cobblestones", cobbleRoads, cobbles, true);
         Emit(world, "Roads gravel", gravelRoads, gravel, true);
