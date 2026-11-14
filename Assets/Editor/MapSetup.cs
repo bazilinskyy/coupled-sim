@@ -78,6 +78,7 @@ public static class MapSetup
         m.EnableKeyword("_PARALLAXMAP");
         m.EnableKeyword("_EMISSION");
         m.EnableKeyword("_OCCLUSIONMAP");
+        m.EnableKeyword("_DETAIL_MULX2");   // the photo textures of walls (kept in builds)
         m.SetFloat("_Parallax", 0.03f);
         EditorUtility.SetDirty(m);
         return m;
@@ -91,6 +92,29 @@ public static class MapSetup
         EditorUtility.SetDirty(assets);
         AssetDatabase.SaveAssets();
         Debug.Log("MapSetup: façade template " + AssetDatabase.GetAssetPath(assets.FacadeTemplate));
+    }
+
+    /// <summary>The photo textures of walls (Assets/ThirdParty/Textures/Walls, CC0) into Resources/MapAssets, normal maps imported as such
+    /// (batch: -executeMethod MapSetup.AddWallTextures).</summary>
+    public static void AddWallTextures()
+    {
+        const string dir = "Assets/ThirdParty/Textures/Walls/";
+        // red brick, dark brick, yellow brick, plaster, concrete; metres of wall per texture
+        var names = new[] { "Bricks101", "Bricks059", "Bricks105", "Plaster001", "Concrete034" };
+        var sizes = new[] { new Vector2(1.6f, 1.6f), new Vector2(1.05f, 1.05f), new Vector2(2.4f, 1.2f), new Vector2(2.5f, 2.5f), new Vector2(1.1f, 0.55f) };
+        foreach (var n in names)
+        {
+            var ni = (TextureImporter)AssetImporter.GetAtPath(dir + n + "_normal.jpg");
+            if (ni.textureType != TextureImporterType.NormalMap) { ni.textureType = TextureImporterType.NormalMap; ni.SaveAndReimport(); }
+        }
+        var assets = AssetDatabase.LoadAssetAtPath<MapAssets>("Assets/Resources/MapAssets.asset");
+        assets.WallDetail = names.Select(n => AssetDatabase.LoadAssetAtPath<Texture2D>(dir + n + "_detail.jpg")).ToArray();
+        assets.WallNormal = names.Select(n => AssetDatabase.LoadAssetAtPath<Texture2D>(dir + n + "_normal.jpg")).ToArray();
+        assets.WallDetailSize = sizes;
+        assets.FacadeTemplate = FacadeTemplate();
+        EditorUtility.SetDirty(assets);
+        AssetDatabase.SaveAssets();
+        Debug.Log($"MapSetup: wall textures {assets.WallDetail.Count(t => t != null)} detail, {assets.WallNormal.Count(t => t != null)} normal");
     }
 
     /// <summary>Adds the detail template to Resources/MapAssets (batch: -executeMethod MapSetup.AddDetailTemplate).</summary>

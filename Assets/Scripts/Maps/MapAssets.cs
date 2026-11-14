@@ -12,6 +12,12 @@ public class MapAssets : ScriptableObject
     public Material DetailTemplate;
     /// <summary>URP Lit with normal, parallax and emission maps: façade materials copy its shader variant (kept in builds).</summary>
     public Material FacadeTemplate;
+    [Header("Photo textures of walls (CC0, ambientCG), as detail maps on the façades")]
+    [Tooltip("In the order of the wall kinds: red brick, dark brick, yellow brick, plaster, concrete. Each scaled to a mean of mid grey: the wall's colour stays, the photo adds bricks, mortar and stains.")]
+    public Texture2D[] WallDetail;
+    public Texture2D[] WallNormal;
+    [Tooltip("Metres of wall one texture covers (width, height).")]
+    public Vector2[] WallDetailSize;
     public GameObject StreetLamp;
     public GameObject[] Trees;
     [Header("Street furniture and parked vehicles (MapPropBuilder)")]
