@@ -10,6 +10,8 @@ public class MapAssets : ScriptableObject
     public Material LitTemplate;
     [Tooltip("URP Lit with a detail map (_DETAIL_MULX2), so the variant is in builds: the aerial photo's fine grain up close.")]
     public Material DetailTemplate;
+    /// <summary>URP Lit with normal, parallax and emission maps: façade materials copy its shader variant (kept in builds).</summary>
+    public Material FacadeTemplate;
     public GameObject StreetLamp;
     public GameObject[] Trees;
     [Header("Street furniture and parked vehicles (MapPropBuilder)")]
