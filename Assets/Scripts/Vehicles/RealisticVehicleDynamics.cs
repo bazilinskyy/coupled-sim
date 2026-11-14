@@ -5,7 +5,8 @@ using UnityEngine;
 /// <summary>
 /// Realistic driving physics for the participant's car, on top of the WheelVehicle (Arcade Car
 /// Physics) set-up: real mass, centre of mass and inertia; suspension tuned to the car's mass;
-/// tyre grip curves for asphalt that drop on wet roads; an engine with torque curve, automatic
+/// tyre grip curves for asphalt that drop on wet roads; per-wheel grip and roughness from the
+/// road surface under each wheel (<see cref="RoadSurfaces"/>: bricks, cobblestones, gravel, grass); an engine with torque curve, automatic
 /// gearbox and engine braking (<see cref="Powertrain"/>); front/rear brake balance with ABS;
 /// anti-roll bars; Ackermann steering geometry. When this component is on a car, WheelVehicle
 /// hands drive, braking and steering to it.
@@ -23,6 +24,8 @@ public class RealisticVehicleDynamics : MonoBehaviour
     [Tooltip("Suspension natural frequency (Hz) and damping ratio.")]
     public float SuspensionFrequency = 1.6f, DampingRatio = 0.35f;
     public bool Abs = true;
+    [Tooltip("Grip and vertical jolts from the surface under each wheel (map roads named by surface, or -roadSurface).")]
+    public bool SurfaceEffects = true;
 
     [Header("Tyres (Magic Formula)")]
     [Tooltip("Set the tyre curves from Pacejka Magic Formula coefficients (e.g. from tyre data) instead of the built-in asphalt curves.")]
@@ -35,6 +38,10 @@ public class RealisticVehicleDynamics : MonoBehaviour
     public float Rpm;
     public float SpeedKmh;
     public float Grip = 1f;
+    [Tooltip("The surface under the front-left wheel.")]
+    public string Surface = "asphalt";
+    [Tooltip("Vertical acceleration of the body from road roughness (RMS over about 1 s, m/s²).")]
+    public float RoughnessRms;
 
     public Powertrain Powertrain { get; private set; }
     public CarSpec Spec { get; private set; }
@@ -44,6 +51,11 @@ public class RealisticVehicleDynamics : MonoBehaviour
     AntiLockBrakes[] _abs;
     WheelCollider _fl, _fr, _rl, _rr;
     bool _configured;
+    float[] _wheelGrip;
+    float _accSq;
+    float[] _phase;
+    readonly float[] _vyHistory = new float[5];
+    int _vyIndex;
 
     void Awake()
     {
@@ -69,6 +81,8 @@ public class RealisticVehicleDynamics : MonoBehaviour
         _rr = _rear.OrderBy(w => transform.InverseTransformPoint(w.transform.position).x).Last();
         _driven = Spec.RearWheelDrive ? _rear : _front;
         _abs = _wheels.Select(_ => new AntiLockBrakes()).ToArray();
+        _wheelGrip = _wheels.Select(_ => -1f).ToArray();
+        _phase = new float[_wheels.Length];
 
         _rb.mass = Spec.Mass;
         // centre of mass: at the spec height above the ground, between the axles (weight distribution)
@@ -100,26 +114,27 @@ public class RealisticVehicleDynamics : MonoBehaviour
     void SetGrip(float grip)
     {
         Grip = grip;
+        for (int i = 0; i < _wheels.Length; i++) SetWheelGrip(i, grip);
+    }
+
+    void SetWheelGrip(int i, float grip)
+    {
+        _wheelGrip[i] = grip;
+        var wc = _wheels[i];
         if (UseMagicFormula && Longitudinal.IsSet && Lateral.IsSet)
         {
             // slips: longitudinal slip ratio up to 1, lateral slip angle up to ~30 degrees (0.5 rad)
-            foreach (var wc in _wheels)
-            {
-                wc.forwardFriction = Longitudinal.ToWheelFriction(wc.forwardFriction, 1f, grip);
-                wc.sidewaysFriction = Lateral.ToWheelFriction(wc.sidewaysFriction, 0.5f, grip);
-            }
+            wc.forwardFriction = Longitudinal.ToWheelFriction(wc.forwardFriction, 1f, grip);
+            wc.sidewaysFriction = Lateral.ToWheelFriction(wc.sidewaysFriction, 0.5f, grip);
             return;
         }
-        foreach (var wc in _wheels)
-        {
-            // asphalt: peak friction at ~10-15% slip, sliding friction ~75% of the peak
-            var f = wc.forwardFriction;
-            f.extremumSlip = 0.2f; f.extremumValue = 1.0f; f.asymptoteSlip = 0.8f; f.asymptoteValue = 0.75f; f.stiffness = grip * 1.2f;
-            wc.forwardFriction = f;
-            var s = wc.sidewaysFriction;
-            s.extremumSlip = 0.25f; s.extremumValue = 1.0f; s.asymptoteSlip = 0.5f; s.asymptoteValue = 0.75f; s.stiffness = grip * 1.4f;
-            wc.sidewaysFriction = s;
-        }
+        // asphalt: peak friction at ~10-15% slip, sliding friction ~75% of the peak
+        var f = wc.forwardFriction;
+        f.extremumSlip = 0.2f; f.extremumValue = 1.0f; f.asymptoteSlip = 0.8f; f.asymptoteValue = 0.75f; f.stiffness = grip * 1.2f;
+        wc.forwardFriction = f;
+        var s = wc.sidewaysFriction;
+        s.extremumSlip = 0.25f; s.extremumValue = 1.0f; s.asymptoteSlip = 0.5f; s.asymptoteValue = 0.75f; s.stiffness = grip * 1.4f;
+        wc.sidewaysFriction = s;
     }
 
     /// <summary>Ackermann steering: the inner front wheel turns more than the outer one.</summary>
@@ -168,13 +183,48 @@ public class RealisticVehicleDynamics : MonoBehaviour
     void FixedUpdate()
     {
         if (!_configured || _fl == null) return;
-        // wet roads: less grip
+        // wet roads: less grip; each wheel by the surface under it
         var env = EnvironmentController.Instance;
         float wet = env != null ? Mathf.Clamp01(env.Rain * 1.5f) : 0f;
-        float grip = Mathf.Lerp(1f, WetGrip, wet);
-        if (Mathf.Abs(grip - Grip) > 0.01f) SetGrip(grip);
+        float speed = _rb.linearVelocity.magnitude;
+        float sum = 0f;
+        for (int i = 0; i < _wheels.Length; i++)
+        {
+            var wc = _wheels[i];
+            bool grounded = wc.GetGroundHit(out var hit);
+            var surface = SurfaceEffects && grounded ? RoadSurfaces.Of(hit.collider) : RoadSurfaces.Asphalt;
+            float grip = surface.GripAt(wet, WetGrip);
+            if (Mathf.Abs(grip - _wheelGrip[i]) > 0.01f) SetWheelGrip(i, grip);
+            sum += _wheelGrip[i];
+            if (wc == _fl) Surface = surface.Name;
+            if (grounded && surface.Roughness > 0f) Jolt(i, surface, speed);
+        }
+        Grip = sum / _wheels.Length;
+        // body vertical acceleration over 0.1 s (what is felt and seen, without the physics steps'
+        // own jitter), RMS over about 1 s; e.g. for logs and motion platforms
+        float vy = Vector3.Dot(_rb.linearVelocity, transform.up);
+        float ay = (vy - _vyHistory[_vyIndex]) / (Time.fixedDeltaTime * _vyHistory.Length);
+        _vyHistory[_vyIndex] = vy;
+        _vyIndex = (_vyIndex + 1) % _vyHistory.Length;
+        _accSq = Mathf.Lerp(_accSq, ay * ay, Time.fixedDeltaTime);
+        RoughnessRms = Mathf.Sqrt(_accSq);
         AntiRoll(_fl, _fr, AntiRollFront);
         AntiRoll(_rl, _rr, AntiRollRear);
+    }
+
+    // a rough surface: a smooth random vertical force at each wheel, stronger with speed, varying
+    // faster the smaller the stones (at most 15 Hz: what the body and seat pass on; faster stones
+    // are felt as that). Each wheel has its own noise, so the car also rolls and pitches a little.
+    void Jolt(int i, RoadSurface surface, float speed)
+    {
+        if (speed < 0.5f) return;
+        float rate = Mathf.Min(speed / surface.Wavelength, 15f);
+        _phase[i] += rate * Time.fixedDeltaTime;
+        // Perlin noise around 0.5: centred and scaled to about -1..1
+        float n = (Mathf.PerlinNoise(_phase[i], i * 7.31f + 0.5f) - 0.5f) * 3f;
+        float scale = surface.Roughness * Mathf.Sqrt(Mathf.Min(speed, 25f) / 13.9f);
+        float quarter = _rb.mass / _wheels.Length;
+        _rb.AddForceAtPosition(transform.up * (quarter * scale * n), _wheels[i].transform.position);
     }
 
     void AntiRoll(WheelCollider left, WheelCollider right, float stiffness)
