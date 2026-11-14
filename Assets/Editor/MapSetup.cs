@@ -42,6 +42,7 @@ public static class MapSetup
         }
         assets.LitTemplate = lit;
         assets.DetailTemplate = DetailTemplate();
+        assets.FacadeTemplate = FacadeTemplate();
         assets.StreetLamp = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/StreetLights/StreetLamp.prefab");
         assets.Trees = new[] { "Tree9_2", "Tree9_3", "Tree9_4", "Tree9_5" }
             .Select(n => AssetDatabase.LoadAssetAtPath<GameObject>($"Assets/Prefabs/Tree/{n}.prefab")).Where(t => t != null).ToArray();
@@ -62,6 +63,34 @@ public static class MapSetup
         m.SetFloat("_DetailAlbedoMapScale", 1f);
         EditorUtility.SetDirty(m);
         return m;
+    }
+
+    static Material FacadeTemplate()
+    {
+        const string path = "Assets/Settings/Rendering/MapLitFacade.mat";
+        var m = AssetDatabase.LoadAssetAtPath<Material>(path);
+        if (m == null)
+        {
+            m = new Material(Shader.Find("Universal Render Pipeline/Lit"));
+            AssetDatabase.CreateAsset(m, path);
+        }
+        m.EnableKeyword("_NORMALMAP");
+        m.EnableKeyword("_PARALLAXMAP");
+        m.EnableKeyword("_EMISSION");
+        m.EnableKeyword("_OCCLUSIONMAP");
+        m.SetFloat("_Parallax", 0.03f);
+        EditorUtility.SetDirty(m);
+        return m;
+    }
+
+    /// <summary>Adds the façade template to Resources/MapAssets (batch: -executeMethod MapSetup.AddFacadeTemplate).</summary>
+    public static void AddFacadeTemplate()
+    {
+        var assets = AssetDatabase.LoadAssetAtPath<MapAssets>("Assets/Resources/MapAssets.asset");
+        assets.FacadeTemplate = FacadeTemplate();
+        EditorUtility.SetDirty(assets);
+        AssetDatabase.SaveAssets();
+        Debug.Log("MapSetup: façade template " + AssetDatabase.GetAssetPath(assets.FacadeTemplate));
     }
 
     /// <summary>Adds the detail template to Resources/MapAssets (batch: -executeMethod MapSetup.AddDetailTemplate).</summary>

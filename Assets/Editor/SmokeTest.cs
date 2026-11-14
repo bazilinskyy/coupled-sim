@@ -165,6 +165,7 @@ public static class SmokeTest
             return;
         }
         double elapsed = EditorApplication.timeSinceStartup - _inGameSince;
+        if (!_lineupDone && elapsed > 1.0) { _lineupDone = true; SpawnLineup(); }
         // -smokeDrive seconds: full throttle for that long, then full brake (participant's car);
         // negative: select reverse first (as the R key or the wheel's reverse button) and drive backwards
         var drive = SessionState.GetString(KeyDrive, "");
@@ -337,6 +338,46 @@ public static class SmokeTest
                 camGo.transform.position = t.position + t.forward * 7f + t.right * 1.2f + Vector3.up * 1.6f;
                 camGo.transform.LookAt(t.position + Vector3.up * 0.8f + t.forward * 1.5f);
             }
+            else if (view.Trim().StartsWith("lineup") && _lineupLength > 0f)
+            {
+                // the parked vehicles from the side of the road, three quarters from the front ("lineup") or from the side ("lineupside")
+                var mid = _lineupStart + _lineupDir * (_lineupLength * 0.45f);
+                camGo.transform.position = view.Trim() == "lineupside"
+                    ? mid + _lineupRight * (_lineupLength * 0.55f) + Vector3.up * 3f
+                    : _lineupStart - _lineupDir * 2f + _lineupRight * 6f + Vector3.up * 3.2f;
+                var target = view.Trim() == "lineupside" ? mid + Vector3.up * 1.2f : _lineupStart + _lineupDir * (_lineupLength * 0.35f) + Vector3.up * 1.2f;
+                // in front of a building or tree that would block the view
+                var toCam = camGo.transform.position - target;
+                if (Physics.Raycast(target + toCam.normalized * 4f, toCam.normalized, out var block, toCam.magnitude - 4f, ~0, QueryTriggerInteraction.Ignore))
+                    camGo.transform.position = block.point - toCam.normalized * 0.5f;
+                camGo.transform.LookAt(target);
+                c.fieldOfView = 55f;
+            }
+            else if (view.Trim().StartsWith("animal") && local != null)
+            {
+                // "animal" (any) or "animal:Dog": the nearest such animal, from a pedestrian's eye height 5 m away
+                var kind = view.Trim().Length > 7 ? view.Trim().Substring(7) : "";
+                var a = UnityEngine.Object.FindObjectsByType<AnimalAgent>(FindObjectsSortMode.None)
+                    .Where(x => kind.Length == 0 || string.Equals(x.Species.ToString(), kind, StringComparison.OrdinalIgnoreCase))
+                    .OrderBy(x => (x.transform.position - local.transform.position).sqrMagnitude).FirstOrDefault();
+                if (a == null) { UnityEngine.Object.DestroyImmediate(camGo); sb.AppendLine($"Screenshot '{view.Trim()}' skipped: no animal"); continue; }
+                var p = a.transform.position;
+                var from = (local.transform.position - p); from.y = 0f;
+                if (from.sqrMagnitude < 0.01f) from = Vector3.back;
+                camGo.transform.position = p + from.normalized * 5f + Vector3.up * 1.6f;
+                camGo.transform.LookAt(p + Vector3.up * 0.4f);
+                sb.AppendLine($"Animal shot: {a.name} at {p}");
+            }
+            else if (view.Trim().StartsWith("rel:") && local != null)
+            {
+                // rel:x,y,z,yaw,pitch[,fov] relative to the participant (x right, z ahead, yaw from its heading)
+                var v = view.Trim().Substring(4).Split(',').Select(x => float.Parse(x, System.Globalization.CultureInfo.InvariantCulture)).ToArray();
+                var t = local.transform;
+                var fwd = Vector3.ProjectOnPlane(t.forward, Vector3.up).normalized; var right = Vector3.Cross(Vector3.up, fwd);
+                camGo.transform.SetPositionAndRotation(t.position + right * v[0] + Vector3.up * v[1] + fwd * v[2],
+                    Quaternion.LookRotation(fwd) * Quaternion.Euler(v.Length > 4 ? v[4] : 0f, v.Length > 3 ? v[3] : 0f, 0f));
+                if (v.Length > 5) c.fieldOfView = v[5];
+            }
             else if (view.Trim() == "chase" || view.Trim() == "front")
             {
                 UnityEngine.Object.DestroyImmediate(camGo);
@@ -466,6 +507,54 @@ public static class SmokeTest
         File.WriteAllBytes(path, tex.EncodeToPNG());
         UnityEngine.Object.DestroyImmediate(tex);
         rt.Release();
+    }
+
+    // -smokeLineup "ToyotaCorolla,DafXF95,...": those vehicle prefabs parked in a queue ahead of the participant (for
+    // pictures of vehicles in a real street; their scripts are removed, they only stand there)
+    static bool _lineupDone;
+    static Vector3 _lineupStart, _lineupDir, _lineupRight; static float _lineupLength;
+
+    static void SpawnLineup()
+    {
+        var args = Environment.GetCommandLineArgs();
+        int i = Array.IndexOf(args, "-smokeLineup");
+        if (i < 0 || i + 1 >= args.Length) return;
+        var local = NetworkingManager.Instance != null ? NetworkingManager.Instance.PlayerSystem.LocalPlayer : null;
+        if (local == null) return;
+        var t = local.transform;
+        _lineupDir = Vector3.ProjectOnPlane(t.forward, Vector3.up).normalized;
+        _lineupRight = Vector3.Cross(Vector3.up, _lineupDir);
+        _lineupStart = t.position + _lineupDir * 7f - _lineupRight * 3.2f;   // in the oncoming lane, facing the participant
+        float z = 0f;
+        var holder = new GameObject("Smoke lineup (inactive)"); holder.SetActive(false);
+        foreach (var name in args[i + 1].Split(','))
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>($"Assets/Prefabs/Cars/Vehicles/Drivable{name.Trim()}.prefab")
+                      ?? AssetDatabase.LoadAssetAtPath<GameObject>($"Assets/Prefabs/Cars/Drivable{name.Trim()}.prefab");
+            if (prefab == null) { Debug.LogWarning("SmokeTest lineup: no vehicle " + name); continue; }
+            var go = UnityEngine.Object.Instantiate(prefab, holder.transform);
+            // scripts off before it ever wakes up: several passes, as some components require others
+            for (int pass = 0; pass < 4; pass++)
+                foreach (var mb in go.GetComponentsInChildren<MonoBehaviour>(true).Reverse())
+                    try { UnityEngine.Object.DestroyImmediate(mb); } catch { }
+            foreach (var cam in go.GetComponentsInChildren<Camera>(true)) cam.gameObject.SetActive(false);
+            foreach (var al in go.GetComponentsInChildren<AudioListener>(true)) UnityEngine.Object.DestroyImmediate(al);
+            foreach (var rb in go.GetComponentsInChildren<Rigidbody>(true)) rb.isKinematic = true;
+            foreach (var n in new[] { "DriverModel&Rig", "PassengerModel" }) { var f = go.transform.Find(n); if (f != null) f.gameObject.SetActive(false); }
+            var box = go.GetComponent<BoxCollider>();
+            float back = box != null ? -(box.center.z - box.size.z / 2f) : 2.5f, front = box != null ? box.center.z + box.size.z / 2f : 2.5f;
+            // the rear section of an articulated vehicle reaches further back than the front section's collider
+            foreach (var r in go.GetComponentsInChildren<Renderer>(true)) back = Mathf.Max(back, -go.transform.InverseTransformPoint(r.bounds.min).z, -go.transform.InverseTransformPoint(r.bounds.max).z);
+            z += back;
+            go.transform.SetParent(null, false);
+            float ground = Physics.Raycast(_lineupStart + _lineupDir * z + Vector3.up * 20f, Vector3.down, out var hit, 40f, ~0, QueryTriggerInteraction.Ignore) ? hit.point.y : t.position.y;
+            go.transform.SetPositionAndRotation(new Vector3(0f, 0f, 0f) + _lineupStart + _lineupDir * z, Quaternion.LookRotation(-_lineupDir));
+            go.transform.position = new Vector3(go.transform.position.x, ground, go.transform.position.z);
+            z += front + 2.5f;
+        }
+        UnityEngine.Object.Destroy(holder);
+        _lineupLength = z;
+        Debug.Log($"SmokeTest lineup: {args[i + 1]} over {z:F1} m ahead of the participant");
     }
 
     static void Fail(string msg)
