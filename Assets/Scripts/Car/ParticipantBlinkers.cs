@@ -1,21 +1,21 @@
 using UnityEngine;
 
 /// <summary>
-/// Turn signals for the participant's own car: Q (left), E (right) or the wheel's blinker buttons
-/// (WheelProfile.BlinkerLeft/Right/Clear); the same key again switches them off. Like a real car
-/// they cancel themselves when the steering wheel returns after a turn. A soft tick sounds with
-/// each flash. The state is sent to the other agents with the car's pose and logged with it.
+/// Turn signals of the participant's own car, on top of WheelVehicle (which switches them with Q / E,
+/// 2 to clear, or the wheel's blinker buttons): like a real car they cancel themselves when the
+/// steering wheel returns after a turn, and a soft tick sounds with each flash. The state is sent to
+/// the other agents with the car's pose and logged with it.
 /// <c>-blinker left|right</c> starts with one on (previews, screenshots).
 /// </summary>
 public class ParticipantBlinkers : MonoBehaviour
 {
-    public KeyCode LeftKey = KeyCode.Q, RightKey = KeyCode.E;
     [Tooltip("Steering (-1..1) beyond which a turn counts, and below which (after a turn) the signal cancels.")]
     public float TurnSteer = 0.3f, CentreSteer = 0.08f;
 
     CarBlinkers _blinkers;
     AudioSource _tick;
     bool _turned, _lastLamp;
+    BlinkerState _lastState;
     static AudioClip _click;
 
     void Start()
@@ -39,11 +39,8 @@ public class ParticipantBlinkers : MonoBehaviour
     void Update()
     {
         if (_blinkers == null) return;
-        bool left = Input.GetKeyDown(LeftKey) || VehicleInput.GetButtonDown("blinker_left");
-        bool right = Input.GetKeyDown(RightKey) || VehicleInput.GetButtonDown("blinker_right");
-        if (VehicleInput.GetButtonDown("blinker_clear")) Set(BlinkerState.None);
-        if (left) Set(_blinkers.State == BlinkerState.Left ? BlinkerState.None : BlinkerState.Left);
-        if (right) Set(_blinkers.State == BlinkerState.Right ? BlinkerState.None : BlinkerState.Right);
+        // switched on or off (by WheelVehicle's keys and buttons, or the experimenter): a new turn
+        if (_blinkers.State != _lastState) { _lastState = _blinkers.State; _turned = false; }
         // self-cancelling: after steering into the turn, cancel when the wheel is back near the centre
         if (_blinkers.State != BlinkerState.None)
         {

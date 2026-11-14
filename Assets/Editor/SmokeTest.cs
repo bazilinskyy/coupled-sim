@@ -32,6 +32,7 @@ public static class SmokeTest
     const string KeyParams = "SmokeTest.Params";
     const string KeyRide = "SmokeTest.Ride";
     const string KeyDrive = "SmokeTest.Drive";
+    static int _pressFrame = -1;
     static int _lastDriveLog = -1;
 
     static double _startTime = -1;
@@ -187,6 +188,22 @@ public static class SmokeTest
                 Debug.Log($"SmokeTest drive: t={elapsed:F1}s {dyn.SpeedKmh:F1} km/h gear {dyn.Gear} {dyn.Rpm:F0} rpm grip {dyn.Grip:F2} on {dyn.Surface} shake {dyn.RoughnessRms:F2} m/s2 pitch rate {w.x * Mathf.Rad2Deg:F2}°/s roll rate {w.z * Mathf.Rad2Deg:F2}°/s vertical {rb.linearVelocity.y:F3} m/s");
             }
         }
+        // -smokePress button@seconds: that VehicleInput button is pressed for one frame (e.g. blinker_left@2)
+        var cmd = System.Environment.GetCommandLineArgs();
+        int pi = System.Array.IndexOf(cmd, "-smokePress");
+        var press = pi >= 0 && pi + 1 < cmd.Length ? cmd[pi + 1] : "";
+        if (press.Contains("@"))
+        {
+            var parts = press.Split('@');
+            float at = float.Parse(parts[1], System.Globalization.CultureInfo.InvariantCulture);
+            if (_pressFrame < 0 && elapsed >= at) _pressFrame = Time.frameCount + 1;
+            if (_pressFrame >= 0)
+            {
+                var prev = VehicleInput.ButtonOverride;
+                int frame = _pressFrame; string name = parts[0];
+                VehicleInput.ButtonOverride = b => b == name ? Time.frameCount == frame : prev != null ? prev(b) : (bool?)null;
+            }
+        }
         // -smokeTakeOver seconds: the driver brakes then (to take over from the automation)
         float takeOverAt = Arg2("-smokeTakeOver", -1f);
         if (takeOverAt >= 0f && drive.Length == 0)
@@ -289,6 +306,8 @@ public static class SmokeTest
             foreach (var l in lines.Skip(1).Take(40)) sb.AppendLine("  " + l);
         }
         sb.AppendLine($"Cars: {cars} ({movedCars} moved), pedestrians: {peds} ({movedPeds} moved)");
+        var localCar = NetworkingManager.Instance != null && NetworkingManager.Instance.PlayerSystem != null ? NetworkingManager.Instance.PlayerSystem.LocalPlayer : null;
+        if (localCar != null && localCar.CarBlinkers != null) sb.AppendLine($"Blinkers: {localCar.CarBlinkers.State}");
 
         if (Soundscape.Current != null && Soundscape.Current.VehicleSounds)
             foreach (var v in Soundscape.Current.Voices().Take(5))
