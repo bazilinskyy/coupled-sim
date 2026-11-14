@@ -47,7 +47,7 @@ public class TrafficLightsManager : MonoBehaviour
         {
             for(int i = 0; i < initialStreetLightSetup.Length; i++)
             {
-                initiallyTriggeredEvents.Add(CurrentIndex);
+                initiallyTriggeredEvents.Add(i);
                 TriggerEvent(i, true);
             }
             initialized = true;
@@ -65,6 +65,16 @@ public class TrafficLightsManager : MonoBehaviour
         }
 
         CurrentTimer += Time.deltaTime;
+    }
+
+    /// <summary>Sets the cycle from code (e.g. the traffic lights of a city map); <paramref name="startTimer"/> is the time already spent in the first event's wait.</summary>
+    public void Configure(TrafficLightEvent[] initial, TrafficLightEvent[] events, float startTimer = 0f)
+    {
+        initialStreetLightSetup = initial;
+        streetLightEvents = events;
+        CurrentIndex = 0;
+        CurrentTimer = startTimer;
+        initialized = false;
     }
 
     public void TriggerEvent(int idx, bool initialSetup)

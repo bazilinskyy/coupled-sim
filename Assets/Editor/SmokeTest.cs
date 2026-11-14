@@ -368,7 +368,7 @@ public static class SmokeTest
                 camGo.transform.LookAt(p + Vector3.up * 0.4f);
                 sb.AppendLine($"Animal shot: {a.name} at {p}");
             }
-            else if (view.Trim().StartsWith("sign") && local != null)
+            else if (view.Trim().StartsWith("sign") && !view.Trim().StartsWith("signal") && local != null)
             {
                 // "sign" or "sign:CyclePath": the nearest such traffic sign, from 7 m in front of it at eye height
                 var kind = view.Trim().Length > 5 ? view.Trim().Substring(5) : "";
@@ -380,6 +380,32 @@ public static class SmokeTest
                 camGo.transform.position = p + sg.transform.forward * 7f + sg.transform.right * 1.5f + Vector3.up * 1.7f;
                 camGo.transform.LookAt(p + Vector3.up * (sg.Height + 0.3f));
                 sb.AppendLine($"Sign shot: {sg.name} at {p}");
+            }
+            else if (view.Trim().StartsWith("signal"))
+            {
+                // "signal", "signal:3" (the n-th nearest signal head to the participant): as a driver sees it, 30 m
+                // before it in its approach; "signaltop:3": its junction from 35 m up
+                var spec = view.Trim();
+                bool top = spec.StartsWith("signaltop");
+                int nth = spec.Contains(":") ? int.Parse(spec.Substring(spec.IndexOf(':') + 1)) : 0;
+                var origin = local != null ? local.transform.position : Vector3.zero;
+                var lights = UnityEngine.Object.FindObjectsByType<CarTrafficLight>(FindObjectsSortMode.None)
+                    .OrderBy(x => (x.transform.position - origin).sqrMagnitude).ToList();
+                if (lights.Count == 0) { UnityEngine.Object.DestroyImmediate(camGo); sb.AppendLine($"Screenshot '{spec}' skipped: no signal"); continue; }
+                var l = lights[Mathf.Min(nth, lights.Count - 1)];
+                var p = l.transform.position;
+                var toTraffic = Vector3.ProjectOnPlane(TrafficCar.LightFacing(l.transform), Vector3.up).normalized;
+                if (top)
+                {
+                    camGo.transform.position = p + toTraffic * 28f + Vector3.up * 30f;
+                    camGo.transform.LookAt(p - toTraffic * 10f - Vector3.up * 5f);
+                }
+                else
+                {
+                    camGo.transform.position = p + toTraffic * 30f + Vector3.up * -3.7f;
+                    camGo.transform.LookAt(p - toTraffic * 10f + Vector3.up * -3.2f);
+                }
+                sb.AppendLine($"Signal shot: {l.name} at {p}, state {l.State}");
             }
             else if (view.Trim().StartsWith("rel:") && local != null)
             {
