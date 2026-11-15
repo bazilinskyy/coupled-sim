@@ -707,7 +707,7 @@ public class SumoBridge : CarSpawnerBase
             _nextPedestrianScan = Time.time + 1f;
             _pedestrians.Clear();
             foreach (var a in FindObjectsByType<PlayerAvatar>())
-                if (a.Type != AvatarType.Driver) _pedestrians.Add(a.transform);
+                if (a.Type == AvatarType.Pedestrian) _pedestrians.Add(a.transform);
         }
         var stop = new HashSet<string>();
         foreach (var kv in _cars)

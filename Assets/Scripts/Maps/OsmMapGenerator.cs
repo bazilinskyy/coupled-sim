@@ -1130,10 +1130,11 @@ public partial class OsmMapGenerator
             var photoRoofs = new MeshBuilder();
             roofs = AerialSplit(roofs, photoRoofs);
             for (int i = 0; i < tileRoofs.Length; i++) tileRoofs[i] = AerialSplit(tileRoofs[i], photoRoofs);
-            Emit(buildings, "Roofs aerial photo", photoRoofs, Mat("Roof aerial photo", Color.white, 0.15f, Aerial.Texture), false);
+            Emit(buildings, "Roofs aerial photo", photoRoofs, Mat("Roof aerial photo", Color.white, 0.15f, Aerial.Texture), true);
         }
-        Emit(buildings, "Roofs", roofs, roof, false);
-        for (int i = 0; i < tileRoofs.Length; i++) Emit(buildings, "Roofs " + tileMats[i].name, tileRoofs[i], tileMats[i], false);
+        // roofs collide too: drones land on them and measure their height above them, planners see the buildings' tops
+        Emit(buildings, "Roofs", roofs, roof, true);
+        for (int i = 0; i < tileRoofs.Length; i++) Emit(buildings, "Roofs " + tileMats[i].name, tileRoofs[i], tileMats[i], true);
 
         PlaceStreetFurniture(root);
 

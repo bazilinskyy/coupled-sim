@@ -49,6 +49,7 @@ public class Client : NetworkSystem
         _msgDispatcher.AddStaticHandler((int)MsgId.B_Ping, HandlePing);
         _msgDispatcher.AddStaticHandler((int)MsgId.S_Environment, EnvironmentController.ClientHandleState);
         _msgDispatcher.AddStaticHandler((int)MsgId.S_AnimalPoses, AnimalSpawner.ClientHandlePoses);
+        _msgDispatcher.AddStaticHandler((int)MsgId.S_DronePoses, DroneSpawner.ClientHandlePoses);
         _msgDispatcher.AddStaticHandler((int)MsgId.S_Voice, (sync, src) => VoiceChat.Receive(NetMsg.Read<VoiceMsg>(sync)));
         NetworkGaze.SendToHost = g => { if (_client.InRoom) _client.SendUnreliable(new GazeMsg { Origin = g.Origin, Direction = g.Direction, Eyes = g.Eyes }); };
         VoiceChat.Setup(v => { if (_client.InRoom) _client.SendUnreliable(v); }, () => _client.MyPlayerId);

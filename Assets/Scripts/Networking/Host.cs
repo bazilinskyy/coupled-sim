@@ -324,6 +324,7 @@ public class Host : NetworkSystem
         _aiCarSystem.UpdateHost();
         _aiPedestrianSyncSystem.UpdateHost();
         AnimalSpawner.Current?.UpdateHost(_host);
+        DroneSpawner.Current?.UpdateHost(_host);
     }
 
     bool failRoleCheck = false;
