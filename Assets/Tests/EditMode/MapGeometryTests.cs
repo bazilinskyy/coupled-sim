@@ -23,6 +23,19 @@ namespace CoupledSim.Tests
         }
 
         [Test]
+        public void TriangulatesPolygonWithBridgedHole()
+        {
+            // a 10 x 10 square with a 2 x 2 courtyard joined to the outline by a bridge (as in the BGT surfaces): area 96
+            var poly = new[] { (0, 0), (10, 0), (6, 4), (4, 4), (4, 6), (6, 6), (6, 4), (10, 0), (10, 10), (0, 10) }
+                .Select(p => new Vector2(p.Item1, p.Item2)).ToList();
+            var tris = Geometry2D.Triangulate(poly);
+            float area = 0;
+            for (int i = 0; i < tris.Count; i += 3)
+                area += Math.Abs(Geometry2D.Cross(poly[tris[i + 1]] - poly[tris[i]], poly[tris[i + 2]] - poly[tris[i]])) / 2;
+            Assert.AreEqual(96f, area, 1e-3);
+        }
+
+        [Test]
         public void TriangulatesClockwiseInput()
         {
             var poly = new List<Vector2> { new Vector2(0, 0), new Vector2(0, 1), new Vector2(1, 1), new Vector2(1, 0) };
