@@ -63,12 +63,13 @@ public sealed class TerrainHeight
 
     // ---- bridges: their decks run straight from one end's ground to the other's
 
-    struct Bridge { public Vector2 A, B; public float HalfWidth, HA, HB; public bool Elevated; }
+    struct Bridge { public Vector2 A, B; public float HalfWidth, HA, HB; public int Layer; }
     readonly List<Bridge> _bridges = new List<Bridge>();
 
-    /// <summary>A bridge from its line; <paramref name="elevated"/>: above other roads or the ground (layer 1 and up): it lifts only
-    /// its own geometry (the generator's "... bridge" meshes and bridge lines), not what passes under it.</summary>
-    public void AddBridge(List<Vector2> line, float width, bool elevated = false)
+    /// <summary>A bridge from its line; <paramref name="layer"/> 1 and up: above other roads or the ground: it lifts only the geometry
+    /// of its own layer (the generator's "... bridge L{layer}" meshes and that layer's lines), not what passes under it (nor
+    /// other decks stacked over or under it). Layer 0: a bridge over water or a small valley, lifting everything on it.</summary>
+    public void AddBridge(List<Vector2> line, float width, int layer = 0)
     {
         if (line.Count < 2) return;
         float ha = At(line[0].x, line[0].y), hb = At(line[line.Count - 1].x, line[line.Count - 1].y);
@@ -78,25 +79,31 @@ public sealed class TerrainHeight
         {
             float seg = Vector2.Distance(line[i], line[i + 1]);
             _bridges.Add(new Bridge { A = line[i], B = line[i + 1], HalfWidth = width / 2f + 1.5f,
-                HA = Mathf.Lerp(ha, hb, total > 0 ? run / total : 0), HB = Mathf.Lerp(ha, hb, total > 0 ? (run + seg) / total : 1), Elevated = elevated });
+                HA = Mathf.Lerp(ha, hb, total > 0 ? run / total : 0), HB = Mathf.Lerp(ha, hb, total > 0 ? (run + seg) / total : 1), Layer = Mathf.Max(0, layer) });
             run += seg;
         }
     }
 
-    /// <summary>The height to lift a point by: the terrain, or a bridge deck's where one passes over it (elevated bridges only
-    /// for <paramref name="onElevated"/> points: their own).</summary>
-    public float Lift(float x, float z) => Lift(x, z, true);
+    /// <summary>The height to lift a point by: the terrain, or a bridge deck's where one passes over it: bridges of layer 0 for
+    /// every point, elevated ones only for points of their own <paramref name="layer"/> (their decks).</summary>
+    public float Lift(float x, float z) => Lift(x, z, 0);
 
-    public float Lift(float x, float z, bool onElevated)
+    public float Lift(float x, float z, int layer)
     {
         var p = new Vector2(x, z);
+        float? own = null, any = null;
         foreach (var b in _bridges)
         {
-            if (b.Elevated && !onElevated) continue;
+            if (b.Layer != 0 && b.Layer != layer) continue;
             var ab = b.B - b.A; float l2 = ab.sqrMagnitude;
             float t = l2 > 1e-6f ? Mathf.Clamp01(Vector2.Dot(p - b.A, ab) / l2) : 0f;
-            if ((b.A + ab * t - p).sqrMagnitude < b.HalfWidth * b.HalfWidth) return Mathf.Lerp(b.HA, b.HB, t);
+            if ((b.A + ab * t - p).sqrMagnitude >= b.HalfWidth * b.HalfWidth) continue;
+            float h = Mathf.Lerp(b.HA, b.HB, t);
+            if (b.Layer == layer && layer > 0) { own = h; break; }   // the point's own deck first
+            if (any == null) any = h;
         }
+        if (own.HasValue) return own.Value;
+        if (any.HasValue) return any.Value;
         return At(x, z);
     }
 
@@ -145,11 +152,13 @@ public sealed class TerrainHeight
                     bool surroundings = t.name.StartsWith("Surroundings");
                     // the ground a little under the streets: its 10 m tiles cut corners on slopes the streets follow more closely
                     float extra = t.name == "Ground" ? -0.15f : 0f;
-                    bool bridge = t.name.EndsWith(" bridge");
+                    int layer = 0;
+                    int bl = t.name.LastIndexOf(" bridge L", StringComparison.Ordinal);
+                    if (bl >= 0) int.TryParse(t.name.Substring(bl + 9), out layer);
                     for (int i = 0; i < v.Length; i++)
                     {
                         var w = l2w.MultiplyPoint3x4(v[i]);
-                        w.y += surroundings ? Min - 0.5f : Lift(w.x, w.z, bridge) + extra;
+                        w.y += surroundings ? Min - 0.5f : Lift(w.x, w.z, layer) + extra;
                         v[i] = w2l.MultiplyPoint3x4(w);
                     }
                     m.vertices = v;
@@ -171,16 +180,16 @@ public sealed class TerrainHeight
         foreach (var (t, offset, onSurface) in things)
         {
             var p = t.position;
-            float lifted = p.y + Lift(p.x, p.z, false);
+            float lifted = p.y + Lift(p.x, p.z, 0);
             var s1 = onSurface ? SurfaceNear(p, lifted - offset) : null;
             t.position = new Vector3(p.x, s1.HasValue ? s1.Value + offset : lifted, p.z);
             objects++;
             if (s1.HasValue) placed++;
         }
-        void LiftLine(List<Vector3> line, bool bridge) { for (int i = 0; i < line.Count; i++) { var q = line[i]; line[i] = new Vector3(q.x, q.y + Lift(q.x, q.z, bridge), q.z); } }
-        foreach (var r in gen.Roads) LiftLine(r.Line, r.Bridge);
-        foreach (var l in gen.CyclePaths) LiftLine(l, gen.BridgeLines.Contains(l));
-        foreach (var l in gen.Pavements) LiftLine(l, gen.BridgeLines.Contains(l));
+        void LiftLine(List<Vector3> line, int layer) { for (int i = 0; i < line.Count; i++) { var q = line[i]; line[i] = new Vector3(q.x, q.y + Lift(q.x, q.z, layer), q.z); } }
+        foreach (var r in gen.Roads) LiftLine(r.Line, r.BridgeLayer);
+        foreach (var l in gen.CyclePaths) LiftLine(l, gen.BridgeLines.TryGetValue(l, out var ly) ? ly : 0);
+        foreach (var l in gen.Pavements) LiftLine(l, gen.BridgeLines.TryGetValue(l, out var ly) ? ly : 0);
         Debug.Log($"TerrainHeight: map lifted onto the terrain ({Min:F1} .. {Max:F1} m around the centre; {meshes} surfaces, {objects} objects ({placed} set on the surface under them), {_bridges.Count} bridge segments): {Credit}");
     }
 }
