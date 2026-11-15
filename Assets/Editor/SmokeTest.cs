@@ -407,6 +407,14 @@ public static class SmokeTest
                 }
                 sb.AppendLine($"Signal shot: {l.name} at {p}, state {l.State}");
             }
+            else if (view.Trim().StartsWith("at:"))
+            {
+                // at:x,y,z,yaw,pitch[,fov] in the scene (y above the ground there, when there is ground)
+                var v = view.Trim().Substring(3).Split(',').Select(x => float.Parse(x, System.Globalization.CultureInfo.InvariantCulture)).ToArray();
+                float gy = Physics.Raycast(new Vector3(v[0], 500f, v[2]), Vector3.down, out var hit, 1000f, ~0, QueryTriggerInteraction.Ignore) ? hit.point.y : 0f;
+                camGo.transform.SetPositionAndRotation(new Vector3(v[0], gy + v[1], v[2]), Quaternion.Euler(v.Length > 4 ? v[4] : 0f, v.Length > 3 ? v[3] : 0f, 0f));
+                if (v.Length > 5) c.fieldOfView = v[5];
+            }
             else if (view.Trim().StartsWith("rel:") && local != null)
             {
                 // rel:x,y,z,yaw,pitch[,fov] relative to the participant (x right, z ahead, yaw from its heading)

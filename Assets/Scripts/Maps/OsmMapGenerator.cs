@@ -928,12 +928,7 @@ public partial class OsmMapGenerator
                     var piece = Geometry2D.SubLine(line, from, to);
                     if (piece.Count < 2) continue;
                     if (width >= 5.5f && hw != "service" && hw != "living_street")
-                    {
-                        var l2 = new List<V2>(); var r2 = new List<V2>();
-                        Geometry2D.Strip(piece, 0.12f, -width / 2 + 0.25f, l2, r2); marks.Strip(l2, r2, 0.035f + lift);
-                        Geometry2D.Strip(piece, 0.12f, width / 2 - 0.25f, l2, r2); marks.Strip(l2, r2, 0.035f + lift);
-                        if (!IsOneWay(w)) Dashes(piece, marks, 0.12f, 3f, 6f, 0.035f + lift);
-                    }
+                        LaneMarkings(w, piece, width, 0.035f + lift, marks, cycles, to < total - 0.01f, from > 0.01f);
                     var sw = w.Tag("sidewalk") ?? w.Tag("sidewalk:both") ?? (hw == "residential" || hw == "tertiary" || hw == "secondary" || hw == "primary" || hw == "unclassified" ? "both" : "no");
                     if (sw == "no" || sw == "none" || sw == "separate") continue;
                     foreach (var side in new[] { -1, 1 })
