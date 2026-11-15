@@ -613,7 +613,7 @@ Five detailed models from Sketchfab (CC BY 4.0, [credits](Assets/ThirdParty/Vehi
 
 The articulated bus's rear section is a trailer (`ArticulatedTrailer`): its axle follows the joint, so it cuts corners like a real articulated bus (`DetailedVehicleTests` checks the angle between the sections on a steady circle against the geometry of a trailer). It is moved from the front section's motion on every PC, so it needs no network data. The extra axles of the truck's tandem and the bus's rear section turn with the driven wheels.
 
-![The detailed vehicles parked in a street in Montreal (top), the Corolla's and the DAF's driver views with the live instrument cluster in Eindhoven (bottom left, middle) and the articulated bus turning in Eindhoven (bottom right)](ReadmeFiles/detailed_vehicles.jpg)
+![The detailed vehicles parked in a street in Montreal (top), the Corolla's and the DAF's driver views with the live instrument cluster in Eindhoven (bottom left, middle) and the articulated bus turning in Eindhoven, from above (bottom right)](ReadmeFiles/detailed_vehicles.jpg)
 
 `Coupled Sim` ➡️ `Vehicles` ➡️ `Build vehicle prefabs` (`VehicleBuilder`) makes these prefabs from 3D models. It copies the hatchback's prefab with all its parts:
 - physics and AI driving;
@@ -673,7 +673,7 @@ Each frame contains the time, the position and rotation of every car with its bl
 
 **Replay.** Every log has a small `.replay.json` file next to it with the experiment, scene, city map, time of day, weather and the vehicle and pedestrian models. In `Play Mode`, before `Start host` or `Start client`, press **Replay a recording** and pick a recording (newest first): the simulator loads that world and plays the trial back with every participant, AI car and traffic light, without network or new logs. At the bottom: a time slider, play/pause and speed, and buttons to follow a participant. Keys: `Space` play/pause, `←`/`→` 5 s back/forward, `-`/`+` slower/faster (0.1× to 8×), `1`-`9` follow participant 1-9, `C` the participant's own view or from behind, `0` free camera (`W` `A` `S` `D`, `Q`/`E` down/up, `Shift` faster, hold the right mouse button to look around), `T` trails of the participants' paths, `Esc` back to the start screen. Logs from before the replay existed have no `.replay.json`: they are listed as "older"; after clicking one, choose the experiment it was recorded in (and the city map, for map experiments), and the replay uses the standard car and pedestrian models. Logs from much older versions of the simulator may be in a different format and cannot be read. From the command line: `-replay ExperimentLogs/<log>.binLog` (for older logs add `-replayExperiment <short name>` and, for map experiments, `-replayMap <map>`).
 
-![Replay of a drive in Delft: behind the participant, the participant's own view, from above with the trail](ReadmeFiles/replay.jpg)
+![Replay of a drive in Delft: the participant's own view (left) and from above with the trail (right)](ReadmeFiles/replay.jpg)
 
 **Live data.** The per-frame logger of each agent also sends its frames over UDP to `localhost:40131`, every `NetworkingManager` ➡️ `Realtime Log Interval` seconds (default 0.2 s; read when the simulator starts), so experiments can be monitored with external tools. `Tools/log_receiver.py` is an example receiver: start it with `python log_receiver.py` (Python 3) from the `Tools` folder before starting the simulation. Packets start with a type (`1` = begin, `2` = frame). A received frame looks like this:
 ```

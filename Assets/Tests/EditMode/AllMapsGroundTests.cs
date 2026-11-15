@@ -122,15 +122,15 @@ namespace CoupledSim.Tests
 
             // the traffic's paths on the roads
             var roads = (System.Collections.IList)gen.GetType().GetField("Roads").GetValue(gen);
+            float half = (float)gen.GetType().GetField("HalfSize").GetValue(gen);
             int points = 0, offRoad = 0;
             foreach (var road in roads)
             {
-                // roads on bridges above other roads: stacked decks share one simple model (not checked)
-                if ((bool)road.GetType().GetField("Bridge").GetValue(road)) continue;
                 var line = (List<Vector3>)road.GetType().GetField("Line").GetValue(road);
                 foreach (var p in line)
                 {
-                    if (!Ground(p, out var g)) continue;
+                    // inside the map (long roads run on beyond it)
+                    if (Mathf.Abs(p.x) > half || Mathf.Abs(p.z) > half || !Ground(p, out var g)) continue;
                     points++;
                     if (Mathf.Abs(p.y - g) > 0.5f) { offRoad++; if (worst.Count < 24) worst.Add($"road point {p}: {p.y - g:F2} m from {hitName}"); }
                 }
