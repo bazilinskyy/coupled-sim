@@ -39,6 +39,7 @@ public partial class OsmMapGenerator
     {
         public V2 Pos, Facing, Road;
         public long Node;
+        public int Side;
         public int Phase;
     }
 
@@ -118,7 +119,7 @@ public partial class OsmMapGenerator
             if (V2.DistanceSquared(a, b) < 1e-4f) continue;
             var dir = V2.Normalize(b - a); var nrm = new V2(dir.Y, -dir.X);
             foreach (var side in new[] { -1, 1 })
-                peds.Add(new PedHead { Pos = _pos[c] + nrm * side * (width / 2f + 0.5f) + dir * 2.6f, Facing = -nrm * side, Road = dir, Node = c });
+                peds.Add(new PedHead { Pos = _pos[c] + nrm * side * (width / 2f + 0.5f) + dir * 2.6f, Facing = -nrm * side, Road = dir, Node = c, Side = side });
         }
 
         // ---- controllers: signals within 40 m of each other work together
@@ -184,6 +185,9 @@ public partial class OsmMapGenerator
             {
                 var light = PlacePedestrianSignal(lightsRoot, h);
                 if (light == null) continue;
+                // the crossing trigger on the other kerb: its waiting pedestrians face this light
+                foreach (var pc in Crossings)
+                    if (pc.name == $"Crossing {h.Node} {(h.Side > 0 ? "A" : "B")}") pc.Signal = light;
                 // one-direction junctions: all pedestrians walk while the cars wait
                 pedByPhase[twoPhase ? h.Phase : 1].Add(light);
                 pedLights.Add(light);
