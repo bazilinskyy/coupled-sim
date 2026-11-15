@@ -1,4 +1,35 @@
-# Coupled simulator for research on driver-pedestrian interactions made in Unity
+<h1 align="center"><img src="ReadmeFiles/logo.svg" width="48" alt="" align="top">&nbsp;Coupled simulator</h1>
+
+<p align="center">
+  <b>Several people in one traffic scene at the same time.</b><br>
+  Drivers, AV passengers, pedestrians, cyclists, riders and drone pilots together in real cities, with AI traffic, eHMIs, sound and full logging: a Unity simulator for research on interactions between road users.
+</p>
+
+<p align="center">
+  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-22c55e"></a>
+  <a href="https://github.com/bazilinskyy/coupled-sim/actions/workflows/tests.yml"><img alt="Tests" src="https://github.com/bazilinskyy/coupled-sim/actions/workflows/tests.yml/badge.svg"></a>
+  <img alt="Unity 6" src="https://img.shields.io/badge/Unity-6000.6-000000?logo=unity&logoColor=white">
+  <img alt="URP" src="https://img.shields.io/badge/render%20pipeline-URP-6366f1">
+  <img alt="Windows, macOS, Linux" src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-0ea5e9">
+  <img alt="VR through OpenXR" src="https://img.shields.io/badge/VR-OpenXR-f97316">
+  <img alt="Up to 8 participants" src="https://img.shields.io/badge/participants-up%20to%208-0f172a">
+  <img alt="20 real cities" src="https://img.shields.io/badge/city%20maps-20%20%2B%20any%20place-94a3b8">
+  <a href="#citation"><img alt="Cite: DSC 2020" src="https://img.shields.io/badge/cite-DSC%202020-b91c1c"></a>
+  <a href="https://github.com/bazilinskyy/coupled-sim/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/bazilinskyy/coupled-sim?style=flat&logo=github"></a>
+  <a href="https://github.com/sponsors/bazilinskyy"><img alt="Sponsor on GitHub" src="https://img.shields.io/badge/sponsor-GitHub-ea4aaa?logo=githubsponsors&logoColor=white"></a>
+  <a href="https://ko-fi.com/bazilinskyy"><img alt="Support on Ko-fi" src="https://img.shields.io/badge/support-Ko--fi-ff5e5b?logo=kofi&logoColor=white"></a>
+</p>
+
+<p align="center">
+  <a href="#getting-started-step-by-step">Getting started</a> ·
+  <a href="#features">Features</a> ·
+  <a href="#short-videos">Videos</a> ·
+  <a href="#running-the-simulator">Running</a> ·
+  <a href="#configuration">Configuration</a> ·
+  <a href="#study-tools">Study tools</a> ·
+  <a href="#citation">Citation</a> ·
+  <a href="#support-the-coupled-simulator">Support</a>
+</p>
 
 The coupled simulator lets several people take part in the same traffic scene at the same time: one or more drivers of manual cars, passengers of automated vehicles (AVs) who control an external human-machine interface (eHMI), and pedestrians who walk with a keyboard or a motion suit, on flat screens or in head-mounted displays. AI-controlled cars and pedestrians fill the scene. Everything that happens is logged for analysis.
 
@@ -9,6 +40,14 @@ The simulator is open source and free to use. It is aimed at, but not limited to
 📺 Demo of the simulator with 3 agents:
 
 [![demo video](ReadmeFiles/thumbnail_demo_video.jpg)](https://www.youtube.com/watch?v=W2VWLYnTYrM)
+
+<a id="short-videos"></a>🎬 **Short videos** (15 s each, with the simulator's sound; click to play). They were made by the simulator itself in batch mode ([videos from fixed cameras](#videos-from-fixed-cameras), frame by frame with the sound rendered in step), with the participants on the [autopilot](#city-maps-openstreetmap) and the built-in traffic of the city maps; the soundtracks are normalised to -23 LUFS each, so their levels are not comparable with each other:
+
+<table>
+<tr><td width="33%" valign="top"><a href="ReadmeFiles/videos/drive_eindhoven.mp4"><img src="ReadmeFiles/videos/drive_eindhoven.jpg" width="100%" alt="Driving in Eindhoven on the autopilot, with traffic"></a><br>Driving in Eindhoven on the autopilot, with traffic</td><td width="33%" valign="top"><a href="ReadmeFiles/videos/cycle_ghent.mp4"><img src="ReadmeFiles/videos/cycle_ghent.jpg" width="100%" alt="Cycling on cobblestones in Ghent"></a><br>Cycling on cobblestones in Ghent</td><td width="33%" valign="top"><a href="ReadmeFiles/videos/walk_delft.mp4"><img src="ReadmeFiles/videos/walk_delft.jpg" width="100%" alt="Walking in Delft in the morning (birds, footsteps)"></a><br>Walking in Delft in the morning (birds, footsteps)</td></tr>
+<tr><td width="33%" valign="top"><a href="ReadmeFiles/videos/drone_delft.mp4"><img src="ReadmeFiles/videos/drone_delft.jpg" width="100%" alt="Flying a drone over Delft, with an AI swarm"></a><br>Flying a drone over Delft, with an AI swarm</td><td width="33%" valign="top"><a href="ReadmeFiles/videos/rain_london.mp4"><img src="ReadmeFiles/videos/rain_london.jpg" width="100%" alt="Heavy rain in London, right-hand drive"></a><br>Heavy rain in London, right-hand drive</td><td width="33%" valign="top"><a href="ReadmeFiles/videos/night_tokyo.mp4"><img src="ReadmeFiles/videos/night_tokyo.jpg" width="100%" alt="Night in Tokyo, following a car"></a><br>Night in Tokyo, following a car</td></tr>
+<tr><td width="33%" valign="top"><a href="ReadmeFiles/videos/moped_newyork.mp4"><img src="ReadmeFiles/videos/moped_newyork.jpg" width="100%" alt="A moped in Midtown New York"></a><br>A moped in Midtown New York</td><td width="33%" valign="top"><a href="ReadmeFiles/videos/four_agents.mp4"><img src="ReadmeFiles/videos/four_agents.jpg" width="100%" alt="Four participants together in Delft: driver, pedestrian, cyclist, moped rider"></a><br>Four participants together in Delft: driver, pedestrian, cyclist, moped rider</td></tr>
+</table>
 
 ## Contents
 - [Citation](#citation) · [Examples of use](#examples-of-use) · [License](#license)
@@ -23,7 +62,7 @@ The simulator is open source and free to use. It is aimed at, but not limited to
 - [Study tools](#study-tools): [participant responses](#participant-responses), [designed eHMIs](#designed-ehmis), [in-car displays](#in-car-displays-head-up-display-centre-screen-instrument-cluster-and-timed-messages), [haptic cues](#haptic-cues), [sound](#sound), [several participants in one car and voice](#several-participants-in-one-car-and-voice), [pedestrian groups](#pedestrian-groups), [gaze over the network](#gaze-over-the-network-and-gaze-triggers), [OpenSCENARIO](#openscenario), [videos from fixed cameras](#videos-from-fixed-cameras), [scene descriptions and AI agents](#scene-descriptions-and-ai-agents)
 - [Testing](#testing)
 - [Hardware](#hardware): [monitors](#several-monitors-and-mirrors), [headsets](#head-mounted-displays-vr), [wheels](#steering-wheels-pedals-and-gamepads), [motion suit](#xsens-mvn-motion-suit), [motion platforms](#motion-platforms), [network](#network)
-- [FAQ](#faq)
+- [FAQ](#faq) · [Support](#support-the-coupled-simulator)
 - [Used assets](#used-assets)
 
 **Note on the git history (November 2026):** the history was rewritten to keep only files that the simulator still uses, which cut a clone from 5.2 GB to 0.7 GB. Clones and forks made before then cannot be merged with the new history: clone the repository again. Older study branches and the full earlier history are kept in an archive repository; ask the maintainer for access.
@@ -457,6 +496,8 @@ Besides the hand-built town, experiments can take place in real city centres, bu
 ![Right-hand drive in London](ReadmeFiles/right_hand_drive.jpg)
 
 **Choosing a map.** Use the `City map (OpenStreetMap)` experiment (`Assets/ExperimentDefinitions/CityMap.prefab`, scene `OsmMap`): the host picks the city in its GUI, or a trial sets it with the parameter `map` (e.g. `map=Tokyo`). The roles (driver, pedestrian, cyclist, e-scooter and moped rider, second driver) use `OsmSpawnPoint`s, which put them on a driving lane, a pavement, a cycle path or the road edge near the map centre, so the experiment works in every city. Time of day uses the city's location and time zone.
+
+**Built-in traffic and the autopilot.** Without SUMO (or with `-mapTraffic 14`, cars per km of lane; trial parameter `mapTraffic`), a city map gets its own traffic: lane routes across the map from its roads (`MapRoutes`: in at the map's edge, straight on at junctions, turning where the road ends, on the driver's side of the road, out at the edge again), driven by `TrafficCar` (the car-following model; they stop at red lights and for pedestrians and animals) and started again at the beginning of their route, out of sight, when they reach its end. `-autopilot [km/h]` (trial parameter `autopilot`) lets the participant move by itself, e.g. for demonstrations and videos: a car drives along the nearest route with the AV's automated driving, a pedestrian walks along the pavement, a rider follows a route near the kerb (on every agent with the option).
 
 **Driving anywhere.** The trial parameter `location=lat,lon[,radius]` (e.g. `location=51.4479,5.4904,350` for the TU/e campus) builds a map of any place: the OpenStreetMap data (radius 100-1000 m, default 400 m) is downloaded the first time (internet needed) and cached in the simulator's data folder; with SUMO installed, a SUMO network and random traffic for the place are built too. The host sends the location to the clients. To add a place to the catalogue for good, save its `.osm.gz` in `Assets/StreamingAssets/Maps` and add it to `MapCatalog`.
 
@@ -1100,12 +1141,14 @@ Messages can also be put in a design's own `"messages"` list, with their place o
 `Haptics.Cue(name, intensity, duration, pattern)` (pattern `pulse`, `double`, `triple`, `continuous`) plays a cue on gamepads (rumble), headset controllers, Logitech wheels (vibration; with the Logitech SDK, see [wheels](#steering-wheels-pedals-and-gamepads)) and external devices: with `-hapticsUdp host:port` every cue is also sent as JSON, `{"cue":"takeover","intensity":1.0,"duration":1.2,"pattern":"triple","time":12.3}`, e.g. to an Arduino or Raspberry Pi driving a vibrating seat, belt, helmet or handlebar. Take-over requests play a `takeover` cue. Cues are logged to `ExperimentLogs/Haptics-*.csv`.
 
 ### Sound
-A `Soundscape` (component on the experiment, or command-line options on every agent) adds:
-- **vehicle sound**: tyre-road noise of the 16 nearest cars that rises with speed (about 30 log10 v; `Tyre Db At 50`: 68 dB at 7.5 m) and, for combustion cars (`-electricCars 0`), an engine whose pitch steps up like gears; 3D sound, -6 dB per doubling of distance;
-- the **participant's own car** heard from inside (quieter, muffled) and **cabin music** (a WAV, OGG or MP3 in `Assets/StreamingAssets/Audio`, at `CabinMusicDb`);
-- **ambience**: distant traffic at `AmbienceDb` at the listener.
+A `Soundscape` makes the scene's sound from models rather than recordings (on city maps it is on by default; `-vehicleSounds 0` turns it off; elsewhere add the component to the experiment or use `-vehicleSounds 1`):
+- **Vehicles** (the 20 nearest): sound power by the European road traffic noise model **CNOSSOS-EU** (Commission Directive (EU) 2015/996, Annex, Table F-1): rolling (tyre/road) and propulsion noise per octave band from 63 Hz to 8 kHz, for cars and vans, medium trucks, heavy trucks and buses, and mopeds; a car at 50 km/h is 70.5 dB(A) at 7.5 m, at 100 km/h 80 dB(A) (tested). Tyre noise is louder on bricks and cobblestones (the road surfaces) and its spectrum shifts up with speed. The engine runs through its gears (`EngineModel`: idle, shift points that rise with the throttle, a variator on scooters) and is heard at its firing frequency with harmonics (petrol, diesel with combustion knock, two-stroke), louder when accelerating and quieter at idle. A share of the cars is electric (`-electricCars 0.15` or trial parameter `electric`; city buses are electric, as in most Dutch cities): propulsion 12 dB quieter (it matters only below about 40 km/h, where electric cars are measurably quieter) and a motor whine instead of the engine. Bicycles roll on narrow tyres and their freewheel clicks when they coast; e-scooters whine and rumble on small wheels.
+- **Propagation**: spherical spreading (-6 dB per doubling of distance), air absorption by ISO 9613-1 (a low-pass whose cut-off falls with distance: above 8 kHz near by, about 4 kHz at 100 m), about 15 dB of shielding and the highs lost when a building is between the source and the listener, and the Doppler shift. Inside the participant's car its body keeps out about 20 dB and the highs of everything outside, and its own tyres and engine come through the floor.
+- **Ambience**: distant traffic that follows the time of day (about 55 dB in the morning and afternoon peaks, 43 dB in the night; `-ambienceDb` sets a fixed level), rain (and on the roof of the car), wind at the ears with gusts (riders also hear their own speed), birds singing in the nearest trees (most at dawn, little at midday, none at night or in the rain; `-birds 0`), and reverberation between buildings: the more of the horizon is wall and the closer, the longer and louder the echo.
+- **People**: footsteps of the participant and of the pedestrians nearby, on hard (paving, asphalt), soft (grass) or loose ground (gravel, snow), and the ticking of pedestrian signals: once a second at red to find the pole, fast at green, as on Dutch "rateltikkers", quieter at night (`-footsteps 0`, `-signalTicks 0`).
+- **Cabin music**: a WAV, OGG or MP3 in `Assets/StreamingAssets/Audio` at `CabinMusicDb`.
 
-Levels are in dB SPL once the sound is **calibrated**: press `F3` (or `-audioCalibration`) to play a 1 kHz tone at full scale, measure it with a sound level meter at the participant's ears (headphones: with a coupler), and enter the reading as `ReferenceDb` (`-audioReferenceDb`). Trial parameters (host): `vehicleSounds`, `electric`, `ambienceDb`, `cabinMusic`, `cabinMusicDb`. It is off by default.
+Levels are in dB SPL once the sound is **calibrated**: press `F3` (or `-audioCalibration`) to play a 1 kHz tone at full scale, measure it with a sound level meter at the participant's ears (headphones: with a coupler), and enter the reading as `ReferenceDb` (`-audioReferenceDb`). Trial parameters (host): `vehicleSounds`, `electric`, `ambienceDb`, `cabinMusic`, `cabinMusicDb`. The models are in `Assets/Scripts/Environment/SoundModels` (engine-free, with tests); the sounds are synthesised in `SoundClips`.
 
 ### Several participants in one car, and voice
 A role can sit in another role's car, e.g. three participants in one shared AV: give it a pedestrian spawn type, `RideInCarOf` (the other role's name) and a `Seat` (`FrontPassenger`, `RearLeft`, `RearRight`, `RearMiddle`; rear seats need the hatchback, `carIdx` 1; in AVs the AV passenger role sits in the front passenger seat). The participant then rides in that seat on every agent, with a seated figure for the others to see; their camera, headset, responses and logs work as for a pedestrian. Up to 8 participants can take part.
@@ -1135,7 +1178,7 @@ With `-gaze` every agent sends its participant's gaze to the host 20 times a sec
 ![CrossingPedestrian.xosc in the town rendered as a video from a fixed street camera (-videoCams): the car brakes to a stop and the pedestrian crosses](ReadmeFiles/openscenario_video.jpg)
 
 ### Videos from fixed cameras
-For online (crowdsourced) versions of a study, the same trial can be rendered as videos from fixed cameras, in the editor, in builds and in batch mode: `-videoCams "street=-30,6,-25,60,12;chase;front;driver"` (a camera at x, y, z with yaw and pitch (and field of view), or behind the participant, ahead of it looking back, or the participant's own view), `-videoStart 2 -videoSeconds 10 -videoFps 30 -videoSize 1920x1080`. The simulation runs in step with the frames, so the videos are smooth even on a slow PC. [ffmpeg](https://ffmpeg.org) (on the PATH, or `-ffmpeg path`) joins the frames into `ExperimentLogs/Videos/{camera}.mp4`; without it the JPEG frames stay and the log shows the command to join them. `-videoQuit` quits when done. (The [Unity Recorder set-up](#recording-trial-videos) records the game view in the editor.)
+For online (crowdsourced) versions of a study, the same trial can be rendered as videos from fixed cameras, in the editor, in builds and in batch mode: `-videoCams "street=-30,6,-25,60,12;chase;front;driver"` (a camera at x, y, z with yaw and pitch (and field of view), or behind the participant, ahead of it looking back, or the participant's own view), `-videoStart 2 -videoSeconds 10 -videoFps 30 -videoSize 1920x1080`. More cameras: `rel:x,y,z,yaw,pitch[,fov]` relative to the participant (following its heading, smoothed) and `grid` (the participants' own views in a 2x2 grid, e.g. of a replay with `-replay log.binLog`). The video has the sound at the participant's ears (or at the first camera with `-videoListener 1`), rendered in step with the frames; `-videoAudio 0` leaves it out, `-videoCrf 28` makes smaller files. The simulation runs in step with the frames, so the videos are smooth even on a slow PC. [ffmpeg](https://ffmpeg.org) (on the PATH, or `-ffmpeg path`) joins the frames into `ExperimentLogs/Videos/{camera}.mp4`; without it the JPEG frames stay and the log shows the command to join them. `-videoQuit` quits when done. (The [Unity Recorder set-up](#recording-trial-videos) records the game view in the editor.)
 
 ### Scene descriptions and AI agents
 `-sceneDescriptions` logs, once a second, a text description of what is around the participant to `ExperimentLogs/SceneDescriptions-*.jsonl`: place, daylight, every car within 60 m (where, distance, speed, approaching or not, braking, its eHMI state) and the pedestrians nearby, e.g. to compare people's and language models' judgements of the same moments.
@@ -1286,6 +1329,14 @@ All agents must be in the same local network; the host's IP address is in its co
 **Can I use my own avatars or cars?** Pedestrians: any humanoid character; `Coupled Sim` ➡️ `Pedestrians` ➡️ `Build pedestrian prefabs` makes AI pedestrians from Rocketbox-style models. Cars: copy a drivable car prefab and replace the model; AI cars need to be in `NetworkingManager` ➡️ `AI Car System` ➡️ `Prefabs`.
 
 **Is there a way to test the simulator without screens and people?** Yes: the smoke test and the edit-mode tests (see [Testing](#testing)).
+
+## Support the coupled simulator
+The coupled simulator is free and stays free. If it is useful for your research or teaching and you would like to give something back, you can [sponsor it on GitHub](https://github.com/sponsors/bazilinskyy) (monthly or once) or [buy me a coffee on Ko-fi](https://ko-fi.com/bazilinskyy). Citing the [paper](#citation), bug reports, ideas and pull requests help just as much.
+
+<p>
+  <a href="https://github.com/sponsors/bazilinskyy"><img alt="Sponsor on GitHub" src="https://img.shields.io/badge/sponsor-GitHub-ea4aaa?logo=githubsponsors&logoColor=white&style=for-the-badge"></a>
+  <a href="https://ko-fi.com/bazilinskyy"><img alt="Support on Ko-fi" src="https://img.shields.io/badge/support-Ko--fi-ff5e5b?logo=kofi&logoColor=white&style=for-the-badge"></a>
+</p>
 
 ## Used assets
 | Name | Developer | License |

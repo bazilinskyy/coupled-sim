@@ -271,7 +271,7 @@ public static class SmokeTest
             foreach (var s in UnityEngine.Object.FindObjectsByType<ObservedSteering>())
                 Debug.Log($"SmokeTest steering: {s.name} road wheels {s.SteerAngle:F1}°, steering wheel {s.SteerAngle * s.SteeringRatio:F0}°");
         }
-        if (elapsed >= SessionState.GetFloat(KeySeconds, 20))
+        if (elapsed >= SessionState.GetFloat(KeySeconds, 20) && !VideoExport.Busy)   // (a video being made is finished first)
         {
             Finish();
         }

@@ -17,6 +17,8 @@ public static class UNetPipelines
         var settings = new NetworkSettings();
         settings.WithFragmentationStageParameters(payloadCapacity: MaxMessageSize);
         settings.WithReliableStageParameters(windowSize: 64);
+        // a long level load (building a city map) can block an agent for many seconds: do not drop the connection then
+        settings.WithNetworkConfigParameters(disconnectTimeoutMS: 120000);
         var driver = NetworkDriver.Create(settings);
         unreliable = driver.CreatePipeline(typeof(FragmentationPipelineStage));
         reliable = driver.CreatePipeline(typeof(FragmentationPipelineStage), typeof(ReliableSequencedPipelineStage));
