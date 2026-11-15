@@ -772,6 +772,12 @@ The same check runs when you press Play in `StartScene` (and adds missing experi
 
 ![ExperimentDefinition of Base with its first role unfolded](ReadmeFiles/guide/inspector_experiment_definition.png)
 
+#### Worlds from the Asset Store (e.g. Windridge City)
+Environments whose licence does not allow putting their files in a public repository, such as [Windridge City](https://assetstore.unity.com/packages/3d/environments/roadways/windridge-city-132222) (Unity Asset Store EULA: free to use in your project and builds, not to redistribute), are imported on each lab PC into `Assets/LocalAssets/`, which git ignores:
+1. In Unity, `Window` ➡️ `Package Manager` ➡️ `My Assets`, sign in with a Unity account that has the asset, `Download` and `Import`. Move the imported folder into `Assets/LocalAssets/` (create it) in the Project window, so Unity keeps the references.
+2. Convert its materials to URP if they show pink: select them and `Edit` ➡️ `Rendering` ➡️ `Materials` ➡️ `Convert Selected Built-in Materials to URP`.
+3. `Coupled Sim` ➡️ `Experiments` ➡️ `Setup…` ➡️ `New experiment` from the `Base` template, then set the new `ExperimentDefinition`'s `Scene` to the asset's demo scene, place the spawn points and waypoint paths in it (`Open it to place spawn points`) and add colliders to its roads if it has none (cars drive on colliders). Keep the experiment prefab in `Assets/LocalAssets/` too, and leave the change to `StartScene` (the experiment added to `NetworkingManager` ➡️ `Experiments`) out of your commits, or work in a private fork.
+
 ### Configuration of agents
 The roles are in `ExperimentDefinition` ➡️ `Roles` (see the picture above).
 
