@@ -63,10 +63,12 @@ public sealed class TerrainHeight
 
     // ---- bridges: their decks run straight from one end's ground to the other's
 
-    struct Bridge { public Vector2 A, B; public float HalfWidth, HA, HB; }
+    struct Bridge { public Vector2 A, B; public float HalfWidth, HA, HB; public bool Elevated; }
     readonly List<Bridge> _bridges = new List<Bridge>();
 
-    public void AddBridge(List<Vector2> line, float width)
+    /// <summary>A bridge from its line; <paramref name="elevated"/>: above other roads or the ground (layer 1 and up): it lifts only
+    /// its own geometry (the generator's "... bridge" meshes and bridge lines), not what passes under it.</summary>
+    public void AddBridge(List<Vector2> line, float width, bool elevated = false)
     {
         if (line.Count < 2) return;
         float ha = At(line[0].x, line[0].y), hb = At(line[line.Count - 1].x, line[line.Count - 1].y);
@@ -76,17 +78,21 @@ public sealed class TerrainHeight
         {
             float seg = Vector2.Distance(line[i], line[i + 1]);
             _bridges.Add(new Bridge { A = line[i], B = line[i + 1], HalfWidth = width / 2f + 1.5f,
-                HA = Mathf.Lerp(ha, hb, total > 0 ? run / total : 0), HB = Mathf.Lerp(ha, hb, total > 0 ? (run + seg) / total : 1) });
+                HA = Mathf.Lerp(ha, hb, total > 0 ? run / total : 0), HB = Mathf.Lerp(ha, hb, total > 0 ? (run + seg) / total : 1), Elevated = elevated });
             run += seg;
         }
     }
 
-    /// <summary>The height to lift a point by: the terrain, or a bridge deck's where one passes over it.</summary>
-    public float Lift(float x, float z)
+    /// <summary>The height to lift a point by: the terrain, or a bridge deck's where one passes over it (elevated bridges only
+    /// for <paramref name="onElevated"/> points: their own).</summary>
+    public float Lift(float x, float z) => Lift(x, z, true);
+
+    public float Lift(float x, float z, bool onElevated)
     {
         var p = new Vector2(x, z);
         foreach (var b in _bridges)
         {
+            if (b.Elevated && !onElevated) continue;
             var ab = b.B - b.A; float l2 = ab.sqrMagnitude;
             float t = l2 > 1e-6f ? Mathf.Clamp01(Vector2.Dot(p - b.A, ab) / l2) : 0f;
             if ((b.A + ab * t - p).sqrMagnitude < b.HalfWidth * b.HalfWidth) return Mathf.Lerp(b.HA, b.HB, t);
@@ -97,7 +103,34 @@ public sealed class TerrainHeight
     /// <summary>Lifts a map built flat onto the terrain.</summary>
     public void Apply(Transform root, OsmMapGenerator gen)
     {
-        int meshes = 0, objects = 0;
+        int meshes = 0, objects = 0, placed = 0;
+        // the surfaces things stand on (not buildings), to set each placed object on the one under it afterwards
+        var surfaces = new HashSet<Collider>();
+        foreach (var go in gen.EmittedMeshes)
+            if (go != null && go.TryGetComponent<Collider>(out var c) && !go.name.StartsWith("Buildings") && !go.name.StartsWith("Roofs") && go.name != "Cornices") surfaces.Add(c);
+        float? SurfaceNear(Vector3 p, float expected)
+        {
+            float? best = null;
+            foreach (var h in Physics.RaycastAll(new Vector3(p.x, expected + 3f, p.z), Vector3.down, 10f, ~0, QueryTriggerInteraction.Ignore))
+                if (surfaces.Contains(h.collider) && (best == null || Mathf.Abs(h.point.y - expected) < Mathf.Abs(best.Value - expected))) best = h.point.y;
+            return best;
+        }
+        var things = new List<(Transform t, float offset, bool onSurface)>();
+        void Collect(Transform t)
+        {
+            if (gen.EmittedMeshes.Contains(t.gameObject)) return;
+            if (t != root && t.GetComponents<Component>().Length > 1)
+            {
+                // how high above the surface under it the flat map placed it (on the pavement, the road, the ground)
+                var p = t.position;
+                var s0 = SurfaceNear(p, p.y - 0.05f);
+                things.Add((t, s0.HasValue ? p.y - s0.Value : 0f, s0.HasValue && p.y - s0.Value < 1.5f));
+                return;
+            }
+            for (int i = 0; i < t.childCount; i++) Collect(t.GetChild(i));
+        }
+        Physics.SyncTransforms();
+        Collect(root);
         void Visit(Transform t)
         {
             if (gen.EmittedMeshes.Contains(t.gameObject))
@@ -112,10 +145,11 @@ public sealed class TerrainHeight
                     bool surroundings = t.name.StartsWith("Surroundings");
                     // the ground a little under the streets: its 10 m tiles cut corners on slopes the streets follow more closely
                     float extra = t.name == "Ground" ? -0.15f : 0f;
+                    bool bridge = t.name.EndsWith(" bridge");
                     for (int i = 0; i < v.Length; i++)
                     {
                         var w = l2w.MultiplyPoint3x4(v[i]);
-                        w.y += surroundings ? Min - 0.5f : Lift(w.x, w.z) + extra;
+                        w.y += surroundings ? Min - 0.5f : Lift(w.x, w.z, bridge) + extra;
                         v[i] = w2l.MultiplyPoint3x4(w);
                     }
                     m.vertices = v;
@@ -127,21 +161,26 @@ public sealed class TerrainHeight
                 }
                 return;
             }
-            // a placed object (anything with more than a Transform): moved as a whole by the height at its foot
-            if (t != root && t.GetComponents<Component>().Length > 1)
-            {
-                var p = t.position;
-                t.position = new Vector3(p.x, p.y + Lift(p.x, p.z), p.z);
-                objects++;
-                return;
-            }
             for (int i = 0; i < t.childCount; i++) Visit(t.GetChild(i));
         }
         Visit(root);
-        void LiftLine(List<Vector3> line) { for (int i = 0; i < line.Count; i++) { var q = line[i]; line[i] = new Vector3(q.x, q.y + Lift(q.x, q.z), q.z); } }
-        foreach (var r in gen.Roads) LiftLine(r.Line);
-        foreach (var l in gen.CyclePaths) LiftLine(l);
-        foreach (var l in gen.Pavements) LiftLine(l);
-        Debug.Log($"TerrainHeight: map lifted onto the terrain ({Min:F1} .. {Max:F1} m around the centre; {meshes} surfaces, {objects} objects, {_bridges.Count} bridge segments): {Credit}");
+        // placed objects (anything with more than a Transform: trees, lamps, signs, props, parked cars) moved as a whole:
+        // onto the lifted surface that was under them (the ground follows the terrain in 10 m tiles, so the terrain's
+        // own height at an object's foot can be off it by a fraction of a metre on slopes), else by the terrain there
+        Physics.SyncTransforms();
+        foreach (var (t, offset, onSurface) in things)
+        {
+            var p = t.position;
+            float lifted = p.y + Lift(p.x, p.z, false);
+            var s1 = onSurface ? SurfaceNear(p, lifted - offset) : null;
+            t.position = new Vector3(p.x, s1.HasValue ? s1.Value + offset : lifted, p.z);
+            objects++;
+            if (s1.HasValue) placed++;
+        }
+        void LiftLine(List<Vector3> line, bool bridge) { for (int i = 0; i < line.Count; i++) { var q = line[i]; line[i] = new Vector3(q.x, q.y + Lift(q.x, q.z, bridge), q.z); } }
+        foreach (var r in gen.Roads) LiftLine(r.Line, r.Bridge);
+        foreach (var l in gen.CyclePaths) LiftLine(l, gen.BridgeLines.Contains(l));
+        foreach (var l in gen.Pavements) LiftLine(l, gen.BridgeLines.Contains(l));
+        Debug.Log($"TerrainHeight: map lifted onto the terrain ({Min:F1} .. {Max:F1} m around the centre; {meshes} surfaces, {objects} objects ({placed} set on the surface under them), {_bridges.Count} bridge segments): {Credit}");
     }
 }

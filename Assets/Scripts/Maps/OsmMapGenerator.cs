@@ -22,7 +22,11 @@ public partial class OsmMapGenerator
         public float Width;
         public string Type;
         public bool OneWay;
+        /// <summary>On a bridge above other roads or the ground (layer 1 and up): lifted straight between its ends.</summary>
+        public bool Bridge;
     }
+    /// <summary>Cycle paths and pavements on such bridges.</summary>
+    public readonly HashSet<List<Vector3>> BridgeLines = new HashSet<List<Vector3>>();
 
     public readonly List<Road> Roads = new List<Road>();
     /// <summary>The trees placed (they sway in the wind: TreeSway).</summary>
@@ -854,14 +858,16 @@ public partial class OsmMapGenerator
             RealDataCredits.Add($"{surfaces.Count} surfaces: {surfaceCredit}");
         }
 
-        var roads = new MeshBuilder();
-        var brickRoads = new MeshBuilder();
-        var cobbleRoads = new MeshBuilder();
-        var gravelRoads = new MeshBuilder();
-        var cycles = new MeshBuilder();
-        var walks = new MeshBuilder();
-        var kerbs = new MeshBuilder();
-        var marks = new MeshBuilder();
+        // [0]: on the ground, [1]: on bridges above other roads (their own meshes: the terrain lifts them, and only them, straight between the bridge's ends)
+        var roadsAll = new[] { new MeshBuilder(), new MeshBuilder() };
+        var brickRoadsAll = new[] { new MeshBuilder(), new MeshBuilder() };
+        var cobbleRoadsAll = new[] { new MeshBuilder(), new MeshBuilder() };
+        var gravelRoadsAll = new[] { new MeshBuilder(), new MeshBuilder() };
+        var cyclesAll = new[] { new MeshBuilder(), new MeshBuilder() };
+        var walksAll = new[] { new MeshBuilder(), new MeshBuilder() };
+        var kerbsAll = new[] { new MeshBuilder(), new MeshBuilder() };
+        var marksAll = new[] { new MeshBuilder(), new MeshBuilder() };
+        MeshBuilder roads, brickRoads, cobbleRoads, gravelRoads, cycles, walks, kerbs, marks;
         var lamps = new List<(Vector3 p, float yaw)>();
         var left = new List<V2>(); var right = new List<V2>();
         var roadWays = new List<(OsmWay way, List<V2> line, float width)>();
@@ -886,13 +892,19 @@ public partial class OsmMapGenerator
             if (line.Count < 2 || !line.Any(Inside)) continue;
             float lift = Math.Max(0, Layer(w)) * 0.02f;
             var bridgeTag = w.Tag("bridge");
-            if (Terrain != null && bridgeTag != null && bridgeTag != "no")
-                Terrain.AddBridge(line.Select(q => new Vector2(q.X, q.Y)).ToList(), RoadWidth(w));
+            bool onBridge = bridgeTag != null && bridgeTag != "no";
+            bool elevated = onBridge && Layer(w) >= 1;
+            if (Terrain != null && onBridge)
+                Terrain.AddBridge(line.Select(q => new Vector2(q.X, q.Y)).ToList(), RoadWidth(w), elevated);
+            int bi = elevated && Terrain != null ? 1 : 0;
+            roads = roadsAll[bi]; brickRoads = brickRoadsAll[bi]; cobbleRoads = cobbleRoadsAll[bi]; gravelRoads = gravelRoadsAll[bi];
+            cycles = cyclesAll[bi]; walks = walksAll[bi]; kerbs = kerbsAll[bi]; marks = marksAll[bi];
+            int pavementsBefore = Pavements.Count, cyclesBefore = CyclePaths.Count;
             if (CarRoads.Contains(hw))
             {
                 float width = RoadWidth(w);
                 roadWays.Add((w, line, width));
-                Roads.Add(new Road { Line = line.Select(p => P(p, 0.02f + lift)).ToList(), Width = width, Type = hw, OneWay = IsOneWay(w) });
+                Roads.Add(new Road { Line = line.Select(p => P(p, 0.02f + lift)).ToList(), Width = width, Type = hw, OneWay = IsOneWay(w), Bridge = bi == 1 });
                 Geometry2D.Strip(line, width, 0, left, right);
                 var surface = SurfaceOf(w);
                 (surface == RoadSurface.Bricks ? brickRoads : surface == RoadSurface.Cobblestones ? cobbleRoads : surface == RoadSurface.Gravel ? gravelRoads : roads)
@@ -959,20 +971,30 @@ public partial class OsmMapGenerator
                 walks.Strip(left, right, 0.05f + lift, 2f);
                 Pavements.Add(line.Select(p => P(p, 0.05f + lift)).ToList());
             }
+            if (bi == 1)
+            {
+                for (int k = pavementsBefore; k < Pavements.Count; k++) BridgeLines.Add(Pavements[k]);
+                for (int k = cyclesBefore; k < CyclePaths.Count; k++) BridgeLines.Add(CyclePaths[k]);
+            }
         }
-        Emit(world, "Roads", roads, asphalt, true);
-        // the collider names tell the car physics the surface (CoupledSim.Vehicles.RoadSurfaces)
-        Emit(world, "Roads bricks", brickRoads, bricks, true);
-        Emit(world, "Roads cobblestones", cobbleRoads, cobbles, true);
-        Emit(world, "Roads gravel", gravelRoads, gravel, true);
+        for (int bi = 0; bi < 2; bi++)
+        {
+            var sfx = bi == 1 ? " bridge" : "";
+            Emit(world, "Roads" + sfx, roadsAll[bi], asphalt, true);
+            // the collider names tell the car physics the surface (CoupledSim.Vehicles.RoadSurfaces)
+            Emit(world, "Roads bricks" + sfx, brickRoadsAll[bi], bricks, true);
+            Emit(world, "Roads cobblestones" + sfx, cobbleRoadsAll[bi], cobbles, true);
+            Emit(world, "Roads gravel" + sfx, gravelRoadsAll[bi], gravel, true);
+            Emit(world, "Cycle paths" + sfx, cyclesAll[bi], red, true);
+            Emit(world, "Pavements" + sfx, walksAll[bi], paving, true);
+            Emit(world, "Kerbs" + sfx, kerbsAll[bi], kerb, true);
+            Emit(world, "Road markings" + sfx, marksAll[bi], marking, false);
+        }
         EmitRoadDetails(world);
-        Emit(world, "Cycle paths", cycles, red, true);
-        Emit(world, "Pavements", walks, paving, true);
-        Emit(world, "Kerbs", kerbs, kerb, true);
-        Emit(world, "Road markings", marks, marking, false);
 
         // zebra crossings at OSM crossing nodes on car roads
         var zebras = new MeshBuilder();
+        var drawnCrossings = new List<V2>();
         var crossingRoot = new GameObject("Pedestrian crossings").transform;
         crossingRoot.SetParent(root, false);
         foreach (var (w, line, width) in roadWays)
@@ -988,8 +1010,12 @@ public partial class OsmMapGenerator
                 if (V2.DistanceSquared(a, b) < 1e-4f) continue;
                 var dir = V2.Normalize(b - a);
                 var nrm = new V2(dir.Y, -dir.X);
+                // one set of markings per place: crossings mapped on both carriageways or on several ways of one junction
+                // (a scramble crossing) would otherwise lay stripes over each other at different angles
+                if (drawnCrossings.Any(q => V2.DistanceSquared(q, p) < 5f * 5f)) marked = false;
+                else if (marked) drawnCrossings.Add(p);
                 // signalised crossings without zebra stripes (as in the Netherlands): two dashed lines
-                bool signalDashes = (c == "traffic_signals" || node.Tag("crossing:signals") == "yes") && cr != "zebra" && c != "zebra";
+                bool signalDashes = marked && (c == "traffic_signals" || node.Tag("crossing:signals") == "yes") && cr != "zebra" && c != "zebra";
                 if (signalDashes)
                 {
                     foreach (var along in new[] { -2f, 2f })
