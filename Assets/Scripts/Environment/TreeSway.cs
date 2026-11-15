@@ -22,7 +22,10 @@ public class TreeSway : MonoBehaviour
             _base[i] = Trees[i].rotation;
             _phase[i] = (float)rng.NextDouble() * 100f;
             // natural sway of a tree: about 0.2-0.5 Hz, slower for taller trees
-            _freq[i] = Mathf.Lerp(0.5f, 0.22f, Mathf.InverseLerp(0.4f, 2f, Trees[i].localScale.y)) * (0.9f + 0.2f * (float)rng.NextDouble());
+            // (by the tree's height: 4 m to 20 m and taller)
+            var r = Trees[i].GetComponentInChildren<Renderer>();
+            float height = r != null ? r.bounds.size.y : 10f * Trees[i].lossyScale.y;
+            _freq[i] = Mathf.Lerp(0.5f, 0.22f, Mathf.InverseLerp(4f, 20f, height)) * (0.9f + 0.2f * (float)rng.NextDouble());
         }
     }
 
