@@ -187,8 +187,13 @@ def building(rings, height, rng):
         pr = np.stack([p[0] * X + p[1] * Y + p[2] for p in planes])
         if model == "min": v = pr.min(0)
         else:
-            sc = height(X, Y); sc = np.where(np.isnan(sc), med, sc)
-            v = pr[np.argmin(np.abs(pr - sc), 0), np.arange(X.size)]
+            # each point takes the plane of the nearest scan sample inside the building (the scan right at the edge
+            # mixes in the street or the neighbours, which would make edge points jump between planes)
+            from scipy.spatial import cKDTree
+            idx = cKDTree(np.stack([fx, fy], -1)).query(np.stack([X, Y], -1), k=1)[1]
+            Afit = np.stack([fx, fy, np.ones_like(fx)], -1)
+            best = np.argmin(np.abs(np.stack([Afit @ p for p in planes]) - fh), 0)
+            v = pr[best[idx], np.arange(X.size)]
         return np.clip(v, 2.0, hi + 0.5)
     # roof vertices: every ring's edge each metre, and a 1 m grid inside
     ringsP = [P] + holes
@@ -207,6 +212,41 @@ def building(rings, height, rng):
     gm &= gd > 0.3
     grid = np.stack([gx[gm], gy[gm]], -1)
     pts = np.concatenate([bnd, grid]) if len(grid) else bnd
+    # points on the ridges and valleys where two roof planes meet (both the lowest there), so the roof's triangles
+    # follow those lines instead of cutting across them in steps
+    if model == "min" and len(planes) > 1:
+        extra = []
+        for a in range(len(planes)):
+            for b in range(a + 1, len(planes)):
+                pa, pb = planes[a], planes[b]
+                # the line where a x + b y + c is equal for both: (pa - pb) . (x, y, 1) = 0
+                dx, dy, dc = pa[0] - pb[0], pa[1] - pb[1], pa[2] - pb[2]
+                nrm = math.hypot(dx, dy)
+                if nrm < 1e-3: continue
+                ox, oy = -dx * dc / nrm ** 2, -dy * dc / nrm ** 2           # the point of the line nearest the origin
+                ux, uy = -dy / nrm, dx / nrm
+                cx, cy = np.mean(xs), np.mean(ys)
+                t0 = (cx - ox) * ux + (cy - oy) * uy
+                span = math.hypot(max(xs) - min(xs), max(ys) - min(ys))
+                for t in np.arange(t0 - span, t0 + span, 0.5):
+                    extra.append((ox + ux * t, oy + uy * t, a, b))
+        if extra:
+            E = np.array([(e[0], e[1]) for e in extra])
+            ok = inside(E[:, 0], E[:, 1])
+            ed = edge_distance(P, E[:, 0], E[:, 1])
+            for hp in holes: ed = np.minimum(ed, edge_distance(hp, E[:, 0], E[:, 1]))
+            pr = np.stack([p[0] * E[:, 0] + p[1] * E[:, 1] + p[2] for p in planes])
+            low = pr.min(0)
+            both = np.array([abs(pr[e[2], i] - low[i]) < 1e-3 and abs(pr[e[3], i] - low[i]) < 1e-3 for i, e in enumerate(extra)])
+            E = E[ok & both & (ed > 0.25)]
+            if len(E):
+                # keep the grid points off the lines (a sliver triangle next to each ridge point otherwise)
+                if len(grid):
+                    from scipy.spatial import cKDTree
+                    near = cKDTree(E).query(pts, k=1)[0]
+                    keep = np.ones(len(pts), bool); keep[len(bnd):] = near[len(bnd):] > 0.3
+                    pts = pts[keep]
+                pts = np.concatenate([pts, E])
     hs = roof_at(pts[:, 0], pts[:, 1])
     T = Delaunay(pts).simplices
     A3 = pts[T]
