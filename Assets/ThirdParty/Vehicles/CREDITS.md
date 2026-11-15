@@ -11,6 +11,8 @@ licence (CC BY 4.0), downloaded from Sketchfab on 14 November 2026. Each folder 
 | `DrivableArticulatedBus` | ["A long City Bus (FULL INTERIOR)"](https://sketchfab.com/3d-models/a-long-city-bus-full-interior-43d21ebcf51f45da9da0ccb0e6aad19a) | [Mixmamo.studio](https://sketchfab.com/mixmamo.studio) | `CityBus/` |
 | `DrivableDafXF95` | ["DAF XF 95"](https://sketchfab.com/3d-models/daf-xf-95-1e61dfadf7114ad38076f1a6a871ccf1) | [Kabourek Roman](https://sketchfab.com/Krakatit) | `DafXF95/` |
 | `DrivableBoxTruck` | ["Box-truck"](https://sketchfab.com/3d-models/box-truck-b0e8788b6b774fe3a18eda1895a2b8fe) | [Cristian Rus](https://sketchfab.com/CristianRus) | `BoxTruck/` |
+| `DrivableGenericSedan`, `Wagon`, `Hatchback`, `Compact`, `Coupe`, `Sport`, `Minivan`, `Suv`, `Offroad`, `Pickup` | ["Generic passenger car pack"](https://sketchfab.com/3d-models/generic-passenger-car-pack-20f9af9b8a404d5cb022ac6fe87f21f5) (downloaded 15 November 2026) | [Comrade1280](https://sketchfab.com/comrade1280) | `GenericCars/` |
+| `DrivableGenericTaxi`, `Police`, `Ambulance`, `PostVan`, `ServiceTruck`, `TowTruck`, `GarbageTruck`, `FireTruck` | ["Generic civil service vehicles pack"](https://sketchfab.com/3d-models/generic-civil-service-vehicles-pack-8ff2a13f30914932a70c7950cfa58465) (downloaded 15 November 2026) | [Comrade1280](https://sketchfab.com/comrade1280) | `GenericService/` |
 
 ## Changes made
 
@@ -24,7 +26,9 @@ The models themselves are unchanged in their folders. The vehicle builder (`Asse
 - the bus's rear section cut off at the joint (it follows the front section as a trailer);
 - left out: the bus's seated driver figure (the simulator's own driver takes the seat) and a helper object of the
   Land Rover Defender (`Object_669`);
-- the simulator's lamps, displays, cameras and driver added.
+- the simulator's lamps, displays, cameras and driver added;
+- the two generic packs (several vehicles in one model, standing at angles): each vehicle taken out of its pack with
+  its wheels, turned straight and scaled to a real vehicle of its type; the packs' city bus and school bus are not used.
 
 ## Trademarks
 

@@ -20,6 +20,26 @@ namespace CoupledSim.Tests
         }
 
         [Test]
+        public void FirstStudyTrialFile()
+        {
+            // the tutorial's file (docs/first-study.md): practice first, then the three eHMI blocks in a balanced order
+            var t = TrialTable.ParseCsv(System.IO.File.ReadAllText("Assets/StreamingAssets/Trials/first-study.csv"));
+            Assert.AreEqual(TrialOrder.Latin, t.Order);
+            Assert.AreEqual(7, t.Rows.Count);
+            CollectionAssert.IsSubsetOf(Enumerable.Range(0, 7).Select(i => t.Get(i, "ehmiDesign")).Distinct().ToList(), new[] { "none", "LightBarCyan@Bumper", "TextWalk@Windshield" });
+            var firstBlocks = new HashSet<string>();
+            for (int participant = 1; participant <= 6; participant++)
+            {
+                var order = t.OrderFor(participant, TrialOrder.Latin);
+                Assert.AreEqual(0, order[0], "practice first");
+                var blocks = order.Skip(1).Select(i => t.Get(i, "block")).ToList();
+                Assert.AreEqual(blocks[0], blocks[1]); Assert.AreEqual(blocks[2], blocks[3]); Assert.AreEqual(blocks[4], blocks[5]);
+                firstBlocks.Add(blocks[0]);
+            }
+            Assert.AreEqual(3, firstBlocks.Count, "each eHMI comes first for some participants");
+        }
+
+        [Test]
         public void CsvRoundTrip()
         {
             var t = TrialTable.ParseCsv("experiment,weather,time\nBase,\"Light, rain\",17:30\n");

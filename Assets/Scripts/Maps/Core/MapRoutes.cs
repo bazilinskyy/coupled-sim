@@ -33,7 +33,8 @@ public static class MapRoutes
     /// <param name="halfSize">Half the map's size (m); the map is centred on the origin.</param>
     public static string LastStats = "";
 
-    public static List<List<Vector3>> Build(IList<RoadLine> roads, float halfSize, bool leftHandTraffic, int max = 60, float minLength = 150f)
+    /// <param name="variants">Walks from each entry: the first goes straight on where it can, the others turn at a junction now and then (seeded, the same on every agent).</param>
+    public static List<List<Vector3>> Build(IList<RoadLine> roads, float halfSize, bool leftHandTraffic, int max = 60, float minLength = 150f, int variants = 1, int seed = 7)
     {
         // the road network as a directed graph of the roads' points (shared points are junctions)
         var ids = new Dictionary<long, int>();
@@ -62,10 +63,12 @@ public static class MapRoutes
         bool AtEdge(Vector3 p) => Math.Max(Math.Abs(p.X), Math.Abs(p.Z)) > halfSize * 0.85f;
 
         var found = new List<(List<int> nodes, List<int> roadsOf, float len)>();
+        var rnd = new Random(seed);
         for (int s = 0; s < pos.Count; s++)
         {
             if (!AtEdge(pos[s])) continue;
             foreach (var first in outs[s])
+            for (int variant = 0; variant < variants; variant++)
             {
                 var dir0 = Flat(pos[first.To] - pos[s]);
                 if (Vector3.Dot(dir0, -pos[s]) <= 0f) continue;   // into the map
@@ -79,6 +82,7 @@ public static class MapRoutes
                     if (len > 60f && AtEdge(pos[cur])) break;
                     var inDir = Vector3.Normalize(Flat(pos[cur] - pos[from]));
                     Edge best = default; float bestScore = float.MaxValue; bool any = false;
+                    var options = new List<Edge>();
                     foreach (var e in outs[cur])
                     {
                         if (e.To == from || seen.Contains(e.To)) continue;
@@ -88,8 +92,11 @@ public static class MapRoutes
                         if (angle > 135f) continue;   // turns at T-junctions too, but not back
                         float score = angle + (e.Road == road ? 0f : 15f);   // straight on, and on the same road
                         if (score < bestScore) { bestScore = score; best = e; any = true; }
+                        if (angle < 110f) options.Add(e);
                     }
                     if (!any) break;
+                    // the variants turn off at a junction now and then
+                    if (variant > 0 && options.Count > 1 && rnd.NextDouble() < 0.35) best = options[rnd.Next(options.Count)];
                     len += Vector3.Distance(pos[cur], pos[best.To]);
                     from = cur; cur = best.To; road = best.Road;
                     nodes.Add(cur); rs.Add(road); seen.Add(cur);

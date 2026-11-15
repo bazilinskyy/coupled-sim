@@ -76,6 +76,14 @@ public class NetworkingManager : MonoBehaviour
 
     /// <summary>Participant number of this session (0 = none).</summary>
     public static int SessionParticipant { get; private set; }
+
+    /// <summary>Clients: the host's participant number and trial (StartGameMsg), so their logs are named like the host's (P03-T02-...).</summary>
+    public static void SetSessionFromHost(int participant, int trialIndex)
+    {
+        if (participant > 0) SessionParticipant = participant;
+        if (trialIndex >= 0) CurrentTrialIndex = trialIndex;
+    }
+    public static int TrialIndexForLogs => CurrentTrialIndex;
     /// <summary>"P03-" when a participant number is set, for log file names.</summary>
     public static string LogPrefix => SessionParticipant > 0 ? $"P{SessionParticipant:D2}-T{CurrentTrialIndex + 1:D2}-" : "";
     /// <summary>Problems found when loading the trial file (shown on the start screen).</summary>
@@ -106,7 +114,7 @@ public class NetworkingManager : MonoBehaviour
             if (args.Contains("-host")) _startHost = true;
             // -quality Fantastic|Balanced|Performance: graphics quality for slower PCs
             var quality = Arg(args, "-quality");
-            if (quality != null)
+            if (quality != null && !string.Equals(quality, "auto", StringComparison.OrdinalIgnoreCase))   // (auto: AutoQuality)
             {
                 int q = Array.FindIndex(QualitySettings.names, n => string.Equals(n, quality, StringComparison.OrdinalIgnoreCase));
                 if (q >= 0) { QualitySettings.SetQualityLevel(q, true); Debug.Log("Quality: " + QualitySettings.names[q]); }

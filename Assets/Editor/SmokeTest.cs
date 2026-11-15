@@ -436,7 +436,7 @@ public static class SmokeTest
                 camGo.transform.LookAt(p + Vector3.up * (sg.Height + 0.3f));
                 sb.AppendLine($"Sign shot: {sg.name} at {p}");
             }
-            else if (view.Trim().StartsWith("signal"))
+            else if (view.Trim().StartsWith("signal") || view.Trim().StartsWith("arrow"))
             {
                 // "signal", "signal:3" (the n-th nearest signal head to the participant): as a driver sees it, 30 m
                 // before it in its approach; "signaltop:3": its junction from 35 m up
@@ -444,7 +444,9 @@ public static class SmokeTest
                 bool top = spec.StartsWith("signaltop");
                 int nth = spec.Contains(":") ? int.Parse(spec.Substring(spec.IndexOf(':') + 1)) : 0;
                 var origin = local != null ? local.transform.position : Vector3.zero;
+                // ("arrow:3": the n-th nearest turn-arrow head)
                 var lights = UnityEngine.Object.FindObjectsByType<CarTrafficLight>(FindObjectsSortMode.None)
+                    .Where(x => !spec.StartsWith("arrow") || x.Arrow != CarTrafficLight.TurnArrow.None)
                     .OrderBy(x => (x.transform.position - origin).sqrMagnitude).ToList();
                 if (lights.Count == 0) { UnityEngine.Object.DestroyImmediate(camGo); sb.AppendLine($"Screenshot '{spec}' skipped: no signal"); continue; }
                 var l = lights[Mathf.Min(nth, lights.Count - 1)];
@@ -581,6 +583,34 @@ public static class SmokeTest
                 float far = viewCam.farClipPlane; viewCam.farClipPlane = Mathf.Min(far, 300f); sb.AppendLine($"  far plane 300 m (was {far}): {Bench():F1} ms"); viewCam.farClipPlane = far;
                 float rs = urp.renderScale; urp.renderScale = 0.75f; sb.AppendLine($"  render scale 0.75: {Bench():F1} ms"); urp.renderScale = rs;
                 sb.AppendLine($"  again as configured: {Bench():F1} ms");
+                // what the groups of objects cost: their renderers off one group at a time; and what is drawn
+                var all = Resources.FindObjectsOfTypeAll<Renderer>().Where(r => r != null && r.gameObject.scene.IsValid() && r.enabled && r.gameObject.activeInHierarchy).ToList();
+                string Group(Renderer r)
+                {
+                    for (var t = r.transform; t != null; t = t.parent)
+                    {
+                        var n = t.name;
+                        if (n.StartsWith("Parked car")) return "parked cars";
+                        if (n.StartsWith("Map traffic") || n.StartsWith("Map cyclist") || n.StartsWith("Traffic ")) return "traffic";
+                        if (n.StartsWith("Street furniture")) return "street furniture";
+                        if (n == "Palm" || n == "Conifer" || n.StartsWith("Tree")) return "trees";
+                        if (n == "Buildings") return "buildings";
+                        if (n.StartsWith("Traffic signals") || n.StartsWith("Traffic signs")) return "signals and signs";
+                        if (n == "World") return "roads and ground";
+                        if (n.StartsWith("Drivable") && t == r.transform.root) return "participant's car";
+                    }
+                    return "other";
+                }
+                var groups = all.GroupBy(Group).ToList();
+                foreach (var g in groups.OrderByDescending(g => g.Count()))
+                {
+                    long tris = 0; foreach (var r in g) if (r is MeshRenderer && r.TryGetComponent<MeshFilter>(out var mf) && mf.sharedMesh != null) tris += mf.sharedMesh.triangles.LongLength / 3; else if (r is SkinnedMeshRenderer sm && sm.sharedMesh != null) tris += sm.sharedMesh.triangles.LongLength / 3;
+                    foreach (var r in g) r.enabled = false;
+                    double ms = Bench();
+                    foreach (var r in g) r.enabled = true;
+                    sb.AppendLine($"  without {g.Key} ({g.Count()} renderers, {tris / 1000} k triangles): {ms:F1} ms");
+                }
+                sb.AppendLine($"  {all.Count} renderers in all");
             }
             viewCam.targetTexture = prev;
             rt.Release();
