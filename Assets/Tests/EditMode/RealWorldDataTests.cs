@@ -73,12 +73,49 @@ namespace CoupledSim.Tests
             Assert.AreEqual("Fog", WeatherOf(45, 0f, 100f, -1f, out _, out _));
         }
 
+        static object Hour(int code, float snowfall, float depth)
+        {
+            var hourType = TypeNamed("RealWeather").GetNestedType("Hour");
+            var h = Activator.CreateInstance(hourType);
+            hourType.GetField("Code").SetValue(h, code);
+            hourType.GetField("Cloud").SetValue(h, 100f);
+            hourType.GetField("Snowfall").SetValue(h, snowfall);
+            hourType.GetField("SnowDepth").SetValue(h, depth);
+            return h;
+        }
+
+        [Test]
+        public void SnowFallsAndCoversTheGround()
+        {
+            var rw = TypeNamed("RealWeather");
+            string W(object h) { var a = new object[] { h, 0f, 0f }; return rw.GetMethod("WeatherOf").Invoke(null, a).ToString(); }
+            float Cover(object h) => (float)rw.GetMethod("SnowCoverOf").Invoke(null, new[] { h });
+            Assert.AreEqual("LightSnow", W(Hour(71, 0.3f, 0.02f)));
+            Assert.AreEqual("HeavySnow", W(Hour(73, 1.5f, 0.1f)), "by the amount");
+            Assert.AreEqual("HeavySnow", W(Hour(75, 0.2f, -1f)), "by the code");
+            Assert.AreEqual(0.4f, Cover(Hour(71, 0.3f, 0.02f)), 1e-4f, "2 cm of 5");
+            Assert.AreEqual(1f, Cover(Hour(3, 0f, 0.2f)), 1e-4f, "old snow, no snowfall");
+            Assert.AreEqual(0.5f, Cover(Hour(71, 0.3f, -1f)), 1e-4f, "snowing, depth unknown");
+            Assert.AreEqual(0f, Cover(Hour(61, 0f, -1f)));
+        }
+
+        [Test]
+        public void TreesLeanMoreInStrongerWind()
+        {
+            var lean = TypeNamed("TreeSway").GetMethod("Lean");
+            float L(float v) => (float)lean.Invoke(null, new object[] { v });
+            Assert.Less(L(3f), 0.2f);
+            Assert.AreEqual(1.2f, L(10f), 0.01f);
+            Assert.AreEqual(6f, L(40f), 0.01f, "at most 6°");
+        }
+
         [Test]
         public void OpenMeteoAnswersAreRead()
         {
             const string json = "{\"latitude\":52.0,\"hourly\":{\"time\":[\"2025-06-01T00:00\",\"2025-06-01T01:00\"]," +
                                 "\"temperature_2m\":[11.5,12.0],\"precipitation\":[0.0,1.2],\"cloud_cover\":[20,95]," +
-                                "\"weather_code\":[1,63],\"wind_speed_10m\":[10.0,14.5],\"visibility\":[null,6000.0]}}";
+                                "\"weather_code\":[1,63],\"wind_speed_10m\":[10.0,14.5],\"visibility\":[null,6000.0]," +
+                                "\"snowfall\":[0.0,0.7],\"snow_depth\":[0.03,null],\"wind_direction_10m\":[200,315]}}";
             var rw = TypeNamed("RealWeather");
             var h = rw.GetMethod("Parse").Invoke(null, new object[] { json, 1 });
             var t = h.GetType();
@@ -88,6 +125,10 @@ namespace CoupledSim.Tests
             Assert.AreEqual(6000f, (float)t.GetField("Visibility").GetValue(h), 1e-4f);
             var h0 = rw.GetMethod("Parse").Invoke(null, new object[] { json, 0 });
             Assert.AreEqual(-1f, (float)t.GetField("Visibility").GetValue(h0), 1e-4f, "missing visibility");
+            Assert.AreEqual(0.7f, (float)t.GetField("Snowfall").GetValue(h), 1e-4f);
+            Assert.AreEqual(-1f, (float)t.GetField("SnowDepth").GetValue(h), 1e-4f, "missing snow depth");
+            Assert.AreEqual(0.03f, (float)t.GetField("SnowDepth").GetValue(h0), 1e-4f);
+            Assert.AreEqual(315f, (float)t.GetField("WindDirection").GetValue(h), 1e-4f);
         }
 
         static object Terrain(float[] h, int n, float step)

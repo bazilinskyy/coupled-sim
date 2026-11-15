@@ -11,6 +11,8 @@ public enum Weather
     LightRain,
     HeavyRain,
     Fog,
+    LightSnow,
+    HeavySnow,
 }
 
 /// <summary>
@@ -19,7 +21,8 @@ public enum Weather
 /// tint, sun strength), fog, rain and wet roads.
 ///
 /// Settable per trial as experiment parameters (it is an IExperimentModifier):
-/// time ("17:30" or 17.5), weather (Clear, PartlyCloudy, Overcast, LightRain, HeavyRain, Fog),
+/// time ("17:30" or 17.5), weather (Clear, PartlyCloudy, Overcast, LightRain, HeavyRain, Fog, LightSnow, HeavySnow),
+/// snow (cover on the ground 0..1), wind (m/s) and winddirection (compass degrees it comes from),
 /// fog (density, e.g. 0.02), rain (0..1), timeSpeed (multiplier of real time; 0 = fixed),
 /// realWeather (a date and local time, e.g. 2025-06-01T14:00: the weather that really was there then, see RealWeather).
 /// The host sends the state to all clients, so every participant sees the same conditions.
@@ -46,6 +49,12 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
     public float ExtraFog = 0f;
     [Tooltip("Rain intensity override (0..1); negative: from the weather.")]
     public float RainOverride = -1f;
+    [Tooltip("Snow on the ground (0..1: grass, pavements and roofs white, slush on the roads, less grip); negative: from the weather (falling snow covers it).")]
+    public float SnowCover = -1f;
+    [Tooltip("Wind speed (m/s, at 10 m): trees sway, rain and snow slant.")]
+    public float WindSpeed = 2f;
+    [Tooltip("Where the wind comes from (compass degrees: 270 = from the west).")]
+    public float WindDirection = 240f;
 
     [Header("Lighting")]
     [Tooltip("Keep the scene's baked lightmaps and sun as they are (as in earlier experiments): only fog, rain, wet roads and street lights change. Off: the sun follows the time of day with realtime lighting.")]
@@ -74,18 +83,33 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
     [Header("State (read only)")]
     public float SunElevation;
     public float Rain;
+    public float Snowfall;
+    public float Snow;
     public bool StreetLightsOn;
 
+    /// <summary>The wind in the scene (m/s), towards where it blows (horizontal).</summary>
+    public Vector3 Wind
+    {
+        get
+        {
+            float yaw = (WindDirection + 180f - NorthOffset) * Mathf.Deg2Rad;
+            return new Vector3(Mathf.Sin(yaw), 0f, Mathf.Cos(yaw)) * Mathf.Max(0f, WindSpeed);
+        }
+    }
+
     Material _sky;
-    ParticleSystem _rain;
+    ParticleSystem _rain, _snow;
     Transform _rainFollow;
     readonly List<Renderer> _wetRenderers = new List<Renderer>();
+    readonly List<Renderer> _snowRenderers = new List<Renderer>();
+    [Tooltip("Material name parts of surfaces that snow covers (roads get slush).")]
+    public string[] SnowSurfaceKeywords = { "grass", "green", "roof", "pavement", "paving", "sidewalk", "ground", "kerb", "gravel", "cycle", "tile" };
     MaterialPropertyBlock _mpb;
     readonly List<ReflectionProbe> _probes = new List<ReflectionProbe>();
     bool _initialised;
     float _appliedTime = -1;
     Weather _appliedWeather;
-    float _appliedFog = -1, _appliedRain = -2;
+    float _appliedFog = -1, _appliedRain = -2, _appliedSnow = -2, _appliedSnowfall = -2, _appliedWind = -1;
 
     /// <summary>The least fog density (exponential squared): the haze of clear air.</summary>
     public const float MinHaze = 0.00028f;
@@ -184,8 +208,17 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
                 if (n.Contains("paving") || n.Contains("cobble") || n.Contains("manhole") || n.Contains("patch") || n.Contains("kerb")) wet = true;
                 if (wet && m.HasProperty("_Smoothness")) { _wetRenderers.Add(r); break; }
             }
+            foreach (var m in r.sharedMaterials)
+            {
+                if (m == null || !m.HasProperty("_BaseMap")) continue;
+                var n = m.name.ToLower();
+                bool snow = false;
+                foreach (var k in SnowSurfaceKeywords) if (n.Contains(k)) { snow = true; break; }
+                if (snow && !n.Contains("facade") && !n.Contains("ground floor")) { _snowRenderers.Add(r); break; }
+            }
         }
         CreateRain();
+        CreateSnow();
         // -liveReflections 0: off (comparisons, slow PCs)
         var args = System.Environment.GetCommandLineArgs();
         int li = System.Array.IndexOf(args, "-liveReflections");
@@ -394,6 +427,7 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
             {
                 var v = p.value.Trim().ToLower();
                 if (v == "rain" || v == "rainy") v = "LightRain";
+                else if (v == "snow" || v == "snowy") v = "LightSnow";
                 else if (v == "cloudy") v = "Overcast";
                 else if (v == "foggy") v = "Fog";
                 if (Enum.TryParse(v, true, out Weather w)) Weather = w;
@@ -401,6 +435,9 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
             }
             else if (name == "fog") ExtraFog = ParseFloat(p.value);
             else if (name == "rain") RainOverride = ParseFloat(p.value);
+            else if (name == "snow" || name == "snowcover") SnowCover = ParseFloat(p.value);
+            else if (name == "wind" || name == "windspeed") WindSpeed = ParseFloat(p.value);
+            else if (name == "winddirection") WindDirection = ParseFloat(p.value);
             else if (name == "timespeed") TimeSpeed = ParseFloat(p.value);
             else if (name == "dayofyear") DayOfYear = (int)ParseFloat(p.value);
             else if (name == "latitude") Latitude = ParseFloat(p.value);
@@ -429,7 +466,7 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
     public struct EnvironmentStateMsg : INetMessage
     {
         public int MessageId => (int)MsgId.S_Environment;
-        public float TimeOfDay, TimeSpeed, ExtraFog, RainOverride, Latitude;
+        public float TimeOfDay, TimeSpeed, ExtraFog, RainOverride, Latitude, SnowCover, WindSpeed, WindDirection;
         public int Weather, DayOfYear;
 
         public void Sync<T>(T synchronizer) where T : ISynchronizer
@@ -441,19 +478,23 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
             synchronizer.Sync(ref Latitude);
             synchronizer.Sync(ref Weather);
             synchronizer.Sync(ref DayOfYear);
+            synchronizer.Sync(ref SnowCover);
+            synchronizer.Sync(ref WindSpeed);
+            synchronizer.Sync(ref WindDirection);
         }
     }
 
     public EnvironmentStateMsg GetState() => new EnvironmentStateMsg
     {
         TimeOfDay = TimeOfDay, TimeSpeed = TimeSpeed, ExtraFog = ExtraFog, RainOverride = RainOverride,
-        Latitude = Latitude, Weather = (int)Weather, DayOfYear = DayOfYear,
+        Latitude = Latitude, Weather = (int)Weather, DayOfYear = DayOfYear, SnowCover = SnowCover, WindSpeed = WindSpeed, WindDirection = WindDirection,
     };
 
     public void SetState(EnvironmentStateMsg s)
     {
         TimeOfDay = s.TimeOfDay; TimeSpeed = s.TimeSpeed; ExtraFog = s.ExtraFog; RainOverride = s.RainOverride;
         Latitude = s.Latitude; Weather = (Weather)s.Weather; DayOfYear = s.DayOfYear;
+        SnowCover = s.SnowCover; WindSpeed = s.WindSpeed; WindDirection = s.WindDirection;
         Apply(true);
     }
 
@@ -490,6 +531,22 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
         Weather.LightRain => 0.9f,
         Weather.HeavyRain => 1f,
         Weather.Fog => 0.8f,
+        Weather.LightSnow => 0.9f,
+        Weather.HeavySnow => 1f,
+        _ => 0f,
+    };
+
+    float WeatherSnowfall() => Weather switch
+    {
+        Weather.LightSnow => 0.35f,
+        Weather.HeavySnow => 1f,
+        _ => 0f,
+    };
+
+    float WeatherSnowCover() => SnowCover >= 0 ? Mathf.Clamp01(SnowCover) : Weather switch
+    {
+        Weather.LightSnow => 0.6f,
+        Weather.HeavySnow => 1f,
         _ => 0f,
     };
 
@@ -506,16 +563,22 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
         Weather.LightRain => 0.006f,
         Weather.HeavyRain => 0.012f,
         Weather.Fog => 0.03f,
+        Weather.LightSnow => 0.005f,
+        Weather.HeavySnow => 0.014f,
         _ => 0.0005f,
     };
 
     void Apply(bool force)
     {
         if (!_initialised) Init();
-        float rain = WeatherRain(), fog = WeatherFog();
+        float rain = WeatherRain(), fog = WeatherFog(), snowfall = WeatherSnowfall(), snow = WeatherSnowCover();
         if (!force && Mathf.Abs(_appliedTime - TimeOfDay) < 1f / 120f && _appliedWeather == Weather &&
-            Mathf.Approximately(_appliedFog, fog) && Mathf.Approximately(_appliedRain, rain)) return;
+            Mathf.Approximately(_appliedFog, fog) && Mathf.Approximately(_appliedRain, rain) && Mathf.Approximately(_appliedSnow, snow) &&
+            Mathf.Approximately(_appliedSnowfall, snowfall) && Mathf.Approximately(_appliedWind, WindSpeed + WindDirection * 1000f)) return;
         _appliedTime = TimeOfDay; _appliedWeather = Weather; _appliedFog = fog; _appliedRain = rain;
+        _appliedSnow = snow; _appliedSnowfall = snowfall; _appliedWind = WindSpeed + WindDirection * 1000f;
+        Snowfall = snowfall; Snow = snow;
+        SetSnowfall(snowfall);
 
         float solarTime = TimeOfDay - UtcOffset + Longitude / 15f; // local solar time
         SolarPosition(solarTime, Latitude, DayOfYear, out var elevation, out var azimuth);
@@ -545,7 +608,7 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
             RenderSettings.fogDensity = Mathf.Max(fog, MinHaze);
             Rain = rain;
             SetRain(rain);
-            SetWetness(rain > 0 ? Mathf.Clamp01(0.4f + rain) : 0f);
+            SetSurfaces(rain > 0 ? Mathf.Clamp01(0.4f + rain) : 0f, snow);
             return;
         }
 
@@ -585,7 +648,7 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
 
         Rain = rain;
         SetRain(rain);
-        SetWetness(rain > 0 ? Mathf.Clamp01(0.4f + rain) : 0f);
+        SetSurfaces(rain > 0 ? Mathf.Clamp01(0.4f + rain) : 0f, snow);
         DynamicGI.UpdateEnvironment();
         _liveDirty = true;
     }
@@ -642,21 +705,55 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
         _probes.AddRange(FindObjectsByType<ReflectionProbe>(FindObjectsInactive.Include));
     }
 
-    void SetWetness(float wet)
+    static Texture2D _snowTex;
+
+    /// <summary>Fresh snow: white with a faint blue-grey grain and a few glints.</summary>
+    static Texture2D SnowTexture()
     {
-        foreach (var r in _wetRenderers)
+        if (_snowTex != null) return _snowTex;
+        const int n = 256;
+        var rng = new System.Random(7);
+        var px = new Color[n * n];
+        for (int y = 0; y < n; y++)
+            for (int x = 0; x < n; x++)
+            {
+                float v = 0.9f + 0.08f * Mathf.PerlinNoise(x * 0.05f, y * 0.05f) + ((float)rng.NextDouble() - 0.5f) * 0.05f;
+                if (rng.NextDouble() < 0.002) v = 1.05f;
+                px[y * n + x] = new Color(v * 0.97f, v * 0.98f, Mathf.Min(1f, v * 1.02f));
+            }
+        _snowTex = new Texture2D(n, n, TextureFormat.RGBA32, true) { name = "snow", wrapMode = TextureWrapMode.Repeat, anisoLevel = 4 };
+        _snowTex.SetPixels(px);
+        _snowTex.Apply(true, true);
+        return _snowTex;
+    }
+
+    // wet: darker and glossier; snow: grass, pavements, roofs and the ground white (from a quarter cover), roads slushy and lighter
+    void SetSurfaces(float wet, float snow)
+    {
+        var all = new HashSet<Renderer>(_wetRenderers);
+        foreach (var r in _snowRenderers) all.Add(r);
+        var snowSet = new HashSet<Renderer>(_snowRenderers);
+        foreach (var r in all)
         {
             if (r == null) continue;
             r.GetPropertyBlock(_mpb);
-            if (wet <= 0f)
+            _mpb.Clear();
+            var mat = r.sharedMaterial;
+            var baseCol = mat != null && mat.HasProperty("_BaseColor") ? mat.GetColor("_BaseColor") : Color.white;
+            bool covered = snowSet.Contains(r) && snow >= 0.25f;
+            if (covered)
             {
-                _mpb.Clear();
+                _mpb.SetTexture("_BaseMap", SnowTexture());
+                _mpb.SetColor("_BaseColor", Color.Lerp(new Color(0.72f, 0.74f, 0.78f), new Color(0.97f, 0.98f, 1f), Mathf.InverseLerp(0.25f, 1f, snow)));
+                _mpb.SetFloat("_Smoothness", wet > 0f ? 0.45f : 0.2f);
             }
-            else
+            else if (wet > 0f || snow > 0f)
             {
-                var baseCol = r.sharedMaterial != null && r.sharedMaterial.HasProperty("_BaseColor") ? r.sharedMaterial.GetColor("_BaseColor") : Color.white;
-                _mpb.SetFloat("_Smoothness", Mathf.Lerp(0.2f, 0.85f, wet));
-                _mpb.SetColor("_BaseColor", baseCol * Mathf.Lerp(1f, 0.65f, wet)); // wet surfaces are darker
+                var col = baseCol * Mathf.Lerp(1f, 0.65f, wet);                       // wet surfaces are darker
+                if (snow > 0f) col = Color.Lerp(col, col * 2.2f, snow * 0.6f);        // slush: lighter grey
+                col.a = baseCol.a;
+                _mpb.SetColor("_BaseColor", col);
+                _mpb.SetFloat("_Smoothness", Mathf.Max(wet > 0f ? Mathf.Lerp(0.2f, 0.85f, wet) : 0.2f, snow > 0f ? 0.65f : 0f));
             }
             r.SetPropertyBlock(_mpb);
         }
@@ -697,7 +794,7 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
             mat.SetFloat("_Surface", 1f);
             mat.SetFloat("_Blend", 0f);
             mat.SetColor("_BaseColor", new Color(0.8f, 0.85f, 0.9f, 0.35f));
-            mat.renderQueue = 3000;
+            Transparent(mat);
             renderer.sharedMaterial = mat;
         }
     }
@@ -707,14 +804,108 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
         if (_rain == null) return;
         var emission = _rain.emission;
         emission.rateOverTime = 9000f * intensity;
+        Blow(_rain, 10f, 12f, 40f);
         if (intensity > 0.01f && !_rain.isPlaying) _rain.Play();
         else if (intensity <= 0.01f && _rain.isPlaying) _rain.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+    }
+
+    // carried by the wind: drops and flakes drift with it, emitted upwind so they still fall around the viewer
+    void Blow(ParticleSystem ps, float fallSpeed, float height, float size)
+    {
+        var w = Wind * 0.85f;
+        var vel = ps.velocityOverLifetime;
+        vel.x = new ParticleSystem.MinMaxCurve(w.x - 0.5f, w.x + 0.5f);
+        vel.y = new ParticleSystem.MinMaxCurve(-fallSpeed * 1.1f, -fallSpeed * 0.9f);
+        vel.z = new ParticleSystem.MinMaxCurve(w.z - 0.5f, w.z + 0.5f);
+        var shape = ps.shape;
+        float drift = height / fallSpeed;
+        shape.position = new Vector3(-w.x * drift * 0.5f, height, -w.z * drift * 0.5f);
+        shape.scale = new Vector3(size + Mathf.Abs(w.x) * drift, 1f, size + Mathf.Abs(w.z) * drift);
+    }
+
+    void CreateSnow()
+    {
+        var go = new GameObject("Snow");
+        go.transform.SetParent(transform, false);
+        _snow = go.AddComponent<ParticleSystem>();
+        _snow.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        var main = _snow.main;
+        main.loop = true;
+        main.startLifetime = 14f;
+        main.startSpeed = 0f;
+        main.startSize = new ParticleSystem.MinMaxCurve(0.03f, 0.07f);
+        main.maxParticles = 20000;
+        main.simulationSpace = ParticleSystemSimulationSpace.World;
+        main.startColor = new Color(1f, 1f, 1f, 0.9f);
+        var shape = _snow.shape;
+        shape.shapeType = ParticleSystemShapeType.Box;
+        var vel = _snow.velocityOverLifetime;
+        vel.enabled = true;
+        vel.space = ParticleSystemSimulationSpace.World;
+        // flakes flutter
+        var noise = _snow.noise;
+        noise.enabled = true;
+        noise.strength = 0.6f;
+        noise.frequency = 0.4f;
+        noise.scrollSpeed = 0.3f;
+        var collision = _snow.collision;   // and stop on the ground instead of falling through it
+        collision.enabled = true;
+        collision.type = ParticleSystemCollisionType.World;
+        collision.mode = ParticleSystemCollisionMode.Collision3D;
+        collision.lifetimeLoss = 1f;
+        collision.quality = ParticleSystemCollisionQuality.Low;
+        var renderer = go.GetComponent<ParticleSystemRenderer>();
+        renderer.renderMode = ParticleSystemRenderMode.Billboard;
+        var shader = Shader.Find("Universal Render Pipeline/Particles/Unlit");
+        if (shader != null)
+        {
+            var mat = new Material(shader) { name = "Snow" };
+            mat.SetFloat("_Surface", 1f);
+            mat.SetFloat("_Blend", 0f);
+            // a soft round flake
+            const int n = 32;
+            var tex = new Texture2D(n, n, TextureFormat.RGBA32, false) { name = "snowflake", wrapMode = TextureWrapMode.Clamp };
+            var px = new Color[n * n];
+            for (int y = 0; y < n; y++) for (int x = 0; x < n; x++)
+            {
+                float d = Vector2.Distance(new Vector2(x + 0.5f, y + 0.5f), new Vector2(n / 2f, n / 2f)) / (n / 2f);
+                px[y * n + x] = new Color(1f, 1f, 1f, Mathf.Clamp01(1f - d * d) );
+            }
+            tex.SetPixels(px); tex.Apply();
+            mat.SetTexture("_BaseMap", tex);
+            mat.SetColor("_BaseColor", new Color(1f, 1f, 1f, 0.95f));
+            Transparent(mat);
+            renderer.sharedMaterial = mat;
+        }
+    }
+
+    // URP particle material set to alpha blending from code (the inspector sets these keywords and states itself)
+    static void Transparent(Material mat)
+    {
+        mat.SetFloat("_Surface", 1f);
+        mat.SetFloat("_Blend", 0f);
+        mat.SetOverrideTag("RenderType", "Transparent");
+        mat.SetFloat("_SrcBlend", (float)UnityEngine.Rendering.BlendMode.SrcAlpha);
+        mat.SetFloat("_DstBlend", (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+        mat.SetFloat("_ZWrite", 0f);
+        mat.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+        mat.renderQueue = 3000;
+    }
+
+    void SetSnowfall(float intensity)
+    {
+        if (_snow == null) return;
+        var emission = _snow.emission;
+        emission.rateOverTime = 4000f * intensity;
+        Blow(_snow, 1.1f, 14f, 50f);
+        if (intensity > 0.01f && !_snow.isPlaying) _snow.Play();
+        else if (intensity <= 0.01f && _snow.isPlaying) _snow.Stop(true, ParticleSystemStopBehavior.StopEmitting);
     }
 
     // rain falls around whoever is looking
     void FollowCamera()
     {
-        if (_rain == null || Rain <= 0.01f) return;
+        if (_rain == null || (Rain <= 0.01f && Snowfall <= 0.01f)) return;
         if (_rainFollow == null || !_rainFollow.gameObject.activeInHierarchy)
         {
             var cam = Camera.main;
@@ -725,6 +916,6 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
             }
             _rainFollow = cam != null ? cam.transform : null;
         }
-        if (_rainFollow != null) _rain.transform.position = _rainFollow.position;
+        if (_rainFollow != null) { _rain.transform.position = _rainFollow.position; if (_snow != null) _snow.transform.position = _rainFollow.position; }
     }
 }
