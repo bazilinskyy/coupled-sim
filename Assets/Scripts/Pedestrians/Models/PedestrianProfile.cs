@@ -37,6 +37,10 @@ namespace CoupledSim.Pedestrians
         public float MinGapFraction;
         /// <summary>Body radius for collision avoidance (m).</summary>
         public float Radius;
+        /// <summary>At a red pedestrian light: crosses on red when a safe gap comes after waiting <see cref="RedLightTolerance"/> (an "opportunist"), else waits for green.</summary>
+        public bool RedLightOpportunist;
+        /// <summary>How long (s) an opportunist waits at a red light before crossing in a safe gap.</summary>
+        public float RedLightTolerance;
 
         public float CrossingSpeed => WalkingSpeed * CrossingSpeedFactor;
 
@@ -86,6 +90,29 @@ namespace CoupledSim.Pedestrians
             p.PatienceTime = Clamp(Normal(rng, 60f, 20f), 20f, 120f);
             return p;
         }
+
+        /// <summary>
+        /// Behaviour at red pedestrian lights, drawn with its own generator (so the other draws, and with them earlier
+        /// trials, stay the same). Observational studies find most pedestrians wait for green and a minority cross on red
+        /// when the road is clear, more often the longer they wait; hazard-based duration models of the waiting time
+        /// (e.g. Guo et al. 2011, Accident Analysis &amp; Prevention) fit Weibull distributions with a rising hazard. Defaults: 25%
+        /// opportunists among adults (10% children and older people), tolerance Weibull(shape 1.6, scale 40 s); calibrate
+        /// them to the study's population.
+        /// </summary>
+        public void SampleSignalCompliance(Random rng)
+        {
+            double share = AgeGroup == AgeGroup.Adult ? 0.25 : 0.10;
+            RedLightOpportunist = rng.NextDouble() < share;
+            RedLightTolerance = Weibull(rng, 1.6f, 40f);
+        }
+
+        /// <summary>A Weibull draw (shape k, scale lambda) by inversion.</summary>
+        public static float Weibull(Random rng, float k, float lambda) =>
+            (float)(lambda * Math.Pow(-Math.Log(1.0 - rng.NextDouble()), 1.0 / k));
+
+        /// <summary>Whether a pedestrian at the kerb may start crossing, by the pedestrian light (gaps are checked as well).</summary>
+        public bool MayStartAtSignal(bool green, bool blinking, float waitedOnRed) =>
+            green || (RedLightOpportunist && (blinking || waitedOnRed >= RedLightTolerance));
 
         public static float Normal(Random rng, float mean, float sd)
         {
