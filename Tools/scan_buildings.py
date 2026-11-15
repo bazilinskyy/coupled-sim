@@ -1,16 +1,22 @@
 #!/usr/bin/env python3
 """
-Real 3D buildings for a Flemish map (Ghent) from open data, where no open 3D city model exists in a usable format:
-- the footprints of the Flemish large-scale base map (GRB, buildings on the ground, "GBG"; Digitaal Vlaanderen);
-- the height of every point of every roof from the laser scans: the surface model minus the terrain model
-  (Digitaal Hoogtemodel Vlaanderen II, DSM and DTM, 1 m; Digitaal Vlaanderen).
-Each building gets walls up to its roof edge and a roof that follows the scan (gables, hips, dormers and flat roofs as
-they are), smoothed a little and cut to the footprint. Written as Assets/StreamingAssets/Maps/{map}.buildings.bin.gz
-("B3DL", the format of Tools/citygml_buildings.py), which the simulator uses instead of the OpenStreetMap buildings.
+Real 3D buildings for a map from open laser scans, where no open 3D city model exists in a usable format:
+- the buildings' footprints (OpenStreetMap; for Ghent the Flemish large-scale base map, GRB "GBG", Digitaal Vlaanderen);
+- the height of every point of every roof: the surface model minus the terrain model of a laser scan.
+Up to four roof planes are fitted to each building's scan (RANSAC); the roof is the lowest of them (gables, hips,
+pyramids, flat), the nearest one where a flat roof has several levels, or flat at the measured height. Written as
+Assets/StreamingAssets/Maps/{map}.buildings.bin.gz ("B3DL", the format of Tools/citygml_buildings.py), which the
+simulator uses instead of the OpenStreetMap buildings.
 
-  python3 Tools/flanders_buildings.py Ghent
+Sources (open, no key):
+  Ghent       GRB footprints; DHMV II DSM and DTM 1 m (Digitaal Vlaanderen, Modellicentie Gratis Hergebruik)
+  Wellington  OSM footprints; LINZ 1 m lidar DSM and DEM (Toitū Te Whenua LINZ, CC BY 4.0)
+  Auckland    OSM footprints; LINZ 1 m lidar DSM and DEM (Toitū Te Whenua LINZ, CC BY 4.0)
+  London      OSM footprints; Environment Agency LIDAR composite first-return DSM and DTM 1 m (Open Government Licence v3)
 
-Needs numpy, Pillow, SciPy. Licence of both sources: Modellicentie Gratis Hergebruik (free reuse, credit Digitaal Vlaanderen).
+  python3 Tools/scan_buildings.py Wellington
+
+Needs numpy, Pillow, SciPy (and tifffile + imagecodecs for the LINZ scans).
 """
 import gzip, json, math, os, struct, sys
 import numpy as np
@@ -29,7 +35,7 @@ DEM = ("https://geo.api.vlaanderen.be/el-{kind}/wcs?service=WCS&version=1.0.0&re
 STEP = 1.0   # metres between roof points
 
 
-def footprints(bbox):
+def grb_footprints(bbox):
     s, w, n, e = bbox
     feats, start = [], 0
     while True:
@@ -37,6 +43,42 @@ def footprints(bbox):
         feats += page
         if len(page) < 5000: break
         start += 5000
+    return feats
+
+
+def osm_footprints(name):
+    """The map's OpenStreetMap buildings as GeoJSON-like polygons (closed ways and multipolygon relations)."""
+    import xml.etree.ElementTree as ET
+    root = ET.fromstring(gzip.open(os.path.join(MAPS, name + ".osm.gz")).read())
+    nodes = {n.get("id"): (float(n.get("lon")), float(n.get("lat"))) for n in root.iter("node")}
+    ways = {}
+    for w in root.iter("way"):
+        ways[w.get("id")] = ([nd.get("ref") for nd in w.iter("nd")], {t.get("k"): t.get("v") for t in w.iter("tag")})
+    def coords(ids): return [nodes[i] for i in ids if i in nodes]
+    def join(parts):
+        """Rings from way pieces joined end to end."""
+        rings, parts = [], [p[:] for p in parts if len(p) > 1]
+        while parts:
+            r = parts.pop(0)
+            while r[0] != r[-1]:
+                for k, p in enumerate(parts):
+                    if p[0] == r[-1]: r += p[1:]; parts.pop(k); break
+                    if p[-1] == r[-1]: r += p[::-1][1:]; parts.pop(k); break
+                else: break
+            if r[0] == r[-1] and len(r) >= 4: rings.append(r)
+        return rings
+    feats, in_rel = [], set()
+    for rel in root.iter("relation"):
+        tags = {t.get("k"): t.get("v") for t in rel.iter("tag")}
+        if tags.get("type") != "multipolygon" or "building" not in tags: continue
+        outer = [ways[m.get("ref")][0] for m in rel.iter("member") if m.get("type") == "way" and m.get("role") == "outer" and m.get("ref") in ways]
+        inner = [ways[m.get("ref")][0] for m in rel.iter("member") if m.get("type") == "way" and m.get("role") == "inner" and m.get("ref") in ways]
+        for m in rel.iter("member"): in_rel.add(m.get("ref"))
+        holes = [coords(r) for r in join(inner)]
+        for r in join(outer): feats.append({"geometry": {"type": "Polygon", "coordinates": [coords(r)] + holes}})
+    for wid, (ids, tags) in ways.items():
+        if "building" in tags and len(ids) >= 4 and ids[0] == ids[-1] and wid not in in_rel:
+            feats.append({"geometry": {"type": "Polygon", "coordinates": [coords(ids)]}})
     return feats
 
 
@@ -191,15 +233,29 @@ def building(rings, height, rng):
 building.models = {}
 
 
+FLANDERS = lambda kind: th.service_sampler(lambda w, s, e, n, px, py: DEM.format(kind=kind, KIND=kind.upper(), w=w, s=s, e=e, n=n, px=px, py=py), 0.5, 400)
+EA_DSM = ("https://environment.data.gov.uk/spatialdata/lidar-composite-digital-surface-model-first-return-dsm-1m/wcs?service=WCS&version=2.0.1"
+          "&request=GetCoverage&coverageId=df4e3ec3-315e-48aa-aaaf-b5ae74d7b2bb__Lidar_Composite_Elevation_FZ_DSM_1m&format=image/tiff"
+          "&subset=Long({w},{e})&subset=Lat({s},{n})&subsettingCrs=http://www.opengis.net/def/crs/EPSG/0/4326&outputCrs=http://www.opengis.net/def/crs/EPSG/0/4326")
+SOURCES = {
+    "Ghent": dict(footprints="grb", dsm=lambda: FLANDERS("dsm"), dtm=lambda: FLANDERS("dtm")),
+    "Wellington": dict(footprints="osm", dsm=lambda: th.linz_prefix_sampler("wellington/wellington-city_2025/dsm_1m/2193/"),
+                       dtm=lambda: th.linz_prefix_sampler(th.LINZ["Wellington"])),
+    "London": dict(footprints="osm", dsm=lambda: th.service_sampler(th.url(EA_DSM), 1.0, 400, workers=1), dtm=lambda: th.service_sampler(th.url(th.EA), 1.0, 400, workers=1)),
+    "Auckland": dict(footprints="osm", dsm=lambda: th.linz_prefix_sampler("auckland/auckland-part-1_2024/dsm_1m/2193/"),
+                     dtm=lambda: th.linz_prefix_sampler(th.LINZ["Auckland"])),
+}
+
+
 def main():
     name = sys.argv[1] if len(sys.argv) > 1 else "Ghent"
+    if name not in SOURCES: sys.exit("no laser scan source for %s (%s)" % (name, ", ".join(SOURCES)))
+    src = SOURCES[name]
     lat0, lon0 = th.centre(name)
     s, w, n, e = th.bounds(name)
     bbox = (s - 0.001, w - 0.0015, n + 0.001, e + 0.0015)
-    feats = footprints(bbox)
-    print("%s: %d footprints (GRB)" % (name, len(feats)))
-    dsm, dtm = rasters("dsm", bbox), rasters("dtm", bbox)
-    print("  %d DSM and %d DTM rasters" % (len(dsm), len(dtm)))
+    feats = grb_footprints(bbox) if src["footprints"] == "grb" else osm_footprints(name)
+    print("%s: %d footprints (%s)" % (name, len(feats), src["footprints"].upper()))
     from scipy.ndimage import map_coordinates
     # heights above the ground on one grid over the map, 0.5 m (local metres <-> geographic as Tools/terrain_height.py)
     xa, ya = to_local(bbox[0], bbox[1], lat0, lon0); xb, yb = to_local(bbox[2], bbox[3], lat0, lon0)
@@ -207,7 +263,7 @@ def main():
     gxs = np.arange(xa, xb, res); gys = np.arange(ya, yb, res)
     GX, GY = np.meshgrid(gxs, gys)
     GLA = lat0 + GY / 111320.0; GLO = lon0 + GX / (111320.0 * math.cos(math.radians(lat0)))
-    NDSM = th.sample_rasters(dsm, GLO, GLA) - th.sample_rasters(dtm, GLO, GLA)
+    NDSM = src["dsm"]()(GLA, GLO) - src["dtm"]()(GLA, GLO)
     del GX, GY, GLA, GLO
     print("  height grid %d x %d" % NDSM.shape[::-1])
     def height(x, y):
