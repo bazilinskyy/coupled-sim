@@ -17,13 +17,13 @@ using V2 = System.Numerics.Vector2;
 /// </summary>
 public partial class OsmMapGenerator
 {
-    public int SignalHeads, PedestrianSignalHeads, SignalJunctions;
+    public int SignalHeads, PedestrianSignalHeads, SignalJunctions, TurnArrowHeads;
     public TrafficLightsSystem Signals { get; private set; }
 
     static readonly bool _noSignals = Array.IndexOf(Environment.GetCommandLineArgs(), "-noSignals") >= 0;
 
     // timing (s): green of the main and the crossing direction, amber, all-red; pedestrians blink before the end
-    public const float MainGreen = 24f, SideGreen = 16f, Amber = 3f, AllRed = 2f, PedestrianBlink = 5f;
+    public const float MainGreen = 24f, SideGreen = 16f, Amber = 3f, AllRed = 2f, PedestrianBlink = 5f, TurnGreen = 7f;
     const float ClusterRadius = 40f;
 
     sealed class Head
@@ -33,6 +33,8 @@ public partial class OsmMapGenerator
         public bool OneWay;
         public long Node;
         public int Phase;
+        /// <summary>The approach has a lane only for turning across the oncoming traffic (left, or right in left-hand traffic): it gets a turn-arrow head and its own phase.</summary>
+        public bool TurnLane;
     }
 
     sealed class PedHead
@@ -99,7 +101,7 @@ public partial class OsmMapGenerator
                     // the stop line: before the junction's crossing roads, else at the signal
                     float back = junction ? JunctionWidth(s) / 2f + 2f : 1f;
                     var stop = Walk(pts, i, from, back, out var t);
-                    heads.Add(new Head { Stop = stop, Travel = t, Width = width, OneWay = ow != 0, Node = s });
+                    heads.Add(new Head { Stop = stop, Travel = t, Width = width, OneWay = ow != 0, Node = s, TurnLane = HasTurnLane(w, ow != 0 ? "" : from < 0 ? ":forward" : ":backward") });
                 }
             }
         }
@@ -173,12 +175,14 @@ public partial class OsmMapGenerator
             }
 
             var byPhase = new[] { new List<CarTrafficLight>(), new List<CarTrafficLight>() };
+            var turnByPhase = new[] { new List<CarTrafficLight>(), new List<CarTrafficLight>() };
             foreach (var h in ch)
             {
                 var light = PlaceCarSignal(lightsRoot, h, stopLines);
                 if (light == null) continue;
                 byPhase[h.Phase].Add(light);
                 carLights.Add(light);
+                if (h.TurnLane && PlaceArrowHead(lightsRoot, h, light) is CarTrafficLight arrowHead) { turnByPhase[h.Phase].Add(arrowHead); carLights.Add(arrowHead); }
             }
             var pedByPhase = new[] { new List<PedestrianTrafficLight>(), new List<PedestrianTrafficLight>() };
             foreach (var h in cp)
@@ -194,33 +198,45 @@ public partial class OsmMapGenerator
             }
             var A = Section("Phase A", byPhase[0]); var B = Section("Phase B", byPhase[1]);
             var PA = PedSection("Pedestrians with phase A", pedByPhase[0]); var PB = PedSection("Pedestrians with phase B", pedByPhase[1]);
+            // the stages of the cycle: each direction straight on (with its pedestrians), then its protected turns
+            // across the oncoming traffic when it has turn arrows (the pedestrians wait then)
+            bool arrows = turnByPhase[0].Count + turnByPhase[1].Count > 0;
+            var stages = new List<(CarSection cars, PedestrianSection peds, float green, string name)>
+            {
+                (A, PA, arrows ? MainGreen - 6f : MainGreen, "A"),
+            };
+            if (turnByPhase[0].Count > 0) stages.Add((Section("Phase A turns", turnByPhase[0]), null, TurnGreen, "A turns"));
+            stages.Add((B, PB, twoPhase ? (arrows ? SideGreen - 3f : SideGreen) : 10f, "B"));   // one direction: the pedestrians' green
+            if (turnByPhase[1].Count > 0) stages.Add((Section("Phase B turns", turnByPhase[1]), null, TurnGreen, "B turns"));
             var none = new CarSection[0]; var noPed = new PedestrianSection[0];
             TrafficLightEvent E(string name, float dt, LightState state, CarSection[] cars, PedestrianSection[] ped) =>
                 new TrafficLightEvent { name = name, deltaTime = dt, state = state, carSections = cars, pedestrianSections = ped };
-            float greenB = twoPhase ? SideGreen : 10f;   // one direction: the pedestrians' green
-            var initial = new[]
+            PedestrianSection[] Peds(PedestrianSection p) => p != null ? new[] { p } : noPed;
+            var initial = new List<TrafficLightEvent> { E(stages[0].name + " green", 0, LightState.GREEN, new[] { stages[0].cars }, Peds(stages[0].peds)) };
+            for (int k = 1; k < stages.Count; k++) initial.Add(E(stages[k].name + " red", 0, LightState.RED, new[] { stages[k].cars }, Peds(stages[k].peds)));
+            var events = new List<TrafficLightEvent>();
+            for (int k = 0; k < stages.Count; k++)
             {
-                E("A green", 0, LightState.GREEN, new[] { A }, new[] { PA }),
-                E("B red", 0, LightState.RED, new[] { B }, new[] { PB }),
-            };
-            var events = new List<TrafficLightEvent>
-            {
-                E("A pedestrians blink", MainGreen - PedestrianBlink, LightState.BLINK_GREEN, none, new[] { PA }),
-                E("A amber", PedestrianBlink, LightState.YELLOW, new[] { A }, noPed),
-                E("A pedestrians red", 0, LightState.RED, none, new[] { PA }),
-                E("A red", Amber, LightState.RED, new[] { A }, noPed),
-            };
-            if (redAmber && twoPhase) events.Add(E("B red and amber", AllRed - 0.5f, LightState.RED_AND_YELLOW, new[] { B }, noPed));
-            events.Add(E("B green", redAmber && twoPhase ? 0.5f + 1.5f : AllRed, LightState.GREEN, new[] { B }, new[] { PB }));
-            events.Add(E("B pedestrians blink", greenB - PedestrianBlink, LightState.BLINK_GREEN, none, new[] { PB }));
-            events.Add(E("B amber", PedestrianBlink, LightState.YELLOW, new[] { B }, noPed));
-            events.Add(E("B pedestrians red", 0, LightState.RED, none, new[] { PB }));
-            events.Add(E("B red", Amber, LightState.RED, new[] { B }, noPed));
-            if (redAmber) events.Add(E("A red and amber", AllRed - 0.5f, LightState.RED_AND_YELLOW, new[] { A }, noPed));
-            events.Add(E("A green", redAmber ? 2f : AllRed, LightState.GREEN, new[] { A }, new[] { PA }));
+                var st = stages[k]; var next = stages[(k + 1) % stages.Count];
+                bool carsHere = st.cars.carStreetLights.Length > 0, carsNext = next.cars.carStreetLights.Length > 0;
+                if (st.peds != null)
+                {
+                    events.Add(E(st.name + " pedestrians blink", st.green - PedestrianBlink, LightState.BLINK_GREEN, none, Peds(st.peds)));
+                    events.Add(E(st.name + " amber", PedestrianBlink, LightState.YELLOW, new[] { st.cars }, noPed));
+                    events.Add(E(st.name + " pedestrians red", 0, LightState.RED, none, Peds(st.peds)));
+                }
+                else events.Add(E(st.name + " amber", st.green, LightState.YELLOW, new[] { st.cars }, noPed));
+                events.Add(E(st.name + " red", Amber, LightState.RED, new[] { st.cars }, noPed));
+                if (redAmber && carsHere && carsNext)
+                {
+                    events.Add(E(next.name + " red and amber", AllRed - 0.5f, LightState.RED_AND_YELLOW, new[] { next.cars }, noPed));
+                    events.Add(E(next.name + " green", 2f, LightState.GREEN, new[] { next.cars }, Peds(next.peds)));
+                }
+                else events.Add(E(next.name + " green", AllRed, LightState.GREEN, new[] { next.cars }, Peds(next.peds)));
+            }
             var manager = go.AddComponent<TrafficLightsManager>();
             // junctions do not all switch at once: a start offset from the junction's node (the same for every agent)
-            manager.Configure(initial, events.ToArray(), (float)(((ulong)cluster.Key * 2654435761UL) % 1000UL) / 1000f * (MainGreen - PedestrianBlink));
+            manager.Configure(initial.ToArray(), events.ToArray(), (float)(((ulong)cluster.Key * 2654435761UL) % 1000UL) / 1000f * (MainGreen - PedestrianBlink));
             managers.Add(manager);
             SignalJunctions++;
         }
@@ -233,6 +249,96 @@ public partial class OsmMapGenerator
     }
 
     static float Cross(V2 a, V2 b) => a.X * b.Y - a.Y * b.X;
+
+    /// <summary>Whether turn:lanes (of a direction) has a lane only for turning across the oncoming traffic
+    /// (lanes are listed from the left; values like left, slight_left, left;through).</summary>
+    bool HasTurnLane(OsmWay w, string direction)
+    {
+        var v = w.Tag("turn:lanes" + direction);
+        if (string.IsNullOrEmpty(v)) return false;
+        string across = _map.LeftHandTraffic ? "right" : "left";
+        foreach (var lane in v.Split('|'))
+        {
+            var turns = lane.Split(';');
+            if (turns.Any(x => x.Trim().EndsWith(across)) && !turns.Any(x => x.Trim() == "through" || x.Trim() == "none" || x.Trim() == "")) return true;
+        }
+        return false;
+    }
+
+    static Texture2D _arrowMask;
+    static Material _arrowMaskMat, _housingMat;
+
+    /// <summary>A turn-arrow head beside the approach's main head, further over the road on the same mast arm: a
+    /// housing with three lenses lit by the main head's lamps, behind black masks that leave an arrow open.</summary>
+    CarTrafficLight PlaceArrowHead(Transform parent, Head h, CarTrafficLight main)
+    {
+        var lenses = main.Lenses;
+        if (lenses.Any(l => l == null)) return null;
+        var t = h.Travel;
+        var right = new V2(t.Y, -t.X) * (_map.LeftHandTraffic ? -1f : 1f);
+        var shine = main.transform.right;                         // towards the traffic
+        var inward = new Vector3(-right.X, 0f, -right.Y);
+        float shift = Mathf.Clamp(h.Width / 4f, 2.2f, 3.2f);
+        var go = new GameObject($"Turn arrow signal {h.Node}");
+        go.transform.SetParent(parent, false);
+        var light = go.AddComponent<CarTrafficLight>();
+        var c = (lenses[0].bounds.center + lenses[2].bounds.center) / 2f + inward * shift;
+        go.transform.SetPositionAndRotation(c, main.transform.rotation);
+        _housingMat ??= Mat("Signal housing", new Color(0.08f, 0.08f, 0.09f), 0.3f);
+        Transform Part(PrimitiveType type, Vector3 pos, Vector3 scale, Quaternion rot, Material m)
+        {
+            var p = GameObject.CreatePrimitive(type);
+            UnityEngine.Object.DestroyImmediate(p.GetComponent<Collider>());
+            p.transform.SetParent(go.transform, false);
+            p.transform.SetPositionAndRotation(pos, rot);
+            p.transform.localScale = scale;
+            p.GetComponent<MeshRenderer>().sharedMaterial = m;
+            return p.transform;
+        }
+        float span = Vector3.Distance(lenses[0].bounds.center, lenses[2].bounds.center);
+        var up = Vector3.up;
+        var look = Quaternion.LookRotation(shine, up);
+        // housing, and the arm from the main head
+        Part(PrimitiveType.Cube, c - shine * 0.12f, new Vector3(0.36f, span + 0.45f, 0.26f), look, _housingMat);
+        var armFrom = (lenses[0].bounds.center + inward * 0.2f) + up * 0.35f; var armTo = c + up * (span / 2f + 0.25f);
+        Part(PrimitiveType.Cylinder, (armFrom + armTo) / 2f, new Vector3(0.07f, Vector3.Distance(armFrom, armTo) / 2f, 0.07f), Quaternion.FromToRotation(Vector3.up, (armTo - armFrom).normalized), _housingMat);
+        // lenses and their arrow masks (the lens lights up behind the arrow)
+        if (_arrowMask == null)
+        {
+            const int n = 64;
+            _arrowMask = new Texture2D(n, n, TextureFormat.RGBA32, false) { name = "Arrow mask", wrapMode = TextureWrapMode.Clamp };
+            var px = new Color32[n * n];
+            for (int y = 0; y < n; y++)
+                for (int x = 0; x < n; x++)
+                {
+                    float u = (x + 0.5f) / n - 0.5f, v = (y + 0.5f) / n - 0.5f;
+                    // an arrow pointing to -u (left as seen from in front): a triangular head and a shaft
+                    bool head = u < -0.02f && u > -0.36f && Mathf.Abs(v) < (u + 0.36f) * 0.95f;
+                    bool shaft = u >= -0.04f && u < 0.32f && Mathf.Abs(v) < 0.09f;
+                    px[y * n + x] = head || shaft ? new Color32(0, 0, 0, 0) : new Color32(5, 5, 6, 255);
+                }
+            _arrowMask.SetPixels32(px); _arrowMask.Apply();
+            _arrowMaskMat = Mat("Arrow mask", Color.white, 0.05f, _arrowMask);
+            _arrowMaskMat.SetFloat("_AlphaClip", 1f); _arrowMaskMat.SetFloat("_Cutoff", 0.5f); _arrowMaskMat.EnableKeyword("_ALPHATEST_ON");
+            _arrowMaskMat.SetColor("_BaseColor", new Color(0.02f, 0.02f, 0.02f));
+        }
+        var arrow = _map.LeftHandTraffic ? CarTrafficLight.TurnArrow.Right : CarTrafficLight.TurnArrow.Left;
+        var made = new MeshRenderer[3];
+        for (int i = 0; i < 3; i++)
+        {
+            var at = c + up * (span / 2f - i * span / 2f);
+            var lens = Part(PrimitiveType.Cylinder, at, new Vector3(0.22f, 0.02f, 0.22f), Quaternion.FromToRotation(Vector3.up, shine), lenses[i].sharedMaterial);
+            made[i] = lens.GetComponent<MeshRenderer>();
+            // the quad's back faces the traffic once turned to look along -shine; mirrored for a right arrow
+            var q = Part(PrimitiveType.Quad, at + shine * 0.03f, new Vector3(arrow == CarTrafficLight.TurnArrow.Left ? 0.24f : -0.24f, 0.24f, 1f), Quaternion.LookRotation(-shine, up), _arrowMaskMat);
+            q.GetComponent<MeshRenderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        }
+        light.Setup(main, made[0], made[1], made[2]);
+        light.Arrow = arrow;
+        light.TurnRed();
+        TurnArrowHeads++;
+        return light;
+    }
 
     /// <summary>The point <paramref name="dist"/> metres from node i towards the side the traffic comes from, and the travel direction there.</summary>
     static V2 Walk(List<V2> pts, int i, int from, float dist, out V2 travel)

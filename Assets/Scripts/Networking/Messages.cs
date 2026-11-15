@@ -86,6 +86,10 @@ public struct StartGameMsg : INetMessage
     public int Map;
     // a map of any place (trial parameter "location"): centre and half size; radius 0 = none
     public float LocationLat, LocationLon, LocationRadius;
+    // the trial's designed eHMI for the AVs (trial parameter ehmiDesign): index in DesignedEhmi.Available() (-1: the roles' own) and placement (-1: the role's)
+    public int EhmiDesign, EhmiPlacement;
+    // the session's participant number and trial index, for the clients' log names
+    public int Participant, TrialIndex;
 
     public void Sync<T>(T synchronizer) where T : ISynchronizer
     {
@@ -94,6 +98,10 @@ public struct StartGameMsg : INetMessage
         synchronizer.Sync(ref Map);
         synchronizer.Sync(ref LocationLat);
         synchronizer.Sync(ref LocationLon);
+        synchronizer.Sync(ref EhmiDesign);
+        synchronizer.Sync(ref EhmiPlacement);
+        synchronizer.Sync(ref Participant);
+        synchronizer.Sync(ref TrialIndex);
         synchronizer.Sync(ref LocationRadius);
     }
 }

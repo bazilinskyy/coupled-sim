@@ -41,6 +41,8 @@ public static class VehicleBuilder
         public Vector3 HeadFromSteeringWheel = new Vector3(0f, 0.386f, -0.489f);   // driver's eyes from the steering wheel's centre (as in the hatchback)
         public string Credit;                // attribution (CC-BY models)
         public bool Passenger = true;        // a passenger figure next to the driver (not in a bus)
+        public string PackNode;              // a model of several vehicles: this vehicle's node (kept with the separate wheels under it or next to it)
+        public float PackYaw;                // ... turned by this after its long axis is put along z (180: it faced backwards)
     }
 
     const string Kenney = "Assets/ThirdParty/Kenney/CarKit/";
@@ -81,14 +83,51 @@ public static class VehicleBuilder
         new Def { Name = "DafXF95", Model = Detailed + "DafXF95/daf_xf_95.glb", Preset = RealisticVehicleDynamics.CarPreset.Truck, Length = 7.45f,
                   Wheels = null, WheelRadius = 0.53f, Combine = true, Interior = true, HeadFromFront = 1.25f, HeadHeight = 2.45f, HeadSide = 0.82f,
                   Credit = "\"DAF XF 95\" by Kabourek Roman" },
+        // generic, unbranded traffic vehicles (CC BY 4.0 packs by comrade1280, credits in CREDITS.md): realistic bodies, opaque windows
+        P("GenericSedan", "Sedan Body", RealisticVehicleDynamics.CarPreset.Estate, 4.75f, 0.32f),
+        P("GenericWagon", "Wagon Body", RealisticVehicleDynamics.CarPreset.Estate, 4.75f, 0.32f),
+        P("GenericHatchback", "Hatchback Body", RealisticVehicleDynamics.CarPreset.Hatchback, 4.25f, 0.31f, yaw: 180f),
+        P("GenericCompact", "Compact Body", RealisticVehicleDynamics.CarPreset.Hatchback, 3.85f, 0.30f, yaw: 180f),
+        P("GenericCoupe", "Coupe Body", RealisticVehicleDynamics.CarPreset.Hatchback, 4.45f, 0.32f, yaw: 180f),
+        P("GenericSport", "Sport body", RealisticVehicleDynamics.CarPreset.Hatchback, 4.5f, 0.33f),
+        P("GenericMinivan", "minivan body", RealisticVehicleDynamics.CarPreset.Estate, 4.85f, 0.33f, eyes: 1.4f, yaw: 180f),
+        P("GenericSuv", "SUV Body", RealisticVehicleDynamics.CarPreset.Suv, 4.7f, 0.36f, eyes: 1.45f),
+        P("GenericOffroad", "Offroad Body", RealisticVehicleDynamics.CarPreset.Suv, 4.6f, 0.38f, eyes: 1.5f),
+        P("GenericPickup", "Pickup Body", RealisticVehicleDynamics.CarPreset.Suv, 5.3f, 0.38f, eyes: 1.5f, yaw: 180f),
+        S("GenericTaxi", "taxi", RealisticVehicleDynamics.CarPreset.Estate, 5.0f, 0.33f, yaw: 180f),
+        S("GenericPolice", "police_sedan", RealisticVehicleDynamics.CarPreset.Estate, 5.0f, 0.33f),
+        S("GenericAmbulance", "ambulance", RealisticVehicleDynamics.CarPreset.Van, 6.6f, 0.38f, eyes: 2.0f, fromFront: 1.4f, yaw: 180f),
+        S("GenericPostVan", "postvan", RealisticVehicleDynamics.CarPreset.Van, 4.6f, 0.34f, eyes: 1.75f, fromFront: 1.6f, yaw: 180f),
+        S("GenericServiceTruck", "rdservtruck", RealisticVehicleDynamics.CarPreset.Truck, 6.0f, 0.42f, eyes: 2.0f, fromFront: 1.5f),
+        S("GenericTowTruck", "towtruck", RealisticVehicleDynamics.CarPreset.Truck, 6.6f, 0.42f, eyes: 2.0f, fromFront: 1.5f),
+        S("GenericGarbageTruck", "garbage_truck", RealisticVehicleDynamics.CarPreset.Truck, 8.2f, 0.52f, eyes: 2.4f, fromFront: 1.2f, yaw: 180f),
+        S("GenericFireTruck", "fire_truck", RealisticVehicleDynamics.CarPreset.Truck, 9.2f, 0.52f, eyes: 2.4f, fromFront: 1.3f),
+
         new Def { Name = "BoxTruck", Model = Detailed + "BoxTruck/box_truck.glb", Preset = RealisticVehicleDynamics.CarPreset.Truck, Length = 7.4f,
                   Wheels = null, WheelRadius = 0.40f, HeadFromFront = 1.0f, HeadHeight = 2.0f, HeadSide = 0.5f,
                   Credit = "\"Box-truck\" by Cristian Rus" },
     };
 
+    const string CarPack = Detailed + "GenericCars/generic_passenger_cars.glb";
+    const string ServicePack = Detailed + "GenericService/generic_service_vehicles.glb";
+
+    static Def P(string name, string node, RealisticVehicleDynamics.CarPreset preset, float length, float wheel, float yaw = 0f, float eyes = 1.2f) => new Def
+    {
+        Name = name, Model = CarPack, PackNode = node, PackYaw = yaw, Preset = preset, Length = length, Wheels = null, WheelRadius = wheel, Combine = true,
+        HeadFromFront = length * 0.5f, HeadHeight = eyes,
+        Credit = "\"Generic passenger car pack\" by Comrade1280",
+    };
+
+    static Def S(string name, string node, RealisticVehicleDynamics.CarPreset preset, float length, float wheel, float yaw = 0f, float eyes = 1.2f, float fromFront = 0f) => new Def
+    {
+        Name = name, Model = ServicePack, PackNode = node, PackYaw = yaw, Preset = preset, Length = length, Wheels = null, WheelRadius = wheel, Combine = true,
+        HeadFromFront = fromFront > 0f ? fromFront : length * 0.5f, HeadHeight = eyes, HeadSide = eyes > 1.6f ? 0.5f : 0.36f,
+        Credit = "\"Generic civil service vehicles pack\" by Comrade1280",
+    };
+
     static Def K(string name, string file, RealisticVehicleDynamics.CarPreset preset, float length, float width, float height, bool cab = false, float eyes = 1.22f, float side = 0.36f) => new Def
     {
-        Name = "Kenney" + name, Model = Kenney + file + ".fbx", Preset = preset, Length = length, Width = width, Height = height,
+        Name = "Kenney" + name, Model = Kenney + file + ".fbx", Preset = preset, Length = length, Width = width, Height = height, Traffic = false,   // stylised: replaced in traffic by the generic packs
         HeadFromFront = cab ? 1.15f : length * 0.55f, HeadHeight = cab ? Mathf.Max(eyes, 1.95f) : eyes, HeadSide = cab ? Mathf.Max(side, 0.45f) : side,
     };
 
@@ -111,6 +150,41 @@ public static class VehicleBuilder
                  built.Where(p => Defs.First(d => p.name == "Drivable" + d.Name).Interior).ToList());
         AssetDatabase.SaveAssets();
         Debug.Log($"VehicleBuilder: built {built.Count} vehicles: {string.Join(", ", built.Select(b => b.name))}");
+    }
+
+    /// <summary>A model of several vehicles: keeps the named vehicle and the separate wheels within its outline (the
+    /// pack's wheels are siblings of the bodies, some names used twice), removes the rest. The vehicles stand at
+    /// angles in the pack: the model is first turned so the vehicle's long axis (from its vertices) is along z, then
+    /// by <paramref name="yaw"/> (180 when it then faces backwards).</summary>
+    static bool KeepPackVehicle(Transform model, string node, float yaw)
+    {
+        var keep = model.GetComponentsInChildren<Transform>(true).FirstOrDefault(t => t.name == node);
+        if (keep == null) return false;
+        var pts = new List<Vector3>();
+        foreach (var mf in keep.GetComponentsInChildren<MeshFilter>(true))
+            if (mf.sharedMesh != null && mf.sharedMesh.isReadable)
+                foreach (var v in mf.sharedMesh.vertices) pts.Add(mf.transform.TransformPoint(v));
+        if (pts.Count < 3) return false;
+        // the long axis in the ground plane: the main direction of the vertices' spread
+        var c = Vector3.zero; foreach (var q in pts) c += q; c /= pts.Count;
+        float xx = 0, zz = 0, xz = 0;
+        foreach (var q in pts) { float dx = q.x - c.x, dz = q.z - c.z; xx += dx * dx; zz += dz * dz; xz += dx * dz; }
+        float theta = 0.5f * Mathf.Atan2(2f * xz, xx - zz);    // from +x towards +z
+        var dir = new Vector3(Mathf.Cos(theta), 0f, Mathf.Sin(theta));
+        float alpha = Mathf.Atan2(dir.x, dir.z) * Mathf.Rad2Deg;
+        model.RotateAround(c, Vector3.up, -alpha + yaw);
+        var rs = keep.GetComponentsInChildren<Renderer>(true);
+        var area = rs[0].bounds;
+        foreach (var r in rs) area.Encapsulate(r.bounds);
+        area.Expand(new Vector3(area.size.x * 0.05f, area.size.y * 0.1f, area.size.z * 0.05f));
+        foreach (Transform sib in keep.parent.Cast<Transform>().ToArray())
+        {
+            if (sib == keep) continue;
+            var wr = sib.GetComponentsInChildren<Renderer>(true);
+            bool wheel = sib.name.StartsWith("Wheel") && wr.Length > 0 && area.Contains(wr[0].bounds.center);
+            if (!wheel) UnityEngine.Object.DestroyImmediate(sib.gameObject);
+        }
+        return true;
     }
 
     static Bounds LocalBounds(Transform root, IEnumerable<Renderer> renderers)
@@ -170,6 +244,7 @@ public static class VehicleBuilder
             model.transform.localRotation = Quaternion.Euler(0f, d.Yaw, 0f) * model.transform.localRotation;   // keeps the model's own up axis
             foreach (var n in d.Remove)
                 foreach (var t in model.GetComponentsInChildren<Transform>(true).Where(t => t.name == n).ToArray()) UnityEngine.Object.DestroyImmediate(t.gameObject);
+            if (d.PackNode != null && !KeepPackVehicle(model.transform, d.PackNode, d.PackYaw)) { Debug.LogWarning($"VehicleBuilder: {d.Name}: no node {d.PackNode} in {d.Model}"); return null; }
             Bounds Measure() => auto ? VehicleModelRig.DrawnBounds(root, model) : LocalBounds(root, model.GetComponentsInChildren<Renderer>(true));
             var b0 = Measure();
             float s = d.Length / Mathf.Max(0.01f, b0.size.z);
@@ -463,7 +538,9 @@ public static class VehicleBuilder
         AICar[] Load() => paths.Select(p => AssetDatabase.LoadAssetAtPath<AICar>(p)).Where(a => a != null).ToArray();
         var ai = Load();
         // (traffic lists below stay as they are when no traffic vehicle was built)
-        AICar[] Append(AICar[] list) { ai = Load(); var names = new HashSet<string>(paths.Select(Path.GetFileNameWithoutExtension)); return (list ?? new AICar[0]).Where(a => a != null && !names.Contains(a.name)).Concat(ai).ToArray(); }
+        // vehicles taken out of traffic (Traffic = false, e.g. the stylised Kenney cars) leave the lists too
+        var retired = new HashSet<string>(Defs.Where(d => !d.Traffic).Select(d => "Drivable" + d.Name));
+        AICar[] Append(AICar[] list) { ai = Load(); var names = new HashSet<string>(paths.Select(Path.GetFileNameWithoutExtension)); return (list ?? new AICar[0]).Where(a => a != null && !names.Contains(a.name) && !retired.Contains(a.name)).Concat(ai).ToArray(); }
 
         var scene = EditorSceneManager.OpenScene("Assets/_Scenes/StartScene.unity", OpenSceneMode.Single);
         foreach (var nm in UnityEngine.Object.FindObjectsByType<NetworkingManager>(FindObjectsInactive.Include))

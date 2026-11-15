@@ -1,0 +1,11 @@
+# A first study (docs/first-study.md): does an eHMI on an automated car help pedestrians decide when to cross?
+# The host is the AV's passenger, the client the pedestrian. Blocks A-C are counterbalanced per participant (balanced Latin square).
+#order=latin
+experiment,role,block,clientRoles,ehmiDesign,weather,time,notes
+base,Automated - Passenger,,Pedestrian,none,PartlyCloudy,13:00,practice
+base,Automated - Passenger,A,Pedestrian,none,PartlyCloudy,13:00,no eHMI
+base,Automated - Passenger,A,Pedestrian,none,PartlyCloudy,13:00,no eHMI
+base,Automated - Passenger,B,Pedestrian,LightBarCyan@Bumper,PartlyCloudy,13:00,light bar
+base,Automated - Passenger,B,Pedestrian,LightBarCyan@Bumper,PartlyCloudy,13:00,light bar
+base,Automated - Passenger,C,Pedestrian,TextWalk@Windshield,PartlyCloudy,13:00,text
+base,Automated - Passenger,C,Pedestrian,TextWalk@Windshield,PartlyCloudy,13:00,text

@@ -208,6 +208,9 @@ public class TrafficCar : MonoBehaviour
                     var lp = light.transform.position;
                     if (Flat2(lp - p) > 6f * 6f) continue;
                     if (!FacesTraffic(light.transform)) continue;
+                    // turn arrows: an arrow head is for the cars turning its way, the main head of that approach for the others
+                    var turn = TurnAfter(start + d);
+                    if (light.Arrow != CarTrafficLight.TurnArrow.None ? turn != light.Arrow : turn != CarTrafficLight.TurnArrow.None && HasArrow(light, turn)) continue;
                     float stopGap = Mathf.Max(0.1f, along - VehicleLength / 2f - 2f);
                     if (light.State == LightState.YELLOW && Speed * Speed / (2f * 3f) > stopGap)
                         continue; // too close to stop comfortably: drive on
@@ -239,6 +242,22 @@ public class TrafficCar : MonoBehaviour
 
     // A signal head for this car faces against the driving direction (its axis along the road).
     bool FacesTraffic(Transform light) => Vector3.Dot(LightFacing(light), transform.forward) < -0.7f;
+
+    /// <summary>Which way the own path turns just after <paramref name="dist"/> (more than 35° within 30 m).</summary>
+    CarTrafficLight.TurnArrow TurnAfter(float dist)
+    {
+        var a = Flat(_circuit.GetRoutePoint(dist).direction); var b = Flat(_circuit.GetRoutePoint(dist + 30f).direction);
+        float angle = Vector3.SignedAngle(a, b, Vector3.up);   // positive: to the right
+        return angle < -35f ? CarTrafficLight.TurnArrow.Left : angle > 35f ? CarTrafficLight.TurnArrow.Right : CarTrafficLight.TurnArrow.None;
+    }
+
+    /// <summary>Whether the approach of a main head also has a turn-arrow head for this turn.</summary>
+    static bool HasArrow(CarTrafficLight main, CarTrafficLight.TurnArrow turn)
+    {
+        foreach (var l in _lights)
+            if (l != null && l.Arrow == turn && (l.transform.position - main.transform.position).sqrMagnitude < 8f * 8f && Vector3.Dot(LightFacing(l.transform), LightFacing(main.transform)) > 0.9f) return true;
+        return false;
+    }
 
     /// <summary>Direction the lights of a signal head shine to (towards the traffic it controls).</summary>
     public static Vector3 LightFacing(Transform light) => light.right; // the signal heads in this project shine along their local x axis

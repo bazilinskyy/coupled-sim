@@ -20,7 +20,7 @@ public class LiveLogger : IDisposable
     {
         _socket = new UdpClient();
         _socket.Connect("localhost", Port);
-        _buffer = new byte[4 * 1024];
+        _buffer = new byte[63 * 1024];   // (a UDP datagram holds up to 64 KB; busy scenes need more than a few KB)
         _stream = new MemoryStream(_buffer);
         _writer = new BinaryWriter(_stream);
     }

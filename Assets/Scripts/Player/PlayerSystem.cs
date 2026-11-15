@@ -288,11 +288,36 @@ public class PlayerSystem : MonoBehaviour
         PlayerInputMode = inputMode;
     }
 
-    /// <summary>The role's designed eHMI, or the command line's (-ehmiDesign Name[@Hood|Top|Windshield|Bumper|Road]) for AV roles.</summary>
+    /// <summary>The designed eHMIs in StreamingAssets/eHMI (names, sorted: the same list on every agent).</summary>
+    public static string[] AvailableEhmiDesigns()
+    {
+        var dir = System.IO.Path.Combine(Application.streamingAssetsPath, "eHMI");
+        if (!System.IO.Directory.Exists(dir)) return new string[0];
+        var names = System.Linq.Enumerable.ToArray(System.Linq.Enumerable.Select(System.IO.Directory.GetFiles(dir, "*.json"), f => System.IO.Path.GetFileNameWithoutExtension(f)));
+        Array.Sort(names, StringComparer.Ordinal);
+        return names;
+    }
+
+    /// <summary>The trial's designed eHMI for AVs (trial parameter ehmiDesign=Name[@Placement], sent by the host to every agent); null: the roles' own.</summary>
+    public static string TrialEhmiDesign;
+    public static EhmiPlacement? TrialEhmiPlacement;
+
+    /// <summary>Parses "Name[@Placement]" into the trial's eHMI (for the host; clients get indices from StartGameMsg).</summary>
+    public static void SetTrialEhmi(string value)
+    {
+        TrialEhmiDesign = null; TrialEhmiPlacement = null;
+        if (string.IsNullOrWhiteSpace(value) || value.Trim().ToLowerInvariant() == "none") return;
+        var parts = value.Trim().Split('@');
+        TrialEhmiDesign = parts[0];
+        if (parts.Length > 1 && Enum.TryParse<EhmiPlacement>(parts[1], true, out var pl)) TrialEhmiPlacement = pl;
+    }
+
+    /// <summary>The role's designed eHMI, the trial's (ehmiDesign), or the command line's (-ehmiDesign Name[@Hood|Top|Windshield|Bumper|Road]) for AV roles.</summary>
     static string EhmiDesignFor(ExperimentRoleDefinition role, SpawnPointType type, out EhmiPlacement placement)
     {
         placement = role.EhmiDesignPlacement;
         var design = string.IsNullOrEmpty(role.EhmiDesign) ? null : role.EhmiDesign;
+        if (type == SpawnPointType.PlayerInAIControlledCar && TrialEhmiDesign != null) { design = TrialEhmiDesign; if (TrialEhmiPlacement.HasValue) placement = TrialEhmiPlacement.Value; }
         var args = Environment.GetCommandLineArgs();
         if (type == SpawnPointType.PlayerInAIControlledCar)
             for (int i = 0; i + 1 < args.Length; i++)
@@ -309,6 +334,7 @@ public class PlayerSystem : MonoBehaviour
     public static DesignedEhmi SpawnDesignedEhmi(PlayerAvatar avatar, string design, EhmiPlacement placement)
     {
         var go = new GameObject("Designed eHMI " + design);
+        Debug.Log($"Designed eHMI {design} ({placement}) on {avatar.name}");
         var root = avatar.transform;
         Transform anchor = placement == EhmiPlacement.Hood ? avatar.HMISlots.Hood : placement == EhmiPlacement.Top ? avatar.HMISlots.Top
             : placement == EhmiPlacement.Windshield ? avatar.HMISlots.Windshield : null;

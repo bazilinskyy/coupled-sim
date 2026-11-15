@@ -24,6 +24,8 @@ public class ReplayPlayer : MonoBehaviour
     PlayerAvatar _carFallback, _pedestrianFallback;
     readonly List<PlayerAvatar> _drivers = new List<PlayerAvatar>();
     readonly List<PlayerAvatar> _pedestrians = new List<PlayerAvatar>();
+    readonly List<(Transform t, Transform[] props, Renderer[] discs, float angle)> _drones = new List<(Transform, Transform[], Renderer[], float)>();
+    readonly List<PlayerAvatar> _droneParticipants = new List<PlayerAvatar>();
     readonly List<LineRenderer> _trails = new List<LineRenderer>();
     TrafficLightsSystem _lights;
     Camera _camera;
@@ -34,7 +36,7 @@ public class ReplayPlayer : MonoBehaviour
 
     static readonly float[] Speeds = { 0.1f, 0.25f, 0.5f, 1f, 2f, 4f, 8f };
 
-    List<PlayerAvatar> Participants => _drivers.Take(_info.Drivers.Length).Concat(_pedestrians).ToList();
+    List<PlayerAvatar> Participants => _drivers.Take(_info.Drivers.Length).Concat(_pedestrians).Concat(_droneParticipants).ToList();
     /// <summary>The participants of the recording (cars and two-wheelers first, then pedestrians), e.g. for VideoExport's grid.</summary>
     public List<PlayerAvatar> ReplayParticipants => _ready ? Participants : new List<PlayerAvatar>();
     bool _video;
@@ -145,6 +147,16 @@ public class ReplayPlayer : MonoBehaviour
         }
         for (int i = 0; i < _log.PedestrianCount; i++)
             _pedestrians.Add(Spawn(i < _info.Pedestrians.Length ? _info.Pedestrians[i] : null, _pedestrianFallback, false));
+
+        // drones (participants' and AI): the procedural body, posed from the log
+        foreach (var entry in _info.Drones ?? new List<string>())
+        {
+            var parts = entry.Split('|');
+            var go = new GameObject("Replay " + (parts.Length > 2 ? parts[2] : "drone"));
+            var (props, discs) = DroneBody.Build(go.transform, CoupledSim.Drones.QuadrotorParameters.Preset(parts.Length > 1 ? parts[1] : "Consumer"));
+            _drones.Add((go.transform, props, discs, 0f));
+            if (parts[0] == "participant") { var pa = go.AddComponent<PlayerAvatar>(); pa.Type = AvatarType.Drone; pa.cameras = new Camera[0]; _droneParticipants.Add(pa); }
+        }
 
         // own camera; the scene's cameras off
         foreach (var c in FindObjectsByType<Camera>())
@@ -355,6 +367,22 @@ public class ReplayPlayer : MonoBehaviour
             var pose = a.Pedestrians[i];
             if (p == null || pose.LocalPositions == null || pose.LocalPositions.Count != p.SyncTransforms.Length + 1) continue;
             p.ApplyPose(pose);
+        }
+        for (int i = 0; i < _drones.Count; i++)
+        {
+            var d = _drones[i];
+            bool present = a.DronePositions != null && i < a.DronePositions.Length;
+            if (d.t.gameObject.activeSelf != present) d.t.gameObject.SetActive(present);
+            if (!present) continue;
+            var pos = a.DronePositions[i]; var rot = a.DroneRotations[i];
+            if (b.DronePositions != null && i < b.DronePositions.Length && (b.DronePositions[i] - pos).sqrMagnitude < 25f) { pos = Vector3.Lerp(pos, b.DronePositions[i], u); rot = Quaternion.Slerp(rot, b.DroneRotations[i], u); }
+            d.t.SetPositionAndRotation(pos, rot);
+            // the propellers at the logged blade-passing frequency (two blades: rotor speed = BPF / 2 rev/s)
+            float revPerS = a.DroneLanded[i] ? 0f : a.DroneBladeHz[i] / 2f;
+            float angle = d.angle + revPerS * 360f * Time.deltaTime;
+            for (int j = 0; j < d.props.Length; j++) if (d.props[j] != null) d.props[j].localRotation = Quaternion.Euler(0, (j % 2 == 0 ? 1 : -1) * angle, 0);
+            foreach (var disc in d.discs) if (disc != null) disc.enabled = revPerS > 10f;
+            _drones[i] = (d.t, d.props, d.discs, angle % 360f);
         }
         if (_lights != null)
         {

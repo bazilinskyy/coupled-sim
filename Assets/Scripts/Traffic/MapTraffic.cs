@@ -20,7 +20,10 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
 {
     [Tooltip("Cars per km of route lane.")]
     public float CarsPerKm = 14f;
-    public int MaxCars = 70;
+    public int MaxCars = 90;
+    [Tooltip("Cyclists per km of route, near the kerb (Dutch and Belgian maps: twice as many).")]
+    public float CyclistsPerKm = 6f;
+    public int MaxCyclists = 40;
     public float DesiredSpeedKmh = 40f, DesiredSpeedSdKmh = 6f;
     [Tooltip("Car prefabs (each in NetworkingManager ➡️ AI Car System ➡️ Prefabs); empty: SUMO's car list or the AI car system's prefabs.")]
     public AICar[] CarPrefabs;
@@ -95,7 +98,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         var gen = OsmMap.Current.Generator;
         var lines = gen.Roads.Where(r => !r.Bridge || r.BridgeLayer == 0)
             .Select(r => new CoupledSim.Maps.MapRoutes.RoadLine { Line = r.Line.Select(p => new System.Numerics.Vector3(p.x, p.y, p.z)).ToList(), Width = r.Width, OneWay = r.OneWay }).ToList();
-        var lanes = CoupledSim.Maps.MapRoutes.Build(lines, gen.HalfSize, OsmMap.Current.Info.LeftHandTraffic)
+        var lanes = CoupledSim.Maps.MapRoutes.Build(lines, gen.HalfSize, OsmMap.Current.Info.LeftHandTraffic, max: 80, variants: 3)
             .Select(l => l.Select(p => new Vector3(p.X, p.Y, p.Z)).ToList()).ToList();
         foreach (var lane in lanes) Routes.Add(MakeCircuit(lane, Routes.Count));
         foreach (var r in Routes) r.GetRoutePoint(0f);   // (the circuit works out its length on first use)
@@ -134,6 +137,10 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         if (prefabs.Length == 0) { Debug.LogWarning("MapTraffic: no car prefabs"); yield break; }
         var rng = new System.Random(Seed);
         var players = FindObjectsByType<PlayerAvatar>().Select(a => a.transform.position).ToList();
+        // a realistic mix: mostly cars, some vans, few trucks, an occasional bus
+        float Weight(AICar p) { var n = p.name.ToLowerInvariant(); return n.Contains("bus") ? 0.25f : n.Contains("truck") || n.Contains("daf") ? 0.5f : n.Contains("van") || n.Contains("delivery") ? 1.2f : n.Contains("ambulance") || n.Contains("police") || n.Contains("taxi") ? 0.6f : 3f; }
+        float total = prefabs.Sum(Weight);
+        AICar Pick() { double x = rng.NextDouble() * total; foreach (var p in prefabs) { x -= Weight(p); if (x <= 0) return p; } return prefabs[prefabs.Length - 1]; }
         var spawn = new GameObject("Map traffic spawn point").transform;
         int count = 0;
         foreach (var route in Routes)
@@ -151,7 +158,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
                 var dir = rp.direction; dir.y = 0;
                 spawn.SetPositionAndRotation(pos + Vector3.up * 0.1f, Quaternion.LookRotation(dir.normalized, Vector3.up));
                 var p = spawnParams;
-                p.SpawnPoint = spawn; p.Track = route; p.Car = prefabs[rng.Next(prefabs.Length)];
+                p.SpawnPoint = spawn; p.Track = route; p.Car = Pick();
                 p.color = Colors[rng.Next(Colors.Length)]; p.SpawnDriver = true;
                 var car = Spawn(p, false);
                 car.GetComponent<WaypointProgressTracker>().SetProgress(d);
@@ -168,6 +175,58 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         }
         Destroy(spawn.gameObject);
         Debug.Log($"MapTraffic: {count} cars");
+        yield return SpawnCyclists();
+    }
+
+    /// <summary>Cyclists near the kerb of the routes (their own routes, 1.8 m to the kerb side of the cars' lane).</summary>
+    IEnumerator SpawnCyclists()
+    {
+        var sumo = FindAnyObjectByType<SumoBridge>();
+        var bikes = sumo != null && sumo.BicyclePrefabs != null && sumo.BicyclePrefabs.Length > 0 ? sumo.BicyclePrefabs : _syncSystem.Prefabs.Where(p => p != null && p.name.Contains("Bicycle")).ToArray();
+        if (bikes.Length == 0 || CyclistsPerKm <= 0f) yield break;
+        var country = OsmMap.Current.Info.Country ?? "";
+        float perKm = CyclistsPerKm * (country == "Netherlands" || country == "Belgium" || country == "Denmark" ? 2f : 1f);
+        bool lht = OsmMap.Current.Info.LeftHandTraffic;
+        var rng = new System.Random(Seed + 11);
+        var spawn = new GameObject("Map cyclists spawn point").transform;
+        int count = 0, index = 0;
+        foreach (var route in Routes.ToList())
+        {
+            if (count >= MaxCyclists) break;
+            var kerb = new List<Vector3>();
+            for (float d = 0; d < route.Length; d += 4f) { var rp = route.GetRoutePoint(d); kerb.Add(rp.position + Vector3.Cross(Vector3.up, rp.direction).normalized * (lht ? -1.8f : 1.8f)); }
+            if (kerb.Count < 10) continue;
+            var bikeRoute = MakeCircuit(kerb, Routes.Count + 1000 + index++);
+            bikeRoute.name = "Map cycle route " + index;
+            bikeRoute.GetRoutePoint(0f);
+            int n = Mathf.Min(5, Mathf.RoundToInt(bikeRoute.Length / 1000f * perKm));   // (spread over the routes)
+            for (int i = 0; i < n && count < MaxCyclists; i++)
+            {
+                float d = bikeRoute.Length * (i + 0.3f) / n;
+                if (d > bikeRoute.Length - 60f) continue;
+                var rp = bikeRoute.GetRoutePoint(d);
+                var pos = rp.position;
+                if (Physics.Raycast(pos + Vector3.up * 5f, Vector3.down, out var hit, 20f, ~0, QueryTriggerInteraction.Ignore)) pos.y = hit.point.y;
+                var dir = rp.direction; dir.y = 0;
+                spawn.SetPositionAndRotation(pos + Vector3.up * 0.05f, Quaternion.LookRotation(dir.normalized, Vector3.up));
+                var p = spawnParams;
+                p.SpawnPoint = spawn; p.Track = bikeRoute; p.Car = bikes[rng.Next(bikes.Length)]; p.color = Colors[rng.Next(Colors.Length)]; p.SpawnDriver = true;
+                var bike = Spawn(p, false);
+                bike.GetComponent<WaypointProgressTracker>().SetProgress(d);
+                bike.name = $"Map cyclist {index} {i}";
+                var t = bike.gameObject.AddComponent<TrafficCar>();
+                t.VehicleLength = 1.8f; t.LaneHalfWidth = 0.8f;
+                float v = (16f + Normal(rng) * 3f) / 3.6f;
+                t.Init(CoupledSim.Traffic.CarFollowingModelType.IDM, Mathf.Clamp(v, 2.5f, 7f), new System.Random(rng.Next()));
+                t.Speed = v * 0.7f;
+                bike.gameObject.AddComponent<MapRouteRecycler>();
+                Cars.Add(t);
+                count++;
+                if (count % 10 == 0) yield return null;
+            }
+        }
+        Destroy(spawn.gameObject);
+        Debug.Log($"MapTraffic: {count} cyclists");
     }
 
     /// <summary>The participant's car drives itself along the route nearest to it (where it points).</summary>

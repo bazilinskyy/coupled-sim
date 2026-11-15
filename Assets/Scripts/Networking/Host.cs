@@ -280,12 +280,20 @@ public class Host : NetworkSystem
         startSimulation = false;
 
         _msgDispatcher.ClearLevelMessageHandlers();
+        // the trial's designed eHMI for the AVs (ehmiDesign=Name[@Hood|Top|Windshield|Bumper|Road]), for every agent
+        string ehmi = null;
+        if (currentTrial?.experimentParameters != null) foreach (var p in currentTrial.experimentParameters) if (p.name.ToLowerInvariant() == "ehmidesign") ehmi = p.value;
+        PlayerSystem.SetTrialEhmi(ehmi);
+        int ehmiIndex = PlayerSystem.TrialEhmiDesign != null ? Array.IndexOf(PlayerSystem.AvailableEhmiDesigns(), PlayerSystem.TrialEhmiDesign) : -1;
+        if (PlayerSystem.TrialEhmiDesign != null && ehmiIndex < 0) Debug.LogWarning($"ehmiDesign {PlayerSystem.TrialEhmiDesign}: no such file in StreamingAssets/eHMI");
         _host.BroadcastReliable(new StartGameMsg
         {
             Roles = _playerRoles,
             Experiment = _selectedExperiment,
             Map = MapCatalog.IndexOf(_lvlManager.MapFor(_selectedExperiment, currentTrial)),
             LocationLat = Location(0), LocationLon = Location(1), LocationRadius = Location(2),
+            EhmiDesign = ehmiIndex, EhmiPlacement = PlayerSystem.TrialEhmiPlacement.HasValue ? (int)PlayerSystem.TrialEhmiPlacement.Value : -1,
+            Participant = NetworkingManager.SessionParticipant, TrialIndex = NetworkingManager.TrialIndexForLogs,
         });
         for (int i = 0; i < UNetConfig.MaxPlayers; i++)
         {
