@@ -27,6 +27,7 @@
   <a href="#running-the-simulator">Running</a> ·
   <a href="#configuration">Configuration</a> ·
   <a href="#study-tools">Study tools</a> ·
+  <a href="#experimenter-dashboard">Dashboard</a> ·
   <a href="#citation">Citation</a> ·
   <a href="#support-the-coupled-simulator">Support</a>
 </p>
@@ -426,14 +427,20 @@ Trial videos for "offline" use (for example online questionnaires) are recorded 
 Videos are named `{trial index}_{ExperimentDefinition.ShortName}_roleIdx-{role index}_{parameter name}-{value}_..._{yy-MM-dd_hh-mm}`, where `hh` is the hour on a 12-hour clock.
 
 ### Experimenter dashboard
-The host serves a dashboard at `http://<host ip>:8080` (the address is in the console; change the port with `-dashboardPort N`), to run an experiment from any computer, tablet or phone on the lab network, without walking to the host PC:
-- start the host, choose the experiment (and for city maps the city, or a location), bind roles to the connected participants, choose the host's mode, initialise the experiment, start the simulation and go to the next trial;
-- switch eHMIs, set the weather and time of day, trigger visual syncing;
-- watch a live top-down map of the scene (rendered from the scene when it loads) with every participant (ringed), AV, AI car, SUMO vehicle, two-wheeler and pedestrian, and the traffic lights; see who is connected and ready, the trial and the frame rate.
+The host serves a dashboard at `http://<host ip>:8080` (the address is in the console; change the port with `-dashboardPort N`): one page from which the experimenter runs a session with several participants as it happens, from any computer, tablet or phone on the lab network, without walking to the host PC or to the participants' PCs. It needs no internet and no installation (a plain web page from the simulator); allow TCP port 8080 in the host's firewall to use it from other devices. The `ExperimentDashboard` component sits on `Managers` in `StartScene`.
 
-![](ReadmeFiles/dashboard.jpg)
+**Before the trial (Session):**
+- start the host, choose the experiment and, for city maps, the city or any place by coordinates (`lat,lon[,radius]`), and the host's own mode (flat screen, headset, motion suit);
+- see every participant's PC as it connects (up to 8: the host and players 1-7), give each a role (driver, AV passenger, pedestrian, cyclist, e-scooter or moped rider, drone pilot, ...), and see when each is ready;
+- `Initialise experiment` loads the scene on every agent; `Start simulation` starts it for all at the same moment; `Next trial` goes on in automatic trial sequences.
 
-It needs no internet and no installation (a plain web page from the simulator). Allow TCP port 8080 in the host's firewall to use it from other devices. The `ExperimentDashboard` component sits on `Managers` in `StartScene`.
+**During the trial:**
+- a live map of the scene from above (rendered from the scene, or the aerial photo of a city map) with every participant (ringed), the AV, AI cars, SUMO vehicles, two-wheelers, pedestrians and the traffic lights, and a table of all agents with their kind and position; the header shows the host's state, the scene and its frame rate;
+- `Take-over request` sends a take-over request to the AV now (see [automated driving](#automated-driving-and-take-over-requests)); the trial line shows the automation's state;
+- eHMI: switch all eHMIs off, to "stop" or to "walk";
+- conditions: change the time of day and the weather for every agent at once, and trigger visual syncing (a flash for synchronising external recordings).
+
+![The dashboard during a session with four participants on the Delft map: the host drives (on the autopilot), players 1-3 are a pedestrian, a cyclist and a moped rider; all connected and ready, ringed on the live map with the built-in traffic, the agents listed below](ReadmeFiles/dashboard.jpg)
 
 ## Controls
 | Who | Action | Keyboard | Steering wheel / gamepad |
