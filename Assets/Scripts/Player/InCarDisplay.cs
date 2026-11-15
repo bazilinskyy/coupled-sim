@@ -111,6 +111,7 @@ public class InCarDisplay : DesignedEhmi
             case "reverse": return _dyn != null && _dyn.Gear < 0;
             case "headlights": return env != null && env.SunElevation < 1f;
             case "wet": return env != null && env.Rain > 0.2f;
+            case "snow": return env != null && (env.Snow > 0.2f || env.Snowfall > 0.05f);
             case "rough": return _dyn != null && _dyn.Surface != "asphalt";
             case "message": return _shown.Count > 0;
             default: return true;

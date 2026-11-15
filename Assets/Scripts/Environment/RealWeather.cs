@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 using UnityEngine;
 
 /// <summary>
-/// The weather that really was at the experiment's place at a date and hour, from Open-Meteo's historical weather
+/// The weather that really was at the experiment's place at a date and hour (also snow on the ground and the wind), from Open-Meteo's historical weather
 /// (weather data by Open-Meteo.com, CC BY 4.0; no key): trial parameter <c>realWeather=2025-06-01T14:00</c> (local time
 /// of the map) or <c>-realWeather 2025-06-01T14:00</c>. It sets the weather (from the WMO weather code and the
 /// precipitation), the rain's strength, fog from the visibility, the time of day and the day of the year (the sun).
@@ -16,6 +16,8 @@ public static class RealWeather
     public sealed class Hour
     {
         public float Temperature, Precipitation, Cloud, Wind, Visibility = -1f;
+        /// <summary>Snowfall (cm/h), snow depth (m; -1 unknown), where the wind comes from (compass degrees).</summary>
+        public float Snowfall, SnowDepth = -1f, WindDirection = 240f;
         public int Code;
     }
 
@@ -34,8 +36,12 @@ public static class RealWeather
         env.Weather = WeatherOf(h, out float rain, out float fog);
         env.RainOverride = rain;
         env.ExtraFog = fog;
+        env.SnowCover = SnowCoverOf(h);
+        env.WindSpeed = h.Wind / 3.6f;
+        env.WindDirection = h.WindDirection;
         Debug.Log($"Real weather {t:yyyy-MM-dd HH:mm} at {env.Latitude:F3}, {env.Longitude:F3}: {h.Temperature:F1} °C, cloud cover {h.Cloud:F0}%, " +
-                  $"precipitation {h.Precipitation:F1} mm/h, wind {h.Wind:F0} km/h, WMO code {h.Code}" + (h.Visibility >= 0 ? $", visibility {h.Visibility:F0} m" : "") +
+                  $"precipitation {h.Precipitation:F1} mm/h" + (h.Snowfall > 0 ? $", snowfall {h.Snowfall:F1} cm/h" : "") + (h.SnowDepth > 0 ? $", snow depth {h.SnowDepth * 100f:F0} cm" : "") +
+                  $", wind {h.Wind:F0} km/h from {h.WindDirection:F0}°, WMO code {h.Code}" + (h.Visibility >= 0 ? $", visibility {h.Visibility:F0} m" : "") +
                   $" -> {env.Weather} (weather data by Open-Meteo.com, CC BY 4.0)");
         return true;
     }
@@ -50,16 +56,25 @@ public static class RealWeather
         else if (c >= 95) w = Weather.HeavyRain;
         else if (c == 65 || c == 82 || c == 67) w = Weather.HeavyRain;
         else if ((c >= 51 && c <= 64) || c == 66 || c == 80 || c == 81) w = Weather.LightRain;
-        else if (c >= 71 && c <= 86) w = Weather.Overcast;           // snow: not drawn, at least grey
+        else if (c == 75 || c == 86 || ((c >= 71 && c <= 77 || c == 85) && h.Snowfall >= 1f)) w = Weather.HeavySnow;
+        else if ((c >= 71 && c <= 77) || c == 85) w = Weather.LightSnow;
         else if (h.Cloud >= 70f || c == 3) w = Weather.Overcast;
         else if (h.Cloud >= 25f || c == 2) w = Weather.PartlyCloudy;
         // the measured amount decides between light and heavy rain
-        if (h.Precipitation >= 2.5f && (w == Weather.LightRain || w == Weather.Overcast)) w = Weather.HeavyRain;
-        else if (h.Precipitation >= 0.1f && w < Weather.LightRain) w = Weather.LightRain;
+        bool snowing = w == Weather.LightSnow || w == Weather.HeavySnow;
+        if (!snowing && h.Precipitation >= 2.5f && (w == Weather.LightRain || w == Weather.Overcast)) w = Weather.HeavyRain;
+        else if (!snowing && h.Precipitation >= 0.1f && w < Weather.LightRain) w = h.Snowfall > 0.05f ? Weather.LightSnow : Weather.LightRain;
         if (w == Weather.LightRain || w == Weather.HeavyRain) rain = Mathf.Clamp(0.15f + h.Precipitation / 4f, 0.15f, 1f);
         // poor visibility as fog: 5% contrast left at the visibility distance (exponential fog: density = 3 / visibility)
         if (h.Visibility > 0f && h.Visibility < 1500f) { if (w < Weather.LightRain) w = Weather.Fog; fog = 3f / Mathf.Max(50f, h.Visibility); }
         return w;
+    }
+
+    /// <summary>Snow on the ground 0..1: from the snow depth (5 cm and more: covered), else a light cover while it snows.</summary>
+    public static float SnowCoverOf(Hour h)
+    {
+        if (h.SnowDepth >= 0f) return Mathf.Clamp01(h.SnowDepth / 0.05f);
+        return h.Snowfall > 0.05f || (h.Code >= 71 && h.Code <= 77) || h.Code == 85 || h.Code == 86 ? 0.5f : 0f;
     }
 
     static string CacheFolder => Path.Combine(Application.persistentDataPath, "Weather");
@@ -71,17 +86,21 @@ public static class RealWeather
         var file = Path.Combine(CacheFolder, key + ".json");
         string json = null;
         try { if (File.Exists(file)) json = File.ReadAllText(file); } catch { }
+        // answers cached before snow and the wind's direction were asked for: asked again (kept if offline)
+        string old = json != null && !json.Contains("wind_direction_10m") ? json : null;
+        if (old != null) json = null;
         if (json == null)
         {
             string day = t.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
             string q = string.Format(CultureInfo.InvariantCulture,
-                "latitude={0:F4}&longitude={1:F4}&start_date={2}&end_date={2}&hourly=temperature_2m,precipitation,cloud_cover,weather_code,wind_speed_10m,visibility&timezone=auto", lat, lon, day);
+                "latitude={0:F4}&longitude={1:F4}&start_date={2}&end_date={2}&hourly=temperature_2m,precipitation,snowfall,snow_depth,cloud_cover,weather_code,wind_speed_10m,wind_direction_10m,visibility&timezone=auto", lat, lon, day);
             // the archive (ERA5) is days behind and has no visibility; the historical forecasts have both for recent years
             bool recent = (DateTime.UtcNow - t).TotalDays < 7;
             json = Get((recent ? "https://api.open-meteo.com/v1/forecast?" : "https://historical-forecast-api.open-meteo.com/v1/forecast?") + q)
                    ?? Get("https://archive-api.open-meteo.com/v1/archive?" + q.Replace(",visibility", ""));
+            if (json == null) json = old;
+            else try { Directory.CreateDirectory(CacheFolder); File.WriteAllText(file, json); } catch { }
             if (json == null) return null;
-            try { Directory.CreateDirectory(CacheFolder); File.WriteAllText(file, json); } catch { }
         }
         return Parse(json, t.Hour);
     }
@@ -123,11 +142,13 @@ public static class RealWeather
             return v == "null" ? float.NaN : float.Parse(v, CultureInfo.InvariantCulture);
         }
         float temp = At("temperature_2m"), prec = At("precipitation"), cloud = At("cloud_cover"), code = At("weather_code"), wind = At("wind_speed_10m"), vis = At("visibility");
+        float snow = At("snowfall"), depth = At("snow_depth"), dir = At("wind_direction_10m");
         if (float.IsNaN(code) && float.IsNaN(cloud)) return null;
         return new Hour
         {
             Temperature = float.IsNaN(temp) ? 0f : temp, Precipitation = float.IsNaN(prec) ? 0f : prec, Cloud = float.IsNaN(cloud) ? 0f : cloud,
             Code = float.IsNaN(code) ? 0 : (int)code, Wind = float.IsNaN(wind) ? 0f : wind, Visibility = float.IsNaN(vis) ? -1f : vis,
+            Snowfall = float.IsNaN(snow) ? 0f : snow, SnowDepth = float.IsNaN(depth) ? -1f : depth, WindDirection = float.IsNaN(dir) ? 240f : dir,
         };
     }
 }
