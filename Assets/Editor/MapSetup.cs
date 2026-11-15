@@ -191,7 +191,10 @@ public static class MapSetup
                 Role("E-scooter rider", SpawnPointType.PlayerRidingTwoWheeler, OsmMap.SpawnKind.CyclePath, 1, twoWheelerIdx: 1),
                 Role("Moped rider", SpawnPointType.PlayerRidingTwoWheeler, OsmMap.SpawnKind.RoadEdge, 1, twoWheelerIdx: 2),
                 Role("Second driver", SpawnPointType.PlayerControlingCar, OsmMap.SpawnKind.RoadLane, 1),
+                Role("Drone pilot", SpawnPointType.PlayerFlyingDrone, OsmMap.SpawnKind.Pavement, 2),
             };
+            var drones = new GameObject("Drones (AI)").AddComponent<DroneSpawner>();
+            drones.transform.SetParent(root.transform, false);
             exp.PointsOfInterest = new Transform[0];
 
             var env = new GameObject("Environment (time of day, weather)").AddComponent<EnvironmentController>();

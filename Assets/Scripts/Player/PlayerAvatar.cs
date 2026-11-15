@@ -76,6 +76,7 @@ public enum AvatarType
 {
     Pedestrian,
     Driver,
+    Drone,
 }
 
 // These are used for more than Players (AI cars have these as well)

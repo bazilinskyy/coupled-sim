@@ -64,6 +64,7 @@ public static class SmokeTest
         SessionState.SetInt(KeyRole, int.Parse(Arg("-smokeRole", "-1")));
         SessionState.SetString(KeyShot, Arg("-smokeShot", ""));
         SessionState.SetString(KeyParams, Arg("-smokeParams", ""));
+        SessionState.SetString("SmokeTest.Fly", Arg("-smokeFly", ""));
         SessionState.SetString(KeyRide, Arg("-smokeRide", ""));
         SessionState.SetString(KeyDrive, Arg("-smokeDrive", ""));
         SessionState.SetString(KeyErrors, "");
@@ -213,6 +214,20 @@ public static class SmokeTest
         {
             double tIn = elapsed;
             VehicleInput.Override = axis => (axis == "Brake" || axis == "Break") && tIn >= takeOverAt && tIn < takeOverAt + 1.5 ? 0.6f : (float?)null;
+        }
+        // -smokeFly climb,yaw,forward,lateral: fly the participant's drone (if any) with fixed sticks (-1..1); a climb
+        // first lifts it off, the rest follows after 2 s
+        var fly = SessionState.GetString("SmokeTest.Fly", "");
+        if (fly.Length > 0)
+        {
+            var f = fly.Split(',').Select(x => float.Parse(x, System.Globalization.CultureInfo.InvariantCulture)).ToArray();
+            foreach (var dc in UnityEngine.Object.FindObjectsByType<DroneController>(FindObjectsSortMode.None))
+            {
+                if (!dc.ReadInput || !dc.enabled) continue;
+                dc.UseExternalInput = true;
+                bool early = elapsed < 2.0;
+                dc.ExternalSticks = early ? new Vector4(1f, 0, 0, 0) : new Vector4(f.Length > 0 ? f[0] : 0, f.Length > 1 ? f[1] : 0, f.Length > 2 ? f[2] : 0, f.Length > 3 ? f[3] : 0);
+            }
         }
         // -smokeRide drive,steer: ride the participant's two-wheeler (if any) with fixed input
         var ride = SessionState.GetString(KeyRide, "");
@@ -406,6 +421,20 @@ public static class SmokeTest
                     camGo.transform.LookAt(p - toTraffic * 10f + Vector3.up * -3.2f);
                 }
                 sb.AppendLine($"Signal shot: {l.name} at {p}, state {l.State}");
+            }
+            else if (view.Trim().StartsWith("aidrone"))
+            {
+                // "aidrone" or "aidrone:2": the n-th nearest AI drone to the participant, from 2.5 m behind and 0.8 m above it (scaled with the airframe)
+                int nth = view.Contains(":") ? int.Parse(view.Substring(view.IndexOf(':') + 1)) : 0;
+                var origin = local != null ? local.transform.position : Vector3.zero;
+                var ds = UnityEngine.Object.FindObjectsByType<DroneController>(FindObjectsSortMode.None).Where(d => !d.ReadInput)
+                    .OrderBy(d => (d.transform.position - origin).sqrMagnitude).ToList();
+                if (ds.Count == 0) { UnityEngine.Object.DestroyImmediate(camGo); sb.AppendLine($"Screenshot '{view.Trim()}' skipped: no AI drone"); continue; }
+                var d0 = ds[Mathf.Min(nth, ds.Count - 1)];
+                float size = d0.Parameters.ArmLength / 0.19f;
+                camGo.transform.position = d0.transform.position - Quaternion.Euler(0, d0.transform.eulerAngles.y, 0) * Vector3.forward * 2.5f * size + Vector3.up * 0.8f * size;
+                camGo.transform.LookAt(d0.transform.position);
+                sb.AppendLine($"AI drone shot: {d0.name} at {d0.transform.position}, {d0.SpeedKmh:F0} km/h, {d0.HeightAboveGround:F0} m above the ground");
             }
             else if (view.Trim().StartsWith("at:"))
             {

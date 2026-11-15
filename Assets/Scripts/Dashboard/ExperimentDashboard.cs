@@ -180,6 +180,7 @@ public class ExperimentDashboard : MonoBehaviour
             if (!a.gameObject.activeInHierarchy) continue;
             var t = a.transform;
             string kind = a.Type == AvatarType.Pedestrian ? (a.GetComponent<AIPedestrian>() != null && a.GetComponent<AIPedestrian>().enabled ? "ai-pedestrian" : "pedestrian")
+                : a.Type == AvatarType.Drone ? "drone"
                 : a.GetComponent<TwoWheelerController>() != null ? "two-wheeler"
                 : a.GetComponent<AICar>() != null && a.GetComponent<AICar>().enabled ? (a.name.StartsWith("SUMO") ? "sumo-car" : "ai-car") : "car";
             bool player = nm != null && nm.PlayerSystem != null && nm.PlayerSystem.Avatars.Contains(a);

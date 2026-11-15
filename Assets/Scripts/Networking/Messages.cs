@@ -20,6 +20,7 @@ enum MsgId
     S_Environment = 10,
     S_AnimalPoses = 11,
     S_Voice = 12,
+    S_DronePoses = 13,
 
     S_VisualSync = 123,
 
