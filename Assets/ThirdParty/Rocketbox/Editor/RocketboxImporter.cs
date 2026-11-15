@@ -105,7 +105,8 @@ public class RocketboxImporter : AssetPostprocessor
     void OnPostprocessModel(GameObject root)
     {
         if (!InRoot(assetPath)) return;
-        if (root.transform.Find("Bip02") != null) RenameBip(root.transform);
+        // (the children's skeletons are named Bip02: kept, as their humanoid avatars are built from those names
+        // before this runs; renaming them here broke the avatars and left AI children standing in a T-pose)
 
         // One LODGroup over the four resolutions (hipoly, midpoly, lowpoly, ultralowpoly).
         var levels = new[] { "hipoly", "midpoly", "lowpoly", "ultralowpoly" };
@@ -132,11 +133,5 @@ public class RocketboxImporter : AssetPostprocessor
         if (n.Contains("midpoly")) return "midpoly";
         if (n.Contains("lowpoly")) return "lowpoly";
         return null;
-    }
-
-    static void RenameBip(Transform t)
-    {
-        t.name = t.name.Replace("Bip02", "Bip01");
-        for (int i = 0; i < t.childCount; i++) RenameBip(t.GetChild(i));
     }
 }
