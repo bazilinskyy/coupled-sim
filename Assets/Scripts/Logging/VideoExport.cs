@@ -131,7 +131,11 @@ public class VideoExport : MonoBehaviour
                     for (int g = 0; g < 4; g++)
                     {
                         var gc = s.Grid[g];
-                        if (g < people.Count && people[g] != null) Eye(people[g], gc.transform, s.Frames == 0);
+                        bool used = g < people.Count && people[g] != null;
+                        if (used) Eye(people[g], gc.transform, s.Frames == 0);
+                        gc.cullingMask = used ? ~0 : 0;   // (an unused quarter stays black)
+                        gc.clearFlags = used ? CameraClearFlags.Skybox : CameraClearFlags.SolidColor;
+                        gc.backgroundColor = Color.black;
                         gc.Render();
                         RenderTexture.active = gc.targetTexture;
                         // top left, top right, bottom left, bottom right (texture rows start at the bottom)
@@ -205,7 +209,9 @@ public class VideoExport : MonoBehaviour
         var eye = p.cameras != null && p.cameras.Length > 0 && p.cameras[0] != null ? p.cameras[0].transform : null;
         var an = p.GetComponentInChildren<Animator>();
         var head = p.Type == AvatarType.Pedestrian && an != null && an.isHuman ? an.GetBoneTransform(HumanBodyBones.Head) : null;
-        var pos = head != null ? head.position + p.transform.forward * 0.12f : eye != null ? eye.position : p.transform.position + Vector3.up * 1.6f;
+        var pos = head != null ? head.position + p.transform.forward * 0.12f : eye != null ? eye.position
+            : p.Type == AvatarType.Drone ? p.transform.position - Quaternion.Euler(0, p.transform.eulerAngles.y, 0) * Vector3.forward * 1.4f + Vector3.up * 0.45f   // a drone: from just behind
+            : p.transform.position + Vector3.up * 1.6f;
         var rot = Quaternion.Euler(head != null ? 8f : 4f, p.transform.eulerAngles.y, 0f);
         if (first) t.SetPositionAndRotation(pos, rot);
         else { float k = 1f - Mathf.Exp(-14f / Fps); t.SetPositionAndRotation(Vector3.Lerp(t.position, pos, 0.8f), Quaternion.Slerp(t.rotation, rot, k)); }

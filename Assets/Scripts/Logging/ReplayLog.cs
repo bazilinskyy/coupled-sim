@@ -20,6 +20,7 @@ public class ReplayInfo
     public string[] Drivers = new string[0];        // participants' vehicles (cars, AV passengers' cars, two-wheelers)
     public string[] Pedestrians = new string[0];    // participants on foot
     public List<string> AICars = new List<string>(); // AI cars, in the order they appeared
+    public List<string> Drones = new List<string>(); // "participant|Consumer|name" or "ai|Industrial|name", in the order they appeared
 
     public static string PathFor(string binLog) => Path.ChangeExtension(binLog, ".replay.json");
 
@@ -56,6 +57,10 @@ public class ReplayLog
         public bool[] FrontLights, StopLights;
         public AvatarPose[] Pedestrians;
         public byte[] CarLights, PedestrianLights;
+        public Vector3[] DronePositions;
+        public Quaternion[] DroneRotations;
+        public float[] DroneBladeHz;
+        public bool[] DroneLanded;
     }
 
     public DateTime Start;
@@ -86,6 +91,15 @@ public class ReplayLog
                 {
                     var type = (LogFrameType)r.ReadInt32();
                     if (type == LogFrameType.AICarSpawn) { aiCars++; continue; }
+                    if (type == LogFrameType.Drones)
+                    {
+                        int nd = r.ReadInt32();
+                        var last = log.Frames.Count > 0 ? log.Frames[log.Frames.Count - 1] : null;
+                        var dp = new Vector3[nd]; var dr = new Quaternion[nd]; var dh = new float[nd]; var dl = new bool[nd];
+                        for (int i = 0; i < nd; i++) { dp[i] = r.ReadVector3(); dr[i] = r.ReadQuaternion(); dh[i] = r.ReadSingle(); dl[i] = r.ReadBoolean(); }
+                        if (last != null) { last.DronePositions = dp; last.DroneRotations = dr; last.DroneBladeHz = dh; last.DroneLanded = dl; }
+                        continue;
+                    }
                     int n = log.PersistentDrivers + aiCars;
                     var f = new Frame
                     {

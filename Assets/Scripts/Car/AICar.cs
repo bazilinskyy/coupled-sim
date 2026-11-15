@@ -41,7 +41,7 @@ public class AICar : MonoBehaviour, IVehicle
     {
         get
         {
-            return modelElements[0].localRotation;
+            return modelElements != null && modelElements.Length > 0 ? modelElements[0].localRotation : Quaternion.identity;   // (two-wheelers have no body to pitch)
         }
         set
         {

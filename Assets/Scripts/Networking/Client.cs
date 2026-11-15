@@ -99,6 +99,10 @@ public class Client : NetworkSystem
         _msgDispatcher.ClearLevelMessageHandlers();
         var msg = NetMsg.Read<StartGameMsg>(sync);
         _lvlManager.MapOverride = msg.Map; // the host decides the map
+        NetworkingManager.SetSessionFromHost(msg.Participant, msg.TrialIndex);   // logs named like the host's
+        var designs = PlayerSystem.AvailableEhmiDesigns();   // and the trial's designed eHMI
+        PlayerSystem.TrialEhmiDesign = msg.EhmiDesign >= 0 && msg.EhmiDesign < designs.Length ? designs[msg.EhmiDesign] : null;
+        PlayerSystem.TrialEhmiPlacement = msg.EhmiPlacement >= 0 ? (EhmiPlacement?)msg.EhmiPlacement : null;
         _lvlManager.LocationOverride = msg.LocationRadius > 0
             ? string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:R},{1:R},{2:R}", msg.LocationLat, msg.LocationLon, msg.LocationRadius)
             : null;

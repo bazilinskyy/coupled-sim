@@ -165,7 +165,7 @@ public class AICarSyncSystem
         waypointProgressTracker.enabled = true;
         waypointProgressTracker.Init(parameters.Track);
         var paint = aiCar.GetComponent<CarConfigurator>();
-        paint.ChangeParameters(parameters);
+        if (paint != null) paint.ChangeParameters(parameters);   // (two-wheelers have no paint)
         var avatar = aiCar.GetComponent<PlayerAvatar>();
         avatar.Initialize(false, PlayerSystem.InputMode.None, PlayerSystem.ControlMode.HostAI, parameters.VehicleType);
         var color = parameters.color;

@@ -11,6 +11,8 @@ enum LogFrameType
 {
     PositionsUpdate,
     AICarSpawn,
+    /// <summary>After a PositionsUpdate (files only, when the scene has drones): count, then per drone position, rotation, blade-passing frequency (Hz), landed.</summary>
+    Drones,
 }
 
 //logger class
@@ -212,6 +214,32 @@ public class WorldLogger
                 writer.Write((byte)light.State);
             }
         }
+        if (writer == _fileWriter) WriteDrones(writer);   // (not in the live stream, whose format stays as it was)
+    }
+
+    // drones (participants' and AI), in the order they appeared; their names and airframes go to the replay info
+    readonly List<DroneController> _drones = new List<DroneController>();
+    void WriteDrones(BinaryWriter writer)
+    {
+        int before = _drones.Count;
+        foreach (var p in _playerSystem.Drones) { var d = p != null ? p.GetComponent<DroneController>() : null; if (d != null && !_drones.Contains(d)) _drones.Add(d); }
+        if (DroneSpawner.Current != null) foreach (var a in DroneSpawner.Current.Spawned) if (a.Drone != null && !_drones.Contains(a.Drone)) _drones.Add(a.Drone);
+        if (_drones.Count == 0) return;
+        if (_drones.Count != before && _replay != null)
+        {
+            for (int i = before; i < _drones.Count; i++)
+                _replay.Drones.Add($"{(_drones[i].GetComponent<PlayerAvatar>() != null ? "participant" : "ai")}|{_drones[i].Preset}|{_drones[i].name}");
+            _replay.Save(_path);
+        }
+        writer.Write((int)LogFrameType.Drones);
+        writer.Write(_drones.Count);
+        foreach (var d in _drones)
+        {
+            writer.Write(d != null ? d.transform.position : Vector3.zero);
+            writer.Write(d != null ? d.transform.rotation : Quaternion.identity);
+            writer.Write(d != null ? d.BladePassingHz : 0f);
+            writer.Write(d == null || d.Landed);
+        }
     }
 
     // velocity of a participant's vehicle: physics for cars, the model's speed for two-wheelers
@@ -383,6 +411,13 @@ public class LogConverter
                 {
                     aiCarIndexes.Add(numAICars + numPersistentDrivers);
                     numAICars++;
+                    continue;
+                }
+                if (eventType == LogFrameType.Drones)
+                {
+                    // drones are in their own CSV logs (Drone-*.csv, Drones-*.csv): skipped here
+                    int nd = reader.ReadInt32();
+                    for (int i = 0; i < nd; i++) { reader.ReadVector3(); reader.ReadQuaternion(); reader.ReadSingle(); reader.ReadBoolean(); }
                     continue;
                 }
                 Assert.AreEqual(LogFrameType.PositionsUpdate, eventType);
