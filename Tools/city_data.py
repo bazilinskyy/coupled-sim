@@ -314,15 +314,33 @@ def bgt_kind(collection, props):
     return None
 
 
+def _cross_seg(p1, p2, p3, p4):
+    """Whether segments p1-p2 and p3-p4 cross (touching at an end does not count)."""
+    def o(a, b, c): return (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])
+    d1, d2, d3, d4 = o(p3, p4, p1), o(p3, p4, p2), o(p1, p2, p3), o(p1, p2, p4)
+    return d1 * d2 < 0 and d3 * d4 < 0
+
+
 def bridge_holes(outer, holes):
-    """One ring from an outer ring and its holes (bridges from each hole's easternmost vertex to the outer ring),
-    so a simple ear-clipping triangulation keeps the holes open."""
+    """One ring from an outer ring and its holes (a bridge from each hole's easternmost vertex to the nearest vertex
+    of the ring it can see, i.e. without crossing the ring or another hole), so a simple ear-clipping triangulation
+    keeps the holes open."""
     ring = list(outer)
-    for hole in sorted(holes, key=lambda h: -max(p[0] for p in h)):
+    todo = sorted(holes, key=lambda h: -max(p[0] for p in h))
+    for k, hole in enumerate(todo):
         mi = max(range(len(hole)), key=lambda i: hole[i][0]); m = hole[mi]
-        # nearest ring vertex east of m (an approximation of the visible one)
-        cand = [i for i, p in enumerate(ring) if p[0] >= m[0]] or list(range(len(ring)))
-        bi = min(cand, key=lambda i: (ring[i][0] - m[0]) ** 2 + (ring[i][1] - m[1]) ** 2)
+        others = [h for h in todo[k + 1:]] + [hole]
+        def visible(i):
+            q = ring[i]
+            for poly in [ring] + others:
+                n = len(poly)
+                for e in range(n):
+                    a, b = poly[e], poly[(e + 1) % n]
+                    if a in (q, m) or b in (q, m): continue
+                    if _cross_seg(m, q, a, b): return False
+            return True
+        order = sorted(range(len(ring)), key=lambda i: (ring[i][0] - m[0]) ** 2 + (ring[i][1] - m[1]) ** 2)
+        bi = next((i for i in order[:60] if visible(i)), order[0])
         h = hole[mi:] + hole[:mi + 1]
         ring = ring[:bi + 1] + h + [ring[bi]] + ring[bi + 1:]
     return ring
