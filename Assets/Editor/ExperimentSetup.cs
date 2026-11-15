@@ -170,6 +170,7 @@ public static class ExperimentSetup
         var ps = nm.GetComponent<PlayerSystem>();
         var drivers = ps != null ? ListProperty(ps, "_AvatarPrefabDriver") : new Object[0];
         var twoWheelers = ps != null ? ListProperty(ps, "_AvatarPrefabTwoWheeler") : new Object[0];
+        var drones = ps != null ? ListProperty(ps, "_AvatarPrefabDrone") : new Object[0];
         if (ps != null && new SerializedObject(ps).FindProperty("_AvatarPrefab")?.objectReferenceValue == null)
             Err("PlayerSystem has no pedestrian avatar prefab", ps);
         var aiCars = new HashSet<Object>(ListProperty(nm, "_aiCarSystem.Prefabs").Where(o => o != null));
@@ -181,7 +182,7 @@ public static class ExperimentSetup
             var exp = experiments[i];
             if (exp == null) { Err($"experiment {i} in NetworkingManager ➡️ Experiments is empty (missing prefab?)", nm); continue; }
             if (Array.IndexOf(experiments, exp) != i) Warn($"experiment {exp.name} is registered twice (also as {Array.IndexOf(experiments, exp)})", nm);
-            ValidateExperiment(exp, $"experiment {i} ({exp.name})", drivers, twoWheelers, aiCars, Err, Warn);
+            ValidateExperiment(exp, $"experiment {i} ({exp.name})", drivers, twoWheelers, drones, aiCars, Err, Warn);
         }
 
         // trials
@@ -214,7 +215,7 @@ public static class ExperimentSetup
         return issues;
     }
 
-    static void ValidateExperiment(ExperimentDefinition exp, string what, Object[] drivers, Object[] twoWheelers, HashSet<Object> aiCars,
+    static void ValidateExperiment(ExperimentDefinition exp, string what, Object[] drivers, Object[] twoWheelers, Object[] drones, HashSet<Object> aiCars,
         Action<string, Object> Err, Action<string, Object> Warn)
     {
         if (string.IsNullOrEmpty(exp.ShortName)) Warn($"{what} has no ShortName (used in log and video names)", exp);
@@ -251,6 +252,10 @@ public static class ExperimentSetup
                 case SpawnPointType.PlayerRidingTwoWheeler:
                     if (role.twoWheelerIdx < 0 || role.twoWheelerIdx >= twoWheelers.Length || twoWheelers[role.twoWheelerIdx] == null)
                         Err($"{rw}: two-wheeler {role.twoWheelerIdx} is not in PlayerSystem ➡️ Avatar Prefab Two Wheeler", exp);
+                    break;
+                case SpawnPointType.PlayerFlyingDrone:
+                    if (role.droneIdx < 0 || role.droneIdx >= drones.Length || drones[role.droneIdx] == null)
+                        Err($"{rw}: drone {role.droneIdx} is not in PlayerSystem ➡️ Avatar Prefab Drone", exp);
                     break;
             }
         }

@@ -37,6 +37,9 @@ public class PlayerSystem : MonoBehaviour
     [SerializeField]
     [Tooltip("Bicycle, e-scooter and moped avatars for PlayerRidingTwoWheeler roles.")]
     PlayerAvatar[] _AvatarPrefabTwoWheeler;
+    [SerializeField]
+    [Tooltip("Drones for PlayerFlyingDrone roles.")]
+    PlayerAvatar[] _AvatarPrefabDrone;
 
 
     [NonSerialized]
@@ -44,6 +47,7 @@ public class PlayerSystem : MonoBehaviour
     public PlayerAvatar PedestrianPrefab => _AvatarPrefab;
     public PlayerAvatar[] DriverPrefabs => _AvatarPrefabDriver;
     public PlayerAvatar[] TwoWheelerPrefabs => _AvatarPrefabTwoWheeler;
+    public PlayerAvatar[] DronePrefabs => _AvatarPrefabDrone;
 
     // Avatars contains both Drivers and Pedestrians (in arbitrary order)
     [NonSerialized]
@@ -54,6 +58,8 @@ public class PlayerSystem : MonoBehaviour
     public List<PlayerAvatar> Pedestrians = new List<PlayerAvatar>();
     [NonSerialized]
     public List<PlayerAvatar> Passengers = new List<PlayerAvatar>();
+    [NonSerialized]
+    public List<PlayerAvatar> Drones = new List<PlayerAvatar>();
 
     PlayerAvatar[] Player2Avatar = new PlayerAvatar[UNetConfig.MaxPlayers];
     public PlayerAvatar GetAvatar(int player) => Player2Avatar[player];
@@ -99,10 +105,12 @@ public class PlayerSystem : MonoBehaviour
         return null;
     }
 
-    PlayerAvatar GetAvatarPrefab(SpawnPointType type, int carIdx, int twoWheelerIdx = 0)
+    PlayerAvatar GetAvatarPrefab(SpawnPointType type, int carIdx, int twoWheelerIdx = 0, int droneIdx = 0)
     {
         switch (type)
         {
+            case SpawnPointType.PlayerFlyingDrone:
+                return _AvatarPrefabDrone[droneIdx];
             case SpawnPointType.PlayerRidingTwoWheeler:
                 return _AvatarPrefabTwoWheeler[twoWheelerIdx];
             case SpawnPointType.PlayerControlledPedestrian:
@@ -121,7 +129,7 @@ public class PlayerSystem : MonoBehaviour
         // headset roles: start OpenXR now (flat-screen PCs never need a VR runtime)
         if (PlayerInputMode == InputMode.VR || PlayerInputMode == InputMode.Suite) XRSession.Start();
         bool isPassenger = spawnPoint.Type == SpawnPointType.PlayerInAIControlledCar;
-        LocalPlayer = SpawnAvatar(spawnPoint, GetAvatarPrefab(spawnPoint.Type, role.carIdx, role.twoWheelerIdx), player, role);
+        LocalPlayer = SpawnAvatar(spawnPoint, GetAvatarPrefab(spawnPoint.Type, role.carIdx, role.twoWheelerIdx, role.droneIdx), player, role);
         LocalPlayer.Initialize(false, PlayerInputMode, isPassenger ? ControlMode.Passenger : ControlMode.Driver, spawnPoint.VehicleType, spawnPoint.CameraIndex);
         var response = ResponseInput.WithCommandLine(role.Response);
         if (response.Button || response.Slider) LocalPlayer.gameObject.AddComponent<ResponseInput>().Init(response, role.Name);
@@ -129,7 +137,7 @@ public class PlayerSystem : MonoBehaviour
         VideoExport.Ensure();
         OpenScenario.Ensure();
         SceneDescriber.EnsureLoggerFromCommandLine();
-        if (spawnPoint.Type != SpawnPointType.PlayerControlledPedestrian) MotionOutput.AddIfAsked(LocalPlayer.gameObject);
+        if (spawnPoint.Type != SpawnPointType.PlayerControlledPedestrian && spawnPoint.Type != SpawnPointType.PlayerFlyingDrone) MotionOutput.AddIfAsked(LocalPlayer.gameObject);
         var args = Environment.GetCommandLineArgs();
         if (Array.IndexOf(args, "-gaze") >= 0 || Array.IndexOf(args, "-gazeTrigger") >= 0) NetworkGaze.Ensure();
         if (Array.IndexOf(args, "-companions") >= 0) PedestrianGroup.EnsureFromCommandLine();
@@ -164,7 +172,7 @@ public class PlayerSystem : MonoBehaviour
 
     public void SpawnRemotePlayer(SpawnPoint spawnPoint, int player, ExperimentRoleDefinition role)
     {
-        var remotePlayer = SpawnAvatar(spawnPoint, GetAvatarPrefab(spawnPoint.Type, role.carIdx, role.twoWheelerIdx), player, role);
+        var remotePlayer = SpawnAvatar(spawnPoint, GetAvatarPrefab(spawnPoint.Type, role.carIdx, role.twoWheelerIdx, role.droneIdx), player, role);
         remotePlayer.Initialize(true, InputMode.None, ControlMode.HostAI, spawnPoint.VehicleType);
     }
 
@@ -174,6 +182,7 @@ public class PlayerSystem : MonoBehaviour
         {
             case AvatarType.Pedestrian: return Pedestrians;
             case AvatarType.Driver: return Cars;
+            case AvatarType.Drone: return Drones;
             default: Assert.IsFalse(true, $"No avatar collection for type {type}"); return null;
         }
     }

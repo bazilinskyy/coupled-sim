@@ -82,7 +82,7 @@ public class TrafficCar : MonoBehaviour
         _pedestrians.Clear();
         foreach (var a in FindObjectsByType<PlayerAvatar>())
         {
-            if (!a.gameObject.activeInHierarchy) continue;
+            if (!a.gameObject.activeInHierarchy || a.Type == AvatarType.Drone) continue;
             (a.Type == AvatarType.Driver ? _cars : _pedestrians).Add(a.transform);
         }
         if (Time.time >= _nextLightScan)

@@ -173,7 +173,11 @@ public class OpenScenario : MonoBehaviour
             float x = F(Attr(tp, "x")), y = F(Attr(tp, "y")), z = F(Attr(tp, "z")), h = F(Attr(tp, "h"));
             var pos = new Vector3(x - _offset.x, z, y - _offset.y);
             // ground under it
-            if (Physics.Raycast(pos + Vector3.up * 50f, Vector3.down, out var hit, 100f, ~0, QueryTriggerInteraction.Ignore)) pos.y = hit.point.y;
+            // ground under it: the surface nearest the given height (not a roof or bridge high above a road)
+            float? groundY = null;
+            foreach (var g in Physics.RaycastAll(pos + Vector3.up * 50f, Vector3.down, 100f, ~0, QueryTriggerInteraction.Ignore))
+                if (g.collider.attachedRigidbody == null && (groundY == null || Mathf.Abs(g.point.y - z) < Mathf.Abs(groundY.Value - z))) groundY = g.point.y;
+            if (groundY.HasValue) pos.y = groundY.Value;
             a.T.SetPositionAndRotation(pos, Quaternion.Euler(0f, 90f - h * Mathf.Rad2Deg, 0f));
             Log("teleport", a.Name, $"{x.ToString("F1", Ci)},{y.ToString("F1", Ci)},h={h.ToString("F2", Ci)}");
             return;

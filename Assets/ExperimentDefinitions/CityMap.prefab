@@ -81,6 +81,7 @@ Transform:
   - {fileID: 8823583109223987964}
   - {fileID: 5520401738300167913}
   - {fileID: 4700275596640567279}
+  - {fileID: 8253610912110734963}
   m_Father: {fileID: 688831363954450875}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2783958237378070590
@@ -210,6 +211,7 @@ Transform:
   - {fileID: 8868225042934192711}
   - {fileID: 2328396113636596722}
   - {fileID: 4846708888230763120}
+  - {fileID: 7915595583261480665}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &4508130044032702980
@@ -237,6 +239,7 @@ MonoBehaviour:
     EhmiDesignPlacement: 0
     carIdx: 0
     twoWheelerIdx: 0
+    droneIdx: 0
     SpawnPoint:
       Point: {fileID: 3688745493129557461}
       Type: 1
@@ -266,6 +269,7 @@ MonoBehaviour:
     EhmiDesignPlacement: 0
     carIdx: 0
     twoWheelerIdx: 0
+    droneIdx: 0
     SpawnPoint:
       Point: {fileID: 7382821149594510999}
       Type: 0
@@ -295,6 +299,7 @@ MonoBehaviour:
     EhmiDesignPlacement: 0
     carIdx: 0
     twoWheelerIdx: 0
+    droneIdx: 0
     SpawnPoint:
       Point: {fileID: 7911089957957243612}
       Type: 3
@@ -324,6 +329,7 @@ MonoBehaviour:
     EhmiDesignPlacement: 0
     carIdx: 0
     twoWheelerIdx: 1
+    droneIdx: 0
     SpawnPoint:
       Point: {fileID: 8823583109223987964}
       Type: 3
@@ -353,6 +359,7 @@ MonoBehaviour:
     EhmiDesignPlacement: 0
     carIdx: 0
     twoWheelerIdx: 2
+    droneIdx: 0
     SpawnPoint:
       Point: {fileID: 5520401738300167913}
       Type: 3
@@ -382,9 +389,40 @@ MonoBehaviour:
     EhmiDesignPlacement: 0
     carIdx: 0
     twoWheelerIdx: 0
+    droneIdx: 0
     SpawnPoint:
       Point: {fileID: 4700275596640567279}
       Type: 1
+      CameraIndex: 0
+      VehicleType: 0
+    AutonomousPath: {fileID: 0}
+    AutonomousIsYielding: 0
+    Steering: 0
+    RideInCarOf: 
+    Seat: 0
+    HudDesign: 
+    CentreScreenDesign: 
+    ClusterDesign: 
+    InCarMessages: 
+    Response:
+      Button: 0
+      ButtonLabel: 
+      Slider: 0
+      SliderLabel: 
+      SliderStart: 0
+      Hidden: 0
+  - Name: Drone pilot
+    TopHMI: {fileID: 0}
+    WindshieldHMI: {fileID: 0}
+    HoodHMI: {fileID: 0}
+    EhmiDesign: 
+    EhmiDesignPlacement: 0
+    carIdx: 0
+    twoWheelerIdx: 0
+    droneIdx: 0
+    SpawnPoint:
+      Point: {fileID: 8253610912110734963}
+      Type: 4
       CameraIndex: 0
       VehicleType: 0
     AutonomousPath: {fileID: 0}
@@ -674,6 +712,9 @@ MonoBehaviour:
   Weather: 1
   ExtraFog: 0
   RainOverride: -1
+  SnowCover: -1
+  WindSpeed: 2
+  WindDirection: 240
   UseBakedLighting: 0
   Sun: {fileID: 0}
   StreetLights: []
@@ -695,7 +736,73 @@ MonoBehaviour:
   LiveReflectionDistance: 30
   SunElevation: 0
   Rain: 0
+  Snowfall: 0
+  Snow: 0
   StreetLightsOn: 0
+  SnowSurfaceKeywords:
+  - grass
+  - green
+  - roof
+  - pavement
+  - paving
+  - sidewalk
+  - ground
+  - kerb
+  - gravel
+  - cycle
+  - tile
+--- !u!1 &7409150465961176008
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7915595583261480665}
+  - component: {fileID: 9217674777183838465}
+  m_Layer: 0
+  m_Name: Drones (AI)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7915595583261480665
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7409150465961176008}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 688831363954450875}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &9217674777183838465
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7409150465961176008}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bf38756148b94472e828eddda626df7b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DroneSpawner
+  Deliveries: 2
+  Patrols: 1
+  Swarm: 0
+  Centre: {fileID: 0}
+  Radius: 220
+  Clearance: 20
+  Seed: 1
+  LogInterval: 0.1
 --- !u!1 &7448913500274970244
 GameObject:
   m_ObjectHideFlags: 0
@@ -742,6 +849,52 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::OsmSpawnPoint
   Kind: 0
   Index: 0
+--- !u!1 &7961962590505626748
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8253610912110734963}
+  - component: {fileID: 4059924900444643797}
+  m_Layer: 0
+  m_Name: Drone pilot spawn
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8253610912110734963
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7961962590505626748}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8268997310008627352}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4059924900444643797
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7961962590505626748}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a2f1813aa37e94032a34777e71d5b2ad, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::OsmSpawnPoint
+  Kind: 3
+  Index: 2
 --- !u!1 &8851579679614856896
 GameObject:
   m_ObjectHideFlags: 0
@@ -834,6 +987,8 @@ MonoBehaviour:
   SendUnityCars: 1
   StopForPedestrians: 1
   PedestrianLookAhead: 15
+  FollowSimulatorLights: 1
   Status: not started
   SumoTime: 0
   VehicleCount: 0
+  SyncedTrafficLights: 0
