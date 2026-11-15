@@ -58,14 +58,15 @@ TERRARIUM_CREDIT = ("Terrain Tiles (Mapzen/Tilezen, AWS Open Data): includes SRT
 AHN_CREDIT = "AHN4 digital terrain model (Actueel Hoogtebestand Nederland, via PDOK, CC0)"
 
 
-def get(url, headers=None, tries=4):
+def get(url, headers=None, tries=6):
     for k in range(tries):
         try:
             with urllib.request.urlopen(urllib.request.Request(url, headers={**UA, **(headers or {})}), timeout=180) as r:
                 return r.read()
         except Exception as e:
             if k == tries - 1: raise
-            print("  retry (%s)" % e); time.sleep(3 * (k + 1))
+            busy = "429" in str(e)   # rate limited: wait longer
+            print("  retry (%s)" % e); time.sleep((20 if busy else 3) * (k + 1))
 
 
 def bounds(name):
@@ -217,7 +218,7 @@ def chunks(lats, lons, size_deg_lat, pad=0.0002):
     return [(w + i * dlon, s + j * dlat, w + (i + 1) * dlon, s + (j + 1) * dlat) for i in range(k) for j in range(k)]
 
 
-def service_sampler(url_of, res_m, chunk_m=500, big_endian=False):
+def service_sampler(url_of, res_m, chunk_m=500, big_endian=False, workers=4):
     def sampler(lats, lons):
         rasters = []
         boxes = chunks(lats, lons, chunk_m / 111320.0)
@@ -226,7 +227,7 @@ def service_sampler(url_of, res_m, chunk_m=500, big_endian=False):
             w, s, e, n = b
             px = max(16, int((e - w) * 111320 * math.cos(math.radians(lat0)) / res_m)); py = max(16, int((n - s) * 111320 / res_m))
             return tiff_array(get(url_of(w, s, e, n, px, py)), big_endian)
-        with ThreadPoolExecutor(4) as ex:
+        with ThreadPoolExecutor(workers) as ex:
             for r in ex.map(fetch, boxes): rasters.append(r)
         print("  %d rasters" % len(rasters))
         return sample_rasters(rasters, lons, lats)
@@ -327,9 +328,14 @@ class RangeFile:
 LINZ = {"Wellington": "wellington/wellington-city_2025/dem_1m/2193/", "Auckland": "auckland/auckland-part-1_2024/dem_1m/2193/"}
 
 def linz_sampler(name):
+    return linz_prefix_sampler(LINZ[name])
+
+
+def linz_prefix_sampler(prefix):
+    """A LINZ elevation collection (DEM or DSM) on AWS: heights at (lats, lons)."""
     def sampler(lats, lons):
         import tifffile, imagecodecs
-        base = "https://nz-elevation.s3.ap-southeast-2.amazonaws.com/" + LINZ[name]
+        base = "https://nz-elevation.s3.ap-southeast-2.amazonaws.com/" + prefix
         col = json.loads(get(base + "collection.json"))
         items = [l["href"] for l in col["links"] if l["rel"] == "item"]
         s, n, w, e = lats.min(), lats.max(), lons.min(), lons.max()
