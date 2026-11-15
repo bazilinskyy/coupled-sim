@@ -502,6 +502,13 @@ public partial class OsmMapGenerator
         public readonly List<Vector2> UV = new List<Vector2>();
         public readonly List<int> T = new List<int>();
 
+        public void Append(MeshBuilder o)
+        {
+            int k = V.Count;
+            V.AddRange(o.V); UV.AddRange(o.UV);
+            foreach (var t in o.T) T.Add(t + k);
+        }
+
         public void Quad(Vector3 a, Vector3 b, Vector3 c, Vector3 d, Vector2 ua, Vector2 ub, Vector2 uc, Vector2 ud)
         {
             int i = V.Count;
@@ -1128,8 +1135,10 @@ public partial class OsmMapGenerator
             // roofs in the photo's colours (tiles, gravel, solar panels, dormers); roofs over 35 m keep
             // their materials, as the photo shows tall buildings leaning away from the camera
             var photoRoofs = new MeshBuilder();
-            roofs = AerialSplit(roofs, photoRoofs);
-            for (int i = 0; i < tileRoofs.Length; i++) tileRoofs[i] = AerialSplit(tileRoofs[i], photoRoofs);
+            var steep = new[] { new MeshBuilder(), new MeshBuilder() };
+            roofs = AerialSplit(roofs, photoRoofs, steep);
+            for (int i = 0; i < tileRoofs.Length; i++) tileRoofs[i] = AerialSplit(tileRoofs[i], photoRoofs, steep);
+            for (int i = 0; i < tileRoofs.Length; i++) tileRoofs[i].Append(steep[i]);
             Emit(buildings, "Roofs aerial photo", photoRoofs, Mat("Roof aerial photo", Color.white, 0.15f, Aerial.Texture), true);
         }
         // roofs collide too: drones land on them and measure their height above them, planners see the buildings' tops
@@ -1693,12 +1702,18 @@ public partial class OsmMapGenerator
 
     static Texture2D RoofTiles(string name, Color baseColor) => Tex(name, 256, (x, y, r) =>
     {
-        // rows of overlapping tiles: a dark shadow line under each row, rows offset by half a tile
-        int row = y / 32, ty = y % 32, tx = (x + (row % 2) * 16) % 32;
-        var c = Noise(baseColor, r, 0.18f);
-        if (ty < 3) c *= 0.55f;
-        else if (tx < 2) c *= 0.75f;
-        else c *= 0.9f + 0.1f * ty / 32f;
+        // pantiles (the wavy tiles of most Dutch and Flemish roofs): 8 rows and 8 tiles a row, each tile a wave across
+        // with its lit crest and shaded trough, a dark shadow line under the row above, rows offset by half a tile,
+        // and every tile a little lighter or darker (weathering, replaced tiles)
+        int row = y / 32, ty = y % 32, col = (x + (row % 2) * 16) / 32, tx = (x + (row % 2) * 16) % 32;
+        var c = Noise(baseColor, r, 0.1f);
+        uint hsh = (uint)(row * 73856093 ^ (col & 7) * 19349663);
+        c *= 0.86f + 0.28f * ((hsh % 1000) / 1000f);
+        float wave = Mathf.Sin(tx / 32f * Mathf.PI * 2f);
+        c *= 0.86f + 0.16f * wave;
+        if (ty < 3) c *= 0.5f + 0.12f * ty;          // the shadow of the row above
+        else c *= 0.92f + 0.1f * ty / 32f;           // a tile is lighter towards its lower edge
+        if (tx == 31 || tx == 0) c *= 0.8f;           // the overlap between tiles
         c.a = 1f;
         return c;
     });
@@ -1943,18 +1958,36 @@ public partial class OsmMapGenerator
     public AerialPhoto Aerial { get; private set; }
     const float AerialRoofMaxHeight = 35f;
 
-    // moves the triangles of src that lie below AerialRoofMaxHeight into photo (with photo UVs); returns the rest
-    MeshBuilder AerialSplit(MeshBuilder src, MeshBuilder photo)
+    // moves the triangles of src that lie below AerialRoofMaxHeight into photo (with photo UVs); returns the rest.
+    // Steep faces (over 30°, pitched roofs) go to the tile roofs instead (steep[0] red, steep[1] anthracite, by the
+    // photo's colour there), with the rows of tiles along their eaves: a photo from above smears on a steep slope.
+    MeshBuilder AerialSplit(MeshBuilder src, MeshBuilder photo, MeshBuilder[] steep)
     {
         var rest = new MeshBuilder();
         for (int i = 0; i + 2 < src.T.Count; i += 3)
         {
             int a = src.T[i], b = src.T[i + 1], c = src.T[i + 2];
-            bool low = src.V[a].y < AerialRoofMaxHeight && src.V[b].y < AerialRoofMaxHeight && src.V[c].y < AerialRoofMaxHeight;
-            var dst = low ? photo : rest;
-            int k = dst.V.Count;
-            foreach (var j in new[] { a, b, c }) { dst.V.Add(src.V[j]); dst.UV.Add(low ? Aerial.Uv(src.V[j]) : src.UV[j]); }
-            dst.T.Add(k); dst.T.Add(k + 1); dst.T.Add(k + 2);
+            Vector3 va = src.V[a], vb = src.V[b], vc = src.V[c];
+            bool low = va.y < AerialRoofMaxHeight && vb.y < AerialRoofMaxHeight && vc.y < AerialRoofMaxHeight;
+            var n = Vector3.Cross(vb - va, vc - va);
+            bool isSteep = low && n.sqrMagnitude > 1e-6f && Mathf.Abs(n.normalized.y) < 0.866f && Mathf.Abs(n.normalized.y) > 0.17f;
+            if (isSteep)
+            {
+                n = n.normalized; if (n.y < 0) n = -n;
+                var col = Aerial.Sample((va + vb + vc) / 3f);
+                Color.RGBToHSV(col, out float h, out float sat, out float val);
+                bool red = sat > 0.18f && (h < 0.09f || h > 0.94f) && val > 0.22f;
+                var dst = steep[red ? 0 : 1];
+                var strike = Vector3.Cross(Vector3.up, n).normalized; var dip = Vector3.Cross(n, strike);
+                int k0 = dst.V.Count;
+                foreach (var v in new[] { va, vb, vc }) { dst.V.Add(v); dst.UV.Add(new Vector2(Vector3.Dot(v, strike), Vector3.Dot(v, dip)) / 2.6f); }
+                dst.T.Add(k0); dst.T.Add(k0 + 1); dst.T.Add(k0 + 2);
+                continue;
+            }
+            var to = low ? photo : rest;
+            int k = to.V.Count;
+            foreach (var j in new[] { a, b, c }) { to.V.Add(src.V[j]); to.UV.Add(low ? Aerial.Uv(src.V[j]) : src.UV[j]); }
+            to.T.Add(k); to.T.Add(k + 1); to.T.Add(k + 2);
         }
         return rest;
     }

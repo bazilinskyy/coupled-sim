@@ -12,7 +12,7 @@ The simulator is open source and free to use. It is aimed at, but not limited to
 
 ## Contents
 - [Citation](#citation) · [Examples of use](#examples-of-use) · [License](#license)
-- [Features](#features) · [Graphics](#graphics)
+- [Features](#features) · [Agents at a glance](#agents-at-a-glance) · [Graphics](#graphics)
 - [Getting started, step by step](#getting-started-step-by-step) (for first-time users) · [Installation](#installation)
 - [Running the simulator](#running-the-simulator): [host](#running-as-a-host), [client](#running-as-a-client), [several agents on one machine](#several-agents-on-one-machine), [builds and command line](#builds-and-command-line-options), [automatic trials](#running-trials-automatically), [trial files and counterbalancing](#trial-files-and-counterbalancing), [recording videos](#recording-trial-videos), [dashboard](#experimenter-dashboard)
 - [Controls](#controls)
@@ -68,6 +68,13 @@ The source code of the coupled simulator is released under the [MIT License](LIC
 - Automatic trial sequences with per-trial parameters and video recording; trial files (CSV/JSON) with counterbalancing per participant (balanced Latin square).
 - An experiment setup window: new experiments from templates on any map, a check of the whole set-up before Play.
 - A web dashboard for the experimenter: run the session, switch eHMIs, weather and time from any device, and watch a live map of all agents.
+
+## Agents at a glance
+Every kind of agent in the simulator, as the smoke test's line-up (`-smokeLineup`, see [Testing](#testing)) parks them on Delft's Markt: children and adults (Microsoft Rocketbox avatars), a cyclist, an e-scooter rider and a moped rider, with the drone hovering at the right edge (top); the animals: pigeon, cat, dog, husky, fox, deer and horse (bottom). Participants can take the roles of a driver, an AV passenger, a pedestrian, a cyclist, an e-scooter or moped rider and a drone pilot; all of them also exist as AI agents.
+
+![Pedestrians, riders and a drone (top) and the animals (bottom) on the Markt in Delft](ReadmeFiles/agents.jpg)
+
+The vehicles are shown under [Vehicles](#vehicles).
 
 ## Graphics
 The simulator uses the **Universal Render Pipeline** (URP 17.6): the pipeline asset is `Assets/URPDefaultResources/Fantastic.asset` (HDR, 4× MSAA, soft shadows up to 150 m, forward rendering; the 24 street lamps nearest to the viewer are lit) with its renderer `Default_Forward_Renderer` (screen-space ambient occlusion). Post-processing (ACES tonemapping, bloom, colour grading, vignette) comes from the global volume `Post-processing (URP)` in the environment scenes with `Assets/Settings/Rendering/SimulatorVolumeProfile.asset`; every participant camera gets post-processing and SMAA anti-aliasing when it starts rendering (`UrpCameraSetup`). Materials were converted with the Render Pipeline Converter; `Assets/Editor/Graphics/GraphicsSetup.cs` holds the conversion steps (including baking the Tree Creator trees to normal meshes).
@@ -482,7 +489,7 @@ For another Japanese map, take the CityGML zip of its ward from the dataset page
 
 Maps without such a file use the OpenStreetMap buildings.
 
-**Real aerial photos (ground, roofs and surroundings).** Ten maps have the city's open aerial photo, about 0.2 m per pixel: Delft, Eindhoven, Ghent, Barcelona, Tokyo, New York, Boulder, Sydney, Wellington and Auckland (Toitū Te Whenua LINZ, CC BY 4.0, read from its cloud-optimised GeoTIFFs; needs tifffile and imagecodecs). It lies on the ground wherever no road, pavement, grass or water is mapped, so car parks, yards, squares and building sites look as they really are. A fine grain repeats every 2 m on top, so the photo isn't blurry up close. Roofs up to 35 m show their real colours, solar panels and dormers (taller buildings lean in the photo, so their roofs keep plain materials). A coarser photo of the 6 km around the map runs to the horizon for distant and high views, and some haze (always on, also in clear weather) blends it into the sky. The photos are in `Assets/StreamingAssets/Maps/<Map>.aerial.jpg`, `.aerial-far.jpg` and `.aerial.json`. `-noAerial` on the command line turns them off. To make them for a map (internet needed; needs Pillow and numpy; about a minute):
+**Real aerial photos (ground, roofs and surroundings).** Ten maps have the city's open aerial photo, about 0.2 m per pixel: Delft, Eindhoven, Ghent, Barcelona, Tokyo, New York, Boulder, Sydney, Wellington and Auckland (Toitū Te Whenua LINZ, CC BY 4.0, read from its cloud-optimised GeoTIFFs; needs tifffile and imagecodecs). It lies on the ground wherever no road, pavement, grass or water is mapped, so car parks, yards, squares and building sites look as they really are. A fine grain repeats every 2 m on top, so the photo isn't blurry up close. Flat and low-pitched roofs up to 35 m show their real colours, solar panels and dormers (taller buildings lean in the photo, so their roofs keep plain materials). Pitched roof faces (steeper than 30°) would smear in a photo taken from above: they get clay pantiles instead, red or anthracite as the photo shows them there, with the rows of tiles along the eaves. A coarser photo of the 6 km around the map runs to the horizon for distant and high views, and some haze (always on, also in clear weather) blends it into the sky. The photos are in `Assets/StreamingAssets/Maps/<Map>.aerial.jpg`, `.aerial-far.jpg` and `.aerial.json`. `-noAerial` on the command line turns them off. To make them for a map (internet needed; needs Pillow and numpy; about a minute):
 
 ```bash
 python3 Tools/aerial_photo.py Delft
@@ -637,7 +644,7 @@ It then puts the model in place of the body and fits the wheel colliders, the se
 
 Optionally, `ArticulationFromFront` makes an articulated vehicle and `Remove` leaves out parts of the model (helper objects, a seated driver). `Coupled Sim` ➡️ `Vehicles` ➡️ `Build vehicle prefabs` builds all of them (`-vehicleFilter Name` builds some). The prefabs are added to the AI car list, background traffic, SUMO and the parked cars automatically. `Coupled Sim` ➡️ `Vehicles` ➡️ `Render line-up` renders all vehicles side by side for a check, and `VehicleShowcase.RenderDriverViews` renders each driver's view.
 
-![The Kenney cars in Boulder (left) and the vans and trucks in São Paulo (right)](ReadmeFiles/vehicle_range.jpg)
+![All cars (top: Smart, hatchback, Toyota Corolla, Land Rover Defender and the Kenney cars) and all vans, trucks and buses (bottom: the Kenney vans and trucks, the box truck, the DAF XF 95 and the articulated bus), parked at an angle on the Markt in Delft](ReadmeFiles/vehicle_range.jpg)
 
 **Road surfaces under each wheel.** Each wheel gets the grip and roughness of the surface it is on. On city maps the surface comes from the road meshes, which follow OpenStreetMap's `surface` tag. In other scenes everything counts as asphalt unless `-roadSurface name` sets one surface everywhere (`asphalt`, `bricks`, `cobblestones`, `gravel`, `grass`, `paving` or `unpaved`).
 
@@ -880,7 +887,7 @@ Roles with `SpawnPoint.Type` = `PlayerFlyingDrone` let a participant fly a drone
 - **Network and logs**: the host flies the AI drones and sends their poses to the clients 20 times a second; participants' drones are synchronised like other avatars. The participant's flight is logged to `ExperimentLogs/Drone-{date}.csv` (50 Hz: position, velocity, attitude, height above the ground, the four rotor speeds, blade-passing frequency, mode and stick inputs), the AI drones to `ExperimentLogs/Drones-{date}.csv` (10 Hz: mission, phase, position, velocity, heading, height, blade-passing frequency).
 - **Smoke test**: `-smokeRole N` (the drone pilot's role) with `-smokeFly "climb,yaw,forward,lateral"` (each -1..1) flies the drone with fixed sticks (climbing for the first 2 s); the screenshot view `aidrone` (or `aidrone:2`) shows the nearest (or the third nearest) AI drone.
 
-![Drones over Delft: the participant's drone from the chase camera (left), its gimbal camera (middle) and an AI drone of a swarm (right)](ReadmeFiles/drones.jpg)
+![Drones over Delft: the participant's drone from the chase camera (left), a delivery drone landed at its drop point (middle) and a drone of a swarm over the tiled roofs (right)](ReadmeFiles/drones.jpg)
 
 ### Automated driving and take-over requests
 The AV of a role with `SpawnPoint.Type` = `PlayerInAIControlledCar` gets an `AutomatedDriving` component when the participant is spawned. It drives in one of two modes (trial parameter `automation`):
@@ -1136,7 +1143,7 @@ For online (crowdsourced) versions of a study, the same trial can be rendered as
 Unity -batchmode -projectPath . -executeMethod SmokeTest.Run -smokeSeconds 30 -smokeOut SmokeTest -logFile smoke.log
 ```
 
-Options: `-smokeTrial N` (index in `Trials`), `-smokeExperiment N` and `-smokeRole N` (override the trial's experiment and role), `-smokeShot "x,y,z,yaw,pitch;..."` (extra screenshots from these camera poses; also `chase`, `front`, `rel:x,y,z,yaw,pitch[,fov]` relative to the participant, which works on every map, `animal[:Dog]` at the nearest animal, `sign[:CyclePath]` at the nearest traffic sign, `aidrone[:n]` at the n-th nearest AI drone, and `lineup`/`lineupside`), `-smokeDrive seconds` and `-smokeSteer -1..1` (drive the participant's car), `-smokeLineup "ToyotaCorolla,DafXF95,..."` (park those vehicles in a row ahead of the participant, for pictures of vehicles in a real street), `-smokeScene <path>` (scene to start from), `-smokeInputMode VR` (head-mounted display mode; without a headset it checks the camera set-up). The report also counts jumps of the participant's view of more than 30° between samples (they should be 0).
+Options: `-smokeTrial N` (index in `Trials`), `-smokeExperiment N` and `-smokeRole N` (override the trial's experiment and role), `-smokeShot "x,y,z,yaw,pitch;..."` (extra screenshots from these camera poses; also `chase`, `front`, `rel:x,y,z,yaw,pitch[,fov]` relative to the participant, which works on every map, `animal[:Dog]` at the nearest animal, `sign[:CyclePath]` at the nearest traffic sign, `aidrone[:n]` at the n-th nearest AI drone, and `lineup`/`lineupside`), `-smokeDrive seconds` and `-smokeSteer -1..1` (drive the participant's car), `-smokeLineup "ToyotaCorolla,DafXF95,..."` (park those vehicles in a row ahead of the participant, for pictures of vehicles in a real street; besides vehicles also `Bicycle`, `EScooter` and `Moped` with their riders, pedestrians `ped:Female_Adult_01`, animals `animal:Dog` and the hovering `Drone`), `-smokeLineupAngle deg` (e.g. `65`: side by side at that angle, as in angle parking, so every agent is seen in full; the `lineup` view then looks at them from opposite the middle of the line and hides posts, signs and trees in the way), `-smokeLineupAt x,z,heading` (where the line starts and its direction, instead of ahead of the participant), `-smokeShotSize 3200x1800` (size of the `-smokeShot` pictures), `-smokeScene <path>` (scene to start from), `-smokeInputMode VR` (head-mounted display mode; without a headset it checks the camera set-up). The report also counts jumps of the participant's view of more than 30° between samples (they should be 0).
 
 The models (pedestrians, traffic, two-wheelers, vehicles, maps, trial files) have edit-mode tests (`Assets/Tests/EditMode`, 125 tests, including the tyre model): run them in `Window` ➡️ `General` ➡️ `Test Runner`, or with `Unity -batchmode -projectPath . -runTests -testPlatform EditMode -testResults results.xml`. On Windows, `Unity` is `"C:\Program Files\Unity\Hub\Editor\6000.6.9f1\Editor\Unity.exe"`; on macOS `/Applications/Unity/Hub/Editor/6000.6.9f1/Unity.app/Contents/MacOS/Unity`.
 

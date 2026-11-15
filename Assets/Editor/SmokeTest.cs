@@ -355,18 +355,58 @@ public static class SmokeTest
             }
             else if (view.Trim().StartsWith("lineup") && _lineupLength > 0f)
             {
-                // the parked vehicles from the side of the road, three quarters from the front ("lineup") or from the side ("lineupside")
+                // the parked vehicles from the side of the road, three quarters from the front ("lineup") or from the side
+                // ("lineupside"); an angled line-up from in front of its first agent, looking along the line
                 var mid = _lineupStart + _lineupDir * (_lineupLength * 0.45f);
-                camGo.transform.position = view.Trim() == "lineupside"
-                    ? mid + _lineupRight * (_lineupLength * 0.55f) + Vector3.up * 3f
-                    : _lineupStart - _lineupDir * 2f + _lineupRight * 6f + Vector3.up * 3.2f;
-                var target = view.Trim() == "lineupside" ? mid + Vector3.up * 1.2f : _lineupStart + _lineupDir * (_lineupLength * 0.35f) + Vector3.up * 1.2f;
+                Vector3 target;
+                if (view.Trim() == "lineupside")
+                {
+                    camGo.transform.position = mid + _lineupRight * (_lineupLength * 0.55f) + Vector3.up * 3f;
+                    target = mid + Vector3.up * 1.2f;
+                }
+                else if (_lineupAngle > 5f)
+                {
+                    // opposite the middle of the line, a little towards its start (the agents face that way): all at about
+                    // the same distance, three quarters from the front, the whole line in the picture
+                    camGo.transform.position = _lineupStart + _lineupDir * (_lineupLength * 0.47f) + _lineupRight * (4f + 0.62f * _lineupLength) + Vector3.up * (1.8f + 0.04f * _lineupLength);
+                    target = _lineupStart + _lineupDir * (_lineupLength * 0.5f) + Vector3.up * 0.8f;
+                    // posts, trees and signs between the camera and the line-up are taken away
+                    var cp = camGo.transform.position; var far = _lineupStart + _lineupDir * (_lineupLength * 0.5f);
+                    var fwd2 = Vector3.ProjectOnPlane(far - cp, Vector3.up);
+                    var boxRot = Quaternion.Inverse(Quaternion.LookRotation(fwd2)); var boxMid = (cp + far) / 2f;
+                    var halfExt = new Vector3(_lineupLength * 0.6f, 0f, fwd2.magnitude / 2f + 2f);
+                    // (also objects made with hide flags, such as the traffic signs, which FindObjectsByType leaves out)
+                    foreach (var r in Resources.FindObjectsOfTypeAll<Renderer>().Where(x => x != null && x.gameObject.scene.IsValid()))
+                    {
+                        if (r == null || !r.enabled || _lineupPlaced.Any(p => p != null && r.transform.IsChildOf(p.transform)) || r.GetComponentInParent<PlayerAvatar>() != null) continue;
+                        var bs = r.bounds.size;
+                        if (r.bounds.max.y < _lineupStart.y + 1.2f || Mathf.Max(bs.x, bs.z) > 12f || r.name.StartsWith("Buildings") || r.name.StartsWith("Roofs")) continue;
+                        var q = boxRot * (r.bounds.center - boxMid);
+                        if (Mathf.Abs(q.x) < halfExt.x && Mathf.Abs(q.z) < halfExt.z)
+                        {
+                            r.enabled = false;
+                            foreach (var col in r.GetComponents<Collider>()) col.enabled = false;
+                        }
+                    }
+                }
+                else
+                {
+                    camGo.transform.position = _lineupStart - _lineupDir * 2f + _lineupRight * 6f + Vector3.up * 3.2f;
+                    target = _lineupStart + _lineupDir * (_lineupLength * 0.35f) + Vector3.up * 1.2f;
+                }
                 // in front of a building or tree that would block the view
                 var toCam = camGo.transform.position - target;
                 if (Physics.Raycast(target + toCam.normalized * 4f, toCam.normalized, out var block, toCam.magnitude - 4f, ~0, QueryTriggerInteraction.Ignore))
                     camGo.transform.position = block.point - toCam.normalized * 0.5f;
                 camGo.transform.LookAt(target);
-                c.fieldOfView = 55f;
+                c.fieldOfView = _lineupAngle > 5f && view.Trim() != "lineupside" ? 50f : 55f;
+                if (_lineupAngle > 5f && view.Trim() != "lineupside")
+                {
+                    // when a wall behind the camera brought it closer, a wider view still shows the whole line
+                    float d = Vector3.ProjectOnPlane(target - camGo.transform.position, Vector3.up).magnitude;
+                    float hfov = 2f * Mathf.Atan((0.55f * _lineupLength + 2f) / Mathf.Max(1f, d)) * Mathf.Rad2Deg;
+                    c.fieldOfView = Mathf.Clamp(Camera.HorizontalToVerticalFieldOfView(hfov, 16f / 9f), 50f, 75f);
+                }
             }
             else if (view.Trim().StartsWith("animal") && local != null)
             {
@@ -425,9 +465,11 @@ public static class SmokeTest
             else if (view.Trim().StartsWith("aidrone"))
             {
                 // "aidrone" or "aidrone:2": the n-th nearest AI drone to the participant, from 2.5 m behind and 0.8 m above it (scaled with the airframe)
-                int nth = view.Contains(":") ? int.Parse(view.Substring(view.IndexOf(':') + 1)) : 0;
+                // ("aidrone:Delivery", "aidrone:Patrol", "aidrone:Swarm": the nearest of those)
+                var arg = view.Contains(":") ? view.Substring(view.IndexOf(':') + 1).Trim() : "0";
+                int nth = int.TryParse(arg, out var nn) ? nn : 0;
                 var origin = local != null ? local.transform.position : Vector3.zero;
-                var ds = UnityEngine.Object.FindObjectsByType<DroneController>(FindObjectsSortMode.None).Where(d => !d.ReadInput)
+                var ds = UnityEngine.Object.FindObjectsByType<DroneController>(FindObjectsSortMode.None).Where(d => !d.ReadInput && (char.IsDigit(arg[0]) || d.name.StartsWith(arg, StringComparison.OrdinalIgnoreCase)))
                     .OrderBy(d => (d.transform.position - origin).sqrMagnitude).ToList();
                 if (ds.Count == 0) { UnityEngine.Object.DestroyImmediate(camGo); sb.AppendLine($"Screenshot '{view.Trim()}' skipped: no AI drone"); continue; }
                 var d0 = ds[Mathf.Min(nth, ds.Count - 1)];
@@ -466,7 +508,10 @@ public static class SmokeTest
                 camGo.transform.SetPositionAndRotation(new Vector3(v[0], v[1], v[2]), Quaternion.Euler(v.Length > 4 ? v[4] : 0, v[3], 0));
             }
             var path = Path.Combine(outDir, $"view{shot++}.png");
-            SaveCamera(c, path, 1600, 900);
+            // -smokeShotSize WxH (default 1600x900), e.g. larger for pictures cropped later
+            int sw = 1600, sh = 900; int iss = Array.IndexOf(Environment.GetCommandLineArgs(), "-smokeShotSize");
+            if (iss >= 0 && iss + 1 < Environment.GetCommandLineArgs().Length) { var wh = Environment.GetCommandLineArgs()[iss + 1].Split('x'); sw = int.Parse(wh[0]); sh = int.Parse(wh[1]); }
+            SaveCamera(c, path, sw, sh);
             sb.AppendLine($"Screenshot: {path}");
             UnityEngine.Object.DestroyImmediate(camGo);
         }
@@ -585,10 +630,42 @@ public static class SmokeTest
         rt.Release();
     }
 
-    // -smokeLineup "ToyotaCorolla,DafXF95,...": those vehicle prefabs parked in a queue ahead of the participant (for
-    // pictures of vehicles in a real street; their scripts are removed, they only stand there)
+    // -smokeLineup "ToyotaCorolla,DafXF95,...": those vehicle prefabs parked ahead of the participant (for pictures of
+    // vehicles in a real street; their scripts are removed, they only stand there). Besides vehicles: two-wheelers with
+    // their riders (Bicycle, EScooter, Moped), pedestrians (ped:Female_Adult_01, ped:Claudia), animals (animal:Dog) and
+    // the drone (Drone, hovering). -smokeLineupAngle deg: 0 a queue in the oncoming lane facing the participant; e.g. 45
+    // side by side at that angle (echelon parking), fronts on a line, facing the camera of the "lineup" view.
+    // -smokeLineupAt x,z,heading: the line's start and direction instead of ahead of the participant.
     static bool _lineupDone;
-    static Vector3 _lineupStart, _lineupDir, _lineupRight; static float _lineupLength;
+    static Vector3 _lineupStart, _lineupDir, _lineupRight; static float _lineupLength, _lineupAngle;
+    static readonly List<GameObject> _lineupPlaced = new List<GameObject>();
+
+    static GameObject LineupPrefab(string name)
+    {
+        string[] paths;
+        if (name.StartsWith("ped:")) { var n = name.Substring(4); paths = new[] { $"Assets/Prefabs/AIPedestrians/Rocketbox/Pedestrian_{n}.prefab", $"Assets/Prefabs/AIPedestrians/Pedestrian_{n}.prefab" }; }
+        else if (name.StartsWith("animal:")) paths = new[] { $"Assets/Prefabs/Animals/{name.Substring(7)}.prefab" };
+        else paths = new[] { $"Assets/Prefabs/Cars/Vehicles/Drivable{name}.prefab", $"Assets/Prefabs/Cars/Drivable{name}.prefab", $"Assets/Prefabs/TwoWheelers/{name}.prefab", $"Assets/Prefabs/Drones/{name}.prefab" };
+        foreach (var path in paths) { var g = AssetDatabase.LoadAssetAtPath<GameObject>(path); if (g != null) return g; }
+        return null;
+    }
+
+    /// <summary>Bounds of the renderers in the object's own frame (x across, z along).</summary>
+    static Bounds LocalBounds(GameObject go)
+    {
+        var b = new Bounds(Vector3.zero, Vector3.zero); bool any = false;
+        foreach (var r in go.GetComponentsInChildren<Renderer>(true))
+        {
+            if (r is ParticleSystemRenderer || !r.enabled || !r.gameObject.activeInHierarchy || r.bounds.size.magnitude > 40f) continue;
+            var c = r.bounds.center; var e = r.bounds.extents;
+            for (int k = 0; k < 8; k++)
+            {
+                var p = go.transform.InverseTransformPoint(c + Vector3.Scale(e, new Vector3((k & 1) == 0 ? -1 : 1, (k & 2) == 0 ? -1 : 1, (k & 4) == 0 ? -1 : 1)));
+                if (!any) { b = new Bounds(p, Vector3.zero); any = true; } else b.Encapsulate(p);
+            }
+        }
+        return any ? b : new Bounds(Vector3.up, new Vector3(2f, 2f, 4.5f));
+    }
 
     static void SpawnLineup()
     {
@@ -598,39 +675,104 @@ public static class SmokeTest
         var local = NetworkingManager.Instance != null ? NetworkingManager.Instance.PlayerSystem.LocalPlayer : null;
         if (local == null) return;
         var t = local.transform;
-        _lineupDir = Vector3.ProjectOnPlane(t.forward, Vector3.up).normalized;
-        _lineupRight = Vector3.Cross(Vector3.up, _lineupDir);
-        _lineupStart = t.position + _lineupDir * 7f - _lineupRight * 3.2f;   // in the oncoming lane, facing the participant
-        float z = 0f;
-        var holder = new GameObject("Smoke lineup (inactive)"); holder.SetActive(false);
-        foreach (var name in args[i + 1].Split(','))
+        int ia = Array.IndexOf(args, "-smokeLineupAngle");
+        _lineupAngle = ia >= 0 && ia + 1 < args.Length ? float.Parse(args[ia + 1], System.Globalization.CultureInfo.InvariantCulture) : 0f;
+        int iat = Array.IndexOf(args, "-smokeLineupAt");
+        if (iat >= 0 && iat + 1 < args.Length)
         {
-            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>($"Assets/Prefabs/Cars/Vehicles/Drivable{name.Trim()}.prefab")
-                      ?? AssetDatabase.LoadAssetAtPath<GameObject>($"Assets/Prefabs/Cars/Drivable{name.Trim()}.prefab");
-            if (prefab == null) { Debug.LogWarning("SmokeTest lineup: no vehicle " + name); continue; }
+            var v = args[iat + 1].Split(',').Select(x => float.Parse(x, System.Globalization.CultureInfo.InvariantCulture)).ToArray();
+            _lineupDir = Quaternion.Euler(0, v[2], 0) * Vector3.forward;
+            _lineupRight = Vector3.Cross(Vector3.up, _lineupDir);
+            _lineupStart = new Vector3(v[0], t.position.y, v[1]);
+        }
+        else
+        {
+            _lineupDir = Vector3.ProjectOnPlane(t.forward, Vector3.up).normalized;
+            _lineupRight = Vector3.Cross(Vector3.up, _lineupDir);
+            _lineupStart = t.position + _lineupDir * 7f - _lineupRight * (_lineupAngle > 5f ? 1.5f : 3.2f);   // in the oncoming lane, facing the participant
+        }
+        float a = _lineupAngle * Mathf.Deg2Rad;
+        var facing = Quaternion.LookRotation(-Mathf.Cos(a) * _lineupDir + Mathf.Sin(a) * _lineupRight);
+        float z = 0f, prevHalf = -1f;
+        var holder = new GameObject("Smoke lineup (inactive)"); holder.SetActive(false);
+        var placed = _lineupPlaced; placed.Clear();
+        foreach (var raw in args[i + 1].Split(','))
+        {
+            var name = raw.Trim();
+            var prefab = LineupPrefab(name);
+            if (prefab == null) { Debug.LogWarning("SmokeTest lineup: no prefab " + name); continue; }
             var go = UnityEngine.Object.Instantiate(prefab, holder.transform);
-            // scripts off before it ever wakes up: several passes, as some components require others
+            bool drone = go.GetComponent<DroneController>() != null;
+            // scripts off before it ever wakes up (several passes, as some components require others), except the
+            // riders' hands and feet on the grips and pedals
             for (int pass = 0; pass < 4; pass++)
                 foreach (var mb in go.GetComponentsInChildren<MonoBehaviour>(true).Reverse())
-                    try { UnityEngine.Object.DestroyImmediate(mb); } catch { }
+                    if (!(mb is RiderIK)) try { UnityEngine.Object.DestroyImmediate(mb); } catch { }
             foreach (var cam in go.GetComponentsInChildren<Camera>(true)) cam.gameObject.SetActive(false);
             foreach (var al in go.GetComponentsInChildren<AudioListener>(true)) UnityEngine.Object.DestroyImmediate(al);
             foreach (var rb in go.GetComponentsInChildren<Rigidbody>(true)) rb.isKinematic = true;
             foreach (var n in new[] { "DriverModel&Rig", "PassengerModel" }) { var f = go.transform.Find(n); if (f != null) f.gameObject.SetActive(false); }
-            var box = go.GetComponent<BoxCollider>();
-            float back = box != null ? -(box.center.z - box.size.z / 2f) : 2.5f, front = box != null ? box.center.z + box.size.z / 2f : 2.5f;
-            // the rear section of an articulated vehicle reaches further back than the front section's collider
-            foreach (var r in go.GetComponentsInChildren<Renderer>(true)) back = Mathf.Max(back, -go.transform.InverseTransformPoint(r.bounds.min).z, -go.transform.InverseTransformPoint(r.bounds.max).z);
-            z += back;
+            // pedestrians standing (their walking controller is set by their AI script, which is gone)
+            foreach (var an in go.GetComponentsInChildren<Animator>(true))
+                if (name.StartsWith("ped:"))
+                {
+                    if (an.runtimeAnimatorController == null) an.runtimeAnimatorController = AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>("Assets/Prefabs/AIPedestrians/Pedestrian.controller");
+                    an.enabled = true; an.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+                }
+            if (drone)
+            {
+                var (_, discs) = DroneBody.Build(go.transform, CoupledSim.Drones.QuadrotorParameters.Consumer);
+                foreach (var d in discs) d.enabled = true;   // spinning
+            }
             go.transform.SetParent(null, false);
-            float ground = Physics.Raycast(_lineupStart + _lineupDir * z + Vector3.up * 20f, Vector3.down, out var hit, 40f, ~0, QueryTriggerInteraction.Ignore) ? hit.point.y : t.position.y;
-            go.transform.SetPositionAndRotation(new Vector3(0f, 0f, 0f) + _lineupStart + _lineupDir * z, Quaternion.LookRotation(-_lineupDir));
-            go.transform.position = new Vector3(go.transform.position.x, ground, go.transform.position.z);
-            z += front + 2.5f;
+            var lb = LocalBounds(go);
+            Vector3 at;
+            if (_lineupAngle <= 5f)
+            {
+                // a queue: back to front along the line
+                float back = -lb.min.z, front = lb.max.z;
+                var box = go.GetComponent<BoxCollider>();
+                if (box != null) { back = Mathf.Max(back, -(box.center.z - box.size.z / 2f)); front = Mathf.Max(front, box.center.z + box.size.z / 2f); }
+                z += back;
+                at = _lineupStart + _lineupDir * z;
+                go.transform.rotation = Quaternion.LookRotation(-_lineupDir);
+                z += front + 2.5f;
+            }
+            else
+            {
+                // side by side: neighbours apart by their half widths and a gap (larger for larger agents), fronts on the line
+                float half = Mathf.Max(lb.max.x, -lb.min.x);
+                var bc = go.GetComponent<BoxCollider>();   // vehicles: the body's collider (mirrors and lamps aside)
+                if (bc != null && bc.size.x > 0.5f) half = Mathf.Min(half, bc.size.x / 2f + 0.15f);
+                float gap = Mathf.Clamp(0.4f * (half + Mathf.Max(prevHalf, 0f)), 0.35f, 1.5f);
+                if (prevHalf >= 0f) z += (prevHalf + half + gap) / Mathf.Sin(a);
+                prevHalf = half;
+                go.transform.rotation = facing;
+                at = _lineupStart + _lineupDir * z - (facing * Vector3.forward) * lb.max.z;
+            }
+            float ground = Physics.Raycast(at + Vector3.up * 20f, Vector3.down, out var hit, 40f, ~0, QueryTriggerInteraction.Ignore) ? hit.point.y : t.position.y;
+            go.transform.position = new Vector3(at.x, ground + (drone ? 1.2f : 0f), at.z);
+            placed.Add(go);
         }
         UnityEngine.Object.Destroy(holder);
-        _lineupLength = z;
-        Debug.Log($"SmokeTest lineup: {args[i + 1]} over {z:F1} m ahead of the participant");
+        _lineupLength = Mathf.Max(z, 1f);
+        // street furniture, trees and parked cars where the line-up stands are hidden (not buildings or the ground)
+        int hidden = 0;
+        foreach (var go in placed)
+        {
+            var lb = LocalBounds(go);
+            var centre = go.transform.TransformPoint(lb.center) + Vector3.up * 0.25f;
+            foreach (var c in Physics.OverlapBox(centre, lb.extents + new Vector3(0.3f, -0.1f, 0.3f), go.transform.rotation, ~0, QueryTriggerInteraction.Collide))
+            {
+                if (c == null || c.transform.IsChildOf(go.transform) || placed.Any(p => c.transform.IsChildOf(p.transform))) continue;
+                var target = c.attachedRigidbody != null ? c.attachedRigidbody.gameObject : c.gameObject;
+                if (target.GetComponentInParent<PlayerAvatar>() != null && target.GetComponentInParent<PlayerAvatar>() == local) continue;
+                var size = c.bounds.size;
+                if (Mathf.Max(size.x, size.z) > 25f || target.GetComponent<Terrain>() != null) continue;
+                target.SetActive(false); hidden++;
+            }
+        }
+        Debug.Log($"SmokeTest lineup: {args[i + 1]} over {z:F1} m at {_lineupStart} (angle {_lineupAngle:F0}°), {hidden} objects in the way hidden");
     }
 
     static void Fail(string msg)
