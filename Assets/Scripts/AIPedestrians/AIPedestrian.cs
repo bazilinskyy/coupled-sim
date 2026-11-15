@@ -54,6 +54,7 @@ public class AIPedestrian : MonoBehaviour
 
     GapAcceptanceModel _crossingModel;
     PedestrianCrossing _crossing;
+    float _redWait;
     Vector3 _crossFrom, _crossTo;
     SysVector2 _velocity;
     float _speedFactor = 1f; // from PedestrianWaypoint relative to the authored speed
@@ -86,6 +87,7 @@ public class AIPedestrian : MonoBehaviour
             int seed = Seed >= 0 ? Seed : StableHash(name);
             var rng = new System.Random(seed);
             Profile = PedestrianProfile.Sample(rng, AgeGroup);
+            Profile.SampleSignalCompliance(new System.Random(seed ^ 0x5eed51));
             _crossingModel = new GapAcceptanceModel(Profile, rng);
             if (SampleWalkingSpeed)
             {
@@ -170,7 +172,16 @@ public class AIPedestrian : MonoBehaviour
         {
             _crossing.GetApproachingVehicles(_crossFrom, _crossTo, _vehicles, _vehiclePositions);
             var phaseBefore = _crossingModel.Phase;
-            bool walk = _crossingModel.Update(dt, _vehicles);
+            // a signalised crossing: wait for green (opportunists: until their patience with the red runs out)
+            bool held = false;
+            var sig = _crossing.Signal;
+            if (sig != null && phaseBefore != CrossingPhase.Crossing)
+            {
+                bool green = sig.State == LightState.GREEN, blink = sig.State == LightState.BLINK_GREEN;
+                if (green) _redWait = 0f; else _redWait += dt;
+                held = !Profile.MayStartAtSignal(green, blink, _redWait);
+            }
+            bool walk = !held && _crossingModel.Update(dt, _vehicles);
             if (walk && phaseBefore != CrossingPhase.Crossing)
             {
                 PedestrianDecisionLog.Write(this, "start crossing", _crossingModel, _vehicles);
@@ -196,7 +207,7 @@ public class AIPedestrian : MonoBehaviour
             if (_crossingModel != null)
             {
                 Phase = _crossingModel.Phase;
-                DecisionReason = _crossingModel.Reason;
+                DecisionReason = held ? "waiting for green" : _crossingModel.Reason;
             }
         }
         else
@@ -346,6 +357,7 @@ public class AIPedestrian : MonoBehaviour
                 _crossingModel.Profile = profile;
                 _crossingModel.Reset();
                 _crossingModel.ArriveAtKerb();
+                _redWait = 0f;
                 PedestrianDecisionLog.Write(this, "arrived at kerb", _crossingModel, _vehicles);
                 return;
             }

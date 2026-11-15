@@ -21,6 +21,8 @@ public class PedestrianCrossing : MonoBehaviour
     public float LateralMargin = 1.5f;
     [Tooltip("Zebra crossing: drivers are expected to yield, so pedestrians are a bit less cautious.")]
     public bool Zebra = true;
+    [Tooltip("A pedestrian light this crossing's waiting pedestrians face (signalised crossing): they cross on green; on red only the opportunists among them, after a while, in a safe gap.")]
+    public PedestrianTrafficLight Signal;
 
     public Vector3 NearPoint => transform.position;
     public Vector3 FarPoint => FarKerb != null ? FarKerb.position : transform.position + transform.forward * 7f;
