@@ -35,8 +35,8 @@ namespace CoupledSim.Maps
             var idx = new List<int>(n);
             bool ccw = SignedArea(poly) > 0;
             for (int i = 0; i < n; i++) idx.Add(ccw ? i : n - 1 - i);
-            int guard = 0;
-            while (idx.Count > 3 && guard++ < 10000)
+            int guard = 0, maxGuard = 2 * n + 10;
+            while (idx.Count > 3 && guard++ < maxGuard)
             {
                 bool clipped = false;
                 for (int i = 0; i < idx.Count; i++)
@@ -48,6 +48,8 @@ namespace CoupledSim.Maps
                     {
                         int p = idx[j];
                         if (p == a || p == b || p == c) continue;
+                        // a copy of a corner (where a hole is bridged to the outline) does not block the ear
+                        if (poly[p] == poly[a] || poly[p] == poly[b] || poly[p] == poly[c]) continue;
                         inside = PointInTriangle(poly[p], poly[a], poly[b], poly[c]);
                     }
                     if (inside) continue;
