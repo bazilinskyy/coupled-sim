@@ -24,6 +24,11 @@ public class KeyboardPlayerMovement : MonoBehaviour
     public bool LookWithRightMouseButton = true;
     [Tooltip("Walk animation for the body (the AI pedestrians' controller with a Speed blend), used when the avatar has none.")]
     public RuntimeAnimatorController WalkAnimation;
+    [Tooltip("Movement set by a script (autopilot, tests) instead of the keys: x sideways, y forward (-1..1), and a turn rate (degrees per second).")]
+    public bool UseExternalInput;
+    public Vector2 ExternalMove;
+    public float ExternalTurnRate;
+    public bool ExternalRun;
 
     Animator _animator;
     Transform _camera;
@@ -70,12 +75,12 @@ public class KeyboardPlayerMovement : MonoBehaviour
 
     void FixedUpdate()
     {
-        var input = Vector3.zero;
+        var input = UseExternalInput ? new Vector3(ExternalMove.x, 0f, ExternalMove.y) : Vector3.zero;
         if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow)) input.z += 1;
         if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow)) input.z -= 1;
         if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow)) input.x -= 1;
         if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow)) input.x += 1;
-        bool run = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+        bool run = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift) || (UseExternalInput && ExternalRun);
         // walking backwards and sideways is slower
         var target = Vector3.ClampMagnitude(input, 1f) * (run ? _runSpeed : _speed);
         if (target.z < 0f) target.z *= 0.6f;
@@ -86,6 +91,7 @@ public class KeyboardPlayerMovement : MonoBehaviour
         float rot = 0;
         if (Input.GetKey(KeyCode.Q)) rot -= _rotateSpeed;
         else if (Input.GetKey(KeyCode.E)) rot += _rotateSpeed;
+        if (UseExternalInput) rot += ExternalTurnRate;
         float yaw = rot * Time.fixedDeltaTime + _yawInput;
         _yawInput = 0f;
         _rb.MovePosition(_rb.position + _rb.rotation * _velocity * Time.fixedDeltaTime);
