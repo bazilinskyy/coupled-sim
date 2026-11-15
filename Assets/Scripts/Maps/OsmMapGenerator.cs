@@ -24,9 +24,11 @@ public partial class OsmMapGenerator
         public bool OneWay;
         /// <summary>On a bridge above other roads or the ground (layer 1 and up): lifted straight between its ends.</summary>
         public bool Bridge;
+        /// <summary>That bridge's layer (0: not on such a bridge).</summary>
+        public int BridgeLayer;
     }
     /// <summary>Cycle paths and pavements on such bridges.</summary>
-    public readonly HashSet<List<Vector3>> BridgeLines = new HashSet<List<Vector3>>();
+    public readonly Dictionary<List<Vector3>, int> BridgeLines = new Dictionary<List<Vector3>, int>();
 
     public readonly List<Road> Roads = new List<Road>();
     /// <summary>The trees placed (they sway in the wind: TreeSway).</summary>
@@ -859,14 +861,14 @@ public partial class OsmMapGenerator
         }
 
         // [0]: on the ground, [1]: on bridges above other roads (their own meshes: the terrain lifts them, and only them, straight between the bridge's ends)
-        var roadsAll = new[] { new MeshBuilder(), new MeshBuilder() };
-        var brickRoadsAll = new[] { new MeshBuilder(), new MeshBuilder() };
-        var cobbleRoadsAll = new[] { new MeshBuilder(), new MeshBuilder() };
-        var gravelRoadsAll = new[] { new MeshBuilder(), new MeshBuilder() };
-        var cyclesAll = new[] { new MeshBuilder(), new MeshBuilder() };
-        var walksAll = new[] { new MeshBuilder(), new MeshBuilder() };
-        var kerbsAll = new[] { new MeshBuilder(), new MeshBuilder() };
-        var marksAll = new[] { new MeshBuilder(), new MeshBuilder() };
+        var roadsAll = new Dictionary<int, MeshBuilder>();
+        var brickRoadsAll = new Dictionary<int, MeshBuilder>();
+        var cobbleRoadsAll = new Dictionary<int, MeshBuilder>();
+        var gravelRoadsAll = new Dictionary<int, MeshBuilder>();
+        var cyclesAll = new Dictionary<int, MeshBuilder>();
+        var walksAll = new Dictionary<int, MeshBuilder>();
+        var kerbsAll = new Dictionary<int, MeshBuilder>();
+        var marksAll = new Dictionary<int, MeshBuilder>();
         MeshBuilder roads, brickRoads, cobbleRoads, gravelRoads, cycles, walks, kerbs, marks;
         var lamps = new List<(Vector3 p, float yaw)>();
         var left = new List<V2>(); var right = new List<V2>();
@@ -895,16 +897,18 @@ public partial class OsmMapGenerator
             bool onBridge = bridgeTag != null && bridgeTag != "no";
             bool elevated = onBridge && Layer(w) >= 1;
             if (Terrain != null && onBridge)
-                Terrain.AddBridge(line.Select(q => new Vector2(q.X, q.Y)).ToList(), RoadWidth(w), elevated);
-            int bi = elevated && Terrain != null ? 1 : 0;
-            roads = roadsAll[bi]; brickRoads = brickRoadsAll[bi]; cobbleRoads = cobbleRoadsAll[bi]; gravelRoads = gravelRoadsAll[bi];
-            cycles = cyclesAll[bi]; walks = walksAll[bi]; kerbs = kerbsAll[bi]; marks = marksAll[bi];
+                Terrain.AddBridge(line.Select(q => new Vector2(q.X, q.Y)).ToList(), RoadWidth(w), elevated ? Math.Min(9, Math.Max(1, Layer(w))) : 0);
+            // 0: on the ground; else the bridge's layer: each layer its own meshes, lifted only by its own bridges
+            int bi = elevated && Terrain != null ? Math.Min(9, Layer(w)) : 0;
+            MeshBuilder Get(Dictionary<int, MeshBuilder> d) => d.TryGetValue(bi, out var m) ? m : d[bi] = new MeshBuilder();
+            roads = Get(roadsAll); brickRoads = Get(brickRoadsAll); cobbleRoads = Get(cobbleRoadsAll); gravelRoads = Get(gravelRoadsAll);
+            cycles = Get(cyclesAll); walks = Get(walksAll); kerbs = Get(kerbsAll); marks = Get(marksAll);
             int pavementsBefore = Pavements.Count, cyclesBefore = CyclePaths.Count;
             if (CarRoads.Contains(hw))
             {
                 float width = RoadWidth(w);
                 roadWays.Add((w, line, width));
-                Roads.Add(new Road { Line = line.Select(p => P(p, 0.02f + lift)).ToList(), Width = width, Type = hw, OneWay = IsOneWay(w), Bridge = bi == 1 });
+                Roads.Add(new Road { Line = line.Select(p => P(p, 0.02f + lift)).ToList(), Width = width, Type = hw, OneWay = IsOneWay(w), Bridge = bi > 0, BridgeLayer = bi });
                 Geometry2D.Strip(line, width, 0, left, right);
                 var surface = SurfaceOf(w);
                 (surface == RoadSurface.Bricks ? brickRoads : surface == RoadSurface.Cobblestones ? cobbleRoads : surface == RoadSurface.Gravel ? gravelRoads : roads)
@@ -966,24 +970,25 @@ public partial class OsmMapGenerator
                 walks.Strip(left, right, 0.05f + lift, 2f);
                 Pavements.Add(line.Select(p => P(p, 0.05f + lift)).ToList());
             }
-            if (bi == 1)
+            if (bi > 0)
             {
-                for (int k = pavementsBefore; k < Pavements.Count; k++) BridgeLines.Add(Pavements[k]);
-                for (int k = cyclesBefore; k < CyclePaths.Count; k++) BridgeLines.Add(CyclePaths[k]);
+                for (int k = pavementsBefore; k < Pavements.Count; k++) BridgeLines[Pavements[k]] = bi;
+                for (int k = cyclesBefore; k < CyclePaths.Count; k++) BridgeLines[CyclePaths[k]] = bi;
             }
         }
-        for (int bi = 0; bi < 2; bi++)
+        foreach (var bi in roadsAll.Keys.Union(cyclesAll.Keys).Union(walksAll.Keys).OrderBy(k => k).ToList())
         {
-            var sfx = bi == 1 ? " bridge" : "";
-            Emit(world, "Roads" + sfx, roadsAll[bi], asphalt, true);
+            var sfx = bi > 0 ? " bridge L" + bi : "";
+            void E(string n, Dictionary<int, MeshBuilder> d, Material m, bool c) { if (d.TryGetValue(bi, out var mb)) Emit(world, n + sfx, mb, m, c); }
+            E("Roads", roadsAll, asphalt, true);
             // the collider names tell the car physics the surface (CoupledSim.Vehicles.RoadSurfaces)
-            Emit(world, "Roads bricks" + sfx, brickRoadsAll[bi], bricks, true);
-            Emit(world, "Roads cobblestones" + sfx, cobbleRoadsAll[bi], cobbles, true);
-            Emit(world, "Roads gravel" + sfx, gravelRoadsAll[bi], gravel, true);
-            Emit(world, "Cycle paths" + sfx, cyclesAll[bi], red, true);
-            Emit(world, "Pavements" + sfx, walksAll[bi], paving, true);
-            Emit(world, "Kerbs" + sfx, kerbsAll[bi], kerb, true);
-            Emit(world, "Road markings" + sfx, marksAll[bi], marking, false);
+            E("Roads bricks", brickRoadsAll, bricks, true);
+            E("Roads cobblestones", cobbleRoadsAll, cobbles, true);
+            E("Roads gravel", gravelRoadsAll, gravel, true);
+            E("Cycle paths", cyclesAll, red, true);
+            E("Pavements", walksAll, paving, true);
+            E("Kerbs", kerbsAll, kerb, true);
+            E("Road markings", marksAll, marking, false);
         }
         EmitRoadDetails(world);
 
