@@ -300,10 +300,24 @@ class RangeFile:
         s.n = int(urllib.request.urlopen(urllib.request.Request(u, method="HEAD", headers=UA), timeout=60).headers["Content-Length"])
     def seek(s, o, w=0): s.p = o if w == 0 else (s.p + o if w == 1 else s.n + o); return s.p
     def tell(s): return s.p
+    BLOCK = 1 << 16   # small reads (TIFF directories) come from 64 kB blocks fetched once; large ones straight
     def read(s, k=-1):
         if k < 0: k = s.n - s.p
-        if k == 0: return b""
-        d = get(s.u, {"Range": "bytes=%d-%d" % (s.p, s.p + k - 1)}); s.p += len(d); return d
+        if k <= 0: return b""
+        if k >= s.BLOCK:
+            a, b = s.p, s.p + k - 1
+            d = get(s.u, {"Range": "bytes=%d-%d" % (a, b)}); s.p += len(d); return d
+        out = b""
+        while k > 0 and s.p < s.n:
+            bi = s.p // s.BLOCK
+            if not hasattr(s, "cache"): s.cache = {}
+            if bi not in s.cache:
+                a = bi * s.BLOCK; b = min(s.n, a + s.BLOCK) - 1
+                s.cache[bi] = get(s.u, {"Range": "bytes=%d-%d" % (a, b)})
+            blk = s.cache[bi]; o = s.p - bi * s.BLOCK
+            piece = blk[o:o + k]; out += piece; s.p += len(piece); k -= len(piece)
+            if not piece: break
+        return out
     def readinto(s, b): d = s.read(len(b)); b[:len(d)] = d; return len(d)
     def seekable(s): return True
 
