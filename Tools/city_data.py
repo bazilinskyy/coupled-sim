@@ -247,6 +247,25 @@ def tokyo_trees(bbox):
     return rows
 
 
+def london_trees(bbox):
+    """All 32 boroughs' trees (GLA list, 209 MB): streamed and filtered, not stored."""
+    s, w, n, e = bbox
+    url = "https://data.london.gov.uk/download/2r45m/e62a6a1f-390d-4193-ae32-3aabd9846f36/Borough_tree_list_2025Nov.csv"
+    print("streaming", url)
+    rows = []
+    with urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=300) as r:
+        lines = io.TextIOWrapper(r, encoding="utf-8-sig", errors="ignore", newline="")
+        for t in csv.DictReader(lines):
+            try: lat, lon = float(t["lat"]), float(t["lon"])
+            except (TypeError, ValueError, KeyError): continue
+            if not (s <= lat <= n and w <= lon <= e): continue
+            m = re.search(r"[\d.]+", t.get("height_m") or "")
+            h = float(m.group()) if m else 0.0
+            sp = t.get("taxon_species") or t.get("taxon_genus") or ""
+            rows.append(dict(lat=lat, lon=lon, height=round(h, 1) if 1.5 < h < 45 else 10.0, kind=kind_of(sp), species=sp))
+    return rows
+
+
 # ------------------------------------------------------------------ BGT light poles (every Dutch municipality, positions only)
 
 def bgt_lamps(bbox):
@@ -367,6 +386,7 @@ SOURCES = {
     ("NewYork", "trees"): (nyc_trees, "Forestry Tree Points, NYC Parks (NYC Open Data)"),
     ("Montreal", "trees"): (montreal_trees, "Arbres publics, Ville de Montréal (CC BY 4.0)"),
     ("Barcelona", "trees"): (barcelona_trees, "Arbrat viari, Ajuntament de Barcelona (Open Data BCN, CC BY 4.0)"),
+    ("London", "trees"): (london_trees, "Local authority maintained trees, Greater London Authority / GiGL (Open Government Licence v3)"),
     ("Tokyo", "trees"): (tokyo_trees, "都道の街路樹 (Street trees on metropolitan roads), Tokyo Metropolitan Government (CC BY 4.0)"),
     ("Delft", "signs"): (ndw_signs, NDW),
     ("Eindhoven", "trees"): (eindhoven_trees, "Bomen, Gemeente Eindhoven (data.eindhoven.nl, public domain)"),

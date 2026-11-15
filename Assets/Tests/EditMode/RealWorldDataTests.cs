@@ -162,10 +162,27 @@ namespace CoupledSim.Tests
             for (int j = 0; j < n; j++) for (int i = 0; i < n; i++) h[j * n + i] = i == 2 ? -20f : 0f;
             var t = Terrain(h, n, step);
             var type = t.GetType();
-            Assert.AreEqual(-20f, (float)type.GetMethod("Lift").Invoke(t, new object[] { 20f, 20f }), 1e-3f, "no bridge: the valley");
-            type.GetMethod("AddBridge").Invoke(t, new object[] { new System.Collections.Generic.List<Vector2> { new Vector2(0f, 20f), new Vector2(40f, 20f) }, 8f });
-            Assert.AreEqual(0f, (float)type.GetMethod("Lift").Invoke(t, new object[] { 20f, 20f }), 1e-3f, "on the bridge: straight between its ends");
-            Assert.AreEqual(-20f, (float)type.GetMethod("Lift").Invoke(t, new object[] { 20f, 40f }), 1e-3f, "beside it: the valley");
+            var lift = type.GetMethod("Lift", new[] { typeof(float), typeof(float), typeof(bool) });
+            float Lift(float x, float z, bool own) => (float)lift.Invoke(t, new object[] { x, z, own });
+            Assert.AreEqual(-20f, Lift(20f, 20f, true), 1e-3f, "no bridge: the valley");
+            type.GetMethod("AddBridge").Invoke(t, new object[] { new System.Collections.Generic.List<Vector2> { new Vector2(0f, 20f), new Vector2(40f, 20f) }, 8f, false });
+            Assert.AreEqual(0f, Lift(20f, 20f, false), 1e-3f, "on the bridge: straight between its ends");
+            Assert.AreEqual(-20f, Lift(20f, 40f, true), 1e-3f, "beside it: the valley");
+        }
+
+        [Test]
+        public void ElevatedBridgesLiftOnlyThemselves()
+        {
+            // an overpass (layer 1) over a road in the valley: the overpass's own deck is straight, the road under it stays down
+            int n = 5; float step = 10f;
+            var h = new float[n * n];
+            for (int j = 0; j < n; j++) for (int i = 0; i < n; i++) h[j * n + i] = i == 2 ? -20f : 0f;
+            var t = Terrain(h, n, step);
+            var type = t.GetType();
+            var lift = type.GetMethod("Lift", new[] { typeof(float), typeof(float), typeof(bool) });
+            type.GetMethod("AddBridge").Invoke(t, new object[] { new System.Collections.Generic.List<Vector2> { new Vector2(0f, 20f), new Vector2(40f, 20f) }, 8f, true });
+            Assert.AreEqual(0f, (float)lift.Invoke(t, new object[] { 20f, 20f, true }), 1e-3f, "the overpass");
+            Assert.AreEqual(-20f, (float)lift.Invoke(t, new object[] { 20f, 20f, false }), 1e-3f, "the road under it");
         }
     }
 }
