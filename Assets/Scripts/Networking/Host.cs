@@ -176,6 +176,7 @@ public class Host : NetworkSystem
                             {
                                 carSpawner.Init(_aiCarSystem);
                             }
+                            MapTraffic.Ensure(_aiCarSystem);   // city maps: traffic without SUMO, the participant's autopilot
                             _aiPedestrianSyncSystem = _lvlManager.ActiveExperiment.AIPedestrians;
                             _aiPedestrianSyncSystem.InitHost(_host);
                             ExperimentRoleDefinition experimentRoleDefinition;

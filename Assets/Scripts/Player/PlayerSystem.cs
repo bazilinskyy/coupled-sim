@@ -135,6 +135,7 @@ public class PlayerSystem : MonoBehaviour
         if (response.Button || response.Slider) LocalPlayer.gameObject.AddComponent<ResponseInput>().Init(response, role.Name);
         Soundscape.Ensure();
         VideoExport.Ensure();
+        if (!(NetworkingManager.Instance != null && NetworkingManager.Instance.NetSystem is Host)) MapTraffic.EnsureLocalAutopilot();
         OpenScenario.Ensure();
         SceneDescriber.EnsureLoggerFromCommandLine();
         if (spawnPoint.Type != SpawnPointType.PlayerControlledPedestrian && spawnPoint.Type != SpawnPointType.PlayerFlyingDrone) MotionOutput.AddIfAsked(LocalPlayer.gameObject);

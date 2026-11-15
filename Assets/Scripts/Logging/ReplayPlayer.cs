@@ -35,6 +35,9 @@ public class ReplayPlayer : MonoBehaviour
     static readonly float[] Speeds = { 0.1f, 0.25f, 0.5f, 1f, 2f, 4f, 8f };
 
     List<PlayerAvatar> Participants => _drivers.Take(_info.Drivers.Length).Concat(_pedestrians).ToList();
+    /// <summary>The participants of the recording (cars and two-wheelers first, then pedestrians), e.g. for VideoExport's grid.</summary>
+    public List<PlayerAvatar> ReplayParticipants => _ready ? Participants : new List<PlayerAvatar>();
+    bool _video;
 
     /// <summary>Starts the replay of a recording (a .binLog with its .replay.json).</summary>
     /// <summary>
@@ -162,6 +165,9 @@ public class ReplayPlayer : MonoBehaviour
         BuildTrails();
         _ready = true;
         ApplyFrame();
+        // sound of the replayed scene, and -videoCams videos of it
+        Soundscape.Ensure();
+        _video = VideoExport.Ensure() != null;
     }
 
     // Unity's own components (UI images and text, animation rigging): left as they are
@@ -296,7 +302,17 @@ public class ReplayPlayer : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.T)) { _showTrails = !_showTrails; foreach (var t in _trails) t.enabled = _showTrails; }
         for (int k = 0; k <= 9; k++)
             if (Input.GetKeyDown(KeyCode.Alpha0 + k)) _follow = k == 0 ? -1 : (k - 1 < Participants.Count ? k - 1 : _follow);
-        if (_playing) _time += Time.unscaledDeltaTime * _speed;
+        // (while a video is made: game time, which runs in step with its frames)
+        if (_playing) _time += (VideoExport.Busy ? Time.deltaTime : Time.unscaledDeltaTime) * _speed;
+        if (_video && !VideoExport.Busy)
+        {
+            Debug.Log("Replay: video done");
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.Exit(0);
+#endif
+            Application.Quit();
+            _video = false;
+        }
         _time = Mathf.Clamp(_time, 0f, _log.Duration);
         if (_time >= _log.Duration) _playing = false;
     }
