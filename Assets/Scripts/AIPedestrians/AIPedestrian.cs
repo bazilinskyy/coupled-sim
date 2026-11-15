@@ -353,7 +353,7 @@ public class AIPedestrian : MonoBehaviour
                 _crossFrom = transform.position;
                 _crossTo = crossing.FarPoint;
                 var profile = Profile;
-                if (crossing.Zebra) profile.CriticalGap *= 0.85f;
+                if (crossing.Zebra && crossing.Signal == null) profile.CriticalGap *= 0.85f;   // drivers give way at a zebra, not at a green light
                 _crossingModel.Profile = profile;
                 _crossingModel.Reset();
                 _crossingModel.ArriveAtKerb();

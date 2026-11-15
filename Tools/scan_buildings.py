@@ -70,14 +70,21 @@ def osm_footprints(name):
     feats, in_rel = [], set()
     for rel in root.iter("relation"):
         tags = {t.get("k"): t.get("v") for t in rel.iter("tag")}
-        if tags.get("type") != "multipolygon" or "building" not in tags: continue
+        if tags.get("type") != "multipolygon" or tags.get("building", "no") == "no": continue
         outer = [ways[m.get("ref")][0] for m in rel.iter("member") if m.get("type") == "way" and m.get("role") == "outer" and m.get("ref") in ways]
         inner = [ways[m.get("ref")][0] for m in rel.iter("member") if m.get("type") == "way" and m.get("role") == "inner" and m.get("ref") in ways]
-        for m in rel.iter("member"): in_rel.add(m.get("ref"))
+        outers = [coords(r) for r in join(outer)]
+        if not outers: continue   # outer ways missing from the extract: keep its closed member ways as buildings
+        # way ids only (nodes, ways and relations are numbered separately)
+        for m in rel.iter("member"):
+            if m.get("type") == "way": in_rel.add(m.get("ref"))
         holes = [coords(r) for r in join(inner)]
-        for r in join(outer): feats.append({"geometry": {"type": "Polygon", "coordinates": [coords(r)] + holes}})
+        for o in outers:
+            # each courtyard belongs to the outer ring around it
+            mine = [h for h in holes if h and inside_mask(o, np.array([h[0][0]]), np.array([h[0][1]]))[0]]
+            feats.append({"geometry": {"type": "Polygon", "coordinates": [o] + mine}})
     for wid, (ids, tags) in ways.items():
-        if "building" in tags and len(ids) >= 4 and ids[0] == ids[-1] and wid not in in_rel:
+        if tags.get("building", "no") != "no" and len(ids) >= 4 and ids[0] == ids[-1] and wid not in in_rel:
             feats.append({"geometry": {"type": "Polygon", "coordinates": [coords(ids)]}})
     return feats
 

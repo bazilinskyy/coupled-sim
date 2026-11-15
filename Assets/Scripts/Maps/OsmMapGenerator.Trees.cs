@@ -27,7 +27,9 @@ public partial class OsmMapGenerator
         if (leafType == "needleleaved") return "conifer";
         if (string.IsNullOrEmpty(species)) return "deciduous";
         var s = species.ToLowerInvariant();
-        foreach (var g in Palms) if (s.StartsWith(g) || s.Contains(" " + g) || s.Contains("palm")) return "palm";
+        // the genus (the first word) or a common name with the word palm (not "Acer palmatum")
+        foreach (var g in Palms) if (s.StartsWith(g) || s.Contains(" " + g)) return "palm";
+        if (System.Text.RegularExpressions.Regex.IsMatch(s, @"\bpalms?\b")) return "palm";
         foreach (var g in Conifers) if (s.StartsWith(g) || s.Contains("(" + g)) return "conifer";
         return "deciduous";
     }
