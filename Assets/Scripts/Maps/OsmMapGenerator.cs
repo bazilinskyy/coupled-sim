@@ -25,6 +25,8 @@ public partial class OsmMapGenerator
     }
 
     public readonly List<Road> Roads = new List<Road>();
+    /// <summary>The trees placed (they sway in the wind: TreeSway).</summary>
+    public readonly List<Transform> TreeTransforms = new List<Transform>();
     public readonly List<List<Vector3>> CyclePaths = new List<List<Vector3>>();
     public readonly List<List<Vector3>> Pavements = new List<List<Vector3>>();
     public readonly List<PedestrianCrossing> Crossings = new List<PedestrianCrossing>();
@@ -1161,6 +1163,7 @@ public partial class OsmMapGenerator
                     float spread = kind == "conifer" ? 0.55f : kind == "palm" ? 0.45f : 1f;
                     go.transform.localScale = Vector3.Scale(go.transform.localScale, new Vector3(s * spread, s, s * spread));
                     CullWhenSmall(go, 0.02f);
+                    TreeTransforms.Add(go.transform);
                     n++;
                 }
                 RealDataCredits.Add($"{n} trees: {treeCredit}");
@@ -1178,7 +1181,9 @@ public partial class OsmMapGenerator
             {
                 if (!_pos.TryGetValue(n.Id, out var p) || !Inside(p)) continue;
                 if (registered.Count > 0 && NearRegistered(p)) continue;
-                CullWhenSmall(UnityEngine.Object.Instantiate(_assets.Trees[rng.Next(_assets.Trees.Length)], P(p, 0.1f), Quaternion.Euler(0, (float)rng.NextDouble() * 360f, 0), props), 0.02f);
+                var tree = UnityEngine.Object.Instantiate(_assets.Trees[rng.Next(_assets.Trees.Length)], P(p, 0.1f), Quaternion.Euler(0, (float)rng.NextDouble() * 360f, 0), props);
+                CullWhenSmall(tree, 0.02f);
+                TreeTransforms.Add(tree.transform);
             }
         }
     }
