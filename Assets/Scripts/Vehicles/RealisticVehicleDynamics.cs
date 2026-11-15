@@ -219,6 +219,7 @@ public class RealisticVehicleDynamics : MonoBehaviour
             bool grounded = wc.GetGroundHit(out var hit);
             var surface = SurfaceEffects && grounded ? RoadSurfaces.Of(hit.collider) : RoadSurfaces.Asphalt;
             float grip = surface.GripAt(wet, WetGrip);
+            if (env != null && env.Snow > 0f) grip *= Mathf.Lerp(1f, 0.45f, env.Snow);   // slush and packed snow
             if (Mathf.Abs(grip - _wheelGrip[i]) > 0.01f) SetWheelGrip(i, grip);
             sum += _wheelGrip[i];
             if (wc == _fl) Surface = surface.Name;
