@@ -1177,12 +1177,18 @@ public partial class OsmMapGenerator
                 {
                     var p = new V2(r.X, r.Z);
                     if (!Inside(p) || n >= MaxRealTrees) continue;
-                    var go = UnityEngine.Object.Instantiate(_assets.Trees[rng.Next(_assets.Trees.Length)], P(p, 0.1f), Quaternion.Euler(0, (float)rng.NextDouble() * 360f, 0), props);
-                    float s = Mathf.Clamp(r.Float("height", treeHeight) / treeHeight, 0.25f, 2.2f) * (0.9f + 0.2f * (float)rng.NextDouble());
-                    // conifers narrow and pointed, palms slender: from the deciduous models, as no others are included
+                    int pick = rng.Next(_assets.Trees.Length); float yaw = (float)rng.NextDouble() * 360f, vary = 0.9f + 0.2f * (float)rng.NextDouble();
                     var kind = r["kind"];
-                    float spread = kind == "conifer" ? 0.55f : kind == "palm" ? 0.45f : 1f;
-                    go.transform.localScale = Vector3.Scale(go.transform.localScale, new Vector3(s * spread, s, s * spread));
+                    if (kind != "conifer" && kind != "palm") kind = TreeKind(r["species"]);
+                    GameObject go;
+                    if (kind == "conifer" || kind == "palm")
+                        go = MakeTree(kind, P(p, 0.1f), Mathf.Clamp(r.Float("height", kind == "palm" ? 9f : 12f), 3f, 35f) * vary, yaw, props, pick + n);
+                    else
+                    {
+                        go = UnityEngine.Object.Instantiate(_assets.Trees[pick], P(p, 0.1f), Quaternion.Euler(0, yaw, 0), props);
+                        float s = Mathf.Clamp(r.Float("height", treeHeight) / treeHeight, 0.25f, 2.2f) * vary;
+                        go.transform.localScale = go.transform.localScale * s;
+                    }
                     CullWhenSmall(go, 0.02f);
                     TreeTransforms.Add(go.transform);
                     n++;
@@ -1202,7 +1208,12 @@ public partial class OsmMapGenerator
             {
                 if (!_pos.TryGetValue(n.Id, out var p) || !Inside(p)) continue;
                 if (registered.Count > 0 && NearRegistered(p)) continue;
-                var tree = UnityEngine.Object.Instantiate(_assets.Trees[rng.Next(_assets.Trees.Length)], P(p, 0.1f), Quaternion.Euler(0, (float)rng.NextDouble() * 360f, 0), props);
+                int pick = rng.Next(_assets.Trees.Length); float yaw = (float)rng.NextDouble() * 360f;
+                // needle-leaved trees and palms (OSM: leaf_type, genus, species, taxon) get their own shapes
+                var okind = TreeKind(n.Tag("genus") ?? n.Tag("species") ?? n.Tag("taxon") ?? n.Tag("species:en"), n.Tag("leaf_type"));
+                float oh = ParseMetres(n.Tag("height"), okind == "palm" ? 9f : 12f);
+                var tree = okind == "deciduous" ? UnityEngine.Object.Instantiate(_assets.Trees[pick], P(p, 0.1f), Quaternion.Euler(0, yaw, 0), props)
+                                                : MakeTree(okind, P(p, 0.1f), Mathf.Clamp(oh, 3f, 35f), yaw, props, (int)(n.Id % 3));
                 CullWhenSmall(tree, 0.02f);
                 TreeTransforms.Add(tree.transform);
             }
