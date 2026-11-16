@@ -277,24 +277,89 @@ public class OsmMap : MonoBehaviour
         if (kind == SpawnKind.CyclePath || kind == SpawnKind.Pavement)
         {
             var lines = (kind == SpawnKind.CyclePath ? Generator.CyclePaths : Generator.Pavements)
-                .Where(l => Length(l) > 15f).OrderBy(l => Mid(l).sqrMagnitude).ToList();
+                .Where(l => Length(l) > 15f && !Generator.CrossingLines.Contains(l)).OrderBy(l => Mid(l).sqrMagnitude).ToList();
             if (lines.Count == 0) return false;
-            var line = lines[index % lines.Count];
-            PointAt(line, Length(line) / 2, out position, out var dir);
-            rotation = Quaternion.LookRotation(dir, Vector3.up);
+            // the index-th line, or a later one when a tree, a post or a wall stands on it
+            float len = kind == SpawnKind.CyclePath ? 1.9f : 0.6f, width = kind == SpawnKind.CyclePath ? 0.7f : 0.6f;
+            for (int k = 0; k < lines.Count; k++)
+            {
+                var line = lines[(index + k) % lines.Count];
+                foreach (var d in Along(Length(line), 3f))
+                {
+                    PointAt(line, d, out position, out var dir);
+                    rotation = Quaternion.LookRotation(dir, Vector3.up);
+                    if (k == lines.Count - 1 || Clear(position, dir, len, width) && OffRoad(position)) return true;
+                }
+            }
             return true;
         }
         var roads = Generator.Roads.Where(r => SpawnRoadTypes.Contains(r.Type) && Length(r.Line) > 40f)
             .OrderBy(r => Mid(r.Line).sqrMagnitude).ToList();
         if (roads.Count == 0) roads = Generator.Roads.Where(r => Length(r.Line) > 20f).OrderBy(r => Mid(r.Line).sqrMagnitude).ToList();
         if (roads.Count == 0) return false;
-        var road = roads[index % roads.Count];
-        PointAt(road.Line, Length(road.Line) / 2, out var centre, out var forward);
-        var rightVec = Vector3.Cross(Vector3.up, forward).normalized;
         float side = Info.LeftHandTraffic ? -1f : 1f;
-        float offset = kind == SpawnKind.RoadEdge ? road.Width / 2 - 0.8f : (road.OneWay ? 0f : road.Width / 4);
-        position = centre + rightVec * side * offset + Vector3.up * 0.05f;
-        rotation = Quaternion.LookRotation(forward, Vector3.up);
+        // the middle of the index-th road, else further along it, else a later road: where no tree, parked car,
+        // post or wall stands in the vehicle's place (register trees often stand at the edge of narrow streets)
+        for (int k = 0; k < roads.Count; k++)
+        {
+            var road = roads[(index + k) % roads.Count];
+            float offset = kind == SpawnKind.RoadEdge ? road.Width / 2 - 0.8f : (road.OneWay ? 0f : road.Width / 4);
+            foreach (var d in Along(Length(road.Line), 5f))
+            {
+                PointAt(road.Line, d, out var centre, out var forward);
+                var rightVec = Vector3.Cross(Vector3.up, forward).normalized;
+                position = centre + rightVec * side * offset + Vector3.up * 0.05f;
+                rotation = Quaternion.LookRotation(forward, Vector3.up);
+                bool rider = kind == SpawnKind.RoadEdge;
+                if (Clear(position, forward, rider ? 1.9f : 4.8f, rider ? 0.8f : 2.0f)) return true;
+            }
+        }
+        // nothing clear anywhere: the middle of the index-th road, as before
+        {
+            var road = roads[index % roads.Count];
+            PointAt(road.Line, Length(road.Line) / 2, out var centre, out var forward);
+            float offset = kind == SpawnKind.RoadEdge ? road.Width / 2 - 0.8f : (road.OneWay ? 0f : road.Width / 4);
+            position = centre + Vector3.Cross(Vector3.up, forward).normalized * side * offset + Vector3.up * 0.05f;
+            rotation = Quaternion.LookRotation(forward, Vector3.up);
+        }
+        return true;
+    }
+
+    /// <summary>Distances along a line to try: its middle, then outwards in steps, keeping a few metres from its ends.</summary>
+    static System.Collections.Generic.IEnumerable<float> Along(float length, float step)
+    {
+        float mid = length / 2f;
+        yield return mid;
+        for (float o = step; o < mid - 6f; o += step) { yield return mid + o; yield return mid - o; }
+    }
+
+    /// <summary>The ground there is not a carriageway (a footpath drawn across a road has no paving there).</summary>
+    static bool OffRoad(Vector3 position)
+    {
+        if (!Physics.Raycast(position + Vector3.up * 3f, Vector3.down, out var hit, 6f, ~0, QueryTriggerInteraction.Ignore)) return true;
+        return !hit.collider.name.StartsWith("Roads");
+    }
+
+    /// <summary>No tree trunk within reach of the footprint (length along forward, width across) and nothing solid in it
+    /// above the kerbs (parked cars, posts, walls).</summary>
+    bool Clear(Vector3 position, Vector3 forward, float length, float width)
+    {
+        forward.y = 0f; forward.Normalize();
+        var a = position - forward * (length / 2f); var b = position + forward * (length / 2f);
+        if (Generator != null)
+            foreach (var t in Generator.TreeTransforms)
+            {
+                if (t == null) continue;
+                var p = t.position; var ab = b - a; ab.y = 0f;
+                float u = Mathf.Clamp01(Vector3.Dot(new Vector3(p.x - a.x, 0f, p.z - a.z), ab) / Mathf.Max(1e-4f, ab.sqrMagnitude));
+                var q = a + ab * u;
+                // trunk and the low branches of street trees (crowns are wider, but higher up)
+                if (new Vector2(p.x - q.x, p.z - q.z).magnitude < width / 2f + 1.6f) return false;
+            }
+        Physics.SyncTransforms();   // (the map's objects were made this frame)
+        var half = new Vector3(width / 2f, 0.6f, length / 2f);
+        foreach (var c in Physics.OverlapBox(position + Vector3.up * 1.0f, half, Quaternion.LookRotation(forward, Vector3.up), ~0, QueryTriggerInteraction.Ignore))
+            if (c != null) return false;
         return true;
     }
 

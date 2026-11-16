@@ -35,6 +35,8 @@ public partial class OsmMapGenerator
     public readonly List<Transform> TreeTransforms = new List<Transform>();
     public readonly List<List<Vector3>> CyclePaths = new List<List<Vector3>>();
     public readonly List<List<Vector3>> Pavements = new List<List<Vector3>>();
+    /// <summary>The pavement lines that cross a road (footway=crossing): walked along, but no place to start on.</summary>
+    public readonly HashSet<List<Vector3>> CrossingLines = new HashSet<List<Vector3>>();
     public readonly List<PedestrianCrossing> Crossings = new List<PedestrianCrossing>();
     public float HalfSize;
     public int BuildingCount;
@@ -893,6 +895,58 @@ public partial class OsmMapGenerator
                 junctionWidth[id] = Math.Max(junctionWidth.TryGetValue(id, out var jw) ? jw : 0, wd);
             }
         }
+        // the car roads on the ground, by 20 m cell: footpaths that OSM draws straight across a road (without
+        // footway=crossing) get no paving where they lie on it
+        var roadCells = new Dictionary<(int, int), List<(V2 a, V2 b, float half)>>();
+        foreach (var w in _data.Ways)
+        {
+            if (!CarRoads.Contains(w.Tag("highway") ?? "") || w.Tag("area") == "yes" || Layer(w) != 0 || w.Tag("tunnel") == "yes" || (w.Tag("bridge") ?? "no") != "no") continue;
+            var rl = Line(w); float half = RoadWidth(w) / 2f;
+            for (int i = 1; i < rl.Count; i++)
+            {
+                var a = rl[i - 1]; var b = rl[i];
+                int x0 = (int)Math.Floor(Math.Min(a.X, b.X) / 20f) - 1, x1 = (int)Math.Floor(Math.Max(a.X, b.X) / 20f) + 1;
+                int z0 = (int)Math.Floor(Math.Min(a.Y, b.Y) / 20f) - 1, z1 = (int)Math.Floor(Math.Max(a.Y, b.Y) / 20f) + 1;
+                for (int x = x0; x <= x1; x++) for (int z = z0; z <= z1; z++)
+                {
+                    if (!roadCells.TryGetValue((x, z), out var l)) roadCells[(x, z)] = l = new List<(V2, V2, float)>();
+                    l.Add((a, b, half));
+                }
+            }
+        }
+        // a footpath point on a road it crosses (well inside the carriageway, at more than 40 degrees to it)
+        bool AcrossRoad(V2 p, V2 dir)
+        {
+            if (!roadCells.TryGetValue(((int)Math.Floor(p.X / 20f), (int)Math.Floor(p.Y / 20f)), out var l)) return false;
+            foreach (var (a, b, half) in l)
+            {
+                var ab = b - a; float len2 = ab.LengthSquared(); if (len2 < 1e-4f) continue;
+                float u = Math.Max(0f, Math.Min(1f, V2.Dot(p - a, ab) / len2));
+                if (V2.Distance(p, a + ab * u) > half * 0.8f) continue;
+                float cos = Math.Abs(V2.Dot(V2.Normalize(ab), dir));
+                if (cos < 0.766f) return true;
+            }
+            return false;
+        }
+        // the parts of a footpath off the roads it crosses (points every metre)
+        List<List<V2>> OffRoads(List<V2> l)
+        {
+            var parts = new List<List<V2>>(); var cur = new List<V2>();
+            for (int i = 1; i < l.Count; i++)
+            {
+                var a = l[i - 1]; var b = l[i]; float d = V2.Distance(a, b); if (d < 1e-3f) continue;
+                var dir = (b - a) / d;
+                int n = Math.Max(1, (int)Math.Ceiling(d));
+                for (int k = (i == 1 ? 0 : 1); k <= n; k++)
+                {
+                    var q = V2.Lerp(a, b, k / (float)n);
+                    if (AcrossRoad(q, dir)) { if (cur.Count >= 2) parts.Add(cur); cur = new List<V2>(); }
+                    else cur.Add(q);
+                }
+            }
+            if (cur.Count >= 2) parts.Add(cur);
+            return parts;
+        }
         foreach (var w in _data.Ways)
         {
             var hw = w.Tag("highway");
@@ -973,9 +1027,18 @@ public partial class OsmMapGenerator
             }
             else if (IsFootway(w))
             {
-                Geometry2D.Strip(line, hw == "pedestrian" ? 4f : 1.8f, 0, left, right);
-                walks.Strip(left, right, 0.05f + lift, 2f);
+                // a crossing (footway=crossing: the footpath over a road, drawn by OSM between the pavements) is the
+                // road's zebra or unmarked crossing, not a raised strip of paving across the carriageway: the AI
+                // pedestrians still walk along it
+                bool crossing = w.Tag("footway") == "crossing" || w.Tag("path") == "crossing" || w.Tag("crossing") != null && hw != "pedestrian";
+                if (!crossing)
+                    foreach (var part in bi == 0 && lift == 0f && hw != "pedestrian" ? OffRoads(line) : new List<List<V2>> { line })
+                    {
+                        Geometry2D.Strip(part, hw == "pedestrian" ? 4f : 1.8f, 0, left, right);
+                        walks.Strip(left, right, 0.05f + lift, 2f);
+                    }
                 Pavements.Add(line.Select(p => P(p, 0.05f + lift)).ToList());
+                if (crossing) CrossingLines.Add(Pavements[Pavements.Count - 1]);
             }
             if (bi > 0)
             {
