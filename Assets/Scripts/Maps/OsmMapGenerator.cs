@@ -26,6 +26,8 @@ public partial class OsmMapGenerator
         public bool Bridge;
         /// <summary>That bridge's layer (0: not on such a bridge).</summary>
         public int BridgeLayer;
+        /// <summary>Cars parked along the left / right kerb (as seen along the way), on the carriageway.</summary>
+        public bool ParkLeft, ParkRight;
     }
     /// <summary>Cycle paths and pavements on such bridges.</summary>
     public readonly Dictionary<List<Vector3>, int> BridgeLines = new Dictionary<List<Vector3>, int>();
@@ -629,6 +631,13 @@ public partial class OsmMapGenerator
         }
     }
 
+    /// <summary>Cars park along this side of the road (-1 left, 1 right, as seen along the way) on the carriageway.</summary>
+    static bool StreetParking(OsmWay w, int side)
+    {
+        var tag = w.Tag("parking:both") ?? w.Tag(side < 0 ? "parking:left" : "parking:right") ?? w.Tag("parking:lane:both") ?? w.Tag(side < 0 ? "parking:lane:left" : "parking:lane:right");
+        return !(tag == null || tag == "no" || tag == "separate" || tag == "no_parking" || tag == "no_stopping" || tag == "fire_lane");
+    }
+
     static bool IsOneWay(OsmWay w) => w.Tag("oneway") == "yes" || (w.Tag("highway") ?? "").StartsWith("motorway") || w.Tag("junction") == "roundabout";
     static bool IsCycleway(OsmWay w) => w.Tag("highway") == "cycleway" || (w.Tag("highway") == "path" && w.Tag("bicycle") == "designated");
     static bool IsFootway(OsmWay w)
@@ -969,7 +978,7 @@ public partial class OsmMapGenerator
             {
                 float width = RoadWidth(w);
                 roadWays.Add((w, line, width));
-                Roads.Add(new Road { Line = line.Select(p => P(p, 0.02f + lift)).ToList(), Width = width, Type = hw, OneWay = IsOneWay(w), Bridge = bi > 0, BridgeLayer = bi });
+                Roads.Add(new Road { Line = line.Select(p => P(p, 0.02f + lift)).ToList(), Width = width, Type = hw, OneWay = IsOneWay(w), Bridge = bi > 0, BridgeLayer = bi, ParkLeft = StreetParking(w, -1), ParkRight = StreetParking(w, 1) });
                 Geometry2D.Strip(line, width, 0, left, right);
                 var surface = SurfaceOf(w);
                 (surface == RoadSurface.Bricks ? brickRoads : surface == RoadSurface.Cobblestones ? cobbleRoads : surface == RoadSurface.Gravel ? gravelRoads : roads)
@@ -1729,8 +1738,7 @@ public partial class OsmMapGenerator
                 // street-side parking: along the kerb, a car every ~6.5 m, not all bays taken
                 foreach (var side in new[] { -1, 1 })
                 {
-                    var tag = w.Tag("parking:both") ?? w.Tag(side < 0 ? "parking:left" : "parking:right") ?? w.Tag("parking:lane:both") ?? w.Tag(side < 0 ? "parking:lane:left" : "parking:lane:right");
-                    if (tag == null || tag == "no" || tag == "separate" || tag == "no_parking" || tag == "no_stopping" || tag == "fire_lane") continue;
+                    if (!StreetParking(w, side)) continue;
                     var line = Line(w); if (line.Count < 2 || !line.Any(Inside)) continue;
                     float width = RoadWidth(w), total = Geometry2D.Length(line);
                     for (float d = 8f; d < total - 8f; d += 6.5f)

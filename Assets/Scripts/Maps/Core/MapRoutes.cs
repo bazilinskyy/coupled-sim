@@ -23,6 +23,8 @@ public static class MapRoutes
         public List<Vector3> Line;
         public float Width;
         public bool OneWay;
+        /// <summary>Cars parked along the left / right kerb (as seen along the line) on the carriageway.</summary>
+        public bool ParkLeft, ParkRight;
     }
 
     struct Edge { public int To, Road; }
@@ -133,6 +135,14 @@ public static class MapRoutes
 
     // the lane's centre: a quarter of the road's width to the driver's side of two-way roads (the middle of a
     // one-way road), points every few metres
+    /// <summary>The route at p (heading d) runs along the line's direction (not against it).</summary>
+    static bool Aligned(List<Vector3> line, Vector3 p, Vector3 d)
+    {
+        int best = 0; float bd = float.MaxValue;
+        for (int i = 0; i + 1 < line.Count; i++) { float q = Vector3.DistanceSquared((line[i] + line[i + 1]) / 2f, p); if (q < bd) { bd = q; best = i; } }
+        return line.Count < 2 || Vector3.Dot(Flat(line[Math.Min(best + 1, line.Count - 1)] - line[best]), d) >= 0f;
+    }
+
     static List<Vector3> Offset(List<int> nodes, List<int> rs, List<Vector3> pos, IList<RoadLine> roads, bool lht)
     {
         var lane = new List<Vector3>();
@@ -147,6 +157,24 @@ public static class MapRoutes
             var right = Vector3.Cross(Vector3.UnitY, d);
             var road = roads[rs[Math.Min(i, rs.Count - 1)]];
             float off = road.OneWay ? (road.Width >= 6.6f ? road.Width / 4f : 0f) : Clamp(road.Width / 4f, 1.5f, 3.5f);
+            if (road.ParkLeft || road.ParkRight)
+            {
+                // parked cars take 2.1 m of the carriageway on their side: the lane runs between them and the centre
+                // line (or the middle of a one-way street's free part); a narrow street is driven in its middle
+                bool along = Aligned(road.Line, p, d);
+                float parkR = (along ? road.ParkRight : road.ParkLeft) ? 2.1f : 0f, parkL = (along ? road.ParkLeft : road.ParkRight) ? 2.1f : 0f;
+                float half = road.Width / 2f;
+                if (road.OneWay)
+                {
+                    float free = road.Width - parkL - parkR, x = (parkL - parkR) / 2f + (free >= 6.6f ? free / 4f : 0f);   // to the route's right
+                    off = x * side;
+                }
+                else
+                {
+                    float park = lht ? parkL : parkR;   // on the driver's side
+                    off = Clamp(Math.Min((half - park) / 2f, half - park - 1.2f), 0f, 3.5f);
+                }
+            }
             var q = p + right * side * off;
             if (lane.Count > 0)
             {
