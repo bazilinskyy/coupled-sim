@@ -1741,12 +1741,14 @@ public partial class OsmMapGenerator
                     if (!StreetParking(w, side)) continue;
                     var line = Line(w); if (line.Count < 2 || !line.Any(Inside)) continue;
                     float width = RoadWidth(w), total = Geometry2D.Length(line);
+                    // on the road where the lanes still fit beside the cars, else half on or on the kerb (MapRoutes.ParkDepth)
+                    float depth = CoupledSim.Maps.MapRoutes.ParkDepth(width, IsOneWay(w), (StreetParking(w, -1) ? 1 : 0) + (StreetParking(w, 1) ? 1 : 0));
                     for (float d = 8f; d < total - 8f; d += 6.5f)
                     {
                         if (rng.NextDouble() > 0.6) continue;
                         var (pt, dir) = Geometry2D.PointAt(line, d);
                         var n = new V2(dir.Y, -dir.X) * side;
-                        Car(pt + n * (width / 2f - 1.0f), Yaw(dir));
+                        Car(pt + n * (width / 2f + 1.1f - depth), Yaw(dir));
                     }
                 }
             }
