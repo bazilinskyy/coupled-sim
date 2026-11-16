@@ -136,7 +136,10 @@ public class VideoExport : MonoBehaviour
                         gc.cullingMask = used ? ~0 : 0;   // (an unused quarter stays black)
                         gc.clearFlags = used ? CameraClearFlags.Skybox : CameraClearFlags.SolidColor;
                         gc.backgroundColor = Color.black;
+                        // (the participant's own figure hidden: from the eyes one would see the inside of the head)
+                        var hidden = used ? HideFigure(people[g]) : null;
                         gc.Render();
+                        if (hidden != null) foreach (var r in hidden) if (r != null) r.enabled = true;
                         RenderTexture.active = gc.targetTexture;
                         // top left, top right, bottom left, bottom right (texture rows start at the bottom)
                         tex.ReadPixels(new Rect(0, 0, Size.x / 2, Size.y / 2), (g % 2) * (Size.x / 2), g < 2 ? Size.y / 2 : 0, false);
@@ -209,6 +212,20 @@ public class VideoExport : MonoBehaviour
         if (!OwnView(p, out var pos, out var rot)) return;
         if (first) t.SetPositionAndRotation(pos, rot);
         else { float k = 1f - Mathf.Exp(-14f / Fps); t.SetPositionAndRotation(Vector3.Lerp(t.position, pos, 0.8f), Quaternion.Slerp(t.rotation, rot, k)); }
+    }
+
+    /// <summary>Hides the person figures (pedestrian, rider, driver) of a participant; returns the renderers to show again.</summary>
+    public static List<Renderer> HideFigure(PlayerAvatar p)
+    {
+        var hidden = new List<Renderer>();
+        if (p == null) return hidden;
+        foreach (var an in p.GetComponentsInChildren<Animator>())
+        {
+            if (an == null || !an.isHuman) continue;
+            foreach (var r in an.GetComponentsInChildren<Renderer>())
+                if (r.enabled) { r.enabled = false; hidden.Add(r); }
+        }
+        return hidden;
     }
 
     /// <summary>

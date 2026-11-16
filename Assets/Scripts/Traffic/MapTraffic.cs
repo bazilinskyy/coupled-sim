@@ -97,7 +97,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
 
         var gen = OsmMap.Current.Generator;
         var lines = gen.Roads.Where(r => !r.Bridge || r.BridgeLayer == 0)
-            .Select(r => new CoupledSim.Maps.MapRoutes.RoadLine { Line = r.Line.Select(p => new System.Numerics.Vector3(p.x, p.y, p.z)).ToList(), Width = r.Width, OneWay = r.OneWay }).ToList();
+            .Select(r => new CoupledSim.Maps.MapRoutes.RoadLine { Line = r.Line.Select(p => new System.Numerics.Vector3(p.x, p.y, p.z)).ToList(), Width = r.Width, OneWay = r.OneWay, ParkLeft = r.ParkLeft, ParkRight = r.ParkRight }).ToList();
         var lanes = CoupledSim.Maps.MapRoutes.Build(lines, gen.HalfSize, OsmMap.Current.Info.LeftHandTraffic, max: 80, variants: 3)
             .Select(l => l.Select(p => new Vector3(p.X, p.Y, p.Z)).ToList()).ToList();
         foreach (var lane in lanes) Routes.Add(MakeCircuit(lane, Routes.Count));
@@ -178,7 +178,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         yield return SpawnCyclists();
     }
 
-    /// <summary>Cyclists near the kerb of the routes (their own routes, 1.8 m to the kerb side of the cars' lane).</summary>
+    /// <summary>Cyclists along the routes: on a cycle path or cycle track beside the road where there is one, else on the carriageway near its kerb (RideLine).</summary>
     IEnumerator SpawnCyclists()
     {
         var sumo = FindAnyObjectByType<SumoBridge>();
@@ -193,8 +193,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         foreach (var route in Routes.ToList())
         {
             if (count >= MaxCyclists) break;
-            var kerb = new List<Vector3>();
-            for (float d = 0; d < route.Length; d += 4f) { var rp = route.GetRoutePoint(d); kerb.Add(rp.position + Vector3.Cross(Vector3.up, rp.direction).normalized * (lht ? -1.8f : 1.8f)); }
+            var kerb = RideLine(route, 0f, route.Length, 4f, lht, true);
             if (kerb.Count < 10) continue;
             var bikeRoute = MakeCircuit(kerb, Routes.Count + 1000 + index++);
             bikeRoute.name = "Map cycle route " + index;
@@ -268,7 +267,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         Debug.Log($"MapTraffic: autopilot at {AutopilotKmh} km/h on {best.name} from {bestD:F0} m");
     }
 
-    /// <summary>Pedestrians walk along the nearest long pavement; riders follow the nearest lane route near its kerb.</summary>
+    /// <summary>Pedestrians walk along the nearest long pavement; riders follow the nearest lane route on its riding line (RideLine).</summary>
     void WalkOrRide(PlayerAvatar me)
     {
         var gen = OsmMap.Current.Generator;
@@ -293,12 +292,11 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
                     float score = (rp.position - at).sqrMagnitude + (Vector3.Dot(rp.direction, fwd) < 0.3f ? 900f : 0f);
                     if (score < bestScore) { bestScore = score; bestR = r; bestD = d; }
                 }
-            path = new List<Vector3>();
-            for (float d = bestD; d < bestR.Length - 50f; d += 3f)
-            {
-                var rp = bestR.GetRoutePoint(d);
-                path.Add(rp.position + Vector3.Cross(Vector3.up, rp.direction).normalized * (OsmMap.Current.Info.LeftHandTraffic ? -1.4f : 1.4f));
-            }
+            // bicycles, e-scooters and 25 km/h mopeds on the cycle path or track beside the road where there is one;
+            // 45 km/h mopeds on the road
+            var tw = me.GetComponent<TwoWheelerController>();
+            bool moped = tw != null && tw.Type == CoupledSim.TwoWheelers.TwoWheelerType.Moped45;
+            path = RideLine(bestR, bestD, bestR.Length - 50f, 3f, OsmMap.Current.Info.LeftHandTraffic, !moped);
         }
         if (path == null || path.Count < 2) { Debug.LogWarning("MapTraffic: no path for the autopilot"); return; }
         // start on the path, facing along it
@@ -317,6 +315,105 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         }
         me.gameObject.AddComponent<ParticipantAutopilot>().Init(path);
         Debug.Log($"MapTraffic: autopilot for the {(me.GetComponent<KeyboardPlayerMovement>() != null ? "pedestrian" : "rider")} along {path.Count} points");
+    }
+
+    enum Ground { None, Road, Cycle, Paving }
+
+    static Ground GroundAt(Vector3 p)
+    {
+        if (!Physics.Raycast(p + Vector3.up * 4f, Vector3.down, out var hit, 10f, ~0, QueryTriggerInteraction.Ignore)) return Ground.None;
+        if (hit.collider.attachedRigidbody != null) return Ground.None;   // a vehicle: unknown ground
+        var n = hit.collider.name;
+        if (n.IndexOf("ycle", StringComparison.Ordinal) >= 0) return Ground.Cycle;
+        if (n.StartsWith("Roads") || n.StartsWith("BGT roads")) return Ground.Road;   // ("BGT parking" is paving: cars park there)
+        return Ground.Paving;
+    }
+
+    /// <summary>
+    /// Where a rider rides along a car route, every <paramref name="step"/> m: across the road towards its kerb (to the right,
+    /// to the left in left-hand traffic) the ground is read every 0.5 m. A cycle path or cycle track within a few metres of
+    /// the carriageway is taken (its kerb-side half when it is wide enough for two directions) when
+    /// <paramref name="preferCycle"/>; otherwise the carriageway 0.8 m from its edge (in a painted cycle lane, if the road
+    /// has one), never the pavement, 1 m clear of parked cars. The offsets are smoothed (a median over 7 points, then an average over 3), so short
+    /// gaps (junctions, driveways, parked vehicles) do not make the line jump.
+    /// </summary>
+    public static bool DebugRide = Array.IndexOf(Environment.GetCommandLineArgs(), "-debugRide") >= 0;
+
+    static List<Vector3> RideLine(WaypointCircuit route, float from, float to, float step, bool lht, bool preferCycle)
+    {
+        Physics.SyncTransforms();
+        var pts = new List<(Vector3 p, Vector3 side)>();
+        for (float d = from; d < to; d += step)
+        {
+            var rp = route.GetRoutePoint(d);
+            var side = Vector3.Cross(Vector3.up, new Vector3(rp.direction.x, 0f, rp.direction.z)).normalized * (lht ? -1f : 1f);
+            pts.Add((rp.position, side));
+        }
+        var off = new float[pts.Count];
+        var limit = new float[pts.Count];   // on the carriageway: no closer than 1 m to what ends it (a parked car, a kerb)
+        for (int i = 0; i < pts.Count; i++)
+        {
+            var (p, side) = pts[i];
+            // the ground across the road, every 0.5 m from 3 m towards the road's centre to 6 m towards the kerb; the stretch
+            // of open carriageway nearest the lane's centre (a parked car, a kerb or paving ends a stretch)
+            const int inner = 6, outer = 12;
+            var g = new Ground[inner + outer + 1];
+            for (int k = -inner; k <= outer; k++) g[k + inner] = GroundAt(p + side * (k * 0.5f));
+            int bestA = 0, bestB = -1, bestDist = int.MaxValue;
+            for (int k = 0; k < g.Length; )
+            {
+                if (g[k] != Ground.Road && g[k] != Ground.None) { k++; continue; }
+                int a = k; while (k < g.Length && (g[k] == Ground.Road || g[k] == Ground.None)) k++;
+                int b2 = k - 1, dist = a > inner ? a - inner : b2 < inner ? inner - b2 : 0;
+                if (b2 - a >= 2 && dist < bestDist) { bestDist = dist; bestA = a; bestB = b2; }
+            }
+            float roadEdge = bestB >= 0 ? (bestB - inner) * 0.5f : 0f, roadStart = bestB >= 0 ? (bestA - inner) * 0.5f : 0f;
+            float pick = bestB >= 0 ? Mathf.Max(roadStart + 0.5f, Mathf.Min(roadEdge - 0.8f, 4f)) : 0.5f;
+            if (preferCycle)
+            {
+                // a cycle path starting within 6 m of the carriageway's edge, at least 1 m wide
+                float start = -1f, end = -1f;
+                for (int k = Mathf.Max(1, Mathf.RoundToInt(roadEdge / 0.5f)); k <= Mathf.RoundToInt((Mathf.Min(roadEdge, 6f) + 6f) / 0.5f); k++)
+                {
+                    bool cyc = GroundAt(p + side * (k * 0.5f)) == Ground.Cycle;
+                    if (cyc && start < 0f) start = k * 0.5f;
+                    if (cyc) end = k * 0.5f; else if (start >= 0f) break;
+                }
+                if (start >= 0f && end - start >= 0.9f) pick = end - start >= 2.4f ? start + 0.7f * (end - start) : (start + end) / 2f;
+            }
+            limit[i] = pick > roadEdge + 0.4f ? float.MaxValue : roadEdge - 1.0f;   // (a cycle path beside the road: no limit)
+            off[i] = pick;
+            if (DebugRide && i % 10 == 0)
+            {
+                var sb = new System.Text.StringBuilder();
+                for (int k = 0; k <= 24; k++) { var h = Physics.Raycast(p + side * (k * 0.5f) + Vector3.up * 4f, Vector3.down, out var hh, 10f, ~0, QueryTriggerInteraction.Ignore); sb.Append(h ? hh.collider.name.Substring(0, Math.Min(6, hh.collider.name.Length)) : "-").Append('|'); }
+                Debug.Log($"RideLine {i}: carriageway {roadStart}..{roadEdge}, pick {pick}: {sb}");
+            }
+        }
+        // smoothing: median over 7 points, the clearance kept, then an average over 3
+        var med = new float[off.Length];
+        for (int i = 0; i < off.Length; i++)
+        {
+            var w = new List<float>();
+            for (int k = Math.Max(0, i - 3); k <= Math.Min(off.Length - 1, i + 3); k++) w.Add(off[k]);
+            w.Sort(); med[i] = w[w.Count / 2];
+        }
+        // keep the clearance of the points around (the median would let the line brush past the parked cars between gaps)
+        for (int i = 0; i < med.Length; i++)
+        {
+            if (limit[i] == float.MaxValue) continue;   // (on a cycle path)
+            float lim = float.MaxValue;
+            for (int k = Math.Max(0, i - 3); k <= Math.Min(med.Length - 1, i + 3); k++) lim = Math.Min(lim, limit[k]);
+            if (lim != float.MaxValue) med[i] = Math.Min(med[i], Math.Max(lim, -2.5f));
+        }
+        var line = new List<Vector3>(pts.Count);
+        for (int i = 0; i < pts.Count; i++)
+        {
+            float sum = 0f; int n = 0;
+            for (int k = Math.Max(0, i - 1); k <= Math.Min(med.Length - 1, i + 1); k++) { sum += med[k]; n++; }
+            line.Add(pts[i].p + pts[i].side * (sum / n));
+        }
+        return line;
     }
 
     static float Normal(System.Random rng)

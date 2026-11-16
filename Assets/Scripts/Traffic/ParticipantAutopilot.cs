@@ -4,7 +4,8 @@ using UnityEngine;
 /// <summary>
 /// Moves a walking or riding participant along a path by itself, through the same inputs a person would give (for
 /// demonstrations and videos; -autopilot): a pedestrian walks along the pavement (turning towards a point a few
-/// metres ahead), a rider follows a lane route near the kerb (steering towards a point ahead, pedalling or riding
+/// metres ahead), a rider follows its riding line (MapTraffic.RideLine: a cycle path beside the road, else near the
+/// kerb; steering towards a point ahead, pedalling or riding
 /// at a steady effort, braking for the bends). At the end of the path it turns round (pedestrians) or stops.
 /// </summary>
 public class ParticipantAutopilot : MonoBehaviour
