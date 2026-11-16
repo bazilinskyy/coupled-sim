@@ -238,13 +238,18 @@ public class Soundscape : MonoBehaviour, IExperimentModifier
     /// <summary>The local participant's avatar (null before there is one).</summary>
     public Transform Participant { get; private set; }
 
+    /// <summary>Whose place the listener is at, when not the local participant's (a video of a replay: the first quarter
+    /// of the grid); null: the local participant.</summary>
+    public static PlayerAvatar ListenerAvatar;
+
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.F3)) ToggleCalibration();
         if (!VehicleSounds) return;
         var listener = FindListener();
         if (listener == null) return;
-        var me = NetworkingManager.Instance != null && NetworkingManager.Instance.PlayerSystem != null ? NetworkingManager.Instance.PlayerSystem.LocalPlayer : null;
+        var me = ListenerAvatar != null ? ListenerAvatar
+            : NetworkingManager.Instance != null && NetworkingManager.Instance.PlayerSystem != null ? NetworkingManager.Instance.PlayerSystem.LocalPlayer : null;
         OwnVehicle = me != null && (me.Type == AvatarType.Driver) ? me.transform : null;
         Participant = me != null ? me.transform : null;
         InsideCar = OwnVehicle != null && listener.IsChildOf(OwnVehicle);
