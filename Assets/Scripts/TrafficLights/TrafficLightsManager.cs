@@ -45,18 +45,25 @@ public class TrafficLightsManager : MonoBehaviour
     {
         if (!initialized)
         {
-            for(int i = 0; i < initialStreetLightSetup.Length; i++)
+            if (initialStreetLightSetup != null)
             {
-                initiallyTriggeredEvents.Add(i);
-                TriggerEvent(i, true);
+                for (int i = 0; i < initialStreetLightSetup.Length; i++)
+                {
+                    initiallyTriggeredEvents.Add(i);
+                    TriggerEvent(i, true);
+                }
             }
             initialized = true;
         }
-        while (CurrentTimer >= streetLightEvents[CurrentIndex].deltaTime && CurrentIndex < streetLightEvents.Length)
+        if (streetLightEvents == null || streetLightEvents.Length == 0) return;
+
+        int guard = 0;
+        int maxSteps = streetLightEvents.Length * 2;
+        while (CurrentIndex >= 0 && CurrentIndex < streetLightEvents.Length && CurrentTimer >= streetLightEvents[CurrentIndex].deltaTime && guard++ < maxSteps)
         {
             triggeredEvents.Add(CurrentIndex);
             TriggerEvent(CurrentIndex, false);
-            CurrentTimer -= streetLightEvents[CurrentIndex].deltaTime;
+            CurrentTimer -= Mathf.Max(0f, streetLightEvents[CurrentIndex].deltaTime);
             CurrentIndex++;
             if (CurrentIndex >= streetLightEvents.Length)
             {
@@ -91,7 +98,7 @@ public class TrafficLightsManager : MonoBehaviour
 
     private void ChangeCarLightsState(ref TrafficLightEvent streetLightEvent)
     {
-        if (streetLightEvent.carSections.Length == 0)
+        if (streetLightEvent.carSections == null || streetLightEvent.carSections.Length == 0)
         {
             return;
         }
@@ -127,7 +134,7 @@ public class TrafficLightsManager : MonoBehaviour
 
     private void ChangePedestrianLightsState(ref TrafficLightEvent streetLightEvent)
     {
-        if (streetLightEvent.pedestrianSections.Length == 0)
+        if (streetLightEvent.pedestrianSections == null || streetLightEvent.pedestrianSections.Length == 0)
         {
             return;
         }

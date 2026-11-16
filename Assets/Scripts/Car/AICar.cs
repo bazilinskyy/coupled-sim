@@ -185,7 +185,10 @@ public class AICar : MonoBehaviour, IVehicle
             if (jerk != 0)
             {
                 acceleration = set_acceleration;
-                t += Mathf.Abs(jerk) / Mathf.Abs(set_acceleration) * Time.fixedDeltaTime;
+                if (Mathf.Abs(set_acceleration) > 1e-4f)
+                {
+                    t += Mathf.Abs(jerk) / Mathf.Abs(set_acceleration) * Time.fixedDeltaTime;
+                }
                 pitch = acceleration / 3 * HasPitch;
                 modelLocalRotation = Quaternion.Slerp(modelLocalRotation, Quaternion.Euler(-pitch, 0, 0), 0.5f);
             }
@@ -362,6 +365,7 @@ public class AICar : MonoBehaviour, IVehicle
     // If gameObject is set invisible, remove the car.
     void OnBecameInvisible()
     {
+        if (!enabled || ExternalSpeedControl) return;
         Despawn();
     }
 
@@ -389,7 +393,8 @@ public class AICar : MonoBehaviour, IVehicle
         // waypoints are tagged "WP"; untagged waypoints with speed settings work too
         if (other.gameObject.CompareTag("WP") || other.gameObject.CompareTag("Untagged"))
         {
-            GetComponent<PlayerAvatar>().CarBlinkers.SwitchToState(speedSettings.BlinkerState);
+            var avatar = playerAvatar != null ? playerAvatar : GetComponent<PlayerAvatar>();
+            avatar?.CarBlinkers?.SwitchToState(speedSettings.BlinkerState);
 
             if (speedSettings.Type == SpeedSettings.WaypointType.InitialSetSpeed)
             {

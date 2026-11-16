@@ -111,7 +111,7 @@ public class Host : NetworkSystem
         }
     }
 
-    public void Shutdown()
+    public override void Shutdown()
     {
         _host.Shutdown();
         _currentState = NetState.Disconnected;

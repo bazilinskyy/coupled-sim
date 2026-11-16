@@ -92,5 +92,104 @@ namespace CoupledSim.Tests
             StringAssert.EndsWith(" end", r1);
             Assert.AreEqual("practice a1 a2 b1 c1 d1 end", Names(3, TrialOrder.None));
         }
+
+        [Test]
+        public void LogConverterWritesAlignedHeadersAndHandlesZeroDtAndEmptyLogs()
+        {
+            var converterType = System.Type.GetType("LogConverter, Assembly-CSharp", true);
+            var converter = System.Activator.CreateInstance(converterType, new object[] { new[] { "Head" } });
+            var translate = converterType.GetMethod("TranslateBinaryLogToCsv");
+
+            string tmpDir = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "coupled_sim_test_" + System.Guid.NewGuid().ToString("N"));
+            System.IO.Directory.CreateDirectory(tmpDir);
+            try
+            {
+                // 1) Empty 0-frame log does not throw
+                string emptyBin = System.IO.Path.Combine(tmpDir, "empty.binLog");
+                string emptyCsv = System.IO.Path.Combine(tmpDir, "empty.csv");
+                using (var bw = new System.IO.BinaryWriter(System.IO.File.Create(emptyBin)))
+                {
+                    bw.Write(System.DateTime.UtcNow.ToBinary());
+                    bw.Write(-1); // LocalDriver
+                    bw.Write(0);  // numPersistentDrivers
+                    bw.Write(0);  // numPedestrians
+                    bw.Write(0);  // numPOIs
+                    bw.Write(0);  // numCarLights
+                    bw.Write(0);  // numPedestrianLights
+                }
+                translate.Invoke(converter, new object[] { emptyBin, emptyCsv, new[] { "Head" }, "WorldRoot", UnityEngine.Vector3.zero, UnityEngine.Quaternion.identity });
+                Assert.IsTrue(System.IO.File.Exists(emptyCsv));
+
+                // 2) Log with 1 local driver, 1 AI car, 2 pedestrians, and duplicate timestamp (dt = 0)
+                string fullBin = System.IO.Path.Combine(tmpDir, "full.binLog");
+                string fullCsv = System.IO.Path.Combine(tmpDir, "full.csv");
+                using (var bw = new System.IO.BinaryWriter(System.IO.File.Create(fullBin)))
+                {
+                    bw.Write(System.DateTime.UtcNow.ToBinary());
+                    bw.Write(0); // LocalDriver = 0
+                    bw.Write(1); // numPersistentDrivers = 1
+                    bw.Write(2); // numPedestrians = 2
+                    bw.Write(0); // POIs
+                    bw.Write(0); // CarLights
+                    bw.Write(0); // PedLights
+
+                    bw.Write(1); // LogFrameType.AICarSpawn -> index 1 is AI car
+                    for (int f = 0; f < 3; f++)
+                    {
+                        float ts = f == 2 ? 0.1f : f * 0.1f; // frame 1 and 2 have identical timestamp (dt = 0)
+                        bw.Write(0); // LogFrameType.PositionsUpdate
+                        bw.Write(ts);
+                        bw.Write(0.01f); // ping
+
+                        // Driver 0 (LocalDriver, rotated 90 deg around Y, moving along +X at 10 m/s -> local +Z!)
+                        bw.Write(f * 1f); bw.Write(0f); bw.Write(0f); // pos
+                        bw.Write(0f); bw.Write(90f); bw.Write(0f);    // euler rot
+                        bw.Write(0); bw.Write(false); bw.Write(false);
+                        bw.Write(10f); bw.Write(0f); bw.Write(0f);    // rbVel
+
+                        // Driver 1 (AICar)
+                        bw.Write(0f); bw.Write(0f); bw.Write(f * 1f);
+                        bw.Write(0f); bw.Write(0f); bw.Write(0f);
+                        bw.Write(0); bw.Write(false); bw.Write(false);
+                        bw.Write(0f); bw.Write(0f); bw.Write(10f);    // rbVel
+                        bw.Write(36f);                                // aicar_speed
+                        bw.Write(false); bw.Write(false); bw.Write(false); bw.Write(false);
+
+                        // 2 Pedestrians (Root + 1 bone "Head" = 2 transforms each)
+                        for (int p = 0; p < 2; p++)
+                        {
+                            bw.Write(2); // 2 positions
+                            for (int b = 0; b < 2; b++) { bw.Write(0f); bw.Write(0f); bw.Write(0f); }
+                            bw.Write(2); // 2 rotations
+                            for (int b = 0; b < 2; b++) { bw.Write(0f); bw.Write(0f); bw.Write(0f); }
+                            bw.Write(0); bw.Write(false); bw.Write(false);
+                        }
+                    }
+                }
+                translate.Invoke(converter, new object[] { fullBin, fullCsv, new[] { "Head" }, "WorldRoot", UnityEngine.Vector3.zero, UnityEngine.Quaternion.identity });
+                var lines = System.IO.File.ReadAllLines(fullCsv);
+                // Header rows start after Root, Start Time, and 4 POIs (3 custom + WorldRoot) -> index 6, 7, 8; data rows 9, 10, 11
+                int expectedCols = 2 + 27 + 32 + 2 * 12; // 85 columns
+                Assert.AreEqual(expectedCols, lines[6].Split(';').Length, "row 1 entity header columns");
+                Assert.AreEqual(expectedCols, lines[7].Split(';').Length, "row 2 bone header columns");
+                Assert.AreEqual(expectedCols, lines[8].Split(';').Length, "row 3 field header columns");
+                Assert.AreEqual(expectedCols, lines[9].Split(';').Length, "data row 0 columns");
+                Assert.AreEqual(expectedCols, lines[10].Split(';').Length, "data row 1 columns");
+                Assert.AreEqual(expectedCols, lines[11].Split(';').Length, "data row 2 (dt=0) columns");
+                Assert.IsFalse(lines[11].Contains("NaN") || lines[11].Contains("Infinity"), "dt=0 must not emit NaN/Infinity");
+
+                // Verify local velocity on frame 1 (lines[10]): Driver 0 faces +X (yaw 90°) and moved +1m along +X in 0.1s (36 km/h) -> vel_local_z (col 13) ~ 36, vel_local_smooth_z (col 16) ~ 36
+                var row1 = lines[10].Split(';');
+                Assert.AreEqual(36f, float.Parse(row1[13], System.Globalization.CultureInfo.InvariantCulture), 0.1f, "vel_local_z");
+                Assert.AreEqual(36f, float.Parse(row1[16], System.Globalization.CultureInfo.InvariantCulture), 0.1f, "vel_local_smooth_z");
+
+                // 3) Re-running converter on empty log clears previous aiCarIndexes cleanly
+                translate.Invoke(converter, new object[] { emptyBin, emptyCsv, new[] { "Head" }, "WorldRoot", UnityEngine.Vector3.zero, UnityEngine.Quaternion.identity });
+            }
+            finally
+            {
+                if (System.IO.Directory.Exists(tmpDir)) System.IO.Directory.Delete(tmpDir, true);
+            }
+        }
     }
 }
