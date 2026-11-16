@@ -14,7 +14,7 @@ public class MessageDispatcher
     /// </summary>
     public void AddStaticHandler(int msgId, MessageHandler handler)
     {
-        _dispatchIndex.Add(msgId, handler);
+        _dispatchIndex[msgId] = handler;
     }
 
     /// <summary>
@@ -34,6 +34,8 @@ public class MessageDispatcher
         {
             _dispatchIndex.Remove(msgId);
         }
+        _levelMessageHandlers.Clear();
+        _reportedUnhandled.Clear();
     }
 
     // messages that arrive before their handler is registered (e.g. AI poses while this agent is

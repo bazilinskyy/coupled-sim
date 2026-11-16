@@ -50,9 +50,12 @@ public class UNetClient
 
     public void Disconnect()
     {
-        Assert.IsTrue(ConnectionEstablished);
-        m_Driver.Dispose();
+        if (m_Driver.IsCreated)
+        {
+            m_Driver.Dispose();
+        }
         m_Connection = default(NetworkConnection);
+        MyPlayerId = -1;
     }
 
     //processing network messages comming from clients
@@ -114,6 +117,7 @@ public class UNetClient
 
     public BinaryWriter BeginMessage(int msgId)
     {
+        _writerStream.Position = 0;
         _writer.Write(msgId);
         return _writer;
     }
@@ -128,16 +132,28 @@ public class UNetClient
 
     void SendData(bool reliable)
     {
-        m_Driver.BeginSend(reliable ? reliablePipeline : unreliablePipeline, m_Connection, out var writer);
-        unsafe
+        try
         {
-            fixed (byte* pointerToFirst = _sendBuffer)
+            if (m_Connection == default(NetworkConnection)) return;
+            int status = m_Driver.BeginSend(reliable ? reliablePipeline : unreliablePipeline, m_Connection, out var writer);
+            if (status < 0)
             {
-                writer.WriteBytesUnsafe(pointerToFirst, (int)_writerStream.Position);
+                UNetPipelines.Check(status, (int)_writerStream.Position);
+                return;
             }
+            unsafe
+            {
+                fixed (byte* pointerToFirst = _sendBuffer)
+                {
+                    writer.WriteBytesUnsafe(pointerToFirst, (int)_writerStream.Position);
+                }
+            }
+            UNetPipelines.Check(m_Driver.EndSend(writer), (int)_writerStream.Position);
         }
-        UNetPipelines.Check(m_Driver.EndSend(writer), (int)_writerStream.Position);
-        _writerStream.Position = 0;
+        finally
+        {
+            _writerStream.Position = 0;
+        }
     }
 
     public void SendReliable<TMsg>(TMsg msg)
@@ -152,8 +168,16 @@ public class UNetClient
         where TMsg : INetMessage
     {
         Assert.IsTrue(ConnectionEstablished);
-        _writer.Write(msg.MessageId);
-        msg.Sync(_serializer);
-        SendData(reliable);
+        _writerStream.Position = 0;
+        try
+        {
+            _writer.Write(msg.MessageId);
+            msg.Sync(_serializer);
+            SendData(reliable);
+        }
+        finally
+        {
+            _writerStream.Position = 0;
+        }
     }
 }

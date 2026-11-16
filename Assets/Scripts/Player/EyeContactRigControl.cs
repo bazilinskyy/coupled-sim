@@ -47,6 +47,14 @@ public class EyeContactRigControl : MonoBehaviour
         }
     }
 
+    private void OnDestroy()
+    {
+        if (target != null)
+        {
+            Destroy(target);
+        }
+    }
+
 
 
 

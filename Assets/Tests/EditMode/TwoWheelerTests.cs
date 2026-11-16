@@ -95,5 +95,14 @@ namespace CoupledSim.Tests
             var s = Ride(TwoWheelerType.Bicycle, 5, new TwoWheelerInput { Brake = 1 });
             Assert.AreEqual(0f, s.Speed);
         }
+
+        [Test]
+        public void ZeroTimeStepProducesFiniteAcceleration()
+        {
+            var p = TwoWheelerParameters.Preset(TwoWheelerType.Bicycle);
+            var s = TwoWheelerDynamics.Step(new TwoWheelerState { Speed = 4f }, p, new TwoWheelerInput { Drive = 1f }, 0f);
+            Assert.IsFalse(float.IsNaN(s.Acceleration) || float.IsInfinity(s.Acceleration));
+            Assert.AreEqual(4f, s.Speed, 1e-6f);
+        }
     }
 }

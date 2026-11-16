@@ -31,30 +31,29 @@ public class EyeContact : MonoBehaviour
     private void Start()
     {
         Peds = GameObject.FindGameObjectsWithTag("Pedestrian");
-        aiCar = CarRigidbody.GetComponent<AICar>();
+        if (CarRigidbody != null) aiCar = CarRigidbody.GetComponent<AICar>();
     }
 
     private void FixedUpdate()
     {
+        if (aiCar == null || CarRigidbody == null || PlayerHead == null) return;
         bool yielding = aiCar.state == AICar.CarState.STOPPED;
         bool eyeContactTracking = (yielding ? TrackingWhileYielding : Tracking);
 
         float minDist = float.MaxValue;
-        if (eyeContactTracking)
+        targetPed = null;
+        if (eyeContactTracking && Peds != null)
         {
             foreach (GameObject ped in Peds)
             {
+                if (ped == null || !ped.activeInHierarchy) continue;
                 float distance = FlatDistance(PlayerHead.position, ped.transform.position);
                 if (minDist > distance)
                 {
                     minDist = distance;
                     targetPed = ped.transform;
                 }
-                Debug.Log("Car to pedestrian flat distance " + FlatDistance(CarRigidbody.transform.position, ped.transform.position));
             }
-        } else
-        {
-            targetPed = null;
         }
 
         if ((minDist > maxTrackingDistanceHead || minDist < minTrackingDistanceHead) && !yielding)
@@ -82,7 +81,6 @@ public class EyeContact : MonoBehaviour
     {
         var diffVector = pos1 - pos2;
         diffVector.y = 0;
-        diffVector.z = 0;
         var distance = diffVector.magnitude;
         return distance;
     }
