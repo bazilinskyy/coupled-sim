@@ -135,6 +135,20 @@ public static class MapRoutes
 
     // the lane's centre: a quarter of the road's width to the driver's side of two-way roads (the middle of a
     // one-way road), points every few metres
+    /// <summary>
+    /// How much of the carriageway a row of parked cars takes (m), as Dutch narrow streets do: fully on the road (2.1 m)
+    /// where the traffic still has its lanes beside them (1.9 m from the centre line to the parked cars per direction,
+    /// 2.4 m on a one-way street), else half on the kerb (1.0 m), else on the kerb (0.2 m). A parked car's centre is
+    /// then <c>width / 2 + 1.1 - depth</c> from the road's centre line.
+    /// </summary>
+    public static float ParkDepth(float width, bool oneWay, int sides)
+    {
+        if (sides <= 0) return 0f;
+        foreach (var depth in new[] { 2.1f, 1.0f })
+            if (oneWay ? width - depth * sides >= 2.4f : width / 2f - depth >= 1.9f) return depth;
+        return 0.2f;
+    }
+
     /// <summary>The route at p (heading d) runs along the line's direction (not against it).</summary>
     static bool Aligned(List<Vector3> line, Vector3 p, Vector3 d)
     {
@@ -159,10 +173,12 @@ public static class MapRoutes
             float off = road.OneWay ? (road.Width >= 6.6f ? road.Width / 4f : 0f) : Clamp(road.Width / 4f, 1.5f, 3.5f);
             if (road.ParkLeft || road.ParkRight)
             {
-                // parked cars take 2.1 m of the carriageway on their side: the lane runs between them and the centre
-                // line (or the middle of a one-way street's free part); a narrow street is driven in its middle
+                // parked cars take ParkDepth of the carriageway on their side: the lane runs between them and the centre
+                // line (or in the middle of a one-way street's free part)
                 bool along = Aligned(road.Line, p, d);
-                float parkR = (along ? road.ParkRight : road.ParkLeft) ? 2.1f : 0f, parkL = (along ? road.ParkLeft : road.ParkRight) ? 2.1f : 0f;
+                int sides = (road.ParkLeft ? 1 : 0) + (road.ParkRight ? 1 : 0);
+                float depth = ParkDepth(road.Width, road.OneWay, sides);
+                float parkR = (along ? road.ParkRight : road.ParkLeft) ? depth : 0f, parkL = (along ? road.ParkLeft : road.ParkRight) ? depth : 0f;
                 float half = road.Width / 2f;
                 if (road.OneWay)
                 {
@@ -171,8 +187,9 @@ public static class MapRoutes
                 }
                 else
                 {
-                    float park = lht ? parkL : parkR;   // on the driver's side
-                    off = Clamp(Math.Min((half - park) / 2f, half - park - 1.2f), 0f, 3.5f);
+                    float free = half - (lht ? parkL : parkR);   // from the centre line to the parked cars on the driver's side
+                    // (at least 0.95 m from the middle, so oncoming cars pass each other even on a very narrow street)
+                    off = free >= 1.9f ? Clamp(Math.Min(free / 2f + 0.2f, free - 1.0f), 0.95f, 3.5f) : 0.95f;
                 }
             }
             var q = p + right * side * off;
