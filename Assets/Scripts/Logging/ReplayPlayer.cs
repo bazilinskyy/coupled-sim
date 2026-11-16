@@ -211,7 +211,9 @@ public class ReplayPlayer : MonoBehaviour
         int nDrivers = _info.Drivers.Length;
         for (int p = 0; p < nDrivers + _pedestrians.Count; p++)
         {
-            var points = new List<Vector3>();
+            // one line per stretch: a jump (the participant placed at its start, a respawn) starts a new one, so no
+            // trail cuts straight across buildings or water
+            var pieces = new List<List<Vector3>> { new List<Vector3>() };
             Vector3 last = new Vector3(float.MaxValue, 0, 0);
             foreach (var f in _log.Frames)
             {
@@ -219,18 +221,23 @@ public class ReplayPlayer : MonoBehaviour
                 if (p < nDrivers) { if (p >= f.DriverCount) continue; q = f.Positions[p]; }
                 else { var pose = f.Pedestrians[p - nDrivers]; if (pose.LocalPositions == null || pose.LocalPositions.Count == 0) continue; q = pose.LocalPositions[0]; }
                 if ((q - last).sqrMagnitude < 0.25f) continue;
-                points.Add(q + Vector3.up * 0.15f);
+                if (last.x != float.MaxValue && (q - last).sqrMagnitude > 15f * 15f && pieces[pieces.Count - 1].Count > 0) pieces.Add(new List<Vector3>());
+                pieces[pieces.Count - 1].Add(q + Vector3.up * 0.15f);
                 last = q;
             }
-            var lr = new GameObject("Trail " + p).AddComponent<LineRenderer>();
-            lr.transform.SetParent(transform, false);
-            lr.material = mat;
-            lr.startColor = lr.endColor = colors[p % colors.Length];
-            lr.widthMultiplier = 0.25f;
-            lr.positionCount = points.Count;
-            lr.SetPositions(points.ToArray());
-            lr.enabled = _showTrails;
-            _trails.Add(lr);
+            foreach (var points in pieces)
+            {
+                if (points.Count < 2) continue;
+                var lr = new GameObject("Trail " + p).AddComponent<LineRenderer>();
+                lr.transform.SetParent(transform, false);
+                lr.material = mat;
+                lr.startColor = lr.endColor = colors[p % colors.Length];
+                lr.widthMultiplier = 0.25f;
+                lr.positionCount = points.Count;
+                lr.SetPositions(points.ToArray());
+                lr.enabled = _showTrails;
+                _trails.Add(lr);
+            }
         }
     }
 
@@ -428,12 +435,9 @@ public class ReplayPlayer : MonoBehaviour
             var target = participants[_follow];
             if (_inside)
             {
-                // the participant's own view: their camera (cars) or the head (pedestrians)
-                var eye = target.cameras != null && target.cameras.Length > 0 && target.cameras[0] != null ? target.cameras[0].transform : null;
-                var an = target.GetComponentInChildren<Animator>();
-                var head = an != null && an.isHuman ? an.GetBoneTransform(HumanBodyBones.Head) : null;
-                var pos = eye != null ? eye.position : head != null ? head.position + target.transform.forward * 0.1f : target.transform.position + Vector3.up * 1.6f;
-                t.SetPositionAndRotation(pos, target.transform.rotation * Quaternion.Euler(Mathf.Clamp(_pitch - 15f, -60f, 60f), _yaw, 0f));
+                // the participant's own view: their camera (cars), in front of the face (people on foot or on two wheels)
+                VideoExport.OwnView(target, out var pos, out var own);
+                t.SetPositionAndRotation(pos, Quaternion.Euler(0f, own.eulerAngles.y, 0f) * Quaternion.Euler(Mathf.Clamp(_pitch - 15f, -60f, 60f), _yaw, 0f));
             }
             else
             {

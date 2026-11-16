@@ -343,7 +343,9 @@ public static class SmokeTest
             {
                 // behind and beside the participant's vehicle or avatar
                 var t = local.transform;
-                camGo.transform.position = t.position - t.forward * 4.5f - t.right * 1.8f + Vector3.up * 1.9f; // road side (left, right-hand traffic)
+                // on the side of the road's centre (left in right-hand traffic, right in left-hand traffic)
+                float centreSide = OsmMap.Current != null && OsmMap.Current.Info.LeftHandTraffic ? 1f : -1f;
+                camGo.transform.position = t.position - t.forward * 4.5f + t.right * 1.8f * centreSide + Vector3.up * 1.9f;
                 camGo.transform.LookAt(t.position + Vector3.up * 0.9f + t.forward * 1.5f);
             }
             else if (view.Trim() == "front" && local != null)
