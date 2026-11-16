@@ -66,7 +66,7 @@ public class ParticipantAutopilot : MonoBehaviour
             }
             float effort = bend > 50f ? 0.2f : Effort, brake = bend > 70f ? 0.3f : 0f;
             // something ahead (a vehicle, a person, an animal, a parked car): ease off, brake, wait 1.5 m behind it
-            float gap = ObstacleAhead();
+            float gap = Mathf.Min(ObstacleAhead(), RedLightAhead());
             if (gap < float.MaxValue)
             {
                 float speed = _body != null ? _body.linearVelocity.magnitude : 0f;
@@ -103,7 +103,7 @@ public class ParticipantAutopilot : MonoBehaviour
             {
                 float d = along + s;
                 if (d < 1.2f) continue;   // (the rider's own length)
-                if (d > 12f) return float.MaxValue;
+                if (d > 12f) return Crossing();
                 var c = prev + seg * (s / len) + Vector3.up * 0.9f;
                 int n = Physics.OverlapSphereNonAlloc(c, 0.55f, _near, ~0, QueryTriggerInteraction.Ignore);
                 for (int i = 0; i < n; i++)
@@ -123,6 +123,90 @@ public class ParticipantAutopilot : MonoBehaviour
             }
             along += len; prev = new Vector3(q.x, prev.y, q.z);
         }
+        return Crossing();
+    }
+
+    static readonly List<CarTrafficLight> _lights = new List<CarTrafficLight>();
+    static float _nextLightScan = -1f;
+
+    /// <summary>
+    /// A red light (or a yellow one it can stop for at 3 m/s²) for the rider's way within 40 m: the distance to its stop
+    /// line, 2 m before the head (signal heads stand a few metres past the line, beside the road, facing the traffic they
+    /// control); float.MaxValue when there is none. Riders on a cycle path beside the road keep the road's lights.
+    /// </summary>
+    float RedLightAhead()
+    {
+        if (Time.time >= _nextLightScan) { _nextLightScan = Time.time + 2f; _lights.Clear(); _lights.AddRange(FindObjectsByType<CarTrafficLight>()); }
+        if (_lights.Count == 0) return float.MaxValue;
+        int step = _back ? -1 : 1;
+        var prev = transform.position; float along = 0f;
+        float speed = _body != null ? _body.linearVelocity.magnitude : 0f;
+        for (int i = 0, k = _index; i < 12 && k >= 0 && k < Path.Count && along < 40f; i++, k += step)
+        {
+            var seg = Flat(Path[k] - prev); float len = seg.magnitude;
+            for (float s = 2f; s <= len; s += 2f)
+            {
+                var p = prev + seg * (s / len); float d = along + s;
+                var dir = seg / Mathf.Max(len, 1e-3f);
+                foreach (var light in _lights)
+                {
+                    if (light == null || (light.State != LightState.RED && light.State != LightState.YELLOW && light.State != LightState.RED_AND_YELLOW)) continue;
+                    if (Flat(light.transform.position - p).sqrMagnitude > 6f * 6f) continue;
+                    if (Vector3.Dot(Flat(TrafficCar.LightFacing(light.transform)).normalized, dir) > -0.7f) continue;
+                    float stop = Mathf.Max(0f, d - 3f);
+                    if (light.State == LightState.YELLOW && speed * speed / 6f > stop) continue;   // too close: ride on
+                    return stop;
+                }
+            }
+            along += len; prev = new Vector3(Path[k].x, prev.y, Path[k].z);
+        }
         return float.MaxValue;
+    }
+
+    readonly Collider[] _around = new Collider[64];
+    readonly HashSet<Rigidbody> _seen = new HashSet<Rigidbody>();
+    readonly List<(Vector3 p, float d)> _samples = new List<(Vector3, float)>();
+
+    /// <summary>
+    /// Vehicles about to cross the path (from the side, at a junction): each moving vehicle within 25 m, straight on at
+    /// its speed for the next 3 s, that reaches a point of the path within 1.3 m less than a second after the rider would
+    /// (or before): the distance to that point, so the rider slows and gives way instead of riding into it.
+    /// </summary>
+    float Crossing()
+    {
+        if (_rider == null || _body == null) return float.MaxValue;
+        int step = _back ? -1 : 1;
+        _samples.Clear();
+        var prev = transform.position; float along = 0f;
+        for (int i = 0, k = _index; i < 8 && k >= 0 && k < Path.Count; i++, k += step)
+        {
+            var seg = Flat(Path[k] - prev); float len = seg.magnitude;
+            for (float s = 1f; s <= len && along + s <= 20f; s += 1f) _samples.Add((prev + seg * (s / len), along + s));
+            along += len; prev = new Vector3(Path[k].x, prev.y, Path[k].z);
+            if (along > 20f) break;
+        }
+        float mySpeed = Mathf.Max(1f, _body.linearVelocity.magnitude);
+        float best = float.MaxValue;
+        _seen.Clear();
+        int n = Physics.OverlapSphereNonAlloc(transform.position, 25f, _around, ~0, QueryTriggerInteraction.Ignore);
+        for (int i = 0; i < n; i++)
+        {
+            var rb = _around[i].attachedRigidbody;
+            if (rb == null || rb.transform.IsChildOf(transform) || transform.IsChildOf(rb.transform) || !_seen.Add(rb)) continue;
+            var v = Flat(rb.linearVelocity);
+            if (v.sqrMagnitude < 1f) continue;   // standing: ObstacleAhead's when on the path
+            if (Vector3.Dot(v.normalized, Flat(transform.forward)) > 0.7f) continue;   // the same way: followed, not crossing
+            for (float t = 0f; t <= 3f; t += 0.25f)
+            {
+                var q = rb.position + v * t;
+                foreach (var (sp, sd) in _samples)
+                {
+                    if (sd >= best || Flat(q - sp).sqrMagnitude > 1.3f * 1.3f) continue;
+                    if (t < sd / mySpeed + 1f) best = Mathf.Max(0f, sd - 2.5f);
+                    break;
+                }
+            }
+        }
+        return best;
     }
 }

@@ -329,7 +329,7 @@ public class VideoExport : MonoBehaviour
         {
             try
             {
-                var p = Process.Start(new ProcessStartInfo(exe, $"-y -loglevel error -framerate {Fps} -i \"{Path.Combine(dir, "frame_%06d.jpg")}\" " + (wav != null ? $"-i \"{wav}\" -c:a aac -b:a 96k -shortest " : "") + $"-c:v libx264 -preset slow -pix_fmt yuv420p -crf {Crf} -movflags +faststart \"{mp4}\"")
+                var p = Process.Start(new ProcessStartInfo(exe, $"-y -loglevel error -framerate {Fps} -i \"{Path.Combine(dir, "frame_%06d.jpg")}\" " + (wav != null ? $"-i \"{wav}\" -c:a aac -b:a 192k -shortest " : "") + $"-c:v libx264 -preset slow -pix_fmt yuv420p -crf {Crf} -movflags +faststart \"{mp4}\"")
                 { UseShellExecute = false, CreateNoWindow = true, RedirectStandardError = true });
                 p.WaitForExit(600000);
                 if (p.ExitCode == 0 && File.Exists(mp4)) return true;
