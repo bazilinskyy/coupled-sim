@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using UnityEngine;
 
 public enum Weather
@@ -318,11 +319,54 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
         if (_cabin.transform.parent != root) { _cabin.transform.SetParent(root, false); _cabinDirty = true; }
         _cabin.transform.position = main.transform.position;
         _cabin.transform.rotation = root.rotation;
+        // The in-car displays (world-space canvases: the instrument cluster, a centre screen) are left out of the cabin's
+        // reflections: unlit and bright against a dark cabin, they came out of the small, blurry probe as large coloured
+        // blobs on the windscreen above the dashboard and in the side window by the mirror. The windscreen still reflects
+        // the dark dashboard. (They are drawn on the UI layer, which every camera shows and the cabin probe leaves out.)
+        int ui = LayerMask.NameToLayer("UI");
+        if (ui >= 0)
+        {
+            _cabin.cullingMask = ~(1 << ui);
+            foreach (var c in root.GetComponentsInChildren<Canvas>())
+                if (c.renderMode == RenderMode.WorldSpace)
+                    foreach (var t in c.GetComponentsInChildren<Transform>(true))
+                        if (t.gameObject.layer != ui) { t.gameObject.layer = ui; _cabinDirty = true; }
+        }
+        if (_debugProbes) LogProbes(main, root);
         if (_cabinDirty && !(_liveRender >= 0 && !_live.IsFinishedRendering(_liveRender)) && !CabinRendering)
         {
             _cabinDirty = false;
             _cabinRender = _cabin.RenderProbe();
         }
+    }
+
+    // -debugProbes: which reflection probes the road ahead and the viewer's own glass use (every 2 s)
+    static readonly bool _debugProbes = Array.IndexOf(Environment.GetCommandLineArgs(), "-debugProbes") >= 0;
+    float _nextProbeLog;
+    readonly List<UnityEngine.Rendering.ReflectionProbeBlendInfo> _blend = new List<UnityEngine.Rendering.ReflectionProbeBlendInfo>();
+    void LogProbes(Camera main, Transform root)
+    {
+        if (Time.unscaledTime < _nextProbeLog) return;
+        _nextProbeLog = Time.unscaledTime + 2f;
+        string Info(Renderer r)
+        {
+            if (r == null) return "-";
+            r.GetClosestReflectionProbes(_blend);
+            return r.name + ": " + string.Join(", ", _blend.Select(b => $"{(b.probe != null ? b.probe.name : "?")} {b.weight:F2}"));
+        }
+        var parts = new List<string>();
+        foreach (var d in new[] { 6f, 15f })
+        {
+            var from = main.transform.position + Vector3.ProjectOnPlane(main.transform.forward, Vector3.up).normalized * d + Vector3.up * 3f;
+            if (Physics.Raycast(from, Vector3.down, out var hit, 10f, ~0, QueryTriggerInteraction.Ignore))
+                parts.Add($"ground {d} m ahead {Info(hit.collider.GetComponent<Renderer>())}");
+        }
+        foreach (var r in root.GetComponentsInChildren<Renderer>())
+        {
+            var n = r.name.ToLowerInvariant();
+            if (n.Contains("glass") || n.Contains("window") || n.Contains("wind") || n.Contains("dash")) parts.Add("own " + Info(r));
+        }
+        Debug.Log($"ProbeDebug cabin importance {_cabin.importance}: " + string.Join(" | ", parts));
     }
 
     void HideOwnVehicle(UnityEngine.Rendering.ScriptableRenderContext ctx, Camera cam)
@@ -804,13 +848,14 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
         if (_rain == null) return;
         var emission = _rain.emission;
         emission.rateOverTime = 9000f * intensity;
-        Blow(_rain, 10f, 12f, 40f);
+        Blow(_rain, 10f, 12f, RainBox);
         if (intensity > 0.01f && !_rain.isPlaying) _rain.Play();
         else if (intensity <= 0.01f && _rain.isPlaying) _rain.Stop(true, ParticleSystemStopBehavior.StopEmitting);
     }
 
-    // carried by the wind: drops and flakes drift with it, emitted upwind so they still fall around the viewer
-    void Blow(ParticleSystem ps, float fallSpeed, float height, float size)
+    // carried by the wind: drops and flakes drift with it, emitted upwind so they still fall around the viewer.
+    // Snow (slow: 13 s from 14 m) is emitted through the whole height, so it is around the viewer from the start.
+    void Blow(ParticleSystem ps, float fallSpeed, float height, float size, bool wholeHeight = false)
     {
         var w = Wind * 0.85f;
         var vel = ps.velocityOverLifetime;
@@ -819,8 +864,8 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
         vel.z = new ParticleSystem.MinMaxCurve(w.z - 0.5f, w.z + 0.5f);
         var shape = ps.shape;
         float drift = height / fallSpeed;
-        shape.position = new Vector3(-w.x * drift * 0.5f, height, -w.z * drift * 0.5f);
-        shape.scale = new Vector3(size + Mathf.Abs(w.x) * drift, 1f, size + Mathf.Abs(w.z) * drift);
+        shape.position = new Vector3(-w.x * drift * 0.5f, wholeHeight ? height * 0.5f - 1f : height, -w.z * drift * 0.5f);
+        shape.scale = new Vector3(size + Mathf.Abs(w.x) * drift, wholeHeight ? height + 2f : 1f, size + Mathf.Abs(w.z) * drift);
     }
 
     void CreateSnow()
@@ -897,25 +942,63 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
         if (_snow == null) return;
         var emission = _snow.emission;
         emission.rateOverTime = 4000f * intensity;
-        Blow(_snow, 1.1f, 14f, 50f);
+        Blow(_snow, 1.1f, 14f, SnowBox, true);
         if (intensity > 0.01f && !_snow.isPlaying) _snow.Play();
         else if (intensity <= 0.01f && _snow.isPlaying) _snow.Stop(true, ParticleSystemStopBehavior.StopEmitting);
     }
 
-    // rain falls around whoever is looking
+    /// <summary>Where rain and snow fall around when not the main camera (e.g. a video's camera); null: the main camera.</summary>
+    public static Transform PrecipitationAnchor;
+
+    // rain and snow fall around whoever is looking, wherever they go: the emitters follow the camera (found again
+    // every frame: the camera may change), and drops and flakes the camera leaves behind (the box is 40-50 m wide;
+    // flakes take 13 s to fall) are moved to the box's other side, ahead of it, so it never stops snowing around a
+    // moving viewer
     void FollowCamera()
     {
         if (_rain == null || (Rain <= 0.01f && Snowfall <= 0.01f)) return;
+        _rainFollow = PrecipitationAnchor;
         if (_rainFollow == null || !_rainFollow.gameObject.activeInHierarchy)
         {
             var cam = Camera.main;
-            if (cam == null)
+            if (cam == null || !cam.isActiveAndEnabled)
             {
+                cam = null;
                 foreach (var c in FindObjectsByType<Camera>())
                     if (c.isActiveAndEnabled && c.targetTexture == null) { cam = c; break; }
             }
             _rainFollow = cam != null ? cam.transform : null;
         }
-        if (_rainFollow != null) { _rain.transform.position = _rainFollow.position; if (_snow != null) _snow.transform.position = _rainFollow.position; }
+        if (_rainFollow == null) return;
+        var at = _rainFollow.position;
+        _rain.transform.position = at;
+        if (_snow != null) _snow.transform.position = at;
+        if (Rain > 0.01f) Wrap(_rain, at, RainBox * 0.5f);
+        if (_snow != null && Snowfall > 0.01f) Wrap(_snow, at, SnowBox * 0.5f);
+    }
+
+    const float RainBox = 40f, SnowBox = 50f;
+    ParticleSystem.Particle[] _wrapBuffer;
+
+    // particles more than half a box from the viewer (horizontally) go to the other side of the box
+    void Wrap(ParticleSystem ps, Vector3 at, float half)
+    {
+        int max = ps.main.maxParticles;
+        if (_wrapBuffer == null || _wrapBuffer.Length < max) _wrapBuffer = new ParticleSystem.Particle[max];
+        int n = ps.GetParticles(_wrapBuffer);
+        bool moved = false;
+        for (int i = 0; i < n; i++)
+        {
+            var p = _wrapBuffer[i].position;
+            float dx = p.x - at.x, dz = p.z - at.z;
+            if (dx > half || dx < -half || dz > half || dz < -half)
+            {
+                p.x = at.x + Mathf.Repeat(dx + half, 2f * half) - half;
+                p.z = at.z + Mathf.Repeat(dz + half, 2f * half) - half;
+                _wrapBuffer[i].position = p;
+                moved = true;
+            }
+        }
+        if (moved) ps.SetParticles(_wrapBuffer, n);
     }
 }

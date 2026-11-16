@@ -38,10 +38,30 @@ public class ObservedSteering : MonoBehaviour
     /// <summary>Road-wheel angle (degrees, positive = right) estimated from the motion.</summary>
     public float SteerAngle => _steer;
 
+    /// <summary>The curvature of the path is given (<see cref="Drive"/>, e.g. by a replay, from the logged path over a
+    /// second) instead of estimated here frame by frame.</summary>
+    [HideInInspector] public bool Driven;
+
+    /// <summary>
+    /// Turns the wheel for a path of this curvature (1/m, positive = to the right), or holds it where it is
+    /// (null: standing still). The wheel follows within about 0.15 s.
+    /// </summary>
+    public void Drive(float? curvature, float dt)
+    {
+        Driven = true;
+        if (SteeringWheel == null) return;
+        if (curvature.HasValue && dt > 0f)
+        {
+            float target = Mathf.Clamp(Mathf.Atan(_wheelbase * curvature.Value) * Mathf.Rad2Deg, -MaxSteerAngle, MaxSteerAngle);
+            _steer = Mathf.Lerp(_steer, target, 1f - Mathf.Exp(-dt * 6f));
+        }
+        SteeringWheel.localRotation = Quaternion.AngleAxis(_steer * SteeringRatio * Direction, Vector3.forward);
+    }
+
     void LateUpdate()
     {
         float dt = Time.deltaTime;
-        if (SteeringWheel == null || dt <= 0f) return;
+        if (Driven || SteeringWheel == null || dt <= 0f) return;
         var pos = transform.position;
         float yaw = transform.eulerAngles.y;
         if (!_started) { _started = true; _lastPos = pos; _lastYaw = yaw; return; }
