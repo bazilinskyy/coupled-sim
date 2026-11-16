@@ -372,6 +372,14 @@ public class ReplayPlayer : MonoBehaviour
             var pos = a.Positions[i]; var rot = a.Rotations[i];
             if (i < b.DriverCount && (b.Positions[i] - pos).sqrMagnitude < 25f) { pos = Vector3.Lerp(pos, b.Positions[i], u); rot = Quaternion.Slerp(rot, b.Rotations[i], u); }
             d.transform.SetPositionAndRotation(pos, rot);
+            if (i == 0 && _debugEye && Time.unscaledTime > _nextEyeLog)
+            {
+                _nextEyeLog = Time.unscaledTime + 1f;
+                Renderer big = null; float size = 0f;
+                foreach (var r in d.GetComponentsInChildren<MeshRenderer>()) { float s = r.bounds.size.sqrMagnitude; if (s > size) { size = s; big = r; } }
+                var cam = d.cameras != null && d.cameras.Length > 0 && d.cameras[0] != null ? d.cameras[0].transform : null;
+                Debug.Log($"ReplayEyeDebug t={_time:F1}: body {(big != null ? big.name + " " + d.transform.InverseTransformPoint(big.bounds.center).ToString("F2") : "-")}, camera {(cam != null ? cam.name + " " + d.transform.InverseTransformPoint(cam.position).ToString("F2") : "-")}, root {d.transform.position:F1}");
+            }
             if (d.CarBlinkers != null && d.CarBlinkers.State != a.Blinkers[i]) d.CarBlinkers.SwitchToState(a.Blinkers[i]);
             if (d.frontLights != null && d.frontLights.activeSelf != a.FrontLights[i]) d.frontLights.SetActive(a.FrontLights[i]);
             if (d.stopLights != null && d.stopLights.activeSelf != a.StopLights[i]) d.stopLights.SetActive(a.StopLights[i]);
@@ -508,6 +516,8 @@ public class ReplayPlayer : MonoBehaviour
 
     // the followed participant's own figure is hidden while the replay camera renders their own view
     List<Renderer> _hiddenFigure;
+    static readonly bool _debugEye = Array.IndexOf(Environment.GetCommandLineArgs(), "-debugEye") >= 0;
+    float _nextEyeLog;
     void OnEnable()
     {
         UnityEngine.Rendering.RenderPipelineManager.beginCameraRendering += BeginCamera;
