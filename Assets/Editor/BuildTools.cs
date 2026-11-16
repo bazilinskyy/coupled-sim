@@ -8,7 +8,8 @@ using UnityEngine;
 /// <summary>
 /// Builds the simulator for the lab PCs: Coupled Sim ➡️ Build ➡️ Windows / macOS / Linux, into
 /// Builds/{platform}/. Batch mode: -executeMethod BuildTools.Build -buildTarget Win64|OSX|Linux64
-/// [-buildPath path]. Experiment scenes are added to the build settings first.
+/// [-buildPath path]. Experiment scenes are added to the build settings first; the macOS app is universal (Intel and
+/// Apple silicon).
 /// </summary>
 public static class BuildTools
 {
@@ -36,6 +37,8 @@ public static class BuildTools
     public static bool Build(BuildTarget target, string path = null)
     {
         ExperimentSetup.WithStartScene(nm => ExperimentSetup.RegisterScenes(nm), false);
+        // macOS: one app for Intel and Apple silicon Macs (Unity's default builds for the editor's own kind only)
+        if (target == BuildTarget.StandaloneOSX) UnityEditor.OSXStandalone.UserBuildSettings.architecture = UnityEditor.Build.OSArchitecture.x64ARM64;
         string name = PlayerSettings.productName;
         string folder = target == BuildTarget.StandaloneWindows64 ? "Windows" : target == BuildTarget.StandaloneOSX ? "macOS" : "Linux";
         path ??= Path.Combine("Builds", folder, target == BuildTarget.StandaloneWindows64 ? name + ".exe" : target == BuildTarget.StandaloneOSX ? name + ".app" : name.Replace(' ', '_'));
