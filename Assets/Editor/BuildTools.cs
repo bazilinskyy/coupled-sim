@@ -38,7 +38,8 @@ public static class BuildTools
     {
         ExperimentSetup.WithStartScene(nm => ExperimentSetup.RegisterScenes(nm), false);
         // macOS: one app for Intel and Apple silicon Macs (Unity's default builds for the editor's own kind only)
-        if (target == BuildTarget.StandaloneOSX) UnityEditor.OSXStandalone.UserBuildSettings.architecture = UnityEditor.Build.OSArchitecture.x64ARM64;
+        // (set by name: the macOS build module, whose UserBuildSettings class has it, is not in every editor, e.g. CI's)
+        if (target == BuildTarget.StandaloneOSX) EditorUserBuildSettings.SetPlatformSettings("Standalone", "OSXUniversal", "Architecture", "x64ARM64");
         string name = PlayerSettings.productName;
         string folder = target == BuildTarget.StandaloneWindows64 ? "Windows" : target == BuildTarget.StandaloneOSX ? "macOS" : "Linux";
         path ??= Path.Combine("Builds", folder, target == BuildTarget.StandaloneWindows64 ? name + ".exe" : target == BuildTarget.StandaloneOSX ? name + ".app" : name.Replace(' ', '_'));
