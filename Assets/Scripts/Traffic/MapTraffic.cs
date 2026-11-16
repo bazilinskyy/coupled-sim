@@ -295,7 +295,8 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
                 for (float d = 0; d < r.Length - 100f; d += 4f)
                 {
                     var rp = r.GetRoutePoint(d);
-                    float score = (rp.position - at).sqrMagnitude + (Vector3.Dot(rp.direction, fwd) < 0.3f ? 900f : 0f);
+                    // (near, pointing the rider's way, and with at least 300 m to go: the ride does not end round the corner)
+                    float score = (rp.position - at).sqrMagnitude + (Vector3.Dot(rp.direction, fwd) < 0.3f ? 900f : 0f) + (r.Length - d < 350f ? 2500f : 0f);
                     if (score < bestScore) { bestScore = score; bestR = r; bestD = d; }
                 }
             // bicycles, e-scooters and 25 km/h mopeds on the cycle path or track beside the road where there is one;
@@ -308,7 +309,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         // start on the path, facing along it
         int i0 = 0; float bd = float.MaxValue;
         for (int i = 0; i < path.Count - 1; i++) { float d = (path[i] - at).sqrMagnitude; if (d < bd) { bd = d; i0 = i; } }
-        if (bd > 4f)
+        if (bd > 1f)
         {
             var p0 = path[i0]; var dir = path[Mathf.Min(i0 + 1, path.Count - 1)] - p0; dir.y = 0;
             if (Physics.Raycast(p0 + Vector3.up * 3f, Vector3.down, out var hit, 10f, ~0, QueryTriggerInteraction.Ignore)) p0.y = hit.point.y + 0.05f;
@@ -327,7 +328,8 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
 
     static Ground GroundAt(Vector3 p)
     {
-        if (!Physics.Raycast(p + Vector3.up * 4f, Vector3.down, out var hit, 10f, ~0, QueryTriggerInteraction.Ignore)) return Ground.None;
+        // (a sphere 0.7 m across, not a thin ray: a lamp or sign post standing in a cycle path is found, and ends it there)
+        if (!Physics.SphereCast(p + Vector3.up * 4f, 0.35f, Vector3.down, out var hit, 10f, ~0, QueryTriggerInteraction.Ignore)) return Ground.None;
         if (hit.collider.attachedRigidbody != null) return Ground.None;   // a vehicle: unknown ground
         var n = hit.collider.name;
         if (n.IndexOf("ycle", StringComparison.Ordinal) >= 0) return Ground.Cycle;
