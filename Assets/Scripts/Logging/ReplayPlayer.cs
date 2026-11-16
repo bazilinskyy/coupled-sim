@@ -196,6 +196,14 @@ public class ReplayPlayer : MonoBehaviour
         a.Initialize(true, PlayerSystem.InputMode.None, PlayerSystem.ControlMode.HostAI, PlayerSystem.VehicleType.MDV);
         foreach (var mb in a.GetComponentsInChildren<MonoBehaviour>(true))
             if (mb != null && !KeepOnAvatar.Contains(mb.GetType().Name) && !IsUnity(mb)) mb.enabled = false;
+        // the driver's eye relative to the vehicle, before anything poses the figure that may carry the camera
+        var eye = a.cameras != null && a.cameras.Length > 0 && a.cameras[0] != null ? a.cameras[0].transform : null;
+        if (eye != null && a.Type == AvatarType.Driver)
+        {
+            var re = a.gameObject.AddComponent<ReplayEye>();
+            re.LocalPosition = a.transform.InverseTransformPoint(eye.position);
+            re.LocalYaw = Mathf.DeltaAngle(a.transform.eulerAngles.y, eye.eulerAngles.y);
+        }
         foreach (var c in a.GetComponentsInChildren<Camera>(true)) c.enabled = false;
         foreach (var l in a.GetComponentsInChildren<AudioListener>(true)) l.enabled = false;
         foreach (var s in a.GetComponentsInChildren<AudioSource>(true)) s.enabled = false;
