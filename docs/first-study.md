@@ -4,7 +4,7 @@ This tutorial takes you through a small but complete study, from the question to
 
 **The question.** *Does a light on an automated car help pedestrians decide when to cross in front of it?* Two people take part at the same time: the experimenter sits in the automated car (AV) and the participant is a pedestrian at a crossing. In some trials the AV has no external display (eHMI), in some a cyan light bar on its bumper, in some a text "WALK" on its windscreen. The pedestrian holds a key while they feel safe to cross; the simulator logs that, and where everyone is, every frame.
 
-![The AV with the cyan light bar on its bumper, seen by the pedestrian](../ReadmeFiles/guide/first_study_ehmi.jpg)
+![The AV with the cyan light bar on its bumper, as the pedestrian sees it from the kerb](../ReadmeFiles/guide/first_study_ehmi.jpg)
 
 ## 1. Get the simulator
 1. Download the zip for your computer (Windows or macOS) from the newest release on the [Releases page](https://github.com/bazilinskyy/coupled-sim/releases) and unzip it. On macOS, right-click `Coupled Simulator.app` and choose **Open** the first time (it is not signed).

@@ -206,15 +206,42 @@ public class VideoExport : MonoBehaviour
     /// <summary>A participant's own view: their camera (cars, two-wheelers, drones) or their head (pedestrians), level, smoothed.</summary>
     void Eye(PlayerAvatar p, Transform t, bool first)
     {
-        var eye = p.cameras != null && p.cameras.Length > 0 && p.cameras[0] != null ? p.cameras[0].transform : null;
-        var an = p.GetComponentInChildren<Animator>();
-        var head = p.Type == AvatarType.Pedestrian && an != null && an.isHuman ? an.GetBoneTransform(HumanBodyBones.Head) : null;
-        var pos = head != null ? head.position + p.transform.forward * 0.12f : eye != null ? eye.position
-            : p.Type == AvatarType.Drone ? p.transform.position - Quaternion.Euler(0, p.transform.eulerAngles.y, 0) * Vector3.forward * 1.4f + Vector3.up * 0.45f   // a drone: from just behind
-            : p.transform.position + Vector3.up * 1.6f;
-        var rot = Quaternion.Euler(head != null ? 8f : 4f, p.transform.eulerAngles.y, 0f);
+        if (!OwnView(p, out var pos, out var rot)) return;
         if (first) t.SetPositionAndRotation(pos, rot);
         else { float k = 1f - Mathf.Exp(-14f / Fps); t.SetPositionAndRotation(Vector3.Lerp(t.position, pos, 0.8f), Quaternion.Slerp(t.rotation, rot, k)); }
+    }
+
+    /// <summary>
+    /// A participant's own view: in front of the face of a person on foot or on a two-wheeler (facing where the
+    /// shoulders face: in a replay the body turns, not the avatar's root; and not inside the head, which a camera at
+    /// the head bone would show from within), the car's own camera, or just behind a drone.
+    /// </summary>
+    public static bool OwnView(PlayerAvatar p, out Vector3 pos, out Quaternion rot)
+    {
+        pos = Vector3.zero; rot = Quaternion.identity;
+        if (p == null) return false;
+        var eye = p.cameras != null && p.cameras.Length > 0 && p.cameras[0] != null ? p.cameras[0].transform : null;
+        var an = p.GetComponentInChildren<Animator>();
+        bool person = p.Type != AvatarType.Drone && (p.Type == AvatarType.Pedestrian || p.GetComponent<TwoWheelerController>() != null);
+        var head = person && an != null && an.isHuman ? an.GetBoneTransform(HumanBodyBones.Head) : null;
+        if (head != null)
+        {
+            var fwd = Vector3.ProjectOnPlane(p.transform.forward, Vector3.up).normalized;
+            var l = an.GetBoneTransform(HumanBodyBones.LeftUpperArm); var r = an.GetBoneTransform(HumanBodyBones.RightUpperArm);
+            if (p.Type == AvatarType.Pedestrian && l != null && r != null)
+            {
+                var across = Vector3.ProjectOnPlane(r.position - l.position, Vector3.up);
+                if (across.sqrMagnitude > 0.01f) fwd = Vector3.Cross(across.normalized, Vector3.up);
+            }
+            pos = head.position + Vector3.up * 0.09f + fwd * 0.22f;
+            rot = Quaternion.LookRotation(fwd, Vector3.up) * Quaternion.Euler(8f, 0f, 0f);
+            return true;
+        }
+        pos = eye != null ? eye.position
+            : p.Type == AvatarType.Drone ? p.transform.position - Quaternion.Euler(0, p.transform.eulerAngles.y, 0) * Vector3.forward * 1.4f + Vector3.up * 0.45f   // a drone: from just behind
+            : p.transform.position + Vector3.up * 1.6f;
+        rot = Quaternion.Euler(4f, p.transform.eulerAngles.y, 0f);
+        return true;
     }
 
     void Place(Shot s)

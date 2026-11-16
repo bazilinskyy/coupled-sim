@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Example: a car approaches along x and brakes to a stop; a pedestrian crosses in front of it.
-     World coordinates of the scene (for the town: relative to its origin). -->
+<!-- Example: in the town (experiment Base), a car drives east in its lane and brakes to a stop before the
+     zebra crossing west of the junction; a pedestrian waiting on the south kerb then crosses in front of it.
+     World coordinates of the scene (x east, y north). -->
 <OpenSCENARIO>
   <FileHeader revMajor="1" revMinor="1" date="2026-11-13T00:00:00" description="Car yields to a crossing pedestrian" author="coupled-sim"/>
   <ParameterDeclarations>
     <ParameterDeclaration name="CarSpeed" parameterType="double" value="11.1"/>
-    <ParameterDeclaration name="BrakeAt" parameterType="double" value="2.0"/>
+    <ParameterDeclaration name="BrakeAt" parameterType="double" value="1.75"/>
   </ParameterDeclarations>
   <CatalogLocations/>
   <RoadNetwork/>
@@ -22,9 +23,9 @@
   </Entities>
   <Storyboard>
     <Init><Actions>
-      <Private entityRef="Car"><PrivateAction><TeleportAction><Position><WorldPosition x="-60" y="-3.5" z="0" h="0"/></Position></TeleportAction></PrivateAction>
+      <Private entityRef="Car"><PrivateAction><TeleportAction><Position><WorldPosition x="-75" y="6.5" z="0" h="0"/></Position></TeleportAction></PrivateAction>
         <PrivateAction><LongitudinalAction><SpeedAction><SpeedActionDynamics dynamicsShape="step" value="0" dynamicsDimension="time"/><SpeedActionTarget><AbsoluteTargetSpeed value="$CarSpeed"/></SpeedActionTarget></SpeedAction></LongitudinalAction></PrivateAction></Private>
-      <Private entityRef="Walker"><PrivateAction><TeleportAction><Position><WorldPosition x="-15" y="-8" z="0" h="1.5708"/></Position></TeleportAction></PrivateAction></Private>
+      <Private entityRef="Walker"><PrivateAction><TeleportAction><Position><WorldPosition x="-28.5" y="1.6" z="0" h="1.5708"/></Position></TeleportAction></PrivateAction></Private>
     </Actions></Init>
     <Story name="Yield">
       <Act name="Act">
@@ -36,7 +37,10 @@
         <ManeuverGroup maximumExecutionCount="1" name="WalkerGroup"><Actors selectTriggeringEntities="false"><EntityRef entityRef="Walker"/></Actors>
           <Maneuver name="Cross"><Event name="Cross" priority="override"><Action name="Walk"><PrivateAction><LongitudinalAction><SpeedAction>
             <SpeedActionDynamics dynamicsShape="linear" value="0.8" dynamicsDimension="time"/><SpeedActionTarget><AbsoluteTargetSpeed value="1.4"/></SpeedActionTarget></SpeedAction></LongitudinalAction></PrivateAction></Action>
-            <StartTrigger><ConditionGroup><Condition name="t" delay="0" conditionEdge="rising"><ByValueCondition><SimulationTimeCondition value="4.5" rule="greaterThan"/></ByValueCondition></Condition></ConditionGroup></StartTrigger></Event></Maneuver>
+            <StartTrigger><ConditionGroup><Condition name="t" delay="0" conditionEdge="rising"><ByValueCondition><SimulationTimeCondition value="5.5" rule="greaterThan"/></ByValueCondition></Condition></ConditionGroup></StartTrigger></Event></Maneuver>
+          <Maneuver name="Arrive"><Event name="Arrive" priority="override"><Action name="Stop"><PrivateAction><LongitudinalAction><SpeedAction>
+            <SpeedActionDynamics dynamicsShape="linear" value="0.8" dynamicsDimension="time"/><SpeedActionTarget><AbsoluteTargetSpeed value="0"/></SpeedActionTarget></SpeedAction></LongitudinalAction></PrivateAction></Action>
+            <StartTrigger><ConditionGroup><Condition name="t" delay="0" conditionEdge="rising"><ByValueCondition><SimulationTimeCondition value="16" rule="greaterThan"/></ByValueCondition></Condition></ConditionGroup></StartTrigger></Event></Maneuver>
         </ManeuverGroup>
         <StartTrigger><ConditionGroup><Condition name="start" delay="0" conditionEdge="rising"><ByValueCondition><SimulationTimeCondition value="0" rule="greaterThan"/></ByValueCondition></Condition></ConditionGroup></StartTrigger>
       </Act>
