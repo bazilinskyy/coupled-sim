@@ -498,6 +498,32 @@ public class ReplayPlayer : MonoBehaviour
         SceneManager.LoadScene(0);
     }
 
+    // the followed participant's own figure is hidden while the replay camera renders their own view
+    List<Renderer> _hiddenFigure;
+    void OnEnable()
+    {
+        UnityEngine.Rendering.RenderPipelineManager.beginCameraRendering += BeginCamera;
+        UnityEngine.Rendering.RenderPipelineManager.endCameraRendering += EndCamera;
+    }
+    void OnDisable()
+    {
+        UnityEngine.Rendering.RenderPipelineManager.beginCameraRendering -= BeginCamera;
+        UnityEngine.Rendering.RenderPipelineManager.endCameraRendering -= EndCamera;
+        EndCamera(default, _camera);
+    }
+    void BeginCamera(UnityEngine.Rendering.ScriptableRenderContext ctx, Camera cam)
+    {
+        if (cam != _camera || !_ready || !_inside) return;
+        var people = Participants;
+        if (_follow >= 0 && _follow < people.Count) _hiddenFigure = VideoExport.HideFigure(people[_follow]);
+    }
+    void EndCamera(UnityEngine.Rendering.ScriptableRenderContext ctx, Camera cam)
+    {
+        if (cam != _camera || _hiddenFigure == null) return;
+        foreach (var r in _hiddenFigure) if (r != null) r.enabled = true;
+        _hiddenFigure = null;
+    }
+
     void OnDestroy()
     {
         if (Active == this) Active = null;

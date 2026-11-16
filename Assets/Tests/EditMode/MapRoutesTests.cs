@@ -44,6 +44,27 @@ namespace CoupledSim.Tests
         }
 
         [Test]
+        public void LanesKeepClearOfStreetParking()
+        {
+            // parked cars take 2.1 m along a kerb, their centre 1 m inside it: a car (1.8 m wide) in the lane must not touch them
+            // (a 5.5 m street with cars on both sides leaves 1.7 m: it is driven in its middle)
+            var narrow = Road(-200, 0, 200, 0); narrow.Width = 5.5f; narrow.ParkLeft = narrow.ParkRight = true;
+            foreach (var r in MapRoutes.Build(new[] { narrow }, 200f, false))
+                Assert.AreEqual(0f, Vector3.Dot(r[r.Count / 2], Vector3.Cross(Vector3.UnitY, Vector3.Normalize(r[r.Count - 1] - r[0]))), 0.05f);
+            foreach (float width in new[] { 6.5f, 7f, 9f })
+            {
+                var road = Road(-200, 0, 200, 0); road.Width = width; road.ParkLeft = road.ParkRight = true;
+                foreach (var r in MapRoutes.Build(new[] { road }, 200f, false))
+                {
+                    var dir = Vector3.Normalize(r[r.Count - 1] - r[0]);
+                    float off = Vector3.Dot(r[r.Count / 2], Vector3.Cross(Vector3.UnitY, dir));
+                    Assert.GreaterOrEqual(off, -0.01f, $"{width} m: on its own side or in the middle");
+                    Assert.LessOrEqual(off + 0.9f, width / 2f - 1.0f - 0.9f + 0.01f, $"{width} m: clear of the parked cars");
+                }
+            }
+        }
+
+        [Test]
         public void TJunctionTurns()
         {
             // a road from the south edge ends at a road running east-west: routes turn into it
