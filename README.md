@@ -77,6 +77,7 @@ If you use the coupled simulator for academic work, please cite:
 ## Examples of use
 1. Get out of the way! Examining eHMIs in critical driver-pedestrian encounters in a coupled simulator - [repo](https://github.com/bazilinskyy/coupled-sim-evasive), [paper](https://doi.org/10.1145/3543174.3546849).
 1. Stopping by looking: A driver-pedestrian interaction study in a coupled simulator using head-mounted displays with eye-tracking - [paper](http://doi.org/10.1016/j.apergo.2022.103825).
+1. Enhancing cyclist safety in the EU: A study on lateral overtaking distance across seven scenarios using lab and crowdsourced methods - [paper](https://bazilinskyy.github.io/p/sapienza2025enhancing), [doi](https://doi.org/10.1145/3744333.3747813).
 
 ## License
 The source code of the coupled simulator is released under the [MIT License](LICENSE). Third-party assets included in this repository (see [Used assets](#used-assets)) are not covered by this license. They remain under the license of their developers, such as the Unity Asset Store EULA, MIT, CC0 or CC BY 4.0 (with the credits in [Used assets](#used-assets)).
