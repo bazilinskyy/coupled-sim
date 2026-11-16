@@ -4,11 +4,15 @@ using CoupledSim.Sound;
 using UnityEngine;
 
 /// <summary>
-/// The simulator's sounds, made from code (no recordings), each normalised to a known RMS so that its level can be
-/// set in dB SPL (<see cref="Soundscape.Gain"/>): noise shaped to octave-band spectra (vehicle rolling and propulsion
-/// noise by CNOSSOS-EU, rain, distant traffic), engine harmonics at a firing frequency, an electric motor's whine,
-/// and short one-shots (footsteps on hard, soft and loose ground, the tick of a pedestrian signal, a bicycle's
-/// freewheel) and bird calls.
+/// The simulator's sounds. Where a recording is in <c>Assets/Resources/Sounds</c> (CC0 recordings from Freesound, see
+/// CREDITS.md there) it is used (<see cref="Rec"/>): engines (idle and on load, crossfaded and pitched by the engine
+/// speed), the inside of a car on asphalt and on cobblestones, a bicycle's tyres and freewheel, footsteps on hard,
+/// loose and soft ground, birds and distant city traffic. The rest is made from code, and so is each of these when its
+/// recording is missing (as in tests): noise shaped to octave-band spectra (vehicle rolling and propulsion noise by
+/// CNOSSOS-EU, rain, wind, distant traffic), engine harmonics at a firing frequency, an electric motor's whine, and
+/// short one-shots (footsteps, the tick of a pedestrian signal, a freewheel click) and bird calls. Every sound is
+/// normalised to a known RMS (<see cref="Rms"/>, recordings through <see cref="Recording.Factor"/>) so that its level
+/// can be set in dB SPL (<see cref="Soundscape.ClipGain"/>).
 /// </summary>
 public static class SoundClips
 {
@@ -18,9 +22,10 @@ public static class SoundClips
 
     static AudioClip Make(string name, float[] data, bool loop)
     {
-        // normalise the RMS; loops are cross-faded so they repeat without a click
+        // normalise the RMS; loops are cross-faded so they repeat without a click (noise made by OctaveNoise
+        // repeats seamlessly by itself and needs no cross-fade)
         int n = data.Length;
-        if (loop)
+        if (!_seamless.Remove(data) && loop)
         {
             int fade = Mathf.Min(n / 4, Rate / 20);
             var o = new float[n - fade];
@@ -38,6 +43,8 @@ public static class SoundClips
         clip.SetData(data, 0);
         return clip;
     }
+
+    static readonly HashSet<float[]> _seamless = new HashSet<float[]>();
 
     static AudioClip Cached(string key, Func<AudioClip> make)
     {
@@ -68,25 +75,145 @@ public static class SoundClips
         }
     }
 
-    /// <summary>Noise with the given octave-band levels (dB, 63 Hz - 8 kHz; only the differences matter).</summary>
+    /// <summary>Noise with the given octave-band levels (dB, 63 Hz - 8 kHz; only the differences matter), shaped in
+    /// the frequency domain: the level per octave is interpolated smoothly between the band centres (no peaks at the
+    /// centres), and the noise repeats seamlessly (its length is a power of two of at least <paramref name="seconds"/>).</summary>
     public static float[] OctaveNoise(float seconds, float[] bandDb, int seed)
     {
-        int rate = Rate, n = Mathf.RoundToInt(seconds * rate);
+        int rate = Rate, n = 1;
+        while (n < seconds * rate) n <<= 1;
+        var re = new double[n]; var im = new double[n];
         var rnd = new System.Random(seed);
-        var white = new float[n];
-        for (int i = 0; i < n; i++) white[i] = (float)(rnd.NextDouble() * 2 - 1);
-        var o = new float[n];
-        float max = 0f; foreach (var d in bandDb) max = Mathf.Max(max, d);
-        for (int b = 0; b < Cnossos.Bands.Length && b < bandDb.Length; b++)
+        float max = float.NegativeInfinity; foreach (var d in bandDb) max = Mathf.Max(max, d);
+        for (int k = 1; k < n / 2; k++)
         {
-            float f = Cnossos.Bands[b];
-            if (f > rate * 0.45f) continue;
-            float g = Mathf.Pow(10f, (bandDb[b] - max) / 20f) * Mathf.Sqrt(f / 1000f);   // a band-pass of constant Q passes energy in proportion to its width
-            var bp = Biquad.BandPass(f, 1.41f, rate); var bp2 = Biquad.BandPass(f, 1.41f, rate);
-            for (int i = 0; i < n; i++) o[i] += g * bp2.Process(bp.Process(white[i]));
+            float f = k * (float)rate / n;
+            // energy per octave -> energy per Hz (an octave at f is 0.71 f wide); Gaussian noise: Rayleigh magnitude, random phase
+            double psd = Math.Pow(10, (BandDbAt(bandDb, f) - max) / 10) / (0.71 * f);
+            double mag = Math.Sqrt(psd) * Math.Sqrt(-2 * Math.Log(1 - rnd.NextDouble())), ph = rnd.NextDouble() * 2 * Math.PI;
+            re[k] = mag * Math.Cos(ph); im[k] = mag * Math.Sin(ph);
+            re[n - k] = re[k]; im[n - k] = -im[k];
         }
+        Fft(re, im, true);
+        var o = new float[n];
+        for (int i = 0; i < n; i++) o[i] = (float)re[i];
+        _seamless.Add(o);
         return o;
     }
+
+    /// <summary>Level at <paramref name="f"/> Hz of a spectrum given in octave bands: linear in log frequency between the
+    /// band centres; below 63 Hz falling 6 dB per octave, above 8 kHz 12 dB per octave.</summary>
+    static float BandDbAt(float[] bandDb, float f)
+    {
+        var c = Cnossos.Bands;
+        int m = Mathf.Min(c.Length, bandDb.Length);
+        float o = Mathf.Log(f / c[0], 2f);
+        if (o <= 0f) return bandDb[0] + 6f * o;
+        if (o >= m - 1) return bandDb[m - 1] - 12f * (o - (m - 1));
+        int i = Mathf.FloorToInt(o);
+        return Mathf.Lerp(bandDb[i], bandDb[i + 1], o - i);
+    }
+
+    /// <summary>In-place radix-2 FFT (length a power of two); <paramref name="inverse"/> without the 1/n scaling.</summary>
+    static void Fft(double[] re, double[] im, bool inverse)
+    {
+        int n = re.Length;
+        for (int i = 1, j = 0; i < n; i++)
+        {
+            int bit = n >> 1;
+            for (; (j & bit) != 0; bit >>= 1) j ^= bit;
+            j ^= bit;
+            if (i < j) { (re[i], re[j]) = (re[j], re[i]); (im[i], im[j]) = (im[j], im[i]); }
+        }
+        for (int len = 2; len <= n; len <<= 1)
+        {
+            double ang = 2 * Math.PI / len * (inverse ? 1 : -1), wr = Math.Cos(ang), wi = Math.Sin(ang);
+            for (int i = 0; i < n; i += len)
+            {
+                double cr = 1, ci = 0;
+                for (int k = 0; k < len / 2; k++)
+                {
+                    int a = i + k, b = a + len / 2;
+                    double xr = re[b] * cr - im[b] * ci, xi = re[b] * ci + im[b] * cr;
+                    re[b] = re[a] - xr; im[b] = im[a] - xi; re[a] += xr; im[a] += xi;
+                    double t = cr * wr - ci * wi; ci = cr * wi + ci * wr; cr = t;
+                }
+            }
+        }
+    }
+
+    // ---- recordings
+
+    /// <summary>A recording in Resources/Sounds with what is needed to play it at a level in dB SPL.</summary>
+    public sealed class Recording
+    {
+        public string Name;
+        public AudioClip Clip;
+        /// <summary>Gain that brings the recording to the RMS of the synthesised sounds (<see cref="Rms"/>): play it at <c>ClipGain(dB) * Factor</c>.</summary>
+        public float Factor = 1f;
+        /// <summary>Its A-weighted level minus its unweighted level (dB), to match it to a model's A-weighted level.</summary>
+        public float AWeightDb;
+    }
+
+    static readonly Dictionary<string, Recording> _recs = new Dictionary<string, Recording>();
+
+    /// <summary>The recording Resources/Sounds/<paramref name="name"/>, or null when it is not there (then the
+    /// synthesised sound is used).</summary>
+    public static Recording Rec(string name)
+    {
+        if (_recs.TryGetValue(name, out var r) && (r == null || r.Clip != null)) return r;
+        var clip = Resources.Load<AudioClip>("Sounds/" + name);
+        r = clip == null ? null : Measure(name, clip);
+        _recs[name] = r;
+        return r;
+    }
+
+    static Recording Measure(string name, AudioClip clip)
+    {
+        var r = new Recording { Name = name, Clip = clip };
+        if (clip.loadState != AudioDataLoadState.Loaded) clip.LoadAudioData();
+        int ch = Mathf.Max(1, clip.channels), n = clip.samples;
+        var data = new float[n * ch];
+        if (n == 0 || !clip.GetData(data, 0)) { Debug.LogWarning($"SoundClips: cannot read {name}; it plays unnormalised"); return r; }
+        if (ch > 1) { var m = new float[n]; for (int i = 0; i < n; i++) { float v = 0; for (int c = 0; c < ch; c++) v += data[i * ch + c]; m[i] = v / ch; } data = m; }
+        double e = 0; foreach (var v in data) e += v * v;
+        e /= n;
+        if (e < 1e-14) return r;
+        r.Factor = Rms / (float)Math.Sqrt(e);
+        // A-weighting from the octave bands (the first 8 s)
+        int len = Mathf.Min(n, clip.frequency * 8);
+        double ea = 0;
+        for (int b = 0; b < Cnossos.Bands.Length; b++)
+        {
+            float f = Cnossos.Bands[b];
+            if (f > clip.frequency * 0.45f) continue;
+            var bp = Biquad.BandPass(f, 1.41f, clip.frequency); var bp2 = Biquad.BandPass(f, 1.41f, clip.frequency);
+            double eb = 0;
+            for (int i = 0; i < len; i++) { float y = bp2.Process(bp.Process(data[i])); eb += y * y; }
+            ea += eb / len * Math.Pow(10, Cnossos.AWeighting[b] / 10);
+        }
+        r.AWeightDb = (float)(10 * Math.Log10(Math.Max(ea, 1e-20) / e));
+        return r;
+    }
+
+    /// <summary>Engine recordings to crossfade by the engine's firing frequency: each with the firing frequency it was
+    /// recorded at (from its spectrum); null when one is missing. Petrol: a Peugeot 308 at idle (750 rpm, four
+    /// cylinders) and a 2.5-litre four-cylinder at 2000 and 2940 rpm; diesel: a coach idling (six cylinders, 600 rpm).</summary>
+    public static (Recording rec, float firingHz)[] EngineRecordings(string kind)
+    {
+        var spec = kind == "petrol" ? new[] { ("engine_petrol_idle", 25f), ("engine_petrol_mid", 66.7f), ("engine_petrol_high", 98f) }
+            : kind == "diesel" ? new[] { ("engine_diesel_idle", 30f) } : null;
+        if (spec == null) return null;
+        var o = new (Recording, float)[spec.Length];
+        for (int i = 0; i < spec.Length; i++) { var r = Rec(spec[i].Item1); if (r == null) return null; o[i] = (r, spec[i].Item2); }
+        return o;
+    }
+
+    /// <summary>A recorded step on "hard", "loose" or "soft" ground (4 variants), or null.</summary>
+    public static Recording FootstepRecording(string surface, int variant) => Rec($"step_{surface}_{variant & 3}");
+
+    /// <summary>Recorded bird song (a blackbird, house sparrows), or null.</summary>
+    public static Recording BirdRecording(int variant) => Rec(variant % 2 == 0 ? "birds_blackbird" : "birds_sparrows");
 
     // ---- vehicles
 
