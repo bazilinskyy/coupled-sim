@@ -28,6 +28,10 @@ public partial class OsmMapGenerator
         public int BridgeLayer;
         /// <summary>Cars parked along the left / right kerb (as seen along the way), on the carriageway.</summary>
         public bool ParkLeft, ParkRight;
+        /// <summary>Not for the built-in traffic and the autopilot: a service road with no or private access, or (on maps
+        /// with the national topography's surfaces) a road that lies mostly on paving, grass or gravel there (pedestrian
+        /// streets and squares, yards).</summary>
+        public bool NoThroughTraffic;
     }
     /// <summary>Cycle paths and pavements on such bridges.</summary>
     public readonly Dictionary<List<Vector3>, int> BridgeLines = new Dictionary<List<Vector3>, int>();
@@ -62,7 +66,13 @@ public partial class OsmMapGenerator
     readonly Dictionary<long, V2> _pos = new Dictionary<long, V2>();
     readonly Dictionary<string, Material> _mats = new Dictionary<string, Material>();
 
-    public const float PavementHeight = 0.14f;
+    /// <summary>Height of the pavements (m): raised behind a kerb, or flat (0.012 m) on maps drawn from a national large-scale
+    /// topography (the Dutch BGT), whose surfaces have no heights.</summary>
+    public static float PavementHeight = 0.14f;
+    /// <summary>The map's ground is drawn from the national topography's surfaces (the Dutch BGT): the roads, cycle paths and
+    /// footpaths made from OpenStreetMap's lines are not drawn (they would lie over the real outlines, a little off); the
+    /// roads stay as invisible driving surfaces, and the generated pavements, cycle paths and kerbs are left out.</summary>
+    public bool TopographyGround { get; private set; }
 
     public OsmMapGenerator(MapInfo map, OsmData data, MapAssets assets)
     {
@@ -544,12 +554,64 @@ public partial class OsmMapGenerator
             }
         }
 
-        public void Polygon(List<V2> poly, float y, float uvScale)
+        /// <summary>A flat polygon. maxEdge &gt; 0: its triangles split until no edge is longer (on terrain, so the lift
+        /// follows the ground inside large polygons, not only at their outline).</summary>
+        public void Polygon(List<V2> poly, float y, float uvScale, float maxEdge = 0f)
         {
             var tris = Geometry2D.Triangulate(poly);
+            var pts = new List<V2>(poly);
+            if (maxEdge > 0f) Refine(pts, tris, maxEdge);
             int b = V.Count;
-            foreach (var p in poly) { V.Add(P(p, y)); UV.Add(new Vector2(p.X / uvScale, p.Y / uvScale)); }
+            foreach (var p in pts) { V.Add(P(p, y)); UV.Add(new Vector2(p.X / uvScale, p.Y / uvScale)); }
             for (int i = 0; i < tris.Count; i += 3) { T.Add(b + tris[i]); T.Add(b + tris[i + 2]); T.Add(b + tris[i + 1]); }
+        }
+
+        /// <summary>Conforming refinement: in each pass, every triangle's longest edge longer than maxEdge is marked, and
+        /// every triangle is split by the marked edges it has (into 2, 3 or 4), so neighbours share the new points (no cracks).</summary>
+        static void Refine(List<V2> pts, List<int> tris, float maxEdge)
+        {
+            float max2 = maxEdge * maxEdge;
+            for (int pass = 0; pass < 12; pass++)
+            {
+                var marked = new Dictionary<long, int>();
+                long Key(int a, int b) => a < b ? ((long)a << 32) | (uint)b : ((long)b << 32) | (uint)a;
+                for (int i = 0; i < tris.Count; i += 3)
+                {
+                    int a = tris[i], b = tris[i + 1], c = tris[i + 2];
+                    float ab = V2.DistanceSquared(pts[a], pts[b]), bc = V2.DistanceSquared(pts[b], pts[c]), ca = V2.DistanceSquared(pts[c], pts[a]);
+                    float m = Math.Max(ab, Math.Max(bc, ca));
+                    if (m <= max2) continue;
+                    long k = m == ab ? Key(a, b) : m == bc ? Key(b, c) : Key(c, a);
+                    marked[k] = -1;
+                }
+                if (marked.Count == 0) return;
+                int Mid(int a, int b)
+                {
+                    long k = Key(a, b);
+                    if (!marked.TryGetValue(k, out var m)) return -1;
+                    if (m < 0) { m = pts.Count; pts.Add((pts[a] + pts[b]) / 2f); marked[k] = m; }
+                    return m;
+                }
+                var next = new List<int>(tris.Count * 2);
+                void Add(int a, int b, int c) { next.Add(a); next.Add(b); next.Add(c); }
+                for (int i = 0; i < tris.Count; i += 3)
+                {
+                    int a = tris[i], b = tris[i + 1], c = tris[i + 2];
+                    int mab = Mid(a, b), mbc = Mid(b, c), mca = Mid(c, a);
+                    int n = (mab >= 0 ? 1 : 0) + (mbc >= 0 ? 1 : 0) + (mca >= 0 ? 1 : 0);
+                    if (n == 0) { Add(a, b, c); continue; }
+                    if (n == 3) { Add(a, mab, mca); Add(mab, b, mbc); Add(mca, mbc, c); Add(mab, mbc, mca); continue; }
+                    // rotate so that the first split edge is a-b (and for two, the second b-c)
+                    for (int r = 0; r < 3 && !(mab >= 0 && (n == 1 || mbc >= 0)); r++)
+                    {
+                        int t = a; a = b; b = c; c = t;
+                        int tm = mab; mab = mbc; mbc = mca; mca = tm;
+                    }
+                    if (n == 1) { Add(a, mab, c); Add(mab, b, c); }
+                    else { Add(mab, b, mbc); Add(a, mab, mbc); Add(a, mbc, c); }
+                }
+                tris.Clear(); tris.AddRange(next);
+            }
         }
 
         /// <summary>A box with its bottom centre at <paramref name="p"/>, turned by <paramref name="yaw"/> degrees.</summary>
@@ -781,23 +843,83 @@ public partial class OsmMapGenerator
         bool brickCountry = _map.Country == "Netherlands" || _map.Country == "Belgium" || _map.Country == "United Kingdom";
         int[] palette = brickCountry ? new[] { 0, 0, 1, 1, 2, 3 } : new[] { 3, 3, 4, 4, 2, 0 };
 
+        // the national large-scale topography's surfaces (the Netherlands: BGT), drawn further down; known first, as with
+        // them the roads' lines are not drawn and the ground between the surfaces is not the aerial photo
+        var surfaces = MapExtras.LoadSurfaces(_map.Name, _proj, out var surfaceCredit);
+        TopographyGround = surfaces != null && surfaces.Count > 100;
+        PavementHeight = TopographyGround ? 0.012f : 0.14f;
+        // the roads' profiles on the terrain: without humps (the elevation model's gaps under viaducts are filled from the
+        // embankments beside them) or steps
+        if (Terrain != null)
+        {
+            var profiles = new List<(List<Vector2>, float)>();
+            foreach (var w in _data.Ways)
+            {
+                if (!CarRoads.Contains(w.Tag("highway") ?? "") || w.Tag("area") == "yes" || Layer(w) != 0 || w.Tag("tunnel") == "yes" || (w.Tag("bridge") ?? "no") != "no") continue;
+                var rl = Line(w);
+                if (rl.Count >= 2) profiles.Add((rl.Select(q => new Vector2(q.X, q.Y)).ToList(), RoadWidth(w)));
+            }
+            Terrain.SmoothRoads(profiles);
+        }
+
+        // water (canals, rivers, ponds, harbours): its surface lies WaterDepth below the streets, between quay walls; the
+        // ground has holes for it
+        var waterPolys = new List<List<V2>>();
+        foreach (var w in _data.Ways.Where(w => w.IsClosed))
+        {
+            var lu = w.Tag("landuse"); var nat = w.Tag("natural");
+            if (!(nat == "water" || lu == "basin" || w.Tag("waterway") == "riverbank")) continue;
+            var poly = Line(w);
+            if (poly.Count < 4 || !poly.Any(Inside)) continue;
+            poly.RemoveAt(poly.Count - 1);
+            if (Math.Abs(Geometry2D.SignedArea(poly)) < 4f) continue;
+            waterPolys.Add(poly);
+        }
+        var waterIndex = new WaterIndex(waterPolys);
+
         float h = HalfSize + 40;
         var ground = new MeshBuilder();
         // in tiles of at most 100 m: the physics engine warns about (and handles badly) triangles over 500 m
-        int tiles = Mathf.CeilToInt(2 * h / (Terrain != null ? 10f : 100f));   // 10 m on terrain, so the ground follows it
+        int tiles = Mathf.CeilToInt(2 * h / (Terrain != null || waterPolys.Count > 0 ? 10f : 100f));   // 10 m on terrain, so the ground follows it
         float step = 2 * h / tiles;
+        Vector2 Uv(float x, float z) => new Vector2((x + h) / 4f, (z + h) / 4f);
+        void GroundQuad(float x0, float z0, float x1, float z1) =>
+            ground.Quad(new Vector3(x0, 0, z0), new Vector3(x0, 0, z1), new Vector3(x1, 0, z1), new Vector3(x1, 0, z0), Uv(x0, z0), Uv(x0, z1), Uv(x1, z1), Uv(x1, z0));
         for (int i = 0; i < tiles; i++)
             for (int j = 0; j < tiles; j++)
             {
                 float x0 = -h + i * step, x1 = x0 + step, z0 = -h + j * step, z1 = z0 + step;
-                Vector2 Uv(float x, float z) => new Vector2((x + h) / 4f, (z + h) / 4f);
-                ground.Quad(new Vector3(x0, 0, z0), new Vector3(x0, 0, z1), new Vector3(x1, 0, z1), new Vector3(x1, 0, z0),
-                    Uv(x0, z0), Uv(x0, z1), Uv(x1, z1), Uv(x1, z0));
+                if (waterPolys.Count == 0) { GroundQuad(x0, z0, x1, z1); continue; }
+                var local = waterIndex.EdgesIn(x0, z0, x1, z1);
+                var centre = new V2((x0 + x1) / 2, (z0 + z1) / 2);
+                bool centreWet = waterIndex.Inside(centre);
+                if (local.Count == 0) { if (!centreWet) GroundQuad(x0, z0, x1, z1); continue; }
+                // a shore runs through the tile: 1 m cells, each left out where a corner is in the water (the quay's
+                // coping covers the jagged edge)
+                int k = Mathf.CeilToInt(step);
+                float cs = step / k;
+                var wet = new bool[(k + 1) * (k + 1)];
+                for (int a = 0; a <= k; a++)
+                    for (int b = 0; b <= k; b++)
+                        wet[a * (k + 1) + b] = centreWet ^ WaterIndex.CrossesOdd(local, centre, new V2(x0 + a * cs, z0 + b * cs));
+                for (int a = 0; a < k; a++)
+                    for (int b = 0; b < k; b++)
+                    {
+                        if (wet[a * (k + 1) + b] || wet[(a + 1) * (k + 1) + b] || wet[a * (k + 1) + b + 1] || wet[(a + 1) * (k + 1) + b + 1]) continue;
+                        GroundQuad(x0 + a * cs, z0 + b * cs, x0 + (a + 1) * cs, z0 + (b + 1) * cs);
+                    }
             }
         // the real aerial photo where the map has one (Tools/aerial_photo.py): car parks, yards and
         // squares as they are; else paving
         Aerial = AerialPhoto.Load(_map.Name ?? "");
-        if (Aerial != null)
+        if (Aerial != null && TopographyGround)
+        {
+            // the topography's surfaces cover streets, yards and squares: what is left between them (embankments, verges,
+            // under buildings) is grass, not the aerial photo (its parked cars and shadows look smeared at eye level)
+            Emit(world, "Ground grass", ground, grass, true);
+            EmitSurroundings(world);
+        }
+        else if (Aerial != null)
         {
             for (int i = 0; i < ground.V.Count; i++) ground.UV[i] = Aerial.Uv(ground.V[i]);
             var groundMat = Mat("Ground aerial photo", Color.white, 0.08f, Aerial.Texture);
@@ -820,22 +942,7 @@ public partial class OsmMapGenerator
                 groundMat.SetFloat("_DetailAlbedoMapScale", 1f);
             }
             Emit(world, "Ground", ground, groundMat, true);
-            if (Aerial.FarTexture != null)
-            {
-                // the surroundings (6 km), just under the map's ground, for distant and high views
-                var far = new MeshBuilder();
-                float fh = Aerial.FarHalfSize; int n = 12; float fs = 2 * fh / n;
-                Vector2 FarUv(float x, float z) => new Vector2((x + fh) / (2 * fh), (z + fh) / (2 * fh));
-                for (int i = 0; i < n; i++)
-                    for (int j = 0; j < n; j++)
-                    {
-                        float x0 = -fh + i * fs, x1 = x0 + fs, z0 = -fh + j * fs, z1 = z0 + fs;
-                        far.Quad(new Vector3(x0, -0.1f, z0), new Vector3(x0, -0.1f, z1), new Vector3(x1, -0.1f, z1), new Vector3(x1, -0.1f, z0),
-                            FarUv(x0, z0), FarUv(x0, z1), FarUv(x1, z1), FarUv(x1, z0));
-                    }
-                var go = Emit(world, "Surroundings aerial photo", far, Mat("Surroundings aerial photo", Color.white, 0.05f, Aerial.FarTexture), false);
-                if (go != null) go.GetComponent<MeshRenderer>().shadowCastingMode = ShadowCastingMode.Off;
-            }
+            EmitSurroundings(world);
         }
         else Emit(world, "Ground", ground, Mat("Ground", Color.white, 0.12f, pavingTex), true);
 
@@ -845,19 +952,34 @@ public partial class OsmMapGenerator
         {
             var lu = w.Tag("landuse"); var le = w.Tag("leisure"); var nat = w.Tag("natural");
             bool isGreen = lu == "grass" || lu == "meadow" || lu == "village_green" || lu == "recreation_ground" || le == "park" || le == "garden" || nat == "grassland" || nat == "scrub" || nat == "wood";
-            bool isWater = nat == "water" || lu == "basin" || w.Tag("waterway") == "riverbank";
-            if (!isGreen && !isWater) continue;
+            if (!isGreen) continue;
             var poly = Line(w);
             if (poly.Count < 4 || !poly.Any(Inside)) continue;
             poly.RemoveAt(poly.Count - 1);
-            if (isGreen) green.Polygon(poly, 0.03f, 4f); else waterMb.Polygon(poly, 0.025f, 10f);   // just above the ground (it has no holes for canals)
+            green.Polygon(poly, 0.006f, 4f, Terrain != null ? 8f : 0f);   // just above the ground, under the paths and roads through parks
         }
         Emit(world, "Green areas", green, grass, true);
-        Emit(world, "Water", waterMb, water, false);
+        var quays = new MeshBuilder(); var copings = new MeshBuilder();
+        foreach (var poly in waterPolys)
+        {
+            waterMb.Polygon(poly, -WaterDepth, 10f, Terrain != null ? 8f : 0f);
+            Quay(poly, quays, copings);
+        }
+        var waterGo = Emit(world, "Water", waterMb, WaterMaterial(water), true);
+        if (waterGo != null) waterGo.AddComponent<WaterRipples>();
+        Emit(world, "Quay walls", quays, Mat("Quay wall", Color.white, 0.1f, Tex("quay_bricks", 256, (x, y, r) =>
+        {
+            int row = y / 12, off = row % 2 == 0 ? 0 : 16;
+            if (y % 12 < 1 || (x + off) % 32 < 1) return Noise(new Color(0.28f, 0.27f, 0.25f), r, 0.2f);
+            float tone = 0.8f + 0.3f * (((x + off) / 32 * 7 + row * 13) % 10) / 10f;
+            // darker and greener towards the water line (the bottom of the texture)
+            float damp = Mathf.Clamp01(1f - y / 90f);
+            return Noise(Color.Lerp(new Color(0.42f, 0.24f, 0.18f) * tone, new Color(0.16f, 0.17f, 0.12f), damp * 0.8f), r, 0.18f);
+        })), true);
+        Emit(world, "Quay copings", copings, kerb, true);
         // the national large-scale topography (the Netherlands: BGT) as the ground's surfaces: every carriageway,
         // footpath, cycle path, parking bay, verge and green area at its exact outline, just under the generated
         // streets (which stay on top); the names give the tyres their grip (bricks, paving, grass, gravel)
-        var surfaces = MapExtras.LoadSurfaces(_map.Name, _proj, out var surfaceCredit);
         if (surfaces != null)
         {
             var kinds = new Dictionary<string, (string name, Material mat)>
@@ -867,12 +989,21 @@ public partial class OsmMapGenerator
                 ["grass"] = ("BGT green areas", grass), ["gravel"] = ("BGT gravel", gravel),
             };
             var builders = kinds.Keys.ToDictionary(k => k, _ => new MeshBuilder());
-            foreach (var (kind, ring) in surfaces)
+            foreach (var (tagged, ring) in surfaces)
             {
+                // "kind@n": n levels above the ground (bridge decks): kept over water only (a canal bridge's deck; decks over
+                // roads and railways are the generated bridges'), a little above the ground's surfaces
+                int at = tagged.IndexOf('@');
+                var kind = at < 0 ? tagged : tagged.Substring(0, at);
                 if (!builders.TryGetValue(kind, out var mb) || ring.Count < 3) continue;
                 var poly = ring.Select(q => new V2(q.x, q.y)).ToList();
                 if (!poly.Any(Inside)) continue;
-                mb.Polygon(poly, 0.012f, kind == "grass" ? 4f : kind == "road" || kind == "footway_asphalt" ? 4f : kind == "cycleway" ? 4f : 1.5f);
+                if (at >= 0)
+                {
+                    var c = new V2(poly.Average(q => q.X), poly.Average(q => q.Y));
+                    if (!waterIndex.Inside(c) && !poly.Any(waterIndex.Inside)) continue;
+                }
+                mb.Polygon(poly, at >= 0 ? 0.016f : 0.012f, kind == "grass" ? 4f : kind == "road" || kind == "footway_asphalt" ? 4f : kind == "cycleway" ? 4f : 1.5f, Terrain != null ? 8f : 0f);
             }
             foreach (var kv in kinds) if (builders[kv.Key].V.Count > 0) Emit(world, kv.Value.name, builders[kv.Key], kv.Value.mat, true);
             RealDataCredits.Add($"{surfaces.Count} surfaces: {surfaceCredit}");
@@ -884,6 +1015,7 @@ public partial class OsmMapGenerator
         var cobbleRoadsAll = new Dictionary<int, MeshBuilder>();
         var gravelRoadsAll = new Dictionary<int, MeshBuilder>();
         var cyclesAll = new Dictionary<int, MeshBuilder>();
+        var cycleLanesAll = new Dictionary<int, MeshBuilder>();   // painted on the road: drawn on every map
         var walksAll = new Dictionary<int, MeshBuilder>();
         var kerbsAll = new Dictionary<int, MeshBuilder>();
         var marksAll = new Dictionary<int, MeshBuilder>();
@@ -906,7 +1038,7 @@ public partial class OsmMapGenerator
         }
         // the car roads on the ground, by 20 m cell: footpaths that OSM draws straight across a road (without
         // footway=crossing) get no paving where they lie on it
-        var roadCells = new Dictionary<(int, int), List<(V2 a, V2 b, float half)>>();
+        var roadCells = _roadCells = new Dictionary<(int, int), List<(V2 a, V2 b, float half)>>();
         foreach (var w in _data.Ways)
         {
             if (!CarRoads.Contains(w.Tag("highway") ?? "") || w.Tag("area") == "yes" || Layer(w) != 0 || w.Tag("tunnel") == "yes" || (w.Tag("bridge") ?? "no") != "no") continue;
@@ -972,13 +1104,15 @@ public partial class OsmMapGenerator
             int bi = elevated && Terrain != null ? Math.Min(9, Layer(w)) : 0;
             MeshBuilder Get(Dictionary<int, MeshBuilder> d) => d.TryGetValue(bi, out var m) ? m : d[bi] = new MeshBuilder();
             roads = Get(roadsAll); brickRoads = Get(brickRoadsAll); cobbleRoads = Get(cobbleRoadsAll); gravelRoads = Get(gravelRoadsAll);
-            cycles = Get(cyclesAll); walks = Get(walksAll); kerbs = Get(kerbsAll); marks = Get(marksAll);
+            cycles = Get(cyclesAll); var cycleLanes = Get(cycleLanesAll); walks = Get(walksAll); kerbs = Get(kerbsAll); marks = Get(marksAll);
             int pavementsBefore = Pavements.Count, cyclesBefore = CyclePaths.Count;
             if (CarRoads.Contains(hw))
             {
                 float width = RoadWidth(w);
                 roadWays.Add((w, line, width));
-                Roads.Add(new Road { Line = line.Select(p => P(p, 0.02f + lift)).ToList(), Width = width, Type = hw, OneWay = IsOneWay(w), Bridge = bi > 0, BridgeLayer = bi, ParkLeft = StreetParking(w, -1), ParkRight = StreetParking(w, 1) });
+                var access = w.Tag("motor_vehicle") ?? w.Tag("vehicle") ?? w.Tag("access");
+                Roads.Add(new Road { Line = line.Select(p => P(p, 0.02f + lift)).ToList(), Width = width, Type = hw, OneWay = IsOneWay(w), Bridge = bi > 0, BridgeLayer = bi, ParkLeft = StreetParking(w, -1), ParkRight = StreetParking(w, 1),
+                    NoThroughTraffic = access == "no" || access == "private" || (hw == "service" && (access == "customers" || access == "delivery" || w.Tag("service") == "driveway" || w.Tag("service") == "parking_aisle")) });
                 Geometry2D.Strip(line, width, 0, left, right);
                 var surface = SurfaceOf(w);
                 (surface == RoadSurface.Bricks ? brickRoads : surface == RoadSurface.Cobblestones ? cobbleRoads : surface == RoadSurface.Gravel ? gravelRoads : roads)
@@ -1002,7 +1136,7 @@ public partial class OsmMapGenerator
                     var piece = Geometry2D.SubLine(line, from, to);
                     if (piece.Count < 2) continue;
                     if (width >= 5.5f && hw != "service" && hw != "living_street")
-                        LaneMarkings(w, piece, width, 0.035f + lift, marks, cycles, to < total - 0.01f, from > 0.01f);
+                        LaneMarkings(w, piece, width, 0.035f + lift, marks, cycleLanes, to < total - 0.01f, from > 0.01f);
                     var sw = w.Tag("sidewalk") ?? w.Tag("sidewalk:both") ?? (hw == "residential" || hw == "tertiary" || hw == "secondary" || hw == "primary" || hw == "unclassified" ? "both" : "no");
                     if (sw == "no" || sw == "none" || sw == "separate") continue;
                     foreach (var side in new[] { -1, 1 })
@@ -1055,18 +1189,27 @@ public partial class OsmMapGenerator
                 for (int k = cyclesBefore; k < CyclePaths.Count; k++) BridgeLines[CyclePaths[k]] = bi;
             }
         }
-        foreach (var bi in roadsAll.Keys.Union(cyclesAll.Keys).Union(walksAll.Keys).OrderBy(k => k).ToList())
+        foreach (var bi in roadsAll.Keys.Union(cyclesAll.Keys).Union(walksAll.Keys).Union(cycleLanesAll.Keys).OrderBy(k => k).ToList())
         {
             var sfx = bi > 0 ? " bridge L" + bi : "";
-            void E(string n, Dictionary<int, MeshBuilder> d, Material m, bool c) { if (d.TryGetValue(bi, out var mb)) Emit(world, n + sfx, mb, m, c); }
-            E("Roads", roadsAll, asphalt, true);
+            GameObject E(string n, Dictionary<int, MeshBuilder> d, Material m, bool c) => d.TryGetValue(bi, out var mb) ? Emit(world, n + sfx, mb, m, c) : null;
+            // on the ground of a map with the national topography's surfaces (TopographyGround): the roads only as invisible
+            // driving surfaces, no generated cycle paths, pavements and kerbs (bridges above other roads keep theirs: the
+            // topography's surfaces lie on the ground)
+            bool topo = TopographyGround && bi == 0;
+            void Hidden(GameObject go) { if (go != null && topo) go.GetComponent<MeshRenderer>().enabled = false; }
+            Hidden(E("Roads", roadsAll, asphalt, true));
             // the collider names tell the car physics the surface (CoupledSim.Vehicles.RoadSurfaces)
-            E("Roads bricks", brickRoadsAll, bricks, true);
-            E("Roads cobblestones", cobbleRoadsAll, cobbles, true);
-            E("Roads gravel", gravelRoadsAll, gravel, true);
-            E("Cycle paths", cyclesAll, red, true);
-            E("Pavements", walksAll, paving, true);
-            E("Kerbs", kerbsAll, kerb, true);
+            Hidden(E("Roads bricks", brickRoadsAll, bricks, true));
+            Hidden(E("Roads cobblestones", cobbleRoadsAll, cobbles, true));
+            Hidden(E("Roads gravel", gravelRoadsAll, gravel, true));
+            if (!topo)
+            {
+                E("Cycle paths", cyclesAll, red, true);
+                E("Pavements", walksAll, paving, true);
+                E("Kerbs", kerbsAll, kerb, true);
+            }
+            E("Cycle lanes", cycleLanesAll, red, true);
             E("Road markings", marksAll, marking, false);
         }
         EmitRoadDetails(world);
@@ -1215,6 +1358,7 @@ public partial class OsmMapGenerator
         }
         // roofs collide too: drones land on them and measure their height above them, planners see the buildings' tops
         Emit(buildings, "Roofs", roofs, roof, true);
+        EmitSkyline(buildings);
         for (int i = 0; i < tileRoofs.Length; i++) Emit(buildings, "Roofs " + tileMats[i].name, tileRoofs[i], tileMats[i], true);
 
         PlaceStreetFurniture(root);
@@ -1254,6 +1398,15 @@ public partial class OsmMapGenerator
         if (_assets != null && _assets.Trees != null && _assets.Trees.Length > 0)
         {
             var rng = new System.Random(_map.Name.GetHashCode());
+            // a trunk that the road's width (estimated from OpenStreetMap) puts in the carriageway stands just beside it,
+            // on the verge or pavement, as street trees do
+            int treesMoved = 0;
+            V2 OffCarriageway(V2 q)
+            {
+                if (!InCarriageway(q, 0.4f, 0.9f, out var edge)) return q;
+                treesMoved++;
+                return edge;
+            }
             // the city's tree register, where there is one: every street and park tree it manages, at its height
             var realTrees = MapExtras.Load(_map.Name, "trees", _proj, out var treeCredit);
             if (realTrees != null)
@@ -1262,7 +1415,7 @@ public partial class OsmMapGenerator
                 int n = 0;
                 foreach (var r in realTrees)
                 {
-                    var p = new V2(r.X, r.Z);
+                    var p = OffCarriageway(new V2(r.X, r.Z));
                     if (!Inside(p) || n >= MaxRealTrees) continue;
                     int pick = rng.Next(_assets.Trees.Length); float yaw = (float)rng.NextDouble() * 360f, vary = 0.9f + 0.2f * (float)rng.NextDouble();
                     var kind = r["kind"];
@@ -1295,6 +1448,7 @@ public partial class OsmMapGenerator
             {
                 if (!_pos.TryGetValue(n.Id, out var p) || !Inside(p)) continue;
                 if (registered.Count > 0 && NearRegistered(p)) continue;
+                p = OffCarriageway(p);
                 int pick = rng.Next(_assets.Trees.Length); float yaw = (float)rng.NextDouble() * 360f;
                 // needle-leaved trees and palms (OSM: leaf_type, genus, species, taxon) get their own shapes
                 var okind = TreeKind(n.Tag("genus") ?? n.Tag("species") ?? n.Tag("taxon") ?? n.Tag("species:en"), n.Tag("leaf_type"));
@@ -1304,8 +1458,87 @@ public partial class OsmMapGenerator
                 CullWhenSmall(tree, 0.02f);
                 TreeTransforms.Add(tree.transform);
             }
+            if (treesMoved > 0) Debug.Log($"OsmMap: {treesMoved} trees moved out of the carriageway to its edge");
         }
+        PostsOutOfCarriageway(root);
+        MarkPavedOverRoads();
         RemoveBlockedParkedCars();
+    }
+
+    /// <summary>On maps with the national topography's surfaces: roads that lie mostly (over half, at least 30 m) on its
+    /// paving, grass or gravel are pedestrian streets, squares and yards, not for through traffic.</summary>
+    void MarkPavedOverRoads()
+    {
+        if (!TopographyGround) return;
+        Physics.SyncTransforms();
+        int marked = 0;
+        foreach (var r in Roads)
+        {
+            if (r.Bridge || r.NoThroughTraffic || r.Line.Count < 2) continue;
+            int on = 0, off = 0;
+            for (int i = 1; i < r.Line.Count; i++)
+            {
+                var a = r.Line[i - 1]; var b = r.Line[i]; float len = Vector3.Distance(a, b);
+                for (float d = 1f; d < len; d += 2f)
+                {
+                    var q = Vector3.Lerp(a, b, d / len);
+                    string kind = null;
+                    foreach (var h in Physics.RaycastAll(new Vector3(q.x, 5f, q.z), Vector3.down, 10f, ~0, QueryTriggerInteraction.Ignore))
+                        if (h.collider.name.StartsWith("BGT")) { kind = h.collider.name; break; }
+                    if (kind == null) continue;
+                    if (kind.StartsWith("BGT pavements") || kind.StartsWith("BGT green") || kind.StartsWith("BGT gravel")) off++; else on++;
+                }
+            }
+            if (off * 2 > on + off && off * 2f >= 30f) { r.NoThroughTraffic = true; marked++; }
+        }
+        if (marked > 0) Debug.Log($"OsmMap: {marked} roads on paving, grass or gravel (pedestrian streets, squares, yards) left out of the traffic's routes");
+    }
+
+    /// <summary>The ground-level car roads by 20 m cell (segment ends and half the road's width).</summary>
+    Dictionary<(int, int), List<(V2 a, V2 b, float half)>> _roadCells;
+
+    /// <summary>Whether a point lies in a car road's carriageway or within <paramref name="margin"/> m of its edge; then
+    /// <paramref name="edge"/> is the point <paramref name="outside"/> m beyond that edge, square to the road.</summary>
+    bool InCarriageway(V2 q, float margin, float outside, out V2 edge)
+    {
+        edge = q;
+        if (_roadCells == null || !_roadCells.TryGetValue(((int)Math.Floor(q.X / 20f), (int)Math.Floor(q.Y / 20f)), out var segs)) return false;
+        float bestD = float.MaxValue; V2 bestQ = q, bestN = default; float bestHalf = 0f;
+        foreach (var (a, b, half) in segs)
+        {
+            var ab = b - a; float len2 = ab.LengthSquared(); if (len2 < 1e-4f) continue;
+            float u = Math.Max(0f, Math.Min(1f, V2.Dot(q - a, ab) / len2));
+            var c = a + ab * u; float d = V2.Distance(q, c);
+            if (d - half < bestD) { bestD = d - half; bestQ = c; bestHalf = half; bestN = d > 1e-3f ? (q - c) / d : V2.Normalize(new V2(ab.Y, -ab.X)); }
+        }
+        if (bestD > margin) return false;
+        edge = bestQ + bestN * (bestHalf + outside);
+        return true;
+    }
+
+    /// <summary>
+    /// Posts that ended up in a carriageway (lamp and sign posts, bollards, beacons, signal posts without an arm over the
+    /// road: placed from registers or OpenStreetMap's nodes, against a road width that OpenStreetMap only estimates) stand
+    /// at its edge instead, where traffic does not run into them.
+    /// </summary>
+    void PostsOutOfCarriageway(Transform root)
+    {
+        int moved = 0;
+        var containers = new HashSet<string> { "Street furniture", "Street furniture (OSM)", "Traffic signs", "Traffic signals", "Pedestrian crossings" };
+        foreach (var c in root.GetComponentsInChildren<Transform>(true).Where(t => containers.Contains(t.name)).ToList())
+            for (int i = 0; i < c.childCount; i++)
+            {
+                var o = c.GetChild(i);
+                var rs = o.GetComponentsInChildren<Renderer>();
+                if (rs.Length == 0) continue;
+                var b = rs[0].bounds; foreach (var r in rs) b.Encapsulate(r.bounds);
+                if (Mathf.Max(b.size.x, b.size.z) > 1.3f || b.size.y < 0.8f) continue;   // (signals with an arm over the road stay)
+                var q = new V2(o.position.x, o.position.z);
+                if (!InCarriageway(q, 0.3f, 0.6f, out var edge)) continue;
+                o.position += new Vector3(edge.X - q.X, PavementHeight - Mathf.Min(o.position.y, PavementHeight), edge.Y - q.Y);
+                moved++;
+            }
+        if (moved > 0) Debug.Log($"OsmMap: {moved} posts moved out of the carriageway to its edge");
     }
 
     /// <summary>Parked cars, kept to take away those that stand in a tree, a post or a wall (RemoveBlockedParkedCars).</summary>
@@ -1344,6 +1577,219 @@ public partial class OsmMapGenerator
     }
 
     /// <summary>Not drawn once smaller than this fraction of the screen's height (thousands of register trees and lamps).</summary>
+    /// <summary>How far the skyline reaches from the centre (m; 0: none): cameras see that far.</summary>
+    public float SkylineReach { get; private set; }
+
+    /// <summary>
+    /// The skyline around the map ({map}.skyline.txt.gz from Tools/skyline.py: the tall buildings within a few km, from
+    /// OpenStreetMap): plain towers with rows of windows (lit at night), without collisions or shadows, so views along
+    /// the streets end in the city's towers instead of empty sky.
+    /// </summary>
+    void EmitSkyline(Transform parent)
+    {
+        if (MapExtras.Disabled || string.IsNullOrEmpty(_map.Name)) return;
+        var path = System.IO.Path.Combine(Application.streamingAssetsPath, "Maps", _map.Name + ".skyline.txt.gz");
+        if (!System.IO.File.Exists(path)) return;
+        var walls = new MeshBuilder(); var tops = new MeshBuilder();
+        int count = 0; float reach = 0f;
+        var ci = CultureInfo.InvariantCulture;
+        using (var gz = new System.IO.Compression.GZipStream(System.IO.File.OpenRead(path), System.IO.Compression.CompressionMode.Decompress))
+        using (var r = new System.IO.StreamReader(gz))
+        {
+            var head = r.ReadLine()?.Split(' ');
+            if (head == null || head.Length < 3 || head[0] != "SKY1") return;
+            var local = new GeoProjection(double.Parse(head[1], ci), double.Parse(head[2], ci));
+            bool same = Math.Abs(local.Lat0 - _proj.Lat0) < 1e-9 && Math.Abs(local.Lon0 - _proj.Lon0) < 1e-9;
+            r.ReadLine();   // credit
+            string line;
+            while ((line = r.ReadLine()) != null)
+            {
+                var f = line.Split(' ');
+                if (f.Length < 9) continue;
+                float height = int.Parse(f[0], ci) / 10f;
+                var poly = new List<V2>();
+                for (int i = 1; i + 1 < f.Length; i += 2)
+                {
+                    double x = int.Parse(f[i], ci) / 100.0, z = int.Parse(f[i + 1], ci) / 100.0;
+                    if (!same) { local.ToGeo(x, z, out var la, out var lo); _proj.ToLocal(la, lo, out x, out z); }
+                    poly.Add(new V2((float)x, (float)z));
+                }
+                if (poly.Count < 3 || poly.Any(q => Math.Abs(q.X) < HalfSize && Math.Abs(q.Y) < HalfSize)) continue;
+                if (Geometry2D.SignedArea(poly) < 0) poly.Reverse();   // counter-clockwise: walls face out
+                float along = 0f;
+                for (int i = 0; i < poly.Count; i++)
+                {
+                    var a = poly[i]; var b = poly[(i + 1) % poly.Count];
+                    float len = V2.Distance(a, b); if (len < 0.05f) continue;
+                    // (from 5 m below the ground: the terrain beyond the map is not known; UVs: 6 m wide, 7 m high windows pattern)
+                    walls.Quad(P(b, -5f), P(b, height), P(a, height), P(a, -5f),
+                        new Vector2((along + len) / 6f, -5f / 7f), new Vector2((along + len) / 6f, height / 7f), new Vector2(along / 6f, height / 7f), new Vector2(along / 6f, -5f / 7f));
+                    along += len;
+                    reach = Math.Max(reach, a.Length());
+                }
+                tops.Polygon(poly, height, 10f);
+                count++;
+            }
+        }
+        if (count == 0) return;
+        // glass and concrete in bands of windows: two storeys and four bays per texture repeat
+        var tex = Tex("skyline_windows", 64, (x, y, rr) =>
+        {
+            bool window = (y % 32) >= 9 && (y % 32) <= 28 && (x % 16) >= 2 && (x % 16) <= 14;
+            return window ? Noise(new Color(0.2f, 0.25f, 0.3f), rr, 0.15f) : Noise(new Color(0.55f, 0.55f, 0.53f), rr, 0.08f);
+        });
+        var m = Mat("Skyline", Color.white, 0.35f, tex);
+        m.SetTexture("_EmissionMap", Tex("skyline_lights", 64, (x, y, rr) =>
+        {
+            bool window = (y % 32) >= 9 && (y % 32) <= 28 && (x % 16) >= 2 && (x % 16) <= 14;
+            return window && rr.NextDouble() < 0.5 ? new Color(0.9f, 0.75f, 0.5f) : Color.black;
+        }));
+        m.SetColor("_EmissionColor", Color.black);
+        m.EnableKeyword("_EMISSION");
+        m.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None;
+        NightMaterials.Add(m);
+        foreach (var (mb, name) in new[] { (walls, "Skyline walls"), (tops, "Skyline roofs") })
+        {
+            var go = Emit(parent, name, mb, name.EndsWith("roofs") ? Mat("Roof", new Color(0.27f, 0.27f, 0.28f), 0.2f) : m, false);
+            if (go == null) continue;
+            var mr = go.GetComponent<MeshRenderer>();
+            mr.shadowCastingMode = ShadowCastingMode.Off; mr.receiveShadows = false;
+        }
+        SkylineReach = reach + 200f;
+        RealDataCredits.Add($"skyline of {count} tall buildings around the map (OpenStreetMap)");
+    }
+
+    /// <summary>How far the water lies below the streets (m): Dutch canals about 1 m, harbours and rivers more (not modelled).</summary>
+    public const float WaterDepth = 0.9f;
+
+    /// <summary>A quay along a water outline: brick walls from below the water line up to the street (both faces), and a
+    /// stone coping 0.8 m wide on the land side, just above the ground, over the ground's 1 m cells at the shore.</summary>
+    void Quay(List<V2> poly, MeshBuilder walls, MeshBuilder copings)
+    {
+        int n = poly.Count;
+        float along = 0f;
+        for (int i = 0; i < n; i++)
+        {
+            var a = poly[i]; var b = poly[(i + 1) % n];
+            float len = V2.Distance(a, b); if (len < 0.01f) continue;
+            float y0 = -WaterDepth - 0.3f, y1 = 0f;
+            Vector2 U(float s, float y) => new Vector2(s / 2.5f, (y - y0) / 2.5f);
+            walls.Quad(P(a, y0), P(a, y1), P(b, y1), P(b, y0), U(along, y0), U(along, y1), U(along + len, y1), U(along + len, y0));
+            walls.Quad(P(b, y0), P(b, y1), P(a, y1), P(a, y0), U(along + len, y0), U(along + len, y1), U(along, y1), U(along, y0));
+            along += len;
+        }
+        // the land side: right of the outline when it runs counter-clockwise
+        var ring = new List<V2>(poly) { poly[0] };
+        var l = new List<V2>(); var r = new List<V2>();
+        Geometry2D.Strip(ring, 0.8f, Geometry2D.SignedArea(poly) > 0 ? 0.4f : -0.4f, l, r);
+        copings.Strip(l, r, 0.006f, 1f);
+    }
+
+    Material WaterMaterial(Material plain)
+    {
+        if (_assets == null || _assets.FacadeTemplate == null || _noRelief) return plain;
+        var m = Mat("Water rippled", new Color(0.07f, 0.11f, 0.1f), 0.93f);
+        if (m.shader == _assets.FacadeTemplate.shader) return m;
+        // small wind ripples (a sum of waves that repeat every 2.5 m), moved by WaterRipples
+        var (nrm, hgt, occ) = Relief("water ripples", 256, 256, 2.5f / 256f, (x, y) =>
+        {
+            float u = x / 256f * 2f * Mathf.PI, v = y / 256f * 2f * Mathf.PI;
+            return 0.008f * (Mathf.Sin(3 * u + 1 * v) + 0.7f * Mathf.Sin(5 * u - 4 * v + 1.3f) + 0.5f * Mathf.Sin(-2 * u + 7 * v + 2.1f) + 0.35f * Mathf.Sin(11 * u + 6 * v + 0.4f) + 0.25f * Mathf.Sin(-9 * u + 13 * v + 2.7f));
+        });
+        m.shader = _assets.FacadeTemplate.shader;
+        m.SetColor("_BaseColor", new Color(0.07f, 0.11f, 0.1f));
+        m.SetFloat("_Smoothness", 0.93f);
+        m.SetTexture("_BumpMap", nrm); m.SetFloat("_BumpScale", 0.6f); m.EnableKeyword("_NORMALMAP");
+        m.SetTexture("_ParallaxMap", hgt); m.SetFloat("_Parallax", 0f); m.EnableKeyword("_PARALLAXMAP");
+        m.SetTexture("_OcclusionMap", occ); m.SetFloat("_OcclusionStrength", 0f); m.EnableKeyword("_OCCLUSIONMAP");
+        m.SetTextureScale("_BaseMap", Vector2.one * 4f);   // (URP's maps share the base map's tiling: 2.5 m on the water's 10 m UVs)
+        m.SetColor("_EmissionColor", Color.black); m.EnableKeyword("_EMISSION");
+        return m;
+    }
+
+    /// <summary>The water outlines' edges by 10 m cell, for the ground's holes.</summary>
+    sealed class WaterIndex
+    {
+        readonly List<List<V2>> _polys;
+        readonly Dictionary<(int, int), List<(V2 a, V2 b)>> _cells = new Dictionary<(int, int), List<(V2, V2)>>();
+        readonly List<(float x0, float z0, float x1, float z1)> _boxes = new List<(float, float, float, float)>();
+        const float Cell = 10f;
+
+        public WaterIndex(List<List<V2>> polys)
+        {
+            _polys = polys;
+            foreach (var poly in polys)
+            {
+                _boxes.Add((poly.Min(q => q.X), poly.Min(q => q.Y), poly.Max(q => q.X), poly.Max(q => q.Y)));
+                for (int i = 0; i < poly.Count; i++)
+                {
+                    var a = poly[i]; var b = poly[(i + 1) % poly.Count];
+                    int cx0 = (int)Math.Floor(Math.Min(a.X, b.X) / Cell), cx1 = (int)Math.Floor(Math.Max(a.X, b.X) / Cell);
+                    int cz0 = (int)Math.Floor(Math.Min(a.Y, b.Y) / Cell), cz1 = (int)Math.Floor(Math.Max(a.Y, b.Y) / Cell);
+                    for (int x = cx0; x <= cx1; x++) for (int z = cz0; z <= cz1; z++)
+                    {
+                        if (!_cells.TryGetValue((x, z), out var l)) _cells[(x, z)] = l = new List<(V2, V2)>();
+                        l.Add((a, b));
+                    }
+                }
+            }
+        }
+
+        /// <summary>The edges that may lie in a rectangle.</summary>
+        public List<(V2 a, V2 b)> EdgesIn(float x0, float z0, float x1, float z1)
+        {
+            var res = new List<(V2, V2)>();
+            for (int x = (int)Math.Floor(x0 / Cell); x <= (int)Math.Floor(x1 / Cell); x++)
+                for (int z = (int)Math.Floor(z0 / Cell); z <= (int)Math.Floor(z1 / Cell); z++)
+                    if (_cells.TryGetValue((x, z), out var l)) res.AddRange(l);
+            return res;
+        }
+
+        public bool Inside(V2 p)
+        {
+            for (int i = 0; i < _polys.Count; i++)
+            {
+                var bx = _boxes[i];
+                if (p.X < bx.x0 || p.X > bx.x1 || p.Y < bx.z0 || p.Y > bx.z1) continue;
+                if (Geometry2D.PointInPolygon(p, _polys[i])) return true;
+            }
+            return false;
+        }
+
+        /// <summary>Whether the segment from p to q crosses the edges an odd number of times (q is on the other side of the shore).</summary>
+        public static bool CrossesOdd(List<(V2 a, V2 b)> edges, V2 p, V2 q)
+        {
+            bool odd = false;
+            foreach (var (a, b) in edges)
+            {
+                float d1 = Geometry2D.Cross(b - a, p - a), d2 = Geometry2D.Cross(b - a, q - a);
+                if ((d1 > 0) == (d2 > 0)) continue;
+                float d3 = Geometry2D.Cross(q - p, a - p), d4 = Geometry2D.Cross(q - p, b - p);
+                if ((d3 > 0) == (d4 > 0)) continue;
+                odd = !odd;
+            }
+            return odd;
+        }
+    }
+
+    /// <summary>The surroundings (6 km) from the far aerial photo, just under the map's ground, for distant and high views.</summary>
+    void EmitSurroundings(Transform world)
+    {
+        if (Aerial == null || Aerial.FarTexture == null) return;
+        var far = new MeshBuilder();
+        float fh = Aerial.FarHalfSize; int n = 12; float fs = 2 * fh / n;
+        Vector2 FarUv(float x, float z) => new Vector2((x + fh) / (2 * fh), (z + fh) / (2 * fh));
+        for (int i = 0; i < n; i++)
+            for (int j = 0; j < n; j++)
+            {
+                float x0 = -fh + i * fs, x1 = x0 + fs, z0 = -fh + j * fs, z1 = z0 + fs;
+                far.Quad(new Vector3(x0, -0.1f, z0), new Vector3(x0, -0.1f, z1), new Vector3(x1, -0.1f, z1), new Vector3(x1, -0.1f, z0),
+                    FarUv(x0, z0), FarUv(x0, z1), FarUv(x1, z1), FarUv(x1, z0));
+            }
+        var go = Emit(world, "Surroundings aerial photo", far, Mat("Surroundings aerial photo", Color.white, 0.05f, Aerial.FarTexture), false);
+        if (go != null) go.GetComponent<MeshRenderer>().shadowCastingMode = ShadowCastingMode.Off;
+    }
+
     static void CullWhenSmall(GameObject go, float screenFraction)
     {
         if (!go.TryGetComponent<LODGroup>(out var lod)) lod = go.AddComponent<LODGroup>();

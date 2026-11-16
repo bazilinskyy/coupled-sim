@@ -351,6 +351,13 @@ public static class SmokeTest
                 camGo.transform.position = t.position - t.forward * 4.5f + t.right * 1.8f * centreSide + Vector3.up * 1.9f;
                 camGo.transform.LookAt(t.position + Vector3.up * 0.9f + t.forward * 1.5f);
             }
+            else if (view.Trim().StartsWith("top") && local != null)
+            {
+                // "top" or "top:H": straight down from H m (default 60) above the participant, north up
+                float hgt = view.Trim().Length > 4 && float.TryParse(view.Trim().Substring(4), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var th) ? th : 60f;
+                camGo.transform.position = local.transform.position + Vector3.up * hgt;
+                camGo.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+            }
             else if (view.Trim() == "front" && local != null)
             {
                 // in front of the participant's vehicle, at a pedestrian's eye height, looking back at it

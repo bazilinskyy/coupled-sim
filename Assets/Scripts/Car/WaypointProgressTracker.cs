@@ -51,6 +51,7 @@ namespace UnityStandardAssets.Utility
         private int progressNum; // the current waypoint number, used in point-to-point mode.
         private Vector3 lastPosition; // Used to calculate current speed (since we may not have a rigidbody component)
         private float speed; // current speed of this object (calculated from delta since last frame)
+        private float nextProjection;
 
         // setup script properties
         public void Init(WaypointCircuit circuit)
@@ -131,6 +132,21 @@ namespace UnityStandardAssets.Utility
                 if (Vector3.Dot(progressDelta, progressPoint.direction) < 0)
                 {
                     progressDistance += progressDelta.magnitude*0.5f;
+                }
+                // a few times a second: the nearest point of the route up to 25 m further on, where the vehicle is
+                // nearer to it than to the progress point (it cut a corner, or was pushed or steered off its line): the
+                // progress moves there, so the target stays ahead of the vehicle instead of beside or behind it (where a
+                // vehicle would circle round it)
+                if (Time.time >= nextProjection && circuit.Length > 30f)
+                {
+                    nextProjection = Time.time + 0.25f;
+                    float bestD = progressDistance, bestE = (progressPoint.position - transform.position).sqrMagnitude;
+                    for (float d = 1f; d <= 25f; d += 1f)
+                    {
+                        float e = (circuit.GetRoutePosition(progressDistance + d) - transform.position).sqrMagnitude;
+                        if (e < bestE) { bestE = e; bestD = progressDistance + d; }
+                    }
+                    progressDistance = bestD;
                 }
 
                 lastPosition = transform.position;
