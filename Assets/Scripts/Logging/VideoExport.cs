@@ -110,6 +110,11 @@ public class VideoExport : MonoBehaviour
         int channels = AudioSettings.speakerMode == AudioSpeakerMode.Mono ? 1 : 2, rate = AudioSettings.outputSampleRate;
         var samples = new List<float>();
         bool audio = Audio && rate > 0 && AudioRenderer.Start();
+#if UNITY_EDITOR
+        // (tests mute the editor's sound; while AudioRenderer records, Unity sends silence to the loudspeakers)
+        bool wasMuted = UnityEditor.EditorUtility.audioMasterMute;
+        if (audio) UnityEditor.EditorUtility.audioMasterMute = false;
+#endif
         Unity.Collections.NativeArray<float> buffer = default;
         int frames = Mathf.RoundToInt(Seconds * Fps);
         Debug.Log($"VideoExport: {shots.Count} cameras, {frames} frames at {Fps} fps, {Size.x}x{Size.y}");
@@ -162,6 +167,9 @@ public class VideoExport : MonoBehaviour
         if (audio)
         {
             AudioRenderer.Stop();
+#if UNITY_EDITOR
+            UnityEditor.EditorUtility.audioMasterMute = wasMuted;
+#endif
             if (buffer.IsCreated) buffer.Dispose();
             if (samples.Count > 0) { wav = Path.Combine(root, $"{NetworkingManager.LogPrefix}sound-{stamp}.wav"); WriteWav(wav, samples, channels, rate); }
             Debug.Log($"VideoExport: sound {samples.Count / Mathf.Max(1, channels) / (float)Mathf.Max(1, rate):F1} s at {rate} Hz, {channels} channels");
@@ -252,6 +260,12 @@ public class VideoExport : MonoBehaviour
             }
             pos = head.position + Vector3.up * 0.09f + fwd * 0.22f;
             rot = Quaternion.LookRotation(fwd, Vector3.up) * Quaternion.Euler(8f, 0f, 0f);
+            return true;
+        }
+        if (p.TryGetComponent<ReplayEye>(out var re))
+        {
+            pos = p.transform.TransformPoint(re.LocalPosition);
+            rot = Quaternion.Euler(4f, p.transform.eulerAngles.y + re.LocalYaw, 0f);
             return true;
         }
         pos = eye != null ? eye.position

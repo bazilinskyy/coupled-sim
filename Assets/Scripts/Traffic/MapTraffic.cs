@@ -143,6 +143,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         AICar Pick() { double x = rng.NextDouble() * total; foreach (var p in prefabs) { x -= Weight(p); if (x <= 0) return p; } return prefabs[prefabs.Length - 1]; }
         var spawn = new GameObject("Map traffic spawn point").transform;
         int count = 0;
+        var placed = new List<Vector3>();   // (routes share lanes: no car placed within 10 m of another)
         foreach (var route in Routes)
         {
             float length = route.Length > 0 ? route.Length : 1f;
@@ -153,6 +154,8 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
                 if (d > length - 60f) continue;   // not in the turnaround at the end
                 var rp = route.GetRoutePoint(d);
                 if (players.Any(p => (p - rp.position).sqrMagnitude < 15f * 15f)) continue;
+                if (placed.Any(q => (q - rp.position).sqrMagnitude < 10f * 10f)) continue;
+                placed.Add(rp.position);
                 var pos = rp.position;
                 if (Physics.Raycast(pos + Vector3.up * 5f, Vector3.down, out var hit, 20f, ~0, QueryTriggerInteraction.Ignore)) pos.y = hit.point.y;
                 var dir = rp.direction; dir.y = 0;
@@ -190,6 +193,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         var rng = new System.Random(Seed + 11);
         var spawn = new GameObject("Map cyclists spawn point").transform;
         int count = 0, index = 0;
+        var placed = Cars.Select(c => c.transform.position).ToList();   // (6 m from every car and cyclist placed)
         foreach (var route in Routes.ToList())
         {
             if (count >= MaxCyclists) break;
@@ -204,6 +208,8 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
                 float d = bikeRoute.Length * (i + 0.3f) / n;
                 if (d > bikeRoute.Length - 60f) continue;
                 var rp = bikeRoute.GetRoutePoint(d);
+                if (placed.Any(q => (q - rp.position).sqrMagnitude < 6f * 6f)) continue;
+                placed.Add(rp.position);
                 var pos = rp.position;
                 if (Physics.Raycast(pos + Vector3.up * 5f, Vector3.down, out var hit, 20f, ~0, QueryTriggerInteraction.Ignore)) pos.y = hit.point.y;
                 var dir = rp.direction; dir.y = 0;
@@ -430,6 +436,7 @@ public class MapRouteRecycler : MonoBehaviour
     WaypointProgressTracker _tracker;
     Rigidbody _rb;
     float _nextCheck;
+    static readonly List<(Vector3 pos, float time)> _recent = new List<(Vector3, float)>();
 
     void Start() { _tracker = GetComponent<WaypointProgressTracker>(); _rb = GetComponent<Rigidbody>(); }
 
@@ -443,6 +450,10 @@ public class MapRouteRecycler : MonoBehaviour
         var start = c.GetRoutePoint(4f);
         foreach (var other in Physics.OverlapSphere(start.position, 12f, ~0, QueryTriggerInteraction.Ignore))
             if (other.attachedRigidbody != null && other.attachedRigidbody != _rb && other.attachedRigidbody.GetComponent<AICar>() != null) return;
+        // (cars moved to a start in this physics step are not in the overlap test yet)
+        _recent.RemoveAll(r => Time.time - r.time > 3f);
+        if (_recent.Exists(r => (r.pos - start.position).sqrMagnitude < 12f * 12f)) return;
+        _recent.Add((start.position, Time.time));
         var p = start.position;
         if (Physics.Raycast(p + Vector3.up * 5f, Vector3.down, out var hit, 20f, ~0, QueryTriggerInteraction.Ignore)) p.y = hit.point.y + 0.1f;
         var rot = Quaternion.LookRotation(new Vector3(start.direction.x, 0, start.direction.z), Vector3.up);

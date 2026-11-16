@@ -141,7 +141,8 @@ public class AICar : MonoBehaviour, IVehicle
         // a little pitch: nose down when braking, up when accelerating
         pitch = Mathf.Clamp(-ExternalAcceleration * 0.4f, -1.5f, 1.5f) * HasPitch;
         modelLocalRotation = Quaternion.Slerp(modelLocalRotation, Quaternion.Euler(pitch, 0, 0), 0.1f);
-        theRigidbody.linearVelocity = rotationAxis.forward * ExternalSpeed + Vector3.up * theRigidbody.linearVelocity.y;
+        // (not upwards: a push from a participant's vehicle must not lift or launch the car; gravity keeps it down)
+        theRigidbody.linearVelocity = rotationAxis.forward * ExternalSpeed + Vector3.up * Mathf.Min(theRigidbody.linearVelocity.y, 0.3f);
     }
 
     void FixedUpdate()
