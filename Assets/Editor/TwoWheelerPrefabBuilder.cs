@@ -35,6 +35,17 @@ public static class TwoWheelerPrefabBuilder
         AssetDatabase.SaveAssets();
     }
 
+    [MenuItem("Coupled Sim/Two-wheelers/Build the moped prefab")]
+    public static void BuildMopedOnly()
+    {
+        Directory.CreateDirectory(MeshDir);
+        Directory.CreateDirectory(MatDir);
+        _materials.Clear();
+        _cylinder = Resources.GetBuiltinResource<Mesh>("Cylinder.fbx");
+        Build(TwoWheelerType.Moped25, "Moped", new Color(0.62f, 0.75f, 0.7f), "Male_Adult_09");
+        AssetDatabase.SaveAssets();
+    }
+
     // ------------------------------------------------------------------ materials and meshes
 
     static Material Mat(string name, Color color, float smooth, float metal = 0f, bool emissive = false)
@@ -258,8 +269,76 @@ public static class TwoWheelerPrefabBuilder
         return r;
     }
 
+    // the moped: "Moto Vespa" by mohamed ouartassi (Sketchfab, CC BY 4.0), its parts named by the model's nodes
+    const string MopedModel = "Assets/ThirdParty/TwoWheelers/MotoVespa/moto_vespa.glb";
+    static readonly string[] MopedFrontWheel = { "Object_65", "Object_66", "Object_67", "Object_45" };
+    static readonly string[] MopedRearWheel = { "Object_69", "Object_70", "Object_71" };
+    static readonly string[] MopedSteering = { "Object_41", "Object_43", "Object_44", "Object_52", "Object_17", "Object_28", "Object_13", "Object_14", "Object_56", "Object_57", "Object_59", "Object_60", "Object_61" };
+
+    static Transform FindDeep(Transform t, string name)
+    {
+        if (t.name == name) return t;
+        foreach (Transform c in t) { var f = FindDeep(c, name); if (f != null) return f; }
+        return null;
+    }
+
+    static Bounds BoundsOf(Transform model, params string[] names)
+    {
+        var b = new Bounds(); bool any = false;
+        foreach (var n in names)
+        {
+            var t = FindDeep(model, n); if (t == null) continue;
+            foreach (var r in t.GetComponentsInChildren<Renderer>()) { if (!any) { b = r.bounds; any = true; } else b.Encapsulate(r.bounds); }
+        }
+        return b;
+    }
+
+    /// <summary>
+    /// The moped from its 3D model: the body leans, the handlebar, headlight, fork and front mudguard turn with the
+    /// steering about the axis from the front axle to the headset, the wheels spin; the rider's seat, grips and footrests
+    /// where the model has them. Falls back to the simple shapes (BuildMoped) without the model.
+    /// </summary>
+    static Rig BuildMopedModel(Transform root, GameObject asset)
+    {
+        var r = new Rig { Root = root };
+        r.Lean = Empty("Lean", root, Vector3.zero);
+        var holder = Empty("Model", r.Lean, Vector3.zero, Quaternion.Euler(0, 180, 0));   // (the model's front is its -z)
+        var model = (GameObject)PrefabUtility.InstantiatePrefab(asset);
+        PrefabUtility.UnpackPrefabInstance(model, PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
+        model.transform.SetParent(holder, false);
+        // the wheels' middle at the origin, their bottoms on the ground
+        var fw = BoundsOf(model.transform, "Object_65"); var rw = BoundsOf(model.transform, "Object_69");
+        holder.position += new Vector3(-(fw.center.x + rw.center.x) / 2f, -Mathf.Min(fw.min.y, rw.min.y), -(fw.center.z + rw.center.z) / 2f);
+        fw = BoundsOf(model.transform, "Object_65"); rw = BoundsOf(model.transform, "Object_69");
+        var frontC = new Vector3(0, fw.center.y, fw.center.z); var rearC = new Vector3(0, rw.center.y, rw.center.z);
+        r.WheelRadius = fw.extents.y;
+        // steering axis: from the front axle up to the headset
+        var head = BoundsOf(model.transform, "Object_13").center; head.x = 0f;
+        var axis = (head - frontC).normalized;
+        var pivot = frontC + axis * ((0.55f - frontC.y) / Mathf.Max(0.1f, axis.y));
+        r.Steering = Empty("Steering", r.Lean, pivot, Quaternion.FromToRotation(Vector3.up, axis));
+        r.FrontWheel = Empty("Front wheel", r.Steering, r.Steering.InverseTransformPoint(r.Lean.TransformPoint(frontC)));
+        r.RearWheel = Empty("Rear wheel", r.Lean, rearC);
+        foreach (var n in MopedSteering) FindDeep(model.transform, n)?.SetParent(r.Steering, true);
+        foreach (var n in MopedFrontWheel) FindDeep(model.transform, n)?.SetParent(r.FrontWheel, true);
+        foreach (var n in MopedRearWheel) FindDeep(model.transform, n)?.SetParent(r.RearWheel, true);
+        // the rider: on the rear part of the seat, hands on the grips, feet on the floorboard
+        var seat = BoundsOf(model.transform, "Object_50", "Object_49");
+        r.Seat = Empty("Seat", r.Lean, new Vector3(0, seat.max.y + 0.02f, seat.center.z - 0.12f));
+        var bar = BoundsOf(r.Steering, "Object_14");
+        Transform Grip(string name, float side) => Empty(name, r.Steering, r.Steering.InverseTransformPoint(new Vector3(side * (bar.extents.x - 0.07f), bar.center.y + 0.01f, bar.center.z - 0.03f)));
+        r.LeftGrip = Grip("Left grip", -1f); r.RightGrip = Grip("Right grip", 1f);
+        var floor = BoundsOf(model.transform, "Object_36");
+        r.LeftFoot = Empty("Left foot", r.Lean, new Vector3(-0.11f, floor.max.y + 0.03f, floor.center.z + 0.08f));
+        r.RightFoot = Empty("Right foot", r.Lean, new Vector3(0.11f, floor.max.y + 0.03f, floor.center.z + 0.08f));
+        Debug.Log($"TwoWheelerPrefabBuilder: moped model, wheels at {rearC} and {frontC} (radius {r.WheelRadius:F2}), steering pivot {pivot}, seat {r.Seat.localPosition}");
+        return r;
+    }
+
     static Rig BuildMoped(Transform root, Color paint)
     {
+        var asset = AssetDatabase.LoadAssetAtPath<GameObject>(MopedModel);
+        if (asset != null) return BuildMopedModel(root, asset);
         var r = new Rig { Root = root, WheelRadius = 0.24f };
         var body = Mat("MopedPaint", paint, 0.75f, 0.1f);
         var steel = Mat("Steel", new Color(0.8f, 0.8f, 0.82f), 0.85f, 1f);
