@@ -12,6 +12,11 @@ using UnityEngine.SceneManagement;
 /// 0 free camera (WASD, Q/E down/up, Shift faster, right mouse button looks around), C camera
 /// inside/behind, T trails, Esc back to the start screen. Nothing is sent over the network and no
 /// new log is written.
+/// Each participant moves between the samples as they came in (<see cref="ReplayTrack"/>): a host gets the other
+/// participants' vehicles and bodies only with each network update. With -replayWith "a.binLog;b.binLog" (the other
+/// participants' own logs of the same session) each of them moves as in its own log instead, at every physics step,
+/// started at the moment the host first saw it move. A car's steering wheel turns with the curvature of its logged
+/// path (steering is not logged), and stands still while the car stands.
 /// </summary>
 public class ReplayPlayer : MonoBehaviour
 {
@@ -28,6 +33,8 @@ public class ReplayPlayer : MonoBehaviour
     readonly List<PlayerAvatar> _droneParticipants = new List<PlayerAvatar>();
     readonly List<LineRenderer> _trails = new List<LineRenderer>();
     TrafficLightsSystem _lights;
+    ReplayTrack[] _driverTracks, _pedestrianTracks;
+    ObservedSteering[] _steering;
     Camera _camera;
     bool _ready, _playing = true, _inside, _showTrails;
     float _time, _speed = 1f, _yaw, _pitch = 15f;
@@ -88,6 +95,7 @@ public class ReplayPlayer : MonoBehaviour
         r._carFallback = ps.DriverPrefabs != null && ps.DriverPrefabs.Length > 0 ? ps.DriverPrefabs[0] : null;
         r._pedestrianFallback = ps.PedestrianPrefab;
         r._experiment = nm.Experiments.FirstOrDefault(e => e != null && e.ShortName == info.Experiment);
+        r.BuildTracks(Arg("-replayWith"));
         Active = r;
         Debug.Log($"Replay: {binLog}: {log.Frames.Count} frames, {log.Duration:F1} s, experiment {info.Experiment}, scene {info.Scene}{(info.Map != null ? ", map " + info.Map : "")}");
 
@@ -99,6 +107,61 @@ public class ReplayPlayer : MonoBehaviour
 
     ExperimentDefinition _experiment;
 
+    static string Arg(string name)
+    {
+        var args = Environment.GetCommandLineArgs();
+        int i = Array.IndexOf(args, name);
+        return i >= 0 && i + 1 < args.Length ? args[i + 1] : null;
+    }
+
+    /// <summary>
+    /// The participants' tracks: from this log, or (other participants' own logs, -replayWith) from their own,
+    /// started when this log first shows them moving. Their own logs have them at every physics step; this one only
+    /// as the network brought them.
+    /// </summary>
+    void BuildTracks(string others)
+    {
+        int maxDrivers = _log.Frames.Max(f => f.DriverCount);
+        _driverTracks = new ReplayTrack[maxDrivers];
+        for (int i = 0; i < maxDrivers; i++) _driverTracks[i] = new ReplayTrack(_log, i, false);
+        _pedestrianTracks = new ReplayTrack[_log.PedestrianCount];
+        for (int i = 0; i < _log.PedestrianCount; i++) _pedestrianTracks[i] = new ReplayTrack(_log, i, true);
+        for (int i = 0; i < Mathf.Min(_info.Drivers.Length, maxDrivers); i++)
+            if (_driverTracks[i].Changes > 2 && _driverTracks[i].Interval > 0.1f)
+                Debug.Log($"Replay: participant {i + 1} ({_info.Drivers[i]}) has a new sample only every {_driverTracks[i].Interval:F2} s in this log" +
+                          (i == _log.LocalDriver ? "" : " (as the network brought it; its own log, -replayWith, has every step)"));
+        if (string.IsNullOrEmpty(others)) return;
+        foreach (var path in others.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
+        {
+            ReplayLog log;
+            try { log = ReplayLog.Read(path.Trim()); }
+            catch (Exception e) { Debug.LogWarning($"Replay: cannot read {path}: {e.Message}"); continue; }
+            if (log.Frames.Count == 0) continue;
+            // its own participant: the local driver, or the pedestrian whose samples change most often
+            ReplayTrack own;
+            if (log.LocalDriver >= 0) own = new ReplayTrack(log, log.LocalDriver, false);
+            else
+            {
+                own = null;
+                for (int i = 0; i < log.PedestrianCount; i++) { var t = new ReplayTrack(log, i, true); if (own == null || t.Changes > own.Changes) own = t; }
+            }
+            if (own == null) { Debug.LogWarning($"Replay: {path} has no participant of its own"); continue; }
+            var here = own.Pedestrian ? (own.Index < _pedestrianTracks.Length ? _pedestrianTracks[own.Index] : null) : (own.Index < _driverTracks.Length ? _driverTracks[own.Index] : null);
+            if (here == null) { Debug.LogWarning($"Replay: {path}: its participant is not in this recording"); continue; }
+            // started when this log first shows it moving (where its own log was at that point)
+            float t0 = here.FirstMove(out var p0), own0 = -1f, err = 0f;
+            if (t0 >= 0f) own0 = own.TimeAt(p0, 0f, 0.05f, out err);
+            if (t0 < 0f || own0 < 0f || err > 1f) { Debug.LogWarning($"Replay: {path}: its participant does not match this recording (off by {err:F1} m)"); continue; }
+            var shifted = new ReplayTrack(log, own.Index, own.Pedestrian, own0 - t0);
+            if (own.Pedestrian) _pedestrianTracks[own.Index] = shifted; else _driverTracks[own.Index] = shifted;
+            // how this log's clock ran compared with theirs (a host far behind real time: its own car and the AI traffic
+            // move at the host's pace, the others at their own)
+            float t1 = here.LastMove(out var p1), own1 = t1 > t0 ? own.TimeAt(p1, own0, 0.05f, out _) : -1f;
+            string pace = t1 > t0 + 1f && own1 > own0 ? $"; its clock ran about {(own1 - own0) / (t1 - t0):F1}x as fast as this log's" : "";
+            Debug.Log($"Replay: {(own.Pedestrian ? "pedestrian " + (own.Index + 1) : "participant " + (own.Index + 1))} from its own log {System.IO.Path.GetFileName(path)} ({own.Changes} samples, from {own0 - t0:+0.00;-0.00} s{pace})");
+        }
+    }
+
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         SceneManager.sceneLoaded -= OnSceneLoaded;
@@ -109,7 +172,8 @@ public class ReplayPlayer : MonoBehaviour
     // MonoBehaviours of the experiment kept running in the replay: the world's look; everything that spawns or drives is off
     static readonly HashSet<string> KeepInExperiment = new HashSet<string> { "EnvironmentController", "CarTrafficLight", "PedestrianTrafficLight", "TrafficSign" };
     // MonoBehaviours kept on the replayed avatars
-    static readonly HashSet<string> KeepOnAvatar = new HashSet<string> { "PlayerAvatar", "CarBlinkers", "SteeringWheel", "ObservedSteering", "WheelRotator" };
+    // (RiderIK: the rider's hands on the grips and feet on the pedals; without it the figure stands in its bicycle)
+    static readonly HashSet<string> KeepOnAvatar = new HashSet<string> { "PlayerAvatar", "CarBlinkers", "SteeringWheel", "ObservedSteering", "WheelRotator", "RiderIK" };
 
     void Setup()
     {
@@ -147,6 +211,9 @@ public class ReplayPlayer : MonoBehaviour
         }
         for (int i = 0; i < _log.PedestrianCount; i++)
             _pedestrians.Add(Spawn(i < _info.Pedestrians.Length ? _info.Pedestrians[i] : null, _pedestrianFallback, false));
+        // steering wheels turned from the logged path
+        _steering = _drivers.Select(d => d != null && d.TryGetComponent<ObservedSteering>(out var s) ? s : null).ToArray();
+        foreach (var s in _steering) if (s != null) s.Driven = true;
 
         // drones (participants' and AI): the procedural body, posed from the log
         foreach (var entry in _info.Drones ?? new List<string>())
@@ -369,9 +436,10 @@ public class ReplayPlayer : MonoBehaviour
             bool present = i < a.DriverCount;
             if (d.gameObject.activeSelf != present) d.gameObject.SetActive(present);
             if (!present) continue;
-            var pos = a.Positions[i]; var rot = a.Rotations[i];
-            if (i < b.DriverCount && (b.Positions[i] - pos).sqrMagnitude < 25f) { pos = Vector3.Lerp(pos, b.Positions[i], u); rot = Quaternion.Slerp(rot, b.Rotations[i], u); }
+            var track = _driverTracks[i];
+            if (!track.Pose(track.LocalTime(_time), out var pos, out var rot)) { pos = a.Positions[i]; rot = a.Rotations[i]; }
             d.transform.SetPositionAndRotation(pos, rot);
+            if (_steering[i] != null) _steering[i].Drive(track.Curvature(track.LocalTime(_time)), Time.deltaTime);
             if (i == 0 && _debugEye && Time.unscaledTime > _nextEyeLog)
             {
                 _nextEyeLog = Time.unscaledTime + 1f;
@@ -380,16 +448,33 @@ public class ReplayPlayer : MonoBehaviour
                 var cam = d.cameras != null && d.cameras.Length > 0 && d.cameras[0] != null ? d.cameras[0].transform : null;
                 Debug.Log($"ReplayEyeDebug t={_time:F1}: body {(big != null ? big.name + " " + d.transform.InverseTransformPoint(big.bounds.center).ToString("F2") : "-")}, camera {(cam != null ? cam.name + " " + d.transform.InverseTransformPoint(cam.position).ToString("F2") : "-")}, root {d.transform.position:F1}");
             }
-            if (d.CarBlinkers != null && d.CarBlinkers.State != a.Blinkers[i]) d.CarBlinkers.SwitchToState(a.Blinkers[i]);
-            if (d.frontLights != null && d.frontLights.activeSelf != a.FrontLights[i]) d.frontLights.SetActive(a.FrontLights[i]);
-            if (d.stopLights != null && d.stopLights.activeSelf != a.StopLights[i]) d.stopLights.SetActive(a.StopLights[i]);
+            // blinkers and lights: from the participant's own log when it has one
+            var lf = track.Log == _log ? a : track.Log.Frames[Mathf.Max(0, track.Log.FrameAt(track.LocalTime(_time), out _))];
+            int li = track.Log == _log ? i : track.Index;
+            if (li < lf.DriverCount)
+            {
+                if (d.CarBlinkers != null && d.CarBlinkers.State != lf.Blinkers[li]) d.CarBlinkers.SwitchToState(lf.Blinkers[li]);
+                if (d.frontLights != null && d.frontLights.activeSelf != lf.FrontLights[li]) d.frontLights.SetActive(lf.FrontLights[li]);
+                if (d.stopLights != null && d.stopLights.activeSelf != lf.StopLights[li]) d.stopLights.SetActive(lf.StopLights[li]);
+            }
         }
         for (int i = 0; i < _pedestrians.Count; i++)
         {
             var p = _pedestrians[i];
-            var pose = a.Pedestrians[i];
-            if (p == null || pose.LocalPositions == null || pose.LocalPositions.Count != p.SyncTransforms.Length + 1) continue;
-            p.ApplyPose(pose);
+            var track = _pedestrianTracks[i];
+            if (p == null || !track.At(track.LocalTime(_time), out var fa, out var fb, out var fu)) continue;
+            var pa = fa.Pedestrians[track.Index]; var pb = fb.Pedestrians[track.Index];
+            if (pa.LocalPositions == null || pa.LocalPositions.Count != p.SyncTransforms.Length + 1) continue;
+            if (pb.LocalPositions == null || pb.LocalPositions.Count != pa.LocalPositions.Count) { pb = pa; fu = 0f; }
+            // the body between the two samples (root and every synced bone)
+            p.transform.SetPositionAndRotation(Vector3.Lerp(pa.LocalPositions[0], pb.LocalPositions[0], fu), Quaternion.Slerp(pa.LocalRotations[0], pb.LocalRotations[0], fu));
+            for (int j = 0; j < p.SyncTransforms.Length; j++)
+            {
+                var tr = p.SyncTransforms[j];
+                if (tr == null) continue;
+                tr.localPosition = Vector3.Lerp(pa.LocalPositions[j + 1], pb.LocalPositions[j + 1], fu);
+                tr.localRotation = Quaternion.Slerp(pa.LocalRotations[j + 1], pb.LocalRotations[j + 1], fu);
+            }
         }
         for (int i = 0; i < _drones.Count; i++)
         {

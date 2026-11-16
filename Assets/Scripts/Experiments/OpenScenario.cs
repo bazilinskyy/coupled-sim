@@ -16,8 +16,10 @@ using UnityEngine;
 ///   with step, linear or cubic dynamics over a time, a rate or a distance);
 /// - start triggers: SimulationTimeCondition (and events without a trigger, at the start).
 /// Other actions and conditions are listed as unsupported in the log. Actors drive straight ahead
-/// along their heading (no lane following). World coordinates are the scene's (x east, y north),
-/// minus the road network's offset for OpenDRIVE/SUMO maps, so a scenario on the same .xodr fits.
+/// along their heading (no lane following), on the ground under them: a pedestrian steps up onto a
+/// pavement and down onto the road (the scenario's z only tells a road from a bridge above it).
+/// World coordinates are the scene's (x east, y north), minus the road network's offset for
+/// OpenDRIVE/SUMO maps, so a scenario on the same .xodr fits.
 /// Every agent plays the same file in step with the trial clock. Load with -openscenario file.xosc
 /// (StreamingAssets/Scenarios or a full path). Events are logged to ExperimentLogs/OpenScenario-*.csv.
 /// </summary>
@@ -32,6 +34,7 @@ public class OpenScenario : MonoBehaviour
         public Transform T;
         public Animator Anim;
         public float Speed, Target, Rate;   // m/s, m/s, m/s² (0: step)
+        public bool Grounded;
     }
     sealed class Event
     {
@@ -160,9 +163,47 @@ public class OpenScenario : MonoBehaviour
             if (a.T == null) continue;
             a.Speed = a.Rate > 0f ? Mathf.MoveTowards(a.Speed, a.Target, a.Rate * dt) : a.Target;
             a.T.position += a.T.forward * a.Speed * dt;
+            if (a.Speed != 0f || !a.Grounded) Ground(a);
             if (a.Anim != null && a.Pedestrian) { a.Anim.SetFloat("Speed", Mathf.Clamp01(a.Speed / 1.4f)); a.Anim.speed = a.Speed > 1.4f ? Mathf.Min(2f, a.Speed / 1.4f) : 1f; }
         }
     }
+
+    // The levels one can stand on at p, from high to low: the top of the scenery there (not the actors, vehicles or
+    // people), and each surface further down with at least 1.6 m of room above it (a road under a bridge; not the road
+    // surface running on under a pavement).
+    readonly RaycastHit[] _hits = new RaycastHit[16];
+    List<float> Levels(Vector3 p)
+    {
+        var levels = new List<float>();
+        int n = Physics.RaycastNonAlloc(p + Vector3.up * 60f, Vector3.down, _hits, 120f, ~0, QueryTriggerInteraction.Ignore);
+        var ys = new List<float>();
+        for (int i = 0; i < n; i++)
+            if (Scenery(_hits[i].collider)) ys.Add(_hits[i].point.y);
+        ys.Sort((u, v) => v.CompareTo(u));
+        for (int i = 0; i < ys.Count; i++)
+            if (i == 0 || ys[i - 1] - ys[i] > 1.6f) levels.Add(ys[i]);
+        return levels;
+    }
+
+    // feet (wheels) on the ground: the highest surface from a step above them down (kerbs up and down; on a bridge or in
+    // a tunnel the level it is on)
+    void Ground(Actor a)
+    {
+        float step = a.Pedestrian ? 0.35f : 0.25f;
+        var p = a.T.position;
+        float? best = null;
+        int n = Physics.RaycastNonAlloc(p + Vector3.up * (step + 0.5f), Vector3.down, _hits, step + 2.5f, ~0, QueryTriggerInteraction.Ignore);
+        for (int i = 0; i < n; i++)
+        {
+            float y = _hits[i].point.y;
+            if (Scenery(_hits[i].collider) && y <= p.y + step && (best == null || y > best.Value)) best = y;
+        }
+        a.Grounded = true;
+        if (best.HasValue) a.T.position = new Vector3(p.x, best.Value, p.z);
+    }
+
+    bool Scenery(Collider c) => c.attachedRigidbody == null && !c.transform.IsChildOf(transform)
+        && c.GetComponentInParent<PlayerAvatar>() == null && c.GetComponentInParent<Animator>() == null;
 
     void Apply(Event e, float t)
     {
@@ -172,13 +213,14 @@ public class OpenScenario : MonoBehaviour
         {
             float x = F(Attr(tp, "x")), y = F(Attr(tp, "y")), z = F(Attr(tp, "z")), h = F(Attr(tp, "h"));
             var pos = new Vector3(x - _offset.x, z, y - _offset.y);
-            // ground under it
-            // ground under it: the surface nearest the given height (not a roof or bridge high above a road)
+            // on the ground under it: the top surface there (a pavement, not the road surface running on under it),
+            // and of several levels (a bridge over a road) the one nearest the given height
             float? groundY = null;
-            foreach (var g in Physics.RaycastAll(pos + Vector3.up * 50f, Vector3.down, 100f, ~0, QueryTriggerInteraction.Ignore))
-                if (g.collider.attachedRigidbody == null && (groundY == null || Mathf.Abs(g.point.y - z) < Mathf.Abs(groundY.Value - z))) groundY = g.point.y;
+            foreach (var level in Levels(pos))
+                if (groundY == null || Mathf.Abs(level - z) < Mathf.Abs(groundY.Value - z) - 0.5f) groundY = level;
             if (groundY.HasValue) pos.y = groundY.Value;
             a.T.SetPositionAndRotation(pos, Quaternion.Euler(0f, 90f - h * Mathf.Rad2Deg, 0f));
+            a.Grounded = groundY.HasValue;
             Log("teleport", a.Name, $"{x.ToString("F1", Ci)},{y.ToString("F1", Ci)},h={h.ToString("F2", Ci)}");
             return;
         }
