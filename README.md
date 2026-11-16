@@ -82,17 +82,18 @@ If you use the coupled simulator for academic work, please cite:
 The source code of the coupled simulator is released under the [MIT License](LICENSE). Third-party assets included in this repository (see [Used assets](#used-assets)) are not covered by this license. They remain under the license of their developers, such as the Unity Asset Store EULA, MIT, CC0 or CC BY 4.0 (with the credits in [Used assets](#used-assets)).
 
 ## Features
+- **Ready-made simulators for Windows and macOS** on the [Releases page](https://github.com/bazilinskyy/coupled-sim/releases), with the tutorial [Your first study](docs/first-study.md): a complete small study without Unity.
 - Up to **8 human participants** in one scene (a host and seven clients) over a local network; several of them can sit in one car and talk to each other (voice is recorded).
 - Roles: driver of a manual car, passenger of an AV (controls its eHMI), pedestrian, cyclist, e-scooter rider, moped rider, drone pilot.
 - Input: keyboard, gamepads and steering wheels with pedals (Logitech, Thrustmaster, Fanatec, Moza; profiles and in-simulator calibration; force feedback on Logitech wheels), Xsens MVN motion suit for pedestrians.
 - Output: flat screens (also several monitors side by side, and mirror views) or head-mounted displays through OpenXR (Meta Quest, Varjo, HTC Vive, Valve Index, HP Reverb, Pico), with eye-tracking logs on headsets that have eye tracking.
 - AI cars that follow waypoint paths with configurable speed, acceleration, yielding, blinkers and driver eye contact.
 - Realistic car physics: engine and automatic gearbox, brakes with ABS, tyre grip that drops in the rain, suspension and anti-roll bars, matched to the real cars.
-- Background traffic with a choice of car-following models (IDM, Gipps, Krauss) that follows other cars, stops at red lights, slows down for bends and yields to pedestrians.
+- Background traffic with a choice of car-following models (IDM, Gipps, Krauss) that follows other cars, stops at red lights, slows down for bends and yields to pedestrians; on city maps a realistic mix of 18 cars, vans, trucks and buses that also turn at junctions, and AI cyclists near the kerb.
 - Participants can also be cyclists, e-scooter riders or moped riders, with two-wheeler dynamics (power, legal speed limits, lean and steering).
 - Drones: a participant can fly a quadrotor (gimbal camera, line of sight or chase view), and AI drones deliver parcels, patrol and fly as a swarm; quadrotor rigid-body dynamics with a PX4-style flight controller, Dryden turbulence in the scene's wind, and flocking by the model of Vásárhelyi et al. (2018).
 - Animals moving around the world (pigeons, dogs, cats, foxes, deer, horses) that wander, eat and flee from traffic and people; traffic stops for them.
-- Time of day (solar position) and weather (clouds, rain with wet roads, fog), set per trial; URP graphics with post-processing and ambient occlusion.
+- Time of day (solar position) and weather (clouds, rain with wet roads, fog), set per trial; URP graphics with post-processing and ambient occlusion, and a quality level that adapts to the PC (`-quality auto`).
 - 20 city maps from OpenStreetMap on six continents (Eindhoven, Delft, London, Tokyo, New York, Cairo, São Paulo, Sydney, ...), built at load time, and maps of any place by coordinates; real 3D buildings in Delft, Eindhoven, Tokyo, New York and Montreal; windows light up at night.
 - Coupling with [SUMO](https://eclipse.dev/sumo/) over TraCI: SUMO traffic in the scene, participants' cars and the AV in SUMO.
 - AI pedestrians with individual walking speeds, gap-acceptance crossing decisions that react to yielding cars and eHMIs, collision avoidance (social force model), traffic-aware head movements, and 12 realistic avatars.
@@ -104,8 +105,8 @@ The source code of the coupled simulator is released under the [MIT License](LIC
 - Motion cues for motion platforms over UDP; tyres from Pacejka Magic Formula coefficients.
 - ASAM OpenSCENARIO playback; videos of trials from fixed cameras (also in builds and batch mode) for online studies; text descriptions of the scene for language-model studies.
 - Automated driving with take-over requests (visual and auditory warning, reaction times logged) and hand-back to the automation; AVs that follow waypoints, a car-following model or a path file (speed profiles, recorded trajectories).
-- Traffic lights with programmable sequences; traffic signs (stop, give way, speed limits, crossings, one way, ...) and working traffic lights, placed from OpenStreetMap on city maps; day and night versions of the town.
-- Logging of all agents (cars, pedestrian skeletons, traffic lights, eye contact) to binary files, conversion to CSV, and live streaming over UDP; export of the road network (GeoJSON, OBJ) for analysis.
+- Traffic lights with programmable sequences, with turn arrows and protected turn phases on city maps; traffic signs (stop, give way, speed limits, crossings, one way, ...) and working traffic lights, placed from OpenStreetMap on city maps; day and night versions of the town.
+- Logging of all agents (cars, pedestrian skeletons, drones, traffic lights, eye contact) to binary files, conversion to CSV, and live streaming over UDP; replay of every trial with a free camera; export of the road network (GeoJSON, OBJ) for analysis.
 - Automatic trial sequences with per-trial parameters and video recording; trial files (CSV/JSON) with counterbalancing per participant (balanced Latin square).
 - An experiment setup window: new experiments from templates on any map, a check of the whole set-up before Play.
 - A web dashboard for the experimenter: run the session, switch eHMIs, weather and time from any device, and watch a live map of all agents.
@@ -619,6 +620,8 @@ City maps get working traffic lights where OpenStreetMap has them (`highway=traf
 
 **Turn arrows.** An approach whose `turn:lanes` (OpenStreetMap) has a lane only for turning across the oncoming traffic (left, or right in left-hand traffic) gets a second head with arrow lenses over that lane, on the same mast arm, and its own protected phase: the junction's cycle is then main road straight on (with its pedestrians), its turns, crossing road straight on, its turns (straight-on greens shortened, 7 s for the turns). AI cars obey the arrow when their route turns that way and the main head otherwise. Eindhoven has 11 such heads, London 1 (right arrows); `-smokeShot arrow:0` shows the nearest one.
 
+![A junction in Eindhoven: the head with arrow lenses over the left-turn lane, showing red (left), and the built-in traffic approaching it (right)](ReadmeFiles/traffic_turn_arrows.jpg)
+
 They are ordinary `CarTrafficLight` and `PedestrianTrafficLight`s run by a `TrafficLightsSystem` (see [configuration of traffic lights](#configuration-of-traffic-lights)), so the host keeps every agent's lights in step, AI cars (`TrafficCar`) stop at red and amber, logs record every light's state and replays show them. With [SUMO traffic](#traffic-from-sumo), SUMO's signals show what the simulator's lights show (`Follow Simulator Lights` on the `SumoBridge`): each controlled link of a SUMO traffic light takes the state of the head over its approach, so SUMO cars stop where participants see red; SUMO lights with no head near them keep SUMO's own programme (Eindhoven: 15 of 25 follow the map's lights). `-noSignals` leaves the traffic lights out.
 
 **Pedestrians at the lights.** Each signalised crossing knows the pedestrian light its waiting pedestrians face (`PedestrianCrossing.Signal`, set by the map; in hand-built scenes in the Inspector). AI pedestrians with behaviour models cross on green (still checking the gaps), not when the green blinks, and wait on red; a share of "opportunists" (25% of adults, 10% of children and older people) cross on red in a safe gap once they have waited longer than their own tolerance, drawn from a Weibull distribution (shape 1.6, scale 40 s), as in hazard-based duration models of pedestrians' waiting at red lights (e.g. Guo et al. 2011). The draws use their own random generator, so earlier trials repeat as before; calibrate the shares to the study's population in `PedestrianProfile.SampleSignalCompliance`.
@@ -1031,7 +1034,7 @@ Every experiment has an `AnimalSpawner` (child object `Animals`) that places ani
 
 The experiment parameter `animals` multiplies the numbers per trial (`0` = no animals, `2` = twice as many). Positions and states are logged to `ExperimentLogs/Animals-{date}.csv` (time, animal, species, position, heading, state). The dog (a pit bull), cat, pigeon, deer (a doe) and horse are realistic animated models from Sketchfab (CC BY 4.0, [credits](Assets/ThirdParty/Animals/CREDITS.md)); the husky and the fox are low-poly CC0 animals by Quaternius, as no realistic animated ones are free. Each is scaled to a real body length in its walking pose, with walk, run, idle and eating (and for pigeons flying) animations; where a model's walk carries the body forward, `RootMotionLock` holds it in place (the animal agent does the moving); `Coupled Sim` ➡️ `Animals` ➡️ `Build prefabs and add to experiments` (`AnimalPrefabBuilder`) rebuilds the prefabs.
 
-![Animals on the city maps: a dog in Boulder (top left); a dog, a cat and a fox in Ghent](ReadmeFiles/animals.jpg)
+![Animals on the city maps: a dog in Ghent, with pigeons behind it (left), and a cat in Delft (right); all the animals are in the line-up under Agents at a glance](ReadmeFiles/animals.jpg)
 
 ### Time of day and weather
 Every experiment has an `EnvironmentController` (child object `Environment (time of day, weather)`) that sets:
