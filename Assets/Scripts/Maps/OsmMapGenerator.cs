@@ -1305,6 +1305,42 @@ public partial class OsmMapGenerator
                 TreeTransforms.Add(tree.transform);
             }
         }
+        RemoveBlockedParkedCars();
+    }
+
+    /// <summary>Parked cars, kept to take away those that stand in a tree, a post or a wall (RemoveBlockedParkedCars).</summary>
+    readonly List<(GameObject car, float yaw)> _parkedCars = new List<(GameObject, float)>();
+
+    /// <summary>
+    /// Parked cars are placed before the trees and street lamps (and partly on the kerb in narrow streets): those that stand
+    /// in a tree's trunk or in anything solid that is not the ground (a lamp or sign post, a bollard, a wall) are taken away.
+    /// </summary>
+    void RemoveBlockedParkedCars()
+    {
+        Physics.SyncTransforms();
+        int removed = 0;
+        foreach (var (car, yaw) in _parkedCars)
+        {
+            if (car == null) continue;
+            var t = car.transform; var fwd = Quaternion.Euler(0f, yaw, 0f) * Vector3.forward; var right = Vector3.Cross(Vector3.up, fwd);
+            bool blocked = false;
+            foreach (var tree in TreeTransforms)
+            {
+                if (tree == null) continue;
+                var d = tree.position - t.position; d.y = 0f;
+                if (Mathf.Abs(Vector3.Dot(d, fwd)) < 2.6f && Mathf.Abs(Vector3.Dot(d, right)) < 1.4f) { blocked = true; break; }
+            }
+            if (!blocked)
+                foreach (var c in Physics.OverlapBox(t.position + Vector3.up * 0.9f, new Vector3(0.85f, 0.5f, 2.1f), Quaternion.LookRotation(fwd, Vector3.up), ~0, QueryTriggerInteraction.Ignore))
+                {
+                    if (c.transform.IsChildOf(t)) continue;
+                    var n = c.name;
+                    if (n.StartsWith("Roads") || n.StartsWith("Pavements") || n.StartsWith("Kerbs") || n.StartsWith("Cycle") || n.StartsWith("BGT") || n.StartsWith("Ground") || n.StartsWith("Terrain") || n.StartsWith("Road")) continue;
+                    blocked = true; break;
+                }
+            if (blocked) { if (Application.isPlaying) UnityEngine.Object.Destroy(car); else UnityEngine.Object.DestroyImmediate(car); removed++; ParkedCarCount--; }
+        }
+        if (removed > 0) Debug.Log($"OsmMap: {removed} parked cars taken away (in a tree, a post or a wall)");
     }
 
     /// <summary>Not drawn once smaller than this fraction of the screen's height (thousands of register trees and lamps).</summary>
@@ -1614,14 +1650,15 @@ public partial class OsmMapGenerator
             fences = new MeshBuilder(), containers = new MeshBuilder(), shelters = new MeshBuilder(), furniture = new MeshBuilder(), cabinets = new MeshBuilder(), busSigns = new MeshBuilder();
         var assets = _assets;
 
-        void Place(GameObject prefab, V2 p, float yaw, string name)
+        GameObject Place(GameObject prefab, V2 p, float yaw, string name)
         {
-            if (prefab == null) return;
+            if (prefab == null) return null;
             // keep the prefab's own rotation (models imported lying on their back are turned upright there)
             var go = UnityEngine.Object.Instantiate(prefab, new Vector3(p.X, GroundAt(p, PavementHeight), p.Y), Quaternion.Euler(0, yaw, 0) * prefab.transform.rotation, props);
             go.name = name;
             go.isStatic = true;
             PropCount++;
+            return go;
         }
         // parked vehicles are collected first and the ones nearest the centre placed (the caps keep the frame rate)
         var cars = new List<(V2 p, float yaw)>(); var bikes = new List<(V2 p, float yaw)>();
@@ -1755,7 +1792,7 @@ public partial class OsmMapGenerator
         }
         if (assets != null && assets.ParkedCars != null && assets.ParkedCars.Length > 0)
             foreach (var c in cars.OrderBy(c => c.p.Length()).Take(MaxParkedCars))
-            { Place(assets.ParkedCars[rng.Next(assets.ParkedCars.Length)], c.p, c.yaw, "Parked car"); ParkedCarCount++; }
+            { _parkedCars.Add((Place(assets.ParkedCars[rng.Next(assets.ParkedCars.Length)], c.p, c.yaw, "Parked car"), c.yaw)); ParkedCarCount++; }
         if (assets != null && assets.ParkedBicycles != null && assets.ParkedBicycles.Length > 0)
             foreach (var b in bikes.OrderBy(b => b.p.Length()).Take(MaxParkedBicycles))
             { Place(assets.ParkedBicycles[rng.Next(assets.ParkedBicycles.Length)], b.p, b.yaw, "Parked bicycle"); ParkedBicycleCount++; }
