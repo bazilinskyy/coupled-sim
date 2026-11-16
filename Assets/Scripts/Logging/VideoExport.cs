@@ -218,7 +218,8 @@ public class VideoExport : MonoBehaviour
     void Eye(PlayerAvatar p, Transform t, bool first)
     {
         if (!OwnView(p, out var pos, out var rot)) return;
-        if (first) t.SetPositionAndRotation(pos, rot);
+        // (a vehicle's own view sits fixed in it: smoothing would let the camera trail behind the seat)
+        if (first || p.Type == AvatarType.Driver && p.GetComponent<TwoWheelerController>() == null) t.SetPositionAndRotation(pos, rot);
         else { float k = 1f - Mathf.Exp(-14f / Fps); t.SetPositionAndRotation(Vector3.Lerp(t.position, pos, 0.8f), Quaternion.Slerp(t.rotation, rot, k)); }
     }
 

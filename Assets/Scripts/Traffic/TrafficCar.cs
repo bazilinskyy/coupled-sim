@@ -174,8 +174,9 @@ public class TrafficCar : MonoBehaviour
             if (dv.sqrMagnitude > VehicleLength * VehicleLength) continue;
             float al = Vector3.Dot(dv, transform.forward), ac = Mathf.Abs(Vector3.Dot(dv, transform.right));
             int rk = c.TryGetComponent<TrafficCar>(out var tc2) ? tc2._rank : int.MinValue;
-            // beside it: the earlier spawned goes on; just ahead of it (closer than a vehicle length): this one waits
-            bool beside = Mathf.Abs(al) < 1.5f && rk < _rank, justAhead = al >= 1.5f && al < VehicleLength * 0.75f;
+            // the one further back waits (the other ahead by up to three quarters of a vehicle length); level with it
+            // (within 0.3 m): the earlier spawned goes on
+            bool beside = Mathf.Abs(al) <= 0.3f && rk < _rank, justAhead = al > 0.3f && al < VehicleLength * 0.75f;
             // (overlapping: closer across than their half widths together; a car is about 1.8 m wide, a bicycle 0.6 m)
             float halfWidths = HalfWidth(transform) + HalfWidth(c);
             if (ac < halfWidths && (beside || justAhead))
@@ -255,8 +256,8 @@ public class TrafficCar : MonoBehaviour
 
     readonly List<Vector3> _ahead = new List<Vector3>();
     float _stoppedSince;
-    static float HalfWidth(Transform v) => v.TryGetComponent<TrafficCar>(out var tc) ? (tc.LaneHalfWidth < 1f ? 0.3f : 0.9f)
-        : v.GetComponent<TwoWheelerController>() != null ? 0.35f : 0.9f;
+    static float HalfWidth(Transform v) => v.TryGetComponent<TrafficCar>(out var tc) ? (tc.LaneHalfWidth < 1f ? 0.4f : 0.9f)
+        : v.GetComponent<TwoWheelerController>() != null ? 0.4f : 0.9f;
     static int _ranks;
     /// <summary>-noYield: no yielding to crossing traffic (for comparisons); -debugTraffic: logs overlaps and yielding every 10 s.</summary>
     public static readonly bool NoYield = System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-noYield") >= 0;
