@@ -14,6 +14,10 @@ public partial class OsmMapGenerator
     /// <summary>Tufts per square metre.</summary>
     public static float GrassBladeDensity = 7f;
     const float GrassChunk = 20f, GrassNearWays = 12f;
+    /// <summary>At most this many tufts on a map, within GrassRadius of its centre (where its scenes are): a big map's
+    /// lawns would otherwise take millions.</summary>
+    public static int GrassBladeBudget = 250000;
+    public static float GrassRadius = 500f;
 
     /// <summary>Scatters tufts over the grass meshes' triangles (their y: the grass's height above the flat map; the
     /// terrain lifts the tufts with everything else).</summary>
@@ -55,6 +59,22 @@ public partial class OsmMapGenerator
             return false;
         }
         var rng = new System.Random(_map.Name != null ? _map.Name.GetHashCode() : 1);
+        bool Near(Vector3 p) => p.x * p.x + p.z * p.z < GrassRadius * GrassRadius;
+        // the lawn near ways within the radius (estimated by the triangles' corners and middle), for the density
+        float eligible = 0f;
+        foreach (var mb in grassMeshes)
+        {
+            if (mb == null) continue;
+            for (int t = 0; t + 2 < mb.T.Count; t += 3)
+            {
+                Vector3 a = mb.V[mb.T[t]], b = mb.V[mb.T[t + 1]], c = mb.V[mb.T[t + 2]];
+                var m = (a + b + c) / 3f;
+                if (!Near(m)) continue;
+                int near = (NearWay(new V2(a.x, a.z)) ? 1 : 0) + (NearWay(new V2(b.x, b.z)) ? 1 : 0) + (NearWay(new V2(c.x, c.z)) ? 1 : 0) + (NearWay(new V2(m.x, m.z)) ? 1 : 0);
+                eligible += Vector3.Cross(b - a, c - a).magnitude / 2f * near / 4f;
+            }
+        }
+        float density = Mathf.Min(GrassBladeDensity, eligible > 1f ? GrassBladeBudget / eligible : GrassBladeDensity);
         foreach (var mb in grassMeshes)
         {
             if (mb == null) continue;
@@ -62,8 +82,8 @@ public partial class OsmMapGenerator
             {
                 Vector3 a = mb.V[mb.T[t]], b = mb.V[mb.T[t + 1]], c = mb.V[mb.T[t + 2]];
                 float area = Vector3.Cross(b - a, c - a).magnitude / 2f;
-                if (area < 0.05f) continue;
-                float expected = area * GrassBladeDensity;
+                if (area < 0.05f || !Near((a + b + c) / 3f)) continue;
+                float expected = area * density;
                 int n = (int)expected + (rng.NextDouble() < expected - (int)expected ? 1 : 0);
                 for (int k = 0; k < n; k++)
                 {
@@ -101,7 +121,7 @@ public partial class OsmMapGenerator
             lod.RecalculateBounds();
             count += kv.Value.V.Count / 8;
         }
-        Debug.Log($"OsmMap: {count} tufts of grass blades in {chunks.Count} chunks");
+        Debug.Log($"OsmMap: {count} tufts of grass blades in {chunks.Count} chunks ({density:F1} per m² within {GrassRadius:F0} m of the centre)");
     }
 
     // two crossed quads, 0.3-0.5 m wide and 0.08-0.2 m high, each showing a random part of the blades' texture

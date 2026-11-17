@@ -633,12 +633,13 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
         _appliedSnow = snow; _appliedSnowfall = snowfall; _appliedWind = WindSpeed + WindDirection * 1000f;
         Snowfall = snowfall; Snow = snow;
         SetSnowfall(snowfall);
+        SetBareTrees(snow >= 0.3f);
 
         float solarTime = TimeOfDay - UtcOffset + Longitude / 15f; // local solar time
         SolarPosition(solarTime, Latitude, DayOfYear, out var elevation, out var azimuth);
         SunElevation = elevation;
         float clouds = WeatherCloudiness();
-        float day = Mathf.Clamp01((elevation + 4f) / 14f);        // 0 at night, 1 from 10° up
+        float day = Mathf.Clamp01((elevation + 4f) / 9f);         // 0 at night, 1 from 5° up (the sky stays bright until sunset)
         float low = Mathf.Clamp01(1f - elevation / 25f);          // warmer light when low
 
         if (Sun != null && !UseBakedLighting)
@@ -679,7 +680,8 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
 
         // ambient light: brighter and bluer by day, grey under clouds, dim blue at night
         // night: some sky glow of the city
-        var skyCol = Color.Lerp(new Color(0.1f, 0.11f, 0.16f), Color.Lerp(new Color(0.55f, 0.65f, 0.85f), new Color(0.55f, 0.57f, 0.6f), clouds), day);
+        // (the shade of a street lit by the sky alone: a little brighter than before, as photos of streets in shade show)
+        var skyCol = Color.Lerp(new Color(0.1f, 0.11f, 0.16f), Color.Lerp(new Color(0.66f, 0.76f, 0.96f), new Color(0.64f, 0.66f, 0.7f), clouds), day);
         RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Trilight;
         RenderSettings.ambientSkyColor = skyCol;
         RenderSettings.ambientEquatorColor = skyCol * 0.8f;
@@ -930,6 +932,11 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
             mat.SetTexture("_BaseMap", tex);
             mat.SetColor("_BaseColor", new Color(1f, 1f, 1f, 0.95f));
             Transparent(mat);
+            // flakes right in front of the camera fade out (as a lens never sees them sharp), and none fills the view
+            mat.SetFloat("_CameraFadingEnabled", 1f); mat.EnableKeyword("_FADING_ON");
+            mat.SetVector("_CameraFadeParams", new Vector4(0.6f, 1f / 2.4f, 0f, 0f));   // near 0.6 m, fully there from 3 m
+            mat.SetFloat("_CameraNearFadeDistance", 0.6f); mat.SetFloat("_CameraFarFadeDistance", 3f);
+            renderer.maxParticleSize = 0.012f;
             renderer.sharedMaterial = mat;
         }
     }
@@ -945,6 +952,52 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
         mat.SetFloat("_ZWrite", 0f);
         mat.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
         mat.renderQueue = 3000;
+    }
+
+    // deciduous trees under snow: their leaves' materials swapped for a fully clipped copy (bare branches); needle trees
+    // and palms keep theirs
+    readonly Dictionary<Renderer, Material[]> _leafy = new Dictionary<Renderer, Material[]>();
+    readonly Dictionary<Material, Material> _bareOf = new Dictionary<Material, Material>();
+    bool _bare;
+
+    void SetBareTrees(bool bare)
+    {
+        if (bare == _bare) return;
+        _bare = bare;
+        if (bare && _leafy.Count == 0)
+        {
+            var trees = OsmMap.Current != null && OsmMap.Current.Generator != null ? OsmMap.Current.Generator.TreeTransforms : null;
+            if (trees == null) return;
+            foreach (var t in trees)
+                if (t != null)
+                    foreach (var r in t.GetComponentsInChildren<Renderer>())
+                    {
+                        var mats = r.sharedMaterials;
+                        if (mats.Any(m => m != null && IsLeaves(m.name))) _leafy[r] = mats;
+                    }
+        }
+        foreach (var kv in _leafy)
+        {
+            if (kv.Key == null) continue;
+            kv.Key.sharedMaterials = bare ? kv.Value.Select(m => m != null && IsLeaves(m.name) ? Bare(m) : m).ToArray() : kv.Value;
+        }
+    }
+
+    static bool IsLeaves(string name)
+    {
+        var n = name.ToLowerInvariant();
+        return (n.Contains("leaf") || n.Contains("leaves") || n.Contains("foliage")) && !n.Contains("needle") && !n.Contains("conifer") && !n.Contains("palm") && !n.Contains("pine");
+    }
+
+    Material Bare(Material leaves)
+    {
+        if (_bareOf.TryGetValue(leaves, out var b)) return b;
+        b = new Material(leaves) { name = leaves.name + " (bare)" };
+        b.SetFloat("_AlphaClip", 1f); b.EnableKeyword("_ALPHATEST_ON"); b.SetFloat("_Cutoff", 1f);
+        var c = b.HasProperty("_BaseColor") ? b.GetColor("_BaseColor") : Color.white; c.a = 0f;
+        if (b.HasProperty("_BaseColor")) b.SetColor("_BaseColor", c);
+        b.renderQueue = (int)UnityEngine.Rendering.RenderQueue.AlphaTest;
+        return _bareOf[leaves] = b;
     }
 
     void SetSnowfall(float intensity)
