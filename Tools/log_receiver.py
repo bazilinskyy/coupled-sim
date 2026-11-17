@@ -7,8 +7,19 @@ HOST, PORT = "localhost", 40131
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 sock.bind((HOST, PORT))
 
+initialized = False
+numAICars = 0
+aiCarIndexes = set()
+LocalDriver = -1
+numPersistentDrivers = 0
+numPedestrians = 0
+numCarLights = 0
+numPedestrianLights = 0
+
 while True:
-    received = sock.recv(1024)
+    received = sock.recv(65535)
+    if len(received) < 4:
+        continue
     offset = 0
 
 ### this is almost one to one translation of relevant part of WorldLogging
@@ -18,7 +29,7 @@ while True:
     if (packetType == 1) : # Log Begin
         numAICars = 0
         #int numAICars = 0;
-        aiCarIndexes = []
+        aiCarIndexes = set()
         #List<int> aiCarIndexes = new List<int>();
         LocalDriver = struct.unpack("i", received[offset:offset+4])[0]
         offset = offset + 4
@@ -35,15 +46,16 @@ while True:
         numPedestrianLights = struct.unpack("i", received[offset:offset+4])[0]
         offset = offset + 4
         #int numPedestrianLights = reader.ReadInt32();
+        initialized = True
         print("begin")
-    elif (packetType == 2) : # Log Frame
+    elif (packetType == 2 and initialized) : # Log Frame
         eventType = struct.unpack("i", received[offset:offset+4])[0]
         offset = offset + 4
         #var eventType = (LogFrameType)reader.ReadInt32();
         while (eventType == 1) :
         #if (eventType == LogFrameType.AICarSpawn)
         #{
-            aiCarIndexes.append(numAICars + numPersistentDrivers)
+            aiCarIndexes.add(numAICars + numPersistentDrivers)
             #aiCarIndexes.Add(numAICars + numPersistentDrivers);
             numAICars = numAICars + 1
             #numAICars++;
@@ -93,7 +105,7 @@ while True:
                 frame[key]["rigidbody"] = struct.unpack("{}f".format(3), received[offset:offset+4*3]) # meters per second (not in Km per hour)
                 offset = offset + 4*3  # 3 floats, 4 bytes each
                 #frame.LocalDriverRbVelocity = reader.ReadVector3() * SpeedConvertion.Mps2Kmph;
-            elif (aiCarIndexes.count(i) > 0) :
+            elif (i in aiCarIndexes) :
             #} else if (IsAICar(i))
             #{
                 frame[key]["rigidbody"] = struct.unpack("{}f".format(3), received[offset:offset+4*3]) # meters per second (not in Km per hour)

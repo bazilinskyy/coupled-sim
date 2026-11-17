@@ -24,8 +24,10 @@ public static class CarHeadlights
         _cars.Clear();
         if (night)
         {
-            foreach (var a in Object.FindObjectsByType<PlayerAvatar>()) if (a.Type == AvatarType.Driver) _cars.Add(a.transform);
-            foreach (var c in Object.FindObjectsByType<TrafficCar>()) if (!_cars.Contains(c.transform)) _cars.Add(c.transform);
+            foreach (var a in Object.FindObjectsByType<PlayerAvatar>())
+                if (a.Type == AvatarType.Driver && a.GetComponent<TwoWheelerController>() == null) _cars.Add(a.transform);
+            foreach (var c in Object.FindObjectsByType<TrafficCar>())
+                if (c.GetComponent<TwoWheelerController>() == null && !_cars.Contains(c.transform)) _cars.Add(c.transform);
             _cars.Sort((x, y) => (x.position - at).sqrMagnitude.CompareTo((y.position - at).sqrMagnitude));
             if (_cars.Count > MaxCars) _cars.RemoveRange(MaxCars, _cars.Count - MaxCars);
         }
@@ -35,6 +37,7 @@ public static class CarHeadlights
         foreach (var t in drop)
         {
             if (_lights.TryGetValue(t, out var ls)) foreach (var l in ls) if (l != null) Object.Destroy(l.gameObject);
+            if (!night && t != null && t.TryGetComponent<PlayerAvatar>(out var av) && av.frontLights != null) av.frontLights.SetActive(false);
             _lights.Remove(t);
         }
         foreach (var t in _cars)

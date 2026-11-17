@@ -25,7 +25,6 @@ public class Recorder : MonoBehaviour
         videoRecorder = ScriptableObject.CreateInstance<MovieRecorderSettings>();
         videoRecorder.name = "Video recorder";
         videoRecorder.Enabled = true;
-        controllerSettings.AddRecorderSettings(videoRecorder);
         // controllerSettings.SetRecordModeToManual(); // will stop when closing
         RecorderOptions.VerboseMode = false;
         videoRecorder.ImageInputSettings = new GameViewInputSettings()

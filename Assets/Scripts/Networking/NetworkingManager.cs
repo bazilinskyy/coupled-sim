@@ -200,10 +200,11 @@ public class NetworkingManager : MonoBehaviour
     void NextTrial()
     {
         CurrentTrialIndex++;
+        _netSystem?.Shutdown();
+        _netSystem = null;
         Destroy(gameObject);
-        if (CurrentTrialIndex < trials.Length)
+        if (trials != null && CurrentTrialIndex < trials.Length)
         {
-            (_netSystem as Host)?.Shutdown();
             SceneManager.LoadScene(0);
         } else
         {
@@ -383,6 +384,8 @@ public class NetworkingManager : MonoBehaviour
         {
             Instance = null;
         }
+        _netSystem?.Shutdown();
+        _netSystem = null;
         _logger.EndLog();
         _fixedLogger.EndLog();
     }

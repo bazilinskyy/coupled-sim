@@ -81,15 +81,17 @@ public class Client : NetworkSystem
         _pendingAllReady = false;
         var lights = GameObject.FindAnyObjectByType<TrafficLightsSystem>();
         lights?.RegisterHandlers(_msgDispatcher);
-        ExperimentRoleDefinition experimentRoleDefinition = _lvlManager.ActiveExperiment.Roles[_roles[_client.MyPlayerId]];
-        if (experimentRoleDefinition.AutonomousPath != null) {
+        int roleIdx = _roles != null && _client.MyPlayerId >= 0 && _client.MyPlayerId < _roles.Count ? _roles[_client.MyPlayerId] : -1;
+        var roles = _lvlManager.ActiveExperiment.Roles;
+        ExperimentRoleDefinition experimentRoleDefinition = roleIdx >= 0 && roles != null && roleIdx < roles.Length ? roles[roleIdx] : default;
+        if (roleIdx >= 0 && roles != null && roleIdx < roles.Length && experimentRoleDefinition.AutonomousPath != null) {
             _playerSys.ActivatePlayerAICar();
         }
         _currentState = NetState.InGame;
         Time.timeScale = 1f;
-        var roleName = experimentRoleDefinition.Name;
-        _logger.BeginLog($"ClientLog-{roleName}-", _lvlManager.ActiveExperiment, lights, Time.realtimeSinceStartup, true);
-        _fixedTimeLogger.BeginLog($"ClientFixedTimeLog-{roleName}-", _lvlManager.ActiveExperiment, lights, Time.fixedTime, false);
+        var roleName = !string.IsNullOrEmpty(experimentRoleDefinition.Name) ? experimentRoleDefinition.Name : "Spectator";
+        _logger.BeginLog($"ClientLog-{NetworkingManager.LogPrefix}{roleName}-", _lvlManager.ActiveExperiment, lights, Time.realtimeSinceStartup, true);
+        _fixedTimeLogger.BeginLog($"ClientFixedTimeLog-{NetworkingManager.LogPrefix}{roleName}-", _lvlManager.ActiveExperiment, lights, Time.fixedTime, false);
     }
     bool _pendingAllReady;
 
@@ -175,11 +177,14 @@ public class Client : NetworkSystem
     {
         if (Time.realtimeSinceStartup - _lastPoseUpdateSent > PoseUpdateInterval)
         {
-            var msg = new UpdateClientPose
+            if (_playerSys.LocalPlayer != null)
             {
-                Pose = _playerSys.LocalPlayer.GetPose(),
-            };
-            _client.SendUnreliable(msg);
+                var msg = new UpdateClientPose
+                {
+                    Pose = _playerSys.LocalPlayer.GetPose(),
+                };
+                _client.SendUnreliable(msg);
+            }
             _lastPoseUpdateSent = Time.realtimeSinceStartup;
 
             if (_lastPingRespondedTo || Time.realtimeSinceStartup - _lastPingSent > PingTimeout)
@@ -204,6 +209,12 @@ public class Client : NetworkSystem
     }
 
     string _ip = "192.168.1.11";
+
+    public override void Shutdown()
+    {
+        _client.Disconnect();
+        _currentState = NetState.Disconnected;
+    }
 
     /// <summary>Connects to the host at <paramref name="ip"/> (as the Connect button; -connect on the command line).</summary>
     public void Connect(string ip)
