@@ -478,8 +478,9 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
     /// the lane would drive partly or wholly on the cycle path, cycle lane or pavement beside it (and into the benches
     /// and posts there). Each point where the car's middle or either side (0.8 m out) is over a cycle path, cycle lane or
     /// pavement, as it is seen (<see cref="SeenGround"/>), is moved across by the least that keeps all three off them, at
-    /// most 3 m; the moves are smoothed (a median over 5 points), so the lane does not zigzag. A cycle path or pavement
-    /// that crosses the road (no clear carriageway beside it) is left alone. Returns how many points moved.
+    /// most 3 m; the moves are smoothed (a median over 5 points, then an average over 3), so a lone point does not bend
+    /// the lane and it does not zigzag. A cycle path or pavement that crosses the road (no clear carriageway beside it) is
+    /// left alone. Returns how many points moved.
     /// </summary>
     static int KeepOnCarriageway(List<Vector3> lane)
     {
@@ -503,17 +504,25 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         }
         if (!any) return 0;
         int moved = 0;
-        var smooth = new float[lane.Count];
+        // a median over 5 points (a lone point over a cycle path, as where one crosses the road, or a small patch, does
+        // not bend the lane: only a stretch of 3 points and more, some 20 m, moves), then an average over 3, so the lane
+        // eases across
+        var median = new float[lane.Count];
         for (int i = 0; i < lane.Count; i++)
         {
             var w = new List<float>();
             for (int k = Mathf.Max(0, i - 2); k <= Mathf.Min(lane.Count - 1, i + 2); k++) w.Add(shift[k]);
-            w.Sort(); smooth[i] = w[w.Count / 2];
-            // (a point over a cycle path keeps its own move even where its neighbours had none: the median would drop it)
-            if (shift[i] != 0f && Mathf.Abs(smooth[i]) < Mathf.Abs(shift[i])) smooth[i] = shift[i];
+            w.Sort(); median[i] = w[w.Count / 2];
+        }
+        var smooth = new float[lane.Count];
+        for (int i = 0; i < lane.Count; i++)
+        {
+            float sum = 0f; int n = 0;
+            for (int k = Mathf.Max(0, i - 1); k <= Mathf.Min(lane.Count - 1, i + 1); k++) { sum += median[k]; n++; }
+            smooth[i] = sum / n;
         }
         for (int i = 0; i < lane.Count; i++)
-            if (smooth[i] != 0f) { _moves.Add((lane[i], smooth[i])); lane[i] += side[i] * smooth[i]; moved++; }
+            if (Mathf.Abs(smooth[i]) > 0.01f) { _moves.Add((lane[i], smooth[i])); lane[i] += side[i] * smooth[i]; moved++; }
         return moved;
     }
 
