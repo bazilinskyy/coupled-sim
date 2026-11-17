@@ -61,6 +61,94 @@ public sealed class TerrainHeight
         return Mathf.Lerp(Mathf.Lerp(a, b, tx), Mathf.Lerp(c, d, tx), tz);
     }
 
+    // ---- roads: smooth profiles
+
+    /// <summary>
+    /// Smooths the terrain along the roads before the map is lifted onto it. A road's profile (the terrain every 2 m along
+    /// it) loses its humps narrower than about 60 m (a morphological opening: the lowest over 30 m either side, then the
+    /// highest of that): where the elevation model has no ground (under a viaduct) its gaps were filled from the
+    /// embankments beside the road, which made humps on the road; slopes and dips stay. Then a gentle smoothing
+    /// (8 m), and the result goes into the grid across the road and 3 m beside it, fading into the terrain within 10 m.
+    /// </summary>
+    public void SmoothRoads(List<(List<Vector2> line, float width)> roads, List<(List<Vector2> line, float width)> keep = null)
+    {
+        // only on flat maps (less than 12 m between the lowest and highest ground): there a hump on a road is a gap in the
+        // model; on hilly maps it may be a real crest, which the opening would shave off
+        if (roads == null || roads.Count == 0 || Max - Min >= 12f) return;
+        var sum = new float[_h.Length]; var wsum = new float[_h.Length]; var wmax = new float[_h.Length];
+        // cells within 12 m of the lines to keep (bridges and their ramps) stay as they are
+        var fixedCells = new bool[_h.Length];
+        if (keep != null)
+            foreach (var (line, width) in keep)
+                for (int i = 0; i + 1 < line.Count; i++)
+                {
+                    float d = Vector2.Distance(line[i], line[i + 1]); int n = Mathf.Max(1, Mathf.CeilToInt(d / 2f));
+                    float r = width / 2f + 12f;
+                    for (int k = 0; k <= n; k++)
+                    {
+                        var p = Vector2.Lerp(line[i], line[i + 1], k / (float)n);
+                        int i0 = Mathf.Max(0, Mathf.FloorToInt((p.x - r - _x0) / _step)), i1 = Mathf.Min(_nx - 1, Mathf.CeilToInt((p.x + r - _x0) / _step));
+                        int j0 = Mathf.Max(0, Mathf.FloorToInt((p.y - r - _z0) / _step)), j1 = Mathf.Min(_nz - 1, Mathf.CeilToInt((p.y + r - _z0) / _step));
+                        for (int j = j0; j <= j1; j++) for (int ii = i0; ii <= i1; ii++) fixedCells[j * _nx + ii] = true;
+                    }
+                }
+        const float ds = 2f; const int open = 15; const float sigma = 4f;   // samples: 30 m, 8 m
+        var gauss = new float[9];
+        for (int k = 0; k < gauss.Length; k++) gauss[k] = Mathf.Exp(-0.5f * k * k / (sigma * sigma));
+        var pts = new List<Vector2>();
+        foreach (var (line, width) in roads)
+        {
+            pts.Clear();
+            for (int i = 0; i + 1 < line.Count; i++)
+            {
+                float d = Vector2.Distance(line[i], line[i + 1]);
+                int n = Mathf.Max(1, Mathf.CeilToInt(d / ds));
+                for (int k = 0; k < n; k++) pts.Add(Vector2.Lerp(line[i], line[i + 1], k / (float)n));
+            }
+            pts.Add(line[line.Count - 1]);
+            int m = pts.Count;
+            if (m < 3) continue;
+            var raw = new float[m]; var ero = new float[m]; var opened = new float[m]; var prof = new float[m];
+            for (int i = 0; i < m; i++) raw[i] = At(pts[i].x, pts[i].y);
+            for (int i = 0; i < m; i++) { float v = float.MaxValue; for (int k = Mathf.Max(0, i - open); k <= Mathf.Min(m - 1, i + open); k++) v = Mathf.Min(v, raw[k]); ero[i] = v; }
+            for (int i = 0; i < m; i++) { float v = float.MinValue; for (int k = Mathf.Max(0, i - open); k <= Mathf.Min(m - 1, i + open); k++) v = Mathf.Max(v, ero[k]); opened[i] = v; }
+            for (int i = 0; i < m; i++)
+            {
+                float a = 0f, w = 0f;
+                for (int k = -8; k <= 8; k++) { int j = i + k; if (j < 0 || j >= m) continue; float g = gauss[Mathf.Abs(k)]; a += g * opened[j]; w += g; }
+                prof[i] = a / w;
+            }
+            float inner = width / 2f + 3f, outer = width / 2f + 10f;
+            for (int i = 0; i < m; i++)
+            {
+                var p = pts[i];
+                int i0 = Mathf.Max(0, Mathf.FloorToInt((p.x - outer - _x0) / _step)), i1 = Mathf.Min(_nx - 1, Mathf.CeilToInt((p.x + outer - _x0) / _step));
+                int j0 = Mathf.Max(0, Mathf.FloorToInt((p.y - outer - _z0) / _step)), j1 = Mathf.Min(_nz - 1, Mathf.CeilToInt((p.y + outer - _z0) / _step));
+                for (int j = j0; j <= j1; j++)
+                    for (int ii = i0; ii <= i1; ii++)
+                    {
+                        float dx = _x0 + ii * _step - p.x, dz = _z0 + j * _step - p.y;
+                        float d = Mathf.Sqrt(dx * dx + dz * dz);
+                        if (d >= outer) continue;
+                        float w = d <= inner ? 1f : 1f - (d - inner) / (outer - inner);
+                        int c = j * _nx + ii;
+                        // (the nearer samples count most)
+                        float wn = w / (1f + d);
+                        sum[c] += wn * prof[i]; wsum[c] += wn; wmax[c] = Mathf.Max(wmax[c], w);
+                    }
+            }
+        }
+        int changed = 0; float most = 0f;
+        for (int c = 0; c < _h.Length; c++)
+        {
+            if (wsum[c] <= 0f || fixedCells[c]) continue;
+            float v = Mathf.Lerp(_h[c], sum[c] / wsum[c], wmax[c]);
+            if (Mathf.Abs(v - _h[c]) > 0.05f) { changed++; most = Mathf.Max(most, Mathf.Abs(v - _h[c])); }
+            _h[c] = v;
+        }
+        Debug.Log($"TerrainHeight: {roads.Count} road profiles smoothed ({changed} cells moved more than 5 cm, at most {most:F1} m)");
+    }
+
     // ---- bridges: their decks run straight from one end's ground to the other's
 
     struct Bridge { public Vector2 A, B; public float HalfWidth, HA, HB; public int Layer; }
@@ -151,7 +239,7 @@ public sealed class TerrainHeight
                     // the distant surroundings (a few big triangles): flat, under the lowest ground of the map
                     bool surroundings = t.name.StartsWith("Surroundings");
                     // the ground a little under the streets: its 10 m tiles cut corners on slopes the streets follow more closely
-                    float extra = t.name == "Ground" ? -0.15f : 0f;
+                    float extra = t.name == "Ground" || t.name.StartsWith("Ground ") ? -0.15f : 0f;
                     int layer = 0;
                     int bl = t.name.LastIndexOf(" bridge L", StringComparison.Ordinal);
                     if (bl >= 0) int.TryParse(t.name.Substring(bl + 9), out layer);

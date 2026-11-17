@@ -53,6 +53,10 @@ public class OsmMap : MonoBehaviour
         if (Generator != null && Generator.Aerial != null && Generator.Aerial.FarTexture != null)
             foreach (var cam in Camera.allCameras)
                 if (cam.farClipPlane < Generator.Aerial.FarHalfSize) cam.farClipPlane = Generator.Aerial.FarHalfSize;
+        // and to the skyline around the map
+        if (Generator != null && Generator.SkylineReach > 0f)
+            foreach (var cam in Camera.allCameras)
+                if (cam.farClipPlane < Generator.SkylineReach && cam.farClipPlane > 100f) cam.farClipPlane = Generator.SkylineReach;
         float elevation = env != null ? env.SunElevation : 45f;
         float level = Mathf.Clamp01((2f - elevation) / 6f);
         if (Mathf.Abs(level - _lights) < 0.01f) return;
@@ -293,7 +297,7 @@ public class OsmMap : MonoBehaviour
             }
             return true;
         }
-        var roads = Generator.Roads.Where(r => SpawnRoadTypes.Contains(r.Type) && Length(r.Line) > 40f)
+        var roads = Generator.Roads.Where(r => SpawnRoadTypes.Contains(r.Type) && !r.NoThroughTraffic && Length(r.Line) > 40f)
             .OrderBy(r => Mid(r.Line).sqrMagnitude).ToList();
         if (roads.Count == 0) roads = Generator.Roads.Where(r => Length(r.Line) > 20f).OrderBy(r => Mid(r.Line).sqrMagnitude).ToList();
         if (roads.Count == 0) return false;

@@ -358,8 +358,14 @@ def bgt_surfaces(bbox):
             d = json.loads(get(url))
             for f in d.get("features", []):
                 g = f.get("geometry") or {}
-                kind = bgt_kind(coll, f.get("properties") or {})
+                props = f.get("properties") or {}
+                kind = bgt_kind(coll, props)
                 if not kind: continue
+                # the level relative to the ground: below it (tunnels, underpasses) left out, as the map draws the
+                # ground; above it (bridge decks) marked "@1": the map keeps those over water only
+                level = props.get("relatieve_hoogteligging") or 0
+                if level < 0: continue
+                if level > 0: kind += "@%d" % level
                 parts = [g["coordinates"]] if g.get("type") == "Polygon" else g.get("coordinates", []) if g.get("type") == "MultiPolygon" else []
                 for rings in parts:
                     if not rings or len(rings[0]) < 4: continue
