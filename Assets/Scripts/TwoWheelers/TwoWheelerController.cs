@@ -146,12 +146,36 @@ public class TwoWheelerController : MonoBehaviour
         return 0f;
     }
 
-    void LateUpdate()
+    void LateUpdate() => ShowParts(Time.deltaTime);
+
+    /// <summary>
+    /// A two-wheeler of the traffic (this controller off; <see cref="AICar"/> moves the body along its route): its parts
+    /// show the motion as a rider's would, so it does not glide upright through a bend with still wheels: the wheels
+    /// turn at its speed, the cranks while it rides on (not while it brakes), the handlebar steers by the bend
+    /// (wheelbase times the curvature) and frame and rider lean into it as a steady turn needs (tan lean = speed times
+    /// yaw rate / g, within MaxLean), smoothed over LeanTimeConstant.
+    /// </summary>
+    public void ShowMotion(float speed, float yawRate, float acceleration, float dt)
+    {
+        speed = Mathf.Max(0f, speed);
+        float maxLean = Parameters.MaxLean * Mathf.Deg2Rad;
+        float lean = Mathf.Clamp(Mathf.Atan(speed * yawRate / 9.81f), -maxLean, maxLean);
+        float steer = speed > 0.3f ? Mathf.Clamp(Mathf.Atan(Parameters.Wheelbase * yawRate / speed), -Parameters.MaxSteerAngle * Mathf.Deg2Rad, Parameters.MaxSteerAngle * Mathf.Deg2Rad) : State.Steer;
+        float k = 1f - Mathf.Exp(-dt / Mathf.Max(0.05f, Parameters.LeanTimeConstant));
+        State.Speed = speed;
+        State.YawRate = yawRate;
+        State.Acceleration = acceleration;
+        State.Lean = Mathf.Lerp(State.Lean, lean, k);
+        State.Steer = Mathf.Lerp(State.Steer, steer, k);
+        Input.Drive = speed > 0.5f && acceleration > -0.3f ? 0.5f : 0f;
+        ShowParts(dt);
+    }
+
+    void ShowParts(float dt)
     {
         SpeedKmh = State.Speed * 3.6f;
         LeanDeg = State.Lean * Mathf.Rad2Deg;
         SteerDeg = State.Steer * Mathf.Rad2Deg;
-        float dt = Time.deltaTime;
         _wheelAngle += State.Speed / Mathf.Max(0.05f, WheelRadius) * Mathf.Rad2Deg * dt;
         if (FrontWheel != null) FrontWheel.localRotation = Quaternion.Euler(_wheelAngle, 0, 0);
         if (RearWheel != null) RearWheel.localRotation = Quaternion.Euler(_wheelAngle, 0, 0);
