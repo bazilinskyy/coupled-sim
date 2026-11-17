@@ -110,8 +110,8 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         bool sumoRuns = sumo != null && sumo.isActiveAndEnabled && (sumo.Status ?? "").StartsWith("connected");
 
         var gen = OsmMap.Current.Generator;
-        var lines = _lines = gen.Roads.Where(r => (!r.Bridge || r.BridgeLayer == 0) && !r.NoThroughTraffic)
-            .Select(r => new CoupledSim.Maps.MapRoutes.RoadLine { Line = r.Line.Select(p => new System.Numerics.Vector3(p.x, p.y, p.z)).ToList(), Width = r.Width, OneWay = r.OneWay, ParkLeft = r.ParkLeft, ParkRight = r.ParkRight, SpeedKmh = r.SpeedLimitKmh }).ToList();
+        var lines = _lines = gen.Roads.Where(r => !r.NoThroughTraffic)
+            .Select(r => new CoupledSim.Maps.MapRoutes.RoadLine { Line = r.Line.Select(p => new System.Numerics.Vector3(p.x, p.y, p.z)).ToList(), Width = r.Width, OneWay = r.OneWay, ParkLeft = r.ParkLeft, ParkRight = r.ParkRight, SpeedKmh = r.SpeedLimitKmh, Lanes = r.Lanes }).ToList();
         // (a map with corridors along a highway: routes start and end at its area's edge; more of them, as it is longer)
         var area = gen.Area;
         System.Func<System.Numerics.Vector3, float> depth = area == null ? null : p => area.Depth(new System.Numerics.Vector2(p.X, p.Z));
@@ -313,7 +313,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
                 bestScore = 0f;
                 Debug.Log($"MapTraffic: the autopilot drives to {Destination}: {best.OpenLength / 1000f:F1} km");
             }
-            else Debug.LogWarning($"MapTraffic: no route from here to {Destination}; the autopilot takes the nearest route");
+            else Debug.LogWarning($"MapTraffic: no route from here to {Destination} ({CoupledSim.Maps.MapRoutes.Why}); the autopilot takes the nearest route");
         }
         if (best == null)
         foreach (var r in Routes)

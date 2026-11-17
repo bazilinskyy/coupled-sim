@@ -34,6 +34,8 @@ public partial class OsmMapGenerator
         public bool NoThroughTraffic;
         /// <summary>Speed limit (km/h): OpenStreetMap's maxspeed (mph converted), else a default by road type.</summary>
         public float SpeedLimitKmh;
+        /// <summary>Lanes (OpenStreetMap's lanes; 0: not given).</summary>
+        public int Lanes;
     }
     /// <summary>Cycle paths and pavements on such bridges.</summary>
     public readonly Dictionary<List<Vector3>, int> BridgeLines = new Dictionary<List<Vector3>, int>();
@@ -917,9 +919,8 @@ public partial class OsmMapGenerator
             }
             // (not at bridges: their ramps rise on purpose, and the decks run between their ends' ground)
             Terrain.SmoothRoads(profiles, bridges);
-            // a map with corridors (embankments, slopes along kilometres of road): the base ground further under the
-            // surfaces, so its 10 m tiles do not cut through a motorway's surface on a curved embankment
-            if (Area != null) Terrain.GroundDrop = 0.5f;
+            // (a map with corridors: TerrainHeight.Apply keeps the ground under the nearest road's lower edge, so its 10 m
+            // tiles do not cut through a motorway's surface on an embankment or in a cutting)
         }
 
         // water (canals, rivers, ponds, harbours): its surface lies WaterDepth below the streets, between quay walls; the
@@ -981,9 +982,18 @@ public partial class OsmMapGenerator
             for (float x = bx0; x < bx1; x += tile)
                 for (float z = bz0; z < bz1; z += tile)
                 {
-                    if (Area.Contains(new V2(x + tile / 2, z + tile / 2), -tile)) continue;   // (well inside: the map's own ground)
-                    beyond.Quad(new Vector3(x, -0.35f, z), new Vector3(x, -0.35f, z + tile), new Vector3(x + tile, -0.35f, z + tile), new Vector3(x + tile, -0.35f, z),
-                        new Vector2(x, z) / 4f, new Vector2(x, z + tile) / 4f, new Vector2(x + tile, z + tile) / 4f, new Vector2(x + tile, z) / 4f);
+                    // not in the area (the map's own ground): whole tiles well away from it, else in cells of 20 m along its
+                    // edge (with the terrain, a big tile's flat face would rise through the roads)
+                    float d = Area.Depth(new V2(x + tile / 2, z + tile / 2));
+                    if (d >= tile * 0.71f) continue;
+                    float cs = d < -tile * 0.71f ? tile : 20f;
+                    for (float cx = x; cx < x + tile - 0.1f; cx += cs)
+                        for (float cz = z; cz < z + tile - 0.1f; cz += cs)
+                        {
+                            if (cs < tile && Area.Depth(new V2(cx + cs / 2, cz + cs / 2)) >= cs * 0.71f) continue;
+                            beyond.Quad(new Vector3(cx, -0.35f, cz), new Vector3(cx, -0.35f, cz + cs), new Vector3(cx + cs, -0.35f, cz + cs), new Vector3(cx + cs, -0.35f, cz),
+                                new Vector2(cx, cz) / 4f, new Vector2(cx, cz + cs) / 4f, new Vector2(cx + cs, cz + cs) / 4f, new Vector2(cx + cs, cz) / 4f);
+                        }
                 }
             Emit(world, "Ground beyond the map", beyond, grass, false);
         }
@@ -999,6 +1009,20 @@ public partial class OsmMapGenerator
         }
         else if (Aerial != null)
         {
+            // a map with corridors reaches beyond the photo: the tiles there are grass (the photo's edge pixels would
+            // smear over kilometres)
+            if (Area != null)
+            {
+                var photo = new MeshBuilder(); var beyondPhoto = new MeshBuilder();
+                for (int i = 0; i + 3 < ground.V.Count; i += 4)
+                {
+                    var c = (ground.V[i] + ground.V[i + 2]) / 2f;
+                    var to = Aerial.Covers(c) ? photo : beyondPhoto;
+                    to.Quad(ground.V[i], ground.V[i + 1], ground.V[i + 2], ground.V[i + 3], ground.UV[i], ground.UV[i + 1], ground.UV[i + 2], ground.UV[i + 3]);
+                }
+                ground = photo;
+                if (beyondPhoto.V.Count > 0) Emit(world, "Ground grass", beyondPhoto, grass, true);
+            }
             for (int i = 0; i < ground.V.Count; i++) ground.UV[i] = Aerial.Uv(ground.V[i]);
             var groundMat = Mat("Ground aerial photo", Color.white, 0.08f, Aerial.Texture);
             if (_assets != null && _assets.DetailTemplate != null)
@@ -1229,7 +1253,7 @@ public partial class OsmMapGenerator
                 var ms = w.Tag("maxspeed");
                 float limit = SpeedNumber(ms) * (ms != null && ms.Contains("mph") ? 1.609f : 1f);
                 Roads.Add(new Road { Line = roadLine, Width = width, Type = hw, OneWay = owDir != 0, Bridge = bi > 0, BridgeLayer = bi,
-                    SpeedLimitKmh = limit > 0f ? limit : RoadSpeedLimits.Default(hw),
+                    SpeedLimitKmh = limit > 0f ? limit : RoadSpeedLimits.Default(hw), Lanes = int.TryParse(w.Tag("lanes"), out var nLanes) ? nLanes : 0,
                     ParkLeft = owDir < 0 ? parkR : parkL, ParkRight = owDir < 0 ? parkL : parkR,
                     NoThroughTraffic = access == "no" || access == "private" || (hw == "service" && (access == "customers" || access == "delivery" || w.Tag("service") == "driveway" || w.Tag("service") == "parking_aisle")) });
                 // a dual carriageway's motorway: a steel guard rail along its inner edge (the central reservation), 0.45-0.8 m
@@ -1455,10 +1479,19 @@ public partial class OsmMapGenerator
             Real3DBuildings = true;
             AddRealBuildings(bag, buildingMbs, palette, roofs, tileRoofs, groundMbs, shopPoints, cornices);
         }
-        foreach (var w in bag != null ? Enumerable.Empty<OsmWay>() : _data.Ways.Where(w => w.IsClosed && w.Tag("building") != null))
+        // OpenStreetMap's buildings where the file of real 3D buildings has none (a map's corridors reach beyond it)
+        HashSet<long> realCells = null;
+        if (bag != null)
+        {
+            realCells = new HashSet<long>();
+            foreach (var b in bag) foreach (var v in b.V) realCells.Add(((long)Mathf.FloorToInt(v.x / 30f) << 32) ^ (uint)Mathf.FloorToInt(v.z / 30f));
+        }
+        bool RealHere(V2 q) => realCells.Contains(((long)Mathf.FloorToInt(q.X / 30f) << 32) ^ (uint)Mathf.FloorToInt(q.Y / 30f));
+        foreach (var w in bag != null && Area == null ? Enumerable.Empty<OsmWay>() : _data.Ways.Where(w => w.IsClosed && w.Tag("building") != null))
         {
             var poly = Line(w);
             if (poly.Count < 4 || !poly.Any(Inside)) continue;
+            if (realCells != null && poly.Any(RealHere)) continue;
             poly.RemoveAt(poly.Count - 1);
             float height = BuildingHeight(w);
             float minHeight = ParseMetres(w.Tag("min_height"), 0f);
