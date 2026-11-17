@@ -489,11 +489,12 @@ public partial class OsmMapGenerator
                         }
                         else
                         {
-                            open |= Mathf.Abs(u - 0.02f) < 0.06f && v > -0.06f && v < 0.24f;               // body
-                            float leg1 = u - (-0.06f - (v + 0.06f) * 0.55f), leg2 = u - (0.08f + (v + 0.06f) * -0.55f);
-                            open |= v > -0.4f && v <= -0.04f && (Mathf.Abs(leg1) < 0.04f || Mathf.Abs(leg2) < 0.04f);   // legs apart
-                            float arm1 = u - (-0.05f - (0.2f - v) * 0.5f), arm2 = u - (0.08f + (0.2f - v) * 0.5f);
-                            open |= v > 0.0f && v < 0.2f && (Mathf.Abs(arm1) < 0.03f || Mathf.Abs(arm2) < 0.03f);   // arms swinging
+                            open |= Mathf.Abs(u - 0.01f) < 0.06f && v > -0.06f && v < 0.24f;               // body
+                            // legs apart from the hip and arms swinging from the shoulders, one forward, one back
+                            float legA = u - (0.01f + 0.45f * (v + 0.06f)), legB = u - (0.01f - 0.45f * (v + 0.06f));
+                            open |= v > -0.4f && v <= -0.04f && (Mathf.Abs(legA) < 0.04f || Mathf.Abs(legB) < 0.04f);
+                            float armA = u - (0.01f + 0.6f * (v - 0.2f)), armB = u - (0.01f - 0.6f * (v - 0.2f));
+                            open |= v > 0.02f && v < 0.2f && (Mathf.Abs(armA) < 0.03f || Mathf.Abs(armB) < 0.03f);
                         }
                         px[y * n + xx] = open ? new Color32(0, 0, 0, 0) : new Color32(5, 5, 6, 255);
                     }
