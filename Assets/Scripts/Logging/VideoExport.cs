@@ -22,6 +22,9 @@ using Debug = UnityEngine.Debug;
 /// snow fall around the first camera.
 /// Command line: -videoCams "street=0,1.6,-20,0,0;chase" -videoSeconds 10 -videoStart 2 -videoFps 30
 /// -videoSize 1280x720 [-videoCrf 18] [-videoAudio 0] [-videoQuit] [-videoKeepFrames] [-ffmpeg path/to/ffmpeg].
+/// While it records, the physics runs a whole number of steps per frame (at 30 fps: 60 Hz instead of 50 Hz), so moving
+/// things move smoothly in the video. -videoDebug writes the participant's pose, its body's and the first camera's per
+/// frame (video-debug-*.csv beside the videos), to tell a shaking car from a shaking camera.
 /// </summary>
 public class VideoExport : MonoBehaviour
 {
@@ -118,6 +121,11 @@ public class VideoExport : MonoBehaviour
         // rain and snow fall around the first video camera (a grid: around the main camera)
         if (shots.Count > 0 && shots[0].Grid == null) EnvironmentController.PrecipitationAnchor = shots[0].Cam.transform;
         Time.captureFramerate = Fps;
+        // the physics in step with the frames: a whole number of physics steps per frame (at 30 fps two of 1/60 s), not
+        // 50 Hz's 2, 2, 1, 2, 2, 1 steps, with which every vehicle moved a third less in every third frame and judders at
+        // 10 Hz against the camera (a car seen from behind seemed to shake; from the driver's seat, the whole street)
+        _fixedBefore = Time.fixedDeltaTime;
+        Time.fixedDeltaTime = 1f / (Fps * Mathf.Max(1, Mathf.RoundToInt(1f / (Fps * _fixedBefore))));
         _tex = new Texture2D(Size.x, Size.y, TextureFormat.RGB24, false);
         // the sound, rendered offline: each frame the audio of exactly 1/Fps s
         int channels = AudioSettings.speakerMode == AudioSpeakerMode.Mono ? 1 : 2, rate = AudioSettings.outputSampleRate;
@@ -129,6 +137,13 @@ public class VideoExport : MonoBehaviour
         if (_audioStarted) UnityEditor.EditorUtility.audioMasterMute = false;
 #endif
         int frames = Mathf.RoundToInt(Seconds * Fps);
+        // -videoDebug: per frame, the participant's pose, its body's and the first camera's (shaking: which of them)
+        StreamWriter debug = null;
+        if (Array.IndexOf(CommandLine.Args, "-videoDebug") >= 0 && shots.Count > 0)
+        {
+            debug = new StreamWriter(Path.Combine(root, $"{NetworkingManager.LogPrefix}video-debug-{stamp}.csv"));
+            debug.WriteLine("frame,time,fixed_steps,x,y,z,yaw,pitch,roll,body_pitch,body_roll,body_y,cam_x,cam_y,cam_z,cam_yaw,cam_pitch");
+        }
         Debug.Log($"VideoExport: {shots.Count} cameras, {frames} frames at {Fps} fps, {Size.x}x{Size.y}");
         for (int f = 0; f < frames; f++)
         {
@@ -172,6 +187,7 @@ public class VideoExport : MonoBehaviour
                 else
                 {
                     Place(s);
+                    if (debug != null && s == shots[0]) DebugFrame(debug, f, s.Cam.transform);
                     s.Cam.Render();
                     RenderTexture.active = s.Cam.targetTexture;
                     _tex.ReadPixels(new Rect(0, 0, Size.x, Size.y), 0, 0, false);
@@ -181,7 +197,9 @@ public class VideoExport : MonoBehaviour
                 s.Frames++;
             }
         }
+        debug?.Dispose();
         Time.captureFramerate = 0;
+        if (_fixedBefore > 0f) { Time.fixedDeltaTime = _fixedBefore; _fixedBefore = 0f; }
         Soundscape.ListenerAvatar = null;
         EnvironmentController.PrecipitationAnchor = null;
         if (_tex != null) { Destroy(_tex); _tex = null; }
@@ -225,6 +243,7 @@ public class VideoExport : MonoBehaviour
     }
 
     Texture2D _tex;
+    float _fixedBefore;
     bool _audioStarted;
     Unity.Collections.NativeArray<float> _buffer;
 
@@ -233,6 +252,7 @@ public class VideoExport : MonoBehaviour
     void OnDestroy()
     {
         if (Busy) Time.captureFramerate = 0;
+        if (_fixedBefore > 0f) { Time.fixedDeltaTime = _fixedBefore; _fixedBefore = 0f; }
         Busy = false;
         if (_audioStarted) { AudioRenderer.Stop(); _audioStarted = false; }
         if (_buffer.IsCreated) { _buffer.Dispose(); _buffer = default; }
@@ -310,6 +330,26 @@ public class VideoExport : MonoBehaviour
             : p.transform.position + Vector3.up * 1.6f;
         rot = Quaternion.Euler(4f, p.transform.eulerAngles.y, 0f);
         return true;
+    }
+
+    int _fixedSteps;
+    void FixedUpdate() => _fixedSteps++;
+
+    void DebugFrame(StreamWriter w, int f, Transform cam)
+    {
+        var ps = NetworkingManager.Instance != null ? NetworkingManager.Instance.PlayerSystem : null;
+        var me = ps != null ? ps.LocalPlayer : null;
+        if (me == null) return;
+        var t = me.transform; var e = t.eulerAngles;
+        // the car's body (the model the automation pitches), else the first child with a renderer
+        var ai = me.GetComponent<AICar>();
+        var body = ai != null && ai.modelElements != null && ai.modelElements.Length > 0 && ai.modelElements[0] != null ? ai.modelElements[0] : null;
+        var be = body != null ? body.localEulerAngles : Vector3.zero;
+        float A(float a) => a > 180f ? a - 360f : a;
+        var ci = CultureInfo.InvariantCulture;
+        string F(float v) => v.ToString("F4", ci);
+        w.WriteLine(string.Join(",", f.ToString(ci), F(Time.time), _fixedSteps.ToString(ci), F(t.position.x), F(t.position.y), F(t.position.z), F(e.y), F(A(e.x)), F(A(e.z)),
+            F(A(be.x)), F(A(be.z)), F(body != null ? body.localPosition.y : 0f), F(cam.position.x), F(cam.position.y), F(cam.position.z), F(cam.eulerAngles.y), F(A(cam.eulerAngles.x))));
     }
 
     void Place(Shot s)
