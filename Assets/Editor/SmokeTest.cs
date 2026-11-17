@@ -279,10 +279,25 @@ public static class SmokeTest
             foreach (var s in UnityEngine.Object.FindObjectsByType<ObservedSteering>())
                 Debug.Log($"SmokeTest steering: {s.name} road wheels {s.SteerAngle:F1}°, steering wheel {s.SteerAngle * s.SteeringRatio:F0}°");
         }
-        if (elapsed >= SessionState.GetFloat(KeySeconds, 20) && !VideoExport.Busy)   // (a video being made is finished first)
+        // -smokeUntilKmh v: finish (and take the pictures) as soon as the participant's car goes that fast; -smokeSeconds
+        // stays the limit. For a picture at a speed: batch-mode frames are slow and uneven, so the game time (and the
+        // speed) reached after a set number of real seconds varies from run to run.
+        float untilKmh = Arg2("-smokeUntilKmh", -1f);
+        bool fastEnough = untilKmh > 0f && LocalKmh() >= untilKmh;
+        if ((elapsed >= SessionState.GetFloat(KeySeconds, 20) || fastEnough) && !VideoExport.Busy)   // (a video being made is finished first)
         {
             Finish();
         }
+    }
+
+    static float LocalKmh()
+    {
+        var local = NetworkingManager.Instance != null && NetworkingManager.Instance.PlayerSystem != null ? NetworkingManager.Instance.PlayerSystem.LocalPlayer : null;
+        if (local == null) return 0f;
+        var dyn = local.GetComponentInChildren<RealisticVehicleDynamics>();
+        if (dyn != null) return dyn.SpeedKmh;
+        var rb = local.GetComponent<Rigidbody>();
+        return rb != null ? rb.linearVelocity.magnitude * 3.6f : 0f;
     }
 
     static float Arg2(string name, float def)
@@ -309,6 +324,36 @@ public static class SmokeTest
         Debug.Log("SmokeTest report:\n" + report);
         SessionState.SetBool(KeyActive, false);
         EditorApplication.Exit(errors.Length == 0 ? 0 : 1);
+    }
+
+    /// <summary>
+    /// "cluster[:distance[,margin]]": the instrument cluster (an InCarDisplay on the dashboard) filling the picture,
+    /// seen on the line from the driver's eye to it: from the eye (distance 0, the default: through the steering wheel,
+    /// as the driver sees it) or that many metres in front of it; margin: the picture is this much wider and higher
+    /// than the cluster (default 1.3). False when the participant has no cluster.
+    /// </summary>
+    static bool ClusterView(PlayerAvatar local, Camera c, string view)
+    {
+        var panel = local.GetComponentsInChildren<InCarDisplay>().Where(d => d.Placement == InCarDisplay.Kind.Cluster)
+            .Select(d => d.GetComponentInChildren<Canvas>()).FirstOrDefault(cv => cv != null);
+        var eye = local.GetComponentsInChildren<Camera>().Where(x => x.isActiveAndEnabled && x.targetTexture == null)
+            .OrderByDescending(x => x.depth).FirstOrDefault();
+        if (panel == null || eye == null) return false;
+        var v = view.Contains(":") ? view.Substring(view.IndexOf(':') + 1).Split(',').Select(x => float.Parse(x, System.Globalization.CultureInfo.InvariantCulture)).ToArray() : new float[0];
+        float distance = v.Length > 0 ? v[0] : 0f, margin = v.Length > 1 ? v[1] : 1.3f;
+        var corners = new Vector3[4];
+        ((RectTransform)panel.transform).GetWorldCorners(corners);   // bottom left, top left, top right, bottom right
+        var centre = (corners[0] + corners[2]) * 0.5f;
+        float width = Vector3.Distance(corners[0], corners[3]), height = Vector3.Distance(corners[0], corners[1]);
+        var pos = distance > 0f ? centre + (eye.transform.position - centre).normalized * distance : eye.transform.position;
+        c.transform.SetPositionAndRotation(pos, Quaternion.LookRotation(centre - pos, corners[1] - corners[0]));
+        c.nearClipPlane = 0.02f;
+        float d = Vector3.Distance(pos, centre), aspect = 16f / 9f;
+        int iss = Array.IndexOf(Environment.GetCommandLineArgs(), "-smokeShotSize");
+        if (iss >= 0 && iss + 1 < Environment.GetCommandLineArgs().Length) { var wh = Environment.GetCommandLineArgs()[iss + 1].Split('x'); aspect = float.Parse(wh[0]) / float.Parse(wh[1]); }
+        float half = Mathf.Max(height * margin * 0.5f, width * margin * 0.5f / aspect);
+        c.fieldOfView = 2f * Mathf.Atan(half / d) * Mathf.Rad2Deg;
+        return true;
     }
 
     static void Finish()
@@ -352,7 +397,8 @@ public static class SmokeTest
             foreach (var v in Soundscape.Current.Voices().Take(5))
                 sb.AppendLine($"Sound: {v.car} at {v.kmh:F0} km/h, tyre volume {v.tyre:F4}, engine volume {v.engine:F4}");
         int shot = 0;
-        // extra views: -smokeShot "x,y,z,yaw,pitch;x,y,z,yaw,pitch", "chase" (behind the participant) or "front" (ahead, looking back)
+        // extra views: -smokeShot "x,y,z,yaw,pitch;x,y,z,yaw,pitch", "chase" (behind the participant) or "front" (ahead, looking back),
+        // "cluster" (the instrument cluster, see ClusterView)
         foreach (var view in SessionState.GetString(KeyShot, "").Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
         {
             var camGo = new GameObject("SmokeTestCamera");
@@ -547,6 +593,10 @@ public static class SmokeTest
                 camGo.transform.SetPositionAndRotation(t.position + right * v[0] + Vector3.up * v[1] + fwd * v[2],
                     Quaternion.LookRotation(fwd) * Quaternion.Euler(v.Length > 4 ? v[4] : 0f, v.Length > 3 ? v[3] : 0f, 0f));
                 if (v.Length > 5) c.fieldOfView = v[5];
+            }
+            else if (view.Trim().StartsWith("cluster") && local != null && ClusterView(local, c, view.Trim()))
+            {
+                // placed by ClusterView
             }
             else if (view.Trim() == "chase" || view.Trim() == "front")
             {
