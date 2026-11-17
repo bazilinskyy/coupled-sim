@@ -99,7 +99,7 @@ public static class MapRoutes
                         var d = Flat(pos[e.To] - pos[cur]);
                         if (d.LengthSquared() < 1e-4f) continue;
                         float angle = Angle(inDir, d);
-                        if (angle > 135f) continue;   // turns at T-junctions too, but not back
+                        if (angle > 120f) continue;   // turns at T-junctions too, but no hairpins (cars cut them into poles and walls)
                         float score = angle + (e.Road == road ? 0f : 15f);   // straight on, and on the same road
                         if (score < bestScore) { bestScore = score; best = e; any = true; }
                         if (angle < 110f) options.Add(e);

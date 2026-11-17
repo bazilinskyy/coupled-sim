@@ -1518,6 +1518,15 @@ public partial class OsmMapGenerator
         // the city's own register of street lights, where there is one: every real pole, at its real height,
         // turned to the nearest road; else one every 25 m along streets with pavements
         var realLamps = MapExtras.Load(_map.Name, "lamps", _proj, out var lampCredit);
+        // a pole that the road's width (estimated from OpenStreetMap) puts in the carriageway stands at its edge, as
+        // trees do (traffic cars held by poles stopped and the cars behind them ran into them)
+        int lampsMoved = 0;
+        V2 PoleOffCarriageway(V2 q)
+        {
+            if (!InCarriageway(q, 0.3f, 0.6f, out var edge)) return q;
+            lampsMoved++;
+            return edge;
+        }
         if (realLamps != null && _assets != null && _assets.StreetLamp != null)
         {
             float lampHeight = PrefabHeight(_assets.StreetLamp, 6f);
@@ -1526,6 +1535,7 @@ public partial class OsmMapGenerator
             {
                 var p = new V2(r.X, r.Z);
                 if (!Inside(p)) continue;
+                p = PoleOffCarriageway(p);
                 var (near, dist) = NearestRoad(p, roadWays);
                 float yaw = dist < 40f ? Mathf.Atan2(near.X - p.X, near.Y - p.Y) * Mathf.Rad2Deg : 0f;
                 var go = UnityEngine.Object.Instantiate(_assets.StreetLamp, P(p, dist < 12f ? PavementHeight : 0.05f), Quaternion.Euler(0, yaw, 0), props);
@@ -1538,12 +1548,15 @@ public partial class OsmMapGenerator
             lamps.Clear();
         }
         if (_assets != null && _assets.StreetLamp != null)
-            foreach (var (p, yaw) in lamps)
+            foreach (var (p0, yaw) in lamps)
             {
+                var q = PoleOffCarriageway(new V2(p0.x, p0.z));
+                var p = new Vector3(q.X, p0.y, q.Y);
                 var go = UnityEngine.Object.Instantiate(_assets.StreetLamp, p, Quaternion.Euler(0, yaw, 0), props);
                 go.name = "StreetLamp";
                 CullWhenSmall(go, 0.008f);
             }
+        if (lampsMoved > 0) Debug.Log($"OsmMap: {lampsMoved} street lamps moved out of the carriageway to its edge");
         if (_assets != null && _assets.Trees != null && _assets.Trees.Length > 0)
         {
             var rng = new System.Random(_map.Name.GetHashCode());
