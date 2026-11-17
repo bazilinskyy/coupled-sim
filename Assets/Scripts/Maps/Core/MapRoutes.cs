@@ -27,6 +27,8 @@ public static class MapRoutes
         public bool ParkLeft, ParkRight;
         /// <summary>Speed limit (km/h; 0: unknown, taken as 50): the route to a destination is the quickest.</summary>
         public float SpeedKmh;
+        /// <summary>Lanes (0: not known).</summary>
+        public int Lanes;
     }
 
     struct Edge { public int To, Road; }
@@ -143,9 +145,16 @@ public static class MapRoutes
         return routes;
     }
 
+    /// <summary>How far to the driver's side of a one-way road's centre line its traffic drives: in the outer lane (of two
+    /// and more), else in the middle of a narrow road and a quarter of the width over on a wide one.</summary>
+    public static float OneWayLane(float width, int lanes) => lanes >= 2 ? width / 2f - width / (2f * lanes) : width >= 6.6f ? width / 4f : 0f;
+
+    /// <summary>Why the last ShortestPath found no route (null when it found one).</summary>
+    public static string Why;
+
     /// <summary>
     /// The quickest drivable route (by the roads' speed limits, in the driving direction of one-way roads) from a point to
-    /// the road point nearest to a destination, as a lane on the driver's side, as the traffic's routes: for the participant's autopilot driving to a
+    /// the reachable road point nearest to a destination, as a lane on the driver's side, as the traffic's routes: for the participant's autopilot driving to a
     /// place (destination=lat,lon). Starts on the road nearest to <paramref name="from"/> that runs within 60° of
     /// <paramref name="heading"/>. Empty when no route joins them.
     /// </summary>
@@ -186,9 +195,7 @@ public static class MapRoutes
                 float dist = (Flat(pos[a] + (pos[e.To] - pos[a]) * t) - Flat(from)).Length();
                 if (dist < best) { best = dist; start = e.To; startFrom = a; startRoad = e.Road; }
             }
-        int goal = -1; float bg = float.MaxValue;
-        for (int i = 0; i < pos.Count; i++) { float d = (Flat(pos[i]) - Flat(to)).LengthSquared(); if (outs[i].Count > 0 || true) if (d < bg) { bg = d; goal = i; } }
-        if (start < 0 || goal < 0 || best > 30f) return new List<Vector3>();
+        if (start < 0 || best > 30f) { Why = start < 0 ? "no road heading this way" : $"the nearest road heading this way is {best:F0} m away"; return new List<Vector3>(); }
         // Dijkstra over the points (lengths in metres), no U-turns at a point
         var dist2 = new Dictionary<int, float> { [start] = 0f };
         var prevOf = new Dictionary<int, (int node, int road)> { [start] = (startFrom, startRoad) };
@@ -196,7 +203,6 @@ public static class MapRoutes
         while (open.Count > 0)
         {
             var (d0, n) = open.Min; open.Remove(open.Min);
-            if (n == goal) break;
             if (d0 > dist2[n]) continue;
             int back = prevOf[n].node;
             foreach (var e in outs[n])
@@ -209,7 +215,17 @@ public static class MapRoutes
                 dist2[e.To] = nd; prevOf[e.To] = (n, e.Road); open.Add((nd, e.To));
             }
         }
-        if (!dist2.ContainsKey(goal)) return new List<Vector3>();
+        // goal: the reachable point nearest the destination (the nearest point of all may be on the other carriageway,
+        // or on a road the network does not reach)
+        int goal = -1; float bg = float.MaxValue, nearestAll = float.MaxValue;
+        for (int i = 0; i < pos.Count; i++)
+        {
+            float d = (Flat(pos[i]) - Flat(to)).Length();
+            nearestAll = Math.Min(nearestAll, d);
+            if (dist2.ContainsKey(i) && d < bg) { bg = d; goal = i; }
+        }
+        if (goal < 0 || bg > nearestAll + 150f) { Why = $"the roads reachable from here come no nearer than {bg:F0} m (the nearest road {nearestAll:F0} m)"; return new List<Vector3>(); }
+        Why = null;
         var nodes = new List<int>(); var rs = new List<int>();
         for (int n = goal; ; )
         {
@@ -286,7 +302,7 @@ public static class MapRoutes
             d = Vector3.Normalize(d);
             var right = Vector3.Cross(Vector3.UnitY, d);
             var road = roads[rs[Math.Min(i, rs.Count - 1)]];
-            float off = road.OneWay ? (road.Width >= 6.6f ? road.Width / 4f : 0f) : Clamp(road.Width / 4f, 1.5f, 3.5f);
+            float off = road.OneWay ? OneWayLane(road.Width, road.Lanes) : Clamp(road.Width / 4f, 1.5f, 3.5f);
             if (road.ParkLeft || road.ParkRight)
             {
                 // parked cars take ParkDepth of the carriageway on their side: the lane runs between them and the centre
