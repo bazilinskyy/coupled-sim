@@ -492,6 +492,26 @@ public static class SmokeTest
                 camGo.transform.LookAt(d0.transform.position);
                 sb.AppendLine($"AI drone shot: {d0.name} at {d0.transform.position}, {d0.SpeedKmh:F0} km/h, {d0.HeightAboveGround:F0} m above the ground");
             }
+            else if (view.Trim().StartsWith("near:") && local != null)
+            {
+                // near:Name[,distance]: the nearest part (mesh vertex) of the scene object Name at least 8 m from the
+                // participant (e.g. "Manhole covers", "Puddles"), from 4 m on the participant's side (default), 1.4 m up
+                var parts = view.Trim().Substring(5).Split(',');
+                float back = parts.Length > 1 ? float.Parse(parts[1], System.Globalization.CultureInfo.InvariantCulture) : 4f;
+                var go = GameObject.Find(parts[0]);
+                var lp = local.transform.position; Vector3? best = null; float bd = float.MaxValue;
+                foreach (var mf in go != null ? go.GetComponentsInChildren<MeshFilter>() : new MeshFilter[0])
+                    foreach (var vtx in mf.sharedMesh.vertices)
+                    {
+                        var w = mf.transform.TransformPoint(vtx); float d = (w - lp).sqrMagnitude;
+                        if (d >= 64f && d < bd) { bd = d; best = w; }
+                    }
+                if (best == null) { UnityEngine.Object.DestroyImmediate(camGo); sb.AppendLine($"Screenshot '{view.Trim()}' skipped: nothing named {parts[0]}"); continue; }
+                var dir = lp - best.Value; dir.y = 0f; dir.Normalize();
+                camGo.transform.position = best.Value + dir * back + Vector3.up * 1.4f;
+                camGo.transform.LookAt(best.Value);
+                sb.AppendLine($"Near shot: {parts[0]} at {best.Value}");
+            }
             else if (view.Trim().StartsWith("at:"))
             {
                 // at:x,y,z,yaw,pitch[,fov] in the scene (y above the ground there, when there is ground)
