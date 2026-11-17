@@ -1082,17 +1082,20 @@ public partial class OsmMapGenerator
                 // fine grain every 2 m over the photo (0.2-0.3 m per pixel), so it is not blurry up close
                 groundMat.shader = _assets.DetailTemplate.shader;
                 groundMat.CopyPropertiesFromMaterial(_assets.DetailTemplate);
-                groundMat.SetTexture("_BaseMap", Aerial.Texture);
+                groundMat.SetTexture("_BaseMap", Aerial.GroundTexture != null ? Aerial.GroundTexture : Aerial.Texture);
                 groundMat.SetColor("_BaseColor", Color.white);
                 groundMat.SetFloat("_Smoothness", 0.08f);
                 groundMat.EnableKeyword("_DETAIL_MULX2");
-                groundMat.SetTexture("_DetailAlbedoMap", Tex("ground_detail", 256, (x, y, r) =>
+                // up close: real paving (the photo of concrete tiles in grey, Resources/paving_detail), 1.8 m a tile; the
+                // aerial photo gives the colour
+                var pavingDetail = _noPhotoWalls ? null : Resources.Load<Texture2D>("paving_detail");
+                groundMat.SetTexture("_DetailAlbedoMap", pavingDetail != null ? pavingDetail : Tex("ground_detail", 256, (x, y, r) =>
                 {
                     float v = 0.5f + ((float)r.NextDouble() - 0.5f) * 0.16f;
                     if (r.NextDouble() < 0.004) v -= 0.12f;   // grit
                     return new Color(v, v, v);
                 }));
-                groundMat.SetTextureScale("_DetailAlbedoMap", Vector2.one * (Aerial.HalfSize));
+                groundMat.SetTextureScale("_DetailAlbedoMap", Vector2.one * (pavingDetail != null ? 2f * Aerial.HalfSize / 1.8f : Aerial.HalfSize));
                 groundMat.SetFloat("_DetailAlbedoMapScale", 1f);
             }
             Emit(world, "Ground", ground, groundMat, true);
@@ -1379,6 +1382,21 @@ public partial class OsmMapGenerator
                     if (width >= 5.5f && hw != "service" && hw != "living_street")
                         LaneMarkings(w, piece, width, 0.035f + lift, marks, cycleLanes, to < total - 0.01f, from > 0.01f);
                     var sw = w.Tag("sidewalk") ?? w.Tag("sidewalk:both") ?? (hw == "residential" || hw == "tertiary" || hw == "secondary" || hw == "primary" || hw == "unclassified" ? "both" : "no");
+                    // street lamps every 25 m at the kerb (also where the pavements are mapped as ways of their own, as in
+                    // New York and Sydney: those streets were dark at night)
+                    if (sw != "no" && sw != "none")
+                    {
+                        float len = Geometry2D.Length(piece);
+                        // (on streets wider than 10 m on both sides in turn, every 20 m; else one side, every 25 m)
+                        bool both = width > 10f; int k = 0;
+                        for (float d = 6f; d < len - 4f; d += both ? 20f : 25f, k++)
+                        {
+                            var (pt, dir) = Geometry2D.PointAt(piece, d);
+                            var n = new V2(dir.Y, -dir.X) * (both && k % 2 == 1 ? -1f : 1f);
+                            var lp = pt + n * (width / 2 + 0.4f);
+                            if (Inside(lp)) lamps.Add((P(lp, PavementHeight), Mathf.Atan2(-n.X, -n.Y) * Mathf.Rad2Deg));
+                        }
+                    }
                     if (sw == "no" || sw == "none" || sw == "separate") continue;
                     foreach (var side in new[] { -1, 1 })
                     {
@@ -1394,14 +1412,6 @@ public partial class OsmMapGenerator
                         var centre = new List<V2>(); var dummy = new List<V2>();
                         Geometry2D.Strip(piece, 0f, side * (width / 2 + 1.0f), centre, dummy);
                         Pavements.Add(centre.Select(p => P(p, PavementHeight)).ToList());
-                    }
-                    float len = Geometry2D.Length(piece);
-                    for (float d = 6f; d < len - 4f; d += 25f)
-                    {
-                        var (pt, dir) = Geometry2D.PointAt(piece, d);
-                        var n = new V2(dir.Y, -dir.X);
-                        var lp = pt + n * (width / 2 + 0.4f);
-                        if (Inside(lp)) lamps.Add((P(lp, PavementHeight), Mathf.Atan2(-n.X, -n.Y) * Mathf.Rad2Deg));
                     }
                 }
             }
@@ -1665,6 +1675,7 @@ public partial class OsmMapGenerator
                 CullWhenSmall(go, 0.008f);
             }
         if (lampsMoved > 0) Debug.Log($"OsmMap: {lampsMoved} street lamps moved out of the carriageway to its edge");
+        Debug.Log($"OsmMap: {lamps.Count} street lamps along the streets (every 25 m), {lamps.Count(l => new Vector2(l.p.x, l.p.z).magnitude < 150f)} within 150 m of the centre, {realLamps?.Count ?? -1} from a register");
         if (_assets != null && _assets.Trees != null && _assets.Trees.Length > 0)
         {
             var rng = new System.Random(_map.Name.GetHashCode());

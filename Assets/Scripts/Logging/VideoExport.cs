@@ -188,6 +188,7 @@ public class VideoExport : MonoBehaviour
                 else
                 {
                     Place(s);
+                    if (s == shots[0]) EnvironmentController.ViewerOverride = s.Cam.transform;
                     var cleared = ClearView(s);
                     if (PlanarWaterReflection.Instance != null) PlanarWaterReflection.Instance.RenderFor(s.Cam);
                     if (debug != null && s == shots[0]) DebugFrame(debug, f, s.Cam.transform);
@@ -203,6 +204,7 @@ public class VideoExport : MonoBehaviour
         }
         debug?.Dispose();
         Time.captureFramerate = 0;
+        EnvironmentController.ViewerOverride = null;
         if (_fixedBefore > 0f) { Time.fixedDeltaTime = _fixedBefore; _fixedBefore = 0f; }
         Soundscape.ListenerAvatar = null;
         EnvironmentController.PrecipitationAnchor = null;

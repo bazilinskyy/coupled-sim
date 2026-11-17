@@ -66,10 +66,10 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
     public List<Light> StreetLights = new List<Light>();
     [Tooltip("Add a light to every street lamp (objects whose name starts with this) that switches on at dusk; empty: off.")]
     public string LampNamePrefix = "StreetLamp";
-    public float LampIntensity = 4f;
+    public float LampIntensity = 6f;
     public float LampRange = 18f;
     [Tooltip("Only the street lights nearest to the viewer are switched on (performance); 0 = all.")]
-    public int MaxActiveStreetLights = 24;
+    public int MaxActiveStreetLights = 48;
     [Tooltip("Material name parts of surfaces that get wet in the rain.")]
     public string[] WetSurfaceKeywords = { "road", "asphalt", "lane", "street", "sidewalk", "pavement", "crossing", "tile" };
 
@@ -482,16 +482,31 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
             if (l != null) _lampOrder.Add(((l.transform.position - viewer).sqrMagnitude, l));
         _lampOrder.Sort((a, b) => a.d.CompareTo(b.d));
         for (int i = 0; i < _lampOrder.Count; i++) _lampOrder[i].l.enabled = i < MaxActiveStreetLights;
+        if (!_lampLogged && _lampOrder.Count > 0)
+        {
+            _lampLogged = true;
+            var near = _lampOrder.Take(4).Select(e => $"{e.l.name} under {(e.l.transform.parent != null ? e.l.transform.parent.name : "-")} {Mathf.Sqrt(e.d):F0} m");
+            Debug.Log($"EnvironmentController: street lights on near {viewer}: {string.Join("; ", near)}");
+        }
     }
+    bool _lampLogged;
+
+    /// <summary>A camera that renders the scene by itself (a video's camera while it records): the street lights and
+    /// the like follow it instead of the screen's view.</summary>
+    public static Transform ViewerOverride;
+
+    /// <summary>Where the viewer is (see <see cref="ViewerPosition"/>), for anything that keeps lights near the view.</summary>
+    public static Vector3 Viewer => Instance != null ? Instance.ViewerPosition() : (Camera.main != null ? Camera.main.transform.position : Vector3.zero);
 
     Vector3 ViewerPosition()
     {
-        var cam = Camera.main;
-        if (cam == null)
-        {
-            foreach (var c in FindObjectsByType<Camera>())
-                if (c.isActiveAndEnabled && c.targetTexture == null) { cam = c; break; }
-        }
+        if (ViewerOverride != null) return ViewerOverride.position;
+        // the camera that draws the world on the screen (the highest depth with the default layer; not an overlay that
+        // draws only the interface)
+        Camera cam = null;
+        foreach (var c in Camera.allCameras)
+            if (c.targetTexture == null && (c.cullingMask & 1) != 0 && (cam == null || c.depth > cam.depth)) cam = c;
+        if (cam == null) cam = Camera.main;
         return cam != null ? cam.transform.position : transform.position;
     }
 
@@ -750,6 +765,8 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
         foreach (var t in FindObjectsByType<Transform>())
         {
             if (!t.name.StartsWith(LampNamePrefix) || (t.parent != null && t.parent.name.StartsWith(LampNamePrefix))) continue;
+            // (a lamp model's own light, if any, is off: this one replaces it)
+            foreach (var own in t.GetComponentsInChildren<Light>(true)) { own.enabled = false; StreetLights.Remove(own); }
             var renderers = t.GetComponentsInChildren<MeshRenderer>();
             if (renderers.Length == 0) continue;
             Bounds head = renderers[0].bounds;
@@ -762,8 +779,11 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
             l.type = LightType.Spot;
             l.spotAngle = 120f;
             l.innerSpotAngle = 60f;
-            l.range = LampRange;
-            l.intensity = LampIntensity;
+            // as bright on the ground under a tall pole as under a low one (the light falls off with the square of the
+            // height: 4.5 m is the default's height)
+            float mount = Mathf.Max(2.5f, go.transform.position.y - t.position.y);
+            l.range = Mathf.Max(LampRange, mount * 3f);
+            l.intensity = LampIntensity * Mathf.Clamp(mount * mount / (4.5f * 4.5f), 1f, 4f);
             l.useColorTemperature = true;
             l.colorTemperature = 3200f;
             l.color = Color.white;
@@ -771,6 +791,7 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
             l.enabled = false;
             StreetLights.Add(l);
         }
+        Debug.Log($"EnvironmentController: {StreetLights.Count} street lights");
     }
 
     // Baked lightmaps hold the sun's shadows for one sun position: switch the scene to realtime
