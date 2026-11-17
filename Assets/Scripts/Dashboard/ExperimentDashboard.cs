@@ -240,8 +240,10 @@ public class ExperimentDashboard : MonoBehaviour
             tex.Apply();
             RenderTexture.active = prev;
             var png = tex.EncodeToJPG(85);
+            cam.targetTexture = null;
             Destroy(tex);
             rt.Release();
+            Destroy(rt);
             lock (_lock)
             {
                 _mapPng = png;

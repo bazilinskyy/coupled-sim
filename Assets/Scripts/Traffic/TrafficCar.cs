@@ -45,10 +45,33 @@ public class TrafficCar : MonoBehaviour
     WaypointCircuit _circuit;
 
     // shared lists, rebuilt at most once per physics step
-    static readonly List<Transform> _cars = new List<Transform>();
-    static readonly List<Transform> _pedestrians = new List<Transform>();
+    struct CachedCar { public Transform t; public Vector3 pos, fwd; public TrafficCar tc; public string name; }
+    struct CachedPed { public Vector3 pos; public string name; }
+    struct CachedAnimal { public Vector3 pos; public string species; }
+    struct CachedLight
+    {
+        public CarTrafficLight light;
+        public Vector3 pos, facing;
+        public LightState state;
+        public CarTrafficLight.TurnArrow arrow;
+        public bool hasLeftArrow, hasRightArrow;
+    }
+
+    static readonly List<PlayerAvatar> _avatarObjects = new List<PlayerAvatar>();
     static readonly List<CarTrafficLight> _lights = new List<CarTrafficLight>();
+    static readonly List<CachedCar> _cars = new List<CachedCar>();
+    static readonly List<CachedPed> _pedestrians = new List<CachedPed>();
+    static readonly List<CachedAnimal> _animals = new List<CachedAnimal>();
+    static readonly List<CachedLight> _activeLights = new List<CachedLight>();
+
+    static readonly List<CachedCar> _nearCars = new List<CachedCar>();
+    static readonly List<CachedPed> _nearPeds = new List<CachedPed>();
+    static readonly List<CachedAnimal> _nearAnimals = new List<CachedAnimal>();
+    static readonly List<CachedLight> _nearLights = new List<CachedLight>();
+
     static int _cacheFrame = -1;
+    static float _cacheFixedTime = -1f;
+    static float _nextAvatarScan;
     static float _nextLightScan;
 
     public void Init(CarFollowingModelType type, float desiredSpeed, System.Random rng)
@@ -76,20 +99,86 @@ public class TrafficCar : MonoBehaviour
 
     static void RefreshCaches()
     {
-        if (_cacheFrame == Time.frameCount) return;
+        float fixedNow = Time.fixedTime;
+        if (_cacheFrame == Time.frameCount && _cacheFixedTime == fixedNow) return;
         _cacheFrame = Time.frameCount;
+        _cacheFixedTime = fixedNow;
+
+        float now = Time.time;
+        if (now >= _nextAvatarScan || _avatarObjects.Count == 0)
+        {
+            _nextAvatarScan = now + 0.25f;
+            _avatarObjects.Clear();
+            _avatarObjects.AddRange(FindObjectsByType<PlayerAvatar>(FindObjectsSortMode.None));
+        }
+        if (now >= _nextLightScan)
+        {
+            _nextLightScan = now + 2f;
+            _lights.Clear();
+            _lights.AddRange(FindObjectsByType<CarTrafficLight>(FindObjectsSortMode.None));
+        }
+
         _cars.Clear();
         _pedestrians.Clear();
-        foreach (var a in FindObjectsByType<PlayerAvatar>())
+        for (int i = 0; i < _avatarObjects.Count; i++)
         {
-            if (!a.gameObject.activeInHierarchy || a.Type == AvatarType.Drone) continue;
-            (a.Type == AvatarType.Driver ? _cars : _pedestrians).Add(a.transform);
+            var a = _avatarObjects[i];
+            if (a == null || !a.gameObject.activeInHierarchy || a.Type == AvatarType.Drone) continue;
+            var tr = a.transform;
+            if (a.Type == AvatarType.Driver)
+            {
+                a.TryGetComponent<TrafficCar>(out var tc);
+                _cars.Add(new CachedCar { t = tr, pos = tr.position, fwd = tr.forward, tc = tc, name = a.name });
+            }
+            else
+            {
+                _pedestrians.Add(new CachedPed { pos = tr.position, name = a.name });
+            }
         }
-        if (Time.time >= _nextLightScan)
+
+        _animals.Clear();
+        var allAnimals = AnimalAgent.All;
+        for (int i = 0; i < allAnimals.Count; i++)
         {
-            _nextLightScan = Time.time + 2f;
-            _lights.Clear();
-            _lights.AddRange(FindObjectsByType<CarTrafficLight>());
+            var animal = allAnimals[i];
+            if (animal == null || animal.Current == AnimalAgent.State.Fly) continue;
+            _animals.Add(new CachedAnimal { pos = animal.transform.position, species = animal.Species.ToString() });
+        }
+
+        _activeLights.Clear();
+        for (int i = 0; i < _lights.Count; i++)
+        {
+            var light = _lights[i];
+            if (light == null) continue;
+            var st = light.State;
+            if (st != LightState.RED && st != LightState.YELLOW && st != LightState.RED_AND_YELLOW) continue;
+            var lt = light.transform;
+            var lpos = lt.position;
+            var lfacing = LightFacing(lt);
+            bool hasLeft = false, hasRight = false;
+            if (light.Arrow == CarTrafficLight.TurnArrow.None)
+            {
+                for (int j = 0; j < _lights.Count; j++)
+                {
+                    var o = _lights[j];
+                    if (o == null || o.Arrow == CarTrafficLight.TurnArrow.None) continue;
+                    if ((o.transform.position - lpos).sqrMagnitude < 8f * 8f && Vector3.Dot(LightFacing(o.transform), lfacing) > 0.9f)
+                    {
+                        if (o.Arrow == CarTrafficLight.TurnArrow.Left) hasLeft = true;
+                        else if (o.Arrow == CarTrafficLight.TurnArrow.Right) hasRight = true;
+                    }
+                }
+            }
+            _activeLights.Add(new CachedLight
+            {
+                light = light,
+                pos = lpos,
+                facing = lfacing,
+                state = st,
+                arrow = light.Arrow,
+                hasLeftArrow = hasLeft,
+                hasRightArrow = hasRight,
+            });
         }
     }
 
@@ -156,9 +245,44 @@ public class TrafficCar : MonoBehaviour
         what = "free road";
         float start = _tracker.ProgressDistance;
         var me = transform.position;
+        var myFwd = transform.forward;
         // distance from the car to its progress point (the tracker lags a little behind)
-        float offset = Vector3.Dot(_circuit.GetRoutePoint(start).position - me, transform.forward);
+        float offset = Vector3.Dot(_circuit.GetRoutePoint(start).position - me, myFwd);
         float lw2 = LaneHalfWidth * LaneHalfWidth;
+        float maxRange2 = (LookAhead + 10f) * (LookAhead + 10f);
+
+        _nearCars.Clear();
+        for (int i = 0; i < _cars.Count; i++)
+        {
+            var c = _cars[i];
+            if (c.t != transform && Flat2(c.pos - me) <= maxRange2 && Vector3.Dot(c.fwd, myFwd) > 0.3f)
+                _nearCars.Add(c);
+        }
+
+        _nearAnimals.Clear();
+        _nearPeds.Clear();
+        if (YieldToPedestrians)
+        {
+            for (int i = 0; i < _animals.Count; i++)
+                if (Flat2(_animals[i].pos - me) <= maxRange2) _nearAnimals.Add(_animals[i]);
+            for (int i = 0; i < _pedestrians.Count; i++)
+                if (Flat2(_pedestrians[i].pos - me) <= maxRange2) _nearPeds.Add(_pedestrians[i]);
+        }
+
+        _nearLights.Clear();
+        if (ObeyTrafficLights)
+        {
+            for (int i = 0; i < _activeLights.Count; i++)
+            {
+                var l = _activeLights[i];
+                if (Flat2(l.pos - me) <= maxRange2 && Vector3.Dot(l.facing, myFwd) < -0.7f)
+                    _nearLights.Add(l);
+            }
+        }
+
+        if (_nearCars.Count == 0 && _nearAnimals.Count == 0 && _nearPeds.Count == 0 && _nearLights.Count == 0)
+            return Leader.None;
+
         const float step = 2f;
         for (float d = step; d <= LookAhead; d += step)
         {
@@ -166,33 +290,31 @@ public class TrafficCar : MonoBehaviour
             float along = d + offset;
             if (along < 1f) continue;
 
-            foreach (var c in _cars)
+            for (int i = 0; i < _nearCars.Count; i++)
             {
-                if (c == transform) continue;
-                var q = c.position;
-                if (Flat2(q - p) < lw2 && Vector3.Dot(c.forward, transform.forward) > 0.3f)
+                var c = _nearCars[i];
+                if (Flat2(c.pos - p) < lw2)
                 {
-                    var tracked = c.GetComponent<TrafficCar>();
-                    float leaderSpeed = tracked != null ? tracked.Speed : SpeedOf(c);
+                    float leaderSpeed = c.tc != null ? c.tc.Speed : SpeedOf(c.t);
                     what = $"car {c.name} at {along:F0} m";
                     return Leader.Vehicle(Mathf.Max(0.1f, along - VehicleLength), leaderSpeed);
                 }
             }
             if (YieldToPedestrians)
             {
-                foreach (var animal in AnimalAgent.All)
+                for (int i = 0; i < _nearAnimals.Count; i++)
                 {
-                    if (animal.Current == AnimalAgent.State.Fly) continue;
-                    var ap = animal.transform.position;
-                    if (Flat2(ap - p) < lw2 * 1.2f && Mathf.Abs(ap.y - p.y) < 1.5f)
+                    var animal = _nearAnimals[i];
+                    if (Flat2(animal.pos - p) < lw2 * 1.2f && Mathf.Abs(animal.pos.y - p.y) < 1.5f)
                     {
-                        what = $"{animal.Species} at {along:F0} m";
+                        what = $"{animal.species} at {along:F0} m";
                         return Leader.Stationary(Mathf.Max(0.1f, along - VehicleLength / 2f - 1.5f));
                     }
                 }
-                foreach (var ped in _pedestrians)
+                for (int i = 0; i < _nearPeds.Count; i++)
                 {
-                    if (Flat2(ped.position - p) < lw2 * 1.2f && Mathf.Abs(ped.position.y - p.y) < 1.5f)
+                    var ped = _nearPeds[i];
+                    if (Flat2(ped.pos - p) < lw2 * 1.2f && Mathf.Abs(ped.pos.y - p.y) < 1.5f)
                     {
                         what = $"pedestrian {ped.name} at {along:F0} m";
                         return Leader.Stationary(Mathf.Max(0.1f, along - VehicleLength / 2f - 1.5f));
@@ -201,20 +323,19 @@ public class TrafficCar : MonoBehaviour
             }
             if (ObeyTrafficLights)
             {
-                foreach (var light in _lights)
+                for (int i = 0; i < _nearLights.Count; i++)
                 {
-                    if (light.State != LightState.RED && light.State != LightState.YELLOW && light.State != LightState.RED_AND_YELLOW) continue;
+                    var l = _nearLights[i];
                     // lights stand beside the road, a few metres past the stop line, facing the traffic
-                    var lp = light.transform.position;
-                    if (Flat2(lp - p) > 6f * 6f) continue;
-                    if (!FacesTraffic(light.transform)) continue;
+                    if (Flat2(l.pos - p) > 6f * 6f) continue;
                     // turn arrows: an arrow head is for the cars turning its way, the main head of that approach for the others
                     var turn = TurnAfter(start + d);
-                    if (light.Arrow != CarTrafficLight.TurnArrow.None ? turn != light.Arrow : turn != CarTrafficLight.TurnArrow.None && HasArrow(light, turn)) continue;
+                    bool hasTurnArrow = (turn == CarTrafficLight.TurnArrow.Left && l.hasLeftArrow) || (turn == CarTrafficLight.TurnArrow.Right && l.hasRightArrow);
+                    if (l.arrow != CarTrafficLight.TurnArrow.None ? turn != l.arrow : turn != CarTrafficLight.TurnArrow.None && hasTurnArrow) continue;
                     float stopGap = Mathf.Max(0.1f, along - VehicleLength / 2f - 2f);
-                    if (light.State == LightState.YELLOW && Speed * Speed / (2f * 3f) > stopGap)
+                    if (l.state == LightState.YELLOW && Speed * Speed / (2f * 3f) > stopGap)
                         continue; // too close to stop comfortably: drive on
-                    what = $"{light.State} light at {along:F0} m";
+                    what = $"{l.state} light at {along:F0} m";
                     return Leader.Stationary(stopGap);
                 }
             }

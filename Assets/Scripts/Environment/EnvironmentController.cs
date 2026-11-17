@@ -349,9 +349,11 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
 
     void OnDestroy()
     {
+        if (Instance == this) Instance = null;
         UnityEngine.Rendering.RenderPipelineManager.beginCameraRendering -= HideOwnVehicle;
         UnityEngine.Rendering.RenderPipelineManager.endCameraRendering -= ShowOwnVehicle;
         RestoreOwnVehicle();
+        if (_sky != null) Destroy(_sky);
     }
 
     // above the viewer (out of their own car), when the light changed or the viewer moved on
@@ -451,16 +453,24 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
         }
     }
 
-    static float ParseFloat(string s) => float.Parse(s, CultureInfo.InvariantCulture);
+    static float ParseFloat(string s, float fallback = 0f)
+    {
+        if (float.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out var v)) return v;
+        Debug.LogWarning($"EnvironmentController: invalid number '{s}'");
+        return fallback;
+    }
 
     static float ParseTime(string s)
     {
-        if (s.Contains(":"))
+        if (!string.IsNullOrEmpty(s) && s.Contains(":"))
         {
             var parts = s.Split(':');
-            return int.Parse(parts[0], CultureInfo.InvariantCulture) + int.Parse(parts[1], CultureInfo.InvariantCulture) / 60f;
+            if (parts.Length >= 2 && int.TryParse(parts[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out var hh) && int.TryParse(parts[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out var mm))
+                return hh + mm / 60f;
+            Debug.LogWarning($"EnvironmentController: invalid time '{s}'");
+            return 13f;
         }
-        return ParseFloat(s);
+        return ParseFloat(s, 13f);
     }
 
     public struct EnvironmentStateMsg : INetMessage

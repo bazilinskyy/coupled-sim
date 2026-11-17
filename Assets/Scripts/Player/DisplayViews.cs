@@ -66,14 +66,24 @@ public class DisplayViews : MonoBehaviour
 
     PlayerAvatar _builtFor;
     readonly List<GameObject> _made = new List<GameObject>();
+    readonly List<RenderTexture> _rts = new List<RenderTexture>();
+
+    void ClearViews()
+    {
+        foreach (var g in _made) if (g != null) Destroy(g);
+        _made.Clear();
+        foreach (var rt in _rts) if (rt != null) { rt.Release(); Destroy(rt); }
+        _rts.Clear();
+    }
+
+    void OnDestroy() => ClearViews();
 
     void Update()
     {
         var nm = NetworkingManager.Instance;
         var local = nm != null && nm.PlayerSystem != null ? nm.PlayerSystem.LocalPlayer : null;
         if (local == _builtFor) return;
-        foreach (var g in _made) if (g != null) Destroy(g);
-        _made.Clear();
+        ClearViews();
         _builtFor = local;
         if (local == null || Views == null || Views.Length == 0) return;
         var main = FindMainCamera(local);
@@ -143,6 +153,7 @@ public class DisplayViews : MonoBehaviour
         int w = display < Display.displays.Length ? Display.displays[display].renderingWidth : 1280;
         int h = display < Display.displays.Length ? Display.displays[display].renderingHeight : 720;
         var rt = new RenderTexture(Mathf.Max(320, w), Mathf.Max(180, h), 24);
+        _rts.Add(rt);
         cam.targetTexture = rt;
         cam.aspect = rt.width / (float)rt.height;
         var canvasGo = new GameObject($"View {v.Kind} screen");
