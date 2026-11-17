@@ -66,23 +66,35 @@ public class CarBlinkers : MonoBehaviour
 
     private void ResetBlinkers()
     {
-        foreach (MeshRenderer renderer in leftBlinkers)
+        if (leftBlinkers != null)
         {
-            renderer.material = lightOff;
+            foreach (MeshRenderer renderer in leftBlinkers)
+            {
+                if (renderer != null) renderer.sharedMaterial = lightOff;
+            }
         }
-        foreach (MeshRenderer renderer in rightBlinkers)
+        if (rightBlinkers != null)
         {
-            renderer.material = lightOff;
+            foreach (MeshRenderer renderer in rightBlinkers)
+            {
+                if (renderer != null) renderer.sharedMaterial = lightOff;
+            }
         }
 
-        foreach (var obj in leftBlinkerObjects)
+        if (leftBlinkerObjects != null)
         {
-            obj.SetActive(false);
+            foreach (var obj in leftBlinkerObjects)
+            {
+                if (obj != null) obj.SetActive(false);
+            }
         }
 
-        foreach (var obj in rightBlinkerObjects)
+        if (rightBlinkerObjects != null)
         {
-            obj.SetActive(false);
+            foreach (var obj in rightBlinkerObjects)
+            {
+                if (obj != null) obj.SetActive(false);
+            }
         }
     }
 
@@ -92,23 +104,35 @@ public class CarBlinkers : MonoBehaviour
         {
             yield return new WaitForSeconds(blinkInterval);
             LampOn = true;
-            foreach (MeshRenderer rend in blinkerRenderers)
+            if (blinkerRenderers != null)
             {
-                rend.material = lightOn;
+                foreach (MeshRenderer rend in blinkerRenderers)
+                {
+                    if (rend != null) rend.sharedMaterial = lightOn;
+                }
             }
-            foreach (var obj in blinkerObjects)
+            if (blinkerObjects != null)
             {
-                obj.SetActive(true);
+                foreach (var obj in blinkerObjects)
+                {
+                    if (obj != null) obj.SetActive(true);
+                }
             }
             yield return new WaitForSeconds(blinkInterval);
             LampOn = false;
-            foreach (MeshRenderer rend in blinkerRenderers)
+            if (blinkerRenderers != null)
             {
-                rend.material = lightOff;
+                foreach (MeshRenderer rend in blinkerRenderers)
+                {
+                    if (rend != null) rend.sharedMaterial = lightOff;
+                }
             }
-            foreach(var obj in blinkerObjects)
+            if (blinkerObjects != null)
             {
-                obj.SetActive(false);
+                foreach(var obj in blinkerObjects)
+                {
+                    if (obj != null) obj.SetActive(false);
+                }
             }
         }
     }

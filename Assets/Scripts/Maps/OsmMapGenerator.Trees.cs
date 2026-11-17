@@ -20,6 +20,7 @@ public partial class OsmMapGenerator
     static readonly string[] Conifers = { "pinus", "picea", "abies", "taxus", "thuja", "larix", "pseudotsuga", "metasequoia", "taxodium",
         "chamaecyparis", "cupressus", "juniperus", "cedrus", "sequoia", "sequoiadendron", "tsuga", "cryptomeria", "araucaria", "cupressocyparis", "xcupressocyparis" };
     static readonly string[] Palms = { "phoenix", "washingtonia", "trachycarpus", "chamaerops", "livistona", "syagrus", "butia", "archontophoenix", "howea", "cocos", "roystonea", "sabal", "arecaceae" };
+    static readonly System.Text.RegularExpressions.Regex PalmWordRegex = new System.Text.RegularExpressions.Regex(@"\bpalms?\b", System.Text.RegularExpressions.RegexOptions.Compiled);
 
     /// <summary>"conifer", "palm" or "deciduous" from a species name or OSM tags.</summary>
     public static string TreeKind(string species, string leafType = null)
@@ -29,7 +30,7 @@ public partial class OsmMapGenerator
         var s = species.ToLowerInvariant();
         // the genus (the first word) or a common name with the word palm (not "Acer palmatum")
         foreach (var g in Palms) if (s.StartsWith(g) || s.Contains(" " + g)) return "palm";
-        if (System.Text.RegularExpressions.Regex.IsMatch(s, @"\bpalms?\b")) return "palm";
+        if (PalmWordRegex.IsMatch(s)) return "palm";
         foreach (var g in Conifers) if (s.StartsWith(g) || s.Contains("(" + g)) return "conifer";
         return "deciduous";
     }

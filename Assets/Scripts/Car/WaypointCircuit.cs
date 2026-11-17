@@ -48,19 +48,41 @@ namespace UnityStandardAssets.Utility
 
         public Vector3 GetRoutePosition(float dist)
         {
-            int point = 0;
+            if (distances == null || distances.Length == 0 || numPoints == 0)
+            {
+                if (Waypoints != null && Waypoints.Length > 1)
+                {
+                    CachePositionsAndDistances();
+                    numPoints = Waypoints.Length;
+                }
+                else
+                {
+                    return Waypoints != null && Waypoints.Length > 0 && Waypoints[0] != null ? Waypoints[0].position : transform.position;
+                }
+            }
 
             if (Length == 0)
             {
                 Length = distances[distances.Length - 1];
             }
 
+            if (Length <= 1e-5f)
+            {
+                return points[0];
+            }
+
             dist = Mathf.Repeat(dist, Length);
 
-            while (distances[point] < dist)
+            int lo = 1, hi = distances.Length - 1;
+            while (lo < hi)
             {
-                ++point;
+                int mid = (lo + hi) >> 1;
+                if (distances[mid] < dist)
+                    lo = mid + 1;
+                else
+                    hi = mid;
             }
+            int point = lo;
 
 
             // get nearest two points, ensuring points wrap-around start & end of circuit
