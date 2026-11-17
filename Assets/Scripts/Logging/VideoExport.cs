@@ -105,22 +105,21 @@ public class VideoExport : MonoBehaviour
             shots[0].Cam.gameObject.AddComponent<AudioListener>();
         }
         Time.captureFramerate = Fps;
-        var tex = new Texture2D(Size.x, Size.y, TextureFormat.RGB24, false);
+        _tex = new Texture2D(Size.x, Size.y, TextureFormat.RGB24, false);
         // the sound, rendered offline: each frame the audio of exactly 1/Fps s
         int channels = AudioSettings.speakerMode == AudioSpeakerMode.Mono ? 1 : 2, rate = AudioSettings.outputSampleRate;
         var samples = new List<float>();
-        bool audio = Audio && rate > 0 && AudioRenderer.Start();
-        Unity.Collections.NativeArray<float> buffer = default;
+        _audioStarted = Audio && rate > 0 && AudioRenderer.Start();
         int frames = Mathf.RoundToInt(Seconds * Fps);
         Debug.Log($"VideoExport: {shots.Count} cameras, {frames} frames at {Fps} fps, {Size.x}x{Size.y}");
         for (int f = 0; f < frames; f++)
         {
             yield return null;   // (WaitForEndOfFrame never comes in batch mode; the cameras render on demand)
-            if (audio)
+            if (_audioStarted)
             {
                 int n = AudioRenderer.GetSampleCountForCaptureFrame() * channels;
-                if (!buffer.IsCreated || buffer.Length != n) { if (buffer.IsCreated) buffer.Dispose(); buffer = new Unity.Collections.NativeArray<float>(n, Unity.Collections.Allocator.Persistent); }
-                if (n > 0 && AudioRenderer.Render(buffer)) samples.AddRange(buffer);
+                if (!_buffer.IsCreated || _buffer.Length != n) { if (_buffer.IsCreated) _buffer.Dispose(); _buffer = new Unity.Collections.NativeArray<float>(n, Unity.Collections.Allocator.Persistent); }
+                if (n > 0 && AudioRenderer.Render(_buffer)) samples.AddRange(_buffer);
             }
             foreach (var s in shots)
             {
@@ -139,7 +138,7 @@ public class VideoExport : MonoBehaviour
                         gc.Render();
                         RenderTexture.active = gc.targetTexture;
                         // top left, top right, bottom left, bottom right (texture rows start at the bottom)
-                        tex.ReadPixels(new Rect(0, 0, Size.x / 2, Size.y / 2), (g % 2) * (Size.x / 2), g < 2 ? Size.y / 2 : 0, false);
+                        _tex.ReadPixels(new Rect(0, 0, Size.x / 2, Size.y / 2), (g % 2) * (Size.x / 2), g < 2 ? Size.y / 2 : 0, false);
                     }
                 }
                 else
@@ -147,19 +146,21 @@ public class VideoExport : MonoBehaviour
                     Place(s);
                     s.Cam.Render();
                     RenderTexture.active = s.Cam.targetTexture;
-                    tex.ReadPixels(new Rect(0, 0, Size.x, Size.y), 0, 0, false);
+                    _tex.ReadPixels(new Rect(0, 0, Size.x, Size.y), 0, 0, false);
                 }
                 RenderTexture.active = prev;
-                File.WriteAllBytes(Path.Combine(s.Dir, $"frame_{f:D6}.jpg"), tex.EncodeToJPG(92));
+                File.WriteAllBytes(Path.Combine(s.Dir, $"frame_{f:D6}.jpg"), _tex.EncodeToJPG(92));
                 s.Frames++;
             }
         }
         Time.captureFramerate = 0;
+        if (_tex != null) { Destroy(_tex); _tex = null; }
         string wav = null;
-        if (audio)
+        if (_audioStarted)
         {
             AudioRenderer.Stop();
-            if (buffer.IsCreated) buffer.Dispose();
+            _audioStarted = false;
+            if (_buffer.IsCreated) { _buffer.Dispose(); _buffer = default; }
             if (samples.Count > 0) { wav = Path.Combine(root, $"{NetworkingManager.LogPrefix}sound-{stamp}.wav"); WriteWav(wav, samples, channels, rate); }
             Debug.Log($"VideoExport: sound {samples.Count / Mathf.Max(1, channels) / (float)Mathf.Max(1, rate):F1} s at {rate} Hz, {channels} channels");
         }
@@ -190,7 +191,20 @@ public class VideoExport : MonoBehaviour
         foreach (var x in data) w.Write((short)Mathf.Clamp(Mathf.RoundToInt(x * 32767f), -32768, 32767));
     }
 
+    Texture2D _tex;
+    bool _audioStarted;
+    Unity.Collections.NativeArray<float> _buffer;
+
     void Awake() => StartCoroutine(Start_());
+
+    void OnDestroy()
+    {
+        if (Busy) Time.captureFramerate = 0;
+        Busy = false;
+        if (_audioStarted) { AudioRenderer.Stop(); _audioStarted = false; }
+        if (_buffer.IsCreated) { _buffer.Dispose(); _buffer = default; }
+        if (_tex != null) { Destroy(_tex); _tex = null; }
+    }
 
     /// <summary>The participants: those of a replay, else every participant's avatar (the local one first).</summary>
     static List<PlayerAvatar> Participants()

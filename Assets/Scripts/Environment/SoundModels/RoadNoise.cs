@@ -95,9 +95,30 @@ namespace CoupledSim.Sound
             return 10f * (float)Math.Log10(Math.Max(e, 1e-30));
         }
 
+        /// <summary>Total rolling sound power over all octave bands without delegate allocation.</summary>
+        public static float TotalRolling(VehicleCategory c, float kmh, float surfaceDb = 0f, bool aWeighted = false)
+        {
+            if (AR[Index(c)] == null) return -300f;
+            double e = 0;
+            for (int i = 0; i < Bands.Length; i++) e += Math.Pow(10, (Rolling(c, kmh, i, surfaceDb) + (aWeighted ? AWeighting[i] : 0f)) / 10);
+            return 10f * (float)Math.Log10(Math.Max(e, 1e-30));
+        }
+
+        /// <summary>Total propulsion sound power over all octave bands without delegate allocation.</summary>
+        public static float TotalPropulsion(VehicleCategory c, float kmh, bool electric = false, bool aWeighted = false)
+        {
+            double e = 0;
+            for (int i = 0; i < Bands.Length; i++) e += Math.Pow(10, (Propulsion(c, kmh, i, electric) + (aWeighted ? AWeighting[i] : 0f)) / 10);
+            return 10f * (float)Math.Log10(Math.Max(e, 1e-30));
+        }
+
         /// <summary>Sound pressure level at <paramref name="metres"/> from a point source of sound power
         /// <paramref name="lw"/> on reflecting ground (hemispherical spreading): L_p = L_W - 10 log10(2 pi r^2).</summary>
-        public static float PressureAt(float lw, float metres) => lw - 10f * (float)Math.Log10(2 * Math.PI * metres * metres);
+        public static float PressureAt(float lw, float metres)
+        {
+            float r = Math.Max(metres, 0.01f);
+            return lw - 10f * (float)Math.Log10(2 * Math.PI * r * r);
+        }
     }
 
     /// <summary>

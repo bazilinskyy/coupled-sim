@@ -77,7 +77,14 @@ public class Soundscape : MonoBehaviour, IExperimentModifier
     }
 
     void Awake() => Current = this;
-    void OnDestroy() { if (Current == this) Current = null; }
+    void OnDestroy()
+    {
+        if (Current == this) Current = null;
+        foreach (var v in _voices.Values) v?.Dispose();
+        _voices.Clear();
+        _ticks.Dispose();
+        _steps.Dispose();
+    }
 
     static bool Truthy(string v) => v == "1" || v.ToLowerInvariant() == "true";
 
@@ -142,7 +149,8 @@ public class Soundscape : MonoBehaviour, IExperimentModifier
     {
         var path = Path.IsPathRooted(CabinMusic) ? CabinMusic : Path.Combine(Application.streamingAssetsPath, "Audio", CabinMusic);
         var type = path.EndsWith(".ogg", StringComparison.OrdinalIgnoreCase) ? AudioType.OGGVORBIS : path.EndsWith(".mp3", StringComparison.OrdinalIgnoreCase) ? AudioType.MPEG : AudioType.WAV;
-        using var req = UnityWebRequestMultimedia.GetAudioClip("file://" + path, type);
+        var uri = new Uri(Path.GetFullPath(path)).AbsoluteUri;
+        using var req = UnityWebRequestMultimedia.GetAudioClip(uri, type);
         yield return req.SendWebRequest();
         if (req.result != UnityWebRequest.Result.Success) { Debug.LogWarning($"Soundscape: cannot load cabin music {path}: {req.error}"); yield break; }
         _music = Source2D("Cabin music", DownloadHandlerAudioClip.GetContent(req));
@@ -346,6 +354,7 @@ public class Soundscape : MonoBehaviour, IExperimentModifier
     {
         readonly Transform _car;
         readonly AudioSource _rollLo, _rollHi, _prop, _engine, _clicks;
+        readonly AudioSource[] _sources;
         readonly AudioLowPassFilter[] _lp;
         readonly VehicleCategory _cat;
         readonly EngineModel _engineModel;
@@ -377,12 +386,14 @@ public class Soundscape : MonoBehaviour, IExperimentModifier
             uint h = (uint)car.name.GetHashCode();
             _electric = _scooter || preset == RealisticVehicleDynamics.CarPreset.CityBus || n.Contains("articulatedbus") || (_cat == VehicleCategory.Light && !_twoWheeler && (h % 1000) / 1000f < sc.ElectricShare);
             _engineModel = EngineModel.For(_cat);
-            var lps = new List<AudioLowPassFilter>();
+            var lps = new List<AudioLowPassFilter>(4);
+            var srcs = new List<AudioSource>(4);
             AudioSource Add(string name, AudioClip clip)
             {
                 var s = Source3D(car, name, clip, true, new Vector3(0f, 0.4f, 0f));
                 s.time = UnityEngine.Random.value * clip.length * 0.9f;
                 lps.Add(s.gameObject.AddComponent<AudioLowPassFilter>());
+                srcs.Add(s);
                 s.Play();
                 return s;
             }
@@ -406,6 +417,7 @@ public class Soundscape : MonoBehaviour, IExperimentModifier
                 _prop = Add("Propulsion", SoundClips.PropulsionNoise(_cat, _electric));
                 _engine = Add(_electric ? "Motor" : "Engine", _electric ? SoundClips.Whine() : SoundClips.Engine(_cat == VehicleCategory.Moped ? "twostroke" : _cat == VehicleCategory.Light ? "petrol" : "diesel"));
             }
+            _sources = srcs.ToArray();
             _lp = lps.ToArray();
         }
 
@@ -428,12 +440,12 @@ public class Soundscape : MonoBehaviour, IExperimentModifier
             _engineModel.Update(kmh, throttle);
 
             // sound power (CNOSSOS-EU), then the level 1 m from a source on reflecting ground (L_W - 8 dB)
-            float lr = kmh < 2f || _rollLo == null ? -100f : Cnossos.Total(i => Cnossos.Rolling(_cat == VehicleCategory.Moped ? VehicleCategory.Light : _cat, kmh, i, _surfaceDb), false);
-            float lp = _prop == null && !_scooter ? -100f : Cnossos.Total(i => Cnossos.Propulsion(_cat, kmh, i, _electric), false);
+            float lr = kmh < 2f || _rollLo == null ? -100f : Cnossos.TotalRolling(_cat == VehicleCategory.Moped ? VehicleCategory.Light : _cat, kmh, _surfaceDb, false);
+            float lp = _prop == null && !_scooter ? -100f : Cnossos.TotalPropulsion(_cat, kmh, _electric, false);
             lp += _electric ? 0f : 6f * (throttle - 0.25f) - (kmh < 5f ? 6f : 0f);   // accelerating louder, idling quieter (an assumption)
             float r1 = Cnossos.PressureAt(lr, 1f), p1 = Cnossos.PressureAt(lp, 1f);
             if (_bicycle) r1 -= 24f;          // narrow tyres
-            if (_scooter) { r1 -= 14f; p1 = Cnossos.PressureAt(Cnossos.Total(i => Cnossos.Propulsion(VehicleCategory.Light, Mathf.Max(kmh, 5f), i, true), false), 1f) - 22f + (kmh < 1f ? -60f : 0f); }
+            if (_scooter) { r1 -= 14f; p1 = Cnossos.PressureAt(Cnossos.TotalPropulsion(VehicleCategory.Light, Mathf.Max(kmh, 5f), true, false), 1f) - 22f + (kmh < 1f ? -60f : 0f); }
 
             // the path to the listener: distance (air absorption), buildings in the way
             var listener = sc.Listener;
@@ -441,12 +453,12 @@ public class Soundscape : MonoBehaviour, IExperimentModifier
             if (ownInside)
             {
                 // inside the participant's own car: tyres and engine through the floor and the firewall
-                foreach (var s in Sources()) s.spatialBlend = 0f;
+                for (int i = 0; i < _sources.Length; i++) _sources[i].spatialBlend = 0f;
                 r1 -= 21f; p1 -= 16f; cutoff = 900f;
             }
             else if (listener != null)
             {
-                foreach (var s in Sources()) s.spatialBlend = 1f;
+                for (int i = 0; i < _sources.Length; i++) _sources[i].spatialBlend = 1f;
                 float d = Vector3.Distance(listener.position, p);
                 cutoff = AirAbsorption.Cutoff(d);
                 if (Time.time >= _nextOcclusion)
@@ -488,17 +500,9 @@ public class Soundscape : MonoBehaviour, IExperimentModifier
             }
         }
 
-        IEnumerable<AudioSource> Sources()
-        {
-            if (_rollLo != null) yield return _rollLo;
-            if (_rollHi != null) yield return _rollHi;
-            if (_prop != null) yield return _prop;
-            if (_engine != null) yield return _engine;
-        }
-
         public void Dispose()
         {
-            foreach (var s in Sources()) if (s != null) Destroy(s.gameObject);
+            for (int i = 0; i < _sources.Length; i++) if (_sources[i] != null) Destroy(_sources[i].gameObject);
             if (_clicks != null) Destroy(_clicks.gameObject);
         }
     }
@@ -509,6 +513,7 @@ public class Soundscape : MonoBehaviour, IExperimentModifier
     sealed class Tickers
     {
         readonly Dictionary<PedestrianTrafficLight, (AudioSource src, float next)> _on = new Dictionary<PedestrianTrafficLight, (AudioSource, float)>();
+        readonly List<PedestrianTrafficLight> _keys = new List<PedestrianTrafficLight>();
         PedestrianTrafficLight[] _all = new PedestrianTrafficLight[0];
         float _nextScan;
 
@@ -525,14 +530,24 @@ public class Soundscape : MonoBehaviour, IExperimentModifier
             var env = EnvironmentController.Instance;
             float hour = env != null ? env.TimeOfDay : 13f;
             float level = 60f - (hour < 7f || hour > 22f ? 6f : 0f) + (sc.InsideCar ? -20f : 0f);   // quieter at night
-            foreach (var l in _on.Keys.ToList())
+            _keys.Clear();
+            foreach (var k in _on.Keys) _keys.Add(k);
+            for (int i = 0; i < _keys.Count; i++)
             {
+                var l = _keys[i];
+                if (l == null) continue;
                 var (src, next) = _on[l];
                 if (src == null || Time.time < next) continue;
                 bool walk = l.State == LightState.GREEN || l.State == LightState.BLINK_GREEN;
                 src.PlayOneShot(src.clip, sc.ClipGain(level));
                 _on[l] = (src, Time.time + (walk ? 0.12f : 1f));
             }
+        }
+
+        public void Dispose()
+        {
+            foreach (var kv in _on.Values) if (kv.src != null) Destroy(kv.src.gameObject);
+            _on.Clear();
         }
     }
 
@@ -577,6 +592,12 @@ public class Soundscape : MonoBehaviour, IExperimentModifier
                 float db = (surface == "hard" ? 56f : surface == "soft" ? 48f : 54f) + (own ? -4f : 0f) + (sc.InsideCar ? -20f : 0f);
                 w.Src.PlayOneShot(SoundClips.Footstep(surface, UnityEngine.Random.Range(0, 4)), sc.ClipGain(db));
             }
+        }
+
+        public void Dispose()
+        {
+            foreach (var w in _walkers.Values) if (w.Src != null) Destroy(w.Src.gameObject);
+            _walkers.Clear();
         }
 
         static string Surface(Vector3 at)

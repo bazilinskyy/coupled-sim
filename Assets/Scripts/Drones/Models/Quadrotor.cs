@@ -221,8 +221,10 @@ namespace CoupledSim.Drones
             _velIntegral = Vector3.Zero;
         }
 
-        static Vector4 Sin4() => new Vector4((float)Math.Sin(Angles[0]), (float)Math.Sin(Angles[1]), (float)Math.Sin(Angles[2]), (float)Math.Sin(Angles[3]));
-        static Vector4 Cos4() => new Vector4((float)Math.Cos(Angles[0]), (float)Math.Cos(Angles[1]), (float)Math.Cos(Angles[2]), (float)Math.Cos(Angles[3]));
+        static readonly Vector4 SinAngles = new Vector4((float)Math.Sin(Angles[0]), (float)Math.Sin(Angles[1]), (float)Math.Sin(Angles[2]), (float)Math.Sin(Angles[3]));
+        static readonly Vector4 CosAngles = new Vector4((float)Math.Cos(Angles[0]), (float)Math.Cos(Angles[1]), (float)Math.Cos(Angles[2]), (float)Math.Cos(Angles[3]));
+        static Vector4 Sin4() => SinAngles;
+        static Vector4 Cos4() => CosAngles;
         static float Dot4(Vector4 a, Vector4 b) => Vector4.Dot(a, b);
 
         /// <summary>The flight controller: rotor speed commands for the current command and state.</summary>
@@ -289,16 +291,13 @@ namespace CoupledSim.Drones
             var gains = new Vector3(RateGain, RateGain, YawRateGain);
             var torque = I * (gains * (ratesCmd - State.Rates)) + Vector3.Cross(State.Rates, I * State.Rates);
             // mixer: rotor speeds² from thrust and torques, within the rotors' range
-            var u = new[] { Math.Max(0f, thrust), torque.X, torque.Y, torque.Z };
+            float u0 = Math.Max(0f, thrust), u1 = torque.X, u2 = torque.Y, u3 = torque.Z;
             float lo = p.MinRotorSpeed * p.MinRotorSpeed, hi = p.MaxRotorSpeed * p.MaxRotorSpeed;
-            var w = new float[4];
-            for (int i = 0; i < 4; i++)
-            {
-                float s = 0f;
-                for (int j = 0; j < 4; j++) s += _mixInverse[i, j] * u[j];
-                w[i] = (float)Math.Sqrt(Clamp(s, lo, hi));
-            }
-            return new Vector4(w[0], w[1], w[2], w[3]);
+            float w0 = (float)Math.Sqrt(Clamp(_mixInverse[0, 0] * u0 + _mixInverse[0, 1] * u1 + _mixInverse[0, 2] * u2 + _mixInverse[0, 3] * u3, lo, hi));
+            float w1 = (float)Math.Sqrt(Clamp(_mixInverse[1, 0] * u0 + _mixInverse[1, 1] * u1 + _mixInverse[1, 2] * u2 + _mixInverse[1, 3] * u3, lo, hi));
+            float w2 = (float)Math.Sqrt(Clamp(_mixInverse[2, 0] * u0 + _mixInverse[2, 1] * u1 + _mixInverse[2, 2] * u2 + _mixInverse[2, 3] * u3, lo, hi));
+            float w3 = (float)Math.Sqrt(Clamp(_mixInverse[3, 0] * u0 + _mixInverse[3, 1] * u1 + _mixInverse[3, 2] * u2 + _mixInverse[3, 3] * u3, lo, hi));
+            return new Vector4(w0, w1, w2, w3);
         }
 
         static float Clamp(float v, float lo, float hi) => v < lo ? lo : v > hi ? hi : v;
