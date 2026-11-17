@@ -66,7 +66,8 @@ public class UNetHost
             Debug.Log("Failed to bind to port " + UNetConfig.Port);
         else
         {
-            Debug.Log("Listening on " + NetworkUtils.GetLocalInterfaceAddresses()[0]);
+            var addrs = NetworkUtils.GetLocalInterfaceAddresses();
+            Debug.Log("Listening on " + (addrs.Count > 0 ? addrs[0] : "127.0.0.1"));
             m_Driver.Listen();
         }
 
@@ -87,7 +88,25 @@ public class UNetHost
         if (m_Driver.IsCreated)
         {
             m_Driver.Dispose();
+        }
+        if (m_Connections.IsCreated)
+        {
             m_Connections.Dispose();
+        }
+        _connId2playerId.Clear();
+        for (int i = 0; i < _playerId2connId.Length; i++)
+        {
+            _playerId2connId[i] = default(NetworkConnection);
+        }
+        _initialized = false;
+    }
+
+    void ReleaseConnection(NetworkConnection conn)
+    {
+        if (conn != default(NetworkConnection) && _connId2playerId.TryGetValue(conn, out int pid))
+        {
+            _playerId2connId[pid] = default(NetworkConnection);
+            _connId2playerId.Remove(conn);
         }
     }
 
@@ -103,6 +122,7 @@ public class UNetHost
         {
             if (!m_Connections[i].IsCreated)
             {
+                ReleaseConnection(m_Connections[i]);
                 m_Connections.RemoveAtSwapBack(i);
                 --i;
             }
@@ -148,7 +168,9 @@ public class UNetHost
                 else if (cmd == NetworkEvent.Type.Disconnect)
                 {
                     Debug.Log("Client disconnected from server");
+                    ReleaseConnection(m_Connections[i]);
                     m_Connections[i] = default(NetworkConnection);
+                    break;
                 }
             }
         }
@@ -156,6 +178,7 @@ public class UNetHost
 
     public BinaryWriter BeginMessage(int msgId)
     {
+        Clear();
         _writer.Write(msgId);
         return _writer;
     }
@@ -166,20 +189,32 @@ public class UNetHost
 
     void EndMessageBroadcastExceptPlayer(bool reliable, int except)
     {
-        var exceptConnId = _playerId2connId[except];
-        foreach (var connId in m_Connections)
+        try
         {
-            if (exceptConnId != connId)
+            var exceptConnId = _playerId2connId[except];
+            foreach (var connId in m_Connections)
             {
-                SendDataNoClear(connId, reliable);
+                if (exceptConnId != connId)
+                {
+                    SendDataNoClear(connId, reliable);
+                }
             }
         }
-        Clear();
+        finally
+        {
+            Clear();
+        }
     }
 
     void SendDataNoClear(NetworkConnection connId, bool reliable)
     {
-        m_Driver.BeginSend(reliable ? reliablePipeline : unreliablePipeline, connId, out var writer);
+        if (connId == default(NetworkConnection)) return;
+        int status = m_Driver.BeginSend(reliable ? reliablePipeline : unreliablePipeline, connId, out var writer);
+        if (status < 0)
+        {
+            UNetPipelines.Check(status, (int)_writerStream.Position);
+            return;
+        }
         unsafe
         {
             fixed (byte* pointerToFirst = _sendBuffer)
@@ -194,8 +229,14 @@ public class UNetHost
 
     void SendDataAndClear(NetworkConnection connId, bool reliable)
     {
-        SendDataNoClear(connId, reliable);
-        Clear();
+        try
+        {
+            SendDataNoClear(connId, reliable);
+        }
+        finally
+        {
+            Clear();
+        }
     }
 
     public void BroadcastCustomMessageReliable<TMsg>(TMsg msg, int receiverId)
@@ -208,15 +249,23 @@ public class UNetHost
         where TMsg : INetMessage
     {
         Assert.IsTrue(_initialized, "Cannot broadcast before Initialize()");
+        if (m_Connections.Length == 0) return;
 
-        _writer.Write(msg.MessageId);
-        _writer.Write(receiverId);
-        msg.Sync(_serializer);
-        foreach (var connId in m_Connections)
-        {
-            SendDataNoClear(connId, reliable);
-        }
         Clear();
+        try
+        {
+            _writer.Write(msg.MessageId);
+            _writer.Write(receiverId);
+            msg.Sync(_serializer);
+            foreach (var connId in m_Connections)
+            {
+                SendDataNoClear(connId, reliable);
+            }
+        }
+        finally
+        {
+            Clear();
+        }
     }
 
     public void BroadcastReliable<TMsg>(TMsg msg)
@@ -229,14 +278,22 @@ public class UNetHost
         where TMsg : INetMessage
     {
         Assert.IsTrue(_initialized, "Cannot broadcast before Initialize()");
+        if (m_Connections.Length == 0) return;
 
-        _writer.Write(msg.MessageId);
-        msg.Sync(_serializer);
-        foreach (var connId in m_Connections)
-        {
-            SendDataNoClear(connId, reliable);
-        }
         Clear();
+        try
+        {
+            _writer.Write(msg.MessageId);
+            msg.Sync(_serializer);
+            foreach (var connId in m_Connections)
+            {
+                SendDataNoClear(connId, reliable);
+            }
+        }
+        finally
+        {
+            Clear();
+        }
     }
 
     public void SendReliableToPlayer<TMsg>(TMsg msg, int player)
@@ -250,8 +307,16 @@ public class UNetHost
     {
         Assert.IsTrue(_initialized, "Cannot send before Initialize()");
 
-        _writer.Write(msg.MessageId);
-        msg.Sync(_serializer);
-        SendDataAndClear(_playerId2connId[player], reliable);
+        Clear();
+        try
+        {
+            _writer.Write(msg.MessageId);
+            msg.Sync(_serializer);
+            SendDataNoClear(_playerId2connId[player], reliable);
+        }
+        finally
+        {
+            Clear();
+        }
     }
 }

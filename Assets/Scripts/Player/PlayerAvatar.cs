@@ -266,7 +266,7 @@ public class PlayerAvatar : MonoBehaviour
         {
             if (instance != null)
             {
-                GameObject.Destroy(instance);
+                GameObject.Destroy(instance.gameObject);
             }
             instance = GameObject.Instantiate(prefab, parent);
             instance.transform.localPosition = default;
@@ -354,6 +354,9 @@ public class PlayerAvatar : MonoBehaviour
 
     internal void SetBreakLights(bool breaking)
     {
-        stopLights.SetActive(breaking);
+        if (stopLights != null)
+        {
+            stopLights.SetActive(breaking);
+        }
     }
 }

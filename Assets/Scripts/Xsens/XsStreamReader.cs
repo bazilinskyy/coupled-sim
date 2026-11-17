@@ -96,35 +96,37 @@ namespace xsens
             }
 
             // Make a thread to read from the connection with MVN studio
-            connectionThread = new Thread(new ThreadStart(read));
+            connectionThread = new Thread(new ThreadStart(read)) { IsBackground = true };
             connectionThread.Start();
         }
 
+        void OnDestroy() => StopReader();
 
         /// <summary>
         /// Raises the application quit event.
         /// </summary>
-        void OnApplicationQuit()
+        void OnApplicationQuit() => StopReader();
+
+        void StopReader()
         {
             try
             {
-                // shutdown 'the friendly' way
                 stopListening = true;
-                Debug.LogError("stopping");
-                if (!connectionThread.Join(2000))
+                if (udpClient != null)
                 {
-                    // shutdown Schwarzenegger style
-                    connectionThread.Abort();
-                    if (udpClient != null)
-                    {
-                        udpClient.Close();
-                        udpClient = null;
-                    }
+                    udpClient.Close();
+                    udpClient = null;
                 }
-
-                for (int i = 0; i < NUM_STREAMS; ++i)
+                if (connectionThread != null && connectionThread.IsAlive)
                 {
-                    poseActors[i].killThread();
+                    connectionThread.Join(500);
+                }
+                if (poseActors != null)
+                {
+                    for (int i = 0; i < NUM_STREAMS; ++i)
+                    {
+                        poseActors[i]?.killThread();
+                    }
                 }
             }
             catch
@@ -148,15 +150,17 @@ namespace xsens
                 while (!stopListening)
                 {
                     byte[] receiveBytes = udpClient.Receive(ref groupEP);
+                    if (receiveBytes == null || receiveBytes.Length < 6) continue;
 
                     string result = "";
                     result += (char)(receiveBytes[4]);
                     result += (char)(receiveBytes[5]);
-                    StreamingProtocol packId = (StreamingProtocol)Int32.Parse(result);
+                    if (!Int32.TryParse(result, out int parsedId)) continue;
+                    StreamingProtocol packId = (StreamingProtocol)parsedId;
 
                     if (packId == StreamingProtocol.SPPoseQuaternion)
                     {
-                        if (receiveBytes.Length > 15)
+                        if (receiveBytes.Length > 16)
                         {
                             int streamID = receiveBytes[16];
                             if (streamID >= 0 && streamID < NUM_STREAMS)
@@ -182,7 +186,7 @@ namespace xsens
             }
             finally
             {
-                udpClient.Close();
+                udpClient?.Close();
                 udpClient = null;
             }
         }

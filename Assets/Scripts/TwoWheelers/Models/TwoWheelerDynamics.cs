@@ -166,6 +166,11 @@ namespace CoupledSim.TwoWheelers
         /// <summary>Advances the state by dt seconds. slope: road gradient (rad), positive uphill.</summary>
         public static TwoWheelerState Step(TwoWheelerState s, in TwoWheelerParameters p, TwoWheelerInput input, float dt, float slope = 0f)
         {
+            if (dt <= 0f)
+            {
+                s.Acceleration = 0f;
+                return s;
+            }
             float v = s.Speed;
             float force = DriveForce(p, v, input.Drive) - ResistanceForce(p, v, slope);
             float a = force / p.Mass - Math.Clamp(input.Brake, 0f, 1f) * p.MaxBraking;

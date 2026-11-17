@@ -46,7 +46,14 @@ public partial class OsmMapGenerator
     }
 
     /// <summary>+1 one-way along the way, -1 against it, 0 both ways.</summary>
-    static int OneWayDir(OsmWay w) => w.Tag("oneway") == "-1" ? -1 : IsOneWay(w) ? 1 : 0;
+    static int OneWayDir(OsmWay w)
+    {
+        var ow = w.Tag("oneway");
+        if (ow == "-1" || ow == "reverse") return -1;
+        if (ow == "no" || ow == "0" || ow == "false") return 0;
+        if (ow == "yes" || ow == "1" || ow == "true" || (w.Tag("highway") ?? "").StartsWith("motorway") || w.Tag("junction") == "roundabout") return 1;
+        return 0;
+    }
 
     void PlaceTrafficSignals(Transform root, List<(OsmWay way, List<V2> line, float width)> roadWays, Material marking)
     {
@@ -101,7 +108,7 @@ public partial class OsmMapGenerator
                     // the stop line: before the junction's crossing roads, else at the signal
                     float back = junction ? JunctionWidth(s) / 2f + 2f : 1f;
                     var stop = Walk(pts, i, from, back, out var t);
-                    heads.Add(new Head { Stop = stop, Travel = t, Width = width, OneWay = ow != 0, Node = s, TurnLane = HasTurnLane(w, ow != 0 ? "" : from < 0 ? ":forward" : ":backward") });
+                    heads.Add(new Head { Stop = stop, Travel = t, Width = width, OneWay = ow != 0, Node = s, TurnLane = HasTurnLane(w, from < 0 ? ":forward" : ":backward", ow != 0) });
                 }
             }
         }
@@ -252,11 +259,11 @@ public partial class OsmMapGenerator
 
     /// <summary>Whether turn:lanes (of a direction) has a lane only for turning across the oncoming traffic
     /// (lanes are listed from the left; values like left, slight_left, left;through).</summary>
-    bool HasTurnLane(OsmWay w, string direction)
+    public static bool HasTurnLane(OsmWay w, string direction, bool oneWay, bool leftHandTraffic)
     {
-        var v = w.Tag("turn:lanes" + direction);
+        var v = w.Tag("turn:lanes" + direction) ?? (oneWay ? w.Tag("turn:lanes") : null);
         if (string.IsNullOrEmpty(v)) return false;
-        string across = _map.LeftHandTraffic ? "right" : "left";
+        string across = leftHandTraffic ? "right" : "left";
         foreach (var lane in v.Split('|'))
         {
             var turns = lane.Split(';');
@@ -264,6 +271,8 @@ public partial class OsmMapGenerator
         }
         return false;
     }
+
+    bool HasTurnLane(OsmWay w, string direction, bool oneWay = false) => HasTurnLane(w, direction, oneWay, _map.LeftHandTraffic);
 
     static Texture2D _arrowMask;
     static Material _arrowMaskMat, _housingMat;

@@ -24,6 +24,7 @@ public class AutoQuality : MonoBehaviour
         SceneManager.sceneLoaded += (s, m) =>
         {
             if (_done || s.name == "StartScene") return;
+            _done = true;
             var go = new GameObject("Auto quality");
             DontDestroyOnLoad(go);
             go.AddComponent<AutoQuality>();
