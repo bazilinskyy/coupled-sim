@@ -52,7 +52,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
     /// <summary>Clients: only the autopilot of their own participant (-autopilot; the host runs the traffic).</summary>
     public static void EnsureLocalAutopilot()
     {
-        if (OsmMap.Current == null || Current != null || Array.IndexOf(Environment.GetCommandLineArgs(), "-autopilot") < 0) return;
+        if (OsmMap.Current == null || Current != null || Array.IndexOf(CommandLine.Args, "-autopilot") < 0) return;
         var t = new GameObject("Map routes (autopilot)").AddComponent<MapTraffic>();
         t.ApplyCommandLine();
         t.CarsPerKm = 0f; t._forced = false;
@@ -64,7 +64,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
 
     void ApplyCommandLine()
     {
-        var args = Environment.GetCommandLineArgs();
+        var args = CommandLine.Args;
         var ci = CultureInfo.InvariantCulture;
         int i = Array.IndexOf(args, "-mapTraffic");
         if (i >= 0) { _forced = true; if (i + 1 < args.Length && float.TryParse(args[i + 1], NumberStyles.Float, ci, out var d)) CarsPerKm = d; }
@@ -359,7 +359,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
     /// has one), never the pavement, 1 m clear of parked cars. The offsets are smoothed (a median over 7 points, then an average over 3), so short
     /// gaps (junctions, driveways, parked vehicles) do not make the line jump.
     /// </summary>
-    public static bool DebugRide = Array.IndexOf(Environment.GetCommandLineArgs(), "-debugRide") >= 0;
+    public static bool DebugRide = Array.IndexOf(CommandLine.Args, "-debugRide") >= 0;
 
     static List<Vector3> RideLine(WaypointCircuit route, float from, float to, float step, bool lht, bool preferCycle)
     {

@@ -77,7 +77,7 @@ namespace CoupledSim.Vehicles
             {
                 if (_overrideRead) return _override;
                 _overrideRead = true;
-                var args = Environment.GetCommandLineArgs();
+                var args = CommandLine.Args;
                 int i = Array.IndexOf(args, "-roadSurface");
                 if (i >= 0 && i + 1 < args.Length) _override = FromName(args[i + 1]);
                 return _override;

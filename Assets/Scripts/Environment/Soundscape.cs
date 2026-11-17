@@ -105,7 +105,7 @@ public class Soundscape : MonoBehaviour, IExperimentModifier
 
     void ApplyCommandLine()
     {
-        var args = System.Environment.GetCommandLineArgs();
+        var args = CommandLine.Args;
         var ci = CultureInfo.InvariantCulture;
         for (int i = 0; i + 1 < args.Length; i++)
         {

@@ -22,7 +22,7 @@ public static class LlmClient
 
     static string Arg(string name)
     {
-        var a = Environment.GetCommandLineArgs();
+        var a = CommandLine.Args;
         int i = Array.IndexOf(a, name);
         return i >= 0 && i + 1 < a.Length ? a[i + 1] : null;
     }

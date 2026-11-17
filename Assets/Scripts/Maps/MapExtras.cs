@@ -25,7 +25,7 @@ public static class MapExtras
     public static string PathFor(string map, string layer) => Path.Combine(Application.streamingAssetsPath, "Maps", $"{map}.{layer}.csv");
 
     /// <summary><c>-noRealData</c>: build maps from OpenStreetMap alone (comparisons).</summary>
-    public static bool Disabled => Array.IndexOf(Environment.GetCommandLineArgs(), "-noRealData") >= 0;
+    public static bool Disabled => Array.IndexOf(CommandLine.Args, "-noRealData") >= 0;
 
     /// <summary>The records of a layer, or null when the map has none. Credit: the file's first line.</summary>
     public static List<Record> Load(string map, string layer, GeoProjection proj, out string credit)

@@ -34,7 +34,7 @@ public static class Haptics
     {
         if (_init) return;
         _init = true;
-        var args = Environment.GetCommandLineArgs();
+        var args = CommandLine.Args;
         for (int i = 0; i + 1 < args.Length; i++)
             if (args[i] == "-hapticsUdp")
                 foreach (var t in args[i + 1].Split(','))

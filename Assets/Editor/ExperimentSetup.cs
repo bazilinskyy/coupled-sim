@@ -584,7 +584,7 @@ public class ExperimentSetupWindow : EditorWindow
             if (GUILayout.Button("…", GUILayout.Width(28)))
             {
                 var dir = Path.Combine(Application.streamingAssetsPath, "Trials");
-                var p = EditorUtility.OpenFilePanel("Trial file", Directory.Exists(dir) ? dir : Application.streamingAssetsPath, "csv,json");
+                var p = EditorUtility.OpenFilePanel("Trial file", Directory.Exists(dir) ? dir : Application.streamingAssetsPath, "csv,json,yaml,yml");
                 if (!string.IsNullOrEmpty(p))
                 {
                     var trialsDir = Path.GetFullPath(dir) + Path.DirectorySeparatorChar;

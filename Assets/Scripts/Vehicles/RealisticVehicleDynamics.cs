@@ -60,10 +60,10 @@ public class RealisticVehicleDynamics : MonoBehaviour
 
     void Awake()
     {
-        if (System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-magicFormulaTyres") >= 0) UseMagicFormula = true;
+        if (System.Array.IndexOf(CommandLine.Args, "-magicFormulaTyres") >= 0) UseMagicFormula = true;
         Spec = SpecOf(Car);
         // -carSpec suv|estate|van|bus|truck|hatchback|smart: another vehicle's physics on this car
-        var args = System.Environment.GetCommandLineArgs();
+        var args = CommandLine.Args;
         int ci = System.Array.IndexOf(args, "-carSpec");
         if (ci >= 0 && ci + 1 < args.Length && CarSpec.ByName(args[ci + 1]) is CarSpec forced) Spec = forced;
         Powertrain = new Powertrain(Spec);
