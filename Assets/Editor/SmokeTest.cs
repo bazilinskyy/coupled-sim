@@ -582,6 +582,7 @@ public static class SmokeTest
             if (cam.targetTexture == null) SaveCamera(cam, path, 1280, 720);
             else
             {
+                if (PlanarWaterReflection.Instance != null) PlanarWaterReflection.Instance.RenderFor(cam);
                 cam.Render();
                 var old = RenderTexture.active; RenderTexture.active = cam.targetTexture;
                 var tex = new Texture2D(cam.targetTexture.width, cam.targetTexture.height, TextureFormat.RGB24, false);
@@ -607,10 +608,12 @@ public static class SmokeTest
             viewCam.targetTexture = rt;
             double Bench()
             {
+                if (PlanarWaterReflection.Instance != null) PlanarWaterReflection.Instance.RenderFor(viewCam);
                 viewCam.Render();
                 var sw = System.Diagnostics.Stopwatch.StartNew();
                 for (int i = 0; i < 20; i++)
                 {
+                    if (PlanarWaterReflection.Instance != null) PlanarWaterReflection.Instance.RenderFor(viewCam);
                     viewCam.Render();
                     var old = RenderTexture.active; RenderTexture.active = rt;
                     tex.ReadPixels(new Rect(0, 0, 8, 8), 0, 0);
@@ -697,6 +700,7 @@ public static class SmokeTest
         var rt = new RenderTexture(w, h, 24, RenderTextureFormat.ARGB32);
         var prev = cam.targetTexture;
         cam.targetTexture = rt;
+        if (PlanarWaterReflection.Instance != null) PlanarWaterReflection.Instance.RenderFor(cam);
         cam.Render();
         cam.targetTexture = prev;
         var old = RenderTexture.active;

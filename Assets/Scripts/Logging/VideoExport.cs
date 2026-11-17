@@ -162,6 +162,7 @@ public class VideoExport : MonoBehaviour
                         gc.backgroundColor = Color.black;
                         // (the participant's own figure hidden: from the eyes one would see the inside of the head)
                         var hidden = used ? HideFigure(people[g]) : null;
+                        if (PlanarWaterReflection.Instance != null && used) PlanarWaterReflection.Instance.RenderFor(gc);
                         gc.Render();
                         if (hidden != null) foreach (var r in hidden) if (r != null) r.enabled = true;
                         RenderTexture.active = gc.targetTexture;
@@ -172,7 +173,10 @@ public class VideoExport : MonoBehaviour
                 else
                 {
                     Place(s);
+                    var cleared = ClearView(s);
+                    if (PlanarWaterReflection.Instance != null) PlanarWaterReflection.Instance.RenderFor(s.Cam);
                     s.Cam.Render();
+                    foreach (var (r, mode) in cleared) if (r != null) r.shadowCastingMode = mode;
                     RenderTexture.active = s.Cam.targetTexture;
                     _tex.ReadPixels(new Rect(0, 0, Size.x, Size.y), 0, 0, false);
                 }
@@ -310,6 +314,51 @@ public class VideoExport : MonoBehaviour
             : p.transform.position + Vector3.up * 1.6f;
         rot = Quaternion.Euler(4f, p.transform.eulerAngles.y, 0f);
         return true;
+    }
+
+    // the small things a following camera would see from inside or that stand right in front of it (a tree's crown over
+    // the street, a pole, a signal head, a bike rack): drawn as their shadows only while it renders, as a film crew
+    // would have framed the shot past them
+    Renderer[] _small;
+    readonly List<(Renderer r, UnityEngine.Rendering.ShadowCastingMode mode)> _cleared = new List<(Renderer, UnityEngine.Rendering.ShadowCastingMode)>();
+
+    List<(Renderer r, UnityEngine.Rendering.ShadowCastingMode mode)> ClearView(Shot s)
+    {
+        _cleared.Clear();
+        var spec = s.Spec.ToLowerInvariant();
+        if (!(spec == "chase" || spec == "front" || spec.StartsWith("rel:"))) return _cleared;
+        var ps = NetworkingManager.Instance != null ? NetworkingManager.Instance.PlayerSystem : null;
+        var me = ps != null ? ps.LocalPlayer : null;
+        if (me == null) return _cleared;
+        if (_small == null)
+        {
+            var all = FindObjectsByType<Renderer>(FindObjectsInactive.Exclude);
+            var list = new List<Renderer>();
+            foreach (var r in all)
+            {
+                if (r == null || r is ParticleSystemRenderer || r.transform.IsChildOf(me.transform)) continue;
+                var b = r.bounds;
+                if (Mathf.Max(b.size.x, Mathf.Max(b.size.y, b.size.z)) > 25f) continue;   // (combined meshes, buildings)
+                list.Add(r);
+            }
+            _small = list.ToArray();
+        }
+        var cam = s.Cam.transform.position;
+        var focus = me.transform.position + Vector3.up * 1.2f;
+        var dir = focus - cam; float len = dir.magnitude;
+        var ray = new Ray(cam, len > 1e-3f ? dir / len : Vector3.forward);
+        float near = Mathf.Min(len - 1.5f, 5f);
+        foreach (var r in _small)
+        {
+            if (r == null || !r.enabled || r.shadowCastingMode == UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly) continue;
+            var b = r.bounds; b.Expand(0.6f);
+            if (b.Contains(cam) || (b.IntersectRay(ray, out var d) && d < near))
+            {
+                _cleared.Add((r, r.shadowCastingMode));
+                r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly;
+            }
+        }
+        return _cleared;
     }
 
     void Place(Shot s)

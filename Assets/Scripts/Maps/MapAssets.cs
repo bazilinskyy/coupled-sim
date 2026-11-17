@@ -12,12 +12,21 @@ public class MapAssets : ScriptableObject
     public Material DetailTemplate;
     /// <summary>URP Lit with normal, parallax and emission maps: façade materials copy its shader variant (kept in builds).</summary>
     public Material FacadeTemplate;
+    /// <summary>The water's material (CoupledSim/Water): the map's water copies it (and the shader is kept in builds).</summary>
+    public Material WaterTemplate;
     [Header("Photo textures of walls (CC0, ambientCG), as detail maps on the façades")]
     [Tooltip("In the order of the wall kinds: red brick, dark brick, yellow brick, plaster, concrete. Each scaled to a mean of mid grey: the wall's colour stays, the photo adds bricks, mortar and stains.")]
     public Texture2D[] WallDetail;
     public Texture2D[] WallNormal;
     [Tooltip("Metres of wall one texture covers (width, height).")]
     public Vector2[] WallDetailSize;
+    [Header("Photo textures of the streets' surfaces (CC0, Poly Haven) and the lawn")]
+    [Tooltip("Names: asphalt, asphalt_light, cycle_red, bricks, parking, paving, cobbles, gravel, lawn (MapSetup.AddGroundTextures).")]
+    public string[] GroundNames;
+    public Texture2D[] GroundColour;
+    public Texture2D[] GroundNormal;
+    [Tooltip("Metres of ground one texture covers.")]
+    public float[] GroundSize;
     public GameObject StreetLamp;
     public GameObject[] Trees;
     [Header("Street furniture and parked vehicles (MapPropBuilder)")]

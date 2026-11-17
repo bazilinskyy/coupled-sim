@@ -292,7 +292,7 @@ public sealed class TerrainHeight
                         v[i] = w2l.MultiplyPoint3x4(w);
                     }
                     m.vertices = v;
-                    m.RecalculateNormals();
+                    if (t.name != "Grass blades") m.RecalculateNormals();   // (the blades keep their upward normals: lit as the lawn under them)
                     m.RecalculateBounds();
                     var mc = t.GetComponent<MeshCollider>();
                     if (mc != null) { mc.sharedMesh = null; mc.sharedMesh = m; }

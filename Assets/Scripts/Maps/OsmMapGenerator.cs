@@ -554,9 +554,11 @@ public partial class OsmMapGenerator
             for (int i = 0; i < left.Count - 1; i++)
             {
                 float seg = V2.Distance((left[i] + right[i]) / 2, (left[i + 1] + right[i + 1]) / 2);
+                // (across in metres too: a texture keeps its proportions on wide and narrow strips)
+                float w0 = V2.Distance(left[i], right[i]) / uvScale, w1 = V2.Distance(left[i + 1], right[i + 1]) / uvScale;
                 Quad(P(left[i], y), P(left[i + 1], y), P(right[i + 1], y), P(right[i], y),
                     new Vector2(0, along / uvScale), new Vector2(0, (along + seg) / uvScale),
-                    new Vector2(1, (along + seg) / uvScale), new Vector2(1, along / uvScale));
+                    new Vector2(w1, (along + seg) / uvScale), new Vector2(w0, along / uvScale));
                 along += seg;
             }
         }
@@ -792,6 +794,8 @@ public partial class OsmMapGenerator
 
     // ------------------------------------------------------------------ build
 
+    readonly List<MeshBuilder> _grassMeshes = new List<MeshBuilder>();
+
     public void Build(Transform root)
     {
         var world = new GameObject("World").transform;
@@ -828,6 +832,21 @@ public partial class OsmMapGenerator
         var grass = Mat("Grass", Color.white, 0.05f, Tex("grass", 256, (x, y, r) => Noise(new Color(0.28f, 0.42f, 0.2f), r, 0.4f)));
         var water = Mat("Water", new Color(0.12f, 0.2f, 0.22f), 0.95f);
         var roof = Mat("Roof", new Color(0.27f, 0.27f, 0.28f), 0.2f);
+        // the topography's parking bays and asphalt footways: their own surfaces
+        var parking = Mat("Parking paving", Color.white, 0.12f, bricks.GetTexture("_BaseMap") as Texture2D);
+        var footAsphalt = Mat("Asphalt footway", Color.white, 0.2f, asphalt.GetTexture("_BaseMap") as Texture2D);
+        // photo textures of the real surfaces (Poly Haven, CC0) and the lawn, each at its real size (the meshes' UVs: 4 m
+        // for asphalt, cycle paths and grass, 1.5 m for paving, bricks, cobbles and gravel); -noPhotoTextures: the drawn ones
+        if (!_noPhotoWalls && !_noRelief && _assets != null && _assets.FacadeTemplate != null && _assets.GroundNames != null)
+        {
+            // (tints, in linear light: each photo's mean colour brought to that of the real surface in daylight photos)
+            GroundPhoto(asphalt, "asphalt", 4f, new Color(0.78f, 0.78f, 0.85f)); GroundPhoto(footAsphalt, "asphalt_light", 4f, new Color(0.55f, 0.55f, 0.56f));
+            GroundPhoto(red, "cycle_red", 4f, Color.white);
+            GroundPhoto(bricks, "bricks", 1.5f, new Color(1.45f, 1.0f, 1.0f)); GroundPhoto(parking, "parking", 1.5f, new Color(1.75f, 1.8f, 1.9f));
+            GroundPhoto(paving, "paving", 1.5f, new Color(0.98f, 1.05f, 1.15f));
+            GroundPhoto(cobbles, "cobbles", 1.5f, new Color(0.56f, 0.56f, 0.58f)); GroundPhoto(gravel, "gravel", 1.5f, new Color(0.68f, 0.66f, 0.62f));
+            GroundPhoto(grass, "lawn", 4f, new Color(1.05f, 0.95f, 1.1f));
+        }
         // façades: wall kinds (red, dark and yellow brick, plaster, concrete) × window styles, made when first used
         var wallKinds = new (string name, Color wall, Color frame, bool brick)[]
         {
@@ -1061,6 +1080,7 @@ public partial class OsmMapGenerator
             green.Polygon(poly, 0.006f, 4f, Terrain != null ? 8f : 0f);   // just above the ground, under the paths and roads through parks
         }
         Emit(world, "Green areas", green, grass, true);
+        _grassMeshes.Add(green);
         var quays = new MeshBuilder(); var copings = new MeshBuilder(); var edges = new MeshBuilder();
         // where a way (road, path, bridge) crosses the water's edge (onto a bridge or a ford), by 4 m cell: the quay's
         // invisible kerb has a gap there
@@ -1092,6 +1112,7 @@ public partial class OsmMapGenerator
             Quay(poly, quays, copings, edges, crossings, waterIndex);
         }
         var waterGo = Emit(world, "Water", waterMb, WaterMaterial(water), true);
+        if (waterGo != null && waterGo.GetComponent<MeshRenderer>().sharedMaterial.shader.name == "CoupledSim/Water") waterGo.AddComponent<PlanarWaterReflection>();
         if (waterGo != null) waterGo.AddComponent<WaterRipples>();
         Emit(world, "Quay walls", quays, Mat("Quay wall", Color.white, 0.1f, Tex("quay_bricks", 256, (x, y, r) =>
         {
@@ -1114,7 +1135,7 @@ public partial class OsmMapGenerator
             var kinds = new Dictionary<string, (string name, Material mat)>
             {
                 ["road"] = ("BGT roads", asphalt), ["road_bricks"] = ("BGT roads bricks", bricks), ["footway"] = ("BGT pavements", paving),
-                ["footway_asphalt"] = ("BGT pavements asphalt", asphalt), ["parking"] = ("BGT parking bricks", bricks), ["cycleway"] = ("BGT cycle paths", red),
+                ["footway_asphalt"] = ("BGT pavements asphalt", footAsphalt), ["parking"] = ("BGT parking bricks", parking), ["cycleway"] = ("BGT cycle paths", red),
                 ["grass"] = ("BGT green areas", grass), ["gravel"] = ("BGT gravel", gravel),
             };
             var builders = kinds.Keys.ToDictionary(k => k, _ => new MeshBuilder());
@@ -1133,12 +1154,18 @@ public partial class OsmMapGenerator
                     if (!waterIndex.Inside(c) && !poly.Any(waterIndex.Inside)) continue;
                 }
                 float uvs = kind == "grass" ? 4f : kind == "road" || kind == "footway_asphalt" ? 4f : kind == "cycleway" ? 4f : 1.5f;
-                mb.Polygon(poly, at >= 0 ? 0.016f : 0.012f, uvs, Terrain != null ? 8f : 0f);
+                // green and gravel at the ground's level never over a canal or pond (the topography's verges and banks
+                // reach over the water's edge; at the street's height they hung over the water as slabs)
+                bool offWater = at < 0 && (kind == "grass" || kind == "gravel") && poly.Any(waterIndex.Inside);
+                var into = offWater ? new MeshBuilder() : mb;
+                into.Polygon(poly, at >= 0 ? 0.016f : 0.012f, uvs, Terrain != null ? 8f : 0f);
                 // a 16 cm band under its outline: neighbours' curves are stroked separately, and the slivers between
                 // them (a few cm) showed the grass underneath as cracks across the road
-                if (at < 0) mb.OutlineBand(poly, 0.16f, 0.009f, uvs, Terrain != null ? 8f : 0f);
+                if (at < 0) into.OutlineBand(poly, 0.16f, 0.009f, uvs, Terrain != null ? 8f : 0f);
+                if (offWater) AppendOffWater(mb, into, waterIndex);
             }
             foreach (var kv in kinds) if (builders[kv.Key].V.Count > 0) Emit(world, kv.Value.name, builders[kv.Key], kv.Value.mat, true);
+            _grassMeshes.Add(builders["grass"]);
             RealDataCredits.Add($"{surfaces.Count} surfaces: {surfaceCredit}");
         }
 
@@ -1315,7 +1342,7 @@ public partial class OsmMapGenerator
                     {
                         if ((sw == "left" && side > 0) || (sw == "right" && side < 0)) continue;
                         Geometry2D.Strip(piece, 2.0f, side * (width / 2 + 1.0f), left, right);
-                        walks.Strip(left, right, PavementHeight, 2f);
+                        walks.Strip(left, right, PavementHeight, 1.5f);
                         kerbs.Wall(side < 0 ? right : left, 0.02f, PavementHeight, side < 0);
                         // kerb at both ends of the piece too
                         kerbs.Wall(new List<V2> { left[0], right[0] }, 0.02f, PavementHeight, side > 0);
@@ -1350,7 +1377,7 @@ public partial class OsmMapGenerator
                     foreach (var part in bi == 0 && lift == 0f && hw != "pedestrian" ? OffRoads(line) : new List<List<V2>> { line })
                     {
                         Geometry2D.Strip(part, hw == "pedestrian" ? 4f : 1.8f, 0, left, right);
-                        walks.Strip(left, right, 0.05f + lift, 2f);
+                        walks.Strip(left, right, 0.05f + lift, 1.5f);
                     }
                 Pavements.Add(line.Select(p => P(p, 0.05f + lift)).ToList());
                 if (crossing) CrossingLines.Add(Pavements[Pavements.Count - 1]);
@@ -1660,6 +1687,14 @@ public partial class OsmMapGenerator
         MarkPavedOverRoads();
         PavementsOntoTopography();
         RemoveBlockedParkedCars();
+        // grass blades where grass is on top (not where a road, path, building or tree stands on the green area)
+        Physics.SyncTransforms();
+        EmitGrassBlades(world, _grassMeshes, q =>
+        {
+            if (!Physics.Raycast(new Vector3(q.X, 20f, q.Y), Vector3.down, out var hit, 40f, ~0, QueryTriggerInteraction.Ignore)) return true;
+            var n = hit.collider.name;
+            return !(n == "Green areas" || n == "BGT green areas");
+        });
     }
 
     /// <summary>
@@ -1996,17 +2031,43 @@ public partial class OsmMapGenerator
         }
     }
 
+    /// <summary>A photo texture of a surface (MapAssets.GroundColour/GroundNormal) on a ground material whose meshes have
+    /// <paramref name="uvMetres"/> metres per UV unit.</summary>
+    void GroundPhoto(Material m, string name, float uvMetres, Color tint)
+    {
+        int i = Array.IndexOf(_assets.GroundNames, name);
+        if (i < 0 || _assets.GroundColour == null || i >= _assets.GroundColour.Length || _assets.GroundColour[i] == null) return;
+        m.shader = _assets.FacadeTemplate.shader;
+        m.SetTexture("_BaseMap", _assets.GroundColour[i]);
+        m.SetColor("_BaseColor", tint);
+        if (_assets.GroundNormal != null && i < _assets.GroundNormal.Length && _assets.GroundNormal[i] != null)
+        {
+            m.SetTexture("_BumpMap", _assets.GroundNormal[i]); m.SetFloat("_BumpScale", 1f); m.EnableKeyword("_NORMALMAP");
+        }
+        float size = _assets.GroundSize != null && i < _assets.GroundSize.Length && _assets.GroundSize[i] > 0f ? _assets.GroundSize[i] : 2f;
+        m.SetTextureScale("_BaseMap", Vector2.one * (uvMetres / size));
+    }
+
     Material WaterMaterial(Material plain)
     {
         if (_assets == null || _assets.FacadeTemplate == null || _noRelief) return plain;
-        var m = Mat("Water rippled", new Color(0.07f, 0.11f, 0.1f), 0.93f);
-        if (m.shader == _assets.FacadeTemplate.shader) return m;
-        // small wind ripples (a sum of waves that repeat every 2.5 m), moved by WaterRipples
+        if (_mats.TryGetValue("Water rippled", out var made)) return made;
+        // small wind ripples (a sum of waves that repeat every 2.5 m)
         var (nrm, hgt, occ) = Relief("water ripples", 256, 256, 2.5f / 256f, (x, y) =>
         {
             float u = x / 256f * 2f * Mathf.PI, v = y / 256f * 2f * Mathf.PI;
             return 0.008f * (Mathf.Sin(3 * u + 1 * v) + 0.7f * Mathf.Sin(5 * u - 4 * v + 1.3f) + 0.5f * Mathf.Sin(-2 * u + 7 * v + 2.1f) + 0.35f * Mathf.Sin(11 * u + 6 * v + 0.4f) + 0.25f * Mathf.Sin(-9 * u + 13 * v + 2.7f));
         });
+        // the water shader (CoupledSim/Water): a murky body, the ripples moving with the wind, the scene's mirror image
+        // (PlanarWaterReflection) by Fresnel, the sun's glint
+        if (_assets.WaterTemplate != null)
+        {
+            var w = new Material(_assets.WaterTemplate) { name = "Water rippled" };
+            w.SetTexture("_BumpMap", nrm);
+            _mats["Water rippled"] = w;
+            return w;
+        }
+        var m = Mat("Water rippled", new Color(0.07f, 0.11f, 0.1f), 0.93f);
         m.shader = _assets.FacadeTemplate.shader;
         m.SetColor("_BaseColor", new Color(0.07f, 0.11f, 0.1f));
         m.SetFloat("_Smoothness", 0.93f);
@@ -2016,6 +2077,40 @@ public partial class OsmMapGenerator
         m.SetTextureScale("_BaseMap", Vector2.one * 4f);   // (URP's maps share the base map's tiling: 2.5 m on the water's 10 m UVs)
         m.SetColor("_EmissionColor", Color.black); m.EnableKeyword("_EMISSION");
         return m;
+    }
+
+    /// <summary>Adds <paramref name="src"/>'s triangles to <paramref name="dst"/>, without the parts over water (split
+    /// down to 1.5 m, each piece kept where its centre is dry).</summary>
+    static void AppendOffWater(MeshBuilder dst, MeshBuilder src, WaterIndex water)
+    {
+        void Tri(Vector3 a, Vector3 b, Vector3 c, Vector2 ua, Vector2 ub, Vector2 uc, int depth)
+        {
+            float longest = Math.Max(Vector3.Distance(a, b), Math.Max(Vector3.Distance(b, c), Vector3.Distance(c, a)));
+            var centre = (a + b + c) / 3f;
+            if (longest > 1.5f && depth < 10)
+            {
+                // the whole triangle dry or wet (none of its corners and its centre near the other): no need to split
+                bool wa = water.Inside(new V2(a.x, a.z)), wb = water.Inside(new V2(b.x, b.z)), wc = water.Inside(new V2(c.x, c.z)), wm = water.Inside(new V2(centre.x, centre.z));
+                if (wa == wb && wb == wc && wc == wm && longest < 12f) { if (!wm) Add(a, b, c, ua, ub, uc); return; }
+                // split the longest edge
+                if (Vector3.Distance(a, b) >= longest - 1e-4f) { var m = (a + b) / 2f; var um = (ua + ub) / 2f; Tri(a, m, c, ua, um, uc, depth + 1); Tri(m, b, c, um, ub, uc, depth + 1); }
+                else if (Vector3.Distance(b, c) >= longest - 1e-4f) { var m = (b + c) / 2f; var um = (ub + uc) / 2f; Tri(a, b, m, ua, ub, um, depth + 1); Tri(a, m, c, ua, um, uc, depth + 1); }
+                else { var m = (c + a) / 2f; var um = (uc + ua) / 2f; Tri(a, b, m, ua, ub, um, depth + 1); Tri(m, b, c, um, ub, uc, depth + 1); }
+                return;
+            }
+            if (!water.Inside(new V2(centre.x, centre.z))) Add(a, b, c, ua, ub, uc);
+        }
+        void Add(Vector3 a, Vector3 b, Vector3 c, Vector2 ua, Vector2 ub, Vector2 uc)
+        {
+            int i = dst.V.Count;
+            dst.V.Add(a); dst.V.Add(b); dst.V.Add(c); dst.UV.Add(ua); dst.UV.Add(ub); dst.UV.Add(uc);
+            dst.T.Add(i); dst.T.Add(i + 1); dst.T.Add(i + 2);
+        }
+        for (int t = 0; t + 2 < src.T.Count; t += 3)
+        {
+            int i0 = src.T[t], i1 = src.T[t + 1], i2 = src.T[t + 2];
+            Tri(src.V[i0], src.V[i1], src.V[i2], src.UV[i0], src.UV[i1], src.UV[i2], 0);
+        }
     }
 
     /// <summary>The water outlines' edges by 10 m cell, for the ground's holes.</summary>
