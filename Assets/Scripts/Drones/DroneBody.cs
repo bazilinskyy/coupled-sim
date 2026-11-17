@@ -70,7 +70,9 @@ public static class DroneBody
         float a = p.ArmLength, s = a / 0.19f;   // 1 for the consumer drone
         var model = new GameObject("Drone model").transform;
         model.SetParent(root, false);
-        Part(PrimitiveType.Cube, "Body", model, new Vector3(0, 0.05f * s, 0), new Vector3(0.09f, 0.06f, 0.2f) * s, _body);
+        // a rounded shell (as a consumer drone's moulded body), a little wider at the back
+        Part(PrimitiveType.Sphere, "Body", model, new Vector3(0, 0.05f * s, 0), new Vector3(0.1f, 0.055f, 0.22f) * s, _body);
+        Part(PrimitiveType.Sphere, "Body rear", model, new Vector3(0, 0.055f * s, -0.045f * s), new Vector3(0.115f, 0.05f, 0.12f) * s, _body);
         Part(PrimitiveType.Cube, "Battery", model, new Vector3(0, 0.085f * s, -0.03f * s), new Vector3(0.07f, 0.025f, 0.12f) * s, _dark);
         // gimbal and camera under the nose
         Part(PrimitiveType.Sphere, "Gimbal", model, new Vector3(0, 0.015f * s, 0.11f * s), Vector3.one * 0.035f * s, _dark);
