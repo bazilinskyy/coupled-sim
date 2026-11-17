@@ -151,6 +151,8 @@ public class AICar : MonoBehaviour, IVehicle
     TrafficCar _trafficCar;
     WaypointProgressTracker _tracker;
     float _yawRate;
+    TwoWheelerController _twoWheeler;
+    bool _twoWheelerChecked;
 
     /// <summary>
     /// Steering of traffic driven by an external speed controller (TrafficCar: the map's traffic, the autopilot):
@@ -238,6 +240,9 @@ public class AICar : MonoBehaviour, IVehicle
             rotationAxis.rotation = Quaternion.Euler(_groundPitch, rotationAxis.rotation.eulerAngles.y, _groundRoll);
             SteerPursuit();
             FixedUpdateExternal();
+            // a two-wheeler of the traffic: wheels, cranks, handlebar and lean show its motion
+            if (_twoWheelerChecked == false) { _twoWheelerChecked = true; TryGetComponent(out _twoWheeler); }
+            if (_twoWheeler != null && !_twoWheeler.enabled) _twoWheeler.ShowMotion(ExternalSpeed, _yawRate, ExternalAcceleration, Time.fixedDeltaTime);
             return;
         }
 

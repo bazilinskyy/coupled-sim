@@ -21,6 +21,8 @@ public class PedestrianTrafficLight : MonoBehaviour
     protected MeshRenderer downRenderer;
     [SerializeField]
     protected MeshRenderer upRenderer;
+    /// <summary>The red lens (above) and the green one (below).</summary>
+    public MeshRenderer[] Lenses => new[] { upRenderer, downRenderer };
 
     public void TurnGreen()
     {

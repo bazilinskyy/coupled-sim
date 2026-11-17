@@ -21,6 +21,7 @@ public partial class OsmMapGenerator
     public TrafficLightsSystem Signals { get; private set; }
 
     static readonly bool _noSignals = Array.IndexOf(CommandLine.Args, "-noSignals") >= 0;
+    static readonly bool _debugSignals = Array.IndexOf(CommandLine.Args, "-debugTraffic") >= 0;
 
     // timing (s): green of the main and the crossing direction, amber, all-red; pedestrians blink before the end
     public const float MainGreen = 24f, SideGreen = 16f, Amber = 3f, AllRed = 2f, PedestrianBlink = 5f, TurnGreen = 7f;
@@ -108,6 +109,16 @@ public partial class OsmMapGenerator
                     // the stop line: before the junction's crossing roads, else at the signal
                     float back = junction ? JunctionWidth(s) / 2f + 2f : 1f;
                     var stop = Walk(pts, i, from, back, out var t);
+                    // and before a pedestrian crossing on the approach (at the signal, or between it and the junction):
+                    // its stripes run 2 m either side of its node, and the traffic waits in front of them, not on them
+                    var ids = w.NodeIds.Where(_pos.ContainsKey).ToList();
+                    for (int j = i; j >= 0 && j < ids.Count; j += from)
+                    {
+                        if (!_data.Nodes.TryGetValue(ids[j], out var cn) || cn.Tag("highway") != "crossing") continue;
+                        var cp = _pos[ids[j]];
+                        float along = V2.Dot(cp - stop, t);
+                        if (along > -2.5f && along < 25f && Math.Abs(Cross(t, cp - stop)) < width / 2f + 1f) stop += t * (along - 2.5f);   // (2.5 m before its node)
+                    }
                     heads.Add(new Head { Stop = stop, Travel = t, Width = width, OneWay = ow != 0, Node = s, TurnLane = HasTurnLane(w, from < 0 ? ":forward" : ":backward", ow != 0) });
                 }
             }
@@ -165,9 +176,21 @@ public partial class OsmMapGenerator
                                     : cp.OrderBy(h => h.Node).First().Road;
             foreach (var h in ch) h.Phase = Math.Abs(V2.Dot(h.Travel, main)) >= 0.7071f ? 0 : 1;
             bool twoPhase = ch.Any(h => h.Phase == 1);
-            // pedestrians cross a road while its direction is red: during the other phase, or their own phase
-            foreach (var h in cp) h.Phase = Math.Abs(V2.Dot(h.Road, main)) >= 0.7071f ? 1 : 0;
+            // pedestrians cross a road while the traffic along it is red: the phase other than that of the heads of the
+            // approaches along it (within 45°), and with the main direction where no signalled approach runs along it
+            // (a side road at a junction signalled one way only: they walk beside the traffic that has green, so a head
+            // across the side road, which drivers on the main road see, does not show red to them while they have
+            // green); in a signalised crossing of one road only, while its cars wait
+            foreach (var h in cp)
+            {
+                var along = ch.Where(c => Math.Abs(V2.Dot(c.Travel, h.Road)) >= 0.7071f).Select(c => c.Phase).Distinct().ToList();
+                h.Phase = along.Count == 1 && along[0] == 1 ? 0 : along.Count > 0 || ch.Count == 0 ? 1 : 0;
+            }
 
+            if (_debugSignals)
+                Debug.Log($"SignalDebug: junction {cluster.Key} at {_pos[cluster.Key]}: {(twoPhase ? "two phases" : "one direction")}, main {main}; car heads "
+                    + string.Join(", ", ch.Select(h => $"{h.Node} travel {h.Travel} phase {h.Phase}{(h.TurnLane ? " +arrow" : "")}"))
+                    + "; pedestrian heads " + string.Join(", ", cp.Select(h => $"{h.Node} (degree {Degree(h.Node)}, {at[h.Node].Count} road(s)) road {h.Road} at {h.Pos} facing {h.Facing} phase {h.Phase}")));
             var go = new GameObject($"Signals {cluster.Key}");
             go.transform.SetParent(control.transform, false);
             CarSection Section(string name, IEnumerable<CarTrafficLight> l)
@@ -190,6 +213,7 @@ public partial class OsmMapGenerator
                 byPhase[h.Phase].Add(light);
                 carLights.Add(light);
                 if (h.TurnLane && PlaceArrowHead(lightsRoot, h, light) is CarTrafficLight arrowHead) { turnByPhase[h.Phase].Add(arrowHead); carLights.Add(arrowHead); }
+                FlatLenses(light.Lenses, TrafficCar.LightFacing(light.transform));
             }
             var pedByPhase = new[] { new List<PedestrianTrafficLight>(), new List<PedestrianTrafficLight>() };
             foreach (var h in cp)
@@ -199,8 +223,7 @@ public partial class OsmMapGenerator
                 // the crossing trigger on the other kerb: its waiting pedestrians face this light
                 foreach (var pc in Crossings)
                     if (pc.name == $"Crossing {h.Node} {(h.Side > 0 ? "A" : "B")}") pc.Signal = light;
-                // one-direction junctions: all pedestrians walk while the cars wait
-                pedByPhase[twoPhase ? h.Phase : 1].Add(light);
+                pedByPhase[h.Phase].Add(light);
                 pedLights.Add(light);
             }
             var A = Section("Phase A", byPhase[0]); var B = Section("Phase B", byPhase[1]);
@@ -400,6 +423,107 @@ public partial class OsmMapGenerator
         var x = new Vector3(h.Facing.X, 0, h.Facing.Y);
         var fwd = Vector3.Cross(x, Vector3.up);   // LookRotation(fwd) has right = up × fwd = x
         go.transform.SetPositionAndRotation(new Vector3(h.Pos.X, ground + 2.6f, h.Pos.Y), Quaternion.LookRotation(fwd, Vector3.up));
-        return go.GetComponent<PedestrianTrafficLight>();
+        var ped = go.GetComponent<PedestrianTrafficLight>();
+        if (ped != null)
+        {
+            FigureMasks(go.transform, ped.Lenses, x);   // (before the lenses are flattened: in front of their front faces)
+            FlatLenses(ped.Lenses, x);
+        }
+        return ped;
+    }
+
+    /// <summary>
+    /// The signal heads' lenses (cylinders of the traffic light model) are lit on their sides too: a head that faces
+    /// across the road showed its red or green to the drivers coming along it (a pedestrian head across the
+    /// participant's road, red while it had green, looked like a car signal showing red towards it). Each lens is
+    /// flattened onto its front face (its depth along the direction it shines cut to 2%), so it is seen only by those it
+    /// shines at, as the visors of real signals make it.
+    /// </summary>
+    static void FlatLenses(IEnumerable<MeshRenderer> lenses, Vector3 shine)
+    {
+        foreach (var lens in lenses)
+        {
+            if (lens == null || !lens.TryGetComponent<MeshFilter>(out var mf) || mf.sharedMesh == null || lens.transform.childCount > 0) continue;
+            var t = lens.transform;
+            var ls = t.InverseTransformDirection(shine);   // (the lens's own axis nearest to the shine direction)
+            int k = Mathf.Abs(ls.x) >= Mathf.Abs(ls.y) && Mathf.Abs(ls.x) >= Mathf.Abs(ls.z) ? 0 : Mathf.Abs(ls.y) >= Mathf.Abs(ls.z) ? 1 : 2;
+            var b = mf.sharedMesh.bounds;
+            if (b.size[k] < 1e-4f) continue;
+            float front = b.center[k] + Mathf.Sign(ls[k]) * b.extents[k];   // (the front face, in the mesh's coordinates)
+            const float f = 0.02f;
+            var scale = t.localScale; float sk = scale[k];
+            var axis = Vector3.zero; axis[k] = 1f;
+            // the front face stays where it was: the lens shrinks towards it
+            t.localPosition += t.localRotation * (axis * (front * sk * (1f - f)));
+            scale[k] = sk * f; t.localScale = scale;
+        }
+    }
+
+    static Texture2D[] _figureMask;
+    static Material[] _figureMat;
+
+    /// <summary>
+    /// Black masks over the lenses of a pedestrian head that leave a figure open, a standing one over the red lens and a
+    /// walking one over the green, as real pedestrian signals have: plain red and green discs at 2.6 m on a pole look
+    /// like a car's signal to the drivers who see them (a head across a side road faces the main road's drivers).
+    /// </summary>
+    void FigureMasks(Transform head, MeshRenderer[] lenses, Vector3 shine)
+    {
+        if (_figureMask == null)
+        {
+            const int n = 64;
+            _figureMask = new Texture2D[2]; _figureMat = new Material[2];
+            for (int f = 0; f < 2; f++)
+            {
+                var tex = new Texture2D(n, n, TextureFormat.RGBA32, false) { name = f == 0 ? "Standing figure mask" : "Walking figure mask", wrapMode = TextureWrapMode.Clamp };
+                var px = new Color32[n * n];
+                for (int y = 0; y < n; y++)
+                    for (int xx = 0; xx < n; xx++)
+                    {
+                        float u = (xx + 0.5f) / n - 0.5f, v = (y + 0.5f) / n - 0.5f;   // (v up)
+                        bool open = (u * u + (v - 0.33f) * (v - 0.33f)) < 0.075f * 0.075f;                  // head
+                        if (f == 0)
+                        {
+                            open |= Mathf.Abs(u) < 0.11f && v > -0.08f && v < 0.24f;                        // body and arms
+                            open |= Mathf.Abs(u) < 0.075f && v > -0.4f && v <= -0.08f && Mathf.Abs(u) > 0.012f;   // legs together
+                        }
+                        else
+                        {
+                            open |= Mathf.Abs(u - 0.01f) < 0.06f && v > -0.06f && v < 0.24f;               // body
+                            // legs apart from the hip and arms swinging from the shoulders, one forward, one back
+                            float legA = u - (0.01f + 0.45f * (v + 0.06f)), legB = u - (0.01f - 0.45f * (v + 0.06f));
+                            open |= v > -0.4f && v <= -0.04f && (Mathf.Abs(legA) < 0.04f || Mathf.Abs(legB) < 0.04f);
+                            float armA = u - (0.01f + 0.6f * (v - 0.2f)), armB = u - (0.01f - 0.6f * (v - 0.2f));
+                            open |= v > 0.02f && v < 0.2f && (Mathf.Abs(armA) < 0.03f || Mathf.Abs(armB) < 0.03f);
+                        }
+                        px[y * n + xx] = open ? new Color32(0, 0, 0, 0) : new Color32(5, 5, 6, 255);
+                    }
+                tex.SetPixels32(px); tex.Apply();
+                _figureMask[f] = tex;
+                var m = Mat(tex.name, Color.white, 0.05f, tex);
+                m.SetFloat("_AlphaClip", 1f); m.SetFloat("_Cutoff", 0.5f); m.EnableKeyword("_ALPHATEST_ON");
+                m.SetColor("_BaseColor", new Color(0.02f, 0.02f, 0.02f));
+                _figureMat[f] = m;
+            }
+        }
+        for (int f = 0; f < lenses.Length && f < 2; f++)   // (the red lens above: a standing figure; the green below: a walking one)
+        {
+            var lens = lenses[f];
+            if (lens == null) continue;
+            var b = lens.bounds;
+            float depth = Mathf.Abs(b.extents.x * shine.x) + Mathf.Abs(b.extents.y * shine.y) + Mathf.Abs(b.extents.z * shine.z);
+            float size = b.size.y * 0.95f;   // (the lens's height: its diameter)
+            var q = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            UnityEngine.Object.DestroyImmediate(q.GetComponent<Collider>());
+            q.name = f == 0 ? "Standing figure" : "Walking figure";
+            q.transform.SetParent(head, true);
+            // (the quad faces -z: turned to look along -shine, it faces the people the head shines at)
+            q.transform.SetPositionAndRotation(b.center + shine * (depth + 0.005f), Quaternion.LookRotation(-shine, Vector3.up));
+            q.transform.localScale = Vector3.one;
+            q.transform.localScale = new Vector3(size / q.transform.lossyScale.x, size / q.transform.lossyScale.y, 1f);
+            var r = q.GetComponent<MeshRenderer>();
+            r.sharedMaterial = _figureMat[f];
+            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        }
     }
 }
