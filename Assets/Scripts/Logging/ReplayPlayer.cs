@@ -367,6 +367,7 @@ public class ReplayPlayer : MonoBehaviour
         if (_shotWait > 0f || ++_shotFrames < 4) return;   // a few frames too: batch-mode frames can be slow
         var rt = new RenderTexture(1280, 720, 24);
         _camera.targetTexture = rt;
+        if (PlanarWaterReflection.Instance != null) PlanarWaterReflection.Instance.RenderFor(_camera);
         _camera.Render();
         RenderTexture.active = rt;
         var tex = new Texture2D(1280, 720, TextureFormat.RGB24, false);

@@ -15,6 +15,7 @@ MonoBehaviour:
   LitTemplate: {fileID: 2100000, guid: 6b1b609d993cc4484ae4f9843765301d, type: 2}
   DetailTemplate: {fileID: 2100000, guid: a75ddad5062224497b09a47e9dd1afdd, type: 2}
   FacadeTemplate: {fileID: 2100000, guid: 3ac73f89c1ddd4d54a026c268a7f897b, type: 2}
+  WaterTemplate: {fileID: 2100000, guid: bc6ec2ef6335f4eef909c89d926b8b2a, type: 2}
   WallDetail:
   - {fileID: 2800000, guid: e15b46b398bf648cb91ce9e64c4b7715, type: 3}
   - {fileID: 2800000, guid: 89c32f294139642a693c3aca17d96dd7, type: 3}
@@ -33,6 +34,50 @@ MonoBehaviour:
   - {x: 2.4, y: 1.2}
   - {x: 2.5, y: 2.5}
   - {x: 1.1, y: 0.55}
+  GroundNames:
+  - asphalt
+  - asphalt_light
+  - cycle_red
+  - bricks
+  - parking
+  - paving
+  - cobbles
+  - gravel
+  - kerb
+  - lawn
+  GroundColour:
+  - {fileID: 2800000, guid: 4a1cf96976810410089d844add1729da, type: 3}
+  - {fileID: 2800000, guid: a3682756e70e04a57bad96754003891f, type: 3}
+  - {fileID: 2800000, guid: 0588539db81f94512bcaa475438ff214, type: 3}
+  - {fileID: 2800000, guid: 0c2dc8760b1034a3cb94fdd233cc5b0b, type: 3}
+  - {fileID: 2800000, guid: 6d103e7263dba4f74a93421b7c3a90e9, type: 3}
+  - {fileID: 2800000, guid: 8fd297a2639c54304bf9cc4f4a219ccd, type: 3}
+  - {fileID: 2800000, guid: 55820ffaa155442b4a3f86d02969f373, type: 3}
+  - {fileID: 2800000, guid: 748943c4022844064a8fe553ef3d2264, type: 3}
+  - {fileID: 2800000, guid: d770e396ff553426695ba9c98f4de5f6, type: 3}
+  - {fileID: 2800000, guid: b29eb7463859a4ca2b440b4c6ea919bb, type: 3}
+  GroundNormal:
+  - {fileID: 2800000, guid: 47f4676e88edd470092434df9e7da96f, type: 3}
+  - {fileID: 2800000, guid: c444af221900a47019f1691b6bc75def, type: 3}
+  - {fileID: 2800000, guid: 46567a01af49d4dff9a06e33cdf7d91a, type: 3}
+  - {fileID: 2800000, guid: 2c7607b90f880441a8667a26a8ad518c, type: 3}
+  - {fileID: 2800000, guid: 66383a103de9541f18447d4b86852712, type: 3}
+  - {fileID: 2800000, guid: 4dae207edf5f04271952da633a09f792, type: 3}
+  - {fileID: 2800000, guid: a12f865fe32dd4c30b9f7522c7a9751c, type: 3}
+  - {fileID: 2800000, guid: 505b271c1e8c24fc18026f2d14663d6d, type: 3}
+  - {fileID: 2800000, guid: 728a5a0c9b5794b039794c2c261b1040, type: 3}
+  - {fileID: 2800000, guid: f90201456333d4249b1c87d1b0587973, type: 3}
+  GroundSize:
+  - 3
+  - 4
+  - 2.1
+  - 1.8
+  - 2
+  - 1.8
+  - 2
+  - 2
+  - 2
+  - 2
   StreetLamp: {fileID: 1920794705001472, guid: aa7172f6ab830504883b79d7eb441d33, type: 3}
   Trees:
   - {fileID: 114418, guid: be878d9ea17907f4a8068678a5ce7908, type: 3}
