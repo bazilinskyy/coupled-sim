@@ -56,7 +56,7 @@ The simulator is open source and free to use. It is aimed at, but not limited to
 - [Citation](#citation) · [Examples of use](#examples-of-use) · [License](#license)
 - [Features](#features) · [Agents at a glance](#agents-at-a-glance) · [Graphics](#graphics)
 - [Getting started, step by step](#getting-started-step-by-step) (for first-time users) · [Installation](#installation)
-- [Running the simulator](#running-the-simulator): [host](#running-as-a-host), [client](#running-as-a-client), [several agents on one machine](#several-agents-on-one-machine), [builds and command line](#builds-and-command-line-options), [automatic trials](#running-trials-automatically), [trial files and counterbalancing](#trial-files-and-counterbalancing), [recording videos](#recording-trial-videos), [dashboard](#experimenter-dashboard)
+- [Running the simulator](#running-the-simulator): [host](#running-as-a-host), [client](#running-as-a-client), [several agents on one machine](#several-agents-on-one-machine), [builds and command line](#builds-and-command-line-options), [automatic trials](#running-trials-automatically), [trial files and counterbalancing](#trial-files-and-counterbalancing), [experiment files (YAML)](#experiment-files-yaml), [recording videos](#recording-trial-videos), [dashboard](#experimenter-dashboard)
 - [Controls](#controls)
 - [Environment and vehicles](#environment-and-vehicles): [city maps](#city-maps-openstreetmap), [traffic signs](#traffic-signs), [vehicles](#vehicles)
 - [Networking](#networking)
@@ -349,6 +349,7 @@ Only the window that has focus receives keyboard input.
 | `-autoRun` | run the trials automatically (`Run Trial Sequence Automatically`) |
 | `-clients <n>` | automatic trials: wait for n clients; they get the roles of the trial parameter `clientRoles` (e.g. `Pedestrian,Cyclist`), else the next free roles |
 | `-trials <file>`, `-participant <n>`, `-order latin\|random\|none` | [trial file and counterbalancing](#trial-files-and-counterbalancing) |
+| `-experiment <file.yaml>` | a whole [experiment file](#experiment-files-yaml) (the same as `-trials` with a YAML file) |
 | `-quality Fantastic\|Balanced\|Performance\|auto` | [graphics quality](#graphics) for slower PCs (`auto`: picked from the measured frame rate) |
 | `-sumoConnect <host:port>` | connect to a running [SUMO](#traffic-from-sumo) |
 | `-views "LeftScreen:2,RightScreen:3,RearMirror:1"` | [extra monitors and mirrors](#several-monitors-and-mirrors) |
@@ -422,6 +423,50 @@ For example, a build for participant 7 that runs the whole sequence by itself:
 "Coupled Simulator.exe" -trials example.csv -participant 7 -autoRun
 ```
 `Coupled Sim` ➡️ `Experiments` ➡️ `Setup…` ➡️ `Trials` previews the order for any participant, checks the file, and makes a trial file from the `Trials` list. Examples: `Assets/StreamingAssets/Trials/example.csv` and `example.json`.
+
+### Experiment files (YAML)
+A whole experiment can also be one YAML file, as in [Coupled CARLA](https://github.com/bazilinskyy/coupled-carla#experiment-files): the place, time, weather, traffic, sound and participants, and the trials, each of which overrides any of them. Put it in `Assets/StreamingAssets/Trials` and use it like a trial file (`NetworkingManager` ➡️ `Trial File`, or `-experiment <file.yaml>`); counterbalancing, the session file and `Coupled Sim` ➡️ `Experiments` ➡️ `Setup…` ➡️ `Trials` work as for CSV files. Anything left out keeps the experiment's own setting. `Assets/StreamingAssets/Trials/example.yaml`:
+
+```yaml
+name: delft_crossing
+map: Delft                     # a city map; or {lat: 52.0116, lon: 4.3571, radius_m: 400}, or {bbox: [south, west, north, east]}
+# experiment: CityMap          # the registered experiment that gives the world and roles (CityMap with a map, else Base)
+simulation:
+  time: "13:00"
+  weather: PartlyCloudy        # Clear | PartlyCloudy | Overcast | LightRain | HeavyRain | Fog | LightSnow | HeavySnow
+  # fog: 0.3, rain: 0.5, snow: 0, wind: 6, wind_direction: 270, time_speed: 1, real_weather: 2024-11-23T14:00
+traffic:
+  cars_per_km: 15              # map traffic
+  animals: 1                   # 0 none, 1 normal, 2 twice as many
+  # drones: 1, drone_swarm: 8, autopilot_kmh: 30
+sound:
+  vehicle_sounds: true
+  electric: 0.2                # share of electric cars
+participants:
+  - role: Driver               # this host's participant
+    input: autopilot           # keyboard | wheel | gamepad | vr | suit | autopilot
+    vehicle: ToyotaCorolla     # -driverCar
+    autopilot: 30              # km/h
+    hud: HudSpeed              # any command-line option of the agent: hud: HudSpeed is -hud HudSpeed
+  - role: Pedestrian           # the first client that connects
+duration_s: 120                # each trial ends by itself after 2 minutes (else Esc)
+order: latin                   # latin | random | none
+trials:
+  - {notes: practice, duration_s: 60}
+  - {block: A, notes: clear day, simulation: {weather: Clear}}
+  - {block: B, notes: heavy rain, simulation: {weather: HeavyRain}, traffic: {cars_per_km: 25}}
+  - block: C
+    notes: night, a larger car
+    simulation: {time: "22:30", weather: Clear}
+    participants:
+      - vehicle: LandRoverDefender         # merged over the first participant: the rest stays
+```
+
+- `simulation`, `traffic` and `sound` become the [experiment parameters](#running-trials-automatically) of the same names (`wind_direction` is `winddirection`, `cars_per_km` is `mapTraffic`, `autopilot_kmh` is `autopilot`); `parameters:` passes others as they are (your own `IExperimentModifier`'s).
+- `participants`: the first is this host's. `input` picks the input mode; its other keys are its [command-line options](#builds-and-command-line-options) for the trial (`vehicle` is `-driverCar`, `car_spec: van` is `-carSpec van`, a `true` value a bare flag, `options:` adds any text), so the vehicle, autopilot, in-car displays, eHMI or sound can change from trial to trial. The other participants give the clients' roles in the order they connect (`clientRoles`); their own options go on their own command line.
+- `trials` run in order, or counterbalanced by `block` as in [trial files](#trial-files-and-counterbalancing) (trials without a block before the first block run first). A trial's sections are merged over the file's, participants by position. Each trial may also give `notes`, `recording: {start_s, duration_s}` ([videos](#recording-trial-videos)) and `duration_s`: the trial then ends by itself that long after the simulation starts.
+- Every trial writes its merged configuration to `ExperimentLogs/Config-P03-T02-{date}.yaml` next to its logs, so a trial can always be traced back to the exact settings it ran with.
+- The file is read by a small YAML reader in the simulator: block mappings and lists, one-line `[...]` and `{...}`, quotes and comments; not anchors or `|` blocks. Mistakes are reported with their line on the start screen and in the `Check` tab.
 
 ### Recording trial videos
 Trial videos for "offline" use (for example online questionnaires) are recorded with Unity Recorder, in the editor only:

@@ -94,7 +94,7 @@ public class DroneController : MonoBehaviour
         var p = transform.position;
         Model = new Quadrotor(Parameters, QuadrotorState.AtRest(DroneBody.ToModel(p), DroneBody.YawFromHeading(transform.eulerAngles.y)));
         _gusts = new DrydenTurbulence(name.GetHashCode() ^ (int)(transform.position.x * 131 + transform.position.z * 977));
-        var args = Environment.GetCommandLineArgs();
+        var args = CommandLine.Args;
         int i = Array.IndexOf(args, "-droneMode");
         if (i >= 0 && i + 1 < args.Length && args[i + 1].ToLowerInvariant().StartsWith("att")) PilotMode = DroneMode.Attitude;
         i = Array.IndexOf(args, "-droneView");

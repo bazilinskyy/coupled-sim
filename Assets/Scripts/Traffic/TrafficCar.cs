@@ -260,8 +260,8 @@ public class TrafficCar : MonoBehaviour
         : v.GetComponent<TwoWheelerController>() != null ? 0.4f : 0.9f;
     static int _ranks;
     /// <summary>-noYield: no yielding to crossing traffic (for comparisons); -debugTraffic: logs overlaps and yielding every 10 s.</summary>
-    public static readonly bool NoYield = System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-noYield") >= 0;
-    static readonly bool DebugTraffic = System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-debugTraffic") >= 0;
+    public static readonly bool NoYield = System.Array.IndexOf(CommandLine.Args, "-noYield") >= 0;
+    static readonly bool DebugTraffic = System.Array.IndexOf(CommandLine.Args, "-debugTraffic") >= 0;
     static int _overlapFrames, _yieldFrames, _frames; static float _nextReport = 10f;
     static void DebugCount()
     {

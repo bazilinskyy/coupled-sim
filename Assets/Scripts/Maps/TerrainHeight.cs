@@ -22,7 +22,7 @@ public sealed class TerrainHeight
     public string Credit;
     public float Min, Max;
 
-    public static bool Disabled => Array.IndexOf(Environment.GetCommandLineArgs(), "-flatTerrain") >= 0;
+    public static bool Disabled => Array.IndexOf(CommandLine.Args, "-flatTerrain") >= 0;
 
     public static TerrainHeight Load(string map, GeoProjection proj)
     {

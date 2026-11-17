@@ -93,7 +93,7 @@ public static class SceneDescriber
 
     public static void EnsureLoggerFromCommandLine()
     {
-        if (Array.IndexOf(Environment.GetCommandLineArgs(), "-sceneDescriptions") < 0) return;
+        if (Array.IndexOf(CommandLine.Args, "-sceneDescriptions") < 0) return;
         if (UnityEngine.Object.FindAnyObjectByType<Logger>() != null) return;
         new GameObject("Scene descriptions").AddComponent<Logger>();
     }
