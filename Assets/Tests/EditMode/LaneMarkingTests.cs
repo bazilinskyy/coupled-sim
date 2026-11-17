@@ -78,5 +78,35 @@ namespace CoupledSim.Tests
         {
             Assert.AreEqual(kind, Gen.GetMethod("TreeKind").Invoke(null, new object[] { species, null }));
         }
+
+        [TestCase("", false)]
+        [TestCase("oneway=no", false)]
+        [TestCase("oneway=yes", true)]
+        [TestCase("oneway=1", true)]
+        [TestCase("oneway=true", true)]
+        [TestCase("oneway=-1", true)]
+        [TestCase("oneway=reverse", true)]
+        public void IsOneWayRecognisesReverseAndNumericTags(string tags, bool expected)
+        {
+            bool actual = (bool)Gen.GetMethod("IsOneWay", BindingFlags.NonPublic | BindingFlags.Static).Invoke(null, new[] { Way(tags) });
+            Assert.AreEqual(expected, actual, tags);
+        }
+
+        [TestCase("oneway=yes&turn:lanes=left|through", ":forward", true, false, true)]
+        [TestCase("oneway=yes&turn:lanes:forward=left|through", ":forward", true, false, true)]
+        [TestCase("oneway=-1&turn:lanes=left|through", ":backward", true, false, true)]
+        [TestCase("oneway=-1&turn:lanes:backward=left|through", ":backward", true, false, true)]
+        [TestCase("oneway=yes&turn:lanes=left;through|through", ":forward", true, false, false)]
+        [TestCase("oneway=yes&turn:lanes:forward=through|right", ":forward", true, true, true)]
+        public void SignalTurnLaneChecksDirectionalAndFallbackTags(string tags, string dir, bool oneWay, bool lht, bool expected)
+        {
+            var xml = "<osm><node id=\"1\" lat=\"51.44\" lon=\"5.47\"/><node id=\"2\" lat=\"51.441\" lon=\"5.47\"/><way id=\"10\"><nd ref=\"1\"/><nd ref=\"2\"/>" +
+                      string.Concat(tags.Split('&').Where(t => t.Length > 0).Select(t => { var kv = t.Split('='); return $"<tag k=\"{kv[0]}\" v=\"{kv[1]}\"/>"; })) +
+                      "<tag k=\"highway\" v=\"secondary\"/></way></osm>";
+            var way = CoupledSim.Maps.OsmData.Parse(xml).Ways[0];
+            bool actual = (bool)Gen.GetMethod("HasTurnLane", BindingFlags.Public | BindingFlags.Static)
+                .Invoke(null, new object[] { way, dir, oneWay, lht });
+            Assert.AreEqual(expected, actual, tags);
+        }
     }
 }

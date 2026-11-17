@@ -172,7 +172,10 @@ namespace CoupledSim.Vehicles
         public float WheelTorque(float speed, float throttle, float dt)
         {
             throttle = Math.Clamp(throttle, 0f, 1f);
-            if (!Reverse) AutoShift(speed, throttle);
+            if (!Reverse)
+            {
+                if (_shiftTimer <= 0f) AutoShift(speed, throttle);
+            }
             else Gear = 1;
             // clutch slips below idle: the engine stays at least at idle (or higher when pulling away)
             float wheelRpm = RpmAt(speed, Gear);

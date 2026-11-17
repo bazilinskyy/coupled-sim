@@ -10,7 +10,7 @@ using UnityEngine;
 public static class UNetPipelines
 {
     /// <summary>Largest message (bytes).</summary>
-    public const int MaxMessageSize = 64 * 1024;
+    public const int MaxMessageSize = 256 * 1024;
 
     public static NetworkDriver CreateDriver(out NetworkPipeline unreliable, out NetworkPipeline reliable)
     {

@@ -63,12 +63,23 @@ namespace UnityStandardAssets.Utility
             // You can manually create a transform and assign it to this component *and* the AI,
             // then this component will update it, and the AI can read it.
 
-            target = new GameObject(name + " Waypoint Target").transform;
+            if (target == null)
+            {
+                target = new GameObject(name + " Waypoint Target").transform;
+            }
             //print("Makes Target");
             this.circuit = circuit;
 
             Reset();
 
+        }
+
+        private void OnDestroy()
+        {
+            if (target != null)
+            {
+                Destroy(target.gameObject);
+            }
         }
 
 
