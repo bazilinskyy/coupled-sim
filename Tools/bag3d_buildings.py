@@ -92,6 +92,18 @@ def triangulate(pts):
     if (ax == 1) ^ flip: tris = [(a, c, b) for a, b, c in tris]
     return tris
 
+def rd_inverse(x, y):
+    """RD (EPSG:28992) to WGS84 lat, lon (Schreutelkamp & Strang van Hees), about 1 m: enough to test the area."""
+    dx = (x - 155000) * 1e-5; dy = (y - 463000) * 1e-5
+    lat = (52.15517440 + (3235.65389 * dy - 32.58297 * dx ** 2 - 0.24750 * dy ** 2 - 0.84978 * dx ** 2 * dy - 0.06550 * dy ** 3
+                          - 0.01709 * dx ** 2 * dy ** 2 - 0.00738 * dx + 0.00530 * dx ** 4 - 0.00039 * dx ** 2 * dy ** 3
+                          + 0.00033 * dx ** 4 * dy - 0.00012 * dx * dy) / 3600)
+    lon = (5.38720621 + (5260.52916 * dx + 105.94684 * dx * dy + 2.45656 * dx * dy ** 2 - 0.81885 * dx ** 3 + 0.05594 * dx * dy ** 3
+                         - 0.05607 * dx ** 3 * dy + 0.01199 * dy - 0.00256 * dx ** 3 * dy ** 2 + 0.00128 * dx * dy ** 4
+                         + 0.00022 * dy ** 2 - 0.00022 * dx ** 2 + 0.00026 * dx ** 5) / 3600)
+    return lat, lon
+
+
 def main(name):
     root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
     osm = os.path.join(root, "Assets/StreamingAssets/Maps/%s.osm.gz" % name)
@@ -102,12 +114,25 @@ def main(name):
     x0, y0 = wgs_to_rd(s, w); x1, y1 = wgs_to_rd(n, e)
     x0, y0, x1, y1 = min(x0, x1), min(y0, y1), max(x0, x1), max(y0, y1)
     ox, oy = (x0 + x1) / 2, (y0 + y1) / 2
-    tiles = 4
+    # a map with corridors (Tools/map_area.py): tiles of 500 m along its area, buildings within 60 m of it kept
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import map_area
+    area = map_area.read(name)
+    if area:
+        boxes = []
+        for (s_, w_, n_, e_) in map_area.tiles(area, 500.0, 60.0):
+            ax, ay = wgs_to_rd(s_, w_); bx, by = wgs_to_rd(n_, e_)
+            boxes.append((min(ax, bx), min(ay, by), max(ax, bx), max(ay, by)))
+        rd_to_wgs = lambda x, y: rd_inverse(x, y)
+    else:
+        tiles = 4
+        boxes = [(x0 + (x1-x0)*i/tiles, y0 + (y1-y0)*j/tiles, x0 + (x1-x0)*(i+1)/tiles, y0 + (y1-y0)*(j+1)/tiles) for i in range(tiles) for j in range(tiles)]
     seen = set(); buildings = []
-    for i in range(tiles):
-        for j in range(tiles):
-            bb = (x0 + (x1-x0)*i/tiles, y0 + (y1-y0)*j/tiles, x0 + (x1-x0)*(i+1)/tiles, y0 + (y1-y0)*(j+1)/tiles)
+    for ti, bb in enumerate(boxes):
+        i, j = ti, 0
+        if True:
             for page in fetch(bb):
+                if "metadata" not in page or not page.get("features"): continue   # (a tile without buildings: fields, a motorway)
                 tr = page["metadata"]["transform"]; sc, tl = tr["scale"], tr["translate"]
                 for f in page["features"]:
                     if f["id"] in seen: continue
@@ -147,6 +172,9 @@ def main(name):
                                 tris = triangulate(pts)
                                 dest = roofs if t == "RoofSurface" else walls
                                 dest.extend((local[a], local[b2], local[c]) for a, b2, c in tris)
+                    if area and verts:
+                        cx = sum(v[0] for v in verts) / len(verts) + ox; cy = sum(v[1] for v in verts) / len(verts) + oy
+                        if not map_area.inside(area, *rd_inverse(cx, cy), 60.0): continue
                     if verts and (walls or roofs):
                         buildings.append((kind, year, verts, walls, roofs))
             print("tile %d,%d: %d buildings" % (i, j, len(buildings)), flush=True)

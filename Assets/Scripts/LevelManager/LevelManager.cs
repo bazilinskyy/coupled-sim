@@ -54,6 +54,12 @@ public class LevelManager
         var expPrefab = Experiments[experiment];
         var map = MapFor(experiment, trial);
         OsmMap.Requested = map;
+        // trial parameter "start=lat,lon" (or -start lat,lon on any agent): spawn points near that place, e.g. on a
+        // highway at the end of a map's corridor, instead of near the map's centre
+        string start = null;
+        if (trial?.experimentParameters != null) foreach (var p in trial.experimentParameters) if (p.name.ToLower() == "start") start = p.value;
+        if (start == null) { var args = CommandLine.Args; int si = System.Array.IndexOf(args, "-start"); if (si >= 0 && si + 1 < args.Length) start = args[si + 1]; }
+        OsmMap.RequestedStart = start;
         if (map != null) Debug.Log($"Map: {map}");
         _mainLoadOp = SceneManager.LoadSceneAsync(map != null && string.IsNullOrEmpty(expPrefab.Scene) ? "OsmMap" : expPrefab.Scene);
         _mainLoadOp.completed += (op) =>

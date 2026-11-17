@@ -32,6 +32,8 @@ public partial class OsmMapGenerator
         /// with the national topography's surfaces) a road that lies mostly on paving, grass or gravel there (pedestrian
         /// streets and squares, yards).</summary>
         public bool NoThroughTraffic;
+        /// <summary>Speed limit (km/h): OpenStreetMap's maxspeed (mph converted), else a default by road type.</summary>
+        public float SpeedLimitKmh;
     }
     /// <summary>Cycle paths and pavements on such bridges.</summary>
     public readonly Dictionary<List<Vector3>, int> BridgeLines = new Dictionary<List<Vector3>, int>();
@@ -45,6 +47,9 @@ public partial class OsmMapGenerator
     public readonly HashSet<List<Vector3>> CrossingLines = new HashSet<List<Vector3>>();
     public readonly List<PedestrianCrossing> Crossings = new List<PedestrianCrossing>();
     public float HalfSize;
+    /// <summary>The map's area beyond its square: the centre and corridors along a highway or ring road
+    /// (StreamingAssets/Maps/{map}.area.txt, Tools/map_area.py); null: the square of its data.</summary>
+    public MapArea Area { get; private set; }
     public int BuildingCount;
 
     readonly MapInfo _map;
@@ -89,6 +94,16 @@ public partial class OsmMapGenerator
         proj.ToLocal(data.MinLat, data.MinLon, out var x0, out var z0);
         proj.ToLocal(data.MaxLat, data.MaxLon, out var x1, out var z1);
         HalfSize = (float)Math.Max(Math.Max(Math.Abs(x0), Math.Abs(x1)), Math.Max(Math.Abs(z0), Math.Abs(z1)));
+        try
+        {
+            var areaFile = System.IO.Path.Combine(Application.streamingAssetsPath, "Maps", (map.Name ?? "") + ".area.txt");
+            if (!string.IsNullOrEmpty(map.Name) && System.IO.File.Exists(areaFile) && Array.IndexOf(CommandLine.Args, "-noCorridors") < 0)
+            {
+                Area = MapArea.Parse(System.IO.File.ReadAllText(areaFile), (la, lo) => { proj.ToLocal(la, lo, out var ax, out var az); return new V2((float)ax, (float)az); });
+                Debug.Log($"OsmMap: {map.Name} has {Area.CorridorCount} corridors ({Area.CorridorLength / 1000f:F1} km) beyond its centre");
+            }
+        }
+        catch (Exception e) { Debug.LogWarning("OsmMap: area file: " + e.Message); Area = null; }
     }
 
     // ------------------------------------------------------------------ materials and textures
@@ -607,7 +622,7 @@ public partial class OsmMapGenerator
         static void Refine(List<V2> pts, List<int> tris, float maxEdge)
         {
             float max2 = maxEdge * maxEdge;
-            for (int pass = 0; pass < 12; pass++)
+            for (int pass = 0; pass < 40; pass++)   // (a motorway's surface can be kilometres long: each pass halves the longest edges)
             {
                 var marked = new Dictionary<long, int>();
                 long Key(int a, int b) => a < b ? ((long)a << 32) | (uint)b : ((long)b << 32) | (uint)a;
@@ -760,7 +775,7 @@ public partial class OsmMapGenerator
         }
         return dense;
     }
-    bool Inside(V2 p) => Math.Abs(p.X) < HalfSize + 30 && Math.Abs(p.Y) < HalfSize + 30;
+    bool Inside(V2 p) => Area != null ? Area.Contains(p, 30f) : Math.Abs(p.X) < HalfSize + 30 && Math.Abs(p.Y) < HalfSize + 30;
 
     static float BuildingHeight(OsmWay w)
     {
@@ -902,6 +917,9 @@ public partial class OsmMapGenerator
             }
             // (not at bridges: their ramps rise on purpose, and the decks run between their ends' ground)
             Terrain.SmoothRoads(profiles, bridges);
+            // a map with corridors (embankments, slopes along kilometres of road): the base ground further under the
+            // surfaces, so its 10 m tiles do not cut through a motorway's surface on a curved embankment
+            if (Area != null) Terrain.GroundDrop = 0.5f;
         }
 
         // water (canals, rivers, ponds, harbours): its surface lies WaterDepth below the streets, between quay walls; the
@@ -931,6 +949,8 @@ public partial class OsmMapGenerator
             for (int j = 0; j < tiles; j++)
             {
                 float x0 = -h + i * step, x1 = x0 + step, z0 = -h + j * step, z1 = z0 + step;
+                // (a map with corridors: only the tiles in its area, and 40 m around it)
+                if (Area != null && !Area.Touches(new V2(x0 + step / 2, z0 + step / 2), step / 2 + 40f)) continue;
                 if (waterPolys.Count == 0) { GroundQuad(x0, z0, x1, z1); continue; }
                 var local = waterIndex.EdgesIn(x0, z0, x1, z1);
                 var centre = new V2((x0 + x1) / 2, (z0 + z1) / 2);
@@ -951,6 +971,22 @@ public partial class OsmMapGenerator
                         GroundQuad(x0 + a * cs, z0 + b * cs, x0 + (a + 1) * cs, z0 + (b + 1) * cs);
                     }
             }
+        // a map with corridors: fields beyond its area (3 km around it, a little lower, without colliders), so the view
+        // from a highway ends in land rather than in the void
+        if (Area != null)
+        {
+            var beyond = new MeshBuilder();
+            const float tile = 200f, reach = 3000f;
+            float bx0 = Area.MinX - reach, bz0 = Area.MinZ - reach, bx1 = Area.MaxX + reach, bz1 = Area.MaxZ + reach;
+            for (float x = bx0; x < bx1; x += tile)
+                for (float z = bz0; z < bz1; z += tile)
+                {
+                    if (Area.Contains(new V2(x + tile / 2, z + tile / 2), -tile)) continue;   // (well inside: the map's own ground)
+                    beyond.Quad(new Vector3(x, -0.35f, z), new Vector3(x, -0.35f, z + tile), new Vector3(x + tile, -0.35f, z + tile), new Vector3(x + tile, -0.35f, z),
+                        new Vector2(x, z) / 4f, new Vector2(x, z + tile) / 4f, new Vector2(x + tile, z + tile) / 4f, new Vector2(x + tile, z) / 4f);
+                }
+            Emit(world, "Ground beyond the map", beyond, grass, false);
+        }
         // the real aerial photo where the map has one (Tools/aerial_photo.py): car parks, yards and
         // squares as they are; else paving
         Aerial = AerialPhoto.Load(_map.Name ?? "");
@@ -1096,6 +1132,7 @@ public partial class OsmMapGenerator
         var lamps = new List<(Vector3 p, float yaw)>();
         var left = new List<V2>(); var right = new List<V2>();
         var roadWays = new List<(OsmWay way, List<V2> line, float width)>();
+        var guardRails = new MeshBuilder();   // steel barriers in the central reservation of motorways
         // junctions: nodes shared by car roads, with the widest road meeting there
         var junctionWidth = new Dictionary<long, float>();
         var nodeUse = new Dictionary<long, int>();
@@ -1189,9 +1226,41 @@ public partial class OsmMapGenerator
                 var roadLine = line.Select(p => P(p, 0.02f + lift)).ToList();
                 if (owDir < 0) roadLine.Reverse();
                 bool parkL = StreetParking(w, -1), parkR = StreetParking(w, 1);
+                var ms = w.Tag("maxspeed");
+                float limit = SpeedNumber(ms) * (ms != null && ms.Contains("mph") ? 1.609f : 1f);
                 Roads.Add(new Road { Line = roadLine, Width = width, Type = hw, OneWay = owDir != 0, Bridge = bi > 0, BridgeLayer = bi,
+                    SpeedLimitKmh = limit > 0f ? limit : RoadSpeedLimits.Default(hw),
                     ParkLeft = owDir < 0 ? parkR : parkL, ParkRight = owDir < 0 ? parkL : parkR,
                     NoThroughTraffic = access == "no" || access == "private" || (hw == "service" && (access == "customers" || access == "delivery" || w.Tag("service") == "driveway" || w.Tag("service") == "parking_aisle")) });
+                // a dual carriageway's motorway: a steel guard rail along its inner edge (the central reservation), 0.45-0.8 m
+                // high, no collider (the lanes keep traffic off it)
+                if (hw == "motorway" && owDir != 0 && bi == 0 && roadLine.Count >= 2)
+                {
+                    var travel = roadLine.Select(q => new V2(q.x, q.z)).ToList();
+                    var rl = new List<V2>(); var rr = new List<V2>();
+                    float inner = (width / 2f + 0.6f) * (_map.LeftHandTraffic ? 1f : -1f);
+                    Geometry2D.Strip(travel, 0.06f, inner, rl, rr);
+                    for (int k = 0; k + 1 < rl.Count; k++)
+                        foreach (var e in new[] { rl, rr })
+                        {
+                            V2 a = e[k], b = e[k + 1];
+                            guardRails.Quad(P(a, 0.45f), P(a, 0.8f), P(b, 0.8f), P(b, 0.45f), Vector2.zero, Vector2.up, Vector2.one, Vector2.right);
+                            guardRails.Quad(P(b, 0.45f), P(b, 0.8f), P(a, 0.8f), P(a, 0.45f), Vector2.zero, Vector2.up, Vector2.one, Vector2.right);
+                        }
+                    // posts every 4 m
+                    float railAt = 0f, nextPost = 0f;
+                    for (int k = 0; k + 1 < rl.Count; k++)
+                    {
+                        V2 c0 = (rl[k] + rr[k]) / 2f, c1 = (rl[k + 1] + rr[k + 1]) / 2f; float seg = V2.Distance(c0, c1);
+                        while (nextPost <= railAt + seg && seg > 1e-3f)
+                        {
+                            var c = V2.Lerp(c0, c1, (nextPost - railAt) / seg);
+                            guardRails.Box(P(c, 0f), new Vector3(0.1f, 0.75f, 0.1f), 0f);
+                            nextPost += 4f;
+                        }
+                        railAt += seg;
+                    }
+                }
                 Geometry2D.Strip(line, width, 0, left, right);
                 var surface = SurfaceOf(w);
                 (surface == RoadSurface.Bricks ? brickRoads : surface == RoadSurface.Cobblestones ? cobbleRoads : surface == RoadSurface.Gravel ? gravelRoads : roads)
@@ -1292,6 +1361,7 @@ public partial class OsmMapGenerator
             E("Road markings", marksAll, marking, false);
         }
         EmitRoadDetails(world);
+        if (guardRails.V.Count > 0) Emit(world, "Guard rails", guardRails, Mat("Guard rail steel", new Color(0.62f, 0.64f, 0.66f), 0.55f), false);
 
         // zebra crossings at OSM crossing nodes on car roads
         var zebras = new MeshBuilder();
@@ -1763,7 +1833,7 @@ public partial class OsmMapGenerator
                     if (!same) { local.ToGeo(x, z, out var la, out var lo); _proj.ToLocal(la, lo, out x, out z); }
                     poly.Add(new V2((float)x, (float)z));
                 }
-                if (poly.Count < 3 || poly.Any(q => Math.Abs(q.X) < HalfSize && Math.Abs(q.Y) < HalfSize)) continue;
+                if (poly.Count < 3 || poly.Any(q => Area != null ? Area.Contains(q) : Math.Abs(q.X) < HalfSize && Math.Abs(q.Y) < HalfSize)) continue;
                 if (Geometry2D.SignedArea(poly) < 0) poly.Reverse();   // counter-clockwise: walls face out
                 float along = 0f;
                 for (int i = 0; i < poly.Count; i++)
@@ -2741,7 +2811,8 @@ public partial class OsmMapGenerator
         {
             int a = src.T[i], b = src.T[i + 1], c = src.T[i + 2];
             Vector3 va = src.V[a], vb = src.V[b], vc = src.V[c];
-            bool low = va.y < AerialRoofMaxHeight && vb.y < AerialRoofMaxHeight && vc.y < AerialRoofMaxHeight;
+            // (beyond the photo, on a map with corridors: the roof's own material)
+            bool low = va.y < AerialRoofMaxHeight && vb.y < AerialRoofMaxHeight && vc.y < AerialRoofMaxHeight && Aerial.Covers(va) && Aerial.Covers(vb) && Aerial.Covers(vc);
             var n = Vector3.Cross(vb - va, vc - va);
             bool isSteep = low && n.sqrMagnitude > 1e-6f && Mathf.Abs(n.normalized.y) < 0.866f && Mathf.Abs(n.normalized.y) > 0.17f;
             if (isSteep)

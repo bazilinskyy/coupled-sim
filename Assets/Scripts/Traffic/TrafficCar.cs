@@ -14,6 +14,11 @@ public class TrafficCar : MonoBehaviour
 {
     public CarFollowingModelType ModelType = CarFollowingModelType.IDM;
     public float DesiredSpeed = 13.9f;
+    /// <summary>On roads over 55 km/h (rural roads, motorways): the speed limit times this (a driver's own factor);
+    /// below: DesiredSpeed, at most the limit. 0: always DesiredSpeed (a fixed speed was asked for).</summary>
+    public float SpeedLimitFactor = 1f;
+    float _limitDesired = -1f, _nextLimit;
+    int _endsRoute;
     [Tooltip("How far ahead along the path the driver looks (m).")]
     public float LookAhead = 80f;
     [Tooltip("Sideways distance (m) from the path within which something counts as being in the lane.")]
@@ -208,7 +213,7 @@ public class TrafficCar : MonoBehaviour
         }
         if (Model == null || _circuit == null) return;
         float dt = Time.fixedDeltaTime;
-        Model.DesiredSpeed = Mathf.Min(DesiredSpeed, CurveSpeed());
+        Model.DesiredSpeed = Mathf.Min(LimitDesired(), CurveSpeed());
         var leader = FindLeader(out LeaderDescription);
         LeaderGap = leader.Present ? leader.Gap : float.PositiveInfinity;
         if (Speed > 0.3f) _stoppedSince = 0f; else if (_stoppedSince == 0f) _stoppedSince = Time.time;
@@ -216,6 +221,24 @@ public class TrafficCar : MonoBehaviour
         Speed = Mathf.Max(0f, Speed + Acceleration * dt);
         _car.ExternalSpeed = Speed;
         _car.ExternalAcceleration = Acceleration;
+    }
+
+    /// <summary>The desired speed from the speed limits here and ahead (slowing down comfortably, 1.5 m/s², before a
+    /// lower limit), every half second.</summary>
+    float LimitDesired()
+    {
+        if (SpeedLimitFactor <= 0f || !RoadSpeedLimits.Any || _circuit == null) return DesiredSpeed;
+        if (Time.time < _nextLimit && _limitDesired > 0f) return _limitDesired;
+        _nextLimit = Time.time + 0.5f;
+        float Want(float kmh) => kmh <= 0f ? DesiredSpeed : kmh > 55f ? kmh / 3.6f * SpeedLimitFactor : Mathf.Min(DesiredSpeed, kmh / 3.6f);
+        float start = _tracker.ProgressDistance;
+        float v = Want(RoadSpeedLimits.At(_circuit.GetRoutePoint(start).position));
+        for (float d = 25f; d <= 150f; d += 25f)
+        {
+            float ahead = Want(RoadSpeedLimits.At(_circuit.GetRoutePoint(start + d).position));
+            v = Mathf.Min(v, Mathf.Sqrt(ahead * ahead + 2f * 1.5f * d));
+        }
+        return _limitDesired = v;
     }
 
     /// <summary>
@@ -249,6 +272,10 @@ public class TrafficCar : MonoBehaviour
         RefreshCaches();
         what = "free road";
         float start = _tracker.ProgressDistance;
+        // the end of the route (a city map's routes end at its edge; the car stops there until it is started again): an
+        // obstacle like the others, found in order of distance in the walk below
+        if (_endsRoute == 0) _endsRoute = GetComponent<MapRouteRecycler>() != null ? 1 : -1;
+        float routeEnd = _endsRoute > 0 ? _circuit.OpenLength - Mathf.Repeat(start, _circuit.Length) : float.MaxValue;
         var me = transform.position;
         var myFwd = transform.forward;
         // distance from the car to its progress point (the tracker lags a little behind)
@@ -288,6 +315,7 @@ public class TrafficCar : MonoBehaviour
             }
         }
 
+        if (routeEnd < LookAhead) anyCarClose = true;   // (not the shortcut below: the route ends ahead)
         if (!anyCarClose && _nearAnimals.Count == 0 && _nearPeds.Count == 0 && _nearLights.Count == 0)
             return Leader.None;
 
@@ -318,6 +346,11 @@ public class TrafficCar : MonoBehaviour
             var p = _circuit.GetRoutePoint(start + d).position;
             float along = d + offset;
             if (along < 1f) continue;
+            if (d >= routeEnd - 4f)
+            {
+                what = $"end of the route at {routeEnd:F0} m";
+                return Leader.Stationary(Mathf.Max(0.1f, routeEnd - 4f + offset));
+            }
             if (along >= conflict)
             {
                 what = conflictWhat;

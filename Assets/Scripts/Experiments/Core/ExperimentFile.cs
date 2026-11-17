@@ -23,7 +23,9 @@ namespace CoupledSim.Experiments
     ///   sound                        vehicle_sounds, electric, ambience_db, cabin_music, cabin_music_db, auditory_ehmi, avas
     ///   parameters                   further experiment parameters as they are (your own IExperimentModifier's)
     ///   participants                 the host's participant first: role, input (keyboard, wheel, gamepad, vr, suit,
-    ///                                autopilot), vehicle, autopilot (km/h) and any command-line option of that agent
+    ///                                autopilot), vehicle, autopilot (km/h), spawn {lat, lon} (spawn points near that
+    ///                                place: trial parameter start), destination {lat, lon} (the autopilot drives there, by the quickest route)
+    ///                                and any command-line option of that agent
     ///                                (hud: HudSpeed is -hud HudSpeed, car_spec: van is -carSpec van, a true value a bare
     ///                                flag); the other participants are the clients' roles, in the order they connect
     ///   order                        latin (default), random or none
@@ -140,6 +142,16 @@ namespace CoupledSim.Experiments
                                 continue;
                             }
                             if (k == "options") { if (v != null) args.Add(v); continue; }
+                            if (k == "spawn" || k == "start" || k == "destination")
+                            {
+                                // spawn: {lat, lon} (or [lat, lon]): the spawn points near that place (trial parameter start);
+                                // destination: {lat, lon}: the autopilot drives there by the shortest route (destination)
+                                var sp = kv.Value as Dictionary<string, object>;
+                                var at = sp != null ? Str(sp, "lat") + "," + Str(sp, "lon") : Str(kv.Value);
+                                if (at != null && at.Split(',').Length >= 2 && !at.Contains(",,") && !at.StartsWith(",") && !at.EndsWith(",")) Param(k == "destination" ? "destination" : "start", at);
+                                else warnings.Add($"trial {n}: {kv.Key} is {{lat, lon}}");
+                                continue;
+                            }
                             var flag = k == "vehicle" ? "-driverCar" : "-" + Camel(kv.Key);
                             if (v == null || v.Equals("false", StringComparison.OrdinalIgnoreCase) || v == "no") continue;
                             if (v.Equals("true", StringComparison.OrdinalIgnoreCase) || v == "yes") args.Add(flag);
