@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using CoupledSim.Traffic;
 using UnityEngine;
 using UnityStandardAssets.Utility;
@@ -246,6 +247,11 @@ public class TrafficCar : MonoBehaviour
                 _nextParticipantLog = Time.time + 5f;
                 Debug.Log($"TrafficDebug: autopilot {line} limit {LimitDesired() * 3.6f:F0} km/h");
             }
+            if (Time.time >= _nextSignalLog && GetComponent<AutomatedDriving>() != null)
+            {
+                _nextSignalLog = Time.time + 1f;
+                LogSignalsInView();
+            }
         }
         _car.ExternalSpeed = Speed;
         _car.ExternalAcceleration = Acceleration;
@@ -453,17 +459,24 @@ public class TrafficCar : MonoBehaviour
                 for (int i = 0; i < _nearLights.Count; i++)
                 {
                     var l = _nearLights[i];
-                    // lights stand beside the road, a few metres past the stop line, facing the traffic
+                    // the head hangs over the approach at its stop line, facing the traffic: taken at the sample level with
+                    // it (within a metre along the route), where its distance along the route is known (the first sample
+                    // within reach of it would be some 5 m short of the line, and cars stopped 8-10 m before it)
                     if (Flat2(l.pos - p) > 6f * 6f) continue;
+                    float ahead = Vector3.Dot(Flat(l.pos - p), Flat(_circuit.GetRoutePoint(start + d).direction).normalized);
+                    if (ahead > 1f || ahead <= -1f) continue;
                     // turn arrows: an arrow head is for the cars turning its way, the main head of that approach for the others
                     var turn = TurnAfter(start + d);
                     bool hasTurnArrow = (turn == CarTrafficLight.TurnArrow.Left && l.hasLeftArrow) || (turn == CarTrafficLight.TurnArrow.Right && l.hasRightArrow);
                     if (l.arrow != CarTrafficLight.TurnArrow.None ? turn != l.arrow : turn != CarTrafficLight.TurnArrow.None && hasTurnArrow) continue;
-                    float stopGap = Mathf.Max(0.1f, along - VehicleLength / 2f - 2f);
-                    if (l.state == LightState.YELLOW && Speed * Speed / (2f * 3f) > stopGap)
+                    // the front of the car stops a metre before the line (the model keeps its minimum gap, 2 m, to the
+                    // obstacle: the obstacle is put 1 m past the line)
+                    float toLine = along + ahead - VehicleLength / 2f - 1f;
+                    if (toLine < -0.5f) continue;   // over the line already: clear the junction
+                    if (l.state == LightState.YELLOW && Speed * Speed / (2f * 3f) > toLine)
                         continue; // too close to stop comfortably: drive on
-                    what = $"{l.state} light at {along:F0} m";
-                    return Leader.Stationary(stopGap);
+                    what = $"{l.state} light at {along + ahead:F0} m";
+                    return Leader.Stationary(Mathf.Max(0.1f, toLine + 2f));
                 }
             }
         }
@@ -477,7 +490,36 @@ public class TrafficCar : MonoBehaviour
     static int _ranks;
     /// <summary>-noYield: no yielding to crossing traffic (for comparisons); -debugTraffic: logs overlaps and yielding every 10 s.</summary>
     public static readonly bool NoYield = System.Array.IndexOf(CommandLine.Args, "-noYield") >= 0;
-    float _nextParticipantLog;
+    float _nextParticipantLog, _nextSignalLog;
+
+    /// <summary>-debugTraffic, the participant's autopilot: every second, the signal heads within 35 m ahead that shine
+    /// towards it (car and pedestrian heads), with their state, so a head that faces the wrong way or shows the wrong
+    /// phase can be found from a video's time.</summary>
+    void LogSignalsInView()
+    {
+        var me = transform.position; var fwd = Flat(transform.forward).normalized;
+        var sb = new System.Text.StringBuilder();
+        void Add(Transform t, string kind, LightState st)
+        {
+            var d = Flat(t.position - me);
+            if (d.sqrMagnitude > 35f * 35f || Vector3.Dot(d, fwd) < 2f) return;
+            float facing = Vector3.Dot(Flat(LightFacing(t)).normalized, fwd);
+            if (facing > -0.5f) return;   // (not shining towards the participant)
+            sb.Append($"; {kind} {t.name} {st} at {Vector3.Dot(d, fwd):F0} m ahead, {Vector3.Dot(d, Vector3.Cross(Vector3.up, fwd)):F1} m right, facing {facing:F2}");
+        }
+        foreach (var l in _lights) if (l != null) Add(l.transform, l.Arrow != CarTrafficLight.TurnArrow.None ? "arrow" : "car", l.State);
+        foreach (var l in FindObjectsByType<PedestrianTrafficLight>(FindObjectsSortMode.None)) if (l != null) Add(l.transform, "pedestrian", l.State);
+        // oncoming vehicles within 30 m ahead: how far over they are, and the angle between their heading and their motion
+        foreach (var c in _cars)
+        {
+            if (c.t == null || c.t == transform) continue;
+            var d = Flat(c.pos - me);
+            if (d.sqrMagnitude > 30f * 30f || Vector3.Dot(d, fwd) < 0f || Vector3.Dot(c.fwd, fwd) > -0.3f) continue;
+            float slip = c.t.TryGetComponent<Rigidbody>(out var orb) && Flat(orb.linearVelocity).sqrMagnitude > 0.25f ? Vector3.Angle(Flat(c.fwd), Flat(orb.linearVelocity)) : 0f;
+            sb.Append($"; oncoming {c.name} at {Vector3.Dot(d, fwd):F0} m, {Vector3.Dot(d, Vector3.Cross(Vector3.up, fwd)):F1} m right, heading {Vector3.SignedAngle(-fwd, Flat(c.fwd), Vector3.up):F0}°, slip {slip:F0}°{(c.tc != null ? " [" + c.tc.LeaderDescription + "]" : "")}");
+        }
+        Debug.Log($"TrafficDebug: participant t={Time.time:F1} at ({me.x:F1},{me.z:F1}) heading {Mathf.Atan2(fwd.x, fwd.z) * Mathf.Rad2Deg:F0} v={Speed:F1} {LeaderDescription}{sb}");
+    }
     static readonly bool DebugTraffic = System.Array.IndexOf(CommandLine.Args, "-debugTraffic") >= 0;
     static int _overlapFrames, _yieldFrames, _frames; static float _nextReport = 10f;
     static void DebugCount()
@@ -511,6 +553,18 @@ public class TrafficCar : MonoBehaviour
         {
             _nextReport += 10f;
             Debug.Log($"TrafficDebug: t={Time.time:F0} s, {_frames} frames, car-overlap frames {_overlapFrames}, yielding car-frames {_yieldFrames}, freed from obstacles {Freed}");
+            // how high the vehicles stand on the ground under them (a two-wheeler's wheels sunk into the road: below 0)
+            var heights = new List<(string kind, float h)>();
+            foreach (var cc in _cars)
+            {
+                if (cc.t == null || cc.tc == null) continue;
+                var hits = Physics.RaycastAll(cc.pos + Vector3.up * 2f, Vector3.down, 6f, ~0, QueryTriggerInteraction.Ignore);
+                float ground = float.NegativeInfinity;
+                foreach (var h in hits) if (h.collider.attachedRigidbody == null && h.normal.y > 0.7f && h.point.y < cc.pos.y + 1f && h.point.y > ground) ground = h.point.y;
+                if (ground > float.NegativeInfinity) heights.Add((cc.tc.LaneHalfWidth < 1f ? "two-wheelers" : "cars", cc.pos.y - ground));
+            }
+            foreach (var g in heights.GroupBy(x => x.kind))
+                Debug.Log($"TrafficDebug: {g.Key} above the ground: {g.Count()}, from {g.Min(x => x.h):F2} to {g.Max(x => x.h):F2} m, mean {g.Average(x => x.h):F2} m");
             int n = 0;
             foreach (var cc in _cars)
                 if (cc.t is Transform c && c != null && c.TryGetComponent<TrafficCar>(out var tc) && tc._stoppedSince > 0f && Time.time - tc._stoppedSince > 20f && n++ < 8)
@@ -554,6 +608,11 @@ public class TrafficCar : MonoBehaviour
     /// Crossing, turning and merging traffic: the distance along the own path to the first point that a nearby car
     /// heading another way will reach before this car (its next 3 s, straight on at its speed), or is on now; at about
     /// the same time the car with the lower id goes first. Followed cars ahead (same direction) are FindLeader's.
+    /// A car turning across the oncoming traffic (left; right in left-hand traffic) gives way to it as drivers do: to
+    /// an oncoming vehicle that would reach the point where it crosses its lane (in the next 6 s) before this car has
+    /// crossed it with a gap to spare (the time to clear the lane, its length and 4 m at its speed, at least 3 m/s, and
+    /// 1.5 s more), not only to one that would be there first; else it turns across just in front of the oncoming car,
+    /// which has to brake hard.
     /// </summary>
     float Conflict(float start, float offset, out string what)
     {
@@ -562,6 +621,9 @@ public class TrafficCar : MonoBehaviour
         var me = transform.position;
         _ahead.Clear();
         for (float d = 2f; d <= 30f; d += 2f) _ahead.Add(_circuit.GetRoutePoint(start + d).position);
+        var across = OsmMap.Current != null && OsmMap.Current.Info.LeftHandTraffic ? CarTrafficLight.TurnArrow.Right : CarTrafficLight.TurnArrow.Left;
+        bool turnsAcross = TurnAfter(start) == across;
+        float clearLane = (VehicleLength + 4f) / Mathf.Max(Speed, 3f) + 1.5f;
         foreach (var cc in _cars)
         {
             var c = cc.t;
@@ -577,7 +639,11 @@ public class TrafficCar : MonoBehaviour
             var fwd = Flat(c.forward).normalized;
             // (a car stopping at its red light or behind its leader goes no further than that)
             float further = tc != null ? tc.LeaderGap + 1f : float.PositiveInfinity;
-            for (float tt = 0f; tt <= 3f; tt += 0.5f)
+            // turning across an oncoming vehicle's lane: further ahead, in steps of at most 1.5 m of its way (so its
+            // positions do not skip the narrow strip where this car's path crosses its lane)
+            bool gap = turnsAcross && facing < -0.7f && vc >= 1f;
+            float horizon = gap ? 6f : 3f, dt = gap ? Mathf.Clamp(1.5f / vc, 0.1f, 0.5f) : 0.5f;
+            for (float tt = 0f; tt <= horizon; tt += dt)
             {
                 var q = c.position + fwd * Mathf.Min(vc * tt, further);
                 for (int k = 0; k < _ahead.Count; k++)
@@ -596,7 +662,8 @@ public class TrafficCar : MonoBehaviour
                     // (a tie: the earlier spawned car goes first; a participant's vehicle before any traffic car)
                     int rank = tc != null ? tc._rank : int.MinValue;
                     bool theyFirst = slowBoth ? rank < _rank : tt < mine - 0.4f || Mathf.Abs(tt - mine) <= 0.4f && rank < _rank;
-                    if (theyFirst) { best = along; what = $"yielding to {c.name} at {along:F0} m"; }
+                    if (gap) theyFirst = tt < mine + clearLane;
+                    if (theyFirst) { best = along; what = $"yielding to {c.name} at {along:F0} m{(gap ? " (turning across)" : "")}"; }
                     break;
                 }
             }
