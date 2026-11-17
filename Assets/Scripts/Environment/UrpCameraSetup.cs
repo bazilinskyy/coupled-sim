@@ -22,9 +22,11 @@ public static class UrpCameraSetup
     static void OnBeginCamera(ScriptableRenderContext context, Camera camera)
     {
         if (camera == null || _done.Contains(camera)) return;
+        if (_done.Count > 64) _done.RemoveWhere(c => c == null);
         _done.Add(camera);
         if (camera.cameraType != CameraType.Game || camera.targetTexture != null) return;
         var data = camera.GetUniversalAdditionalCameraData();
+        if (data == null) return;
         data.renderPostProcessing = true;
         if (data.antialiasing == AntialiasingMode.None)
         {
