@@ -558,12 +558,48 @@ public partial class OsmMapGenerator
         /// follows the ground inside large polygons, not only at their outline).</summary>
         public void Polygon(List<V2> poly, float y, float uvScale, float maxEdge = 0f)
         {
+            if (maxEdge > 0f) poly = Densify(poly, maxEdge);
             var tris = Geometry2D.Triangulate(poly);
             var pts = new List<V2>(poly);
             if (maxEdge > 0f) Refine(pts, tris, maxEdge);
             int b = V.Count;
             foreach (var p in pts) { V.Add(P(p, y)); UV.Add(new Vector2(p.X / uvScale, p.Y / uvScale)); }
             for (int i = 0; i < tris.Count; i += 3) { T.Add(b + tris[i]); T.Add(b + tris[i + 2]); T.Add(b + tris[i + 1]); }
+        }
+
+        /// <summary>The outline with each edge in equal pieces of at most maxEdge: neighbours that share an edge (the
+        /// topography's surfaces) then get the same points on it, so no cracks open between them on the terrain.</summary>
+        public static List<V2> Densify(List<V2> poly, float maxEdge)
+        {
+            var dense = new List<V2>(poly.Count * 2);
+            for (int i = 0; i < poly.Count; i++)
+            {
+                V2 a = poly[i], c = poly[(i + 1) % poly.Count];
+                int k = Math.Max(1, (int)Math.Ceiling(V2.Distance(a, c) / maxEdge - 1e-3f));
+                // from the lower end of the edge, so both neighbours compute the same points
+                bool fwd = a.X < c.X || (a.X == c.X && a.Y <= c.Y);
+                for (int j = 0; j < k; j++)
+                    dense.Add(j == 0 ? a : fwd ? V2.Lerp(a, c, j / (float)k) : V2.Lerp(c, a, (k - j) / (float)k));
+            }
+            return dense;
+        }
+
+        /// <summary>A band along a closed outline (centred on it), with the texture in world space like
+        /// <see cref="Polygon"/>: under the topography's surfaces it fills the slivers between neighbours that do not quite
+        /// meet (their curves are stroked apart), where the ground would show through.</summary>
+        public void OutlineBand(List<V2> poly, float width, float y, float uvScale, float maxEdge = 0f)
+        {
+            var ring = maxEdge > 0f ? Densify(poly, maxEdge) : new List<V2>(poly);
+            ring.Add(ring[0]);
+            var l = new List<V2>(); var r = new List<V2>();
+            Geometry2D.Strip(ring, width, 0f, l, r);
+            Vector2 U(V2 q) => new Vector2(q.X / uvScale, q.Y / uvScale);
+            for (int i = 0; i < l.Count - 1; i++)
+            {
+                Quad(P(l[i], y), P(l[i + 1], y), P(r[i + 1], y), P(r[i], y), U(l[i]), U(l[i + 1]), U(r[i + 1]), U(r[i]));
+                // both sides: the outline runs either way round
+                Quad(P(r[i], y), P(r[i + 1], y), P(l[i + 1], y), P(l[i], y), U(r[i]), U(r[i + 1]), U(l[i + 1]), U(l[i]));
+            }
         }
 
         /// <summary>Conforming refinement: in each pass, every triangle's longest edge longer than maxEdge is marked, and
@@ -906,7 +942,7 @@ public partial class OsmMapGenerator
                 var wet = new bool[(k + 1) * (k + 1)];
                 for (int a = 0; a <= k; a++)
                     for (int b = 0; b <= k; b++)
-                        wet[a * (k + 1) + b] = centreWet ^ WaterIndex.CrossesOdd(local, centre, new V2(x0 + a * cs, z0 + b * cs));
+                        wet[a * (k + 1) + b] = waterIndex.Inside(new V2(x0 + a * cs, z0 + b * cs));
                 for (int a = 0; a < k; a++)
                     for (int b = 0; b < k; b++)
                     {
@@ -992,7 +1028,7 @@ public partial class OsmMapGenerator
         foreach (var poly in waterPolys)
         {
             waterMb.Polygon(poly, -WaterDepth, 10f, Terrain != null ? 8f : 0f);
-            Quay(poly, quays, copings, edges, crossings);
+            Quay(poly, quays, copings, edges, crossings, waterIndex);
         }
         var waterGo = Emit(world, "Water", waterMb, WaterMaterial(water), true);
         if (waterGo != null) waterGo.AddComponent<WaterRipples>();
@@ -1035,7 +1071,11 @@ public partial class OsmMapGenerator
                     var c = new V2(poly.Average(q => q.X), poly.Average(q => q.Y));
                     if (!waterIndex.Inside(c) && !poly.Any(waterIndex.Inside)) continue;
                 }
-                mb.Polygon(poly, at >= 0 ? 0.016f : 0.012f, kind == "grass" ? 4f : kind == "road" || kind == "footway_asphalt" ? 4f : kind == "cycleway" ? 4f : 1.5f, Terrain != null ? 8f : 0f);
+                float uvs = kind == "grass" ? 4f : kind == "road" || kind == "footway_asphalt" ? 4f : kind == "cycleway" ? 4f : 1.5f;
+                mb.Polygon(poly, at >= 0 ? 0.016f : 0.012f, uvs, Terrain != null ? 8f : 0f);
+                // a 16 cm band under its outline: neighbours' curves are stroked separately, and the slivers between
+                // them (a few cm) showed the grass underneath as cracks across the road
+                if (at < 0) mb.OutlineBand(poly, 0.16f, 0.009f, uvs, Terrain != null ? 8f : 0f);
             }
             foreach (var kv in kinds) if (builders[kv.Key].V.Count > 0) Emit(world, kv.Value.name, builders[kv.Key], kv.Value.mat, true);
             RealDataCredits.Add($"{surfaces.Count} surfaces: {surfaceCredit}");
@@ -1766,8 +1806,9 @@ public partial class OsmMapGenerator
 
     /// <summary>A quay along a water outline: brick walls from below the water line up to the street (both faces), and a
     /// stone coping 0.8 m wide on the land side, just above the ground, over the ground's 1 m cells at the shore.</summary>
-    void Quay(List<V2> poly, MeshBuilder walls, MeshBuilder copings, MeshBuilder edges, Dictionary<(int, int), List<V2>> crossings)
+    void Quay(List<V2> poly, MeshBuilder walls, MeshBuilder copings, MeshBuilder edges, Dictionary<(int, int), List<V2>> crossings, WaterIndex water)
     {
+        // only along shores: where this area touches or overlaps another water area there is no wall, coping or kerb
         // the invisible kerb, 0.6 m high, in 1 m pieces, left out within 7 m of a way crossing the edge (onto a bridge)
         for (int i = 0; i < poly.Count; i++)
         {
@@ -1778,6 +1819,7 @@ public partial class OsmMapGenerator
             {
                 var p0 = V2.Lerp(a, b, k / (float)pieces); var p1 = V2.Lerp(a, b, (k + 1) / (float)pieces);
                 var mid = (p0 + p1) / 2f;
+                if (!water.IsShore(p0, p1)) continue;
                 int cx = (int)Math.Floor(mid.X / 4f), cz = (int)Math.Floor(mid.Y / 4f);
                 bool way = false;
                 for (int dx = -2; dx <= 2 && !way; dx++)
@@ -1795,16 +1837,40 @@ public partial class OsmMapGenerator
             var a = poly[i]; var b = poly[(i + 1) % n];
             float len = V2.Distance(a, b); if (len < 0.01f) continue;
             float y0 = -WaterDepth - 0.3f, y1 = 0f;
+            if (!water.IsShore(a, b)) { along += len; continue; }
             Vector2 U(float s, float y) => new Vector2(s / 2.5f, (y - y0) / 2.5f);
             walls.Quad(P(a, y0), P(a, y1), P(b, y1), P(b, y0), U(along, y0), U(along, y1), U(along + len, y1), U(along + len, y0));
             walls.Quad(P(b, y0), P(b, y1), P(a, y1), P(a, y0), U(along + len, y0), U(along + len, y1), U(along, y1), U(along, y0));
             along += len;
         }
         // the land side: right of the outline when it runs counter-clockwise
-        var ring = new List<V2>(poly) { poly[0] };
-        var l = new List<V2>(); var r = new List<V2>();
-        Geometry2D.Strip(ring, 0.8f, Geometry2D.SignedArea(poly) > 0 ? 0.4f : -0.4f, l, r);
-        copings.Strip(l, r, 0.006f, 1f);
+        // in runs of shore edges (a closed ring when the whole outline is shore)
+        float side = Geometry2D.SignedArea(poly) > 0 ? 0.4f : -0.4f;
+        int start = -1;
+        for (int i = 0; i < n; i++) if (!water.IsShore(poly[i], poly[(i + 1) % n])) { start = i; break; }
+        var runs = new List<List<V2>>();
+        if (start < 0) runs.Add(new List<V2>(poly) { poly[0] });
+        else
+        {
+            List<V2> run = null;
+            for (int k = 1; k <= n; k++)
+            {
+                int i = (start + k) % n;
+                if (water.IsShore(poly[i], poly[(i + 1) % n]))
+                {
+                    if (run == null) { run = new List<V2> { poly[i] }; runs.Add(run); }
+                    run.Add(poly[(i + 1) % n]);
+                }
+                else run = null;
+            }
+        }
+        foreach (var run in runs)
+        {
+            if (run.Count < 2) continue;
+            var l = new List<V2>(); var r = new List<V2>();
+            Geometry2D.Strip(run, 0.8f, side, l, r);
+            copings.Strip(l, r, 0.006f, 1f);
+        }
     }
 
     Material WaterMaterial(Material plain)
@@ -1841,11 +1907,13 @@ public partial class OsmMapGenerator
         {
             _polys = polys;
             foreach (var poly in polys)
-            {
                 _boxes.Add((poly.Min(q => q.X), poly.Min(q => q.Y), poly.Max(q => q.X), poly.Max(q => q.Y)));
+            foreach (var poly in polys)
+            {
                 for (int i = 0; i < poly.Count; i++)
                 {
                     var a = poly[i]; var b = poly[(i + 1) % poly.Count];
+                    if (!IsShore(a, b)) continue;   // between two water areas (a canal mapped in pieces): not a shore
                     int cx0 = (int)Math.Floor(Math.Min(a.X, b.X) / Cell), cx1 = (int)Math.Floor(Math.Max(a.X, b.X) / Cell);
                     int cz0 = (int)Math.Floor(Math.Min(a.Y, b.Y) / Cell), cz1 = (int)Math.Floor(Math.Max(a.Y, b.Y) / Cell);
                     for (int x = cx0; x <= cx1; x++) for (int z = cz0; z <= cz1; z++)
@@ -1858,6 +1926,15 @@ public partial class OsmMapGenerator
         }
 
         public bool Any => _polys.Count > 0;
+
+        /// <summary>Whether a piece of a water outline has land on one side (not water on both: canals are often
+        /// mapped as several areas that touch or overlap).</summary>
+        public bool IsShore(V2 a, V2 b)
+        {
+            var d = b - a; float l = d.Length(); if (l < 1e-4f) return false;
+            var n = new V2(-d.Y, d.X) * (0.3f / l); var m = (a + b) / 2f;
+            return !(Inside(m + n) && Inside(m - n));
+        }
 
         /// <summary>The nearest point of a water outline within <paramref name="radius"/> m.</summary>
         public bool NearestShore(V2 p, float radius, out V2 shore)
@@ -1892,21 +1969,6 @@ public partial class OsmMapGenerator
                 if (Geometry2D.PointInPolygon(p, _polys[i])) return true;
             }
             return false;
-        }
-
-        /// <summary>Whether the segment from p to q crosses the edges an odd number of times (q is on the other side of the shore).</summary>
-        public static bool CrossesOdd(List<(V2 a, V2 b)> edges, V2 p, V2 q)
-        {
-            bool odd = false;
-            foreach (var (a, b) in edges)
-            {
-                float d1 = Geometry2D.Cross(b - a, p - a), d2 = Geometry2D.Cross(b - a, q - a);
-                if ((d1 > 0) == (d2 > 0)) continue;
-                float d3 = Geometry2D.Cross(q - p, a - p), d4 = Geometry2D.Cross(q - p, b - p);
-                if ((d3 > 0) == (d4 > 0)) continue;
-                odd = !odd;
-            }
-            return odd;
         }
     }
 
