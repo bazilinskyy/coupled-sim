@@ -16,6 +16,46 @@ public class OsmMap : MonoBehaviour
 {
     /// <summary>Map to build when the scene loads (set before loading the scene).</summary>
     public static string Requested;
+    /// <summary>"lat,lon": spawn points near this place instead of the map centre (trial parameter start, -start).</summary>
+    public static string RequestedStart;
+
+    /// <summary>The local point spawn points are nearest to: the requested start, else the map centre.</summary>
+    Vector3 SpawnFocus()
+    {
+        if (string.IsNullOrEmpty(RequestedStart) || Generator == null) return Vector3.zero;
+        var f = RequestedStart.Split(',');
+        var ci = System.Globalization.CultureInfo.InvariantCulture;
+        if (f.Length < 2 || !double.TryParse(f[0], System.Globalization.NumberStyles.Float, ci, out var la) || !double.TryParse(f[1], System.Globalization.NumberStyles.Float, ci, out var lo)) return Vector3.zero;
+        new CoupledSim.Maps.GeoProjection(Info.Latitude, Info.Longitude).ToLocal(la, lo, out var x, out var z);
+        return new Vector3((float)x, 0f, (float)z);
+    }
+
+    static float Distance2(System.Collections.Generic.List<Vector3> line, Vector3 p)
+    {
+        float best = float.MaxValue;
+        for (int i = 0; i + 1 < line.Count; i++)
+        {
+            var a = line[i]; var b = line[i + 1]; a.y = b.y = p.y = 0f;
+            var ab = b - a; float t = ab.sqrMagnitude < 1e-6f ? 0f : Mathf.Clamp01(Vector3.Dot(p - a, ab) / ab.sqrMagnitude);
+            best = Mathf.Min(best, (a + ab * t - p).sqrMagnitude);
+        }
+        return best;
+    }
+
+    /// <summary>The distance along a line of its point nearest to p.</summary>
+    static float NearestAlong(System.Collections.Generic.List<Vector3> line, Vector3 p)
+    {
+        float best = float.MaxValue, at = 0f, acc = 0f;
+        for (int i = 0; i + 1 < line.Count; i++)
+        {
+            var a = line[i]; var b = line[i + 1]; a.y = b.y = p.y = 0f;
+            var ab = b - a; float l = ab.magnitude; float t = l < 1e-3f ? 0f : Mathf.Clamp01(Vector3.Dot(p - a, ab) / (l * l));
+            float d = (a + ab * t - p).sqrMagnitude;
+            if (d < best) { best = d; at = acc + t * l; }
+            acc += l;
+        }
+        return at;
+    }
     public static OsmMap Current { get; private set; }
 
     [Tooltip("Map built when the scene is opened directly (e.g. in the editor).")]
@@ -280,8 +320,9 @@ public class OsmMap : MonoBehaviour
 
         if (kind == SpawnKind.CyclePath || kind == SpawnKind.Pavement)
         {
+            var near = SpawnFocus();
             var lines = (kind == SpawnKind.CyclePath ? Generator.CyclePaths : Generator.Pavements)
-                .Where(l => Length(l) > 15f && !Generator.CrossingLines.Contains(l)).OrderBy(l => Mid(l).sqrMagnitude).ToList();
+                .Where(l => Length(l) > 15f && !Generator.CrossingLines.Contains(l)).OrderBy(l => (Mid(l) - near).sqrMagnitude).ToList();
             if (lines.Count == 0) return false;
             // the index-th line, or a later one when a tree, a post or a wall stands on it
             float len = kind == SpawnKind.CyclePath ? 1.9f : 0.6f, width = kind == SpawnKind.CyclePath ? 0.7f : 0.6f;
@@ -297,36 +338,64 @@ public class OsmMap : MonoBehaviour
             }
             return true;
         }
-        var roads = Generator.Roads.Where(r => SpawnRoadTypes.Contains(r.Type) && !r.NoThroughTraffic && Length(r.Line) > 40f)
-            .OrderBy(r => Mid(r.Line).sqrMagnitude).ToList();
+        var focus = SpawnFocus();
+        bool atStart = focus != Vector3.zero;
+        // (near a requested start: any road with through traffic, motorways too, nearest first)
+        var roads = (atStart
+                ? Generator.Roads.Where(r => !r.NoThroughTraffic && r.Type != "service" && Length(r.Line) > 40f).OrderBy(r => Distance2(r.Line, focus))
+                : Generator.Roads.Where(r => SpawnRoadTypes.Contains(r.Type) && !r.NoThroughTraffic && Length(r.Line) > 40f).OrderBy(r => Mid(r.Line).sqrMagnitude))
+            .ToList();
+        if (atStart && index == 0)
+        {
+            var near = Generator.Roads.OrderBy(r => Distance2(r.Line, focus)).Take(4)
+                .Select(r => $"{r.Type} {Mathf.Sqrt(Distance2(r.Line, focus)):F0} m{(r.NoThroughTraffic ? " no through traffic" : "")}{(r.Bridge ? " bridge" : "")}, {Length(r.Line):F0} m long");
+            Debug.Log($"OsmMap: spawn near {RequestedStart} ({focus.x:F0}, {focus.z:F0}): nearest roads {string.Join("; ", near)}");
+        }
         if (roads.Count == 0) roads = Generator.Roads.Where(r => Length(r.Line) > 20f).OrderBy(r => Mid(r.Line).sqrMagnitude).ToList();
         if (roads.Count == 0) return false;
         float side = Info.LeftHandTraffic ? -1f : 1f;
+        // (a one-way road of two lanes and more, a motorway's carriageway: in the lane on the driver's side, as the routes)
         // the middle of the index-th road, else further along it, else a later road: where no tree, parked car,
         // post or wall stands in the vehicle's place (register trees often stand at the edge of narrow streets)
         for (int k = 0; k < roads.Count; k++)
         {
             var road = roads[(index + k) % roads.Count];
-            float offset = kind == SpawnKind.RoadEdge ? road.Width / 2 - 0.8f : (road.OneWay ? 0f : road.Width / 4);
-            foreach (var d in Along(Length(road.Line), 5f))
+            float offset = kind == SpawnKind.RoadEdge ? road.Width / 2 - 0.8f : (road.OneWay ? (road.Width >= 6.6f ? road.Width / 4 : 0f) : road.Width / 4);
+            foreach (var d in atStart ? AlongFrom(Length(road.Line), NearestAlong(road.Line, focus), 5f) : Along(Length(road.Line), 5f))
             {
                 PointAt(road.Line, d, out var centre, out var forward);
                 var rightVec = Vector3.Cross(Vector3.up, forward).normalized;
                 position = centre + rightVec * side * offset + Vector3.up * 0.05f;
                 rotation = Quaternion.LookRotation(forward, Vector3.up);
                 bool rider = kind == SpawnKind.RoadEdge;
-                if (Clear(position, forward, rider ? 1.9f : 4.8f, rider ? 0.8f : 2.0f)) return true;
+                if (Clear(position, forward, rider ? 1.9f : 4.8f, rider ? 0.8f : 2.0f))
+                {
+                    if (atStart) Debug.Log($"OsmMap: spawn {kind} {index} on a {road.Type} at {position}");
+                    return true;
+                }
             }
         }
         // nothing clear anywhere: the middle of the index-th road, as before
         {
             var road = roads[index % roads.Count];
             PointAt(road.Line, Length(road.Line) / 2, out var centre, out var forward);
-            float offset = kind == SpawnKind.RoadEdge ? road.Width / 2 - 0.8f : (road.OneWay ? 0f : road.Width / 4);
+            float offset = kind == SpawnKind.RoadEdge ? road.Width / 2 - 0.8f : (road.OneWay ? (road.Width >= 6.6f ? road.Width / 4 : 0f) : road.Width / 4);
             position = centre + Vector3.Cross(Vector3.up, forward).normalized * side * offset + Vector3.up * 0.05f;
             rotation = Quaternion.LookRotation(forward, Vector3.up);
         }
         return true;
+    }
+
+    /// <summary>Distances along a line to try: from a point outwards in steps, keeping a few metres from its ends.</summary>
+    static System.Collections.Generic.IEnumerable<float> AlongFrom(float length, float from, float step)
+    {
+        from = Mathf.Clamp(from, Mathf.Min(6f, length / 2), Mathf.Max(length - 6f, length / 2));
+        yield return from;
+        for (float o = step; o < length; o += step)
+        {
+            if (from + o < length - 6f) yield return from + o;
+            if (from - o > 6f) yield return from - o;
+        }
     }
 
     /// <summary>Distances along a line to try: its middle, then outwards in steps, keeping a few metres from its ends.</summary>

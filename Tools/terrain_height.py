@@ -118,8 +118,11 @@ def ahn_sampler(lats, lons):
     x0, x1, y0, y1 = min(xs) - 20, max(xs) + 20, min(ys) - 20, max(ys) + 20
     res = 2.0
     tiles, tile = {}, 1000.0
+    # (only the 1 km tiles with points in them: a map with corridors is a thin strip in a large box)
+    used = {(math.floor(x / tile) * tile, math.floor(y / tile) * tile) for x, y in zip(xs, ys)}
     for tx in np.arange(math.floor(x0 / tile) * tile, x1, tile):
         for ty in np.arange(math.floor(y0 / tile) * tile, y1, tile):
+            if (tx, ty) not in used: continue
             url = ("https://service.pdok.nl/rws/ahn/wcs/v1_0?service=WCS&request=GetCoverage&version=2.0.1&coverageId=dtm_05m"
                    "&subset=x(%d,%d)&subset=y(%d,%d)&scalefactor=0.25&format=image/tiff" % (tx, tx + tile, ty, ty + tile))
             im = Image.open(io.BytesIO(get(url)))
@@ -424,7 +427,63 @@ def blur(a, sigma_px):
     return p
 
 
+def area_mask(parts, lat0, lon0, X, Z, margin):
+    """Grid points within margin (m) of a map's area (Tools/map_area.py): its boxes and corridors."""
+    m = np.zeros(X.shape, bool)
+    for p in parts:
+        if p[0] == "box":
+            s, w, n, e = p[1]
+            xa, za = to_local(s, w, lat0, lon0); xb, zb = to_local(n, e, lat0, lon0)
+            m |= (X > min(xa, xb) - margin) & (X < max(xa, xb) + margin) & (Z > min(za, zb) - margin) & (Z < max(za, zb) + margin)
+        else:
+            pts = [to_local(la, lo, lat0, lon0) for la, lo in p[2]]
+            for (ax, az), (bx, bz) in zip(pts, pts[1:]):
+                dx, dz = bx - ax, bz - az; l2 = dx * dx + dz * dz or 1e-9
+                t = np.clip(((X - ax) * dx + (Z - az) * dz) / l2, 0, 1)
+                m |= np.hypot(X - ax - t * dx, Z - az - t * dz) < p[1] / 2 + margin
+    return m
+
+
+def build_area(name, parts, terrarium=False):
+    """A map with corridors: a rectangle around its area, at 3 m, sampled only within 150 m of the area."""
+    from scipy.ndimage import distance_transform_edt
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import map_area
+    lat0, lon0 = centre(name)
+    s, w, n, e = map_area.union_bbox(parts, 250.0)
+    xa, za = to_local(s, w, lat0, lon0); xb, zb = to_local(n, e, lat0, lon0)
+    source, step0, sigma = ("terrarium", 4, 10) if terrarium else SOURCE.get(name, ("gedtm", 4, 15))
+    step = max(step0, 3)
+    x0, z0 = min(xa, xb), min(za, zb)
+    nx, nz = int(math.ceil((max(xa, xb) - x0) / step)) + 1, int(math.ceil((max(za, zb) - z0) / step)) + 1
+    X, Z = np.meshgrid(x0 + np.arange(nx) * step, z0 + np.arange(nz) * step)
+    mask = area_mask(parts, lat0, lon0, X, Z, 150.0)
+    lats = lat0 + Z / 111320.0; lons = lon0 + X / (111320.0 * math.cos(math.radians(lat0)))
+    print("%s: %d x %d points (%d in the area), %.0f m step, %s" % (name, nx, nz, mask.sum(), step, source))
+    H = np.full(X.shape, np.nan)
+    H[mask] = sampler_for(name, source)(lats[mask], lons[mask])
+    bad = ~np.isfinite(H) | (H > 1e4) | (H < -1e3)
+    if (bad & mask).mean() / max(1e-9, mask.mean()) > 0.5: raise RuntimeError("most of the area without heights")
+    # gaps and everything beyond the area: the nearest height (beyond the area it is never seen)
+    idx = distance_transform_edt(bad, return_distances=False, return_indices=True)
+    H = H[tuple(idx)]
+    H = blur(H, sigma / step)
+    ci, cj = int(round((0 - z0) / step)), int(round((0 - x0) / step))
+    H = H - H[ci, cj]
+    credit = AHN_CREDIT if source == "ahn" else TERRARIUM_CREDIT if source == "terrarium" else CREDITS[source]
+    path = os.path.join(MAPS, name + ".height.bin.gz")
+    with gzip.open(path, "wb") as f:
+        f.write(b"HGT1"); f.write(struct.pack("<dd", lat0, lon0)); f.write(struct.pack("<fff", x0, z0, step))
+        f.write(struct.pack("<ii", nx, nz)); c = credit.encode("utf-8"); f.write(struct.pack("<i", len(c))); f.write(c)
+        f.write(H.astype("<f4").tobytes())
+    print("%s: heights %.1f .. %.1f m around the centre -> %s (%d kB)" % (name, H[mask].min(), H[mask].max(), os.path.relpath(path, ROOT), os.path.getsize(path) // 1024))
+
+
 def build(name, terrarium=False):
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import map_area
+    parts = map_area.read(name)
+    if parts: return build_area(name, parts, terrarium)
     lat0, lon0 = centre(name)
     s, w, n, e = bounds(name)
     xa, za = to_local(s, w, lat0, lon0); xb, zb = to_local(n, e, lat0, lon0)

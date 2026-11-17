@@ -30,6 +30,9 @@ public sealed class AerialPhoto
     }
 
     /// <summary>The texture coordinate of a scene point (x east, z north).</summary>
+    /// <summary>Whether the photo covers a scene point (a map with corridors reaches beyond it).</summary>
+    public bool Covers(Vector3 p) => Mathf.Abs(p.x) < HalfSize && Mathf.Abs(p.z) < HalfSize;
+
     public Vector2 Uv(Vector3 p) => new Vector2((p.x + HalfSize) / (2f * HalfSize), (p.z + HalfSize) / (2f * HalfSize));
 
     public static string PathFor(string map) => Path.Combine(Application.streamingAssetsPath, "Maps", map + ".aerial.jpg");
