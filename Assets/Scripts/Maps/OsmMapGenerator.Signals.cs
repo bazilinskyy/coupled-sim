@@ -213,6 +213,7 @@ public partial class OsmMapGenerator
                 byPhase[h.Phase].Add(light);
                 carLights.Add(light);
                 if (h.TurnLane && PlaceArrowHead(lightsRoot, h, light) is CarTrafficLight arrowHead) { turnByPhase[h.Phase].Add(arrowHead); carLights.Add(arrowHead); }
+                FlatLenses(light.transform);
             }
             var pedByPhase = new[] { new List<PedestrianTrafficLight>(), new List<PedestrianTrafficLight>() };
             foreach (var h in cp)
@@ -423,7 +424,33 @@ public partial class OsmMapGenerator
         var fwd = Vector3.Cross(x, Vector3.up);   // LookRotation(fwd) has right = up × fwd = x
         go.transform.SetPositionAndRotation(new Vector3(h.Pos.X, ground + 2.6f, h.Pos.Y), Quaternion.LookRotation(fwd, Vector3.up));
         FigureMasks(go.transform, x);
+        FlatLenses(go.transform);
         return go.GetComponent<PedestrianTrafficLight>();
+    }
+
+    static Mesh _lensFace;
+
+    /// <summary>
+    /// The signal heads' lenses are cubes standing out of the housing, lit on every face: a head that faces across the
+    /// road showed its red or green to the drivers coming along it, from the side (a pedestrian head across the
+    /// participant's road, red while it had green, looked like a car signal showing red towards it). Each lens becomes
+    /// its front face only (one-sided, where the cube's front was), so it is seen only by those it shines at, as the
+    /// visors of real signals make it.
+    /// </summary>
+    static void FlatLenses(Transform head)
+    {
+        if (_lensFace == null)
+        {
+            // the unit cube's +x face (the lenses shine along their local x), wound to face +x
+            _lensFace = new Mesh { name = "Lens face" };
+            _lensFace.vertices = new[] { new Vector3(0.5f, -0.5f, -0.5f), new Vector3(0.5f, 0.5f, -0.5f), new Vector3(0.5f, 0.5f, 0.5f), new Vector3(0.5f, -0.5f, 0.5f) };
+            _lensFace.normals = new[] { Vector3.right, Vector3.right, Vector3.right, Vector3.right };
+            _lensFace.uv = new[] { new Vector2(0, 0), new Vector2(0, 1), new Vector2(1, 1), new Vector2(1, 0) };
+            _lensFace.triangles = new[] { 0, 1, 2, 0, 2, 3 };
+            _lensFace.RecalculateBounds();
+        }
+        foreach (var r in head.GetComponentsInChildren<MeshRenderer>())
+            if ((r.name == "UpLight" || r.name == "MiddleLight" || r.name == "DownLight") && r.TryGetComponent<MeshFilter>(out var mf)) mf.sharedMesh = _lensFace;
     }
 
     static Texture2D[] _figureMask;
