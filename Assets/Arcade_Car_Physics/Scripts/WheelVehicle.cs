@@ -199,7 +199,7 @@ namespace VehicleBehaviour {
 #if MULTIOSCONTROLS
             Debug.Log("[ACP] Using MultiOSControls");
 #endif
-            if (boostClip != null) {
+            if (boostClip != null && boostSource != null) {
                 boostSource.clip = boostClip;
             }
 
@@ -348,7 +348,7 @@ namespace VehicleBehaviour {
             }
 
             // Handbrake
-            if (Mathf.Abs(speed) < 2 && GetInput(throttleInput) < 0.1f)
+            if (handbrake || (Mathf.Abs(speed) < 2 && (isPlayer ? GetInput(throttleInput) : Mathf.Abs(throttle)) < 0.1f))
             {
                 foreach (WheelCollider wheel in wheels)
                 {
@@ -359,18 +359,21 @@ namespace VehicleBehaviour {
             }
             else
             {
-                foreach (WheelCollider wheel in driveWheel)
+                if (driveWheel != null && driveWheel.Length > 0)
                 {
-                    if ((speed <= 0 && !reverse && throttle < 0) || (speed >= 0 && reverse && throttle > 0))
+                    foreach (WheelCollider wheel in driveWheel)
                     {
-                        wheel.motorTorque = 0;
-                    } else
-                    {
-                        if (throttle > 0) {
-                            wheel.motorTorque = throttle * motorTorque.Evaluate(speed) * diffGearing / driveWheel.Length;
+                        if ((speed <= 0 && !reverse && throttle < 0) || (speed >= 0 && reverse && throttle > 0))
+                        {
+                            wheel.motorTorque = 0;
                         } else
                         {
-                            wheel.motorTorque = throttle * deaccelerateMotorTorque.Evaluate(speed) * diffGearing / driveWheel.Length;
+                            if (throttle > 0) {
+                                wheel.motorTorque = throttle * motorTorque.Evaluate(speed) * diffGearing / driveWheel.Length;
+                            } else
+                            {
+                                wheel.motorTorque = throttle * deaccelerateMotorTorque.Evaluate(speed) * diffGearing / driveWheel.Length;
+                            }
                         }
                     }
                 }

@@ -31,4 +31,21 @@ public class AerialPhotoTests
         Assert.That(uv.x, Is.EqualTo(0f).Within(1e-6f));
         Assert.That(uv.y, Is.EqualTo(0f).Within(1e-6f));
     }
+
+    [Test]
+    public void NonSquareSampleReadsCorrectRowAndColumn()
+    {
+        var t = System.Type.GetType("AerialPhoto, Assembly-CSharp", true);
+        var photo = System.Activator.CreateInstance(t);
+        var flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+        t.GetField("HalfSize").SetValue(photo, 100f);
+        t.GetField("_smallWidth", flags).SetValue(photo, 4);
+        t.GetField("_smallHeight", flags).SetValue(photo, 2);
+        var px = new Color32[8];
+        px[1 * 4 + 3] = new Color32(250, 40, 10, 255); // top-right (x=3, y=1)
+        t.GetField("_small", flags).SetValue(photo, px);
+        var c = (Color)t.GetMethod("Sample").Invoke(photo, new object[] { new Vector3(90f, 0f, 90f) });
+        Assert.AreEqual(250f / 255f, c.r, 1e-3f);
+        Assert.AreEqual(40f / 255f, c.g, 1e-3f);
+    }
 }

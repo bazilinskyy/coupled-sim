@@ -174,5 +174,26 @@ namespace CoupledSim.Tests
             for (int i = 0; i < 20; i++) after = abs.Modulate(1000f, -0.02f, 0.05f);
             Assert.AreEqual(1000f, after, 1e-3);
         }
+
+        [Test]
+        public void DoesNotDownshiftMidUpshiftUnderFullThrottleOnGrade()
+        {
+            var spec = CarSpec.Truck;
+            var p = new Powertrain(spec);
+            float v = 0f;
+            const float dt = 0.01f;
+            int prevGear = p.Gear;
+            int downshifts = 0;
+            for (int step = 0; step < 6000; step++)
+            {
+                float force = p.WheelTorque(v, 1f, dt) / spec.WheelRadius - p.Resistance(v) - spec.Mass * 9.81f * 0.02f;
+                force = Math.Min(force, 0.5f * spec.Mass * 9.81f);
+                v = Math.Max(0f, v + force / spec.Mass * dt);
+                if (p.Gear < prevGear) downshifts++;
+                prevGear = p.Gear;
+            }
+            Assert.AreEqual(0, downshifts, "full-throttle acceleration should not oscillate between gears during shift torque cut");
+            Assert.GreaterOrEqual(p.Gear, 4);
+        }
     }
 }

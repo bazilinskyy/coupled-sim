@@ -57,9 +57,6 @@ namespace xsens
             //make sure we always have some date, even when no streaming
             lastPosePositions = new Vector3[XsMvnPose.MvnDefaultSegmentCount];
             lastPoseOrientations = new Quaternion[XsMvnPose.MvnDefaultSegmentCount];
-            //start a new thread		
-            thread = new Thread(new ThreadStart(start));
-            thread.Start();
         }
 
         /// <summary>
@@ -68,10 +65,6 @@ namespace xsens
         /// </summary>
         public void start()
         {
-            while (true)
-            {
-                  Thread.Sleep(1);
-            }
         }
 
         /// <summary>
@@ -103,7 +96,7 @@ namespace xsens
         /// </summary>
         public void killThread()
         {
-            thread.Abort();
+            thread = null;
         }
 
         /// <summary>

@@ -736,7 +736,7 @@ public partial class OsmMapGenerator
         return !(tag == null || tag == "no" || tag == "separate" || tag == "no_parking" || tag == "no_stopping" || tag == "fire_lane");
     }
 
-    static bool IsOneWay(OsmWay w) => w.Tag("oneway") == "yes" || (w.Tag("highway") ?? "").StartsWith("motorway") || w.Tag("junction") == "roundabout";
+    static bool IsOneWay(OsmWay w) => OneWayDir(w) != 0;
     static bool IsCycleway(OsmWay w) => w.Tag("highway") == "cycleway" || (w.Tag("highway") == "path" && w.Tag("bicycle") == "designated");
     static bool IsFootway(OsmWay w)
     {
@@ -780,6 +780,7 @@ public partial class OsmMapGenerator
         var world = new GameObject("World").transform;
         world.SetParent(root, false);
         _emitted.Clear();
+        NightMaterials.Clear();
         _photoWalls = !_noPhotoWalls && !_noRelief && _assets != null && _assets.FacadeTemplate != null && _assets.WallDetail != null && _assets.WallDetail.Length >= 5;
         try { Terrain = TerrainHeight.Load(_map.Name, _proj); }
         catch (Exception e) { Debug.LogWarning("TerrainHeight: " + e.Message); Terrain = null; }
@@ -1183,7 +1184,13 @@ public partial class OsmMapGenerator
                 float width = RoadWidth(w);
                 roadWays.Add((w, line, width));
                 var access = w.Tag("motor_vehicle") ?? w.Tag("vehicle") ?? w.Tag("access");
-                Roads.Add(new Road { Line = line.Select(p => P(p, 0.02f + lift)).ToList(), Width = width, Type = hw, OneWay = IsOneWay(w), Bridge = bi > 0, BridgeLayer = bi, ParkLeft = StreetParking(w, -1), ParkRight = StreetParking(w, 1),
+                // oneway=-1: the line runs the way the traffic goes (its parking sides swap with it)
+                int owDir = OneWayDir(w);
+                var roadLine = line.Select(p => P(p, 0.02f + lift)).ToList();
+                if (owDir < 0) roadLine.Reverse();
+                bool parkL = StreetParking(w, -1), parkR = StreetParking(w, 1);
+                Roads.Add(new Road { Line = roadLine, Width = width, Type = hw, OneWay = owDir != 0, Bridge = bi > 0, BridgeLayer = bi,
+                    ParkLeft = owDir < 0 ? parkR : parkL, ParkRight = owDir < 0 ? parkL : parkR,
                     NoThroughTraffic = access == "no" || access == "private" || (hw == "service" && (access == "customers" || access == "delivery" || w.Tag("service") == "driveway" || w.Tag("service") == "parking_aisle")) });
                 Geometry2D.Strip(line, width, 0, left, right);
                 var surface = SurfaceOf(w);
@@ -2197,7 +2204,8 @@ public partial class OsmMapGenerator
         {
             var ids = w.NodeIds.Where(_pos.ContainsKey).ToList();
             if (ids.Count < 2) continue;
-            bool oneWay = IsOneWay(w);
+            int owDir = OneWayDir(w);
+            bool oneWay = owDir != 0;
             float total = Geometry2D.Length(line);
             for (int i = 0; i < ids.Count; i++)
             {
@@ -2210,7 +2218,7 @@ public partial class OsmMapGenerator
                     var kind = hw == "stop" ? TrafficSignKind.Stop : TrafficSignKind.GiveWay;
                     var dirTag = node.Tag("direction");
                     // traffic towards the node: along the way when the node is in its second half
-                    bool forward = dirTag == "forward" || (dirTag != "backward" && i >= ids.Count / 2);
+                    bool forward = owDir > 0 || (owDir == 0 && (dirTag == "forward" || (dirTag != "backward" && i >= ids.Count / 2)));
                     var travel = forward ? p - prev : p - next;
                     Sign(kind, p - V2.Normalize(travel) * 1.5f, travel, width);
                 }
@@ -2221,23 +2229,32 @@ public partial class OsmMapGenerator
                     if (!zebra) continue;
                     var dir = next - prev;
                     if (dir.LengthSquared() < 1e-6f) continue;
-                    Sign(TrafficSignKind.PedestrianCrossing, p - V2.Normalize(dir) * 2.5f, dir, width);
-                    if (!oneWay) Sign(TrafficSignKind.PedestrianCrossing, p + V2.Normalize(dir) * 2.5f, -dir, width);
+                    if (owDir >= 0) Sign(TrafficSignKind.PedestrianCrossing, p - V2.Normalize(dir) * 2.5f, dir, width);
+                    if (owDir <= 0) Sign(TrafficSignKind.PedestrianCrossing, p + V2.Normalize(dir) * 2.5f, -dir, width);
                 }
             }
             int limit = SpeedNumber(w.Tag("maxspeed"));
             if (limit > 0 && total > 120f)
             {
-                var (a, da) = Geometry2D.PointAt(line, 12f);
-                Sign(TrafficSignKind.SpeedLimit, a, da, width, limit);
-                if (!oneWay) { var (b, db) = Geometry2D.PointAt(line, total - 12f); Sign(TrafficSignKind.SpeedLimit, b, -db, width, limit); }
+                if (owDir >= 0) { var (a, da) = Geometry2D.PointAt(line, 12f); Sign(TrafficSignKind.SpeedLimit, a, da, width, limit); }
+                if (owDir <= 0) { var (b, db) = Geometry2D.PointAt(line, total - 12f); Sign(TrafficSignKind.SpeedLimit, b, -db, width, limit); }
             }
             if (oneWay && total > 30f && w.Tag("junction") != "roundabout" && !(w.Tag("highway") ?? "").StartsWith("motorway"))
             {
-                var (a, da) = Geometry2D.PointAt(line, 6f);
-                Sign(TrafficSignKind.OneWay, a, da, width);
-                var (b, db) = Geometry2D.PointAt(line, total - 3f);
-                Sign(TrafficSignKind.NoEntry, b, -db, width);
+                if (owDir > 0)
+                {
+                    var (a, da) = Geometry2D.PointAt(line, 6f);
+                    Sign(TrafficSignKind.OneWay, a, da, width);
+                    var (b, db) = Geometry2D.PointAt(line, total - 3f);
+                    Sign(TrafficSignKind.NoEntry, b, -db, width);
+                }
+                else
+                {
+                    var (b, db) = Geometry2D.PointAt(line, total - 6f);
+                    Sign(TrafficSignKind.OneWay, b, -db, width);
+                    var (a, da) = Geometry2D.PointAt(line, 3f);
+                    Sign(TrafficSignKind.NoEntry, a, da, width);
+                }
             }
         }
     }

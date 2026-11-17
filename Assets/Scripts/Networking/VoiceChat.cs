@@ -152,7 +152,7 @@ public class VoiceChat : MonoBehaviour
                 _times = new StreamWriter($"ExperimentLogs/Voice-{NetworkingManager.LogPrefix}{stamp}.csv") { AutoFlush = false };
                 _times.WriteLine("utc;time;first_sample;samples");
             }
-            _times.WriteLine($"{DateTime.UtcNow:yyyy-MM-ddTHH:mm:ss.fff};{Time.time:F3};{_wavSamples};{buf.Length}");
+            _times.WriteLine($"{DateTime.UtcNow:yyyy-MM-ddTHH:mm:ss.fff};{Time.time.ToString("F3", System.Globalization.CultureInfo.InvariantCulture)};{_wavSamples};{buf.Length}");
             foreach (var v in buf) _wav.Write((short)Mathf.Clamp(Mathf.RoundToInt(v * 32767f), -32768, 32767));
             _wavSamples += buf.Length;
         }

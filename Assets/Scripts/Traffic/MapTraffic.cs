@@ -243,7 +243,8 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         if (me.GetComponent<TwoWheelerController>() != null || me.GetComponent<KeyboardPlayerMovement>() != null) { WalkOrRide(me); return; }
         if (me.Type != AvatarType.Driver || Routes.Count == 0) { Debug.LogWarning("MapTraffic: no autopilot for this role"); return; }
         var tracker = me.GetComponent<WaypointProgressTracker>();
-        if (tracker == null || me.GetComponent<AICar>() == null) { Debug.LogWarning("MapTraffic: this car has no automation"); return; }
+        var aiCar = me.GetComponent<AICar>();
+        if (tracker == null || aiCar == null) { Debug.LogWarning("MapTraffic: this car has no automation"); return; }
         WaypointCircuit best = null; float bestD = 0f, bestScore = float.MaxValue;
         var at = me.transform.position; var fwd = me.transform.forward;
         foreach (var r in Routes)
@@ -253,6 +254,12 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
                 float score = (rp.position - at).sqrMagnitude + (Vector3.Dot(rp.direction, fwd) < 0.5f ? 400f : 0f);
                 if (score < bestScore) { bestScore = score; best = r; bestD = d; }
             }
+        if (best == null)
+        {
+            foreach (var r in Routes)
+                if (r != null && (best == null || r.Length > best.Length)) { best = r; bestD = 0f; }
+        }
+        if (best == null) { Debug.LogWarning("MapTraffic: no suitable route for autopilot"); return; }
         var start = best.GetRoutePoint(bestD);
         if ((start.position - at).sqrMagnitude > 9f)
         {
@@ -265,6 +272,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         }
         tracker.Init(best);
         tracker.SetProgress(bestD);
+        aiCar.target = tracker.target;
         if (!me.TryGetComponent<AutomatedDriving>(out var automation)) automation = me.gameObject.AddComponent<AutomatedDriving>();
         automation.Mode = AutomatedDriving.DrivingMode.TrafficModel;
         automation.DesiredSpeedKmh = AutopilotKmh;
@@ -299,11 +307,17 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
                     float score = (rp.position - at).sqrMagnitude + (Vector3.Dot(rp.direction, fwd) < 0.3f ? 900f : 0f) + (r.Length - d < 350f ? 2500f : 0f);
                     if (score < bestScore) { bestScore = score; bestR = r; bestD = d; }
                 }
-            // bicycles, e-scooters and 25 km/h mopeds on the cycle path or track beside the road where there is one;
-            // 45 km/h mopeds on the road
-            var tw = me.GetComponent<TwoWheelerController>();
-            bool moped = tw != null && tw.Type == CoupledSim.TwoWheelers.TwoWheelerType.Moped45;
-            path = RideLine(bestR, bestD, bestR.Length - 50f, 3f, OsmMap.Current.Info.LeftHandTraffic, !moped);
+            if (bestR == null)
+                foreach (var r in Routes)
+                    if (r != null && (bestR == null || r.Length > bestR.Length)) { bestR = r; bestD = 0f; }
+            if (bestR != null)
+            {
+                // bicycles, e-scooters and 25 km/h mopeds on the cycle path or track beside the road where there is one;
+                // 45 km/h mopeds on the road
+                var tw = me.GetComponent<TwoWheelerController>();
+                bool moped = tw != null && tw.Type == CoupledSim.TwoWheelers.TwoWheelerType.Moped45;
+                path = RideLine(bestR, bestD, Mathf.Max(bestD + 6f, bestR.Length - 50f), 3f, OsmMap.Current.Info.LeftHandTraffic, !moped);
+            }
         }
         if (path == null || path.Count < 2) { Debug.LogWarning("MapTraffic: no path for the autopilot"); return; }
         // start on the path, facing along it

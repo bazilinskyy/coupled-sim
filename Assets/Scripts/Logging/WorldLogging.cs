@@ -72,6 +72,9 @@ public class WorldLogger
         };
         _replay.Save(_path);
         _lastFrameAICarCount = 0;
+        _drones.Clear();
+        _aiCache.Clear();
+        _localCachePlayer = null;
         _fileWriter.Write(_playerSystem.Pedestrians.Count);
         _fileWriter.Write(experiment.PointsOfInterest.Length);
         foreach (var poi in experiment.PointsOfInterest)
@@ -170,33 +173,36 @@ public class WorldLogger
         _driverBuffer.Clear();
         _driverBuffer.AddRange(_playerSystem.Cars);
         _driverBuffer.AddRange(_playerSystem.Passengers);
+        int aiStartIndex = _driverBuffer.Count;
         _driverBuffer.AddRange(_aiCarSystem.Cars);
-        foreach (var driver in _driverBuffer)
+        for (int idx = 0; idx < _driverBuffer.Count; idx++)
         {
+            var driver = _driverBuffer[idx];
             writer.Write(driver.transform.position);
             writer.Write(driver.transform.rotation);
             // two-wheelers have no blinkers or car lights: logged as off
             writer.Write((int)(driver.CarBlinkers != null ? driver.CarBlinkers.State : BlinkerState.None));
             writer.Write(driver.frontLights != null && driver.frontLights.gameObject.activeSelf);
             writer.Write(driver.stopLights != null && driver.stopLights.gameObject.activeSelf);
-            if ( driver == _playerSystem.LocalPlayer)
+            if (driver == _playerSystem.LocalPlayer)
             {
-                writer.Write(VelocityOf(driver));
-            } else if (_aiCarSystem.Cars.Contains(driver))
+                writer.Write(VelocityOfLocal(driver));
+            }
+            else if (idx >= aiStartIndex)
             {
-                var rb = driver.GetComponent<Rigidbody>();
-                Assert.IsNotNull(rb);
-                //Assert.IsFalse(rb.isKinematic);
-                writer.Write(rb.linearVelocity);
-                var ai = driver.GetComponent<AICar>();
-                Assert.IsNotNull(ai);
-                writer.Write(ai.speed);
-                writer.Write(ai.state == AICar.CarState.BRAKING);
-                writer.Write(ai.state == AICar.CarState.STOPPED);
-                writer.Write(ai.state == AICar.CarState.TAKEOFF);
-                var plap = driver.GetComponentInChildren<EyeContact>();
-                //Assert.IsNotNull(plap);
-                writer.Write(plap != null && plap.TargetPed != null);
+                if (!_aiCache.TryGetValue(driver, out var cached) || cached.rb == null || cached.ai == null)
+                {
+                    cached = (driver.GetComponent<Rigidbody>(), driver.GetComponent<AICar>(), driver.GetComponentInChildren<EyeContact>());
+                    _aiCache[driver] = cached;
+                }
+                Assert.IsNotNull(cached.rb);
+                writer.Write(cached.rb.linearVelocity);
+                Assert.IsNotNull(cached.ai);
+                writer.Write(cached.ai.speed);
+                writer.Write(cached.ai.state == AICar.CarState.BRAKING);
+                writer.Write(cached.ai.state == AICar.CarState.STOPPED);
+                writer.Write(cached.ai.state == AICar.CarState.TAKEOFF);
+                writer.Write(cached.eye != null && cached.eye.TargetPed != null);
             }
         }
         foreach (var pedestrian in _playerSystem.Pedestrians)
@@ -242,27 +248,37 @@ public class WorldLogger
         }
     }
 
+    readonly Dictionary<PlayerAvatar, (Rigidbody rb, AICar ai, EyeContact eye)> _aiCache = new Dictionary<PlayerAvatar, (Rigidbody, AICar, EyeContact)>();
+    PlayerAvatar _localCachePlayer;
+    TwoWheelerController _localCacheTw;
+    Rigidbody _localCacheRb;
+
     // velocity of a participant's vehicle: physics for cars, the model's speed for two-wheelers
-    static Vector3 VelocityOf(PlayerAvatar driver)
+    Vector3 VelocityOfLocal(PlayerAvatar driver)
     {
-        var twoWheeler = driver.GetComponent<TwoWheelerController>();
-        if (twoWheeler != null) return driver.transform.forward * twoWheeler.Speed;
-        var rb = driver.GetComponent<Rigidbody>();
-        return rb != null && !rb.isKinematic ? rb.linearVelocity : Vector3.zero;
+        if (_localCachePlayer != driver)
+        {
+            _localCachePlayer = driver;
+            _localCacheTw = driver.GetComponent<TwoWheelerController>();
+            _localCacheRb = driver.GetComponent<Rigidbody>();
+        }
+        if (_localCacheTw != null) return driver.transform.forward * _localCacheTw.Speed;
+        return _localCacheRb != null && !_localCacheRb.isKinematic ? _localCacheRb.linearVelocity : Vector3.zero;
     }
 
     //cleans up after logging has ended
     public void EndLog()
     {
-        // TODO(jacek): for now we just call EndLog in NetworkingManager.OnDestroy, so we close the log when the game finishes
-        // Remove that call and this null check when we have proper "End experiment" handling
+        active = false;
         if (_fileWriter != null)
         {
             _fileWriter.Dispose();
+            _fileWriter = null;
         }
         if (_liveLogger != null)
         {
             _liveLogger.Dispose();
+            _liveLogger = null;
         }
     }
 }
@@ -349,7 +365,7 @@ public class LogConverter
         public Dictionary<int, bool> eyecontact = new Dictionary<int, bool>();
     }
 
-    List<int> aiCarIndexes = new List<int>();
+    readonly HashSet<int> aiCarIndexes = new HashSet<int>();
     bool IsAICar(int i) => aiCarIndexes.Contains(i);
 
     #pragma warning disable 0414
@@ -362,6 +378,7 @@ public class LogConverter
     {
         _driverPositions = null;
         _driverVels = null;
+        aiCarIndexes.Clear();
 
         System.Threading.Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
         const string separator = ";";
@@ -475,9 +492,9 @@ public class LogConverter
 
             writer.WriteLine($"Start Time;{startString}");
             var localDriver = log.LocalDriver;
-            var lastFrame = log.Frames[log.Frames.Count - 1];
-            var numDrivers = lastFrame.DriverPositions.Count;
-            var numPedestrians = lastFrame.PedestrianPositions.Count;
+            var lastFrame = log.Frames.Count > 0 ? log.Frames[log.Frames.Count - 1] : null;
+            var numDrivers = lastFrame != null ? lastFrame.DriverPositions.Count : 0;
+            var numPedestrians = lastFrame != null ? lastFrame.PedestrianPositions.Count : 0;
 
             // POI
             var pois = log.POIs;
@@ -526,6 +543,10 @@ public class LogConverter
             {
                 var pedestrianName = $"Pedestrian{i}";
                 writer.Write(string.Join(separator, Enumerable.Repeat(pedestrianName, columnsPerPedestrian)));
+                if (i < numPedestrians - 1)
+                {
+                    writer.Write(separator);
+                }
             }
             if (log.CarLightNames.Count > 0)
             {
@@ -542,10 +563,12 @@ public class LogConverter
             // No bone names for drivers
             writer.Write(separator); // for the Timestamp column
             writer.Write(separator); // for the Ping column
-            var localDriversCount = localDriver == -1 ? 0 : 1;
+            var localDriversCount = localDriver >= 0 && localDriver < numDrivers ? 1 : 0;
             var aiCarsCount = aiCarIndexes.Count;
-            var otherDriversCount = numDrivers - aiCarsCount - localDriversCount;
-            writer.Write(string.Join(separator, new string(';', otherDriversCount * columnsPerDriver + localDriversCount * columnsForLocalDriver + aiCarsCount * columnsForAICar)));
+            var otherDriversCount = Math.Max(0, numDrivers - aiCarsCount - localDriversCount);
+            int totalDriverCols = otherDriversCount * columnsPerDriver + localDriversCount * columnsForLocalDriver + aiCarsCount * columnsForAICar;
+            int driverSeps = Math.Max(0, totalDriverCols - 1) + (numPedestrians > 0 && totalDriverCols > 0 ? 1 : 0);
+            writer.Write(new string(';', driverSeps));
             var sb = new StringBuilder();
             sb.Append(string.Join(separator, Enumerable.Repeat("Root", columnsPerBone)));
             sb.Append(";");
@@ -560,6 +583,10 @@ public class LogConverter
             for (int i = 0; i < numPedestrians; i++)
             {
                 writer.Write(sb.ToString());
+                if (i < numPedestrians - 1)
+                {
+                    writer.Write(separator);
+                }
             }
 
             writer.Write("\n");
@@ -619,11 +646,13 @@ public class LogConverter
                 {
                     var pos = PosToRefPoint(frame.DriverPositions[i]);
                     var rot = frame.DriverRotations[i];
-                    var euler = RotToRefPoint(rot).eulerAngles;
+                    var refRot = RotToRefPoint(rot);
+                    var euler = refRot.eulerAngles;
                     var blinkers = frame.BlinkerStates[i];
                     var front = frame.Front[i];
                     var stop = frame.Stop[i];
                     var inverseRotation = Quaternion.Inverse(rot);
+                    var invRefRotation = Quaternion.Inverse(refRot);
                     if (prevFrame == null || prevFrame.DriverPositions.Count <= i)
                     {
                         if (i == localDriver)
@@ -640,13 +669,13 @@ public class LogConverter
                     }
                     else
                     {
-                        var vel = (pos - PosToRefPoint(prevFrame.DriverPositions[i])) / dt * SpeedConvertion.Mps2Kmph;
-                        var speed = inverseRotation * vel;
+                        var vel = dt > 1e-6f ? (pos - PosToRefPoint(prevFrame.DriverPositions[i])) / dt * SpeedConvertion.Mps2Kmph : Vector3.zero;
+                        var speed = invRefRotation * vel;
                         var runningAvg = _driverVels[i];
                         runningAvg.Add(vel);
                         _driverVels[i] = runningAvg;
                         var velSmooth = runningAvg.Get();
-                        var localSmooth = rot * velSmooth;
+                        var localSmooth = invRefRotation * velSmooth;
                         if (i == localDriver)
                         {
                             var rbVel = frame.LocalDriverRbVelocity;
@@ -708,8 +737,18 @@ public class LogConverter
         }
     }
 
+    public LogConverter(string[] pedestrianSkeletonNames)
+    {
+        _pedestrianSkeletonNames = pedestrianSkeletonNames ?? Array.Empty<string>();
+    }
+
     public LogConverter(PlayerAvatar pedestrianPrefab)
     {
+        if (pedestrianPrefab == null || pedestrianPrefab.SyncTransforms == null)
+        {
+            _pedestrianSkeletonNames = Array.Empty<string>();
+            return;
+        }
         var transforms = pedestrianPrefab.SyncTransforms;
         _pedestrianSkeletonNames = new string[transforms.Length];
         for (int i = 0; i < transforms.Length; i++)
@@ -777,6 +816,7 @@ public class LogConverter
         GUILayout.EndVertical();
 
         GUILayout.EndHorizontal();
+        customPois[i] = serializedPOI;
 
         if (GUILayout.Button("Transform with " + serializedPOI.Name))
         {
