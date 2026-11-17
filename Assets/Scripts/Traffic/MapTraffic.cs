@@ -124,9 +124,15 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
             Debug.Log($"MapTraffic: {lanes.Count} routes in the map's area, {outside} leaving it (by up to {-worst:F0} m)");
         }
         Physics.SyncTransforms();
-        int moved = 0;
-        foreach (var lane in lanes) moved += KeepOffCyclePaths(lane);
-        if (moved > 0) Debug.Log($"MapTraffic: {moved} route points moved off cycle paths and cycle lanes onto the carriageway");
+        int moved = 0; _moves.Clear();
+        foreach (var lane in lanes) moved += KeepOnCarriageway(lane);
+        if (moved > 0) Debug.Log($"MapTraffic: {moved} route points moved off cycle paths, cycle lanes and pavements onto the carriageway");
+        if (moved > 0 && System.Array.IndexOf(CommandLine.Args, "-debugTraffic") >= 0)
+        {
+            var geo = new CoupledSim.Maps.GeoProjection(OsmMap.Current.Info.Latitude, OsmMap.Current.Info.Longitude);
+            Debug.Log("TrafficDebug: the largest moves onto the carriageway: " + string.Join("; ", _moves.OrderByDescending(m => Mathf.Abs(m.shift)).Take(8)
+                .Select(m => { geo.ToGeo(m.at.x, m.at.z, out var la, out var lo); return $"{m.shift:F2} m at {m.at} ({la.ToString("F6", CultureInfo.InvariantCulture)},{lo.ToString("F6", CultureInfo.InvariantCulture)})"; })));
+        }
         foreach (var lane in lanes) Routes.Add(MakeCircuit(lane, Routes.Count));
         RoadSpeedLimits.Build(gen.Roads);
         foreach (var r in Routes) r.GetRoutePoint(0f);   // (the circuit works out its length on first use)
@@ -358,7 +364,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
             if (path.Count >= 2)
             {
                 var lane = path.Select(q => new Vector3(q.X, q.Y, q.Z)).ToList();
-                KeepOffCyclePaths(lane);
+                KeepOnCarriageway(lane);
                 best = MakeCircuit(lane, 900);
                 best.name = "Route to " + Destination;
                 best.GetRoutePoint(0f);
@@ -469,19 +475,20 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
     /// <summary>
     /// The lane routes come from OpenStreetMap's centre lines and widths; where the carriageway really is narrower or lies
     /// a little to the side (as the Dutch topography's surfaces show it), or has a painted cycle lane at its edge, a car on
-    /// the lane would drive partly or wholly on the cycle path or cycle lane beside it. Each point where the car's middle
-    /// or either side (0.8 m out) is over a cycle path or cycle lane, as it is seen (<see cref="SeenGround"/>), is moved
-    /// across by the least that keeps all three off it, at most 3 m; the moves are smoothed (a median over 5 points), so
-    /// the lane does not zigzag. A cycle path that crosses the road (no clear carriageway beside it) is left alone.
-    /// Returns how many points moved.
+    /// the lane would drive partly or wholly on the cycle path, cycle lane or pavement beside it (and into the benches
+    /// and posts there). Each point where the car's middle or either side (0.8 m out) is over a cycle path, cycle lane or
+    /// pavement, as it is seen (<see cref="SeenGround"/>), is moved across by the least that keeps all three off them, at
+    /// most 3 m; the moves are smoothed (a median over 5 points), so the lane does not zigzag. A cycle path or pavement
+    /// that crosses the road (no clear carriageway beside it) is left alone. Returns how many points moved.
     /// </summary>
-    static int KeepOffCyclePaths(List<Vector3> lane)
+    static int KeepOnCarriageway(List<Vector3> lane)
     {
         if (lane.Count < 2) return 0;
         var shift = new float[lane.Count];
         var side = new Vector3[lane.Count];
         bool any = false;
-        bool Clear(Vector3 p, Vector3 s) => SeenGround(p) != Ground.Cycle && SeenGround(p + s * 0.8f) != Ground.Cycle && SeenGround(p - s * 0.8f) != Ground.Cycle;
+        bool Off(Ground g) => g == Ground.Cycle || g == Ground.Pavement;
+        bool Clear(Vector3 p, Vector3 s) => !Off(SeenGround(p)) && !Off(SeenGround(p + s * 0.8f)) && !Off(SeenGround(p - s * 0.8f));
         for (int i = 0; i < lane.Count; i++)
         {
             var d = lane[Mathf.Min(i + 1, lane.Count - 1)] - lane[Mathf.Max(i - 1, 0)]; d.y = 0f;
@@ -506,7 +513,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
             if (shift[i] != 0f && Mathf.Abs(smooth[i]) < Mathf.Abs(shift[i])) smooth[i] = shift[i];
         }
         for (int i = 0; i < lane.Count; i++)
-            if (smooth[i] != 0f) { lane[i] += side[i] * smooth[i]; moved++; }
+            if (smooth[i] != 0f) { _moves.Add((lane[i], smooth[i])); lane[i] += side[i] * smooth[i]; moved++; }
         return moved;
     }
 
@@ -529,11 +536,13 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         var name = top.name;
         if (name.IndexOf("ycle", StringComparison.Ordinal) >= 0) return Ground.Cycle;
         if (name.StartsWith("Roads") || name.StartsWith("BGT roads") || name.StartsWith("Zebra") || name.StartsWith("Road ")) return Ground.Road;
+        if (name.StartsWith("BGT pavements") || name.StartsWith("Pavements") || name.StartsWith("Kerbs")) return Ground.Pavement;
         return Ground.Paving;
     }
     static readonly RaycastHit[] _groundHits = new RaycastHit[16];
+    static readonly List<(Vector3 at, float shift)> _moves = new List<(Vector3, float)>();
 
-    enum Ground { None, Road, Cycle, Paving }
+    enum Ground { None, Road, Cycle, Paving, Pavement }
 
     static Ground GroundAt(Vector3 p)
     {
