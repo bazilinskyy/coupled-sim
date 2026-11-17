@@ -65,7 +65,7 @@ namespace CoupledSim.Maps
                 tangent = tangent.LengthSquared() < 1e-6f ? dirOut : Vector2.Normalize(tangent);
                 var normal = new Vector2(tangent.Y, -tangent.X); // right of the direction
                 var nOut = new Vector2(dirOut.Y, -dirOut.X);
-                float miter = 1f / Math.Max(0.6f, Vector2.Dot(normal, nOut));   // (at most 1.7 times: no spikes at sharp bends)
+                float miter = 1f / Math.Max(0.3f, Vector2.Dot(normal, nOut));
                 left.Add(line[i] + normal * (offset - width / 2) * miter);
                 right.Add(line[i] + normal * (offset + width / 2) * miter);
             }

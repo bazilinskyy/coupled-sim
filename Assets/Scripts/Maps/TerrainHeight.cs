@@ -70,10 +70,28 @@ public sealed class TerrainHeight
     /// embankments beside the road, which made humps on the road; slopes and dips stay. Then a gentle smoothing
     /// (8 m), and the result goes into the grid across the road and 3 m beside it, fading into the terrain within 10 m.
     /// </summary>
-    public void SmoothRoads(List<(List<Vector2> line, float width)> roads)
+    public void SmoothRoads(List<(List<Vector2> line, float width)> roads, List<(List<Vector2> line, float width)> keep = null)
     {
-        if (roads == null || roads.Count == 0) return;
+        // only on flat maps (less than 12 m between the lowest and highest ground): there a hump on a road is a gap in the
+        // model; on hilly maps it may be a real crest, which the opening would shave off
+        if (roads == null || roads.Count == 0 || Max - Min >= 12f) return;
         var sum = new float[_h.Length]; var wsum = new float[_h.Length]; var wmax = new float[_h.Length];
+        // cells within 12 m of the lines to keep (bridges and their ramps) stay as they are
+        var fixedCells = new bool[_h.Length];
+        if (keep != null)
+            foreach (var (line, width) in keep)
+                for (int i = 0; i + 1 < line.Count; i++)
+                {
+                    float d = Vector2.Distance(line[i], line[i + 1]); int n = Mathf.Max(1, Mathf.CeilToInt(d / 2f));
+                    float r = width / 2f + 12f;
+                    for (int k = 0; k <= n; k++)
+                    {
+                        var p = Vector2.Lerp(line[i], line[i + 1], k / (float)n);
+                        int i0 = Mathf.Max(0, Mathf.FloorToInt((p.x - r - _x0) / _step)), i1 = Mathf.Min(_nx - 1, Mathf.CeilToInt((p.x + r - _x0) / _step));
+                        int j0 = Mathf.Max(0, Mathf.FloorToInt((p.y - r - _z0) / _step)), j1 = Mathf.Min(_nz - 1, Mathf.CeilToInt((p.y + r - _z0) / _step));
+                        for (int j = j0; j <= j1; j++) for (int ii = i0; ii <= i1; ii++) fixedCells[j * _nx + ii] = true;
+                    }
+                }
         const float ds = 2f; const int open = 15; const float sigma = 4f;   // samples: 30 m, 8 m
         var gauss = new float[9];
         for (int k = 0; k < gauss.Length; k++) gauss[k] = Mathf.Exp(-0.5f * k * k / (sigma * sigma));
@@ -123,7 +141,7 @@ public sealed class TerrainHeight
         int changed = 0; float most = 0f;
         for (int c = 0; c < _h.Length; c++)
         {
-            if (wsum[c] <= 0f) continue;
+            if (wsum[c] <= 0f || fixedCells[c]) continue;
             float v = Mathf.Lerp(_h[c], sum[c] / wsum[c], wmax[c]);
             if (Mathf.Abs(v - _h[c]) > 0.05f) { changed++; most = Mathf.Max(most, Mathf.Abs(v - _h[c])); }
             _h[c] = v;

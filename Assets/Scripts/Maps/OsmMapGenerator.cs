@@ -853,13 +853,18 @@ public partial class OsmMapGenerator
         if (Terrain != null)
         {
             var profiles = new List<(List<Vector2>, float)>();
+            var bridges = new List<(List<Vector2>, float)>();
             foreach (var w in _data.Ways)
             {
-                if (!CarRoads.Contains(w.Tag("highway") ?? "") || w.Tag("area") == "yes" || Layer(w) != 0 || w.Tag("tunnel") == "yes" || (w.Tag("bridge") ?? "no") != "no") continue;
+                if (w.Tag("highway") == null || w.Tag("area") == "yes") continue;
                 var rl = Line(w);
-                if (rl.Count >= 2) profiles.Add((rl.Select(q => new Vector2(q.X, q.Y)).ToList(), RoadWidth(w)));
+                if (rl.Count < 2) continue;
+                if ((w.Tag("bridge") ?? "no") != "no") { bridges.Add((rl.Select(q => new Vector2(q.X, q.Y)).ToList(), RoadWidth(w))); continue; }
+                if (!CarRoads.Contains(w.Tag("highway")) || Layer(w) != 0 || w.Tag("tunnel") == "yes") continue;
+                profiles.Add((rl.Select(q => new Vector2(q.X, q.Y)).ToList(), RoadWidth(w)));
             }
-            Terrain.SmoothRoads(profiles);
+            // (not at bridges: their ramps rise on purpose, and the decks run between their ends' ground)
+            Terrain.SmoothRoads(profiles, bridges);
         }
 
         // water (canals, rivers, ponds, harbours): its surface lies WaterDepth below the streets, between quay walls; the
@@ -1461,8 +1466,34 @@ public partial class OsmMapGenerator
             if (treesMoved > 0) Debug.Log($"OsmMap: {treesMoved} trees moved out of the carriageway to its edge");
         }
         PostsOutOfCarriageway(root);
+        ObjectsOutOfWater(root, waterIndex);
         MarkPavedOverRoads();
         RemoveBlockedParkedCars();
+    }
+
+    /// <summary>
+    /// Placed objects (signs, lamps, trees, benches, parked bicycles and cars) whose foot is in the water, now that the
+    /// water lies below the streets (registers and OpenStreetMap put some on a quay's edge, a few decimetres off), stand
+    /// on the quay instead: 0.6 m from the water's edge.
+    /// </summary>
+    void ObjectsOutOfWater(Transform root, WaterIndex water)
+    {
+        if (water == null || !water.Any) return;
+        int moved = 0;
+        bool Container(Transform t) => t != null && t != root && !_emitted.Contains(t.gameObject) && t.GetComponents<Component>().Length == 1;
+        foreach (var c in root.GetComponentsInChildren<Transform>(true).Where(Container).ToList())
+            for (int i = 0; i < c.childCount; i++)
+            {
+                var o = c.GetChild(i);
+                if (_emitted.Contains(o.gameObject) || Container(o)) continue;
+                var q = new V2(o.position.x, o.position.z);
+                if (!water.Inside(q) || !water.NearestShore(q, 30f, out var shore)) continue;
+                var away = shore - q; float len = away.Length();
+                var to = shore + (len > 1e-3f ? away / len : V2.UnitX) * 0.6f;
+                o.position += new Vector3(to.X - q.X, 0f, to.Y - q.Y);
+                moved++;
+            }
+        if (moved > 0) Debug.Log($"OsmMap: {moved} objects moved out of the water onto the quay");
     }
 
     /// <summary>On maps with the national topography's surfaces: roads that lie mostly (over half, at least 30 m) on its
@@ -1733,6 +1764,22 @@ public partial class OsmMapGenerator
                     }
                 }
             }
+        }
+
+        public bool Any => _polys.Count > 0;
+
+        /// <summary>The nearest point of a water outline within <paramref name="radius"/> m.</summary>
+        public bool NearestShore(V2 p, float radius, out V2 shore)
+        {
+            shore = p; float best = float.MaxValue;
+            foreach (var (a, b) in EdgesIn(p.X - radius, p.Y - radius, p.X + radius, p.Y + radius))
+            {
+                var ab = b - a; float l2 = ab.LengthSquared(); if (l2 < 1e-6f) continue;
+                float u = Math.Max(0f, Math.Min(1f, V2.Dot(p - a, ab) / l2));
+                var c = a + ab * u; float d = V2.DistanceSquared(p, c);
+                if (d < best) { best = d; shore = c; }
+            }
+            return best <= radius * radius;
         }
 
         /// <summary>The edges that may lie in a rectangle.</summary>
