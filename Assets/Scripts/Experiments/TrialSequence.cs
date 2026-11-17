@@ -18,11 +18,12 @@ using UnityEngine;
 ///   empty cells are left out.
 /// JSON: {"order":"latin","trials":[{"experiment":"Base","role":"Driver","block":"A",
 ///   "parameters":[{"name":"weather","value":"LightRain"}]}]}
+/// YAML (.yaml, .yml): a whole experiment, as in Coupled CARLA (<see cref="ExperimentFile"/>).
 /// </summary>
 public static class TrialSequence
 {
     static readonly HashSet<string> Reserved = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-        { "experiment", "role", "input", "block", "recordingStart", "recordingDuration", "comment", "notes" };
+        { "experiment", "role", "input", "block", "recordingStart", "recordingDuration", "comment", "notes", ExperimentFile.ConfigColumn };
 
     [Serializable]
     class JsonFile
@@ -49,9 +50,11 @@ public static class TrialSequence
     }
 
     /// <summary>Reads a trial file into a table (JSON is converted to the CSV columns).</summary>
-    public static TrialTable ReadTable(string path)
+    public static TrialTable ReadTable(string path, List<string> warnings = null)
     {
         var text = File.ReadAllText(path);
+        if (path.EndsWith(".yaml", StringComparison.OrdinalIgnoreCase) || path.EndsWith(".yml", StringComparison.OrdinalIgnoreCase))
+            return ExperimentFile.Read(text, warnings);
         if (!path.EndsWith(".json", StringComparison.OrdinalIgnoreCase)) return TrialTable.ParseCsv(text);
         var json = JsonUtility.FromJson<JsonFile>(text);
         var table = new TrialTable();
@@ -130,6 +133,7 @@ public static class TrialSequence
                 experimentParameters = parameters.ToArray(),
                 recordingStartTime = TrialTable.ParseFloat(table.Get(r, "recordingStart"), 0f),
                 recordingDuration = TrialTable.ParseFloat(table.Get(r, "recordingDuration"), 0f),
+                config = table.Get(r, ExperimentFile.ConfigColumn),
             });
         }
         return trials.ToArray();
@@ -143,7 +147,9 @@ public static class TrialSequence
         if (full == null) { errors.Add($"trial file '{path}' not found (also looked in StreamingAssets/Trials)"); return null; }
         try
         {
-            var table = ReadTable(full);
+            var warnings = new List<string>();
+            var table = ReadTable(full, warnings);
+            foreach (var w in warnings) Debug.LogWarning($"Trials: {Path.GetFileName(full)}: {w}");
             return ToTrials(table, experiments, participant, order ?? table.Order ?? fallback, defaultInput, errors);
         }
         catch (Exception e)

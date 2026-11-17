@@ -221,7 +221,7 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
         CreateRain();
         CreateSnow();
         // -liveReflections 0: off (comparisons, slow PCs)
-        var args = System.Environment.GetCommandLineArgs();
+        var args = CommandLine.Args;
         int li = System.Array.IndexOf(args, "-liveReflections");
         if (li >= 0 && li + 1 < args.Length) LiveReflections = args[li + 1] != "0";
         if (LiveReflections) CreateLiveReflections();
@@ -341,7 +341,7 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
     }
 
     // -debugProbes: which reflection probes the road ahead and the viewer's own glass use (every 2 s)
-    static readonly bool _debugProbes = Array.IndexOf(Environment.GetCommandLineArgs(), "-debugProbes") >= 0;
+    static readonly bool _debugProbes = Array.IndexOf(CommandLine.Args, "-debugProbes") >= 0;
     float _nextProbeLog;
     readonly List<UnityEngine.Rendering.ReflectionProbeBlendInfo> _blend = new List<UnityEngine.Rendering.ReflectionProbeBlendInfo>();
     void LogProbes(Camera main, Transform root)

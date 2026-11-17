@@ -37,7 +37,7 @@ public class VoiceChat : MonoBehaviour
     /// <summary>Starts voice when the command line asks for it; <paramref name="send"/> sends one packet to the others.</summary>
     public static void Setup(Action<VoiceMsg> send, Func<int> localPlayer)
     {
-        var args = Environment.GetCommandLineArgs();
+        var args = CommandLine.Args;
         int i = Array.IndexOf(args, "-voice");
         if (i < 0) return;
         if (Instance == null)

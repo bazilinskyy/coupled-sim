@@ -109,7 +109,7 @@ public class ReplayPlayer : MonoBehaviour
 
     static string Arg(string name)
     {
-        var args = Environment.GetCommandLineArgs();
+        var args = CommandLine.Args;
         int i = Array.IndexOf(args, name);
         return i >= 0 && i + 1 < args.Length ? args[i + 1] : null;
     }
@@ -319,7 +319,7 @@ public class ReplayPlayer : MonoBehaviour
     /// <summary>-replay &lt;binLog&gt;: start this replay at once (from NetworkingManager). With -replayShots &lt;folder&gt;: take three pictures and quit (tests).</summary>
     public static string CommandLineReplay()
     {
-        var args = Environment.GetCommandLineArgs();
+        var args = CommandLine.Args;
         int i = Array.IndexOf(args, "-replay");
         return i >= 0 && i + 1 < args.Length ? args[i + 1] : null;
     }
@@ -334,7 +334,7 @@ public class ReplayPlayer : MonoBehaviour
         // 25 %: behind the recording participant, 50 %: inside, 75 %: from above with trails
         if (_shot < 0)
         {
-            var args = Environment.GetCommandLineArgs();
+            var args = CommandLine.Args;
             int i = Array.IndexOf(args, "-replayShots");
             _shotDir = i >= 0 && i + 1 < args.Length ? args[i + 1] : null;
             if (_shotDir == null) { _shot = int.MaxValue; return; }
@@ -601,7 +601,7 @@ public class ReplayPlayer : MonoBehaviour
 
     // the followed participant's own figure is hidden while the replay camera renders their own view
     List<Renderer> _hiddenFigure;
-    static readonly bool _debugEye = Array.IndexOf(Environment.GetCommandLineArgs(), "-debugEye") >= 0;
+    static readonly bool _debugEye = Array.IndexOf(CommandLine.Args, "-debugEye") >= 0;
     float _nextEyeLog;
     void OnEnable()
     {

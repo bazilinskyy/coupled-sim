@@ -1,0 +1,38 @@
+# An experiment as one file (as in Coupled CARLA): a driver on the autopilot and a pedestrian (a client) in Delft,
+# a practice trial, then three conditions whose order is counterbalanced over participants.
+# Use: NetworkingManager > Trial File = example.yaml, or a build with
+#   -experiment example.yaml -participant 3 -autoRun -clients 1      (the host)
+#   -connect <host's address>                                         (the pedestrian's PC)
+# Anything left out keeps the experiment's own setting. See README > Experiment files.
+name: delft_crossing
+map: Delft                     # a city map; or {lat: 52.0116, lon: 4.3571, radius_m: 400}, or {bbox: [south, west, north, east]}
+# experiment: CityMap          # the registered experiment that gives the world and roles (CityMap with a map, else Base)
+simulation:
+  time: "13:00"
+  weather: PartlyCloudy        # Clear | PartlyCloudy | Overcast | LightRain | HeavyRain | Fog | LightSnow | HeavySnow
+  # fog: 0.3, rain: 0.5, snow: 0, wind: 6, wind_direction: 270, time_speed: 1, real_weather: 2024-11-23T14:00
+traffic:
+  cars_per_km: 15              # map traffic
+  animals: 1                   # 0 none, 1 normal, 2 twice as many
+  # drones: 1, drone_swarm: 8, autopilot_kmh: 30
+sound:
+  vehicle_sounds: true
+  electric: 0.2                # share of electric cars
+participants:
+  - role: Driver               # this host's participant
+    input: autopilot           # keyboard | wheel | gamepad | vr | suit | autopilot
+    vehicle: ToyotaCorolla     # -driverCar
+    autopilot: 30              # km/h
+    hud: HudSpeed              # any command-line option of the agent: hud: HudSpeed is -hud HudSpeed
+  - role: Pedestrian           # the first client that connects
+duration_s: 120                # each trial ends by itself after 2 minutes (else Esc)
+order: latin                   # latin | random | none
+trials:
+  - {notes: practice, duration_s: 60}
+  - {block: A, notes: clear day, simulation: {weather: Clear}}
+  - {block: B, notes: heavy rain, simulation: {weather: HeavyRain}, traffic: {cars_per_km: 25}}
+  - block: C
+    notes: night, a larger car
+    simulation: {time: "22:30", weather: Clear}
+    participants:
+      - vehicle: LandRoverDefender         # merged over the first participant: the rest stays

@@ -125,7 +125,7 @@ public class SumoBridge : CarSpawnerBase
     {
         yield return null;
         // -sumoConnect host:port on the command line: use a SUMO that is already running (e.g. on another PC)
-        var args = Environment.GetCommandLineArgs();
+        var args = CommandLine.Args;
         int ci = Array.IndexOf(args, "-sumoConnect");
         if (ci >= 0 && ci + 1 < args.Length)
         {

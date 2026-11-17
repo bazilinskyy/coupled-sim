@@ -112,7 +112,12 @@ public static class SmokeTest
     static void Tick()
     {
         FlushErrors();
-        if (!EditorApplication.isPlaying) return;
+        if (!EditorApplication.isPlaying)
+        {
+            // the experiment ended itself (its last trial's duration_s is over): play mode stops, so report and exit
+            if (_configured && _inGameSince >= 0 && SessionState.GetBool(KeyActive, false)) EndedByExperiment();
+            return;
+        }
 
         if (!_configured)
         {
@@ -292,6 +297,19 @@ public static class SmokeTest
     static Quaternion _lastView;
     static int _viewSamples, _viewJumps;
     static string _viewName;
+
+    static void EndedByExperiment()
+    {
+        FlushErrors();
+        var errors = SessionState.GetString(KeyErrors, "");
+        var outDir = SessionState.GetString(KeyOut, "SmokeTest");
+        Directory.CreateDirectory(outDir);
+        var report = $"The experiment ended itself after {EditorApplication.timeSinceStartup - _inGameSince:F0} s (its last trial's duration)\nErrors/exceptions: {(errors.Length == 0 ? "0" : "see below")}\n{errors}";
+        File.WriteAllText(Path.Combine(outDir, "report.txt"), report);
+        Debug.Log("SmokeTest report:\n" + report);
+        SessionState.SetBool(KeyActive, false);
+        EditorApplication.Exit(errors.Length == 0 ? 0 : 1);
+    }
 
     static void Finish()
     {

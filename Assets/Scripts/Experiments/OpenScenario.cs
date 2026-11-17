@@ -54,7 +54,7 @@ public class OpenScenario : MonoBehaviour
 
     public static OpenScenario Ensure()
     {
-        var args = Environment.GetCommandLineArgs();
+        var args = CommandLine.Args;
         int i = Array.IndexOf(args, "-openscenario");
         if (i < 0 || i + 1 >= args.Length) return null;
         var go = new GameObject("OpenSCENARIO");

@@ -37,7 +37,7 @@ public sealed class AerialPhoto
     /// <summary>Null when the map has no photo or <c>-noAerial</c> is on the command line.</summary>
     public static AerialPhoto Load(string map)
     {
-        if (Array.IndexOf(Environment.GetCommandLineArgs(), "-noAerial") >= 0) return null;
+        if (Array.IndexOf(CommandLine.Args, "-noAerial") >= 0) return null;
         var jpg = PathFor(map);
         var json = Path.ChangeExtension(jpg, ".json");
         if (!File.Exists(jpg) || !File.Exists(json)) return null;
