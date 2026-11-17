@@ -123,6 +123,10 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
             foreach (var lane in lanes) { float m = lane.Min(q => area.Depth(new System.Numerics.Vector2(q.x, q.z))); if (m < -5f) { outside++; worst = Mathf.Min(worst, m); } }
             Debug.Log($"MapTraffic: {lanes.Count} routes in the map's area, {outside} leaving it (by up to {-worst:F0} m)");
         }
+        Physics.SyncTransforms();
+        int moved = 0;
+        foreach (var lane in lanes) moved += KeepOffCyclePaths(lane);
+        if (moved > 0) Debug.Log($"MapTraffic: {moved} route points moved off cycle paths and cycle lanes onto the carriageway");
         foreach (var lane in lanes) Routes.Add(MakeCircuit(lane, Routes.Count));
         RoadSpeedLimits.Build(gen.Roads);
         foreach (var r in Routes) r.GetRoutePoint(0f);   // (the circuit works out its length on first use)
@@ -191,97 +195,143 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         var spawn = new GameObject("Map traffic spawn point").transform;
         int count = 0;
         var placed = new List<Vector3>();   // (routes share lanes: no car placed within 10 m of another)
+        // the places along every route at its density; with more than MaxCars of them (a long map, a map with corridors,
+        // or a high density: rush hour), those nearest the participants are taken, so the density holds where they are
+        // and not only on average over all the routes
+        var places = new List<(WaypointCircuit route, int i, float d, Vector3 at)>();
         foreach (var route in Routes)
         {
             float length = route.OpenLength > 0 ? route.OpenLength : 1f;   // (not the circuit's closing piece back to its start)
             int n = Mathf.RoundToInt(length / 1000f * CarsPerKm);
-            for (int i = 0; i < n && count < MaxCars; i++)
+            for (int i = 0; i < n; i++)
             {
                 float d = length * (i + 0.5f) / n + (float)rng.NextDouble() * 6f;
                 if (d > length - 60f) continue;   // not in the turnaround at the end
-                var rp = route.GetRoutePoint(d);
-                if (players.Any(p => (p - rp.position).sqrMagnitude < 15f * 15f)) continue;
-                if (placed.Any(q => (q - rp.position).sqrMagnitude < 10f * 10f)) continue;
-                placed.Add(rp.position);
-                var pos = rp.position;
-                if (Physics.Raycast(pos + Vector3.up * 5f, Vector3.down, out var hit, 20f, ~0, QueryTriggerInteraction.Ignore)) pos.y = hit.point.y;
-                var dir = rp.direction; dir.y = 0;
-                spawn.SetPositionAndRotation(pos + Vector3.up * 0.1f, Quaternion.LookRotation(dir.normalized, Vector3.up));
-                var p = spawnParams;
-                p.SpawnPoint = spawn; p.Track = route; p.Car = Pick();
-                p.color = Colors[rng.Next(Colors.Length)]; p.SpawnDriver = true;
-                var car = Spawn(p, false);
-                car.GetComponent<WaypointProgressTracker>().SetProgress(d);
-                car.name = $"Map traffic {route.name} {i}";
-                var traffic = car.gameObject.AddComponent<TrafficCar>();
-                float v = (DesiredSpeedKmh + Normal(rng) * DesiredSpeedSdKmh) / 3.6f;
-                traffic.Init(CoupledSim.Traffic.CarFollowingModelType.IDM, Mathf.Max(3f, v), new System.Random(rng.Next()));
-                // (on fast roads: the limit times the driver's own factor, 0.85-1.12)
-                traffic.SpeedLimitFactor = Mathf.Clamp(v * 3.6f / DesiredSpeedKmh, 0.85f, 1.12f);
-                traffic.Speed = Mathf.Max(2f, v * 0.6f);
-                car.gameObject.AddComponent<MapRouteRecycler>();
-                Cars.Add(traffic);
-                count++;
-                if (count % 10 == 0) yield return null;
+                places.Add((route, i, d, route.GetRoutePoint(d).position));
             }
         }
+        var centre = players.Count > 0 ? players : new List<Vector3> { Vector3.zero };
+        float Near(Vector3 q) { float b = float.MaxValue; foreach (var c in centre) b = Mathf.Min(b, (c - q).sqrMagnitude); return b; }
+        if (places.Count > MaxCars) places = places.OrderBy(x => Near(x.at)).ToList();
+        foreach (var (route, i, d, at) in places)
+        {
+            if (count >= MaxCars) break;
+            var rp = route.GetRoutePoint(d);
+            if (players.Any(p => (p - rp.position).sqrMagnitude < 15f * 15f)) continue;
+            if (placed.Any(q => (q - rp.position).sqrMagnitude < 10f * 10f)) continue;
+            placed.Add(rp.position);
+            var pos = rp.position;
+            if (Physics.Raycast(pos + Vector3.up * 5f, Vector3.down, out var hit, 20f, ~0, QueryTriggerInteraction.Ignore)) pos.y = hit.point.y;
+            var dir = rp.direction; dir.y = 0;
+            spawn.SetPositionAndRotation(pos + Vector3.up * 0.1f, Quaternion.LookRotation(dir.normalized, Vector3.up));
+            var p = spawnParams;
+            p.SpawnPoint = spawn; p.Track = route; p.Car = Pick();
+            p.color = Colors[rng.Next(Colors.Length)]; p.SpawnDriver = true;
+            var car = Spawn(p, false);
+            car.GetComponent<WaypointProgressTracker>().SetProgress(d);
+            car.name = $"Map traffic {route.name} {i}";
+            var traffic = car.gameObject.AddComponent<TrafficCar>();
+            float v = (DesiredSpeedKmh + Normal(rng) * DesiredSpeedSdKmh) / 3.6f;
+            traffic.Init(CoupledSim.Traffic.CarFollowingModelType.IDM, Mathf.Max(3f, v), new System.Random(rng.Next()));
+            // (on fast roads: the limit times the driver's own factor, 0.85-1.12)
+            traffic.SpeedLimitFactor = Mathf.Clamp(v * 3.6f / DesiredSpeedKmh, 0.85f, 1.12f);
+            traffic.Speed = Mathf.Max(2f, v * 0.6f);
+            car.gameObject.AddComponent<MapRouteRecycler>();
+            Cars.Add(traffic);
+            count++;
+            if (count % 10 == 0) yield return null;
+        }
         Destroy(spawn.gameObject);
-        Debug.Log($"MapTraffic: {count} cars");
+        Debug.Log($"MapTraffic: {count} cars{(places.Count > MaxCars && placed.Count > 0 ? $" (of {places.Count} places at {CarsPerKm} per km: those within {Mathf.Sqrt(placed.Max(Near)):F0} m of the participants)" : "")}");
         yield return SpawnCyclists();
     }
 
-    /// <summary>Cyclists along the routes: on a cycle path or cycle track beside the road where there is one, else on the carriageway near its kerb (RideLine).</summary>
+    /// <summary>Cyclists along the routes: on a cycle path or cycle track beside the road where there is one, else on the
+    /// carriageway near its kerb (RideLine), not on roads over 60 km/h (motorways, trunk roads). The routes nearest the
+    /// participants first, and on them the places nearest the participants (up to MaxCyclists), so the cyclists ride
+    /// where they are seen, also on a map with long corridors.</summary>
     IEnumerator SpawnCyclists()
     {
         var sumo = FindAnyObjectByType<SumoBridge>();
         var bikes = sumo != null && sumo.BicyclePrefabs != null && sumo.BicyclePrefabs.Length > 0 ? sumo.BicyclePrefabs : _syncSystem.Prefabs.Where(p => p != null && p.name.Contains("Bicycle")).ToArray();
-        if (bikes.Length == 0 || CyclistsPerKm <= 0f) yield break;
+        if (bikes.Length == 0 || CyclistsPerKm <= 0f || MaxCyclists <= 0) yield break;
         var country = OsmMap.Current.Info.Country ?? "";
         float perKm = CyclistsPerKm * (country == "Netherlands" || country == "Belgium" || country == "Denmark" ? 2f : 1f);
         bool lht = OsmMap.Current.Info.LeftHandTraffic;
         var rng = new System.Random(Seed + 11);
-        var spawn = new GameObject("Map cyclists spawn point").transform;
-        int count = 0, index = 0;
-        var placed = Cars.Select(c => c.transform.position).ToList();   // (6 m from every car and cyclist placed)
+        var players = FindObjectsByType<PlayerAvatar>().Select(a => a.transform.position).ToList();
+        if (players.Count == 0) players.Add(Vector3.zero);
+        float Near(Vector3 q) { float b = float.MaxValue; foreach (var c in players) b = Mathf.Min(b, (c - q).sqrMagnitude); return b; }
+        // each route's stretch for cyclists: the one nearest the participants without a road over 60 km/h
+        var stretches = new List<(WaypointCircuit route, float from, float to, float near)>();
         foreach (var route in Routes.ToList())
         {
-            if (count >= MaxCyclists) break;
-            var kerb = RideLine(route, 0f, route.OpenLength, 4f, lht, true);
+            float from = -1f, near = float.MaxValue;
+            (float from, float to, float near) best = (0f, 0f, float.MaxValue);
+            for (float d = 0f; d <= route.OpenLength; d += 10f)
+            {
+                var q = route.GetRoutePoint(d).position;
+                bool town = d < route.OpenLength - 10f && RoadSpeedLimits.At(q) <= 60f;
+                if (town) { if (from < 0f) { from = d; near = float.MaxValue; } near = Mathf.Min(near, Near(q)); }
+                else if (from >= 0f) { if (d - from >= 150f && near < best.near) best = (from, d, near); from = -1f; }
+            }
+            if (best.near < float.MaxValue) stretches.Add((route, best.from, best.to, best.near));
+        }
+        stretches.Sort((x, y) => x.near.CompareTo(y.near));
+        var places = new List<(WaypointCircuit bike, int i, float d, Vector3 at)>();
+        int index = 0;
+        foreach (var (route, from, to, near) in stretches)
+        {
+            // (enough places near the participants: the further routes would not get any)
+            if (places.Count >= MaxCyclists * 2 && near > places.Select(x => Near(x.at)).OrderBy(x => x).ElementAt(MaxCyclists - 1)) break;
+            var kerb = RideLine(route, from, to, 4f, lht, true);
             if (kerb.Count < 10) continue;
             var bikeRoute = MakeCircuit(kerb, Routes.Count + 1000 + index++);
             bikeRoute.name = "Map cycle route " + index;
             bikeRoute.GetRoutePoint(0f);
             float bikeLength = bikeRoute.OpenLength;
-            int n = Mathf.Min(5, Mathf.RoundToInt(bikeLength / 1000f * perKm));   // (spread over the routes)
-            for (int i = 0; i < n && count < MaxCyclists; i++)
+            int n = Mathf.RoundToInt(bikeLength / 1000f * perKm);
+            for (int i = 0; i < n; i++)
             {
                 float d = bikeLength * (i + 0.3f) / n;
-                if (d > bikeLength - 60f) continue;
-                var rp = bikeRoute.GetRoutePoint(d);
-                if (placed.Any(q => (q - rp.position).sqrMagnitude < 6f * 6f)) continue;
-                placed.Add(rp.position);
-                var pos = rp.position;
-                if (Physics.Raycast(pos + Vector3.up * 5f, Vector3.down, out var hit, 20f, ~0, QueryTriggerInteraction.Ignore)) pos.y = hit.point.y;
-                var dir = rp.direction; dir.y = 0;
-                spawn.SetPositionAndRotation(pos + Vector3.up * 0.05f, Quaternion.LookRotation(dir.normalized, Vector3.up));
-                var p = spawnParams;
-                p.SpawnPoint = spawn; p.Track = bikeRoute; p.Car = bikes[rng.Next(bikes.Length)]; p.color = Colors[rng.Next(Colors.Length)]; p.SpawnDriver = true;
-                var bike = Spawn(p, false);
-                bike.GetComponent<WaypointProgressTracker>().SetProgress(d);
-                bike.name = $"Map cyclist {index} {i}";
-                var t = bike.gameObject.AddComponent<TrafficCar>();
-                t.VehicleLength = 1.8f; t.LaneHalfWidth = 0.8f;
-                float v = (16f + Normal(rng) * 3f) / 3.6f;
-                t.Init(CoupledSim.Traffic.CarFollowingModelType.IDM, Mathf.Clamp(v, 2.5f, 7f), new System.Random(rng.Next()));
-                t.Speed = v * 0.7f;
-                bike.gameObject.AddComponent<MapRouteRecycler>();
-                Cars.Add(t);
-                count++;
-                if (count % 10 == 0) yield return null;
+                if (d <= bikeLength - 60f) places.Add((bikeRoute, i, d, bikeRoute.GetRoutePoint(d).position));
             }
         }
+        var spawn = new GameObject("Map cyclists spawn point").transform;
+        int count = 0;
+        var placed = Cars.Select(c => c.transform.position).ToList();   // (6 m from every car and cyclist placed)
+        var used = new HashSet<WaypointCircuit>();
+        foreach (var (bikeRoute, i, d, at) in places.OrderBy(x => Near(x.at)))
+        {
+            if (count >= MaxCyclists) break;
+            var rp = bikeRoute.GetRoutePoint(d);
+            if (placed.Any(q => (q - rp.position).sqrMagnitude < 6f * 6f)) continue;
+            placed.Add(rp.position);
+            used.Add(bikeRoute);
+            var pos = rp.position;
+            if (Physics.Raycast(pos + Vector3.up * 5f, Vector3.down, out var hit, 20f, ~0, QueryTriggerInteraction.Ignore)) pos.y = hit.point.y;
+            var dir = rp.direction; dir.y = 0;
+            spawn.SetPositionAndRotation(pos + Vector3.up * 0.05f, Quaternion.LookRotation(dir.normalized, Vector3.up));
+            var p = spawnParams;
+            p.SpawnPoint = spawn; p.Track = bikeRoute; p.Car = bikes[rng.Next(bikes.Length)]; p.color = Colors[rng.Next(Colors.Length)]; p.SpawnDriver = true;
+            var bike = Spawn(p, false);
+            bike.GetComponent<WaypointProgressTracker>().SetProgress(d);
+            bike.name = $"Map cyclist {bikeRoute.name.Substring("Map cycle route ".Length)} {i}";
+            var t = bike.gameObject.AddComponent<TrafficCar>();
+            t.VehicleLength = 1.8f; t.LaneHalfWidth = 0.8f;
+            float v = (16f + Normal(rng) * 3f) / 3.6f;
+            t.Init(CoupledSim.Traffic.CarFollowingModelType.IDM, Mathf.Clamp(v, 2.5f, 7f), new System.Random(rng.Next()));
+            t.Speed = v * 0.7f;
+            bike.gameObject.AddComponent<MapRouteRecycler>();
+            Cars.Add(t);
+            count++;
+            if (count % 10 == 0) yield return null;
+        }
+        // (the cycle routes without a cyclist)
+        int withCyclists = used.Count;
+        foreach (var (bikeRoute, _, _, _) in places) if (used.Add(bikeRoute)) Destroy(bikeRoute.gameObject);
         Destroy(spawn.gameObject);
-        Debug.Log($"MapTraffic: {count} cyclists");
+        Debug.Log($"MapTraffic: {count} cyclists on {withCyclists} cycle routes");
     }
 
     /// <summary>The participant's car drives itself along the route nearest to it (where it points).</summary>
@@ -307,7 +357,9 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
                 new System.Numerics.Vector3((float)dx, 0f, (float)dz), OsmMap.Current.Info.LeftHandTraffic);
             if (path.Count >= 2)
             {
-                best = MakeCircuit(path.Select(q => new Vector3(q.X, q.Y, q.Z)).ToList(), 900);
+                var lane = path.Select(q => new Vector3(q.X, q.Y, q.Z)).ToList();
+                KeepOffCyclePaths(lane);
+                best = MakeCircuit(lane, 900);
                 best.name = "Route to " + Destination;
                 best.GetRoutePoint(0f);
                 bestScore = 0f;
@@ -413,6 +465,73 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         me.gameObject.AddComponent<ParticipantAutopilot>().Init(path);
         Debug.Log($"MapTraffic: autopilot for the {(me.GetComponent<KeyboardPlayerMovement>() != null ? "pedestrian" : "rider")} along {path.Count} points");
     }
+
+    /// <summary>
+    /// The lane routes come from OpenStreetMap's centre lines and widths; where the carriageway really is narrower or lies
+    /// a little to the side (as the Dutch topography's surfaces show it), or has a painted cycle lane at its edge, a car on
+    /// the lane would drive partly or wholly on the cycle path or cycle lane beside it. Each point where the car's middle
+    /// or either side (0.8 m out) is over a cycle path or cycle lane, as it is seen (<see cref="SeenGround"/>), is moved
+    /// across by the least that keeps all three off it, at most 3 m; the moves are smoothed (a median over 5 points), so
+    /// the lane does not zigzag. A cycle path that crosses the road (no clear carriageway beside it) is left alone.
+    /// Returns how many points moved.
+    /// </summary>
+    static int KeepOffCyclePaths(List<Vector3> lane)
+    {
+        if (lane.Count < 2) return 0;
+        var shift = new float[lane.Count];
+        var side = new Vector3[lane.Count];
+        bool any = false;
+        bool Clear(Vector3 p, Vector3 s) => SeenGround(p) != Ground.Cycle && SeenGround(p + s * 0.8f) != Ground.Cycle && SeenGround(p - s * 0.8f) != Ground.Cycle;
+        for (int i = 0; i < lane.Count; i++)
+        {
+            var d = lane[Mathf.Min(i + 1, lane.Count - 1)] - lane[Mathf.Max(i - 1, 0)]; d.y = 0f;
+            if (d.sqrMagnitude < 1e-6f) continue;
+            side[i] = Vector3.Cross(Vector3.up, d.normalized);   // (to the right)
+            if (Clear(lane[i], side[i])) continue;
+            // the least move either way that clears the car of it
+            for (int k = 1; k <= 12 && shift[i] == 0f; k++)
+                foreach (int sgn in new[] { -1, 1 })
+                    if (shift[i] == 0f && SeenGround(lane[i] + side[i] * (sgn * k * 0.25f)) == Ground.Road && Clear(lane[i] + side[i] * (sgn * k * 0.25f), side[i]))
+                    { shift[i] = sgn * k * 0.25f; any = true; }
+        }
+        if (!any) return 0;
+        int moved = 0;
+        var smooth = new float[lane.Count];
+        for (int i = 0; i < lane.Count; i++)
+        {
+            var w = new List<float>();
+            for (int k = Mathf.Max(0, i - 2); k <= Mathf.Min(lane.Count - 1, i + 2); k++) w.Add(shift[k]);
+            w.Sort(); smooth[i] = w[w.Count / 2];
+            // (a point over a cycle path keeps its own move even where its neighbours had none: the median would drop it)
+            if (shift[i] != 0f && Mathf.Abs(smooth[i]) < Mathf.Abs(shift[i])) smooth[i] = shift[i];
+        }
+        for (int i = 0; i < lane.Count; i++)
+            if (smooth[i] != 0f) { lane[i] += side[i] * smooth[i]; moved++; }
+        return moved;
+    }
+
+    /// <summary>The ground at a point as it is seen: the highest surface under it that is drawn (on the maps with the
+    /// national topography's surfaces, OpenStreetMap's roads are invisible driving surfaces under or over the topography's
+    /// cycle paths and pavements, so the first collider is not always the surface one sees).</summary>
+    static Ground SeenGround(Vector3 p)
+    {
+        int n = Physics.RaycastNonAlloc(p + Vector3.up * 4f, Vector3.down, _groundHits, 10f, ~0, QueryTriggerInteraction.Ignore);
+        float best = float.MinValue; Collider top = null;
+        for (int i = 0; i < n; i++)
+        {
+            var h = _groundHits[i];
+            if (h.collider.attachedRigidbody != null || h.point.y <= best) continue;
+            if (h.collider.TryGetComponent<MeshRenderer>(out var mr) && !mr.enabled) continue;   // (an invisible driving surface)
+            if (h.normal.y < 0.7f) continue;   // (a wall, a pole: not ground)
+            best = h.point.y; top = h.collider;
+        }
+        if (top == null) return Ground.None;
+        var name = top.name;
+        if (name.IndexOf("ycle", StringComparison.Ordinal) >= 0) return Ground.Cycle;
+        if (name.StartsWith("Roads") || name.StartsWith("BGT roads") || name.StartsWith("Zebra") || name.StartsWith("Road ")) return Ground.Road;
+        return Ground.Paving;
+    }
+    static readonly RaycastHit[] _groundHits = new RaycastHit[16];
 
     enum Ground { None, Road, Cycle, Paving }
 
