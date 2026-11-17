@@ -26,51 +26,28 @@ namespace CoupledSim.Maps
             return (float)(a / 2);
         }
 
-        /// <summary>Ear-clipping triangulation of a simple polygon (no holes). Returns index triples, counter-clockwise.</summary>
+        /// <summary>Triangulation of a polygon (a ring; holes bridged into it are fine) by <see cref="Earcut"/>. Returns
+        /// index triples, counter-clockwise.</summary>
         public static List<int> Triangulate(IList<Vector2> poly)
         {
             var result = new List<int>();
             int n = poly.Count;
             if (n < 3) return result;
-            var idx = new List<int>(n);
-            bool ccw = SignedArea(poly) > 0;
-            for (int i = 0; i < n; i++) idx.Add(ccw ? i : n - 1 - i);
-            int guard = 0, maxGuard = 2 * n + 10;
-            while (idx.Count > 3 && guard++ < maxGuard)
+            var data = new double[2 * n];
+            for (int i = 0; i < n; i++) { data[2 * i] = poly[i].X; data[2 * i + 1] = poly[i].Y; }
+            var tris = Earcut.Triangulate(data);
+            for (int i = 0; i + 2 < tris.Count; i += 3)
             {
-                bool clipped = false;
-                for (int i = 0; i < idx.Count; i++)
-                {
-                    int a = idx[(i + idx.Count - 1) % idx.Count], b = idx[i], c = idx[(i + 1) % idx.Count];
-                    if (Cross(poly[b] - poly[a], poly[c] - poly[b]) <= 1e-9f) continue; // reflex
-                    bool inside = false;
-                    for (int j = 0; j < idx.Count && !inside; j++)
-                    {
-                        int p = idx[j];
-                        if (p == a || p == b || p == c) continue;
-                        // a copy of a corner (where a hole is bridged to the outline) does not block the ear
-                        if (poly[p] == poly[a] || poly[p] == poly[b] || poly[p] == poly[c]) continue;
-                        inside = PointInTriangle(poly[p], poly[a], poly[b], poly[c]);
-                    }
-                    if (inside) continue;
-                    result.Add(a); result.Add(b); result.Add(c);
-                    idx.RemoveAt(i);
-                    clipped = true;
-                    break;
-                }
-                if (!clipped) break; // degenerate polygon: give up on the rest
+                int a = tris[i], b = tris[i + 1], c = tris[i + 2];
+                float cr = Cross(poly[b] - poly[a], poly[c] - poly[a]);
+                if (Math.Abs(cr) < 1e-9f) continue;   // a sliver along a bridge
+                if (cr > 0) { result.Add(a); result.Add(b); result.Add(c); }
+                else { result.Add(a); result.Add(c); result.Add(b); }
             }
-            if (idx.Count == 3) { result.Add(idx[0]); result.Add(idx[1]); result.Add(idx[2]); }
             return result;
         }
 
         public static float Cross(Vector2 a, Vector2 b) => a.X * b.Y - a.Y * b.X;
-
-        static bool PointInTriangle(Vector2 p, Vector2 a, Vector2 b, Vector2 c)
-        {
-            float d1 = Cross(b - a, p - a), d2 = Cross(c - b, p - b), d3 = Cross(a - c, p - c);
-            return d1 >= 0 && d2 >= 0 && d3 >= 0;
-        }
 
         /// <summary>
         /// Left and right edges of a strip of the given width along a polyline (mitred joins, limited

@@ -17,7 +17,9 @@ using Debug = UnityEngine.Debug;
 /// "name=rel:x,y,z,yaw,pitch[,fov]" relative to the participant (its heading only, so a drone's tilt does not shake
 /// the picture; smoothed), "name=grid" (the participants' own views in a 2x2 grid, in a replay or with several
 /// participants), and the sound at the listener, rendered offline in step with the frames (AudioRenderer), so the
-/// video has the simulator's sound in sync however slowly the frames render; -videoAudio 0 leaves it out.
+/// video has the simulator's sound in sync however slowly the frames render; -videoAudio 0 leaves it out. A grid of a
+/// replay is heard at the first participant's place (the first quarter: the driver's seat), as one listener; rain and
+/// snow fall around the first camera.
 /// Command line: -videoCams "street=0,1.6,-20,0,0;chase" -videoSeconds 10 -videoStart 2 -videoFps 30
 /// -videoSize 1280x720 [-videoCrf 18] [-videoAudio 0] [-videoQuit] [-videoKeepFrames] [-ffmpeg path/to/ffmpeg].
 /// </summary>
@@ -104,6 +106,17 @@ public class VideoExport : MonoBehaviour
             foreach (var l in FindObjectsByType<AudioListener>()) l.enabled = false;
             shots[0].Cam.gameObject.AddComponent<AudioListener>();
         }
+        // a grid of a replay: one listener, at the first quarter's participant (the replay's own camera hears the scene
+        // from behind the car); sitting in a car, it hears the car's body and its own engine as the driver does
+        Camera gridEar = null;
+        if (!ListenAtCamera && ReplayPlayer.Active != null && shots.Count > 0 && shots[0].Grid != null)
+        {
+            foreach (var l in FindObjectsByType<AudioListener>()) l.enabled = false;
+            gridEar = shots[0].Grid[0];
+            gridEar.gameObject.AddComponent<AudioListener>();
+        }
+        // rain and snow fall around the first video camera (a grid: around the main camera)
+        if (shots.Count > 0 && shots[0].Grid == null) EnvironmentController.PrecipitationAnchor = shots[0].Cam.transform;
         Time.captureFramerate = Fps;
         var tex = new Texture2D(Size.x, Size.y, TextureFormat.RGB24, false);
         // the sound, rendered offline: each frame the audio of exactly 1/Fps s
@@ -137,6 +150,13 @@ public class VideoExport : MonoBehaviour
                     {
                         var gc = s.Grid[g];
                         bool used = g < people.Count && people[g] != null;
+                        if (used && gc == gridEar && Soundscape.ListenerAvatar != people[g])
+                        {
+                            // (in the participant's car: the sound model hears it from inside)
+                            Soundscape.ListenerAvatar = people[g];
+                            bool car = people[g].Type == AvatarType.Driver && people[g].GetComponent<TwoWheelerController>() == null;
+                            gc.transform.SetParent(car ? people[g].transform : null, true);
+                        }
                         if (used) Eye(people[g], gc.transform, s.Frames == 0);
                         gc.cullingMask = used ? ~0 : 0;   // (an unused quarter stays black)
                         gc.clearFlags = used ? CameraClearFlags.Skybox : CameraClearFlags.SolidColor;
@@ -163,6 +183,8 @@ public class VideoExport : MonoBehaviour
             }
         }
         Time.captureFramerate = 0;
+        Soundscape.ListenerAvatar = null;
+        EnvironmentController.PrecipitationAnchor = null;
         string wav = null;
         if (audio)
         {
@@ -329,7 +351,7 @@ public class VideoExport : MonoBehaviour
         {
             try
             {
-                var p = Process.Start(new ProcessStartInfo(exe, $"-y -loglevel error -framerate {Fps} -i \"{Path.Combine(dir, "frame_%06d.jpg")}\" " + (wav != null ? $"-i \"{wav}\" -c:a aac -b:a 96k -shortest " : "") + $"-c:v libx264 -preset slow -pix_fmt yuv420p -crf {Crf} -movflags +faststart \"{mp4}\"")
+                var p = Process.Start(new ProcessStartInfo(exe, $"-y -loglevel error -framerate {Fps} -i \"{Path.Combine(dir, "frame_%06d.jpg")}\" " + (wav != null ? $"-i \"{wav}\" -c:a aac -b:a 192k -shortest " : "") + $"-c:v libx264 -preset slow -pix_fmt yuv420p -crf {Crf} -movflags +faststart \"{mp4}\"")
                 { UseShellExecute = false, CreateNoWindow = true, RedirectStandardError = true });
                 p.WaitForExit(600000);
                 if (p.ExitCode == 0 && File.Exists(mp4)) return true;

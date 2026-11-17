@@ -36,6 +36,31 @@ namespace CoupledSim.Tests
         }
 
         [Test]
+        public void TriangulatesCombAndSelfTouchingPolygons()
+        {
+            // a comb with 40 teeth (many reflex corners; area 40 * 1 + 80 * 1 = 120), then a figure-of-eight touching at
+            // one corner (two 1 x 1 squares): the old ear clipping gave up on such outlines and left holes
+            var comb = new List<Vector2> { new Vector2(0, 0), new Vector2(80, 0), new Vector2(80, 1) };
+            for (int t = 39; t >= 0; t--) { comb.Add(new Vector2(2 * t + 2, 1)); comb.Add(new Vector2(2 * t + 2, 2)); comb.Add(new Vector2(2 * t + 1, 2)); comb.Add(new Vector2(2 * t + 1, 1)); }
+            comb.Add(new Vector2(0, 1));
+            float Area(List<Vector2> poly)
+            {
+                var tris = Geometry2D.Triangulate(poly);
+                float a = 0;
+                for (int i = 0; i < tris.Count; i += 3)
+                {
+                    float cr = Geometry2D.Cross(poly[tris[i + 1]] - poly[tris[i]], poly[tris[i + 2]] - poly[tris[i]]);
+                    Assert.Greater(cr, 0f, "counter-clockwise");
+                    a += cr / 2;
+                }
+                return a;
+            }
+            Assert.AreEqual(120f, Area(comb), 1e-3);
+            var eight = new[] { (0, 0), (1, 0), (1, 1), (2, 1), (2, 2), (1, 2), (1, 1), (0, 1) }.Select(p => new Vector2(p.Item1, p.Item2)).ToList();
+            Assert.AreEqual(2f, Area(eight), 1e-3);
+        }
+
+        [Test]
         public void TriangulatesClockwiseInput()
         {
             var poly = new List<Vector2> { new Vector2(0, 0), new Vector2(0, 1), new Vector2(1, 1), new Vector2(1, 0) };

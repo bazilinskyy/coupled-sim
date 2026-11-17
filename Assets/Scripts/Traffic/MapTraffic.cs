@@ -96,7 +96,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         bool sumoRuns = sumo != null && sumo.isActiveAndEnabled && (sumo.Status ?? "").StartsWith("connected");
 
         var gen = OsmMap.Current.Generator;
-        var lines = gen.Roads.Where(r => !r.Bridge || r.BridgeLayer == 0)
+        var lines = gen.Roads.Where(r => (!r.Bridge || r.BridgeLayer == 0) && !r.NoThroughTraffic)
             .Select(r => new CoupledSim.Maps.MapRoutes.RoadLine { Line = r.Line.Select(p => new System.Numerics.Vector3(p.x, p.y, p.z)).ToList(), Width = r.Width, OneWay = r.OneWay, ParkLeft = r.ParkLeft, ParkRight = r.ParkRight }).ToList();
         var lanes = CoupledSim.Maps.MapRoutes.Build(lines, gen.HalfSize, OsmMap.Current.Info.LeftHandTraffic, max: 80, variants: 3)
             .Select(l => l.Select(p => new Vector3(p.X, p.Y, p.Z)).ToList()).ToList();

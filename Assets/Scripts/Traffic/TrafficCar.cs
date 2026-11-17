@@ -330,6 +330,10 @@ public class TrafficCar : MonoBehaviour
                     if (Flat2(q - _ahead[k]) > reach) continue;
                     float along = (k + 1) * 2f + offset;
                     if (along >= best) break;
+                    // committed: its front is at the conflict point already, or it could not stop before it braking at
+                    // 4 m/s²; it clears the junction (the other car, which has it on its path, gives way) instead of
+                    // stopping in the middle of it
+                    if (along - VehicleLength / 2f < (Speed > 0.5f ? 1f + Speed * Speed / 8f : 0.5f)) break;
                     float mine = along / Mathf.Max(Speed, 0.5f);
                     bool slowBoth = vc < 1f && Speed < 1f;
                     // (a tie: the earlier spawned car goes first; a participant's vehicle before any traffic car)

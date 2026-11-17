@@ -142,26 +142,114 @@ public class AICar : MonoBehaviour, IVehicle
         pitch = Mathf.Clamp(-ExternalAcceleration * 0.4f, -1.5f, 1.5f) * HasPitch;
         modelLocalRotation = Quaternion.Slerp(modelLocalRotation, Quaternion.Euler(pitch, 0, 0), 0.1f);
         // (not upwards: a push from a participant's vehicle must not lift or launch the car; gravity keeps it down)
-        theRigidbody.linearVelocity = rotationAxis.forward * ExternalSpeed + Vector3.up * Mathf.Min(theRigidbody.linearVelocity.y, 0.3f);
+        // (along the slope it lies on; the vertical speed beyond the slope's is its own: falling, or a little bump)
+        var fwd = rotationAxis.forward;
+        float vyOwn = theRigidbody.linearVelocity.y - fwd.y * ExternalSpeed;
+        theRigidbody.linearVelocity = fwd * ExternalSpeed + Vector3.up * Mathf.Min(vyOwn, 0.3f);
+    }
+
+    TrafficCar _trafficCar;
+    WaypointProgressTracker _tracker;
+    float _yawRate;
+
+    /// <summary>
+    /// Steering of traffic driven by an external speed controller (TrafficCar: the map's traffic, the autopilot):
+    /// pure pursuit of the target point on the route. The path's curvature towards the target, 2x/L² (x: the target's
+    /// sideways offset, L its distance), turns the vehicle at its own speed times that curvature, so it turns no faster
+    /// than it moves (no turning on the spot, no orbiting a point it cannot reach), within its smallest turning circle
+    /// (by length: about 3 m for a bicycle, 4.7 m for a car, 8-9 m for trucks and buses), and the steering takes
+    /// about 0.2 s to follow (no jitter, no swerving).
+    /// </summary>
+    void SteerPursuit()
+    {
+        if (_trafficCar == null) _trafficCar = GetComponent<TrafficCar>();
+        float length = _trafficCar != null ? _trafficCar.VehicleLength : 4.5f;
+        float minRadius = Mathf.Clamp(0.6f * length + 2f, 2.5f, 9f);   // (car 4.7 m, bicycle 3 m, trucks and buses 8-9 m)
+        // the point to pursue: on the route, 3 m plus a quarter of the speed (m/s) ahead of the progress point (the
+        // tracker's own target, 5 m and more ahead, cut tight corners by a metre or two: on a canal-side street, over the
+        // quay's edge)
+        if (_tracker == null) _tracker = GetComponent<WaypointProgressTracker>();
+        var aim = target.position;
+        if (_tracker != null && _tracker.Circuit != null)
+        {
+            float vNow = Mathf.Max(0f, Vector3.Dot(theRigidbody.linearVelocity, transform.forward));
+            aim = _tracker.Circuit.GetRoutePoint(_tracker.ProgressDistance + 3f + 0.25f * vNow).position;
+        }
+        Vector3 local = transform.InverseTransformPoint(aim);
+        float l2 = local.x * local.x + local.z * local.z;
+        float curvature;
+        if (local.z < 0.3f) curvature = Mathf.Sign(local.x == 0f ? 1f : local.x) / minRadius;   // behind: turn round as tightly as it can
+        else curvature = l2 > 1e-4f ? 2f * local.x / l2 : 0f;
+        curvature = Mathf.Clamp(curvature, -1f / minRadius, 1f / minRadius);
+        float v = Mathf.Max(0f, Vector3.Dot(theRigidbody.linearVelocity, transform.forward));
+        if (v < 0.05f) v = Mathf.Max(0f, ExternalSpeed);
+        float wanted = v * curvature;   // rad/s
+        _yawRate = Mathf.Lerp(_yawRate, wanted, 1f - Mathf.Exp(-Time.fixedDeltaTime / 0.2f));
+        theRigidbody.angularVelocity = new Vector3(0f, _yawRate, 0f);
+    }
+
+    float _groundPitch, _groundRoll;
+    int _groundTick;
+    static readonly RaycastHit[] _groundHits = new RaycastHit[8];
+
+    /// <summary>The height of the ground (roads, pavements, terrain) under a point, not counting vehicles.</summary>
+    static bool GroundY(Vector3 at, out float y)
+    {
+        y = 0f; float best = float.MaxValue; bool found = false;
+        int n = Physics.RaycastNonAlloc(at + Vector3.up * 2f, Vector3.down, _groundHits, 5f, ~0, QueryTriggerInteraction.Ignore);
+        for (int i = 0; i < n; i++)
+        {
+            var h = _groundHits[i];
+            if (h.collider.attachedRigidbody != null || h.distance >= best) continue;
+            best = h.distance; y = h.point.y; found = true;
+        }
+        return found;
+    }
+
+    /// <summary>
+    /// Pitch and roll of the ground under the vehicle (from the heights under its front and back, left and right), so
+    /// on slopes (the maps' terrain) it lies on the road instead of staying level with its front or back wheels in it.
+    /// Two-wheelers only pitch (their lean is their own).
+    /// </summary>
+    void FollowGround()
+    {
+        if ((++_groundTick & 1) != 0) return;   // every other physics step
+        if (_trafficCar == null) _trafficCar = GetComponent<TrafficCar>();
+        float length = _trafficCar != null ? _trafficCar.VehicleLength : 4.5f;
+        float half = Mathf.Max(0.5f, length * 0.4f);
+        var f = transform.forward; f.y = 0f;
+        if (f.sqrMagnitude < 1e-4f) return;
+        f.Normalize();
+        var r = new Vector3(f.z, 0f, -f.x);
+        var p = transform.position;
+        float k = 1f - Mathf.Exp(-2f * Time.fixedDeltaTime / 0.15f);
+        if (GroundY(p + f * half, out var yf) && GroundY(p - f * half, out var yb))
+            _groundPitch = Mathf.Lerp(_groundPitch, Mathf.Clamp(-Mathf.Atan2(yf - yb, 2f * half) * Mathf.Rad2Deg, -20f, 20f), k);
+        if (length > 2.5f && GroundY(p + r * 0.8f, out var yr) && GroundY(p - r * 0.8f, out var yl))
+            _groundRoll = Mathf.Lerp(_groundRoll, Mathf.Clamp(Mathf.Atan2(yr - yl, 1.6f) * Mathf.Rad2Deg, -10f, 10f), k);
     }
 
     void FixedUpdate()
     {
-        // Every physics calculation involves the orientation and speed of the object.
-        Vector3 new_position = transform.InverseTransformPoint(target.position);
-        float psi = Mathf.Asin(new_position.x / (Mathf.Pow(new_position.x * new_position.x + new_position.z * new_position.z, 0.5f) + 0.001f));
+        if (ExternalSpeedControl)
+        {
+            // the heading, on the slope of the ground under it
+            FollowGround();
+            rotationAxis.rotation = Quaternion.Euler(_groundPitch, rotationAxis.rotation.eulerAngles.y, _groundRoll);
+            SteerPursuit();
+            FixedUpdateExternal();
+            return;
+        }
 
         //  Update all required informations
         rotationAxis.rotation = Quaternion.Euler(0, rotationAxis.rotation.eulerAngles.y, 0);                     //heading
 
+        // Every physics calculation involves the orientation and speed of the object.
+        Vector3 new_position = transform.InverseTransformPoint(target.position);
+        float psi = Mathf.Asin(new_position.x / (Mathf.Pow(new_position.x * new_position.x + new_position.z * new_position.z, 0.5f) + 0.001f));
+
         //  Change of Ambient Traffic rotations based on current heading and target position
         theRigidbody.angularVelocity = new Vector3(0f, psi * turn_rate_degree * Mathf.PI / 360f, 0f);
-
-        if (ExternalSpeedControl)
-        {
-            FixedUpdateExternal();
-            return;
-        }
         FixedUpdateScripted();
         if (speed / conversion > SpeedCap)
         {
