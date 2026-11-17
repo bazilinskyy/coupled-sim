@@ -1,0 +1,22 @@
+# A drive on the clone of US-36 (the Denver-Boulder Turnpike) out of Boulder towards Denver: the Boulder map's corridor
+# (Assets/StreamingAssets/Maps/Boulder.area.txt). The car starts on the freeway at the edge of Boulder and the autopilot
+# follows the speed limit (65 mph) to the corridor's end near Louisville; the freeway has its own traffic.
+# Use: -experiment boulder_us36.yaml -autoRun     (or NetworkingManager > Trial File)
+# See README > City maps > Highways.
+name: us36_boulder
+map: Boulder
+simulation:
+  time: "10:30"
+  weather: Clear
+traffic:
+  cars_per_km: 10
+participants:
+  - role: Driver
+    input: autopilot             # or keyboard / wheel to drive yourself
+    vehicle: ToyotaCorolla
+    spawn: {lat: 39.980965, lon: -105.222687}        # on US-36, eastbound, past the Baseline Road interchange
+    destination: {lat: 39.962811, lon: -105.178607}  # 4.3 km on: the autopilot drives there and stops
+duration_s: 300
+trials:
+  - {notes: day}
+  - {notes: dusk snow, simulation: {time: "17:30", weather: LightSnow}}

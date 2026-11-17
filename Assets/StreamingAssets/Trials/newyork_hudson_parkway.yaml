@@ -1,0 +1,23 @@
+# A drive on the clone of Manhattan's West Side Highway and Henry Hudson Parkway: the New York map's corridor
+# (Assets/StreamingAssets/Maps/NewYork.area.txt). The car starts on 12th Avenue by the Hudson (traffic lights, 30 mph),
+# the autopilot follows the West Side Highway onto the parkway through Riverside Park (50 mph) and stops near West
+# 120th Street; both have their own traffic.
+# Use: -experiment newyork_hudson_parkway.yaml -autoRun     (or NetworkingManager > Trial File)
+# See README > City maps > Highways.
+name: hudson_parkway
+map: NewYork
+simulation:
+  time: "10:30"
+  weather: PartlyCloudy
+traffic:
+  cars_per_km: 12
+participants:
+  - role: Driver
+    input: autopilot             # or keyboard / wheel to drive yourself
+    vehicle: ToyotaCorolla
+    spawn: {lat: 40.770077, lon: -73.994505}         # 12th Avenue at West 57th Street, northbound
+    destination: {lat: 40.811126, lon: -73.966834}   # the parkway near West 120th Street, 5.2 km on
+duration_s: 600
+trials:
+  - {notes: day}
+  - {notes: night rain, simulation: {time: "22:00", weather: LightRain}}

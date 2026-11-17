@@ -200,6 +200,8 @@ public sealed class TerrainHeight
         return At(x, z);
     }
 
+    const float ClearCell = 2f;
+
     /// <summary>Lifts a map built flat onto the terrain.</summary>
     public void Apply(Transform root, OsmMapGenerator gen)
     {
@@ -231,6 +233,37 @@ public sealed class TerrainHeight
         }
         Physics.SyncTransforms();
         Collect(root);
+        // a map with corridors (roads cut into slopes, on embankments): near a car road the ground stays under the nearest
+        // road's lower edge, so the 10 m ground tiles, straight between their corners, do not rise through the asphalt
+        Dictionary<long, (float d2, float low)> clearance = null;
+        if (gen.Area != null)
+        {
+            clearance = new Dictionary<long, (float, float)>();
+            foreach (var r in gen.Roads)
+            {
+                if (r.Bridge || r.Line == null) continue;
+                float reach = r.Width / 2f + 8f; int rc = Mathf.CeilToInt(reach / ClearCell);
+                for (int i = 0; i + 1 < r.Line.Count; i++)
+                {
+                    var a = r.Line[i]; var b = r.Line[i + 1];
+                    var dir = b - a; dir.y = 0f; float len = dir.magnitude; if (len < 0.01f) continue; dir /= len;
+                    var side = new Vector3(dir.z, 0f, -dir.x) * (r.Width / 2f);
+                    for (float d = 0f; d <= len; d += 2f)
+                    {
+                        var c = a + dir * d;
+                        float low = Mathf.Min(At(c.x, c.z), Mathf.Min(At(c.x + side.x, c.z + side.z), At(c.x - side.x, c.z - side.z))) - GroundDrop;
+                        int cx = Mathf.FloorToInt(c.x / ClearCell), cz = Mathf.FloorToInt(c.z / ClearCell);
+                        for (int dz = -rc; dz <= rc; dz++) for (int dx = -rc; dx <= rc; dx++)
+                        {
+                            float d2 = (dx * dx + dz * dz) * ClearCell * ClearCell;
+                            if (d2 > reach * reach) continue;
+                            long k = ((long)(cx + dx) << 32) ^ (uint)(cz + dz);
+                            if (!clearance.TryGetValue(k, out var e) || d2 < e.d2) clearance[k] = (d2, low);
+                        }
+                    }
+                }
+            }
+        }
         void Visit(Transform t)
         {
             if (gen.EmittedMeshes.Contains(t.gameObject))
@@ -244,7 +277,9 @@ public sealed class TerrainHeight
                     // the distant surroundings (a few big triangles): flat, under the lowest ground of the map
                     bool surroundings = t.name.StartsWith("Surroundings");
                     // the ground a little under the streets: its 10 m tiles cut corners on slopes the streets follow more closely
-                    float extra = t.name == "Ground" || t.name.StartsWith("Ground ") ? -GroundDrop : 0f;
+                    // (on a map with corridors also the parks and grass, just above the ground: under the roads through them)
+                    bool ground = t.name == "Ground" || t.name.StartsWith("Ground ") || (clearance != null && t.name == "Green areas");
+                    float extra = ground ? -GroundDrop : 0f;
                     int layer = 0;
                     int bl = t.name.LastIndexOf(" bridge L", StringComparison.Ordinal);
                     if (bl >= 0) int.TryParse(t.name.Substring(bl + 9), out layer);
@@ -252,6 +287,8 @@ public sealed class TerrainHeight
                     {
                         var w = l2w.MultiplyPoint3x4(v[i]);
                         w.y += surroundings ? Min - 0.5f : Lift(w.x, w.z, layer) + extra;
+                        if (ground && clearance != null && clearance.TryGetValue(((long)Mathf.FloorToInt(w.x / ClearCell) << 32) ^ (uint)Mathf.FloorToInt(w.z / ClearCell), out var under))
+                            w.y = Mathf.Min(w.y, under.low + (t.name == "Green areas" ? 0.006f : 0f));
                         v[i] = w2l.MultiplyPoint3x4(w);
                     }
                     m.vertices = v;
