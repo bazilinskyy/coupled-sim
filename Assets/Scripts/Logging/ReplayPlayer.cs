@@ -531,6 +531,17 @@ public class ReplayPlayer : MonoBehaviour
         }
     }
 
+    // the car seen from inside has its mirrors on (showing the replay behind it), every other car has them off
+    PlayerAvatar _mirrorsOn;
+    void MirrorsOf(PlayerAvatar car)
+    {
+        if (car != null && car.Type != AvatarType.Driver) car = null;
+        if (car == _mirrorsOn) return;
+        if (_mirrorsOn != null) RearMirrorsReflection.SetLive(_mirrorsOn.gameObject, null, false);
+        _mirrorsOn = car;
+        if (car != null) RearMirrorsReflection.SetLive(car.gameObject, _camera.transform, true);
+    }
+
     void MoveCamera()
     {
         var t = _camera.transform;
@@ -548,9 +559,11 @@ public class ReplayPlayer : MonoBehaviour
                 // the participant's own view: their camera (cars), in front of the face (people on foot or on two wheels)
                 VideoExport.OwnView(target, out var pos, out var own);
                 t.SetPositionAndRotation(pos, Quaternion.Euler(0f, own.eulerAngles.y, 0f) * Quaternion.Euler(Mathf.Clamp(_pitch - 15f, -60f, 60f), _yaw, 0f));
+                MirrorsOf(target);
             }
             else
             {
+                MirrorsOf(null);
                 var rot = Quaternion.Euler(_pitch, target.transform.eulerAngles.y + _yaw, 0f);
                 float dist = target.Type == AvatarType.Pedestrian ? 4f : 8f;
                 t.SetPositionAndRotation(target.transform.position + Vector3.up * 1.2f - rot * Vector3.forward * dist, rot);
@@ -558,6 +571,7 @@ public class ReplayPlayer : MonoBehaviour
         }
         else
         {
+            MirrorsOf(null);
             t.rotation = Quaternion.Euler(_pitch, _yaw, 0f);
             var move = new Vector3((Input.GetKey(KeyCode.D) ? 1 : 0) - (Input.GetKey(KeyCode.A) ? 1 : 0),
                                    (Input.GetKey(KeyCode.E) ? 1 : 0) - (Input.GetKey(KeyCode.Q) ? 1 : 0),
