@@ -20,6 +20,17 @@ namespace UnityStandardAssets.Utility
         public float editorVisualisationSubsteps = 100;
         public float Length { get; private set; }
 
+        /// <summary>The distance to the last waypoint: the route without the straight closing piece back to its start (a
+        /// circuit is a loop; the city maps' routes are not, MapRouteRecycler moves their cars back to the start).</summary>
+        public float OpenLength
+        {
+            get
+            {
+                if (distances == null || distances.Length < 2) { if (Waypoints != null && Waypoints.Length > 1) { CachePositionsAndDistances(); numPoints = Waypoints.Length; } }
+                return distances != null && distances.Length >= 2 ? distances[distances.Length - 2] : 0f;
+            }
+        }
+
         public Transform[] Waypoints
         {
             get { return waypointList.items; }

@@ -32,6 +32,8 @@ public class AutomatedDriving : MonoBehaviour
     [Tooltip("TrafficModel mode: car-following model and desired speed (km/h).")]
     public CarFollowingModelType Model = CarFollowingModelType.IDM;
     public float DesiredSpeedKmh = 40f;
+    [Tooltip("TrafficModel mode on a city map: on roads over 55 km/h, drive at the speed limit times this; 0: always the desired speed.")]
+    public float SpeedLimitFactor = 1f;
 
     [Header("Take-over requests")]
     [Tooltip("Seconds the driver has to take over.")]
@@ -128,6 +130,7 @@ public class AutomatedDriving : MonoBehaviour
         // reuse a collision-avoidance supervisor the traffic spawner may have added
         if (!TryGetComponent(out _traffic)) _traffic = gameObject.AddComponent<TrafficCar>();
         _traffic.Init(Model, DesiredSpeedKmh / 3.6f, new System.Random(1));
+        _traffic.SpeedLimitFactor = SpeedLimitFactor;
     }
 
     void OnDestroy()

@@ -506,12 +506,27 @@ def main():
         for (m, layer), (_, credit) in sorted(SOURCES.items()): print("%-10s %-6s %s" % (m, layer, credit))
         return
     bbox = bounds(a.map, margin=0.001)
+    # a map with corridors (Tools/map_area.py): fetched in tiles of 500 m that cover its area, kept within 60 m of it
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import map_area
+    area = map_area.read(a.map)
     done = 0
     for layer in a.layers.split(","):
         src = SOURCES.get((a.map, layer))
         if src is None: continue
         fn, credit = src
-        rows = fn(bbox)
+        if area is None: rows = fn(bbox)
+        else:
+            rows, seen = [], set()
+            tiles = map_area.tiles(area, 500.0, 60.0)
+            for k, t in enumerate(tiles):
+                for r in fn(t):
+                    pts = r["r"] if layer == "surfaces" else [(r["lon"], r["lat"])]
+                    key = (layer, tuple(pts[0]), len(pts), r.get("k") or r.get("code") or r.get("species") or "")
+                    if key in seen: continue
+                    if not any(map_area.inside(area, lat, lon, 60.0) for lon, lat in pts[::max(1, len(pts) // 12)]): continue
+                    seen.add(key); rows.append(r)
+                print("  %s: tile %d/%d, %d so far" % (layer, k + 1, len(tiles), len(rows)), flush=True)
         write(a.map, layer, rows, credit)
         done += 1
     if done == 0: sys.exit("no source for %s (see --list)" % a.map)

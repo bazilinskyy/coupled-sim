@@ -25,6 +25,8 @@ public static class MapRoutes
         public bool OneWay;
         /// <summary>Cars parked along the left / right kerb (as seen along the line) on the carriageway.</summary>
         public bool ParkLeft, ParkRight;
+        /// <summary>Speed limit (km/h; 0: unknown, taken as 50): the route to a destination is the quickest.</summary>
+        public float SpeedKmh;
     }
 
     struct Edge { public int To, Road; }
@@ -36,7 +38,10 @@ public static class MapRoutes
     public static string LastStats = "";
 
     /// <param name="variants">Walks from each entry: the first goes straight on where it can, the others turn at a junction now and then (seeded, the same on every agent).</param>
-    public static List<List<Vector3>> Build(IList<RoadLine> roads, float halfSize, bool leftHandTraffic, int max = 60, float minLength = 150f, int variants = 1, int seed = 7)
+    /// <param name="depth">For a map with corridors (<see cref="MapArea"/>): how far a point lies inside its area (m); the
+    /// routes then start and end within 40 m of the area's edge (else of the square's).</param>
+    public static List<List<Vector3>> Build(IList<RoadLine> roads, float halfSize, bool leftHandTraffic, int max = 60, float minLength = 150f, int variants = 1, int seed = 7,
+        Func<Vector3, float> depth = null)
     {
         // the road network as a directed graph of the roads' points (shared points are junctions)
         var ids = new Dictionary<long, int>();
@@ -62,7 +67,9 @@ public static class MapRoutes
                 prev = cur;
             }
         }
-        bool AtEdge(Vector3 p) => Math.Max(Math.Abs(p.X), Math.Abs(p.Z)) > halfSize * 0.85f;
+        bool AtEdge(Vector3 p) => depth != null ? depth(p) < 40f : Math.Max(Math.Abs(p.X), Math.Abs(p.Z)) > halfSize * 0.85f;
+        // (into the map: towards its middle, or deeper into its area)
+        bool Into(Vector3 from, Vector3 to) => depth != null ? depth(to) > depth(from) : Vector3.Dot(Flat(to - from), -from) > 0f;
 
         var found = new List<(List<int> nodes, List<int> roadsOf, float len)>();
         var rnd = new Random(seed);
@@ -73,7 +80,7 @@ public static class MapRoutes
             for (int variant = 0; variant < variants; variant++)
             {
                 var dir0 = Flat(pos[first.To] - pos[s]);
-                if (Vector3.Dot(dir0, -pos[s]) <= 0f) continue;   // into the map
+                if (!Into(pos[s], pos[first.To])) continue;   // into the map
                 var nodes = new List<int> { s, first.To };
                 var rs = new List<int> { first.Road };
                 var seen = new HashSet<int> { s, first.To };
@@ -81,7 +88,8 @@ public static class MapRoutes
                 int cur = first.To, from = s, road = first.Road;
                 while (len < halfSize * 4f)
                 {
-                    if (len > 60f && AtEdge(pos[cur])) break;
+                    // (leaving the map: at its edge and heading out; a road along a corridor's edge band goes on)
+                    if (len > 60f && AtEdge(pos[cur]) && (depth == null || !Into(pos[from], pos[cur]))) break;
                     var inDir = Vector3.Normalize(Flat(pos[cur] - pos[from]));
                     Edge best = default; float bestScore = float.MaxValue; bool any = false;
                     var options = new List<Edge>();
@@ -118,6 +126,8 @@ public static class MapRoutes
         foreach (var (nodes, rs, len) in found)
         {
             var lane = Offset(nodes, rs, pos, roads, leftHandTraffic);
+            if (depth != null) lane = TrimToArea(lane, depth);
+            if (lane.Count < 2) continue;
             int overlap = 0, total = 0;
             for (int i = 1; i < lane.Count; i++)
             {
@@ -131,6 +141,112 @@ public static class MapRoutes
             if (routes.Count >= max) break;
         }
         return routes;
+    }
+
+    /// <summary>
+    /// The quickest drivable route (by the roads' speed limits, in the driving direction of one-way roads) from a point to
+    /// the road point nearest to a destination, as a lane on the driver's side, as the traffic's routes: for the participant's autopilot driving to a
+    /// place (destination=lat,lon). Starts on the road nearest to <paramref name="from"/> that runs within 60° of
+    /// <paramref name="heading"/>. Empty when no route joins them.
+    /// </summary>
+    public static List<Vector3> ShortestPath(IList<RoadLine> roads, Vector3 from, Vector3 heading, Vector3 to, bool leftHandTraffic)
+    {
+        var ids = new Dictionary<long, int>();
+        var pos = new List<Vector3>();
+        var outs = new List<List<Edge>>();
+        int Node(Vector3 p)
+        {
+            var k = Key(p);
+            if (!ids.TryGetValue(k, out var i)) { i = pos.Count; ids[k] = i; pos.Add(p); outs.Add(new List<Edge>()); }
+            return i;
+        }
+        for (int r = 0; r < roads.Count; r++)
+        {
+            var l = roads[r].Line;
+            if (l == null || l.Count < 2) continue;
+            int prev = Node(l[0]);
+            for (int i = 1; i < l.Count; i++)
+            {
+                int cur = Node(l[i]);
+                if (cur == prev) continue;
+                outs[prev].Add(new Edge { To = cur, Road = r });
+                if (!roads[r].OneWay) outs[cur].Add(new Edge { To = prev, Road = r });
+                prev = cur;
+            }
+        }
+        // start: the end of the nearest road segment heading this way; goal: the node nearest the destination
+        var h = Vector3.Normalize(Flat(heading));
+        int start = -1, startFrom = -1, startRoad = 0; float best = float.MaxValue;
+        for (int a = 0; a < pos.Count; a++)
+            foreach (var e in outs[a])
+            {
+                var d = Flat(pos[e.To] - pos[a]); float len = d.Length(); if (len < 1e-3f) continue;
+                if (Vector3.Dot(d / len, h) < 0.5f) continue;
+                var ap = Flat(from - pos[a]); float t = Clamp(Vector3.Dot(ap, d) / (len * len), 0f, 1f);
+                float dist = (Flat(pos[a] + (pos[e.To] - pos[a]) * t) - Flat(from)).Length();
+                if (dist < best) { best = dist; start = e.To; startFrom = a; startRoad = e.Road; }
+            }
+        int goal = -1; float bg = float.MaxValue;
+        for (int i = 0; i < pos.Count; i++) { float d = (Flat(pos[i]) - Flat(to)).LengthSquared(); if (outs[i].Count > 0 || true) if (d < bg) { bg = d; goal = i; } }
+        if (start < 0 || goal < 0 || best > 30f) return new List<Vector3>();
+        // Dijkstra over the points (lengths in metres), no U-turns at a point
+        var dist2 = new Dictionary<int, float> { [start] = 0f };
+        var prevOf = new Dictionary<int, (int node, int road)> { [start] = (startFrom, startRoad) };
+        var open = new SortedSet<(float d, int n)> { (0f, start) };
+        while (open.Count > 0)
+        {
+            var (d0, n) = open.Min; open.Remove(open.Min);
+            if (n == goal) break;
+            if (d0 > dist2[n]) continue;
+            int back = prevOf[n].node;
+            foreach (var e in outs[n])
+            {
+                if (e.To == back) continue;
+                float v = roads[e.Road].SpeedKmh > 0f ? roads[e.Road].SpeedKmh : 50f;
+                float nd = d0 + Vector3.Distance(pos[n], pos[e.To]) / v;   // (hours times 1000: the quickest)
+                if (dist2.TryGetValue(e.To, out var old) && old <= nd) continue;
+                if (dist2.ContainsKey(e.To)) open.Remove((old, e.To));
+                dist2[e.To] = nd; prevOf[e.To] = (n, e.Road); open.Add((nd, e.To));
+            }
+        }
+        if (!dist2.ContainsKey(goal)) return new List<Vector3>();
+        var nodes = new List<int>(); var rs = new List<int>();
+        for (int n = goal; ; )
+        {
+            nodes.Add(n); rs.Add(prevOf[n].road);
+            if (n == start) { nodes.Add(startFrom); break; }
+            n = prevOf[n].node;
+        }
+        nodes.Reverse(); rs.Reverse();
+        // (Offset takes the road of each step from the second node on)
+        return Offset(nodes, rs, pos, roads, leftHandTraffic);
+    }
+
+    /// <summary>A route of a map with corridors: its longest stretch inside the area (checked every 5 m: a straight
+    /// piece between two points inside can cut a bend of the corridor), where the ground is.</summary>
+    static List<Vector3> TrimToArea(List<Vector3> lane, Func<Vector3, float> depth)
+    {
+        // every 5 m, remembering which are the route's own points
+        var dense = new List<Vector3>(); var own = new List<bool>();
+        for (int i = 0; i + 1 < lane.Count; i++)
+        {
+            float l = Vector3.Distance(lane[i], lane[i + 1]);
+            int n = Math.Max(1, (int)Math.Ceiling(l / 5f));
+            for (int k = 0; k < n; k++) { dense.Add(Vector3.Lerp(lane[i], lane[i + 1], k / (float)n)); own.Add(k == 0); }
+        }
+        if (lane.Count > 0) { dense.Add(lane[lane.Count - 1]); own.Add(true); }
+        int bestStart = 0, bestLen = 0, start = -1;
+        for (int i = 0; i <= dense.Count; i++)
+        {
+            bool inside = i < dense.Count && depth(dense[i]) >= 0f;
+            if (inside && start < 0) start = i;
+            if (!inside && start >= 0) { if (i - start > bestLen) { bestLen = i - start; bestStart = start; } start = -1; }
+        }
+        var r = new List<Vector3>();
+        if (bestLen < 2) return r;
+        int end = bestStart + bestLen - 1;
+        for (int i = bestStart; i <= end; i++) if (i == bestStart || i == end || own[i]) r.Add(dense[i]);
+        return r;
     }
 
     // the lane's centre: a quarter of the road's width to the driver's side of two-way roads (the middle of a
