@@ -117,7 +117,7 @@ public partial class OsmMapGenerator
                         if (!_data.Nodes.TryGetValue(ids[j], out var cn) || cn.Tag("highway") != "crossing") continue;
                         var cp = _pos[ids[j]];
                         float along = V2.Dot(cp - stop, t);
-                        if (along > -2.5f && along < 25f && Math.Abs(Cross(t, cp - stop)) < width / 2f + 1f) stop -= t * (along + 2.5f);
+                        if (along > -2.5f && along < 25f && Math.Abs(Cross(t, cp - stop)) < width / 2f + 1f) stop += t * (along - 2.5f);   // (2.5 m before its node)
                     }
                     heads.Add(new Head { Stop = stop, Travel = t, Width = width, OneWay = ow != 0, Node = s, TurnLane = HasTurnLane(w, from < 0 ? ":forward" : ":backward", ow != 0) });
                 }
@@ -213,7 +213,7 @@ public partial class OsmMapGenerator
                 byPhase[h.Phase].Add(light);
                 carLights.Add(light);
                 if (h.TurnLane && PlaceArrowHead(lightsRoot, h, light) is CarTrafficLight arrowHead) { turnByPhase[h.Phase].Add(arrowHead); carLights.Add(arrowHead); }
-                FlatLenses(light.transform);
+                FlatLenses(light.Lenses, TrafficCar.LightFacing(light.transform));
             }
             var pedByPhase = new[] { new List<PedestrianTrafficLight>(), new List<PedestrianTrafficLight>() };
             foreach (var h in cp)
@@ -423,34 +423,40 @@ public partial class OsmMapGenerator
         var x = new Vector3(h.Facing.X, 0, h.Facing.Y);
         var fwd = Vector3.Cross(x, Vector3.up);   // LookRotation(fwd) has right = up × fwd = x
         go.transform.SetPositionAndRotation(new Vector3(h.Pos.X, ground + 2.6f, h.Pos.Y), Quaternion.LookRotation(fwd, Vector3.up));
-        FigureMasks(go.transform, x);
-        FlatLenses(go.transform);
-        return go.GetComponent<PedestrianTrafficLight>();
+        var ped = go.GetComponent<PedestrianTrafficLight>();
+        if (ped != null)
+        {
+            FigureMasks(go.transform, ped.Lenses, x);   // (before the lenses are flattened: in front of their front faces)
+            FlatLenses(ped.Lenses, x);
+        }
+        return ped;
     }
 
-    static Mesh _lensFace;
-
     /// <summary>
-    /// The signal heads' lenses are cubes standing out of the housing, lit on every face: a head that faces across the
-    /// road showed its red or green to the drivers coming along it, from the side (a pedestrian head across the
-    /// participant's road, red while it had green, looked like a car signal showing red towards it). Each lens becomes
-    /// its front face only (one-sided, where the cube's front was), so it is seen only by those it shines at, as the
-    /// visors of real signals make it.
+    /// The signal heads' lenses (cylinders of the traffic light model) are lit on their sides too: a head that faces
+    /// across the road showed its red or green to the drivers coming along it (a pedestrian head across the
+    /// participant's road, red while it had green, looked like a car signal showing red towards it). Each lens is
+    /// flattened onto its front face (its depth along the direction it shines cut to 2%), so it is seen only by those it
+    /// shines at, as the visors of real signals make it.
     /// </summary>
-    static void FlatLenses(Transform head)
+    static void FlatLenses(IEnumerable<MeshRenderer> lenses, Vector3 shine)
     {
-        if (_lensFace == null)
+        foreach (var lens in lenses)
         {
-            // the unit cube's +x face (the lenses shine along their local x), wound to face +x
-            _lensFace = new Mesh { name = "Lens face" };
-            _lensFace.vertices = new[] { new Vector3(0.5f, -0.5f, -0.5f), new Vector3(0.5f, 0.5f, -0.5f), new Vector3(0.5f, 0.5f, 0.5f), new Vector3(0.5f, -0.5f, 0.5f) };
-            _lensFace.normals = new[] { Vector3.right, Vector3.right, Vector3.right, Vector3.right };
-            _lensFace.uv = new[] { new Vector2(0, 0), new Vector2(0, 1), new Vector2(1, 1), new Vector2(1, 0) };
-            _lensFace.triangles = new[] { 0, 1, 2, 0, 2, 3 };
-            _lensFace.RecalculateBounds();
+            if (lens == null || !lens.TryGetComponent<MeshFilter>(out var mf) || mf.sharedMesh == null || lens.transform.childCount > 0) continue;
+            var t = lens.transform;
+            var ls = t.InverseTransformDirection(shine);   // (the lens's own axis nearest to the shine direction)
+            int k = Mathf.Abs(ls.x) >= Mathf.Abs(ls.y) && Mathf.Abs(ls.x) >= Mathf.Abs(ls.z) ? 0 : Mathf.Abs(ls.y) >= Mathf.Abs(ls.z) ? 1 : 2;
+            var b = mf.sharedMesh.bounds;
+            if (b.size[k] < 1e-4f) continue;
+            float front = b.center[k] + Mathf.Sign(ls[k]) * b.extents[k];   // (the front face, in the mesh's coordinates)
+            const float f = 0.02f;
+            var scale = t.localScale; float sk = scale[k];
+            var axis = Vector3.zero; axis[k] = 1f;
+            // the front face stays where it was: the lens shrinks towards it
+            t.localPosition += t.localRotation * (axis * (front * sk * (1f - f)));
+            scale[k] = sk * f; t.localScale = scale;
         }
-        foreach (var r in head.GetComponentsInChildren<MeshRenderer>())
-            if ((r.name == "UpLight" || r.name == "MiddleLight" || r.name == "DownLight") && r.TryGetComponent<MeshFilter>(out var mf)) mf.sharedMesh = _lensFace;
     }
 
     static Texture2D[] _figureMask;
@@ -461,7 +467,7 @@ public partial class OsmMapGenerator
     /// walking one over the green, as real pedestrian signals have: plain red and green discs at 2.6 m on a pole look
     /// like a car's signal to the drivers who see them (a head across a side road faces the main road's drivers).
     /// </summary>
-    void FigureMasks(Transform head, Vector3 shine)
+    void FigureMasks(Transform head, MeshRenderer[] lenses, Vector3 shine)
     {
         if (_figureMask == null)
         {
@@ -499,13 +505,13 @@ public partial class OsmMapGenerator
                 _figureMat[f] = m;
             }
         }
-        foreach (var lens in head.GetComponentsInChildren<MeshRenderer>())
+        for (int f = 0; f < lenses.Length && f < 2; f++)   // (the red lens above: a standing figure; the green below: a walking one)
         {
-            int f = lens.name == "UpLight" ? 0 : lens.name == "DownLight" ? 1 : -1;   // (red above, green below)
-            if (f < 0) continue;
+            var lens = lenses[f];
+            if (lens == null) continue;
             var b = lens.bounds;
             float depth = Mathf.Abs(b.extents.x * shine.x) + Mathf.Abs(b.extents.y * shine.y) + Mathf.Abs(b.extents.z * shine.z);
-            float size = Mathf.Min(lens.transform.lossyScale.y, lens.transform.lossyScale.z) * 0.95f;
+            float size = b.size.y * 0.95f;   // (the lens's height: its diameter)
             var q = GameObject.CreatePrimitive(PrimitiveType.Quad);
             UnityEngine.Object.DestroyImmediate(q.GetComponent<Collider>());
             q.name = f == 0 ? "Standing figure" : "Walking figure";

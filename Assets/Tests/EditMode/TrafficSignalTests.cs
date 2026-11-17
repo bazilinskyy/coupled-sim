@@ -95,9 +95,14 @@ namespace CoupledSim.Tests
                 Assert.Greater(Mathf.Abs(h.transform.right.x), 0.95f, h.name + " shines across the road, at the other kerb");
                 Assert.AreEqual(2, h.GetComponentsInChildren<MeshRenderer>().Count(r => r.name.EndsWith("figure")), h.name + ": a standing and a walking figure");
             }
-            // the lenses are lit towards the front only (not seen from the side by the drivers on the road they cross)
-            foreach (var r in _root.GetComponentsInChildren<MeshRenderer>().Where(r => r.name == "UpLight" || r.name == "MiddleLight" || r.name == "DownLight"))
-                Assert.AreEqual(2, r.GetComponent<MeshFilter>().sharedMesh.triangles.Length / 3, r.transform.parent.name + "/" + r.name + ": one face");
+            // the lenses are flat, lit towards the front only (not seen from the side by the drivers on the road they cross)
+            foreach (var h in _root.GetComponentsInChildren(TypeNamed("PedestrianTrafficLight")).Concat(_root.GetComponentsInChildren(TypeNamed("CarTrafficLight"))))
+                foreach (var r in (MeshRenderer[])h.GetType().GetProperty("Lenses").GetValue(h))
+                {
+                    var right = h.transform.right;
+                    float depth = Mathf.Abs(r.bounds.size.x * right.x) + Mathf.Abs(r.bounds.size.z * right.z);
+                    Assert.Less(depth, 0.03f, h.name + "/" + r.name + ": a flat lens");
+                }
         }
 
         [Test]
