@@ -964,11 +964,35 @@ public partial class OsmMapGenerator
             green.Polygon(poly, 0.006f, 4f, Terrain != null ? 8f : 0f);   // just above the ground, under the paths and roads through parks
         }
         Emit(world, "Green areas", green, grass, true);
-        var quays = new MeshBuilder(); var copings = new MeshBuilder();
+        var quays = new MeshBuilder(); var copings = new MeshBuilder(); var edges = new MeshBuilder();
+        // where a way (road, path, bridge) crosses the water's edge (onto a bridge or a ford), by 4 m cell: the quay's
+        // invisible kerb has a gap there
+        var crossings = new Dictionary<(int, int), List<V2>>();
+        if (waterPolys.Count > 0)
+            foreach (var w in _data.Ways)
+            {
+                if (w.Tag("highway") == null) continue;
+                var wl = Line(w);
+                for (int i = 1; i < wl.Count; i++)
+                {
+                    V2 a = wl[i - 1], b = wl[i];
+                    foreach (var (c, d) in waterIndex.EdgesIn(Math.Min(a.X, b.X), Math.Min(a.Y, b.Y), Math.Max(a.X, b.X), Math.Max(a.Y, b.Y)))
+                    {
+                        float d1 = Geometry2D.Cross(d - c, a - c), d2 = Geometry2D.Cross(d - c, b - c);
+                        if ((d1 > 0) == (d2 > 0)) continue;
+                        float d3 = Geometry2D.Cross(b - a, c - a), d4 = Geometry2D.Cross(b - a, d - a);
+                        if ((d3 > 0) == (d4 > 0)) continue;
+                        var x = a + (b - a) * (d1 / (d1 - d2));
+                        var key = ((int)Math.Floor(x.X / 4f), (int)Math.Floor(x.Y / 4f));
+                        if (!crossings.TryGetValue(key, out var l)) crossings[key] = l = new List<V2>();
+                        l.Add(x);
+                    }
+                }
+            }
         foreach (var poly in waterPolys)
         {
             waterMb.Polygon(poly, -WaterDepth, 10f, Terrain != null ? 8f : 0f);
-            Quay(poly, quays, copings);
+            Quay(poly, quays, copings, edges, crossings);
         }
         var waterGo = Emit(world, "Water", waterMb, WaterMaterial(water), true);
         if (waterGo != null) waterGo.AddComponent<WaterRipples>();
@@ -982,6 +1006,9 @@ public partial class OsmMapGenerator
             return Noise(Color.Lerp(new Color(0.42f, 0.24f, 0.18f) * tone, new Color(0.16f, 0.17f, 0.12f), damp * 0.8f), r, 0.18f);
         })), true);
         Emit(world, "Quay copings", copings, kerb, true);
+        // (an invisible kerb along the quays: vehicles and people that stray do not fall into the water)
+        var edgeGo = Emit(world, "Quay edges", edges, kerb, true);
+        if (edgeGo != null) edgeGo.GetComponent<MeshRenderer>().enabled = false;
         // the national large-scale topography (the Netherlands: BGT) as the ground's surfaces: every carriageway,
         // footpath, cycle path, parking bay, verge and green area at its exact outline, just under the generated
         // streets (which stay on top); the names give the tyres their grip (bricks, paving, grass, gravel)
@@ -1468,6 +1495,7 @@ public partial class OsmMapGenerator
         PostsOutOfCarriageway(root);
         ObjectsOutOfWater(root, waterIndex);
         MarkPavedOverRoads();
+        PavementsOntoTopography();
         RemoveBlockedParkedCars();
     }
 
@@ -1494,6 +1522,49 @@ public partial class OsmMapGenerator
                 moved++;
             }
         if (moved > 0) Debug.Log($"OsmMap: {moved} objects moved out of the water onto the quay");
+    }
+
+    /// <summary>
+    /// On maps with the national topography's surfaces: the pedestrians' lines along the roads (placed beside each road at
+    /// half its estimated width) moved sideways, point by point, onto the nearest of the topography's pavements within 4 m
+    /// where they lie on a carriageway, cycle path or parking bay, so pedestrians walk on the pavement, not in the street.
+    /// </summary>
+    void PavementsOntoTopography()
+    {
+        if (!TopographyGround) return;
+        Physics.SyncTransforms();
+        string KindAt(float x, float z)
+        {
+            foreach (var h in Physics.RaycastAll(new Vector3(x, 5f, z), Vector3.down, 10f, ~0, QueryTriggerInteraction.Ignore))
+                if (h.collider.name.StartsWith("BGT")) return h.collider.name;
+            return null;
+        }
+        bool Walkable(string k) => k != null && (k.StartsWith("BGT pavements") || k.StartsWith("BGT green"));
+        int moved = 0;
+        foreach (var line in Pavements)
+        {
+            if (CrossingLines.Contains(line) || BridgeLines.ContainsKey(line) || line.Count < 2) continue;
+            for (int i = 0; i < line.Count; i++)
+            {
+                var p = line[i];
+                var k = KindAt(p.x, p.z);
+                if (k == null || Walkable(k)) continue;
+                var d = (line[Math.Min(i + 1, line.Count - 1)] - line[Math.Max(i - 1, 0)]); d.y = 0f;
+                if (d.sqrMagnitude < 1e-4f) continue;
+                var side = Vector3.Cross(Vector3.up, d.normalized);
+                for (float o = 0.5f; o <= 4f; o += 0.5f)
+                {
+                    Vector3? hit = null;
+                    foreach (var sgn in new[] { 1f, -1f })
+                    {
+                        var q = p + side * (o * sgn);
+                        if (KindAt(q.x, q.z) is string kq && kq.StartsWith("BGT pavements")) { hit = q + side * (0.6f * sgn); break; }
+                    }
+                    if (hit.HasValue) { line[i] = new Vector3(hit.Value.x, p.y, hit.Value.z); moved++; break; }
+                }
+            }
+        }
+        if (moved > 0) Debug.Log($"OsmMap: {moved} points of the pedestrians' lines moved onto the topography's pavements");
     }
 
     /// <summary>On maps with the national topography's surfaces: roads that lie mostly (over half, at least 30 m) on its
@@ -1695,8 +1766,28 @@ public partial class OsmMapGenerator
 
     /// <summary>A quay along a water outline: brick walls from below the water line up to the street (both faces), and a
     /// stone coping 0.8 m wide on the land side, just above the ground, over the ground's 1 m cells at the shore.</summary>
-    void Quay(List<V2> poly, MeshBuilder walls, MeshBuilder copings)
+    void Quay(List<V2> poly, MeshBuilder walls, MeshBuilder copings, MeshBuilder edges, Dictionary<(int, int), List<V2>> crossings)
     {
+        // the invisible kerb, 0.6 m high, in 1 m pieces, left out within 7 m of a way crossing the edge (onto a bridge)
+        for (int i = 0; i < poly.Count; i++)
+        {
+            var a = poly[i]; var b = poly[(i + 1) % poly.Count];
+            float len = V2.Distance(a, b); if (len < 0.01f) continue;
+            int pieces = Math.Max(1, (int)Math.Ceiling(len));
+            for (int k = 0; k < pieces; k++)
+            {
+                var p0 = V2.Lerp(a, b, k / (float)pieces); var p1 = V2.Lerp(a, b, (k + 1) / (float)pieces);
+                var mid = (p0 + p1) / 2f;
+                int cx = (int)Math.Floor(mid.X / 4f), cz = (int)Math.Floor(mid.Y / 4f);
+                bool way = false;
+                for (int dx = -2; dx <= 2 && !way; dx++)
+                    for (int dz = -2; dz <= 2 && !way; dz++)
+                        if (crossings.TryGetValue((cx + dx, cz + dz), out var near)) foreach (var x in near) if (V2.DistanceSquared(x, mid) < 49f) { way = true; break; }
+                if (way) continue;
+                edges.Quad(P(p0, 0f), P(p0, 0.6f), P(p1, 0.6f), P(p1, 0f), Vector2.zero, Vector2.up, Vector2.one, Vector2.right);
+                edges.Quad(P(p1, 0f), P(p1, 0.6f), P(p0, 0.6f), P(p0, 0f), Vector2.zero, Vector2.up, Vector2.one, Vector2.right);
+            }
+        }
         int n = poly.Count;
         float along = 0f;
         for (int i = 0; i < n; i++)

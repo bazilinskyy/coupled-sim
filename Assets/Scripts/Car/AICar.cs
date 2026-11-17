@@ -149,6 +149,7 @@ public class AICar : MonoBehaviour, IVehicle
     }
 
     TrafficCar _trafficCar;
+    WaypointProgressTracker _tracker;
     float _yawRate;
 
     /// <summary>
@@ -156,15 +157,25 @@ public class AICar : MonoBehaviour, IVehicle
     /// pure pursuit of the target point on the route. The path's curvature towards the target, 2x/L² (x: the target's
     /// sideways offset, L its distance), turns the vehicle at its own speed times that curvature, so it turns no faster
     /// than it moves (no turning on the spot, no orbiting a point it cannot reach), within its smallest turning circle
-    /// (by length: about 3 m for a bicycle, 5.5 m for a car, 10-12 m for trucks and buses), and the steering takes
+    /// (by length: about 3 m for a bicycle, 4.7 m for a car, 8-9 m for trucks and buses), and the steering takes
     /// about 0.2 s to follow (no jitter, no swerving).
     /// </summary>
     void SteerPursuit()
     {
         if (_trafficCar == null) _trafficCar = GetComponent<TrafficCar>();
         float length = _trafficCar != null ? _trafficCar.VehicleLength : 4.5f;
-        float minRadius = Mathf.Clamp(0.9f * length + 1.5f, 2.5f, 12f);
-        Vector3 local = transform.InverseTransformPoint(target.position);
+        float minRadius = Mathf.Clamp(0.6f * length + 2f, 2.5f, 9f);   // (car 4.7 m, bicycle 3 m, trucks and buses 8-9 m)
+        // the point to pursue: on the route, 3 m plus a quarter of the speed (m/s) ahead of the progress point (the
+        // tracker's own target, 5 m and more ahead, cut tight corners by a metre or two: on a canal-side street, over the
+        // quay's edge)
+        if (_tracker == null) _tracker = GetComponent<WaypointProgressTracker>();
+        var aim = target.position;
+        if (_tracker != null && _tracker.Circuit != null)
+        {
+            float vNow = Mathf.Max(0f, Vector3.Dot(theRigidbody.linearVelocity, transform.forward));
+            aim = _tracker.Circuit.GetRoutePoint(_tracker.ProgressDistance + 3f + 0.25f * vNow).position;
+        }
+        Vector3 local = transform.InverseTransformPoint(aim);
         float l2 = local.x * local.x + local.z * local.z;
         float curvature;
         if (local.z < 0.3f) curvature = Mathf.Sign(local.x == 0f ? 1f : local.x) / minRadius;   // behind: turn round as tightly as it can
