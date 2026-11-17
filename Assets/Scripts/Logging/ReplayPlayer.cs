@@ -32,6 +32,8 @@ public class ReplayPlayer : MonoBehaviour
     readonly List<(Transform t, Transform[] props, Renderer[] discs, float angle)> _drones = new List<(Transform, Transform[], Renderer[], float)>();
     readonly List<PlayerAvatar> _droneParticipants = new List<PlayerAvatar>();
     readonly List<LineRenderer> _trails = new List<LineRenderer>();
+    readonly List<PlayerAvatar> _participantsCache = new List<PlayerAvatar>();
+    Material _trailMaterial;
     TrafficLightsSystem _lights;
     ReplayTrack[] _driverTracks, _pedestrianTracks;
     ObservedSteering[] _steering;
@@ -43,9 +45,9 @@ public class ReplayPlayer : MonoBehaviour
 
     static readonly float[] Speeds = { 0.1f, 0.25f, 0.5f, 1f, 2f, 4f, 8f };
 
-    List<PlayerAvatar> Participants => _drivers.Take(_info.Drivers.Length).Concat(_pedestrians).Concat(_droneParticipants).ToList();
+    List<PlayerAvatar> Participants => _participantsCache;
     /// <summary>The participants of the recording (cars and two-wheelers first, then pedestrians), e.g. for VideoExport's grid.</summary>
-    public List<PlayerAvatar> ReplayParticipants => _ready ? Participants : new List<PlayerAvatar>();
+    public List<PlayerAvatar> ReplayParticipants => _ready ? _participantsCache : new List<PlayerAvatar>();
     bool _video;
 
     /// <summary>Starts the replay of a recording (a .binLog with its .replay.json).</summary>
@@ -238,6 +240,10 @@ public class ReplayPlayer : MonoBehaviour
         _camera.tag = "MainCamera";
 
         // start by following the participant who recorded it
+        _participantsCache.Clear();
+        for (int i = 0; i < _info.Drivers.Length && i < _drivers.Count; i++) _participantsCache.Add(_drivers[i]);
+        _participantsCache.AddRange(_pedestrians);
+        _participantsCache.AddRange(_droneParticipants);
         var participants = Participants;
         _follow = _info.LocalDriver >= 0 && _info.LocalDriver < _info.Drivers.Length ? _info.LocalDriver : (participants.Count > 0 ? 0 : -1);
         if (_follow < 0 && _drivers.Count > 0) _camera.transform.position = _log.Frames[0].Positions[0] + new Vector3(0, 30, -30);
@@ -282,7 +288,7 @@ public class ReplayPlayer : MonoBehaviour
     void BuildTrails()
     {
         var colors = new[] { new Color(1f, 0.3f, 0.2f), new Color(0.2f, 0.6f, 1f), new Color(0.3f, 0.9f, 0.3f), new Color(1f, 0.8f, 0.2f), new Color(0.8f, 0.4f, 1f) };
-        var mat = new Material(Shader.Find("Sprites/Default"));
+        _trailMaterial = new Material(Shader.Find("Sprites/Default"));
         int nDrivers = _info.Drivers.Length;
         for (int p = 0; p < nDrivers + _pedestrians.Count; p++)
         {
@@ -305,7 +311,7 @@ public class ReplayPlayer : MonoBehaviour
                 if (points.Count < 2) continue;
                 var lr = new GameObject("Trail " + p).AddComponent<LineRenderer>();
                 lr.transform.SetParent(transform, false);
-                lr.material = mat;
+                lr.sharedMaterial = _trailMaterial;
                 lr.startColor = lr.endColor = colors[p % colors.Length];
                 lr.widthMultiplier = 0.25f;
                 lr.positionCount = points.Count;
@@ -369,6 +375,9 @@ public class ReplayPlayer : MonoBehaviour
         RenderTexture.active = null;
         _camera.targetTexture = null;
         System.IO.File.WriteAllBytes(System.IO.Path.Combine(_shotDir, $"replay{_shot}.png"), tex.EncodeToPNG());
+        Destroy(tex);
+        rt.Release();
+        Destroy(rt);
         Debug.Log($"Replay: picture {_shot} at {_time:F1} s");
         _shot++; _shotWait = 1.5f;
         if (_shot >= 3)
@@ -631,5 +640,6 @@ public class ReplayPlayer : MonoBehaviour
     {
         if (Active == this) Active = null;
         SceneManager.sceneLoaded -= OnSceneLoaded;
+        if (_trailMaterial != null) Destroy(_trailMaterial);
     }
 }

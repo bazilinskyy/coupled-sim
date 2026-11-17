@@ -64,5 +64,26 @@ namespace CoupledSim.Tests
             Assert.That(mid, Is.InRange(3000f, 5000f));
             Assert.That(far, Is.InRange(1200f, 2500f));
         }
+
+        [Test]
+        public void NonAllocatingTotalsMatchBandTotalsAndZeroDistanceStaysFinite()
+        {
+            foreach (var cat in new[] { VehicleCategory.Light, VehicleCategory.MediumHeavy, VehicleCategory.Heavy, VehicleCategory.Moped })
+            {
+                foreach (bool aWeighted in new[] { false, true })
+                {
+                    Assert.AreEqual(
+                        Cnossos.Total(i => Cnossos.Rolling(cat, 55f, i, 2.5f), aWeighted),
+                        Cnossos.TotalRolling(cat, 55f, 2.5f, aWeighted),
+                        1e-4f);
+                    Assert.AreEqual(
+                        Cnossos.Total(i => Cnossos.Propulsion(cat, 55f, i, true), aWeighted),
+                        Cnossos.TotalPropulsion(cat, 55f, true, aWeighted),
+                        1e-4f);
+                }
+            }
+            float p0 = Cnossos.PressureAt(90f, 0f);
+            Assert.IsFalse(float.IsInfinity(p0) || float.IsNaN(p0));
+        }
     }
 }

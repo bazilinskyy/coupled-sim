@@ -152,6 +152,11 @@ public class DesignedEhmi : HMI
         rt.anchorMin = new Vector2(x0, y0); rt.anchorMax = new Vector2(x1, y1); rt.offsetMin = rt.offsetMax = Vector2.zero;
     }
 
+    protected virtual void OnDestroy()
+    {
+        if (_tex != null) Destroy(_tex);
+    }
+
     protected virtual void Update()
     {
         if (_tex == null) return;
@@ -183,8 +188,10 @@ public class DesignedEhmi : HMI
     void Draw(float t)
     {
         _visible.Clear();
-        foreach (var state in new[] { Find("ANY"), Find(_lastKey ?? StateKey) })
-            if (state != null) foreach (var e in state.elements) if (Shown(e)) _visible.Add(e);
+        var anyState = Find("ANY");
+        if (anyState != null) foreach (var e in anyState.elements) if (Shown(e)) _visible.Add(e);
+        var curState = Find(_lastKey ?? StateKey);
+        if (curState != null) foreach (var e in curState.elements) if (Shown(e)) _visible.Add(e);
         ExtraElements(_visible);
         // the texture holds what changes rarely (shapes, scales); redrawn only when that changes
         int sig = 17;
@@ -297,6 +304,8 @@ public class DesignedEhmi : HMI
         return rt;
     }
 
+    readonly Element _labelElement = new Element { type = "text" };
+
     void Gauge(Element e, Color c, float t, ref int ti, ref int di)
     {
         Dial(e, out var cx, out var cy, out var r);
@@ -306,9 +315,13 @@ public class DesignedEhmi : HMI
             float v = e.labels > 1 ? Mathf.Lerp(e.min, e.max, k / (float)(e.labels - 1)) : e.min;
             float a = AngleOf(e, v) * Mathf.Deg2Rad;
             float lx = cx + Mathf.Cos(a) * r * 0.58f, ly = cy + Mathf.Sin(a) * r * 0.58f, s = r * 0.25f;
-            var label = new Element { type = "text", text = Mathf.RoundToInt(v * e.labelScale).ToString(CultureInfo.InvariantCulture),
-                x = (lx - s) / _w, y = (ly - s * 0.5f) / _h, w = 2f * s / _w, h = s / _h, color = e.color };
-            SetText(ti++, label, c, t);
+            _labelElement.text = Mathf.RoundToInt(v * e.labelScale).ToString(CultureInfo.InvariantCulture);
+            _labelElement.x = (lx - s) / _w;
+            _labelElement.y = (ly - s * 0.5f) / _h;
+            _labelElement.w = 2f * s / _w;
+            _labelElement.h = s / _h;
+            _labelElement.color = e.color;
+            SetText(ti++, _labelElement, c, t);
         }
         // needle: from the hub outwards, turned to the value
         var needle = Dyn(di++);
@@ -449,8 +462,10 @@ public class DesignedEhmi : HMI
         var tx = _texts[i];
         tx.enabled = true;
         Stretch((RectTransform)tx.transform, e.x, e.y, e.x + e.w, e.y + e.h);
-        tx.text = FillText(e.text);
-        tx.fontSize = tx.resizeTextMaxSize = Mathf.Max(1, Mathf.RoundToInt(e.h * Loaded.height * 1000f * 0.8f));
+        var filled = FillText(e.text);
+        if (tx.text != filled) tx.text = filled;
+        int fontSize = Mathf.Max(1, Mathf.RoundToInt(e.h * Loaded.height * 1000f * 0.8f));
+        if (tx.fontSize != fontSize) tx.fontSize = tx.resizeTextMaxSize = fontSize;
         c.a *= Level(e, t, 0.5f);
         tx.color = c;
     }

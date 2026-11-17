@@ -45,10 +45,11 @@ public class VehicleTracker : MonoBehaviour
     public float SmoothingTime = 0.3f;
 
     readonly Dictionary<PlayerAvatar, TrackedVehicle> _vehicles = new Dictionary<PlayerAvatar, TrackedVehicle>();
+    readonly List<PlayerAvatar> _keys = new List<PlayerAvatar>();
     readonly List<PlayerAvatar> _toRemove = new List<PlayerAvatar>();
     float _nextScan;
 
-    public IEnumerable<TrackedVehicle> Vehicles => _vehicles.Values;
+    public Dictionary<PlayerAvatar, TrackedVehicle>.ValueCollection Vehicles => _vehicles.Values;
 
     void Awake()
     {
@@ -58,6 +59,11 @@ public class VehicleTracker : MonoBehaviour
             return;
         }
         _instance = this;
+    }
+
+    void OnDestroy()
+    {
+        if (_instance == this) _instance = null;
     }
 
     void Rescan()
@@ -85,9 +91,11 @@ public class VehicleTracker : MonoBehaviour
         float dt = Time.fixedDeltaTime;
         float alpha = 1f - Mathf.Exp(-dt / Mathf.Max(1e-3f, SmoothingTime));
         _toRemove.Clear();
-        var keys = new List<PlayerAvatar>(_vehicles.Keys);
-        foreach (var avatar in keys)
+        _keys.Clear();
+        foreach (var k in _vehicles.Keys) _keys.Add(k);
+        for (int i = 0; i < _keys.Count; i++)
         {
+            var avatar = _keys[i];
             if (avatar == null)
             {
                 _toRemove.Add(avatar);
@@ -117,11 +125,20 @@ public class VehicleTracker : MonoBehaviour
     {
         var slots = avatar.HMISlots;
         var signal = EhmiSignal.None;
-        foreach (var hmi in new[] { slots.HoodHMI, slots.TopHMI, slots.WindshieldHMI })
+        if (slots.HoodHMI != null)
         {
-            if (hmi == null) continue;
-            if (hmi.CurrentState == HMIState.WALK) return EhmiSignal.Walk;
-            if (hmi.CurrentState == HMIState.STOP) signal = EhmiSignal.DontWalk;
+            if (slots.HoodHMI.CurrentState == HMIState.WALK) return EhmiSignal.Walk;
+            if (slots.HoodHMI.CurrentState == HMIState.STOP) signal = EhmiSignal.DontWalk;
+        }
+        if (slots.TopHMI != null)
+        {
+            if (slots.TopHMI.CurrentState == HMIState.WALK) return EhmiSignal.Walk;
+            if (slots.TopHMI.CurrentState == HMIState.STOP) signal = EhmiSignal.DontWalk;
+        }
+        if (slots.WindshieldHMI != null)
+        {
+            if (slots.WindshieldHMI.CurrentState == HMIState.WALK) return EhmiSignal.Walk;
+            if (slots.WindshieldHMI.CurrentState == HMIState.STOP) signal = EhmiSignal.DontWalk;
         }
         return signal;
     }
