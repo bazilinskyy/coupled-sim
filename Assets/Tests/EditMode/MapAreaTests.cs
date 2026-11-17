@@ -49,6 +49,45 @@ namespace CoupledSim.Tests
             Assert.IsFalse(a.Contains(new Vector2(9024, 3119)), $"depth {a.Depth(new Vector2(9024, 3119)):F0} m");
         }
 
+        [TestCase("Boulder", 40.0176, -105.2797, 39.980965, -105.222687, 39.962811, -105.178607)]
+        [TestCase("NewYork", 40.7580, -73.9855, 40.770077, -73.994505, 40.811126, -73.966834)]
+        public void CorridorsReachTheExamplesStartAndDestination(string map, double lat0, double lon0, double sLat, double sLon, double dLat, double dLon)
+        {
+            // the example experiments (Trials/boulder_us36.yaml, newyork_hudson_parkway.yaml) start and end in the corridor
+            var proj = new GeoProjection(lat0, lon0);
+            Vector2 L(double la, double lo) { proj.ToLocal(la, lo, out var x, out var z); return new Vector2((float)x, (float)z); }
+            var a = MapArea.Parse(System.IO.File.ReadAllText($"Assets/StreamingAssets/Maps/{map}.area.txt"), L);
+            Assert.Greater(a.CorridorLength, 8000f);
+            Assert.IsTrue(a.Contains(L(lat0, lon0)), "the centre");
+            Assert.Greater(a.Depth(L(sLat, sLon)), 50f, "the start, well inside");
+            Assert.Greater(a.Depth(L(dLat, dLon)), 50f, "the destination, well inside");
+        }
+
+        [Test]
+        public void OneWayTrafficDrivesInTheOuterLane()
+        {
+            Assert.AreEqual(3.5f, MapRoutes.OneWayLane(10.5f, 3), 1e-4f, "three lanes of 3.5 m: the outer lane's centre");
+            Assert.AreEqual(1.75f, MapRoutes.OneWayLane(7f, 2), 1e-4f, "two lanes: a quarter of the width");
+            Assert.AreEqual(2f, MapRoutes.OneWayLane(8f, 0), 1e-4f, "lanes not known, wide: a quarter");
+            Assert.AreEqual(0f, MapRoutes.OneWayLane(5f, 0), 1e-4f, "narrow: the middle");
+        }
+
+        [Test]
+        public void DestinationRouteEndsAtTheNearestReachablePoint()
+        {
+            // two carriageways 20 m apart, joined at neither end: a destination beside the other one (nearer to it) is
+            // reached on this one
+            var east = new MapRoutes.RoadLine { Line = new List<Vector3> { new Vector3(0, 0, 0), new Vector3(500, 0, 0), new Vector3(1000, 0, 0) }, Width = 7f, OneWay = true };
+            var west = new MapRoutes.RoadLine { Line = new List<Vector3> { new Vector3(1000, 0, 20), new Vector3(500, 0, 20), new Vector3(0, 0, 20) }, Width = 7f, OneWay = true };
+            var path = MapRoutes.ShortestPath(new[] { east, west }, new Vector3(10, 0, -2), new Vector3(1, 0, 0), new Vector3(990, 0, 25), false);
+            Assert.GreaterOrEqual(path.Count, 2, MapRoutes.Why);
+            Assert.AreEqual(1000f, path[path.Count - 1].X, 1f);
+            Assert.Less(path[path.Count - 1].Z, 0f, "on the eastbound carriageway, to its right");
+            // facing the wrong way on a one-way road: no road to start on
+            Assert.AreEqual(0, MapRoutes.ShortestPath(new[] { east }, new Vector3(10, 0, 0), new Vector3(-1, 0, 0), new Vector3(990, 0, 0), false).Count);
+            StringAssert.Contains("heading this way", MapRoutes.Why);
+        }
+
         [Test]
         public void RoutesEndAtTheAreasEdge()
         {

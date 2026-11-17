@@ -237,8 +237,15 @@ public class TrafficCar : MonoBehaviour
         {
             _nextHistory = Time.time + 0.25f;
             var rbv = TryGetComponent<Rigidbody>(out var rb0) ? rb0.linearVelocity.magnitude : -1f;
-            _history.Enqueue($"t={Time.time:F2} prog={_tracker.ProgressDistance:F1} v={Speed:F1} rb={rbv:F1} pos=({transform.position.x:F1},{transform.position.z:F1}) {LeaderDescription}");
+            var line = $"t={Time.time:F2} prog={_tracker.ProgressDistance:F1} v={Speed:F1} rb={rbv:F1} pos=({transform.position.x:F1},{transform.position.z:F1}) {LeaderDescription}";
+            _history.Enqueue(line);
             while (_history.Count > 12) _history.Dequeue();
+            // the participant's autopilot: every 5 s
+            if (Time.time >= _nextParticipantLog && GetComponent<AutomatedDriving>() != null)
+            {
+                _nextParticipantLog = Time.time + 5f;
+                Debug.Log($"TrafficDebug: autopilot {line} limit {LimitDesired() * 3.6f:F0} km/h");
+            }
         }
         _car.ExternalSpeed = Speed;
         _car.ExternalAcceleration = Acceleration;
@@ -312,7 +319,8 @@ public class TrafficCar : MonoBehaviour
             if (c.t == transform) continue;
             float d2 = Flat2(c.pos - me);
             if (d2 <= 40f * 40f) anyCarClose = true;
-            if (d2 <= maxRange2 && Vector3.Dot(c.fwd, myFwd) > 0.3f) _nearCars.Add(c);
+            // (not a car on a bridge above or a road below)
+            if (d2 <= maxRange2 && Vector3.Dot(c.fwd, myFwd) > 0.3f && Mathf.Abs(c.pos.y - me.y) < 3.5f) _nearCars.Add(c);
         }
 
         _nearAnimals.Clear();
@@ -469,6 +477,7 @@ public class TrafficCar : MonoBehaviour
     static int _ranks;
     /// <summary>-noYield: no yielding to crossing traffic (for comparisons); -debugTraffic: logs overlaps and yielding every 10 s.</summary>
     public static readonly bool NoYield = System.Array.IndexOf(CommandLine.Args, "-noYield") >= 0;
+    float _nextParticipantLog;
     static readonly bool DebugTraffic = System.Array.IndexOf(CommandLine.Args, "-debugTraffic") >= 0;
     static int _overlapFrames, _yieldFrames, _frames; static float _nextReport = 10f;
     static void DebugCount()
@@ -481,7 +490,9 @@ public class TrafficCar : MonoBehaviour
             for (int j = i + 1; j < _cars.Count; j++)
             {
                 var b = _cars[j].t; if (b == null) continue;
-                var d = b.position - a.position; d.y = 0f;
+                var d = b.position - a.position;
+                if (Mathf.Abs(d.y) > 3.5f) continue;   // (one on a bridge over the other)
+                d.y = 0f;
                 if (d.sqrMagnitude > 9f) continue;
                 // overlapping footprints: closer than half their widths across and half their lengths along
                 float along = Mathf.Abs(Vector3.Dot(d, a.forward)), across = Mathf.Abs(Vector3.Dot(d, a.right));
@@ -554,7 +565,7 @@ public class TrafficCar : MonoBehaviour
         foreach (var cc in _cars)
         {
             var c = cc.t;
-            if (c == null || c == transform || Flat2(cc.pos - me) > 40f * 40f) continue;
+            if (c == null || c == transform || Flat2(cc.pos - me) > 40f * 40f || Mathf.Abs(cc.pos.y - me.y) > 3.5f) continue;
             // (the same route, heading this way: followed, FindLeader; coming back towards this car: oncoming traffic)
             if (cc.tc != null && cc.tc._circuit == _circuit && Vector3.Dot(cc.fwd, transform.forward) >= -0.3f) continue;
             float facing = Vector3.Dot(cc.fwd, transform.forward);

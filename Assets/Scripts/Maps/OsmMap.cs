@@ -360,7 +360,7 @@ public class OsmMap : MonoBehaviour
         for (int k = 0; k < roads.Count; k++)
         {
             var road = roads[(index + k) % roads.Count];
-            float offset = kind == SpawnKind.RoadEdge ? road.Width / 2 - 0.8f : (road.OneWay ? (road.Width >= 6.6f ? road.Width / 4 : 0f) : road.Width / 4);
+            float offset = kind == SpawnKind.RoadEdge ? road.Width / 2 - 0.8f : (road.OneWay ? CoupledSim.Maps.MapRoutes.OneWayLane(road.Width, road.Lanes) : road.Width / 4);
             foreach (var d in atStart ? AlongFrom(Length(road.Line), NearestAlong(road.Line, focus), 5f) : Along(Length(road.Line), 5f))
             {
                 PointAt(road.Line, d, out var centre, out var forward);
@@ -379,7 +379,7 @@ public class OsmMap : MonoBehaviour
         {
             var road = roads[index % roads.Count];
             PointAt(road.Line, Length(road.Line) / 2, out var centre, out var forward);
-            float offset = kind == SpawnKind.RoadEdge ? road.Width / 2 - 0.8f : (road.OneWay ? (road.Width >= 6.6f ? road.Width / 4 : 0f) : road.Width / 4);
+            float offset = kind == SpawnKind.RoadEdge ? road.Width / 2 - 0.8f : (road.OneWay ? CoupledSim.Maps.MapRoutes.OneWayLane(road.Width, road.Lanes) : road.Width / 4);
             position = centre + Vector3.Cross(Vector3.up, forward).normalized * side * offset + Vector3.up * 0.05f;
             rotation = Quaternion.LookRotation(forward, Vector3.up);
         }
