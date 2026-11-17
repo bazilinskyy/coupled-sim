@@ -70,11 +70,12 @@ public sealed class TerrainHeight
     /// embankments beside the road, which made humps on the road; slopes and dips stay. Then a gentle smoothing
     /// (8 m), and the result goes into the grid across the road and 3 m beside it, fading into the terrain within 10 m.
     /// </summary>
-    public void SmoothRoads(List<(List<Vector2> line, float width)> roads, List<(List<Vector2> line, float width)> keep = null)
+    public void SmoothRoads(List<(List<Vector2> line, float width)> roads, List<(List<Vector2> line, float width)> keep = null, bool perRoad = false)
     {
         // only on flat maps (less than 12 m between the lowest and highest ground): there a hump on a road is a gap in the
-        // model; on hilly maps it may be a real crest, which the opening would shave off
-        if (roads == null || roads.Count == 0 || Max - Min >= 12f) return;
+        // model; on hilly maps it may be a real crest, which the opening would shave off. perRoad (a map with corridors,
+        // kilometres long, rising or falling slowly): each road whose own course varies by less than 12 m
+        if (roads == null || roads.Count == 0 || (Max - Min >= 12f && !perRoad)) return;
         var sum = new float[_h.Length]; var wsum = new float[_h.Length]; var wmax = new float[_h.Length];
         // cells within 12 m of the lines to keep (bridges and their ramps) stay as they are
         var fixedCells = new bool[_h.Length];
@@ -110,6 +111,7 @@ public sealed class TerrainHeight
             if (m < 3) continue;
             var raw = new float[m]; var ero = new float[m]; var opened = new float[m]; var prof = new float[m];
             for (int i = 0; i < m; i++) raw[i] = At(pts[i].x, pts[i].y);
+            if (perRoad) { float lo = float.MaxValue, hi = float.MinValue; for (int i = 0; i < m; i++) { lo = Mathf.Min(lo, raw[i]); hi = Mathf.Max(hi, raw[i]); } if (hi - lo >= 12f) continue; }
             for (int i = 0; i < m; i++) { float v = float.MaxValue; for (int k = Mathf.Max(0, i - open); k <= Mathf.Min(m - 1, i + open); k++) v = Mathf.Min(v, raw[k]); ero[i] = v; }
             for (int i = 0; i < m; i++) { float v = float.MinValue; for (int k = Mathf.Max(0, i - open); k <= Mathf.Min(m - 1, i + open); k++) v = Mathf.Max(v, ero[k]); opened[i] = v; }
             for (int i = 0; i < m; i++)
@@ -176,6 +178,9 @@ public sealed class TerrainHeight
     /// every point, elevated ones only for points of their own <paramref name="layer"/> (their decks).</summary>
     public float Lift(float x, float z) => Lift(x, z, 0);
 
+    /// <summary>How far the base ground ("Ground ...") lies under the map's surfaces (m).</summary>
+    public float GroundDrop = 0.15f;
+
     public float Lift(float x, float z, int layer)
     {
         var p = new Vector2(x, z);
@@ -239,7 +244,7 @@ public sealed class TerrainHeight
                     // the distant surroundings (a few big triangles): flat, under the lowest ground of the map
                     bool surroundings = t.name.StartsWith("Surroundings");
                     // the ground a little under the streets: its 10 m tiles cut corners on slopes the streets follow more closely
-                    float extra = t.name == "Ground" || t.name.StartsWith("Ground ") ? -0.15f : 0f;
+                    float extra = t.name == "Ground" || t.name.StartsWith("Ground ") ? -GroundDrop : 0f;
                     int layer = 0;
                     int bl = t.name.LastIndexOf(" bridge L", StringComparison.Ordinal);
                     if (bl >= 0) int.TryParse(t.name.Substring(bl + 9), out layer);

@@ -31,6 +31,11 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
     public int Seed = 3;
     [Tooltip("Participant's autopilot speed (km/h); 0: off.")]
     public float AutopilotKmh;
+    /// <summary>The autopilot's speed was given (-autopilot 50): it keeps it everywhere; else it follows the speed limits on fast roads.</summary>
+    public bool AutopilotFixed;
+    /// <summary>"lat,lon": the autopilot drives there by the quickest route (trial parameter destination, -destination).</summary>
+    public string Destination;
+    List<CoupledSim.Maps.MapRoutes.RoadLine> _lines;
 
     public static MapTraffic Current { get; private set; }
     public readonly List<WaypointCircuit> Routes = new List<WaypointCircuit>();
@@ -69,7 +74,15 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         int i = Array.IndexOf(args, "-mapTraffic");
         if (i >= 0) { _forced = true; if (i + 1 < args.Length && float.TryParse(args[i + 1], NumberStyles.Float, ci, out var d)) CarsPerKm = d; }
         i = Array.IndexOf(args, "-autopilot");
-        if (i >= 0) AutopilotKmh = i + 1 < args.Length && float.TryParse(args[i + 1], NumberStyles.Float, ci, out var k) ? k : 35f;
+        // -autopilot: 35 km/h in town and the speed limit on faster roads (a motorway); -autopilot 50: always 50 km/h
+        if (i >= 0)
+        {
+            float k = 0f;
+            AutopilotFixed = i + 1 < args.Length && float.TryParse(args[i + 1], NumberStyles.Float, ci, out k);
+            AutopilotKmh = AutopilotFixed ? k : 35f;
+        }
+        i = Array.IndexOf(args, "-destination");
+        if (i >= 0 && i + 1 < args.Length) Destination = args[i + 1];
         var nm = NetworkingManager.Instance;
         var trial = nm != null && nm.trials != null && nm.trials.Length > 0 ? nm.trials[Mathf.Clamp(nm.CurrentTrial, 0, nm.trials.Length - 1)] : null;
         if (trial?.experimentParameters != null) SetParameter(trial.experimentParameters);
@@ -82,7 +95,8 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         {
             var n = p.name.ToLowerInvariant();
             if (n == "maptraffic" && float.TryParse(p.value, NumberStyles.Float, ci, out var d)) { CarsPerKm = d; _forced = true; }
-            if (n == "autopilot" && float.TryParse(p.value, NumberStyles.Float, ci, out var k)) AutopilotKmh = k;
+            if (n == "autopilot" && float.TryParse(p.value, NumberStyles.Float, ci, out var k)) { AutopilotKmh = k; AutopilotFixed = true; }
+            if (n == "destination") Destination = p.value;
         }
     }
 
@@ -96,17 +110,50 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         bool sumoRuns = sumo != null && sumo.isActiveAndEnabled && (sumo.Status ?? "").StartsWith("connected");
 
         var gen = OsmMap.Current.Generator;
-        var lines = gen.Roads.Where(r => (!r.Bridge || r.BridgeLayer == 0) && !r.NoThroughTraffic)
-            .Select(r => new CoupledSim.Maps.MapRoutes.RoadLine { Line = r.Line.Select(p => new System.Numerics.Vector3(p.x, p.y, p.z)).ToList(), Width = r.Width, OneWay = r.OneWay, ParkLeft = r.ParkLeft, ParkRight = r.ParkRight }).ToList();
-        var lanes = CoupledSim.Maps.MapRoutes.Build(lines, gen.HalfSize, OsmMap.Current.Info.LeftHandTraffic, max: 80, variants: 3)
+        var lines = _lines = gen.Roads.Where(r => (!r.Bridge || r.BridgeLayer == 0) && !r.NoThroughTraffic)
+            .Select(r => new CoupledSim.Maps.MapRoutes.RoadLine { Line = r.Line.Select(p => new System.Numerics.Vector3(p.x, p.y, p.z)).ToList(), Width = r.Width, OneWay = r.OneWay, ParkLeft = r.ParkLeft, ParkRight = r.ParkRight, SpeedKmh = r.SpeedLimitKmh }).ToList();
+        // (a map with corridors along a highway: routes start and end at its area's edge; more of them, as it is longer)
+        var area = gen.Area;
+        System.Func<System.Numerics.Vector3, float> depth = area == null ? null : p => area.Depth(new System.Numerics.Vector2(p.X, p.Z));
+        var lanes = CoupledSim.Maps.MapRoutes.Build(lines, gen.HalfSize, OsmMap.Current.Info.LeftHandTraffic, max: area == null ? 80 : 140, variants: 3, depth: depth)
             .Select(l => l.Select(p => new Vector3(p.X, p.Y, p.Z)).ToList()).ToList();
+        if (area != null)
+        {
+            int outside = 0; float worst = 0f;
+            foreach (var lane in lanes) { float m = lane.Min(q => area.Depth(new System.Numerics.Vector2(q.x, q.z))); if (m < -5f) { outside++; worst = Mathf.Min(worst, m); } }
+            Debug.Log($"MapTraffic: {lanes.Count} routes in the map's area, {outside} leaving it (by up to {-worst:F0} m)");
+        }
         foreach (var lane in lanes) Routes.Add(MakeCircuit(lane, Routes.Count));
+        RoadSpeedLimits.Build(gen.Roads);
         foreach (var r in Routes) r.GetRoutePoint(0f);   // (the circuit works out its length on first use)
-        Debug.Log("MapTraffic: " + CoupledSim.Maps.MapRoutes.LastStats);
-        Debug.Log($"MapTraffic: {Routes.Count} routes ({Routes.Sum(r => r.Length) / 1000f:F1} km of lanes){(sumoRuns ? ", SUMO runs the traffic" : "")}");
+        Debug.Log($"MapTraffic: {Routes.Count} routes ({Routes.Sum(r => r.OpenLength) / 1000f:F1} km of lanes){(sumoRuns ? ", SUMO runs the traffic" : "")}");
 
         if (AutopilotKmh > 0f) Autopilot();
         if ((!sumoRuns || _forced) && CarsPerKm > 0f) yield return SpawnCars();
+        if (area != null && System.Array.IndexOf(CommandLine.Args, "-debugTraffic") >= 0) StartCoroutine(WatchArea(area));
+    }
+
+    // -debugTraffic on a map with corridors: the first vehicles that leave its area, and how
+    IEnumerator WatchArea(CoupledSim.Maps.MapArea area)
+    {
+        var told = new HashSet<TrafficCar>();
+        while (true)
+        {
+            yield return new WaitForSeconds(0.5f);
+            foreach (var c in Cars)
+            {
+                if (c == null || told.Contains(c)) continue;
+                var p = c.transform.position;
+                float dp = area.Depth(new System.Numerics.Vector2(p.x, p.z));
+                if (dp > -5f && p.y > -20f) continue;
+                told.Add(c);
+                var tr = c.GetComponent<WaypointProgressTracker>();
+                var rp = tr != null && tr.Circuit != null ? tr.Circuit.GetRoutePoint(tr.ProgressDistance).position : Vector3.zero;
+                var rb = c.GetComponent<Rigidbody>();
+                Debug.Log($"TrafficDebug: {c.name} left the area ({dp:F0} m) at {p}, speed {c.Speed:F1} m/s, body {(rb != null ? rb.linearVelocity.ToString() : "-")}, progress {(tr != null ? tr.ProgressDistance : -1f):F0} m of {(tr != null && tr.Circuit != null ? tr.Circuit.Length : 0f):F0} at {rp} ({Vector3.Distance(p, rp):F0} m away), {c.LeaderDescription}");
+                if (told.Count >= 6) yield break;
+            }
+        }
     }
 
     WaypointCircuit MakeCircuit(List<Vector3> lane, int index)
@@ -120,7 +167,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         {
             var w = new GameObject("w" + i).transform;
             w.SetParent(go.transform, false);
-            w.position = lane[i] + Vector3.up * 0.2f;
+            w.position = lane[i] + Vector3.up * 0.2f;   // (the roads' lines are on the terrain already: TerrainHeight.Apply)
             items[i] = w;
         }
         c.waypointList.circuit = c;
@@ -146,7 +193,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         var placed = new List<Vector3>();   // (routes share lanes: no car placed within 10 m of another)
         foreach (var route in Routes)
         {
-            float length = route.Length > 0 ? route.Length : 1f;
+            float length = route.OpenLength > 0 ? route.OpenLength : 1f;   // (not the circuit's closing piece back to its start)
             int n = Mathf.RoundToInt(length / 1000f * CarsPerKm);
             for (int i = 0; i < n && count < MaxCars; i++)
             {
@@ -169,6 +216,8 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
                 var traffic = car.gameObject.AddComponent<TrafficCar>();
                 float v = (DesiredSpeedKmh + Normal(rng) * DesiredSpeedSdKmh) / 3.6f;
                 traffic.Init(CoupledSim.Traffic.CarFollowingModelType.IDM, Mathf.Max(3f, v), new System.Random(rng.Next()));
+                // (on fast roads: the limit times the driver's own factor, 0.85-1.12)
+                traffic.SpeedLimitFactor = Mathf.Clamp(v * 3.6f / DesiredSpeedKmh, 0.85f, 1.12f);
                 traffic.Speed = Mathf.Max(2f, v * 0.6f);
                 car.gameObject.AddComponent<MapRouteRecycler>();
                 Cars.Add(traffic);
@@ -197,16 +246,17 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         foreach (var route in Routes.ToList())
         {
             if (count >= MaxCyclists) break;
-            var kerb = RideLine(route, 0f, route.Length, 4f, lht, true);
+            var kerb = RideLine(route, 0f, route.OpenLength, 4f, lht, true);
             if (kerb.Count < 10) continue;
             var bikeRoute = MakeCircuit(kerb, Routes.Count + 1000 + index++);
             bikeRoute.name = "Map cycle route " + index;
             bikeRoute.GetRoutePoint(0f);
-            int n = Mathf.Min(5, Mathf.RoundToInt(bikeRoute.Length / 1000f * perKm));   // (spread over the routes)
+            float bikeLength = bikeRoute.OpenLength;
+            int n = Mathf.Min(5, Mathf.RoundToInt(bikeLength / 1000f * perKm));   // (spread over the routes)
             for (int i = 0; i < n && count < MaxCyclists; i++)
             {
-                float d = bikeRoute.Length * (i + 0.3f) / n;
-                if (d > bikeRoute.Length - 60f) continue;
+                float d = bikeLength * (i + 0.3f) / n;
+                if (d > bikeLength - 60f) continue;
                 var rp = bikeRoute.GetRoutePoint(d);
                 if (placed.Any(q => (q - rp.position).sqrMagnitude < 6f * 6f)) continue;
                 placed.Add(rp.position);
@@ -247,17 +297,42 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         if (tracker == null || aiCar == null) { Debug.LogWarning("MapTraffic: this car has no automation"); return; }
         WaypointCircuit best = null; float bestD = 0f, bestScore = float.MaxValue;
         var at = me.transform.position; var fwd = me.transform.forward;
+        // destination=lat,lon (-destination): the quickest route there through the road network
+        var dest = Destination != null ? Destination.Split(',') : null;
+        if (dest != null && dest.Length >= 2 && double.TryParse(dest[0], NumberStyles.Float, CultureInfo.InvariantCulture, out var dla)
+            && double.TryParse(dest[1], NumberStyles.Float, CultureInfo.InvariantCulture, out var dlo) && _lines != null)
+        {
+            new CoupledSim.Maps.GeoProjection(OsmMap.Current.Info.Latitude, OsmMap.Current.Info.Longitude).ToLocal(dla, dlo, out var dx, out var dz);
+            var path = CoupledSim.Maps.MapRoutes.ShortestPath(_lines, new System.Numerics.Vector3(at.x, at.y, at.z), new System.Numerics.Vector3(fwd.x, 0f, fwd.z),
+                new System.Numerics.Vector3((float)dx, 0f, (float)dz), OsmMap.Current.Info.LeftHandTraffic);
+            if (path.Count >= 2)
+            {
+                best = MakeCircuit(path.Select(q => new Vector3(q.X, q.Y, q.Z)).ToList(), 900);
+                best.name = "Route to " + Destination;
+                best.GetRoutePoint(0f);
+                bestScore = 0f;
+                Debug.Log($"MapTraffic: the autopilot drives to {Destination}: {best.OpenLength / 1000f:F1} km");
+            }
+            else Debug.LogWarning($"MapTraffic: no route from here to {Destination}; the autopilot takes the nearest route");
+        }
+        if (best == null)
         foreach (var r in Routes)
-            for (float d = 0; d < r.Length - 150f; d += 4f)
+            for (float d = 0; d < r.OpenLength - 150f; d += 4f)
             {
                 var rp = r.GetRoutePoint(d);
                 float score = (rp.position - at).sqrMagnitude + (Vector3.Dot(rp.direction, fwd) < 0.5f ? 400f : 0f);
                 if (score < bestScore) { bestScore = score; best = r; bestD = d; }
             }
+        if (System.Array.IndexOf(CommandLine.Args, "-debugTraffic") >= 0)
+        {
+            var near = Routes.Select(r => { float bd = float.MaxValue, dd = 0f; for (float d = 0; d < r.OpenLength; d += 4f) { var q = r.GetRoutePoint(d); float x = (q.position - at).sqrMagnitude; if (x < bd) { bd = x; dd = d; } } return (r, Mathf.Sqrt(bd), dd, Vector3.Dot(r.GetRoutePoint(dd).direction, fwd)); })
+                .OrderBy(t => t.Item2).Take(6).Select(t => $"{t.r.name} {t.Item2:F0} m at {t.dd:F0} of {t.r.OpenLength:F0} m, heading {t.Item4:F2}");
+            Debug.Log("TrafficDebug: routes near the participant: " + string.Join("; ", near));
+        }
         if (best == null)
         {
             foreach (var r in Routes)
-                if (r != null && (best == null || r.Length > best.Length)) { best = r; bestD = 0f; }
+                if (r != null && (best == null || r.OpenLength > best.OpenLength)) { best = r; bestD = 0f; }
         }
         if (best == null) { Debug.LogWarning("MapTraffic: no suitable route for autopilot"); return; }
         var start = best.GetRoutePoint(bestD);
@@ -276,9 +351,10 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         if (!me.TryGetComponent<AutomatedDriving>(out var automation)) automation = me.gameObject.AddComponent<AutomatedDriving>();
         automation.Mode = AutomatedDriving.DrivingMode.TrafficModel;
         automation.DesiredSpeedKmh = AutopilotKmh;
+        automation.SpeedLimitFactor = AutopilotFixed ? 0f : 1f;
         ps.ActivatePlayerAICar();
-        me.gameObject.AddComponent<MapRouteRecycler>();
-        Debug.Log($"MapTraffic: autopilot at {AutopilotKmh} km/h on {best.name} from {bestD:F0} m");
+        me.gameObject.AddComponent<MapRouteRecycler>().Recycle = false;   // (it stops at its route's end)
+        Debug.Log($"MapTraffic: autopilot at {AutopilotKmh} km/h{(AutopilotFixed ? "" : " in town, the speed limit on faster roads")} on {best.name} from {bestD:F0} m, at {start.position} (the participant was at {at})");
     }
 
     /// <summary>Pedestrians walk along the nearest long pavement; riders follow the nearest lane route on its riding line (RideLine).</summary>
@@ -300,23 +376,23 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         {
             WaypointCircuit bestR = null; float bestD = 0f, bestScore = float.MaxValue;
             foreach (var r in Routes)
-                for (float d = 0; d < r.Length - 100f; d += 4f)
+                for (float d = 0; d < r.OpenLength - 100f; d += 4f)
                 {
                     var rp = r.GetRoutePoint(d);
                     // (near, pointing the rider's way, and with at least 300 m to go: the ride does not end round the corner)
-                    float score = (rp.position - at).sqrMagnitude + (Vector3.Dot(rp.direction, fwd) < 0.3f ? 900f : 0f) + (r.Length - d < 350f ? 2500f : 0f);
+                    float score = (rp.position - at).sqrMagnitude + (Vector3.Dot(rp.direction, fwd) < 0.3f ? 900f : 0f) + (r.OpenLength - d < 350f ? 2500f : 0f);
                     if (score < bestScore) { bestScore = score; bestR = r; bestD = d; }
                 }
             if (bestR == null)
                 foreach (var r in Routes)
-                    if (r != null && (bestR == null || r.Length > bestR.Length)) { bestR = r; bestD = 0f; }
+                    if (r != null && (bestR == null || r.OpenLength > bestR.OpenLength)) { bestR = r; bestD = 0f; }
             if (bestR != null)
             {
                 // bicycles, e-scooters and 25 km/h mopeds on the cycle path or track beside the road where there is one;
                 // 45 km/h mopeds on the road
                 var tw = me.GetComponent<TwoWheelerController>();
                 bool moped = tw != null && tw.Type == CoupledSim.TwoWheelers.TwoWheelerType.Moped45;
-                path = RideLine(bestR, bestD, Mathf.Max(bestD + 6f, bestR.Length - 50f), 3f, OsmMap.Current.Info.LeftHandTraffic, !moped);
+                path = RideLine(bestR, bestD, Mathf.Max(bestD + 6f, bestR.OpenLength - 50f), 3f, OsmMap.Current.Info.LeftHandTraffic, !moped);
             }
         }
         if (path == null || path.Count < 2) { Debug.LogWarning("MapTraffic: no path for the autopilot"); return; }
@@ -449,6 +525,8 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
 /// is clear of other cars.</summary>
 public class MapRouteRecycler : MonoBehaviour
 {
+    /// <summary>False: the vehicle stays at its route's end (the participant's autopilot).</summary>
+    public bool Recycle = true;
     WaypointProgressTracker _tracker;
     Rigidbody _rb;
     float _nextCheck;
@@ -462,7 +540,9 @@ public class MapRouteRecycler : MonoBehaviour
         _nextCheck = Time.time + 0.5f;
         var c = _tracker.Circuit;
         float d = Mathf.Repeat(_tracker.ProgressDistance, c.Length);
-        if (d < c.Length - 45f) return;
+        // at the end of its route (TrafficCar stops there; a circuit's closing piece back to the start, straight across the
+        // map, is never driven)
+        if (d < c.OpenLength - 15f || !Recycle) return;
         var start = c.GetRoutePoint(4f);
         foreach (var other in Physics.OverlapSphere(start.position, 12f, ~0, QueryTriggerInteraction.Ignore))
             if (other.attachedRigidbody != null && other.attachedRigidbody != _rb && other.attachedRigidbody.GetComponent<AICar>() != null) return;

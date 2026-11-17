@@ -1,0 +1,22 @@
+# A drive on the clone of the A270 from Eindhoven to the Automotive Campus in Helmond: the Eindhoven map's corridor
+# (Assets/StreamingAssets/Maps/Eindhoven.area.txt). The car starts on the motorway at the edge of Eindhoven and the
+# autopilot follows the speed limits (100 km/h, 80 km/h near the junctions); the motorway has its own traffic.
+# Use: -experiment eindhoven_automotive_campus.yaml -autoRun     (or NetworkingManager > Trial File)
+# See README > City maps > Highways.
+name: a270_automotive_campus
+map: Eindhoven
+simulation:
+  time: "10:30"
+  weather: PartlyCloudy
+traffic:
+  cars_per_km: 10
+participants:
+  - role: Driver
+    input: autopilot             # or keyboard / wheel to drive yourself
+    vehicle: ToyotaCorolla
+    spawn: {lat: 51.4603, lon: 5.5592}         # on the A270, eastbound, 1 km past its start at Eindhoven
+    destination: {lat: 51.4741, lon: 5.6235}   # the Automotive Campus: the autopilot drives there and stops
+duration_s: 600
+trials:
+  - {notes: day}
+  - {notes: evening rain, simulation: {time: "21:30", weather: LightRain}}
