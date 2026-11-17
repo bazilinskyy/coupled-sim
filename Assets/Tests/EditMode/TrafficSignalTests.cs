@@ -94,6 +94,22 @@ namespace CoupledSim.Tests
                 Assert.Greater(Mathf.Abs(h.transform.right.x), 0.95f, h.name + " shines across the road, at the other kerb");
         }
 
+        [Test]
+        public void StopLineBeforeACrossingOnTheApproach()
+        {
+            // a signalised junction with a crossing 6 m north of it, on the stop line's place (5.5 m: half the secondary
+            // road's 7 m and 2 m): the southbound traffic waits before its stripes (2 m either side), at 8.5 m
+            var xml = CrossroadsXml("<tag k=\"highway\" v=\"traffic_signals\"/>")
+                .Replace("<node id=\"6\" lat=\"51.44\" lon=\"5.4703\">", "<node id=\"6\" lat=\"51.4400539\" lon=\"5.47\">")
+                .Replace("<nd ref=\"2\"/><nd ref=\"1\"/>", "<nd ref=\"2\"/><nd ref=\"6\"/><nd ref=\"1\"/>")
+                .Replace("<nd ref=\"1\"/><nd ref=\"6\"/><nd ref=\"4\"/>", "<nd ref=\"1\"/><nd ref=\"4\"/>");
+            Build(xml);
+            var southbound = _root.GetComponentsInChildren(TypeNamed("CarTrafficLight")).Single(h => h.transform.right.z > 0.9f);
+            Assert.That(southbound.transform.position.z, Is.InRange(8.2f, 9f), "the head over the stop line, 2.5 m before the crossing's node");
+            var northbound = _root.GetComponentsInChildren(TypeNamed("CarTrafficLight")).Single(h => h.transform.right.z < -0.9f);
+            Assert.That(northbound.transform.position.z, Is.InRange(-6f, -5f), "no crossing on the south arm: the stop line where it was");
+        }
+
         int PedestrianLightsIn(string section)
         {
             foreach (var s in _root.GetComponentsInChildren(TypeNamed("PedestrianSection")))

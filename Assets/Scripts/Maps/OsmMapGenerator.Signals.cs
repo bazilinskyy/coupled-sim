@@ -109,6 +109,16 @@ public partial class OsmMapGenerator
                     // the stop line: before the junction's crossing roads, else at the signal
                     float back = junction ? JunctionWidth(s) / 2f + 2f : 1f;
                     var stop = Walk(pts, i, from, back, out var t);
+                    // and before a pedestrian crossing on the approach (at the signal, or between it and the junction):
+                    // its stripes run 2 m either side of its node, and the traffic waits in front of them, not on them
+                    var ids = w.NodeIds.Where(_pos.ContainsKey).ToList();
+                    for (int j = i; j >= 0 && j < ids.Count; j += from)
+                    {
+                        if (!_data.Nodes.TryGetValue(ids[j], out var cn) || cn.Tag("highway") != "crossing") continue;
+                        var cp = _pos[ids[j]];
+                        float along = V2.Dot(cp - stop, t);
+                        if (along > -2.5f && along < 25f && Math.Abs(Cross(t, cp - stop)) < width / 2f + 1f) stop -= t * (along + 2.5f);
+                    }
                     heads.Add(new Head { Stop = stop, Travel = t, Width = width, OneWay = ow != 0, Node = s, TurnLane = HasTurnLane(w, from < 0 ? ":forward" : ":backward", ow != 0) });
                 }
             }
