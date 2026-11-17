@@ -48,7 +48,7 @@ public class ResponseInput : MonoBehaviour
     /// <summary>Settings from the command line (<c>-response button,slider</c>), merged into the role's.</summary>
     public static ResponseSettings WithCommandLine(ResponseSettings s)
     {
-        var args = Environment.GetCommandLineArgs();
+        var args = CommandLine.Args;
         for (int i = 0; i + 1 < args.Length; i++)
             if (args[i] == "-response")
                 foreach (var part in args[i + 1].ToLowerInvariant().Split(','))

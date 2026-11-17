@@ -41,7 +41,7 @@ public class VideoExport : MonoBehaviour
 
     public static VideoExport Ensure()
     {
-        var args = Environment.GetCommandLineArgs();
+        var args = CommandLine.Args;
         int i = Array.IndexOf(args, "-videoCams");
         if (i < 0 || i + 1 >= args.Length) return null;
         var go = new GameObject("Video export");
@@ -342,7 +342,7 @@ public class VideoExport : MonoBehaviour
 
     bool Encode(string dir, string mp4, string wav)
     {
-        var args = Environment.GetCommandLineArgs();
+        var args = CommandLine.Args;
         int a = Array.IndexOf(args, "-ffmpeg");
         var candidates = new List<string>();
         if (a >= 0 && a + 1 < args.Length) candidates.Add(args[a + 1]);

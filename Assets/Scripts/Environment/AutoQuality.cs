@@ -16,7 +16,7 @@ public class AutoQuality : MonoBehaviour
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     static void Init()
     {
-        var args = Environment.GetCommandLineArgs();
+        var args = CommandLine.Args;
         int i = Array.IndexOf(args, "-quality");
         if (i < 0 || i + 1 >= args.Length || !string.Equals(args[i + 1], "auto", StringComparison.OrdinalIgnoreCase)) return;
         int f = Array.IndexOf(args, "-targetFps");

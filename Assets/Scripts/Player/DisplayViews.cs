@@ -50,7 +50,7 @@ public class DisplayViews : MonoBehaviour
     void Awake()
     {
         // -views "RearMirror:1,LeftScreen:2,RightScreen:3": views from the command line (replace the inspector's)
-        var args = Environment.GetCommandLineArgs();
+        var args = CommandLine.Args;
         int i = Array.IndexOf(args, "-views");
         if (i < 0 || i + 1 >= args.Length) return;
         var list = new List<View>();

@@ -49,7 +49,7 @@ public class ExperimentDashboard : MonoBehaviour
     {
         if (Instance != null && Instance != this) { Destroy(this); return; }
         Instance = this;
-        var args = Environment.GetCommandLineArgs();
+        var args = CommandLine.Args;
         int i = Array.IndexOf(args, "-dashboardPort");
         if (i >= 0 && i + 1 < args.Length && int.TryParse(args[i + 1], out var port)) Port = port;
     }

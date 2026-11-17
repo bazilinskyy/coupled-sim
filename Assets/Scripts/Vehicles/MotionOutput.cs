@@ -33,7 +33,7 @@ public class MotionOutput : MonoBehaviour
     /// <summary>Adds the output to the participant's vehicle when -motionUdp is given.</summary>
     public static void AddIfAsked(GameObject vehicle)
     {
-        var args = Environment.GetCommandLineArgs();
+        var args = CommandLine.Args;
         int i = Array.IndexOf(args, "-motionUdp");
         if (i < 0 || i + 1 >= args.Length) return;
         var hp = args[i + 1].Split(':');

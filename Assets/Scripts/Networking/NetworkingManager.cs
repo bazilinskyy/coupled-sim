@@ -29,6 +29,17 @@ public class NetworkingManager : MonoBehaviour
         public ExperimentParameter [] experimentParameters;
         public float recordingStartTime;
         public float recordingDuration;
+        /// <summary>From an experiment file: the trial's merged configuration (YAML), written next to its logs.</summary>
+        [HideInInspector] public string config;
+
+        /// <summary>The value of an experiment parameter (the last one given, as the components apply them in order), or null.</summary>
+        public string Parameter(string name)
+        {
+            string v = null;
+            if (experimentParameters != null)
+                foreach (var p in experimentParameters) if (string.Equals(p.name, name, StringComparison.OrdinalIgnoreCase)) v = p.value;
+            return v;
+        }
     }
 
     public static NetworkingManager Instance
@@ -49,8 +60,31 @@ public class NetworkingManager : MonoBehaviour
     {
         if (_netSystem != null) return;
         var trial = trials != null && trials.Length > 0 ? trials[CurrentTrialIndex] : new Trial { experimentParameters = new ExperimentParameter[0] };
-        _netSystem = new Host(_levelManager, _playerSystem, _aiCarSystem, _logger, _fixedLogger, trial);
+        _netSystem = CreateHost(trial);
     }
+
+    // the host's system for a trial: its participant's options (an experiment file's first participant) and, from an
+    // experiment file, the trial's merged configuration next to the logs (ExperimentLogs/Config-P03-T02-{date}.yaml)
+    Host CreateHost(Trial trial)
+    {
+        CommandLine.SetTrialOptions(trial.Parameter(ExperimentFile.ArgsColumn));
+        if (!string.IsNullOrEmpty(CommandLine.TrialOptions)) Debug.Log("Trial options: " + CommandLine.TrialOptions);
+        _trialDuration = float.TryParse(trial.Parameter("duration"), NumberStyles.Float, CultureInfo.InvariantCulture, out var d) ? d : 0f;
+        if (!string.IsNullOrEmpty(trial.config))
+        {
+            try
+            {
+                Directory.CreateDirectory("ExperimentLogs");
+                File.WriteAllText($"ExperimentLogs/Config-{LogPrefix}{DateTime.Now:yyyy_MM_dd_HH_mm_ss}.yaml",
+                    $"# trial {CurrentTrialIndex + 1}{(SessionParticipant > 0 ? $", participant {SessionParticipant}" : "")}, from {Path.GetFileName(_trialFile ?? TrialFile)}\n" + trial.config);
+            }
+            catch (Exception e) { Debug.LogWarning("Could not write the trial's configuration: " + e.Message); }
+        }
+        return new Host(_levelManager, _playerSystem, _aiCarSystem, _logger, _fixedLogger, trial);
+    }
+
+    // a trial with a duration (experiment file: duration_s) ends by itself that long after the simulation starts
+    float _trialDuration, _inGameSince = -1f;
 
     /// <summary>Ends the current trial: next trial of the sequence, or quits after the last (as Esc).</summary>
     public void RequestNextTrial() => NextTrial();
@@ -103,8 +137,9 @@ public class NetworkingManager : MonoBehaviour
         if (!_sessionLoaded)
         {
             _sessionLoaded = true;
-            var args = Environment.GetCommandLineArgs();
-            var file = Arg(args, "-trials") ?? TrialFile;
+            var args = CommandLine.Args;
+            var file = Arg(args, "-trials") ?? Arg(args, "-experiment") ?? TrialFile;
+            _trialFile = file;
             SessionParticipant = int.TryParse(Arg(args, "-participant"), out var p) ? p : Participant;
             TrialOrder? order = TrialTable.TryParseOrder(Arg(args, "-order"), out var o) && Arg(args, "-order") != null ? o : (TrialOrder?)null;
             if (args.Contains("-autoRun")) _autoRun = true;
@@ -141,6 +176,7 @@ public class NetworkingManager : MonoBehaviour
     }
 
     static bool _autoRun, _startHost;
+    static string _trialFile;
     static float _screenshotAt = -1f, _quitAt = -1f;
     static string _screenshotFile;
     static string _connectTo;
@@ -233,8 +269,8 @@ public class NetworkingManager : MonoBehaviour
             if (replay != null)
             {
                 // -replayExperiment <short name> [-replayMap <map>]: for recordings without .replay.json
-                var exp = Experiments.FirstOrDefault(e => e != null && e.ShortName == Arg(Environment.GetCommandLineArgs(), "-replayExperiment"));
-                var err = ReplayPlayer.Begin(replay, this, exp, Arg(Environment.GetCommandLineArgs(), "-replayMap"));
+                var exp = Experiments.FirstOrDefault(e => e != null && e.ShortName == Arg(CommandLine.Args, "-replayExperiment"));
+                var err = ReplayPlayer.Begin(replay, this, exp, Arg(CommandLine.Args, "-replayMap"));
                 if (err != null) Debug.LogError("Replay: " + err);
                 return;
             }
@@ -265,7 +301,7 @@ public class NetworkingManager : MonoBehaviour
         if (_netSystem == null && _startHost && !RunTrialSequenceAutomatically) StartHost();
         if (RunTrialSequenceAutomatically && _netSystem == null && trials != null && trials.Length > 0)
         {
-            _netSystem = new Host(_levelManager, _playerSystem, _aiCarSystem, _logger, _fixedLogger, trials[CurrentTrialIndex]);
+            _netSystem = CreateHost(trials[CurrentTrialIndex]);
         }
         if (_netSystem != null)
         {
@@ -274,6 +310,16 @@ public class NetworkingManager : MonoBehaviour
                 host.UpdateAutomatic();
             }
             _netSystem.Update();
+            if (_trialDuration > 0f && _netSystem is Host timed && timed.InGame)
+            {
+                if (_inGameSince < 0f) _inGameSince = Time.time;
+                else if (Time.time - _inGameSince >= _trialDuration)
+                {
+                    Debug.Log($"Trial {CurrentTrialIndex + 1}: its {_trialDuration:F0} s are over");
+                    _trialDuration = 0f;
+                    NextTrial();
+                }
+            }
         }
     }
     void FixedUpdate()
@@ -306,7 +352,7 @@ public class NetworkingManager : MonoBehaviour
                 if (!RunTrialSequenceAutomatically && GUILayout.Button("Start host"))
                 {
                     var trial = trials != null && trials.Length > 0 ? trials[CurrentTrialIndex] : new Trial { experimentParameters = new ExperimentParameter[0] };
-                    _netSystem = new Host(_levelManager, _playerSystem, _aiCarSystem, _logger, _fixedLogger, trial);
+                    _netSystem = CreateHost(trial);
                 }
                 if (!RunTrialSequenceAutomatically && GUILayout.Button("Start client"))
                 {

@@ -112,7 +112,7 @@ public class DesignedEhmi : HMI
         _manager = FindAnyObjectByType<HMIManager>();
         Build();
         // -ehmiState WALK|STOP|DISABLED on the command line: start in that state (previews, screenshots)
-        var args = Environment.GetCommandLineArgs();
+        var args = CommandLine.Args;
         for (int i = 0; i + 1 < args.Length; i++)
             if (args[i] == "-ehmiState" && Enum.TryParse<HMIState>(args[i + 1], true, out var st)) CurrentState = st;
         Display(CurrentState);

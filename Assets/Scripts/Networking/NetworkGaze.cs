@@ -61,7 +61,7 @@ public class NetworkGaze : MonoBehaviour
 
     void ReadCommandLine()
     {
-        var args = Environment.GetCommandLineArgs();
+        var args = CommandLine.Args;
         var list = new List<GazeTrigger>(Triggers);
         var ci = CultureInfo.InvariantCulture;
         for (int i = 0; i + 1 < args.Length; i++)

@@ -20,7 +20,7 @@ public partial class OsmMapGenerator
     public int SignalHeads, PedestrianSignalHeads, SignalJunctions, TurnArrowHeads;
     public TrafficLightsSystem Signals { get; private set; }
 
-    static readonly bool _noSignals = Array.IndexOf(Environment.GetCommandLineArgs(), "-noSignals") >= 0;
+    static readonly bool _noSignals = Array.IndexOf(CommandLine.Args, "-noSignals") >= 0;
 
     // timing (s): green of the main and the crossing direction, amber, all-red; pedestrians blink before the end
     public const float MainGreen = 24f, SideGreen = 16f, Amber = 3f, AllRed = 2f, PedestrianBlink = 5f, TurnGreen = 7f;

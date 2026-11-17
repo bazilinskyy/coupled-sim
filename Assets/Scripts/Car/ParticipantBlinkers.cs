@@ -31,7 +31,7 @@ public class ParticipantBlinkers : MonoBehaviour
         }
         _tick = gameObject.AddComponent<AudioSource>();
         _tick.spatialBlend = 0f; _tick.volume = 0.35f; _tick.playOnAwake = false;
-        var args = System.Environment.GetCommandLineArgs();
+        var args = CommandLine.Args;
         int bi = System.Array.IndexOf(args, "-blinker");
         if (_blinkers != null && bi >= 0 && bi + 1 < args.Length && System.Enum.TryParse<BlinkerState>(args[bi + 1], true, out var st)) _blinkers.SwitchToState(st);
     }

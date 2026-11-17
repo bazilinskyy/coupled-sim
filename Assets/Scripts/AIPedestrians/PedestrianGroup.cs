@@ -68,7 +68,7 @@ public class PedestrianGroup : MonoBehaviour
 
     static Companion[] FromCommandLine()
     {
-        var args = Environment.GetCommandLineArgs();
+        var args = CommandLine.Args;
         int i = Array.IndexOf(args, "-companions");
         if (i < 0 || i + 1 >= args.Length) return null;
         var list = new List<Companion>();

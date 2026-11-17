@@ -94,7 +94,7 @@ public class PlayerSystem : MonoBehaviour
     // name (e.g. ToyotaCorolla for DrivableToyotaCorolla; give the same option on every PC)
     PlayerAvatar VehicleByName(string option)
     {
-        var args = System.Environment.GetCommandLineArgs();
+        var args = CommandLine.Args;
         int i = System.Array.IndexOf(args, option);
         if (i < 0 || i + 1 >= args.Length) return null;
         var name = args[i + 1];
@@ -139,7 +139,7 @@ public class PlayerSystem : MonoBehaviour
         OpenScenario.Ensure();
         SceneDescriber.EnsureLoggerFromCommandLine();
         if (spawnPoint.Type != SpawnPointType.PlayerControlledPedestrian && spawnPoint.Type != SpawnPointType.PlayerFlyingDrone) MotionOutput.AddIfAsked(LocalPlayer.gameObject);
-        var args = Environment.GetCommandLineArgs();
+        var args = CommandLine.Args;
         if (Array.IndexOf(args, "-gaze") >= 0 || Array.IndexOf(args, "-gazeTrigger") >= 0) NetworkGaze.Ensure();
         if (Array.IndexOf(args, "-companions") >= 0) PedestrianGroup.EnsureFromCommandLine();
         // in-car displays for the participant's own car (driver or AV passenger)
@@ -318,7 +318,7 @@ public class PlayerSystem : MonoBehaviour
         placement = role.EhmiDesignPlacement;
         var design = string.IsNullOrEmpty(role.EhmiDesign) ? null : role.EhmiDesign;
         if (type == SpawnPointType.PlayerInAIControlledCar && TrialEhmiDesign != null) { design = TrialEhmiDesign; if (TrialEhmiPlacement.HasValue) placement = TrialEhmiPlacement.Value; }
-        var args = Environment.GetCommandLineArgs();
+        var args = CommandLine.Args;
         if (type == SpawnPointType.PlayerInAIControlledCar)
             for (int i = 0; i + 1 < args.Length; i++)
                 if (args[i] == "-ehmiDesign")
@@ -380,7 +380,7 @@ public class PlayerSystem : MonoBehaviour
 
     static string Arg(string name)
     {
-        var args = Environment.GetCommandLineArgs();
+        var args = CommandLine.Args;
         for (int i = 0; i + 1 < args.Length; i++) if (args[i] == name) return args[i + 1];
         return null;
     }

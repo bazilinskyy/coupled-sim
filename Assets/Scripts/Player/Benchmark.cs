@@ -18,7 +18,7 @@ public class Benchmark : MonoBehaviour
 
     public static void FromCommandLine()
     {
-        var args = Environment.GetCommandLineArgs();
+        var args = CommandLine.Args;
         int i = Array.IndexOf(args, "-benchmark");
         if (i < 0) return;
         var go = new GameObject("Benchmark");

@@ -56,10 +56,10 @@ public partial class OsmMapGenerator
     Func<int, Material> _facadeMat;
     Func<int, Material> _groundMat;
     /// <summary><c>-noFacadeRelief</c>: flat façades (no normal or parallax maps), e.g. for comparisons or slow PCs.</summary>
-    static readonly bool _noRelief = Array.IndexOf(Environment.GetCommandLineArgs(), "-noFacadeRelief") >= 0;
+    static readonly bool _noRelief = Array.IndexOf(CommandLine.Args, "-noFacadeRelief") >= 0;
     /// <summary>Photo textures of brick, plaster and concrete on the walls (MapAssets.WallDetail); <c>-noPhotoTextures</c>: the drawn bricks of earlier versions.</summary>
     static bool _photoWalls;
-    static readonly bool _noPhotoWalls = Array.IndexOf(Environment.GetCommandLineArgs(), "-noPhotoTextures") >= 0;
+    static readonly bool _noPhotoWalls = Array.IndexOf(CommandLine.Args, "-noPhotoTextures") >= 0;
     /// <summary>Façade materials whose windows light up at night (OsmMap sets their emission from the sun).</summary>
     public static readonly List<Material> NightMaterials = new List<Material>();
     static readonly int Styles = Enum.GetValues(typeof(WindowStyle)).Length;
