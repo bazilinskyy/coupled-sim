@@ -1190,7 +1190,7 @@ Give a role's AV a designed eHMI with `EhmiDesign` (the file name) and `EhmiDesi
 ### In-car displays (head-up display, centre screen, instrument cluster) and timed messages
 The participant's car (driver or AV passenger) can have three displays, each designed like a [designed eHMI](#designed-ehmis) in `Assets/StreamingAssets/InCar/<name>.json`:
 - a **head-up display**, seen about 2.5 m ahead through the windshield (`HudDesign` of the role, or `-hud name`);
-- a **centre screen** on the dashboard (`CentreScreenDesign`, `-centreScreen name`);
+- a **centre screen** in the middle of the dashboard, where the driver sees it (also for an AV passenger) (`CentreScreenDesign`, `-centreScreen name`);
 - the **instrument cluster** behind the steering wheel. It takes the place and size of the car's own dashboard panel and is on by default with the design `Cluster` (`ClusterDesign`, `-cluster name`; `none` keeps the car's old speedometer).
 
 The default cluster shows real data from the car's physics:
