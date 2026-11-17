@@ -225,6 +225,10 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
         int li = System.Array.IndexOf(args, "-liveReflections");
         if (li >= 0 && li + 1 < args.Length) LiveReflections = args[li + 1] != "0";
         if (LiveReflections) CreateLiveReflections();
+        // the viewer's own vehicle out of the live reflections, the people in it out of the cabin's (both with or
+        // without live reflections: the cabin probe is made either way)
+        UnityEngine.Rendering.RenderPipelineManager.beginCameraRendering += HideOwnVehicle;
+        UnityEngine.Rendering.RenderPipelineManager.endCameraRendering += ShowOwnVehicle;
     }
 
     ReflectionProbe _live;
@@ -250,8 +254,6 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
         _live.farClipPlane = 800f;
         _live.shadowDistance = 60f;
         _live.clearFlags = UnityEngine.Rendering.ReflectionProbeClearFlags.Skybox;
-        UnityEngine.Rendering.RenderPipelineManager.beginCameraRendering += HideOwnVehicle;
-        UnityEngine.Rendering.RenderPipelineManager.endCameraRendering += ShowOwnVehicle;
     }
 
     // the viewer's own vehicle (or body) is left out of the live reflections: seen from just above, its roof would
@@ -266,6 +268,8 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
     int _cabinRender = -1;
     bool _cabinDirty = true;
     bool CabinRendering => _cabin != null && _cabinRender >= 0 && !_cabin.IsFinishedRendering(_cabinRender);
+    bool LiveRendering => _live != null && _liveRender >= 0 && !_live.IsFinishedRendering(_liveRender);
+    Vector3 _cabinAt = new Vector3(1e9f, 0f, 0f);
 
     static readonly Collider[] _around = new Collider[8];
 
@@ -306,7 +310,11 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
             _cabin.resolution = 64;
             _cabin.hdr = true;
             _cabin.size = new Vector3(2.6f, 1.8f, 3.2f);   // about a car's cabin around the eyes
-            _cabin.boxProjection = true;
+            // not box-projected: the box of a probe is always aligned with the world's axes, not with the car, and fitted
+            // to no cabin; projected onto it, the bright displays in the dashboard (the smart's yellow trip computer) came
+            // out as a large yellow streak high on the windscreen. Unprojected, the cabin reflects as dark and soft as seen
+            // from the eyes.
+            _cabin.boxProjection = false;
             _cabin.importance = 10;                        // wins over the outdoor probe inside the cabin
             _cabin.blendDistance = 0.1f;
             _cabin.nearClipPlane = 0.05f;
@@ -333,7 +341,7 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
                         if (t.gameObject.layer != ui) { t.gameObject.layer = ui; _cabinDirty = true; }
         }
         if (_debugProbes) LogProbes(main, root);
-        if (_cabinDirty && !(_liveRender >= 0 && !_live.IsFinishedRendering(_liveRender)) && !CabinRendering)
+        if (_cabinDirty && !LiveRendering && !CabinRendering)
         {
             _cabinDirty = false;
             _cabinRender = _cabin.RenderProbe();
@@ -371,7 +379,23 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
 
     void HideOwnVehicle(UnityEngine.Rendering.ScriptableRenderContext ctx, Camera cam)
     {
-        if (cam.cameraType != CameraType.Reflection || _live == null || CabinRendering) return;
+        if (cam.cameraType != CameraType.Reflection) return;
+        if (CabinRendering)
+        {
+            // The cabin probe sits at the viewer's eyes, inside the head of the figure in that seat: the figures' bodies
+            // (shirt and skin) a few centimetres away filled its small, blurry cube and showed as a see-through
+            // pink-and-blue smear high on the windscreen on the passenger's side. The people are left out of it; the
+            // windscreen still reflects the dashboard. (A real windscreen shows the people in it only faintly.)
+            var car = _cabin.transform.parent;
+            if (car == null) return;
+            _hidden.Clear();
+            foreach (var an in car.GetComponentsInChildren<Animator>())
+                if (an != null && an.isHuman)
+                    foreach (var r in an.GetComponentsInChildren<Renderer>())
+                        if (r != null && !r.forceRenderingOff) { r.forceRenderingOff = true; _hidden.Add(r); }
+            return;
+        }
+        if (_live == null) return;
         var root = _cabin != null && _cabin.gameObject.activeSelf && _cabin.transform.parent != null ? _cabin.transform.parent : ViewerVehicle(Camera.main);
         if (root == null) return;
         if (root != _ownRoot) { _ownRoot = root; _own.Clear(); root.GetComponentsInChildren(true, _own); }
@@ -403,8 +427,18 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
     // above the viewer (out of their own car), when the light changed or the viewer moved on
     void UpdateLiveReflections()
     {
-        if (_live == null || Time.unscaledTime < _nextLiveCheck) return;
+        if (Time.unscaledTime < _nextLiveCheck) return;
         _nextLiveCheck = Time.unscaledTime + 0.5f;
+        if (_live == null)
+        {
+            // -liveReflections 0: the cabin still gets its probe. Without it the glass of the viewer's own car reflected
+            // the scene's probes, baked outdoors: a see-through grey-brown sheet over the windscreen (with a hard edge
+            // where its box ends) and the side windows, and over the wing mirror behind them.
+            var at = ViewerPosition();
+            if ((at - _cabinAt).sqrMagnitude > LiveReflectionDistance * LiveReflectionDistance) { _cabinAt = at; _cabinDirty = true; }
+            UpdateCabinReflections();
+            return;
+        }
         if (_liveRender >= 0 && !_live.IsFinishedRendering(_liveRender)) return;
         UpdateCabinReflections();
         if (CabinRendering) return;
@@ -707,6 +741,7 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
         SetSurfaces(rain > 0 ? Mathf.Clamp01(0.4f + rain) : 0f, snow);
         DynamicGI.UpdateEnvironment();
         _liveDirty = true;
+        _cabinDirty = true;
     }
 
     // A spot light under the head of each street lamp model (the highest part, at the end of the arm).
