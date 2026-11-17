@@ -193,20 +193,54 @@ public class DroneSpawner : MonoBehaviour, IExperimentModifier
 
     // ---- flying (host)
 
+    readonly List<AiDrone> _swarm = new List<AiDrone>();
+    readonly List<DroneController> _otherDrones = new List<DroneController>();
+    readonly List<SVec3> _flockPos = new List<SVec3>();
+    readonly List<SVec3> _flockVel = new List<SVec3>();
+    float _nextOtherDroneScan;
+
     void FixedUpdate()
     {
         if (!_host || Spawned.Count == 0) return;
         float dt = Time.fixedDeltaTime, now = Time.time;
         // the swarm's members and the participants' drones, for the flocking interactions
-        var swarm = Spawned.Where(a => a.Mission == Mission.Swarm && a.Drone != null && a.Phase == "flock").ToList();
-        var others = FindObjectsByType<DroneController>(FindObjectsSortMode.None).Where(d => d.ReadInput || d.UseExternalInput).ToList();
-        var pos = swarm.Select(a => a.Drone.Model.State.Position).Concat(others.Select(o => o.Model?.State.Position ?? DroneBody.ToModel(o.transform.position))).ToList();
-        var vel = swarm.Select(a => a.Drone.Model.State.Velocity).Concat(others.Select(o => o.Model?.State.Velocity ?? SVec3.Zero)).ToList();
-        if (swarm.Count > 0)
+        _swarm.Clear();
+        for (int k = 0; k < Spawned.Count; k++)
         {
-            var centroid = swarm.Aggregate(Vector3.zero, (acc, a) => acc + a.Drone.transform.position) / swarm.Count;
-            var goal = _swarmRoute[_swarmLeg % _swarmRoute.Count];
-            if (Vector2.Distance(new Vector2(centroid.x, centroid.z), new Vector2(goal.x, goal.z)) < 25f) _swarmLeg++;
+            var sd = Spawned[k];
+            if (sd.Mission == Mission.Swarm && sd.Drone != null && sd.Phase == "flock") _swarm.Add(sd);
+        }
+        _flockPos.Clear();
+        _flockVel.Clear();
+        if (_swarm.Count > 0)
+        {
+            if (now >= _nextOtherDroneScan)
+            {
+                _nextOtherDroneScan = now + 0.5f;
+                _otherDrones.Clear();
+                foreach (var oc in FindObjectsByType<DroneController>(FindObjectsSortMode.None))
+                    if (oc.ReadInput || oc.UseExternalInput) _otherDrones.Add(oc);
+            }
+            for (int k = 0; k < _swarm.Count; k++)
+            {
+                _flockPos.Add(_swarm[k].Drone.Model.State.Position);
+                _flockVel.Add(_swarm[k].Drone.Model.State.Velocity);
+            }
+            for (int k = 0; k < _otherDrones.Count; k++)
+            {
+                var o = _otherDrones[k];
+                if (o == null) continue;
+                _flockPos.Add(o.Model?.State.Position ?? DroneBody.ToModel(o.transform.position));
+                _flockVel.Add(o.Model?.State.Velocity ?? SVec3.Zero);
+            }
+            if (_swarmRoute != null && _swarmRoute.Count > 0)
+            {
+                Vector3 centroid = Vector3.zero;
+                for (int k = 0; k < _swarm.Count; k++) centroid += _swarm[k].Drone.transform.position;
+                centroid /= _swarm.Count;
+                var goal = _swarmRoute[_swarmLeg % _swarmRoute.Count];
+                if (Vector2.Distance(new Vector2(centroid.x, centroid.z), new Vector2(goal.x, goal.z)) < 25f) _swarmLeg++;
+            }
         }
         foreach (var a in Spawned)
         {
@@ -230,9 +264,10 @@ public class DroneSpawner : MonoBehaviour, IExperimentModifier
                         if (Math.Abs(s.Position.Z - up.Z) < 2f) a.Phase = "flock";
                         break;
                     }
-                    int i = swarm.IndexOf(a);
+                    int i = _swarm.IndexOf(a);
+                    if (i < 0 || _swarmRoute == null || _swarmRoute.Count == 0) break;
                     var goal = DroneBody.ToModel(_swarmRoute[_swarmLeg % _swarmRoute.Count] + Vector3.up * _swarmHeight);
-                    var want = Flocking.Velocity(i, pos, vel, new SVec3(goal.X, goal.Y, s.Position.Z), FlockingParameters.Default);
+                    var want = Flocking.Velocity(i, _flockPos, _flockVel, new SVec3(goal.X, goal.Y, s.Position.Z), FlockingParameters.Default);
                     want.Z = 0.8f * (goal.Z - s.Position.Z);   // and its height
                     d.Fly(new DroneCommand { Mode = DroneMode.Velocity, Velocity = want, Yaw = Heading(want, s) });
                     break;
