@@ -1098,7 +1098,16 @@ public partial class OsmMapGenerator
             Emit(world, "Ground", ground, groundMat, true);
             EmitSurroundings(world);
         }
-        else Emit(world, "Ground", ground, Mat("Ground", Color.white, 0.12f, pavingTex), true);
+        else if (!_data.Ways.Any(w => w.Tag("building") != null))
+            // a road network without buildings (OpenDRIVE, SUMO): fields between the roads, not paving
+            Emit(world, "Ground grass", ground, grass, true);
+        else
+        {
+            var paved = Mat("Ground", Color.white, 0.12f, pavingTex);
+            if (!_noPhotoWalls && !_noRelief && _assets != null && _assets.FacadeTemplate != null && _assets.GroundNames != null)
+                GroundPhoto(paved, "paving", 4f, new Color(0.95f, 1.03f, 1.15f));
+            Emit(world, "Ground", ground, paved, true);
+        }
 
         var green = new MeshBuilder();
         var waterMb = new MeshBuilder();
@@ -2591,7 +2600,7 @@ public partial class OsmMapGenerator
         var wood = Mat("Terrace furniture", new Color(0.42f, 0.3f, 0.2f), 0.3f);
         var brickWall = Mat("Garden wall", Color.white, 0.1f, Tex("garden_wall", 128, (x, y, r) => (y % 16 < 2 || (x + (y / 16 % 2) * 16) % 32 < 2) ? new Color(0.5f, 0.47f, 0.43f) : Noise(new Color(0.5f, 0.25f, 0.18f), r, 0.25f)));
         MeshBuilder bollards = new MeshBuilder(), racks = new MeshBuilder(), hedges = new MeshBuilder(), walls = new MeshBuilder(),
-            fences = new MeshBuilder(), containers = new MeshBuilder(), shelters = new MeshBuilder(), shelterFrames = new MeshBuilder(), shelterAds = new MeshBuilder(), furniture = new MeshBuilder(), cabinets = new MeshBuilder(), busSigns = new MeshBuilder();
+            fences = new MeshBuilder(), containers = new MeshBuilder(), containersPaper = new MeshBuilder(), containersPlastic = new MeshBuilder(), shelters = new MeshBuilder(), shelterFrames = new MeshBuilder(), shelterAds = new MeshBuilder(), furniture = new MeshBuilder(), cabinets = new MeshBuilder(), busSigns = new MeshBuilder();
         var assets = _assets;
 
         GameObject Place(GameObject prefab, V2 p, float yaw, string name)
@@ -2669,7 +2678,8 @@ public partial class OsmMapGenerator
             }
             else if (amenity == "recycling")
             {
-                for (int k = 0; k < 3; k++) containers.Box(p3 + Quaternion.Euler(0, along, 0) * new Vector3(0, 0, (k - 1) * 1.7f), new Vector3(1.4f, 1.6f, 1.5f), along);
+                // a row of three, one per kind of waste (glass, paper, packaging), each in its own colour
+                for (int k = 0; k < 3; k++) (k == 0 ? containers : k == 1 ? containersPaper : containersPlastic).Box(p3 + Quaternion.Euler(0, along, 0) * new Vector3(0, 0, (k - 1) * 1.7f), new Vector3(1.4f, 1.6f, 1.5f), along);
                 PropCount++;
             }
             else if (node.Tag("man_made") == "street_cabinet") { cabinets.Box(p3, new Vector3(0.7f, 1.2f, 0.35f), along); PropCount++; }
@@ -2751,6 +2761,8 @@ public partial class OsmMapGenerator
         Emit(props, "Walls", walls, brickWall, true);
         Emit(props, "Fences", fences, metal, true);
         Emit(props, "Recycling containers", containers, containerMat, true);
+        Emit(props, "Recycling containers paper", containersPaper, Mat("Containers paper", new Color(0.12f, 0.24f, 0.5f), 0.3f), true);
+        Emit(props, "Recycling containers packaging", containersPlastic, Mat("Containers packaging", new Color(0.82f, 0.66f, 0.12f), 0.3f), true);
         var shelterGo = Emit(props, "Bus shelters", shelters, glass, true);
         if (shelterGo != null) shelterGo.GetComponent<MeshRenderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         Emit(props, "Bus shelter frames", shelterFrames, Mat("Shelter frame", new Color(0.2f, 0.21f, 0.22f), 0.45f), true);
