@@ -70,18 +70,28 @@ public sealed class AerialPhoto
         if (withGround)
         {
             var px = tex.GetPixels32(0);
+            int w = tex.width, h = tex.height;
+            // the photo's own light taken out: each pixel divided by the mean brightness around it (about 5 m), so
+            // photographed shadows and sunlit patches (other directions than the scene's sun) do not show as smears at
+            // eye level; the colours stay, a little calmer, and the scene lights the ground itself
+            var lum = new float[px.Length];
+            double total = 0;
+            for (int i = 0; i < px.Length; i++) { lum[i] = (0.3f * px[i].r + 0.59f * px[i].g + 0.11f * px[i].b) / 255f; total += lum[i]; }
+            float mean = (float)(total / px.Length);
+            int radius = Mathf.Max(4, Mathf.RoundToInt(w / 160f));   // (4096 px over about 700 m: 26 px, 4.5 m)
+            var blur = BoxBlur(BoxBlur(lum, w, h, radius), w, h, radius);
             for (int i = 0; i < px.Length; i++)
             {
-                float r = px[i].r / 255f, g = px[i].g / 255f, b = px[i].b / 255f;
-                float lum = 0.3f * r + 0.59f * g + 0.11f * b;
-                // shadows lifted (the scene casts its own), colours calmer, the blue of shade in photos taken out
-                float l2 = lum < 0.42f ? lum + (0.42f - lum) * 0.45f : lum;
-                float k = l2 / Mathf.Max(lum, 0.02f);
-                r = (lum + (r - lum) * 0.6f) * k; g = (lum + (g - lum) * 0.6f) * k; b = (lum + (b - lum) * 0.6f) * k;
+                float r = px[i].r / 255f, g = px[i].g / 255f, b = px[i].b / 255f, l = Mathf.Max(lum[i], 0.01f);
+                float k = Mathf.Clamp(mean / Mathf.Max(blur[i], 0.02f), 0.6f, 2.2f);
+                // calmer colours, and the blue of shade taken out
+                r = (l + (r - l) * 0.5f) * k; g = (l + (g - l) * 0.5f) * k; b = (l + (b - l) * 0.5f) * k;
                 float rg = (r + g) * 0.5f; if (b > rg) b = Mathf.Lerp(b, rg, 0.7f);
-                px[i] = new Color32((byte)(Mathf.Clamp01(r) * 255f), (byte)(Mathf.Clamp01(g) * 255f), (byte)(Mathf.Clamp01(b) * 255f), 255);
+                // and the brightness held near the mean (what is left of a sharp shadow edge)
+                float l2 = 0.3f * r + 0.59f * g + 0.11f * b, t = Mathf.Lerp(l2, mean, 0.35f) / Mathf.Max(l2, 0.01f);
+                px[i] = new Color32((byte)(Mathf.Clamp01(r * t) * 255f), (byte)(Mathf.Clamp01(g * t) * 255f), (byte)(Mathf.Clamp01(b * t) * 255f), 255);
             }
-            ground = new Texture2D(tex.width, tex.height, TextureFormat.RGB24, true) { name = name + " (ground)", wrapMode = TextureWrapMode.Clamp, filterMode = FilterMode.Trilinear, anisoLevel = 16 };
+            ground = new Texture2D(w, h, TextureFormat.RGB24, true) { name = name + " (ground)", wrapMode = TextureWrapMode.Clamp, filterMode = FilterMode.Trilinear, anisoLevel = 16 };
             ground.SetPixels32(px);
             ground.Apply(true);
             ground.Compress(true);
@@ -93,5 +103,36 @@ public sealed class AerialPhoto
         tex.Compress(true);                  // about 11 MB of video memory for 4096² instead of 64 MB
         tex.Apply(true, true);
         return tex;
+    }
+
+    /// <summary>A box blur of a w x h field (rows, then columns; a running sum), radius in pixels.</summary>
+    static float[] BoxBlur(float[] src, int w, int h, int radius)
+    {
+        var tmp = new float[src.Length]; var dst = new float[src.Length];
+        for (int y = 0; y < h; y++)
+        {
+            int row = y * w; float sum = 0f; int n = 0;
+            for (int x = -radius; x <= radius; x++) if (x >= 0 && x < w) { sum += src[row + x]; n++; }
+            for (int x = 0; x < w; x++)
+            {
+                tmp[row + x] = sum / n;
+                int add = x + radius + 1, rem = x - radius;
+                if (add < w) { sum += src[row + add]; n++; }
+                if (rem >= 0) { sum -= src[row + rem]; n--; }
+            }
+        }
+        for (int x = 0; x < w; x++)
+        {
+            float sum = 0f; int n = 0;
+            for (int y = -radius; y <= radius; y++) if (y >= 0 && y < h) { sum += tmp[y * w + x]; n++; }
+            for (int y = 0; y < h; y++)
+            {
+                dst[y * w + x] = sum / n;
+                int add = y + radius + 1, rem = y - radius;
+                if (add < h) { sum += tmp[add * w + x]; n++; }
+                if (rem >= 0) { sum -= tmp[rem * w + x]; n--; }
+            }
+        }
+        return dst;
     }
 }
