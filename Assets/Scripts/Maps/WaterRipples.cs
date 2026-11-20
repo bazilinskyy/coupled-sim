@@ -6,7 +6,8 @@ public class WaterRipples : MonoBehaviour
     public Vector2 Speed = new Vector2(0.012f, 0.007f);   // texture repeats per second (one repeat is 2.5 m)
     Material _m;
 
-    void Start() { var r = GetComponent<Renderer>(); if (r != null) _m = r.sharedMaterial; }
+    // (only a URP Lit water: the CoupledSim/Water shader moves its own ripples and has no base map)
+    void Start() { var r = GetComponent<Renderer>(); if (r != null && r.sharedMaterial != null && r.sharedMaterial.HasProperty("_BaseMap")) _m = r.sharedMaterial; }
 
     void Update()
     {

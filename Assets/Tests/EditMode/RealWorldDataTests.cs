@@ -188,5 +188,49 @@ namespace CoupledSim.Tests
             Assert.AreEqual(0f, (float)lift.Invoke(t, new object[] { 20f, 20f, 1 }), 1e-3f, "layer 1 keeps its own deck under layer 2");
             Assert.AreEqual(-20f, (float)lift.Invoke(t, new object[] { 20f, 20f, 2 }), 1e-3f, "layer 2 follows its own ends (both in the valley)");
         }
+
+        // a building of the city models (Bag3dBuildings.Building): vertices, wall and roof triangles
+        static object Building(Vector3[] v, int[] walls, int[] roofs, byte roofKind)
+        {
+            var t = TypeNamed("Bag3dBuildings+Building");
+            var b = Activator.CreateInstance(t);
+            t.GetField("V").SetValue(b, v); t.GetField("Walls").SetValue(b, walls); t.GetField("Roofs").SetValue(b, roofs);
+            t.GetField("RoofKind").SetValue(b, roofKind);
+            TypeNamed("Bag3dBuildings").GetMethod("SlopingFacades").Invoke(null, new[] { b });
+            return b;
+        }
+
+        static int Count(object b, string field) => ((int[])b.GetType().GetField(field).GetValue(b)).Length / 3;
+
+        [Test]
+        public void TowersSlopingFacadeIsAWall()
+        {
+            // a 150 m tower whose face slopes back from 20 m up (labelled a roof by the city model), with a flat top
+            var v = new[] { new Vector3(0, 20, 0), new Vector3(30, 20, 0), new Vector3(30, 150, 20), new Vector3(0, 150, 20),
+                            new Vector3(0, 150, 30), new Vector3(30, 150, 30) };
+            var b = Building(v, new int[0], new[] { 0, 2, 1, 0, 3, 2, 3, 4, 5, 3, 5, 2 }, 1);
+            Assert.AreEqual(2, Count(b, "Walls"), "the sloping face becomes a wall");
+            Assert.AreEqual(2, Count(b, "Roofs"), "the flat top stays a roof");
+            Assert.AreEqual(0, (byte)b.GetType().GetField("RoofKind").GetValue(b), "no tiled roof on the tower");
+        }
+
+        [Test]
+        public void SpireStaysARoof()
+        {
+            // a church tower 108 m high: the spire's steep faces start at 60 m (more than a third of its height)
+            var v = new[] { new Vector3(0, 60, 0), new Vector3(8, 60, 0), new Vector3(4, 108, 4) };
+            var b = Building(v, new int[0], new[] { 0, 2, 1 }, 1);
+            Assert.AreEqual(0, Count(b, "Walls"));
+            Assert.AreEqual(1, Count(b, "Roofs"));
+        }
+
+        [Test]
+        public void LowBuildingsKeepSteepRoofs()
+        {
+            // a house with a steep roof: under 100 m, nothing changes
+            var v = new[] { new Vector3(0, 6, 0), new Vector3(8, 6, 0), new Vector3(4, 12, 1) };
+            var b = Building(v, new int[0], new[] { 0, 2, 1 }, 1);
+            Assert.AreEqual(1, Count(b, "Roofs"));
+        }
     }
 }
