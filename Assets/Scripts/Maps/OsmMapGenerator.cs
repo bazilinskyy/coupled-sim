@@ -1725,8 +1725,9 @@ public partial class OsmMapGenerator
             if (realTrees != null)
             {
                 float treeHeight = PrefabHeight(_assets.Trees[0], 12f);
-                int n = 0;
-                foreach (var r in realTrees)
+                int n = 0, treesWithCrown = 0;
+                // (the nearest the map's centre first, when a register has more than MaxRealTrees)
+                foreach (var r in realTrees.OrderBy(t => t.X * t.X + t.Z * t.Z))
                 {
                     var p = OffCarriageway(new V2(r.X, r.Z));
                     if (!Inside(p) || n >= MaxRealTrees) continue;
@@ -1740,13 +1741,19 @@ public partial class OsmMapGenerator
                     {
                         go = UnityEngine.Object.Instantiate(_assets.Trees[pick], P(p, 0.1f), Quaternion.Euler(0, yaw, 0), props);
                         float s = Mathf.Clamp(r.Float("height", treeHeight) / treeHeight, 0.25f, 2.2f) * vary;
-                        go.transform.localScale = go.transform.localScale * s;
+                        // the crown as wide as the register measured it (a young or pruned street tree is narrower than
+                        // the model, an old plane tree wider), within half to one and a half times the model's shape
+                        float crown = r.Float("crown", 0f), sx = s;
+                        if (crown > 0f) sx = Mathf.Clamp(crown / PrefabCrownWidth(_assets.Trees[pick], treeHeight * 0.75f) * vary, s * 0.5f, s * 1.5f);
+                        go.transform.localScale = Vector3.Scale(go.transform.localScale, new Vector3(sx, s, sx));
+                        if (crown > 0f) treesWithCrown++;
                     }
                     CullWhenSmall(go, 0.02f);
                     TreeTransforms.Add(go.transform);
                     n++;
                 }
                 RealDataCredits.Add($"{n} trees: {treeCredit}");
+                if (treesWithCrown > 0) Debug.Log($"OsmMap: {treesWithCrown} register trees with their measured crown width");
             }
             // OpenStreetMap's trees (all of them, or those a partial register leaves out: not within 4 m of a registered tree)
             var registered = new HashSet<(int, int)>();
@@ -2451,6 +2458,25 @@ public partial class OsmMapGenerator
     static readonly Dictionary<GameObject, float> _prefabHeights = new Dictionary<GameObject, float>();
 
     /// <summary>Height of a prefab's drawn parts (measured once).</summary>
+    static readonly Dictionary<GameObject, float> _prefabCrowns = new Dictionary<GameObject, float>();
+
+    /// <summary>The width of a tree model's crown in metres (the mean of its extent along x and z), at its own scale.</summary>
+    static float PrefabCrownWidth(GameObject prefab, float fallback)
+    {
+        if (_prefabCrowns.TryGetValue(prefab, out var w)) return w;
+        var go = UnityEngine.Object.Instantiate(prefab);
+        go.SetActive(true);
+        w = fallback;
+        var rs = go.GetComponentsInChildren<Renderer>(true);
+        if (rs.Length > 0)
+        {
+            var b = rs[0].bounds; foreach (var r in rs) b.Encapsulate(r.bounds);
+            w = Mathf.Max(0.5f, (b.size.x + b.size.z) * 0.5f);
+        }
+        UnityEngine.Object.DestroyImmediate(go);
+        return _prefabCrowns[prefab] = w;
+    }
+
     static float PrefabHeight(GameObject prefab, float fallback)
     {
         if (_prefabHeights.TryGetValue(prefab, out var h)) return h;
