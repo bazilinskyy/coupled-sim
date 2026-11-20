@@ -177,6 +177,11 @@ public class AnimalAgent : MonoBehaviour
             if (dist > 40f) continue;
             float closing = Vector3.Dot(v.Velocity, rel.normalized);
             bool close = dist < FleeDistance && v.Velocity.magnitude > 0.5f;
+            // nor does it stay in the way of a car that creeps up to it or stands close in front of it, waiting for it
+            // (neither would ever move: the car stops a few metres short and creeps on below 0.5 m/s); a bird flies off
+            var vf = v.Forward; vf.y = 0f; vf.Normalize();
+            float ahead = Vector3.Dot(vf, rel);
+            if (dist < FleeDistance + 3f && ahead > 0f && (rel - vf * ahead).magnitude < 1.5f) close = true;   // (in its way; from its middle: a truck stops further back)
             if ((closing > 0.5f && dist / closing < FleeTime) || close)
             {
                 // run sideways, away from the vehicle's path

@@ -66,7 +66,13 @@ public class ParticipantAutopilot : MonoBehaviour
             }
             float effort = bend > 50f ? 0.2f : Effort, brake = bend > 70f ? 0.3f : 0f;
             // something ahead (a vehicle, a person, an animal, a parked car): ease off, brake, wait 1.5 m behind it
-            float gap = Mathf.Min(ObstacleAhead(), RedLightAhead());
+            float obstacle = ObstacleAhead(), red = RedLightAhead();
+            float gap = Mathf.Min(obstacle, red);
+            if (DebugTraffic && Time.time >= _nextDebug)
+            {
+                _nextDebug = Time.time + 1f;
+                Debug.Log($"TrafficDebug: rider t={Time.time:F1} at ({p.x:F1},{p.z:F1}) v={(_body != null ? _body.linearVelocity.magnitude : 0f):F1} obstacle {(obstacle < float.MaxValue ? obstacle.ToString("F1") : "-")} red light {(red < float.MaxValue ? red.ToString("F1") : "-")}");
+            }
             if (gap < float.MaxValue)
             {
                 float speed = _body != null ? _body.linearVelocity.magnitude : 0f;
@@ -79,6 +85,8 @@ public class ParticipantAutopilot : MonoBehaviour
     }
 
     static Vector3 Flat(Vector3 v) { v.y = 0f; return v; }
+    static readonly bool DebugTraffic = System.Array.IndexOf(CommandLine.Args, "-debugTraffic") >= 0;
+    float _nextDebug;
 
     readonly Collider[] _near = new Collider[24];
     float _nextWaitLog;
@@ -130,9 +138,10 @@ public class ParticipantAutopilot : MonoBehaviour
     static float _nextLightScan = -1f;
 
     /// <summary>
-    /// A red light (or a yellow one it can stop for at 3 m/s²) for the rider's way within 40 m: the distance to its stop
-    /// line, 2 m before the head (signal heads stand a few metres past the line, beside the road, facing the traffic they
-    /// control); float.MaxValue when there is none. Riders on a cycle path beside the road keep the road's lights.
+    /// A red light (or a yellow one it can stop for at 3 m/s²) for the rider's way within 40 m: the distance to a metre
+    /// before its stop line (the head hangs over the approach at the line, facing the traffic it controls), so the rider
+    /// waits at the line; float.MaxValue when there is none. Riders on a cycle path beside the road keep the road's
+    /// lights; turn-arrow heads are for the turning lane and do not count.
     /// </summary>
     float RedLightAhead()
     {
@@ -144,16 +153,23 @@ public class ParticipantAutopilot : MonoBehaviour
         for (int i = 0, k = _index; i < 12 && k >= 0 && k < Path.Count && along < 40f; i++, k += step)
         {
             var seg = Flat(Path[k] - prev); float len = seg.magnitude;
-            for (float s = 2f; s <= len; s += 2f)
+            for (float s = 1f; s <= len; s += 1f)
             {
                 var p = prev + seg * (s / len); float d = along + s;
                 var dir = seg / Mathf.Max(len, 1e-3f);
                 foreach (var light in _lights)
                 {
                     if (light == null || (light.State != LightState.RED && light.State != LightState.YELLOW && light.State != LightState.RED_AND_YELLOW)) continue;
+                    if (light.Arrow != CarTrafficLight.TurnArrow.None) continue;   // (a turn arrow is for the turning lane)
                     if (Flat(light.transform.position - p).sqrMagnitude > 6f * 6f) continue;
                     if (Vector3.Dot(Flat(TrafficCar.LightFacing(light.transform)).normalized, dir) > -0.7f) continue;
-                    float stop = Mathf.Max(0f, d - 3f);
+                    // the head hangs over the stop line: its distance along the path from the sample level with it (the
+                    // samples are at most 2 m apart; the first one within reach of it is some 5 m short of the line)
+                    float ahead = Vector3.Dot(Flat(light.transform.position - p), dir);
+                    if (ahead > 1f || ahead <= -1f) continue;
+                    if (d + ahead < 1f) continue;   // at the line already: ride on
+                    // (the rider stops 1.5 m short of this: its front about 1.5 m before the line)
+                    float stop = Mathf.Max(0f, d + ahead - 1f);
                     if (light.State == LightState.YELLOW && speed * speed / 6f > stop) continue;   // too close: ride on
                     return stop;
                 }

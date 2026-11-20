@@ -117,6 +117,53 @@ public static class MapSetup
         Debug.Log($"MapSetup: wall textures {assets.WallDetail.Count(t => t != null)} detail, {assets.WallNormal.Count(t => t != null)} normal");
     }
 
+    /// <summary>The photo textures of the streets' surfaces (Assets/ThirdParty/Textures/Ground, CC0 Poly Haven) and the lawn
+    /// (Assets/Textures/Ground/Lawn, Tools/lawn_texture.py) into Resources/MapAssets, normal maps imported as such
+    /// (batch: -executeMethod MapSetup.AddGroundTextures).</summary>
+    public static void AddGroundTextures()
+    {
+        const string dir = "Assets/ThirdParty/Textures/Ground/";
+        // (name, colour map, normal map, metres per texture: the scanned area)
+        var set = new (string name, string col, string nrm, float size)[]
+        {
+            ("asphalt", dir + "asphalt_02_diff_2k.jpg", dir + "asphalt_02_nor_gl_2k.jpg", 3f),
+            ("asphalt_light", dir + "asphalt_04_diff_2k.jpg", dir + "asphalt_04_nor_gl_2k.jpg", 4f),
+            ("cycle_red", dir + "cycle_red_diff_2k.jpg", dir + "clean_asphalt_nor_gl_2k.jpg", 2.1f),
+            ("bricks", dir + "herringbone_brick_diff_2k.jpg", dir + "herringbone_brick_nor_gl_2k.jpg", 1.8f),
+            ("parking", dir + "brick_pavement_02_diff_2k.jpg", dir + "brick_pavement_02_nor_gl_2k.jpg", 2f),
+            ("paving", dir + "concrete_pavement_diff_2k.jpg", dir + "concrete_pavement_nor_gl_2k.jpg", 1.8f),
+            ("cobbles", dir + "cobblestone_floor_08_diff_2k.jpg", dir + "cobblestone_floor_08_nor_gl_2k.jpg", 2f),
+            ("gravel", dir + "gravel_floor_02_diff_2k.jpg", dir + "gravel_floor_02_nor_gl_2k.jpg", 2f),
+            ("kerb", dir + "concrete_floor_01_diff_2k.jpg", dir + "concrete_floor_01_nor_gl_2k.jpg", 2f),
+            ("lawn", "Assets/Textures/Ground/Lawn/lawn_col.png", "Assets/Textures/Ground/Lawn/lawn_nrm.png", 2f),
+        };
+        foreach (var e in set)
+        {
+            var ci = (TextureImporter)AssetImporter.GetAtPath(e.col);
+            if (ci.maxTextureSize != 2048 || ci.wrapMode != TextureWrapMode.Repeat || ci.anisoLevel < 8) { ci.maxTextureSize = 2048; ci.wrapMode = TextureWrapMode.Repeat; ci.anisoLevel = 8; ci.SaveAndReimport(); }
+            var ni = (TextureImporter)AssetImporter.GetAtPath(e.nrm);
+            if (ni.textureType != TextureImporterType.NormalMap || ni.anisoLevel < 8) { ni.textureType = TextureImporterType.NormalMap; ni.wrapMode = TextureWrapMode.Repeat; ni.anisoLevel = 8; ni.SaveAndReimport(); }
+        }
+        var assets = AssetDatabase.LoadAssetAtPath<MapAssets>("Assets/Resources/MapAssets.asset");
+        assets.GroundNames = set.Select(e => e.name).ToArray();
+        assets.GroundColour = set.Select(e => AssetDatabase.LoadAssetAtPath<Texture2D>(e.col)).ToArray();
+        assets.GroundNormal = set.Select(e => AssetDatabase.LoadAssetAtPath<Texture2D>(e.nrm)).ToArray();
+        assets.GroundSize = set.Select(e => e.size).ToArray();
+        // the water's material (CoupledSim/Water)
+        const string waterPath = "Assets/Materials/Map/Water.mat";
+        var water = AssetDatabase.LoadAssetAtPath<Material>(waterPath);
+        if (water == null)
+        {
+            System.IO.Directory.CreateDirectory("Assets/Materials/Map");
+            water = new Material(Shader.Find("CoupledSim/Water"));
+            AssetDatabase.CreateAsset(water, waterPath);
+        }
+        assets.WaterTemplate = water;
+        EditorUtility.SetDirty(assets);
+        AssetDatabase.SaveAssets();
+        Debug.Log($"MapSetup: ground textures {assets.GroundColour.Count(t => t != null)} colour, {assets.GroundNormal.Count(t => t != null)} normal");
+    }
+
     /// <summary>Adds the detail template to Resources/MapAssets (batch: -executeMethod MapSetup.AddDetailTemplate).</summary>
     public static void AddDetailTemplate()
     {
