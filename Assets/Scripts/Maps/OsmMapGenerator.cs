@@ -1923,9 +1923,12 @@ public partial class OsmMapGenerator
                 var rs = o.GetComponentsInChildren<Renderer>();
                 if (rs.Length == 0) continue;
                 var b = rs[0].bounds; foreach (var r in rs) b.Encapsulate(r.bounds);
-                if (Mathf.Max(b.size.x, b.size.z) > 1.3f || b.size.y < 0.8f) continue;   // (signals with an arm over the road stay)
+                // (signals with an arm over the road stay; benches, up to 2 m long, are kept a little further from the edge)
+                bool bench = o.name.Contains("Bench") || o.name.Contains("bench");
+                if ((!bench && Mathf.Max(b.size.x, b.size.z) > 1.3f) || (!bench && b.size.y < 0.8f)) continue;
                 var q = new V2(o.position.x, o.position.z);
-                if (!InCarriageway(q, 0.3f, 0.6f, out var edge)) continue;
+                float reach = bench ? Mathf.Max(b.size.x, b.size.z) / 2f + 0.3f : 0.3f;
+                if (!InCarriageway(q, reach, reach + 0.3f, out var edge)) continue;
                 o.position += new Vector3(edge.X - q.X, PavementHeight - Mathf.Min(o.position.y, PavementHeight), edge.Y - q.Y);
                 moved++;
             }
