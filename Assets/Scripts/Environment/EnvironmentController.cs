@@ -424,6 +424,22 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
         if (_sky != null) Destroy(_sky);
     }
 
+    /// <summary>True when the live and cabin reflection probes show the viewer's present place. Pictures taken right
+    /// after the camera jumped (the replay's shots) wait for it: the probes are rendered a face per frame, and the
+    /// windscreen otherwise reflected what the probe had seen from the previous camera position (a green sheet over a
+    /// shop front in the replay's own view).</summary>
+    public bool ReflectionsCurrent
+    {
+        get
+        {
+            if (CabinRendering || LiveRendering) return false;
+            if (_cabin != null && _cabin.gameObject.activeSelf && _cabinDirty) return false;
+            if (_live == null) return true;
+            var v = ViewerPosition();
+            return !_liveDirty && (v - _liveAt).sqrMagnitude < LiveReflectionDistance * LiveReflectionDistance;
+        }
+    }
+
     // above the viewer (out of their own car), when the light changed or the viewer moved on
     void UpdateLiveReflections()
     {
