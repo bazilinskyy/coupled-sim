@@ -12,6 +12,9 @@ public sealed class AerialPhoto
     [Serializable] sealed class Meta { public float halfSize; public float metresPerPixel; public float farHalfSize; public string credit; }
 
     public Texture2D Texture;
+    /// <summary>The photo for the ground at eye level: shadows softer and less blue, colours calmer (a photo's shadows
+    /// and parked cars, seen from the street, read as smears).</summary>
+    public Texture2D GroundTexture;
     public float HalfSize;
     /// <summary>The coarser photo of the surroundings ({map}.aerial-far.jpg, 2 × FarHalfSize metres), or null.</summary>
     public Texture2D FarTexture;
@@ -46,16 +49,16 @@ public sealed class AerialPhoto
         if (!File.Exists(jpg) || !File.Exists(json)) return null;
         var meta = JsonUtility.FromJson<Meta>(File.ReadAllText(json));
         if (meta == null || meta.halfSize <= 0) return null;
-        var tex = Image(jpg, map + " aerial photo", out var small, out int smallWidth, out int smallHeight);
+        var tex = Image(jpg, map + " aerial photo", out var small, out int smallWidth, out int smallHeight, out var ground);
         if (tex == null) return null;
         var far = Path.Combine(Path.GetDirectoryName(jpg), map + ".aerial-far.jpg");
-        var farTex = meta.farHalfSize > meta.halfSize && File.Exists(far) ? Image(far, map + " surroundings photo", out _, out _, out _) : null;
-        return new AerialPhoto { _small = small, _smallWidth = smallWidth, _smallHeight = smallHeight, Texture = tex, HalfSize = meta.halfSize, Credit = meta.credit, FarTexture = farTex, FarHalfSize = meta.farHalfSize };
+        var farTex = meta.farHalfSize > meta.halfSize && File.Exists(far) ? Image(far, map + " surroundings photo", out _, out _, out _, out _, false) : null;
+        return new AerialPhoto { GroundTexture = ground, _small = small, _smallWidth = smallWidth, _smallHeight = smallHeight, Texture = tex, HalfSize = meta.halfSize, Credit = meta.credit, FarTexture = farTex, FarHalfSize = meta.farHalfSize };
     }
 
-    static Texture2D Image(string path, string name, out Color32[] small, out int smallWidth, out int smallHeight)
+    static Texture2D Image(string path, string name, out Color32[] small, out int smallWidth, out int smallHeight, out Texture2D ground, bool withGround = true)
     {
-        small = null; smallWidth = 0; smallHeight = 0;
+        small = null; smallWidth = 0; smallHeight = 0; ground = null;
         var tex = new Texture2D(2, 2, TextureFormat.RGB24, true) { name = name };
         if (!tex.LoadImage(File.ReadAllBytes(path))) { UnityEngine.Object.DestroyImmediate(tex); return null; }
         // a mip level of about 1024 px (2-4 m a pixel) kept for colour samples
@@ -64,6 +67,26 @@ public sealed class AerialPhoto
         small = tex.GetPixels32(level);
         smallWidth = Math.Max(1, tex.width >> level);
         smallHeight = Math.Max(1, tex.height >> level);
+        if (withGround)
+        {
+            var px = tex.GetPixels32(0);
+            for (int i = 0; i < px.Length; i++)
+            {
+                float r = px[i].r / 255f, g = px[i].g / 255f, b = px[i].b / 255f;
+                float lum = 0.3f * r + 0.59f * g + 0.11f * b;
+                // shadows lifted (the scene casts its own), colours calmer, the blue of shade in photos taken out
+                float l2 = lum < 0.42f ? lum + (0.42f - lum) * 0.45f : lum;
+                float k = l2 / Mathf.Max(lum, 0.02f);
+                r = (lum + (r - lum) * 0.6f) * k; g = (lum + (g - lum) * 0.6f) * k; b = (lum + (b - lum) * 0.6f) * k;
+                float rg = (r + g) * 0.5f; if (b > rg) b = Mathf.Lerp(b, rg, 0.7f);
+                px[i] = new Color32((byte)(Mathf.Clamp01(r) * 255f), (byte)(Mathf.Clamp01(g) * 255f), (byte)(Mathf.Clamp01(b) * 255f), 255);
+            }
+            ground = new Texture2D(tex.width, tex.height, TextureFormat.RGB24, true) { name = name + " (ground)", wrapMode = TextureWrapMode.Clamp, filterMode = FilterMode.Trilinear, anisoLevel = 16 };
+            ground.SetPixels32(px);
+            ground.Apply(true);
+            ground.Compress(true);
+            ground.Apply(true, true);
+        }
         tex.wrapMode = TextureWrapMode.Clamp;
         tex.filterMode = FilterMode.Trilinear;
         tex.anisoLevel = 16;                 // seen at grazing angles from the street

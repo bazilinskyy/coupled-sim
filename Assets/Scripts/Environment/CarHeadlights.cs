@@ -19,8 +19,7 @@ public static class CarHeadlights
     public static void Update(float sunElevation)
     {
         bool night = sunElevation < 1f;
-        var cam = Camera.main;
-        var at = cam != null ? cam.transform.position : Vector3.zero;
+        var at = EnvironmentController.Viewer;
         _cars.Clear();
         if (night)
         {

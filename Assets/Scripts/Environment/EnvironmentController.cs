@@ -66,10 +66,10 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
     public List<Light> StreetLights = new List<Light>();
     [Tooltip("Add a light to every street lamp (objects whose name starts with this) that switches on at dusk; empty: off.")]
     public string LampNamePrefix = "StreetLamp";
-    public float LampIntensity = 4f;
+    public float LampIntensity = 6f;
     public float LampRange = 18f;
     [Tooltip("Only the street lights nearest to the viewer are switched on (performance); 0 = all.")]
-    public int MaxActiveStreetLights = 24;
+    public int MaxActiveStreetLights = 48;
     [Tooltip("Material name parts of surfaces that get wet in the rain.")]
     public string[] WetSurfaceKeywords = { "road", "asphalt", "lane", "street", "sidewalk", "pavement", "crossing", "tile" };
 
@@ -225,6 +225,10 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
         int li = System.Array.IndexOf(args, "-liveReflections");
         if (li >= 0 && li + 1 < args.Length) LiveReflections = args[li + 1] != "0";
         if (LiveReflections) CreateLiveReflections();
+        // the viewer's own vehicle out of the live reflections, the people in it out of the cabin's (both with or
+        // without live reflections: the cabin probe is made either way)
+        UnityEngine.Rendering.RenderPipelineManager.beginCameraRendering += HideOwnVehicle;
+        UnityEngine.Rendering.RenderPipelineManager.endCameraRendering += ShowOwnVehicle;
     }
 
     ReflectionProbe _live;
@@ -250,8 +254,6 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
         _live.farClipPlane = 800f;
         _live.shadowDistance = 60f;
         _live.clearFlags = UnityEngine.Rendering.ReflectionProbeClearFlags.Skybox;
-        UnityEngine.Rendering.RenderPipelineManager.beginCameraRendering += HideOwnVehicle;
-        UnityEngine.Rendering.RenderPipelineManager.endCameraRendering += ShowOwnVehicle;
     }
 
     // the viewer's own vehicle (or body) is left out of the live reflections: seen from just above, its roof would
@@ -266,6 +268,8 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
     int _cabinRender = -1;
     bool _cabinDirty = true;
     bool CabinRendering => _cabin != null && _cabinRender >= 0 && !_cabin.IsFinishedRendering(_cabinRender);
+    bool LiveRendering => _live != null && _liveRender >= 0 && !_live.IsFinishedRendering(_liveRender);
+    Vector3 _cabinAt = new Vector3(1e9f, 0f, 0f);
 
     static readonly Collider[] _around = new Collider[8];
 
@@ -306,7 +310,11 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
             _cabin.resolution = 64;
             _cabin.hdr = true;
             _cabin.size = new Vector3(2.6f, 1.8f, 3.2f);   // about a car's cabin around the eyes
-            _cabin.boxProjection = true;
+            // not box-projected: the box of a probe is always aligned with the world's axes, not with the car, and fitted
+            // to no cabin; projected onto it, the bright displays in the dashboard (the smart's yellow trip computer) came
+            // out as a large yellow streak high on the windscreen. Unprojected, the cabin reflects as dark and soft as seen
+            // from the eyes.
+            _cabin.boxProjection = false;
             _cabin.importance = 10;                        // wins over the outdoor probe inside the cabin
             _cabin.blendDistance = 0.1f;
             _cabin.nearClipPlane = 0.05f;
@@ -333,7 +341,7 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
                         if (t.gameObject.layer != ui) { t.gameObject.layer = ui; _cabinDirty = true; }
         }
         if (_debugProbes) LogProbes(main, root);
-        if (_cabinDirty && !(_liveRender >= 0 && !_live.IsFinishedRendering(_liveRender)) && !CabinRendering)
+        if (_cabinDirty && !LiveRendering && !CabinRendering)
         {
             _cabinDirty = false;
             _cabinRender = _cabin.RenderProbe();
@@ -371,7 +379,23 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
 
     void HideOwnVehicle(UnityEngine.Rendering.ScriptableRenderContext ctx, Camera cam)
     {
-        if (cam.cameraType != CameraType.Reflection || _live == null || CabinRendering) return;
+        if (cam.cameraType != CameraType.Reflection) return;
+        if (CabinRendering)
+        {
+            // The cabin probe sits at the viewer's eyes, inside the head of the figure in that seat: the figures' bodies
+            // (shirt and skin) a few centimetres away filled its small, blurry cube and showed as a see-through
+            // pink-and-blue smear high on the windscreen on the passenger's side. The people are left out of it; the
+            // windscreen still reflects the dashboard. (A real windscreen shows the people in it only faintly.)
+            var car = _cabin.transform.parent;
+            if (car == null) return;
+            _hidden.Clear();
+            foreach (var an in car.GetComponentsInChildren<Animator>())
+                if (an != null && an.isHuman)
+                    foreach (var r in an.GetComponentsInChildren<Renderer>())
+                        if (r != null && !r.forceRenderingOff) { r.forceRenderingOff = true; _hidden.Add(r); }
+            return;
+        }
+        if (_live == null) return;
         var root = _cabin != null && _cabin.gameObject.activeSelf && _cabin.transform.parent != null ? _cabin.transform.parent : ViewerVehicle(Camera.main);
         if (root == null) return;
         if (root != _ownRoot) { _ownRoot = root; _own.Clear(); root.GetComponentsInChildren(true, _own); }
@@ -403,8 +427,18 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
     // above the viewer (out of their own car), when the light changed or the viewer moved on
     void UpdateLiveReflections()
     {
-        if (_live == null || Time.unscaledTime < _nextLiveCheck) return;
+        if (Time.unscaledTime < _nextLiveCheck) return;
         _nextLiveCheck = Time.unscaledTime + 0.5f;
+        if (_live == null)
+        {
+            // -liveReflections 0: the cabin still gets its probe. Without it the glass of the viewer's own car reflected
+            // the scene's probes, baked outdoors: a see-through grey-brown sheet over the windscreen (with a hard edge
+            // where its box ends) and the side windows, and over the wing mirror behind them.
+            var at = ViewerPosition();
+            if ((at - _cabinAt).sqrMagnitude > LiveReflectionDistance * LiveReflectionDistance) { _cabinAt = at; _cabinDirty = true; }
+            UpdateCabinReflections();
+            return;
+        }
         if (_liveRender >= 0 && !_live.IsFinishedRendering(_liveRender)) return;
         UpdateCabinReflections();
         if (CabinRendering) return;
@@ -448,16 +482,31 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
             if (l != null) _lampOrder.Add(((l.transform.position - viewer).sqrMagnitude, l));
         _lampOrder.Sort((a, b) => a.d.CompareTo(b.d));
         for (int i = 0; i < _lampOrder.Count; i++) _lampOrder[i].l.enabled = i < MaxActiveStreetLights;
+        if (!_lampLogged && _lampOrder.Count > 0)
+        {
+            _lampLogged = true;
+            var near = _lampOrder.Take(4).Select(e => $"{e.l.name} under {(e.l.transform.parent != null ? e.l.transform.parent.name : "-")} {Mathf.Sqrt(e.d):F0} m");
+            Debug.Log($"EnvironmentController: street lights on near {viewer}: {string.Join("; ", near)}");
+        }
     }
+    bool _lampLogged;
+
+    /// <summary>A camera that renders the scene by itself (a video's camera while it records): the street lights and
+    /// the like follow it instead of the screen's view.</summary>
+    public static Transform ViewerOverride;
+
+    /// <summary>Where the viewer is (see <see cref="ViewerPosition"/>), for anything that keeps lights near the view.</summary>
+    public static Vector3 Viewer => Instance != null ? Instance.ViewerPosition() : (Camera.main != null ? Camera.main.transform.position : Vector3.zero);
 
     Vector3 ViewerPosition()
     {
-        var cam = Camera.main;
-        if (cam == null)
-        {
-            foreach (var c in FindObjectsByType<Camera>())
-                if (c.isActiveAndEnabled && c.targetTexture == null) { cam = c; break; }
-        }
+        if (ViewerOverride != null) return ViewerOverride.position;
+        // the camera that draws the world on the screen (the highest depth with the default layer; not an overlay that
+        // draws only the interface)
+        Camera cam = null;
+        foreach (var c in Camera.allCameras)
+            if (c.targetTexture == null && (c.cullingMask & 1) != 0 && (cam == null || c.depth > cam.depth)) cam = c;
+        if (cam == null) cam = Camera.main;
         return cam != null ? cam.transform.position : transform.position;
     }
 
@@ -633,12 +682,13 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
         _appliedSnow = snow; _appliedSnowfall = snowfall; _appliedWind = WindSpeed + WindDirection * 1000f;
         Snowfall = snowfall; Snow = snow;
         SetSnowfall(snowfall);
+        SetBareTrees(snow >= 0.3f);
 
         float solarTime = TimeOfDay - UtcOffset + Longitude / 15f; // local solar time
         SolarPosition(solarTime, Latitude, DayOfYear, out var elevation, out var azimuth);
         SunElevation = elevation;
         float clouds = WeatherCloudiness();
-        float day = Mathf.Clamp01((elevation + 4f) / 14f);        // 0 at night, 1 from 10° up
+        float day = Mathf.Clamp01((elevation + 4f) / 9f);         // 0 at night, 1 from 5° up (the sky stays bright until sunset)
         float low = Mathf.Clamp01(1f - elevation / 25f);          // warmer light when low
 
         if (Sun != null && !UseBakedLighting)
@@ -679,7 +729,8 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
 
         // ambient light: brighter and bluer by day, grey under clouds, dim blue at night
         // night: some sky glow of the city
-        var skyCol = Color.Lerp(new Color(0.1f, 0.11f, 0.16f), Color.Lerp(new Color(0.55f, 0.65f, 0.85f), new Color(0.55f, 0.57f, 0.6f), clouds), day);
+        // (the shade of a street lit by the sky alone: a little brighter than before, as photos of streets in shade show)
+        var skyCol = Color.Lerp(new Color(0.1f, 0.11f, 0.16f), Color.Lerp(new Color(0.66f, 0.76f, 0.96f), new Color(0.64f, 0.66f, 0.7f), clouds), day);
         RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Trilight;
         RenderSettings.ambientSkyColor = skyCol;
         RenderSettings.ambientEquatorColor = skyCol * 0.8f;
@@ -705,6 +756,7 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
         SetSurfaces(rain > 0 ? Mathf.Clamp01(0.4f + rain) : 0f, snow);
         DynamicGI.UpdateEnvironment();
         _liveDirty = true;
+        _cabinDirty = true;
     }
 
     // A spot light under the head of each street lamp model (the highest part, at the end of the arm).
@@ -713,6 +765,8 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
         foreach (var t in FindObjectsByType<Transform>())
         {
             if (!t.name.StartsWith(LampNamePrefix) || (t.parent != null && t.parent.name.StartsWith(LampNamePrefix))) continue;
+            // (a lamp model's own light, if any, is off: this one replaces it)
+            foreach (var own in t.GetComponentsInChildren<Light>(true)) { own.enabled = false; StreetLights.Remove(own); }
             var renderers = t.GetComponentsInChildren<MeshRenderer>();
             if (renderers.Length == 0) continue;
             Bounds head = renderers[0].bounds;
@@ -725,8 +779,11 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
             l.type = LightType.Spot;
             l.spotAngle = 120f;
             l.innerSpotAngle = 60f;
-            l.range = LampRange;
-            l.intensity = LampIntensity;
+            // as bright on the ground under a tall pole as under a low one (the light falls off with the square of the
+            // height: 4.5 m is the default's height)
+            float mount = Mathf.Max(2.5f, go.transform.position.y - t.position.y);
+            l.range = Mathf.Max(LampRange, mount * 3f);
+            l.intensity = LampIntensity * Mathf.Clamp(mount * mount / (4.5f * 4.5f), 1f, 4f);
             l.useColorTemperature = true;
             l.colorTemperature = 3200f;
             l.color = Color.white;
@@ -734,6 +791,7 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
             l.enabled = false;
             StreetLights.Add(l);
         }
+        Debug.Log($"EnvironmentController: {StreetLights.Count} street lights");
     }
 
     // Baked lightmaps hold the sun's shadows for one sun position: switch the scene to realtime
@@ -930,6 +988,11 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
             mat.SetTexture("_BaseMap", tex);
             mat.SetColor("_BaseColor", new Color(1f, 1f, 1f, 0.95f));
             Transparent(mat);
+            // flakes right in front of the camera fade out (as a lens never sees them sharp), and none fills the view
+            mat.SetFloat("_CameraFadingEnabled", 1f); mat.EnableKeyword("_FADING_ON");
+            mat.SetVector("_CameraFadeParams", new Vector4(0.6f, 1f / 2.4f, 0f, 0f));   // near 0.6 m, fully there from 3 m
+            mat.SetFloat("_CameraNearFadeDistance", 0.6f); mat.SetFloat("_CameraFarFadeDistance", 3f);
+            renderer.maxParticleSize = 0.012f;
             renderer.sharedMaterial = mat;
         }
     }
@@ -945,6 +1008,52 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
         mat.SetFloat("_ZWrite", 0f);
         mat.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
         mat.renderQueue = 3000;
+    }
+
+    // deciduous trees under snow: their leaves' materials swapped for a fully clipped copy (bare branches); needle trees
+    // and palms keep theirs
+    readonly Dictionary<Renderer, Material[]> _leafy = new Dictionary<Renderer, Material[]>();
+    readonly Dictionary<Material, Material> _bareOf = new Dictionary<Material, Material>();
+    bool _bare;
+
+    void SetBareTrees(bool bare)
+    {
+        if (bare == _bare) return;
+        _bare = bare;
+        if (bare && _leafy.Count == 0)
+        {
+            var trees = OsmMap.Current != null && OsmMap.Current.Generator != null ? OsmMap.Current.Generator.TreeTransforms : null;
+            if (trees == null) return;
+            foreach (var t in trees)
+                if (t != null)
+                    foreach (var r in t.GetComponentsInChildren<Renderer>())
+                    {
+                        var mats = r.sharedMaterials;
+                        if (mats.Any(m => m != null && IsLeaves(m.name))) _leafy[r] = mats;
+                    }
+        }
+        foreach (var kv in _leafy)
+        {
+            if (kv.Key == null) continue;
+            kv.Key.sharedMaterials = bare ? kv.Value.Select(m => m != null && IsLeaves(m.name) ? Bare(m) : m).ToArray() : kv.Value;
+        }
+    }
+
+    static bool IsLeaves(string name)
+    {
+        var n = name.ToLowerInvariant();
+        return (n.Contains("leaf") || n.Contains("leaves") || n.Contains("foliage")) && !n.Contains("needle") && !n.Contains("conifer") && !n.Contains("palm") && !n.Contains("pine");
+    }
+
+    Material Bare(Material leaves)
+    {
+        if (_bareOf.TryGetValue(leaves, out var b)) return b;
+        b = new Material(leaves) { name = leaves.name + " (bare)" };
+        b.SetFloat("_AlphaClip", 1f); b.EnableKeyword("_ALPHATEST_ON"); b.SetFloat("_Cutoff", 1f);
+        var c = b.HasProperty("_BaseColor") ? b.GetColor("_BaseColor") : Color.white; c.a = 0f;
+        if (b.HasProperty("_BaseColor")) b.SetColor("_BaseColor", c);
+        b.renderQueue = (int)UnityEngine.Rendering.RenderQueue.AlphaTest;
+        return _bareOf[leaves] = b;
     }
 
     void SetSnowfall(float intensity)

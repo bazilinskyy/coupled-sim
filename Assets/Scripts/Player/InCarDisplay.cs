@@ -279,13 +279,31 @@ public class InCarDisplay : DesignedEhmi
         var car = _car.transform;
         if (Placement == Kind.Cluster && PlaceOnDashboard(cam)) { _placed = true; return; }
         var eye = car.InverseTransformPoint(cam.transform.position);
-        Vector3 local = Placement == Kind.Hud
-            ? new Vector3(eye.x, eye.y - 0.02f, eye.z + 2.5f)      // seen through the windshield, just below the horizon
-            : new Vector3(0f, eye.y - 0.16f, eye.z + 0.62f);      // middle of the dashboard
+        Vector3 local;
+        if (Placement == Kind.Hud) local = new Vector3(eye.x, eye.y - 0.02f, eye.z + 2.5f);   // seen through the windshield, just below the horizon
+        else
+        {
+            // middle of the dashboard, where the driver sees it, also when the viewer sits elsewhere: placed from the
+            // passenger's eyes it sat 8 cm lower and 11 cm further back, behind the dashboard's top, which hid its
+            // lower half ("29 km/h", the take-over card) from the passenger seat
+            var driver = DriverEye(cam);
+            local = new Vector3(0f, driver.y - 0.16f, driver.z + 0.62f);
+        }
         transform.localPosition = local;
-        // face the driver's eyes (the panel is seen from its +z side)
-        transform.rotation = Quaternion.LookRotation(cam.transform.position - transform.position, car.up);
+        // face the eyes (the panel is seen from its +z side): the HUD the viewer's; the centre screen, fixed in the car,
+        // the driver's, so a passenger sees it at an angle (as in a real car) and not turned towards them, over the
+        // take-over warning ahead of them
+        var faced = Placement == Kind.Hud ? cam.transform.position : car.TransformPoint(DriverEye(cam));
+        transform.rotation = Quaternion.LookRotation(faced - transform.position, car.up);
         _placed = true;
+    }
+
+    /// <summary>The driver's eye in the car's space: the car's first camera (the driver's seat), else the viewer's.</summary>
+    Vector3 DriverEye(Camera viewer)
+    {
+        var car = _car.transform;
+        var first = _car.cameras != null && _car.cameras.Length > 0 && _car.cameras[0] != null ? _car.cameras[0].transform : null;
+        return car.InverseTransformPoint(first != null ? first.position : viewer.transform.position);
     }
 
     // the car's own instrument panel (the canvas "Dashboard" with its old speedometer): the cluster
@@ -305,7 +323,10 @@ public class InCarDisplay : DesignedEhmi
         transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
         float s = Mathf.Min(worldWidth / Loaded.width, worldHeight / Loaded.height) / Mathf.Max(1e-6f, dash.lossyScale.x);
         transform.localScale = Vector3.one * s;
-        transform.position = dash.position - dash.forward * 0.002f;   // just in front of it, towards the driver
+        // in front of it, towards the driver: 1.2 cm, in front of the rims of the old dials too (the Toyota Corolla's
+        // stood out of its dial faces and crossed the new gauges as two black rings); not much more, or the old
+        // display behind shows at its edge when seen at an angle (from the passenger seat)
+        transform.position = dash.position - dash.forward * 0.012f;
         return true;
     }
 }
