@@ -1216,6 +1216,36 @@ public partial class OsmMapGenerator
                 ["grass"] = ("BGT green areas", grass), ["gravel"] = ("BGT gravel", gravel),
             };
             var builders = kinds.Keys.ToDictionary(k => k, _ => new MeshBuilder());
+            // the ground-level polygons by 20 m cell (their bounds): a deck over a canal in a culvert, or over nothing
+            // the topography draws, has no surface under it (the Waterslootsebrug in Delft: a strip of the ground's grass
+            // across the street)
+            var groundCells = new Dictionary<(int, int), List<(List<Vector2> ring, Vector2 min, Vector2 max)>>();
+            foreach (var (tagged, ring) in surfaces)
+            {
+                if (tagged.IndexOf('@') >= 0 || ring.Count < 3) continue;
+                Vector2 mn = ring[0], mx = ring[0];
+                foreach (var q in ring) { mn = Vector2.Min(mn, q); mx = Vector2.Max(mx, q); }
+                for (int cx = Mathf.FloorToInt(mn.x / 20f); cx <= Mathf.FloorToInt(mx.x / 20f); cx++)
+                    for (int cz = Mathf.FloorToInt(mn.y / 20f); cz <= Mathf.FloorToInt(mx.y / 20f); cz++)
+                    {
+                        if (!groundCells.TryGetValue((cx, cz), out var l)) groundCells[(cx, cz)] = l = new List<(List<Vector2>, Vector2, Vector2)>();
+                        l.Add((ring, mn, mx));
+                    }
+            }
+            bool GroundSurfaceAt(Vector2 q)
+            {
+                if (!groundCells.TryGetValue((Mathf.FloorToInt(q.x / 20f), Mathf.FloorToInt(q.y / 20f)), out var l)) return false;
+                foreach (var (ring, mn, mx) in l)
+                {
+                    if (q.x < mn.x || q.y < mn.y || q.x > mx.x || q.y > mx.y) continue;
+                    bool inside = false;
+                    for (int i = 0, j = ring.Count - 1; i < ring.Count; j = i++)
+                        if ((ring[i].y > q.y) != (ring[j].y > q.y) && q.x < (ring[j].x - ring[i].x) * (q.y - ring[i].y) / (ring[j].y - ring[i].y) + ring[i].x) inside = !inside;
+                    if (inside) return true;
+                }
+                return false;
+            }
+            int decksOverNothing = 0;
             foreach (var (tagged, ring) in surfaces)
             {
                 // "kind@n": n levels above the ground (bridge decks): kept over water only (a canal bridge's deck; decks over
@@ -1228,7 +1258,12 @@ public partial class OsmMapGenerator
                 if (at >= 0)
                 {
                     var c = new V2(poly.Average(q => q.X), poly.Average(q => q.Y));
-                    if (!waterIndex.Inside(c) && !poly.Any(waterIndex.Inside)) continue;
+                    if (!waterIndex.Inside(c) && !poly.Any(waterIndex.Inside))
+                    {
+                        // (over a drawn road or railway: the generated bridge's deck; over no surface: this deck)
+                        if (GroundSurfaceAt(new Vector2(c.X, c.Y))) continue;
+                        decksOverNothing++;
+                    }
                 }
                 float uvs = kind == "grass" ? 4f : kind == "road" || kind == "footway_asphalt" ? 4f : kind == "cycleway" ? 4f : 1.5f;
                 // green and gravel at the ground's level never over a canal or pond (the topography's verges and banks
@@ -1244,6 +1279,7 @@ public partial class OsmMapGenerator
             foreach (var kv in kinds) if (builders[kv.Key].V.Count > 0) Emit(world, kv.Value.name, builders[kv.Key], kv.Value.mat, true);
             _grassMeshes.Add(builders["grass"]);
             RealDataCredits.Add($"{surfaces.Count} surfaces: {surfaceCredit}");
+            if (decksOverNothing > 0) Debug.Log($"OsmMap: {decksOverNothing} topography decks kept over no ground surface (culverts)");
         }
 
         // [0]: on the ground, [1]: on bridges above other roads (their own meshes: the terrain lifts them, and only them, straight between the bridge's ends)
@@ -1921,7 +1957,8 @@ public partial class OsmMapGenerator
     /// </summary>
     void PostsOutOfCarriageway(Transform root)
     {
-        int moved = 0;
+        int moved = 0, movedOffDrawn = 0;
+        Physics.SyncTransforms();
         var containers = new HashSet<string> { "Street furniture", "Street furniture (OSM)", "Traffic signs", "Traffic signals", "Pedestrian crossings" };
         foreach (var c in root.GetComponentsInChildren<Transform>(true).Where(t => containers.Contains(t.name)).ToList())
             for (int i = 0; i < c.childCount; i++)
@@ -1935,11 +1972,54 @@ public partial class OsmMapGenerator
                 if ((!bench && Mathf.Max(b.size.x, b.size.z) > 1.3f) || (!bench && b.size.y < 0.8f)) continue;
                 var q = new V2(o.position.x, o.position.z);
                 float reach = bench ? Mathf.Max(b.size.x, b.size.z) / 2f + 0.3f : 0.3f;
-                if (!InCarriageway(q, reach, reach + 0.3f, out var edge)) continue;
-                o.position += new Vector3(edge.X - q.X, PavementHeight - Mathf.Min(o.position.y, PavementHeight), edge.Y - q.Y);
-                moved++;
+                if (InCarriageway(q, reach, reach + 0.3f, out var edge))
+                {
+                    o.position += new Vector3(edge.X - q.X, PavementHeight - Mathf.Min(o.position.y, PavementHeight), edge.Y - q.Y);
+                    moved++;
+                    continue;
+                }
+                // still on the drawn road (wider than OpenStreetMap's width at junctions and crossings, where a rider
+                // keeping to the kerb rode through a crossing sign's post): stepped away from the road until the ground
+                // under it is not road, then half a metre further
+                if (bench || !OnDrawnRoad(q) || !NearestRoad(q, out _, out var away)) continue;
+                var p2 = q;
+                for (int k = 0; k < 16 && OnDrawnRoad(p2); k++) p2 += away * 0.25f;
+                if (OnDrawnRoad(p2)) continue;
+                p2 += away * 0.5f;
+                o.position += new Vector3(p2.X - q.X, PavementHeight - Mathf.Min(o.position.y, PavementHeight), p2.Y - q.Y);
+                movedOffDrawn++;
             }
         if (moved > 0) Debug.Log($"OsmMap: {moved} posts moved out of the carriageway to its edge");
+        if (movedOffDrawn > 0) Debug.Log($"OsmMap: {movedOffDrawn} posts moved off the drawn road at junctions");
+    }
+
+    /// <summary>Whether the ground drawn at <paramref name="q"/> is a road (a car road's surface, not its markings; on maps
+    /// with the national topography its carriageways, not OpenStreetMap's invisible driving surfaces).</summary>
+    bool OnDrawnRoad(V2 q)
+    {
+        foreach (var h in Physics.RaycastAll(new Vector3(q.X, 200f, q.Y), Vector3.down, 400f, ~0, QueryTriggerInteraction.Ignore))
+        {
+            var n = h.collider.name;
+            if (TopographyGround ? n.StartsWith("BGT roads") : n.StartsWith("Roads")) return true;
+        }
+        return false;
+    }
+
+    /// <summary>The nearest car road's centre line within 30 m: the point on it and the direction from it towards <paramref name="q"/>.</summary>
+    bool NearestRoad(V2 q, out V2 centre, out V2 away)
+    {
+        centre = q; away = default;
+        if (_roadCells == null || !_roadCells.TryGetValue(((int)Math.Floor(q.X / 20f), (int)Math.Floor(q.Y / 20f)), out var segs)) return false;
+        float bestD = 30f; bool found = false;
+        foreach (var (a, b, half) in segs)
+        {
+            var ab = b - a; float len2 = ab.LengthSquared(); if (len2 < 1e-4f) continue;
+            float u = Math.Max(0f, Math.Min(1f, V2.Dot(q - a, ab) / len2));
+            var c = a + ab * u; float d = V2.Distance(q, c);
+            if (d >= bestD || d < 0.05f) continue;
+            bestD = d; centre = c; away = (q - c) / d; found = true;
+        }
+        return found;
     }
 
     /// <summary>Parked cars, kept to take away those that stand in a tree, a post or a wall (RemoveBlockedParkedCars).</summary>

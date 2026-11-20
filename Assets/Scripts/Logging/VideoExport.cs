@@ -338,10 +338,12 @@ public class VideoExport : MonoBehaviour
         return true;
     }
 
-    // the small things a following camera would see from inside or that stand right in front of it (a tree's crown over
-    // the street, a pole, a signal head, a bike rack): drawn as their shadows only while it renders, as a film crew
-    // would have framed the shot past them
+    // the thin things that stand right in front of a following camera (a pole, a signal head, a sign): drawn as their
+    // shadows only while it renders, as a film crew would have framed the shot past them. Not trees: a crown's bounds
+    // reach over the street, so whole trees vanished as the car drove under them; leaves right at the lens are cut by
+    // the camera's near plane instead (FollowNearPlane).
     Renderer[] _small;
+    const float FollowNearPlane = 1.5f;
     readonly List<(Renderer r, UnityEngine.Rendering.ShadowCastingMode mode)> _cleared = new List<(Renderer, UnityEngine.Rendering.ShadowCastingMode)>();
 
     List<(Renderer r, UnityEngine.Rendering.ShadowCastingMode mode)> ClearView(Shot s)
@@ -361,6 +363,7 @@ public class VideoExport : MonoBehaviour
                 if (r == null || r is ParticleSystemRenderer || r.transform.IsChildOf(me.transform)) continue;
                 var b = r.bounds;
                 if (Mathf.Max(b.size.x, Mathf.Max(b.size.y, b.size.z)) > 25f) continue;   // (combined meshes, buildings)
+                if (Mathf.Max(b.size.x, b.size.z) > 3f) continue;                          // (trees, shelters, parked cars)
                 list.Add(r);
             }
             _small = list.ToArray();
@@ -368,6 +371,8 @@ public class VideoExport : MonoBehaviour
         var cam = s.Cam.transform.position;
         var focus = me.transform.position + Vector3.up * 1.2f;
         var dir = focus - cam; float len = dir.magnitude;
+        // leaves and twigs within a metre and a half of the lens are not drawn (never the participant, at least 3 m away)
+        s.Cam.nearClipPlane = Mathf.Clamp(Mathf.Min(FollowNearPlane, len - 1.5f), 0.1f, FollowNearPlane);
         var ray = new Ray(cam, len > 1e-3f ? dir / len : Vector3.forward);
         float near = Mathf.Min(len - 1.5f, 5f);
         foreach (var r in _small)
