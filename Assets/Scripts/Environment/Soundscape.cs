@@ -21,9 +21,10 @@ using UnityEngine.Networking;
 ///   that falls with distance), shielding by buildings (about 15 dB and the highs lost behind them), the Doppler shift,
 ///   and the participant's own car: its body keeps out about 20 dB and the highs, its own engine and tyres come
 ///   through the floor;
-/// - <b>ambience</b>: distant traffic following the time of day, rain (on the roof inside a car), wind at the ears
-///   (with gusts; for riders also their own speed), birds in the trees (most at dawn, none at night or in the rain),
-///   and echoes between buildings (more reverberation in narrow streets);
+/// - <b>ambience</b>: distant traffic following the time of day (the background of a city, A-weighted, <see cref="Ambience"/>),
+///   rain (on the roof inside a car), wind at the ears (the weather's wind as it is in a street, with gusts, and the
+///   listener's own walking or riding speed), birds in the trees (most at dawn, none at night or in the rain), and
+///   echoes between buildings (more reverberation in narrow streets);
 /// - <b>people</b>: footsteps of the participant and of nearby pedestrians on hard, soft or loose ground, and the
 ///   ticking of pedestrian signals (slow at red, fast at green, as on Dutch "rateltikkers");
 /// - calibration: a 1 kHz tone at full scale (F3, or -audioCalibration) to measure with a sound level meter at the
@@ -31,8 +32,8 @@ using UnityEngine.Networking;
 /// On city maps it is on by default (-vehicleSounds 0 turns it off). Settings: this component on an experiment
 /// prefab (trial parameters vehicleSounds, electric (share 0..1, or 0/1), ambienceDb, cabinMusic, cabinMusicDb on the
 /// host), or the command line (-vehicleSounds 1, -electricCars 0.3, -ambienceDb 50, -cabinMusic file.wav,
-/// -cabinMusicDb 60, -audioReferenceDb 94, -birds 0, -signalTicks 0, -footsteps 0, -soundDebug 1 to log the levels
-/// of the participant's own vehicle), which every agent reads.
+/// -cabinMusicDb 60, -audioReferenceDb 94, -birds 0, -signalTicks 0, -footsteps 0, -reverb 0, -soundDebug 1 to log the
+/// levels of the participant's own vehicle and of the ambience), which every agent reads.
 /// </summary>
 public class Soundscape : MonoBehaviour, IExperimentModifier
 {
@@ -40,7 +41,7 @@ public class Soundscape : MonoBehaviour, IExperimentModifier
     public bool VehicleSounds;
     [Tooltip("Share of electric cars (0..1); city buses are electric.")]
     [Range(0f, 1f)] public float ElectricShare = 0.15f;
-    [Tooltip("Distant traffic at the listener, dB; negative: by the time of day (about 55 dB by day, 44 dB at night); 0 = none.")]
+    [Tooltip("Distant traffic at the listener, dB(A); negative: by the time of day (about 45-47 dB(A) by day, 37-40 dB(A) at night); 0 = none.")]
     public float AmbienceDb = -1f;
     public bool Birds = true, Weather = true, Footsteps = true, SignalTicks = true, Reverb = true;
     [Tooltip("WAV or OGG file in StreamingAssets/Audio played in the participant's car; empty = none.")]
@@ -68,7 +69,7 @@ public class Soundscape : MonoBehaviour, IExperimentModifier
     readonly List<AudioSource> _birds = new List<AudioSource>();
     readonly List<SoundClips.Recording> _birdRecs = new List<SoundClips.Recording>();
     AudioReverbFilter _reverb;
-    float _nextScan, _nextEnv, _canyon, _nextBirds;
+    float _nextScan, _nextEnv, _canyon, _nextBirds, _nextReverbDebug, _nextEnvDebug;
     Transform _listener;
 
     /// <summary>The scene's soundscape: the experiment's, else one made from the command line (on city maps on by default).</summary>
@@ -129,6 +130,7 @@ public class Soundscape : MonoBehaviour, IExperimentModifier
                 case "-signalTicks": SignalTicks = v != "0"; break;
                 case "-footsteps": Footsteps = v != "0"; break;
                 case "-soundDebug": SoundDebug = v != "0"; break;
+                case "-reverb": Reverb = v != "0"; break;
             }
         }
         if (Array.IndexOf(args, "-audioCalibration") >= 0) ToggleCalibration();
@@ -240,7 +242,7 @@ public class Soundscape : MonoBehaviour, IExperimentModifier
 
     /// <summary>The participant's own vehicle (null for pedestrians and drones).</summary>
     public Transform OwnVehicle { get; private set; }
-    /// <summary>The listener is inside the participant's car.</summary>
+    /// <summary>The listener is inside the participant's car (not on a bicycle, moped or e-scooter).</summary>
     public bool InsideCar { get; private set; }
     public Transform Listener => _listener;
     /// <summary>The local participant's avatar (null before there is one).</summary>
@@ -260,7 +262,8 @@ public class Soundscape : MonoBehaviour, IExperimentModifier
             : NetworkingManager.Instance != null && NetworkingManager.Instance.PlayerSystem != null ? NetworkingManager.Instance.PlayerSystem.LocalPlayer : null;
         OwnVehicle = me != null && (me.Type == AvatarType.Driver) ? me.transform : null;
         Participant = me != null ? me.transform : null;
-        InsideCar = OwnVehicle != null && listener.IsChildOf(OwnVehicle);
+        // (two-wheelers are "drivers" too, but their riders are in the open air: not inside a car)
+        InsideCar = OwnVehicle != null && listener.IsChildOf(OwnVehicle) && !OwnVehicle.TryGetComponent<TwoWheelerController>(out _);
         if (Time.unscaledTime >= _nextScan) { _nextScan = Time.unscaledTime + 0.5f; Scan(listener.position); }
         foreach (var kv in _voices) if (kv.Key != null) kv.Value.Tick(this, kv.Key == OwnVehicle && InsideCar);
         UpdateEnvironment(listener, me);
@@ -306,37 +309,38 @@ public class Soundscape : MonoBehaviour, IExperimentModifier
         foreach (var kv in _voices) if (kv.Key != null) yield return (kv.Key.name, kv.Value.Kmh, kv.Value.RollingVolume, kv.Value.PropulsionVolume);
     }
 
-    /// <summary>Distant traffic by the hour (a typical urban day: quiet at night, a peak in the morning).</summary>
-    public static float DiurnalDb(float hour)
-    {
-        float[] h = { 0, 3, 5, 7, 8, 12, 17, 19, 22, 24 };
-        float[] db = { 46, 43, 44, 53, 56, 54, 56, 52, 48, 46 };
-        hour = Mathf.Repeat(hour, 24f);
-        for (int i = 1; i < h.Length; i++) if (hour <= h[i]) return Mathf.Lerp(db[i - 1], db[i], (hour - h[i - 1]) / (h[i] - h[i - 1]));
-        return db[0];
-    }
+    /// <summary>Distant traffic by the hour, dB(A) (the background of a city: quiet at night, peaks in the morning and
+    /// afternoon; <see cref="Ambience.DistantTrafficDbA"/>).</summary>
+    public static float DiurnalDb(float hour) => Ambience.DistantTrafficDbA(hour);
 
     void UpdateEnvironment(Transform listener, PlayerAvatar me)
     {
         var env = EnvironmentController.Instance;
         float hour = env != null ? env.TimeOfDay : 13f;
         float inside = InsideCar ? -20f : 0f;   // the car's body
-        // distant traffic
+        // distant traffic, at its A-weighted level whatever the recording's spectrum (most of a distant city's sound is
+        // below 500 Hz: about 9 dB more unweighted)
         float amb = AmbienceDb < 0f ? DiurnalDb(hour) : AmbienceDb;
-        if (_ambience != null) _ambience.volume = AmbienceDb == 0f ? 0f : RecGain(_ambienceRec, amb + (InsideCar ? -12f : 0f));
+        if (_ambience != null) _ambience.volume = AmbienceDb == 0f ? 0f
+            : _ambienceRec != null ? RecGain(_ambienceRec, amb + (InsideCar ? -12f : 0f), 0f) : ClipGain(amb + (InsideCar ? -12f : 0f) - SoundClips.DistantTrafficAShift);
         // rain: on the ground around, or drumming on the roof
         float rain = Weather && env != null ? env.Rain : 0f;
         if (_rain != null) _rain.volume = rain > 0.01f ? ClipGain(46f + 18f * rain + inside) : 0f;
         if (_roofRain != null) _roofRain.volume = rain > 0.01f && InsideCar ? ClipGain(52f + 16f * rain) : 0f;
-        // wind at the ears (outside a car): the wind plus a rider's own speed, with gusts
+        // wind at the ears (outside a car): the weather's wind as it is in a street, with gusts, and the listener's own
+        // speed (riding or walking; Ambience)
         if (_wind != null)
         {
             float w = Weather && env != null ? env.WindSpeed : 0f;
-            var tw = me != null ? me.GetComponent<TwoWheelerController>() : null;
-            if (tw != null) w = Mathf.Sqrt(w * w + Mathf.Pow(tw.SpeedKmh / 3.6f, 2));
             float gust = 1f + 0.35f * (Mathf.PerlinNoise(Time.time * 0.25f, 3.1f) - 0.5f) * 2f;
-            float v = w * gust;
-            _wind.volume = InsideCar || v < 1.5f ? 0f : ClipGain(35f + 45f * Mathf.Log10(v));
+            float v = Ambience.AirSpeedAtEars(w, gust, OwnSpeed(me));
+            float windDb = Ambience.WindNoiseDb(v);
+            _wind.volume = InsideCar ? 0f : ClipGain(windDb);
+            if (SoundDebug && Time.unscaledTime >= _nextEnvDebug)
+            {
+                _nextEnvDebug = Time.unscaledTime + 2f;
+                Debug.Log($"Soundscape ambience: wind {v:F1} m/s at the ears, {(InsideCar ? "-" : windDb.ToString("F1"))} dB (unweighted, 2D); distant traffic {(AmbienceDb == 0f ? "-" : (amb + (InsideCar ? -12f : 0f)).ToString("F1"))} dB(A) at {hour:F2} h");
+            }
         }
         if (Time.unscaledTime < _nextEnv) return;
         _nextEnv = Time.unscaledTime + 0.5f;
@@ -362,8 +366,27 @@ public class Soundscape : MonoBehaviour, IExperimentModifier
             _reverb.reverbLevel = Mathf.Lerp(-10000f, -500f, Mathf.Sqrt(c));
             _reverb.reverbDelay = 0.02f;
             _reverb.diffusion = 80f; _reverb.density = 100f;
+            if (SoundDebug && Time.unscaledTime >= _nextReverbDebug) { _nextReverbDebug = Time.unscaledTime + 2f; Debug.Log($"Soundscape reverb: canyon {c:F2}, room {_reverb.room:F0} mB, reflections {_reverb.reflectionsLevel:F0} mB after {_reverb.reflectionsDelay * 1000f:F1} ms, decay {_reverb.decayTime:F2} s"); }
         }
         if (Birds) PlaceBirds(listener.position, hour, rain);
+    }
+
+    Vector3 _ownLast; Transform _ownLastOf; float _ownSpeed;
+
+    /// <summary>Speed (m/s) at which the listener moves through the air: a rider's, or a pedestrian's walking speed;
+    /// 0 in a car (its body keeps the wind off) or for a drone's camera.</summary>
+    float OwnSpeed(PlayerAvatar me)
+    {
+        if (me == null || me.Type == AvatarType.Drone) return 0f;
+        if (me.TryGetComponent<TwoWheelerController>(out var tw)) return Mathf.Max(0f, tw.SpeedKmh / 3.6f);
+        if (me.Type != AvatarType.Pedestrian || me.GetComponent<SeatedPassenger>() != null) return 0f;
+        var p = me.transform.position; p.y = 0f;
+        float dt = Time.deltaTime;
+        if (_ownLastOf != me.transform || dt <= 0f) { _ownLastOf = me.transform; _ownLast = p; return _ownSpeed; }
+        float v = Vector3.Distance(p, _ownLast) / dt;
+        _ownLast = p;
+        if (v < 15f) _ownSpeed = Mathf.Lerp(_ownSpeed, v, 1f - Mathf.Exp(-dt * 2f));   // (not teleports)
+        return _ownSpeed;
     }
 
     public static bool IsBuilding(Collider c) => c != null && (c.name.StartsWith("Buildings") || c.name.StartsWith("Roofs") || c.name.StartsWith("Real buildings") || c.name == "Cornices");
