@@ -11,7 +11,8 @@ along streets and the signs it derives from OSM tags. The first line is "# <cred
   python3 Tools/city_data.py --list
 
 Columns:
-  trees: lat,lon,height,kind,species          (height in m; kind deciduous|conifer|palm)
+  trees: lat,lon,height,kind,species,crown    (height in m; kind deciduous|conifer|palm; crown: the crown's
+                                               diameter in m where the register has it, else empty)
   lamps: lat,lon,height,lumen,colour          (height of the light in m; colour warm|white|unknown)
   signs: lat,lon,bearing,code,text            (bearing: compass direction the sign faces, degrees;
                                                code: the Dutch RVV code, e.g. C2, A1-50, B6)
@@ -40,6 +41,14 @@ def get(url, data=None, headers=None):
 CONIFERS = ("pinus", "picea", "abies", "taxus", "thuja", "larix", "pseudotsuga", "metasequoia", "taxodium", "chamaecyparis",
             "cedrus", "juniperus", "sequoia", "sequoiadendron", "cupressus", "tsuga", "cryptomeria", "araucaria", "ginkgo_no")
 PALMS = ("phoenix", "washingtonia", "trachycarpus", "chamaerops", "livistona", "syagrus", "butia", "archontophoenix", "howea")
+
+
+def crown_m(v):
+    """A crown diameter in metres from a register's field (a number or text like "8 m"), or "" when unknown."""
+    m = re.search(r"[\d.]+", str(v or ""))
+    try: c = float(m.group()) if m else 0.0
+    except ValueError: c = 0.0
+    return round(c, 1) if 1.0 <= c <= 40.0 else ""
 
 
 def kind_of(species):
@@ -143,7 +152,8 @@ def sydney_trees(bbox):
     for lon, lat, p in arcgis_points("https://services1.arcgis.com/cNVyNtjGVZybOQWZ/arcgis/rest/services/Trees/FeatureServer/0", bbox):
         sp = p.get("SpeciesName") or ""
         h = p.get("TreeHeight")
-        rows.append(dict(lat=lat, lon=lon, height=round(float(h), 1) if h else 9.0, kind=kind_of(sp), species=sp))
+        rows.append(dict(lat=lat, lon=lon, height=round(float(h), 1) if h else 9.0, kind=kind_of(sp), species=sp,
+                         crown=crown_m(p.get("TreeCanopyNS"))))    # the canopy's spread north-south, m
     return rows
 
 
@@ -243,7 +253,8 @@ def tokyo_trees(bbox):
             if not (s <= lat <= n and w <= lon <= e): continue
             try: h = float(r.get("樹高(m)") or 0)
             except ValueError: h = 0
-            rows.append(dict(lat=lat, lon=lon, height=round(h, 1) if h > 0 else 8.0, kind="deciduous", species=r.get("樹種") or ""))
+            rows.append(dict(lat=lat, lon=lon, height=round(h, 1) if h > 0 else 8.0, kind="deciduous", species=r.get("樹種") or "",
+                             crown=crown_m(r.get("枝張(m)"))))    # branch spread, m
     return rows
 
 
@@ -262,7 +273,66 @@ def london_trees(bbox):
             m = re.search(r"[\d.]+", t.get("height_m") or "")
             h = float(m.group()) if m else 0.0
             sp = t.get("taxon_species") or t.get("taxon_genus") or ""
-            rows.append(dict(lat=lat, lon=lon, height=round(h, 1) if 1.5 < h < 45 else 10.0, kind=kind_of(sp), species=sp))
+            rows.append(dict(lat=lat, lon=lon, height=round(h, 1) if 1.5 < h < 45 else 10.0, kind=kind_of(sp), species=sp,
+                             crown=crown_m(t.get("canopy_m"))))    # text like "8 m"
+    return rows
+
+
+def boulder_trees(bbox):
+    """City of Boulder's tree inventory. Its ArcGIS server sits behind a browser check, so the ArcGIS Hub's cached
+    CSV export (WGS84, about 17 MB, the whole city) is streamed and filtered, not stored. No heights: estimated
+    from the trunk's diameter (inches)."""
+    s, w, n, e = bbox
+    url = "https://hub.arcgis.com/api/v3/datasets/dbbae8bdb0a44d17934243b88e85ef2b_0/downloads/data?format=csv&spatialRefId=4326"
+    print("streaming", url)
+    rows = []
+    with urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=300) as r:
+        for t in csv.DictReader(io.TextIOWrapper(r, encoding="utf-8-sig", errors="ignore", newline="")):
+            try: lat, lon = float(t["Y"]), float(t["X"])
+            except (TypeError, ValueError, KeyError): continue
+            if not (s <= lat <= n and w <= lon <= e): continue
+            sp = t.get("LATINNAME") or t.get("GENUS") or ""
+            try: dbh = float(t.get("DBHINT") or 0)
+            except ValueError: dbh = 0
+            h = min(26.0, max(4.0, 4.0 + dbh * 0.55)) if dbh else 10.0
+            kind = "conifer" if t.get("LEAFTYPE") == "Needleleaved" else kind_of(sp)
+            rows.append(dict(lat=lat, lon=lon, height=round(h, 1), kind=kind, species=sp, crown=""))
+    return rows
+
+
+def wellington_trees(bbox):
+    """Wellington City Council's trees (parks, streets, waterfront)."""
+    rows = []
+    for lon, lat, p in arcgis_points("https://gis.wcc.govt.nz/arcgis/rest/services/Parks/Parks/MapServer/53", bbox):
+        sp = p.get("botanical_name") or ""
+        if sp.lower() == "other": sp = p.get("botanical_name_other") or ""
+        h = p.get("height")
+        # csr: crown spread, m (undocumented; as a diameter it is 0.6 of the height, as in Sydney's, London's and
+        # Tokyo's registers)
+        rows.append(dict(lat=lat, lon=lon, height=round(float(h), 1) if h and 1.5 < h < 45 else 9.0, kind=kind_of(sp), species=sp,
+                         crown=crown_m(p.get("csr"))))
+    return rows
+
+
+def saopaulo_trees(bbox):
+    """Arborização viária (GeoSampa WFS): every street tree as a point (from aerial photos of 2010); sizes and
+    species only for those inspected since (Portuguese common names)."""
+    s, w, n, e = bbox
+    rows, start = [], 0
+    while True:
+        q = urllib.parse.urlencode(dict(service="WFS", version="2.0.0", request="GetFeature", typeNames="geoportal:arvore",
+                                        outputFormat="application/json", srsName="urn:ogc:def:crs:EPSG::4326",
+                                        bbox="%f,%f,%f,%f,urn:ogc:def:crs:EPSG::4326" % (s, w, n, e), count=10000, startIndex=start))
+        d = json.loads(get("https://wfs.geosampa.prefeitura.sp.gov.br/geoserver/geoportal/wfs?" + q))
+        feats = d.get("features", [])
+        for f in feats:
+            lon, lat = f["geometry"]["coordinates"][:2]
+            p = f.get("properties") or {}
+            h = p.get("qt_altura_arvore")
+            rows.append(dict(lat=lat, lon=lon, height=round(h, 1) if h and 1.5 < h < 45 else 9.0, kind="deciduous",
+                             species=p.get("nm_vulgar_especie") or "", crown=crown_m(p.get("qt_diametro_copa"))))
+        start += len(feats)
+        if not feats or start >= (d.get("numberMatched") or 0): break
     return rows
 
 
@@ -411,13 +481,16 @@ SOURCES = {
     ("Montreal", "trees"): (montreal_trees, "Arbres publics, Ville de Montréal (CC BY 4.0)"),
     ("Barcelona", "trees"): (barcelona_trees, "Arbrat viari, Ajuntament de Barcelona (Open Data BCN, CC BY 4.0)"),
     ("London", "trees"): (london_trees, "Local authority maintained trees, Greater London Authority / GiGL (Open Government Licence v3)"),
+    ("Boulder", "trees"): (boulder_trees, "Tree Inventory Open Data, City of Boulder Parks and Recreation (CC0 1.0)"),
+    ("Wellington", "trees"): (wellington_trees, "WCC Trees, Wellington City Council (CC BY 3.0 NZ)"),
+    ("SaoPaulo", "trees"): (saopaulo_trees, "Arborização viária, Prefeitura de São Paulo / GeoSampa (CC BY-SA 4.0)"),
     ("Tokyo", "trees"): (tokyo_trees, "都道の街路樹 (Street trees on metropolitan roads), Tokyo Metropolitan Government (CC BY 4.0)"),
     ("Delft", "signs"): (ndw_signs, NDW),
     ("Eindhoven", "trees"): (eindhoven_trees, "Bomen, Gemeente Eindhoven (data.eindhoven.nl, public domain)"),
     ("Eindhoven", "lamps"): (eindhoven_lamps, "Openbare verlichting in Eindhoven, Gemeente Eindhoven (data.eindhoven.nl, public domain)"),
 }
 
-COLUMNS = {"trees": ["lat", "lon", "height", "kind", "species"],
+COLUMNS = {"trees": ["lat", "lon", "height", "kind", "species", "crown"],
            "lamps": ["lat", "lon", "height", "lumen", "colour"],
            "signs": ["lat", "lon", "bearing", "code", "text"]}
 
