@@ -365,6 +365,9 @@ public class ReplayPlayer : MonoBehaviour
         }
         _shotWait -= Time.unscaledDeltaTime;
         if (_shotWait > 0f || ++_shotFrames < 4) return;   // a few frames too: batch-mode frames can be slow
+        // and the reflections re-rendered for the new camera position (at most 120 more frames)
+        var env = EnvironmentController.Instance;
+        if (env != null && !env.ReflectionsCurrent && _shotFrames < 124) return;
         var rt = new RenderTexture(1280, 720, 24);
         _camera.targetTexture = rt;
         if (PlanarWaterReflection.Instance != null) PlanarWaterReflection.Instance.RenderFor(_camera);
