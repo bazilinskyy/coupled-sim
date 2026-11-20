@@ -19,6 +19,8 @@ public class SeatedPassenger : MonoBehaviour
     public float RearOffset = 0.85f, RearHalfWidth = 0.38f;
 
     PlayerAvatar _car;
+    /// <summary>The car this passenger sits in (null until it is found).</summary>
+    public Transform Car => _car != null ? _car.transform : null;
     Transform _figure;
     Vector3 _eyeInRoot;      // camera position in this avatar's root, before any tracking
     bool _prepared;

@@ -356,14 +356,40 @@ public static class SmokeTest
         return true;
     }
 
+    // The pictures wait until the reflections show the picture's camera position (the live probe renders a face per
+    // frame): Finish returns early and runs again on the next frame, with the game paused, skipping the views already
+    // taken. At most 120 frames per picture.
+    static int _viewsDone, _shotsDone, _reflWait;
+    static string _viewLog = "";
+    static GameObject _waitCam;
+    static float _frameMs = -1f, _timeScale = -1f;
+
+    /// <summary>True while the reflections are still being rendered for a camera at <paramref name="at"/>.</summary>
+    static bool WaitForReflections(Transform at)
+    {
+        EnvironmentController.ViewerOverride = at;
+        var env = EnvironmentController.Instance;
+        if (env == null || env.ReflectionsCurrent || _reflWait >= 120)
+        {
+            if (_reflWait > 0) Debug.Log($"SmokeTest: reflections for {at.name} after {_reflWait} frames{(_reflWait >= 120 ? " (gave up)" : "")}");
+            _reflWait = 0;
+            return false;
+        }
+        _reflWait++;
+        if (_timeScale < 0f) { _timeScale = Time.timeScale; Time.timeScale = 0f; }
+        return true;
+    }
+
     static void Finish()
     {
+        if (_waitCam != null) { UnityEngine.Object.DestroyImmediate(_waitCam); _waitCam = null; }
+        if (_frameMs < 0f) _frameMs = Time.smoothDeltaTime * 1000f;
         FlushErrors();
         var outDir = SessionState.GetString(KeyOut, "SmokeTest");
         var sb = new StringBuilder();
         sb.AppendLine($"Unity {Application.unityVersion}, scenes loaded: " +
                       string.Join(", ", Enumerable.Range(0, SceneManager.sceneCount).Select(i => SceneManager.GetSceneAt(i).name)));
-        sb.AppendLine($"Average frame time: {Time.smoothDeltaTime * 1000:F1} ms (batch mode, no vsync)");
+        sb.AppendLine($"Average frame time: {_frameMs:F1} ms (batch mode, no vsync)");
         if (_viewSamples > 0) sb.AppendLine($"Participant's view ({_viewName}, {NetworkingManager.Instance?.PlayerSystem.PlayerInputMode} mode): {_viewJumps} jumps of more than 30° in {_viewSamples} samples");
 
         int movedCars = 0, cars = 0, peds = 0, movedPeds = 0;
@@ -396,11 +422,16 @@ public static class SmokeTest
         if (Soundscape.Current != null && Soundscape.Current.VehicleSounds)
             foreach (var v in Soundscape.Current.Voices().Take(5))
                 sb.AppendLine($"Sound: {v.car} at {v.kmh:F0} km/h, tyre volume {v.tyre:F4}, engine volume {v.engine:F4}");
-        int shot = 0;
+        int shot = _shotsDone, viewIndex = -1;
+        int viewLogStart = sb.Length;
+        sb.Append(_viewLog);
         // extra views: -smokeShot "x,y,z,yaw,pitch;x,y,z,yaw,pitch", "chase" (behind the participant) or "front" (ahead, looking back),
         // "cluster" (the instrument cluster, see ClusterView)
         foreach (var view in SessionState.GetString(KeyShot, "").Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
         {
+            if (++viewIndex < _viewsDone) continue;
+            _viewsDone = viewIndex + 1;   // (put back below while this view waits for its reflections)
+            _viewLog = sb.ToString(viewLogStart, sb.Length - viewLogStart);
             var camGo = new GameObject("SmokeTestCamera");
             var c = camGo.AddComponent<Camera>();
             c.fieldOfView = 50;
@@ -609,6 +640,13 @@ public static class SmokeTest
                 var v = view.Split(',').Select(x => float.Parse(x, System.Globalization.CultureInfo.InvariantCulture)).ToArray();
                 camGo.transform.SetPositionAndRotation(new Vector3(v[0], v[1], v[2]), Quaternion.Euler(v.Length > 4 ? v[4] : 0, v[3], 0));
             }
+            if (WaitForReflections(camGo.transform))
+            {
+                _viewsDone = viewIndex;
+                c.enabled = false;
+                _waitCam = camGo;
+                return;
+            }
             var path = Path.Combine(outDir, $"view{shot++}.png");
             // -smokeShotSize WxH (default 1600x900), e.g. larger for pictures cropped later
             int sw = 1600, sh = 900; int iss = Array.IndexOf(Environment.GetCommandLineArgs(), "-smokeShotSize");
@@ -616,7 +654,16 @@ public static class SmokeTest
             SaveCamera(c, path, sw, sh);
             sb.AppendLine($"Screenshot: {path}");
             UnityEngine.Object.DestroyImmediate(camGo);
+            _shotsDone = shot;
+            _viewLog = sb.ToString(viewLogStart, sb.Length - viewLogStart);
         }
+        _viewsDone = int.MaxValue;
+        _viewLog = sb.ToString(viewLogStart, sb.Length - viewLogStart);
+        // the participant's own view: reflections back at its position
+        var own = UnityEngine.Object.FindObjectsByType<Camera>().Where(x => x.isActiveAndEnabled && x.targetTexture == null && (x.cullingMask & 1) != 0)
+            .OrderByDescending(x => x.depth).FirstOrDefault();
+        if (own != null && WaitForReflections(own.transform)) return;
+        EnvironmentController.ViewerOverride = null;
         foreach (var cam in UnityEngine.Object.FindObjectsByType<Camera>())
         {
             if (!cam.isActiveAndEnabled || cam.targetTexture != null) continue;
