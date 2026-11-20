@@ -736,9 +736,36 @@ public partial class OsmMapGenerator
 
     static Vector3 P(V2 p, float y) => new Vector3(p.X, y, p.Y);
 
+    /// <summary>Triangles above which a mesh is split into pieces (by 400 m square): PhysX's mesh colliders of over 2
+    /// million triangles can make a raycast loop for ever (Eindhoven's corridor made such meshes of its grass and
+    /// pavements).</summary>
+    const int MaxTrianglesPerMesh = 1000000;
+
     static GameObject Emit(Transform parent, string name, MeshBuilder mb, Material mat, bool collider)
     {
         if (mb.V.Count == 0) return null;
+        if (mb.T.Count / 3 > MaxTrianglesPerMesh)
+        {
+            // pieces of the same name, by the square their triangles' middles lie in
+            var pieces = new Dictionary<long, MeshBuilder>();
+            var map = new Dictionary<long, Dictionary<int, int>>();
+            for (int t = 0; t + 2 < mb.T.Count; t += 3)
+            {
+                var c = (mb.V[mb.T[t]] + mb.V[mb.T[t + 1]] + mb.V[mb.T[t + 2]]) / 3f;
+                long k = ((long)Mathf.FloorToInt(c.x / 400f) << 32) ^ (uint)Mathf.FloorToInt(c.z / 400f);
+                if (!pieces.TryGetValue(k, out var piece)) { pieces[k] = piece = new MeshBuilder(); map[k] = new Dictionary<int, int>(); }
+                var ix = map[k];
+                for (int j = 0; j < 3; j++)
+                {
+                    int vi = mb.T[t + j];
+                    if (!ix.TryGetValue(vi, out var ni)) { ni = piece.V.Count; piece.V.Add(mb.V[vi]); piece.UV.Add(mb.UV[vi]); ix[vi] = ni; }
+                    piece.T.Add(ni);
+                }
+            }
+            GameObject first = null;
+            foreach (var piece in pieces.Values) { var pieceGo = Emit(parent, name, piece, mat, collider); if (first == null) first = pieceGo; }
+            return first;
+        }
         var mesh = mb.Build(name);
         var go = new GameObject(name);
         go.transform.SetParent(parent, false);
