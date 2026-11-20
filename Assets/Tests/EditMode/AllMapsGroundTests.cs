@@ -34,7 +34,8 @@ namespace CoupledSim.Tests
         /// <summary>The share of objects that may be off (OpenStreetMap's odd corners: objects on bridges or in tunnels' mouths).</summary>
         const float MaxShareOff = 0.02f;
 
-        [TestCaseSource(nameof(Maps))]
+        // (building a map takes up to 3 minutes: Eindhoven's took 156-187 s, near NUnit's default limit of 180 s)
+        [TestCaseSource(nameof(Maps)), Timeout(360000)]
         public void EverythingStandsOnTheGround(string map)
         {
             var catType = TypeNamed("MapCatalog");
