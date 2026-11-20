@@ -279,6 +279,9 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
     {
         if (main == null) return null;
         var root = main.transform.root;
+        // a passenger seated in another participant's car: that car (its own avatar only rides along)
+        var seated = root.GetComponent<SeatedPassenger>();
+        if (seated != null && seated.Car != null) return seated.Car;
         if (root != main.transform && root.GetComponent<Rigidbody>() != null) return root;
         int n = Physics.OverlapSphereNonAlloc(main.transform.position, 0.2f, _around, ~0, QueryTriggerInteraction.Ignore);
         for (int i = 0; i < n; i++)
@@ -296,7 +299,7 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
 
     void UpdateCabinReflections()
     {
-        var main = Camera.main;
+        var main = ViewerOverride != null ? ViewerOverride.GetComponent<Camera>() : ViewerCamera();
         var root = ViewerVehicle(main);
         bool inVehicle = root != null && (root.GetComponent<Rigidbody>() != null || root.GetComponent<PlayerAvatar>() != null);
         if (!inVehicle) { if (_cabin != null) _cabin.gameObject.SetActive(false); return; }
@@ -396,7 +399,7 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
             return;
         }
         if (_live == null) return;
-        var root = _cabin != null && _cabin.gameObject.activeSelf && _cabin.transform.parent != null ? _cabin.transform.parent : ViewerVehicle(Camera.main);
+        var root = _cabin != null && _cabin.gameObject.activeSelf && _cabin.transform.parent != null ? _cabin.transform.parent : ViewerVehicle(ViewerCamera());
         if (root == null) return;
         if (root != _ownRoot) { _ownRoot = root; _own.Clear(); root.GetComponentsInChildren(true, _own); }
         _hidden.Clear();
@@ -517,13 +520,21 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
     Vector3 ViewerPosition()
     {
         if (ViewerOverride != null) return ViewerOverride.position;
-        // the camera that draws the world on the screen (the highest depth with the default layer; not an overlay that
-        // draws only the interface)
+        var cam = ViewerCamera();
+        return cam != null ? cam.transform.position : transform.position;
+    }
+
+    /// <summary>
+    /// The camera that draws the world on the screen: the highest depth with the default layer, not an overlay that draws
+    /// only the interface. (Not always Camera.main: a passenger seated in another participant's car sees through its
+    /// avatar's own camera.)
+    /// </summary>
+    static Camera ViewerCamera()
+    {
         Camera cam = null;
         foreach (var c in Camera.allCameras)
             if (c.targetTexture == null && (c.cullingMask & 1) != 0 && (cam == null || c.depth > cam.depth)) cam = c;
-        if (cam == null) cam = Camera.main;
-        return cam != null ? cam.transform.position : transform.position;
+        return cam != null ? cam : Camera.main;
     }
 
     // ------------------------------------------------------------------ parameters and network
