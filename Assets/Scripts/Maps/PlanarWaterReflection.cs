@@ -42,12 +42,15 @@ public class PlanarWaterReflection : MonoBehaviour
     {
         _measured = true;
         _heights.Clear();
+        // (the collider's mesh: static batching may have combined the renderer's into one that cannot be read)
+        var mc = GetComponent<MeshCollider>();
         var mf = GetComponent<MeshFilter>();
-        if (mf != null && mf.sharedMesh != null)
+        var mesh = mc != null && mc.sharedMesh != null && mc.sharedMesh.isReadable ? mc.sharedMesh : mf != null && mf.sharedMesh != null && mf.sharedMesh.isReadable ? mf.sharedMesh : null;
+        if (mesh != null)
         {
             var sums = new Dictionary<long, (float sum, int n)>();
             var l2w = transform.localToWorldMatrix;
-            foreach (var v0 in mf.sharedMesh.vertices)
+            foreach (var v0 in mesh.vertices)
             {
                 var v = l2w.MultiplyPoint3x4(v0);
                 long k = Key(v.x, v.z);

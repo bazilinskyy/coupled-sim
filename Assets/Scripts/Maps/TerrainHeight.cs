@@ -205,7 +205,7 @@ public sealed class TerrainHeight
     /// <summary>Lifts a map built flat onto the terrain.</summary>
     public void Apply(Transform root, OsmMapGenerator gen)
     {
-        int meshes = 0, objects = 0, placed = 0;
+        int meshes = 0, objects = 0, placed = 0, nonFinite = 0;
         // the surfaces things stand on (not buildings), to set each placed object on the one under it afterwards
         var surfaces = new HashSet<Collider>();
         foreach (var go in gen.EmittedMeshes)
@@ -289,7 +289,9 @@ public sealed class TerrainHeight
                         w.y += surroundings ? Min - 0.5f : Lift(w.x, w.z, layer) + extra;
                         if (ground && clearance != null && clearance.TryGetValue(((long)Mathf.FloorToInt(w.x / ClearCell) << 32) ^ (uint)Mathf.FloorToInt(w.z / ClearCell), out var under))
                             w.y = Mathf.Min(w.y, under.low + (t.name == "Green areas" ? 0.006f : 0f));
-                        v[i] = w2l.MultiplyPoint3x4(w);
+                        var lifted = w2l.MultiplyPoint3x4(w);
+                        if (float.IsFinite(lifted.x) && float.IsFinite(lifted.y) && float.IsFinite(lifted.z)) v[i] = lifted;
+                        else nonFinite++;
                     }
                     m.vertices = v;
                     if (t.name != "Grass blades") m.RecalculateNormals();   // (the blades keep their upward normals: lit as the lawn under them)
@@ -320,6 +322,7 @@ public sealed class TerrainHeight
         foreach (var r in gen.Roads) LiftLine(r.Line, r.BridgeLayer);
         foreach (var l in gen.CyclePaths) LiftLine(l, gen.BridgeLines.TryGetValue(l, out var ly) ? ly : 0);
         foreach (var l in gen.Pavements) LiftLine(l, gen.BridgeLines.TryGetValue(l, out var ly) ? ly : 0);
+        if (nonFinite > 0) Debug.LogWarning($"TerrainHeight: {nonFinite} vertices not lifted (the terrain gave no number there)");
         Debug.Log($"TerrainHeight: map lifted onto the terrain ({Min:F1} .. {Max:F1} m around the centre; {meshes} surfaces, {objects} objects ({placed} set on the surface under them), {_bridges.Count} bridge segments): {Credit}");
     }
 }

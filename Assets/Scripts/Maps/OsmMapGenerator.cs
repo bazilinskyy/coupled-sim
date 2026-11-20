@@ -719,6 +719,11 @@ public partial class OsmMapGenerator
         public Mesh Build(string name)
         {
             var m = new Mesh { name = name, indexFormat = IndexFormat.UInt32 };
+            // (a vertex that is not a number would make a collider's raycasts loop for ever: set to the origin, and said)
+            int bad = 0;
+            for (int i = 0; i < V.Count; i++)
+                if (!float.IsFinite(V[i].x) || !float.IsFinite(V[i].y) || !float.IsFinite(V[i].z)) { V[i] = Vector3.zero; bad++; }
+            if (bad > 0) Debug.LogWarning($"OsmMap: {bad} vertices of '{name}' were not numbers");
             m.SetVertices(V);
             m.SetUVs(0, UV);
             m.SetTriangles(T, 0);
@@ -2170,9 +2175,12 @@ public partial class OsmMapGenerator
             var centre = (a + b + c) / 3f;
             if (longest > 1.5f && depth < 10)
             {
-                // the whole triangle dry or wet (none of its corners and its centre near the other): no need to split
-                bool wa = water.Inside(new V2(a.x, a.z)), wb = water.Inside(new V2(b.x, b.z)), wc = water.Inside(new V2(c.x, c.z)), wm = water.Inside(new V2(centre.x, centre.z));
-                if (wa == wb && wb == wc && wc == wm && longest < 12f) { if (!wm) Add(a, b, c, ua, ub, uc); return; }
+                // the whole triangle dry or wet (its corners, edges' middles and centre all alike): kept whole or left out,
+                // however big (splitting dry lawns made Eindhoven's grass a mesh of millions of vertices)
+                bool W(Vector3 q) => water.Inside(new V2(q.x, q.z));
+                bool wm = W(centre);
+                if (W(a) == wm && W(b) == wm && W(c) == wm && W((a + b) / 2f) == wm && W((b + c) / 2f) == wm && W((c + a) / 2f) == wm)
+                { if (!wm) Add(a, b, c, ua, ub, uc); return; }
                 // split the longest edge
                 if (Vector3.Distance(a, b) >= longest - 1e-4f) { var m = (a + b) / 2f; var um = (ua + ub) / 2f; Tri(a, m, c, ua, um, uc, depth + 1); Tri(m, b, c, um, ub, uc, depth + 1); }
                 else if (Vector3.Distance(b, c) >= longest - 1e-4f) { var m = (b + c) / 2f; var um = (ub + uc) / 2f; Tri(a, b, m, ua, ub, um, depth + 1); Tri(a, m, c, ua, um, uc, depth + 1); }
