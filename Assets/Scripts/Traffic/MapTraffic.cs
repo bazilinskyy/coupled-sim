@@ -892,6 +892,42 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
 
     static Vector3 Flat(Vector3 v) { v.y = 0f; return v; }
 
+    // the car routes' points every 2 m, in 4 m cells: which lanes cross a car's path (TrafficCar.KeepLanesClear)
+    Dictionary<long, List<(Vector3 p, Vector3 dir, WaypointCircuit route)>> _laneCells;
+    static long LaneCell(float x, float z) => ((long)Mathf.FloorToInt(x / 4f) << 32) ^ (uint)Mathf.FloorToInt(z / 4f);
+
+    /// <summary>Whether a car lane (another route) that crosses the direction <paramref name="dir"/> (at more than 45°)
+    /// runs within <paramref name="radius"/> m of p.</summary>
+    public bool CrossingLaneNear(Vector3 p, Vector3 dir, float radius, WaypointCircuit mine)
+    {
+        if (_laneCells == null)
+        {
+            _laneCells = new Dictionary<long, List<(Vector3, Vector3, WaypointCircuit)>>();
+            foreach (var r in Routes)
+                for (float d = 0f; d < r.OpenLength; d += 2f)
+                {
+                    var rp = r.GetRoutePoint(d); var k = LaneCell(rp.position.x, rp.position.z);
+                    if (!_laneCells.TryGetValue(k, out var l)) _laneCells[k] = l = new List<(Vector3, Vector3, WaypointCircuit)>();
+                    l.Add((rp.position, rp.direction, r));
+                }
+        }
+        var f = Flat(dir).normalized;
+        int cx = Mathf.FloorToInt(p.x / 4f), cz = Mathf.FloorToInt(p.z / 4f), reach = Mathf.CeilToInt(radius / 4f);
+        for (int x = cx - reach; x <= cx + reach; x++)
+            for (int z = cz - reach; z <= cz + reach; z++)
+            {
+                if (!_laneCells.TryGetValue(((long)x << 32) ^ (uint)z, out var l)) continue;
+                foreach (var (q, qd, route) in l)
+                {
+                    if (route == mine || Mathf.Abs(q.y - p.y) > 3f) continue;
+                    if (Mathf.Abs(Vector3.Dot(Flat(qd).normalized, f)) > 0.7f) continue;   // (along the same road)
+                    float dx = q.x - p.x, dz = q.z - p.z;
+                    if (dx * dx + dz * dz < radius * radius) return true;
+                }
+            }
+        return false;
+    }
+
     static float Normal(System.Random rng)
     {
         double u1 = 1.0 - rng.NextDouble(), u2 = rng.NextDouble();
