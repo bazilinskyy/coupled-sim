@@ -36,6 +36,8 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
     /// <summary>"lat,lon": the autopilot drives there by the quickest route (trial parameter destination, -destination).</summary>
     public string Destination;
     List<CoupledSim.Maps.MapRoutes.RoadLine> _lines;
+    WaypointCircuit _autopilotRoute;
+    float _autopilotFrom;
 
     public static MapTraffic Current { get; private set; }
     public readonly List<WaypointCircuit> Routes = new List<WaypointCircuit>();
@@ -108,6 +110,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         float t0 = Time.time;
         while (sumo != null && sumo.isActiveAndEnabled && Time.time - t0 < 4f && !(sumo.Status ?? "").StartsWith("connected")) yield return null;
         bool sumoRuns = sumo != null && sumo.isActiveAndEnabled && (sumo.Status ?? "").StartsWith("connected");
+        _signPosts = null; RideMoves = 0;   // (this map's)
 
         var gen = OsmMap.Current.Generator;
         var lines = _lines = gen.Roads.Where(r => !r.NoThroughTraffic)
@@ -124,11 +127,11 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
             Debug.Log($"MapTraffic: {lanes.Count} routes in the map's area, {outside} leaving it (by up to {-worst:F0} m)");
         }
         Physics.SyncTransforms();
-        int moved = 0; _moves.Clear();
+        int moved = 0; _moves.Clear(); ParkedMoves = 0;
         var someone = FindAnyObjectByType<PlayerAvatar>();
         DebugFocus = someone != null && System.Array.IndexOf(CommandLine.Args, "-debugTraffic") >= 0 ? someone.transform.position : (Vector3?)null;
         foreach (var lane in lanes) moved += KeepOnCarriageway(lane);
-        if (moved > 0) Debug.Log($"MapTraffic: {moved} route points moved off cycle paths, cycle lanes and pavements onto the carriageway");
+        if (moved > 0) Debug.Log($"MapTraffic: {moved} route points moved off cycle paths, cycle lanes and pavements onto the carriageway ({ParkedMoves} of them off grass verges or clear of parked cars)");
         if (moved > 0 && System.Array.IndexOf(CommandLine.Args, "-debugTraffic") >= 0)
         {
             var geo = new CoupledSim.Maps.GeoProjection(OsmMap.Current.Info.Latitude, OsmMap.Current.Info.Longitude);
@@ -218,8 +221,14 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
                 places.Add((route, i, d, route.GetRoutePoint(d).position));
             }
         }
-        var centre = players.Count > 0 ? players : new List<Vector3> { Vector3.zero };
-        float Near(Vector3 q) { float b = float.MaxValue; foreach (var c in centre) b = Mathf.Min(b, (c - q).sqrMagnitude); return b; }
+        // (with the participant's car on the autopilot: also along the route it will drive, each point as though it were
+        // 0.3 m further for every metre the car has to drive to get there, so the traffic is where the car will be in the
+        // next minute too, not only where it starts: a rush hour stays a rush hour along the way)
+        var centre = (players.Count > 0 ? players : new List<Vector3> { Vector3.zero }).Select(c => (c, 0f)).ToList();
+        if (_autopilotRoute != null)
+            for (float s = 20f; s <= 1200f && _autopilotFrom + s < _autopilotRoute.OpenLength; s += 20f)
+                centre.Add((_autopilotRoute.GetRoutePoint(_autopilotFrom + s).position, 0.3f * s));
+        float Near(Vector3 q) { float b = float.MaxValue; foreach (var (c, h) in centre) b = Mathf.Min(b, (c - q).magnitude + h); return b * b; }
         if (places.Count > MaxCars) places = places.OrderBy(x => Near(x.at)).ToList();
         foreach (var (route, i, d, at) in places)
         {
@@ -239,6 +248,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
             car.GetComponent<WaypointProgressTracker>().SetProgress(d);
             car.name = $"Map traffic {route.name} {i}";
             var traffic = car.gameObject.AddComponent<TrafficCar>();
+            traffic.FitToBody();
             float v = (DesiredSpeedKmh + Normal(rng) * DesiredSpeedSdKmh) / 3.6f;
             traffic.Init(CoupledSim.Traffic.CarFollowingModelType.IDM, Mathf.Max(3f, v), new System.Random(rng.Next()));
             // (on fast roads: the limit times the driver's own factor, 0.85-1.12)
@@ -250,7 +260,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
             if (count % 10 == 0) yield return null;
         }
         Destroy(spawn.gameObject);
-        Debug.Log($"MapTraffic: {count} cars{(places.Count > MaxCars && placed.Count > 0 ? $" (of {places.Count} places at {CarsPerKm} per km: those within {Mathf.Sqrt(placed.Max(Near)):F0} m of the participants)" : "")}");
+        Debug.Log($"MapTraffic: {count} cars{(places.Count > MaxCars && placed.Count > 0 ? $" (of {places.Count} places at {CarsPerKm} per km: those within {Mathf.Sqrt(placed.Max(Near)):F0} m of the participants{(_autopilotRoute != null ? " and of the autopilot's way ahead" : "")})" : "")}");
         yield return SpawnCyclists();
     }
 
@@ -375,12 +385,33 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
             }
             else Debug.LogWarning($"MapTraffic: no route from here to {Destination} ({CoupledSim.Maps.MapRoutes.Why}); the autopilot takes the nearest route");
         }
+        // (a route whose lane runs over unpaved ground in the next 300 m, where OpenStreetMap's road crosses a verge or a
+        // median the topography has as grass, counts as 20 m further away: of the routes along the participant's street, one
+        // that keeps to the road is taken, then one that goes straight on)
+        var unpaved = new Dictionary<WaypointCircuit, List<float>>();
+        List<float> Unpaved(WaypointCircuit r)
+        {
+            if (unpaved.TryGetValue(r, out var u)) return u;
+            u = new List<float>();
+            for (float d = 0; d < r.OpenLength; d += 2f) if (SeenGround(r.GetRoutePoint(d).position) is var g && (g == Ground.Green || g == Ground.Bare)) u.Add(d);
+            return unpaved[r] = u;
+        }
         if (best == null)
         foreach (var r in Routes)
             for (float d = 0; d < r.OpenLength - 150f; d += 4f)
             {
                 var rp = r.GetRoutePoint(d);
                 float score = (rp.position - at).sqrMagnitude + (Vector3.Dot(rp.direction, fwd) < 0.5f ? 400f : 0f);
+                if (score >= bestScore || (rp.position - at).sqrMagnitude > 900f) { if (score < bestScore) { bestScore = score; best = r; bestD = d; } continue; }
+                if (Unpaved(r).Exists(x => x >= d && x <= d + 300f)) score += 400f;
+                // (of routes running together along the street, the one that goes straight on rather than turning off at
+                // the next junction: as 2 m further for every 90° it turns in the next 150 m)
+                if ((rp.position - at).sqrMagnitude < 25f)
+                {
+                    float turn = 0f; var prevDir = rp.direction;
+                    for (float k = 10f; k <= 150f && d + k < r.OpenLength; k += 10f) { var dir = r.GetRoutePoint(d + k).direction; turn += Vector3.Angle(Flat(prevDir), Flat(dir)); prevDir = dir; }
+                    score += 4f * turn / 90f;
+                }
                 if (score < bestScore) { bestScore = score; best = r; bestD = d; }
             }
         if (System.Array.IndexOf(CommandLine.Args, "-debugTraffic") >= 0)
@@ -401,8 +432,32 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
             // the ground across the lane where the autopilot starts, as seen (left to right, every 0.5 m)
             var across = Vector3.Cross(Vector3.up, new Vector3(start.direction.x, 0f, start.direction.z).normalized);
             var sb = new System.Text.StringBuilder();
-            for (int k = -10; k <= 10; k++) { var g = SeenGround(start.position + across * (k * 0.5f)); sb.Append(k == 0 ? "[" : "").Append(g == Ground.Road ? 'R' : g == Ground.Cycle ? 'C' : g == Ground.Pavement ? 'P' : g == Ground.Paving ? 'p' : '-').Append(k == 0 ? "]" : ""); }
+            for (int k = -10; k <= 10; k++) { var g = SeenGround(start.position + across * (k * 0.5f)); sb.Append(k == 0 ? "[" : "").Append(g == Ground.Road ? 'R' : g == Ground.Cycle ? 'C' : g == Ground.Pavement ? 'P' : g == Ground.Paving ? 'p' : g == Ground.Green ? 'G' : g == Ground.Bare ? 'b' : '-').Append(k == 0 ? "]" : ""); }
             Debug.Log($"TrafficDebug: the ground across the autopilot's lane at its start, every 0.5 m from 5 m left (R road, C cycle, P pavement, p other paving, - none): {sb}");
+            var path = new System.Text.StringBuilder();
+            for (float d = bestD; d < Mathf.Min(best.OpenLength, bestD + 400f); d += 2f) { var q = best.GetRoutePoint(d).position; path.Append($" {q.x:F1},{q.z:F1}"); }
+            Debug.Log($"TrafficDebug: the autopilot's route every 2 m:{path}");
+            // the ground across the lane every 10 m along it (K: a parked car)
+            // (every 2 m over the first 120 m, where the videos turn; then every 10 m)
+            for (float d = bestD; d < Mathf.Min(best.OpenLength, bestD + 400f); d += d - bestD < 120f ? 2f : 10f)
+            {
+                var rp = best.GetRoutePoint(d);
+                var ac = Vector3.Cross(Vector3.up, new Vector3(rp.direction.x, 0f, rp.direction.z).normalized);
+                var row = new System.Text.StringBuilder();
+                for (int k = -10; k <= 10; k++)
+                {
+                    var q = rp.position + ac * (k * 0.5f);
+                    bool parked = false;
+                    int n = Physics.OverlapSphereNonAlloc(q + Vector3.up * 0.7f, 0.2f, _near, ~0, QueryTriggerInteraction.Ignore);
+                    for (int j = 0; j < n && !parked; j++) for (var t = _near[j].transform; t != null; t = t.parent) if (t.name == "Parked car") { parked = true; break; }
+                    var g = SeenGround(q);
+                    row.Append(k == 0 ? "[" : "").Append(parked ? 'K' : g == Ground.Road ? 'R' : g == Ground.Cycle ? 'C' : g == Ground.Pavement ? 'P' : g == Ground.Paving ? 'p' : g == Ground.Green ? 'G' : g == Ground.Bare ? 'b' : '-').Append(k == 0 ? "]" : "");
+                }
+                var under = new System.Text.StringBuilder();
+                int nh = Physics.RaycastNonAlloc(rp.position + Vector3.up * 4f, Vector3.down, _groundHits, 10f, ~0, QueryTriggerInteraction.Ignore);
+                for (int j = 0; j < nh; j++) under.Append($" {_groundHits[j].collider.name}@{_groundHits[j].point.y:F2}");
+                Debug.Log($"TrafficDebug: across the autopilot's lane at {d - bestD:F0} m ({rp.position.x:F1},{rp.position.z:F1}): {row} (under it:{under})");
+            }
         }
         if ((start.position - at).sqrMagnitude > 9f)
         {
@@ -415,6 +470,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         }
         tracker.Init(best);
         tracker.SetProgress(bestD);
+        _autopilotRoute = best; _autopilotFrom = bestD;
         aiCar.target = tracker.target;
         if (!me.TryGetComponent<AutomatedDriving>(out var automation)) automation = me.gameObject.AddComponent<AutomatedDriving>();
         automation.Mode = AutomatedDriving.DrivingMode.TrafficModel;
@@ -461,6 +517,25 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
                 var tw = me.GetComponent<TwoWheelerController>();
                 bool moped = tw != null && tw.Type == CoupledSim.TwoWheelers.TwoWheelerType.Moped45;
                 path = RideLine(bestR, bestD, Mathf.Max(bestD + 6f, bestR.OpenLength - 50f), 3f, OsmMap.Current.Info.LeftHandTraffic, !moped);
+                KeepRideClear(path, OsmMap.Current.Info.LeftHandTraffic);
+                if (Array.IndexOf(CommandLine.Args, "-debugTraffic") >= 0 && _signPosts != null)
+                {
+                    // the sign posts nearest the riding line (its first 150 m), on the ground
+                    var near = new List<(float d, Vector3 at)>();
+                    foreach (var sp in _signPosts)
+                    {
+                        float best = float.MaxValue; float run = 0f;
+                        for (int i = 0; i + 1 < path.Count && run < 150f; i++)
+                        {
+                            var a = path[i]; var b = path[i + 1]; run += Vector3.Distance(a, b);
+                            var ab = b - a; ab.y = 0f; var aq = sp - a; aq.y = 0f;
+                            float t = ab.sqrMagnitude > 1e-6f ? Mathf.Clamp01(Vector3.Dot(aq, ab) / ab.sqrMagnitude) : 0f;
+                            best = Mathf.Min(best, (aq - ab * t).magnitude);
+                        }
+                        if (best < 3f) near.Add((best, sp));
+                    }
+                    Debug.Log($"TrafficDebug: {_signPosts.Count} sign posts; nearest to the rider's line: " + string.Join("; ", near.OrderBy(x => x.d).Take(5).Select(x => $"{x.d:F2} m at ({x.at.x:F1},{x.at.z:F1})")));
+                }
             }
         }
         if (path == null || path.Count < 2) { Debug.LogWarning("MapTraffic: no path for the autopilot"); return; }
@@ -479,16 +554,17 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
             if (tw != null) tw.Teleport(p0, rot.eulerAngles.y);
         }
         me.gameObject.AddComponent<ParticipantAutopilot>().Init(path);
-        Debug.Log($"MapTraffic: autopilot for the {(me.GetComponent<KeyboardPlayerMovement>() != null ? "pedestrian" : "rider")} along {path.Count} points");
+        Debug.Log($"MapTraffic: autopilot for the {(me.GetComponent<KeyboardPlayerMovement>() != null ? "pedestrian" : "rider")} along {path.Count} points{(RideMoves > 0 ? $" ({RideMoves} of them moved clear of posts and pavement)" : "")}");
     }
 
     /// <summary>
     /// The lane routes come from OpenStreetMap's centre lines and widths; where the carriageway really is narrower or lies
     /// a little to the side (as the Dutch topography's surfaces show it), or has a painted cycle lane at its edge, a car on
-    /// the lane would drive partly or wholly on the cycle path, cycle lane or pavement beside it (and into the benches
-    /// and posts there). Each point where the car's middle or either side (0.8 m out) is over a cycle path, cycle lane or
-    /// pavement, as it is seen (<see cref="SeenGround"/>), is moved across by the least that keeps all three off them, at
-    /// most 4.5 m (a lane on the far half of a two-way cycle path); the moves are smoothed (a median over 5 points, then an average over 3), so a lone point does not bend
+    /// the lane would drive partly or wholly on the cycle path, cycle lane, pavement or parking strip beside it (and into the benches
+    /// and posts there), or where the lanes of a junction cut across a grass verge or median (the Dutch topography's green
+    /// areas) or the corner of a canal's quay (moved however short the stretch). Each point where the car's middle or either side (0.8 m out) is over a cycle path, cycle lane, pavement or
+    /// such grass, as it is seen (<see cref="SeenGround"/>), is moved across by the least that keeps all three off them, at
+    /// most 4.5 m (a lane on the far half of a two-way cycle path); the moves are smoothed (a median over 24 m, then an average over 12 m), so a lone point does not bend
     /// the lane and it does not zigzag. A cycle path or pavement that crosses the road (no clear carriageway beside it) is
     /// left alone. Returns how many points moved.
     /// </summary>
@@ -497,8 +573,9 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         if (lane.Count < 2) return 0;
         var shift = new float[lane.Count];
         var side = new Vector3[lane.Count];
+        var grassOnly = new bool[lane.Count];
         bool any = false;
-        bool Off(Ground g) => g == Ground.Cycle || g == Ground.Pavement;
+        bool Off(Ground g) => g == Ground.Cycle || g == Ground.Pavement || g == Ground.Green;
         bool Clear(Vector3 p, Vector3 s) => !Off(SeenGround(p)) && !Off(SeenGround(p + s * 0.8f)) && !Off(SeenGround(p - s * 0.8f));
         for (int i = 0; i < lane.Count; i++)
         {
@@ -506,37 +583,74 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
             if (d.sqrMagnitude < 1e-6f) continue;
             side[i] = Vector3.Cross(Vector3.up, d.normalized);   // (to the right)
             if (Clear(lane[i], side[i])) continue;
+            // (only grass or a quay in the way: a junction's lane cutting across a verge, a median or a canal's corner: moved
+            // also for a short stretch)
+            grassOnly[i] = !(SeenGround(lane[i]) is var g0 && (g0 == Ground.Cycle || g0 == Ground.Pavement))
+                && !(SeenGround(lane[i] + side[i] * 0.8f) is var g1 && (g1 == Ground.Cycle || g1 == Ground.Pavement))
+                && !(SeenGround(lane[i] - side[i] * 0.8f) is var g2 && (g2 == Ground.Cycle || g2 == Ground.Pavement));
             // the least move either way that clears the car of it
             for (int k = 1; k <= 18 && shift[i] == 0f; k++)   // (up to 4.5 m: a two-way cycle path is up to 4 m wide)
                 foreach (int sgn in new[] { -1, 1 })
                     if (shift[i] == 0f && SeenGround(lane[i] + side[i] * (sgn * k * 0.25f)) == Ground.Road && Clear(lane[i] + side[i] * (sgn * k * 0.25f), side[i]))
                     { shift[i] = sgn * k * 0.25f; any = true; }
         }
-        if (!any && DebugFocus == null) return 0;
         int moved = 0;
-        // a median over 5 points (a lone point over a cycle path, as where one crosses the road, or a small patch, does
-        // not bend the lane: only a stretch of 3 points and more, some 20 m, moves), then an average over 3, so the lane
-        // eases across
+        // a median over 24 m (a lone point over a cycle path, as where one crosses the road, or a small patch, does
+        // not bend the lane: only a stretch of some 15 m and more moves), then an average over 12 m, so the lane eases
+        // across (the lanes' points are LaneSpacing, 3 m, apart)
+        int mh = Mathf.Max(1, Mathf.RoundToInt(12f / CoupledSim.Maps.MapRoutes.LaneSpacing)), ah = Mathf.Max(1, Mathf.RoundToInt(6f / CoupledSim.Maps.MapRoutes.LaneSpacing));
         var median = new float[lane.Count];
         for (int i = 0; i < lane.Count; i++)
         {
             var w = new List<float>();
-            for (int k = Mathf.Max(0, i - 2); k <= Mathf.Min(lane.Count - 1, i + 2); k++) w.Add(shift[k]);
+            for (int k = Mathf.Max(0, i - mh); k <= Mathf.Min(lane.Count - 1, i + mh); k++) w.Add(grassOnly[k] ? 0f : shift[k]);
             w.Sort(); median[i] = w[w.Count / 2];
         }
         var smooth = new float[lane.Count];
         for (int i = 0; i < lane.Count; i++)
         {
             float sum = 0f; int n = 0;
-            for (int k = Mathf.Max(0, i - 1); k <= Mathf.Min(lane.Count - 1, i + 1); k++) { sum += median[k]; n++; }
+            for (int k = Mathf.Max(0, i - ah); k <= Mathf.Min(lane.Count - 1, i + ah); k++) { sum += median[k]; n++; }
             smooth[i] = sum / n;
+        }
+        // grass or a quay a junction's lane cuts across (moved by the least that clears it, as below), and parked cars (along the kerb, in parking bays and strips beside the road that OpenStreetMap maps as parking areas,
+        // not as the road's own parking: its lane did not leave room for them): each point where a car on the lane (its
+        // middle after the moves above) would come within 0.25 m of one is moved away from it by the least that clears it,
+        // at most 2.5 m, onto the road; every move holds 6 m before and after the point (the gaps in a row of parked cars
+        // do not bend the lane towards the kerb), and they are averaged as above
+        var park = new float[lane.Count];
+        for (int i = 0; i < lane.Count; i++)
+        {
+            if (side[i] == Vector3.zero) continue;
+            if (grassOnly[i] && median[i] == 0f) { park[i] = shift[i]; continue; }
+            var p = lane[i] + side[i] * median[i];
+            var dir = Vector3.Cross(side[i], Vector3.up);
+            if (!ParkedCarNear(p, dir)) continue;
+            for (int k = 1; k <= 10 && park[i] == 0f; k++)
+                foreach (int sgn in new[] { -1, 1 })
+                {
+                    var q = p + side[i] * (sgn * k * 0.25f);
+                    if (park[i] == 0f && !ParkedCarNear(q, dir) && SeenGround(q) == Ground.Road && Clear(q, side[i])) park[i] = sgn * k * 0.25f;
+                }
+        }
+        int ph = Mathf.Max(1, Mathf.RoundToInt(6f / CoupledSim.Maps.MapRoutes.LaneSpacing));
+        var held = new float[lane.Count];
+        for (int i = 0; i < lane.Count; i++)
+            for (int k = Mathf.Max(0, i - ph); k <= Mathf.Min(lane.Count - 1, i + ph); k++)
+                if (Mathf.Abs(park[k]) > Mathf.Abs(held[i])) held[i] = park[k];
+        var total = new float[lane.Count];
+        for (int i = 0; i < lane.Count; i++)
+        {
+            float sum = 0f; int n = 0;
+            for (int k = Mathf.Max(0, i - ah); k <= Mathf.Min(lane.Count - 1, i + ah); k++) { sum += held[k]; n++; }
+            total[i] = smooth[i] + sum / n;
         }
         if (DebugFocus != null)
             for (int i = 0; i < lane.Count; i++)
                 if ((lane[i] - DebugFocus.Value).sqrMagnitude < 30f * 30f)
-                    Debug.Log($"TrafficDebug: lane point {i}/{lane.Count} at {lane[i]}: shift found {shift[i]:F2}, median {median[i]:F2}, applied {smooth[i]:F2}");
+                    Debug.Log($"TrafficDebug: lane point {i}/{lane.Count} at {lane[i]}: shift found {shift[i]:F2}, median {median[i]:F2}, applied {smooth[i]:F2}, parked cars {park[i]:F2}, in all {total[i]:F2}");
         for (int i = 0; i < lane.Count; i++)
-            if (Mathf.Abs(smooth[i]) > 0.01f) { _moves.Add((lane[i], smooth[i])); lane[i] += side[i] * smooth[i]; moved++; }
+            if (Mathf.Abs(total[i]) > 0.01f) { _moves.Add((lane[i], total[i])); if (Mathf.Abs(park[i]) > 0f) ParkedMoves++; lane[i] += side[i] * total[i]; moved++; }
         return moved;
     }
 
@@ -553,27 +667,53 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         // the surfaces at the top (within 5 cm: the topography's polygons overlap, a cycle path or cycle lane lies on the
         // carriageway's polygon at the same height, and the one drawn over it is what one sees): a cycle path or pavement
         // among them counts
-        var g = MapTraffic.Ground.Paving; bool road = false;
+        var g = MapTraffic.Ground.Paving; bool road = false, bare = false;
         for (int i = 0; i < n; i++)
         {
             var h = _groundHits[i];
             if (!Seen(h) || h.point.y < top - 0.05f) continue;
             var name = h.collider.name;
             if (name.IndexOf("ycle", StringComparison.Ordinal) >= 0) return MapTraffic.Ground.Cycle;
-            if (name.StartsWith("BGT pavements") || name.StartsWith("Pavements") || name.StartsWith("Kerbs")) g = MapTraffic.Ground.Pavement;
+            // (and the topography's parking strips and bays beside the road: a lane over them ran through the parked cars)
+            if (name.StartsWith("BGT pavements") || name.StartsWith("Pavements") || name.StartsWith("Kerbs") || name.StartsWith("BGT parking")) g = MapTraffic.Ground.Pavement;
+            // (the Dutch topography's verges and medians, at their exact outlines, never under a carriageway; a canal's quay
+            // and water)
+            else if ((name.StartsWith("BGT green") || name.StartsWith("Quay") || name.StartsWith("Water")) && g != MapTraffic.Ground.Pavement) g = MapTraffic.Ground.Green;
             else if (name.StartsWith("Roads") || name.StartsWith("BGT roads") || name.StartsWith("Zebra") || name.StartsWith("Road ")) road = true;
+            // (the map's own ground, grass, seen where no drawn surface covers it: on a map with the national topography,
+            // where OpenStreetMap's invisible road runs over a verge or median the topography has as unpaved, or beyond the
+            // topography's reach; not moved off, but a route over it is not the autopilot's first choice; on other maps
+            // the ground beside a narrow road)
+            else if (name.StartsWith("Ground")) bare = true;
         }
-        return g == MapTraffic.Ground.Pavement ? g : road ? MapTraffic.Ground.Road : g;
+        bool topography = OsmMap.Current != null && OsmMap.Current.Generator != null && OsmMap.Current.Generator.TopographyGround;
+        return g == MapTraffic.Ground.Pavement || g == MapTraffic.Ground.Green ? g : road ? MapTraffic.Ground.Road : bare && topography ? MapTraffic.Ground.Bare : g;
         // ground one sees: not a vehicle, not an invisible driving surface, not a wall or pole
         static bool Seen(RaycastHit h) => h.collider.attachedRigidbody == null && h.normal.y >= 0.7f
             && !(h.collider.TryGetComponent<MeshRenderer>(out var mr) && !mr.enabled);
     }
     static readonly RaycastHit[] _groundHits = new RaycastHit[16];
+    static readonly Collider[] _near = new Collider[16];
+    /// <summary>Lane points moved away from parked cars.</summary>
+    static int ParkedMoves;
+
+    /// <summary>Whether a car (4.6 m by 1.8 m) at p heading along dir would come within 0.25 m of a parked car.</summary>
+    static bool ParkedCarNear(Vector3 p, Vector3 dir)
+    {
+        if (dir.sqrMagnitude < 1e-6f) return false;
+        int n = Physics.OverlapBoxNonAlloc(p + Vector3.up * 0.9f, new Vector3(0.9f + 0.25f, 0.6f, 2.3f + 0.25f), _near, Quaternion.LookRotation(dir, Vector3.up), ~0, QueryTriggerInteraction.Ignore);
+        for (int i = 0; i < n; i++)
+        {
+            if (_near[i].attachedRigidbody != null) continue;
+            for (var t = _near[i].transform; t != null; t = t.parent) if (t.name == "Parked car") return true;
+        }
+        return false;
+    }
     static readonly List<(Vector3 at, float shift)> _moves = new List<(Vector3, float)>();
     /// <summary>-debugTraffic: the lane points within 30 m of here (the participant) log their moves.</summary>
     static Vector3? DebugFocus;
 
-    enum Ground { None, Road, Cycle, Paving, Pavement }
+    enum Ground { None, Road, Cycle, Paving, Pavement, Green, Bare }
 
     static Ground GroundAt(Vector3 p)
     {
@@ -672,6 +812,85 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         }
         return line;
     }
+
+    /// <summary>
+    /// The participant's riding line (the autopilot of a rider) clear of what stands in its way: the line is read across the road only every few metres, so a
+    /// sign post, a lamp post or a bollard between two readings (one at the end of a zebra crossing, at a junction's
+    /// corner) and a pavement corner the smoothed line cuts were ridden through. Every half metre along the line, a rider
+    /// that would come within 1 m of a sign post or 0.6 m of anything else fixed (from 0.4 to 1.6 m above the ground; not the
+    /// ground, not a vehicle), or ride on the pavement or grass, is moved across by the least that clears it, at most 2 m
+    /// (towards the road's middle first); each move holds two points before and after (6-8 m), and they are averaged over 3
+    /// points, so the line keeps the whole move past the obstacle and eases out and back.
+    /// </summary>
+    static void KeepRideClear(List<Vector3> line, bool lht)
+    {
+        // (a handlebar is 0.3 m to either side of the rider's middle, and the rider follows its line within some 0.3-0.4 m:
+        // a post a metre from the line, other things 0.6 m)
+        const float Clearance = 0.6f, PostClearance = 1f;
+        if (line.Count < 2) return;
+        // (towards the kerb: to the right, to the left in left-hand traffic)
+        var side = new List<Vector3>(line.Count);
+        for (int i = 0; i < line.Count; i++)
+        {
+            var d = line[Math.Min(i + 1, line.Count - 1)] - line[Math.Max(i - 1, 0)]; d.y = 0f;
+            side.Add(d.sqrMagnitude > 1e-6f ? Vector3.Cross(Vector3.up, d.normalized) * (lht ? -1f : 1f) : Vector3.zero);
+        }
+        // (traffic signs have no colliders: their posts, where they stand)
+        if (_signPosts == null) _signPosts = FindObjectsByType<TrafficSign>(FindObjectsSortMode.None).Select(t => t.transform.position).ToList();
+        bool Blocked(Vector3 p)
+        {
+            var g = SeenGround(p);
+            if (g == Ground.Pavement || g == Ground.Green) return true;
+            foreach (var sp in _signPosts) { float dx = sp.x - p.x, dz = sp.z - p.z; if (dx * dx + dz * dz < PostClearance * PostClearance && Mathf.Abs(sp.y - p.y) < 2f) return true; }
+            int n = Physics.OverlapCapsuleNonAlloc(p + Vector3.up * 0.4f, p + Vector3.up * 1.6f, Clearance, _near, ~0, QueryTriggerInteraction.Ignore);
+            for (int i = 0; i < n; i++)
+            {
+                var c = _near[i];
+                if (c.attachedRigidbody != null) continue;
+                var nm = c.name;
+                if (nm.StartsWith("Roads") || nm.StartsWith("Road ") || nm.StartsWith("BGT") || nm.StartsWith("Ground") || nm.StartsWith("Terrain") || nm.StartsWith("Zebra") || nm.StartsWith("Kerbs") || nm.StartsWith("Pavements") || nm.StartsWith("Cycle")) continue;
+                return true;
+            }
+            return false;
+        }
+        var shift = new float[line.Count];
+        int moved = 0;
+        for (int i = 0; i < line.Count; i++)
+        {
+            // (this point, and halfway to the next one)
+            var a = line[i]; var b = line[Math.Min(i + 1, line.Count - 1)];
+            int steps = Math.Max(1, Mathf.CeilToInt(Vector3.Distance(a, b) / 0.5f));
+            bool blocked = false;
+            for (int k = 0; k < steps && !blocked; k++) blocked = Blocked(Vector3.Lerp(a, b, k / (float)steps));
+            if (!blocked) continue;
+            for (int k = 1; k <= 8 && shift[i] == 0f; k++)
+                foreach (float sgn in new[] { -1f, 1f })   // (-: away from the kerb)
+                {
+                    float off = sgn * k * 0.25f;
+                    bool clear = true;
+                    for (int j = 0; j < steps && clear; j++) clear = !Blocked(Vector3.Lerp(a, b, j / (float)steps) + side[i] * off);
+                    if (clear && shift[i] == 0f) shift[i] = off;
+                }
+            if (shift[i] != 0f) moved++;
+        }
+        if (moved == 0) return;
+        var held = new float[line.Count];
+        for (int i = 0; i < line.Count; i++)
+            for (int k = Math.Max(0, i - 2); k <= Math.Min(line.Count - 1, i + 2); k++)
+                if (Math.Abs(shift[k]) > Math.Abs(held[i])) held[i] = shift[k];
+        for (int i = 0; i < line.Count; i++)
+        {
+            float sum = 0f; int n = 0;
+            for (int k = Math.Max(0, i - 1); k <= Math.Min(line.Count - 1, i + 1); k++) { sum += held[k]; n++; }
+            line[i] += side[i] * (sum / n);
+        }
+        RideMoves += moved;
+    }
+    /// <summary>Riding-line points moved clear of posts, pavement corners and the like.</summary>
+    public static int RideMoves;
+    static List<Vector3> _signPosts;
+
+    static Vector3 Flat(Vector3 v) { v.y = 0f; return v; }
 
     static float Normal(System.Random rng)
     {
