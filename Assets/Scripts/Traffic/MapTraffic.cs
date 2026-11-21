@@ -387,7 +387,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         }
         // (a route whose lane runs over unpaved ground in the next 300 m, where OpenStreetMap's road crosses a verge or a
         // median the topography has as grass, counts as 20 m further away: of the routes along the participant's street, one
-        // that keeps to the road is taken)
+        // that keeps to the road is taken, then one that goes straight on)
         var unpaved = new Dictionary<WaypointCircuit, List<float>>();
         List<float> Unpaved(WaypointCircuit r)
         {
@@ -404,6 +404,14 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
                 float score = (rp.position - at).sqrMagnitude + (Vector3.Dot(rp.direction, fwd) < 0.5f ? 400f : 0f);
                 if (score >= bestScore || (rp.position - at).sqrMagnitude > 900f) { if (score < bestScore) { bestScore = score; best = r; bestD = d; } continue; }
                 if (Unpaved(r).Exists(x => x >= d && x <= d + 300f)) score += 400f;
+                // (of routes running together along the street, the one that goes straight on rather than turning off at
+                // the next junction: as 2 m further for every 90° it turns in the next 150 m)
+                if ((rp.position - at).sqrMagnitude < 25f)
+                {
+                    float turn = 0f; var prevDir = rp.direction;
+                    for (float k = 10f; k <= 150f && d + k < r.OpenLength; k += 10f) { var dir = r.GetRoutePoint(d + k).direction; turn += Vector3.Angle(Flat(prevDir), Flat(dir)); prevDir = dir; }
+                    score += 4f * turn / 90f;
+                }
                 if (score < bestScore) { bestScore = score; best = r; bestD = d; }
             }
         if (System.Array.IndexOf(CommandLine.Args, "-debugTraffic") >= 0)
@@ -552,7 +560,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
     /// <summary>
     /// The lane routes come from OpenStreetMap's centre lines and widths; where the carriageway really is narrower or lies
     /// a little to the side (as the Dutch topography's surfaces show it), or has a painted cycle lane at its edge, a car on
-    /// the lane would drive partly or wholly on the cycle path, cycle lane or pavement beside it (and into the benches
+    /// the lane would drive partly or wholly on the cycle path, cycle lane, pavement or parking strip beside it (and into the benches
     /// and posts there), or where the lanes of a junction cut across a grass verge or median (the Dutch topography's green
     /// areas) or the corner of a canal's quay (moved however short the stretch). Each point where the car's middle or either side (0.8 m out) is over a cycle path, cycle lane, pavement or
     /// such grass, as it is seen (<see cref="SeenGround"/>), is moved across by the least that keeps all three off them, at
@@ -666,7 +674,8 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
             if (!Seen(h) || h.point.y < top - 0.05f) continue;
             var name = h.collider.name;
             if (name.IndexOf("ycle", StringComparison.Ordinal) >= 0) return MapTraffic.Ground.Cycle;
-            if (name.StartsWith("BGT pavements") || name.StartsWith("Pavements") || name.StartsWith("Kerbs")) g = MapTraffic.Ground.Pavement;
+            // (and the topography's parking strips and bays beside the road: a lane over them ran through the parked cars)
+            if (name.StartsWith("BGT pavements") || name.StartsWith("Pavements") || name.StartsWith("Kerbs") || name.StartsWith("BGT parking")) g = MapTraffic.Ground.Pavement;
             // (the Dutch topography's verges and medians, at their exact outlines, never under a carriageway; a canal's quay
             // and water)
             else if ((name.StartsWith("BGT green") || name.StartsWith("Quay") || name.StartsWith("Water")) && g != MapTraffic.Ground.Pavement) g = MapTraffic.Ground.Green;
@@ -808,13 +817,16 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
     /// The participant's riding line (the autopilot of a rider) clear of what stands in its way: the line is read across the road only every few metres, so a
     /// sign post, a lamp post or a bollard between two readings (one at the end of a zebra crossing, at a junction's
     /// corner) and a pavement corner the smoothed line cuts were ridden through. Every half metre along the line, a rider
-    /// (0.45 m to either side of its middle, from 0.4 to 1.6 m above the ground) that would touch something fixed (not the
+    /// that would come within 1 m of a sign post or 0.6 m of anything else fixed (from 0.4 to 1.6 m above the ground; not the
     /// ground, not a vehicle), or ride on the pavement or grass, is moved across by the least that clears it, at most 2 m
     /// (towards the road's middle first); each move holds two points before and after (6-8 m), and they are averaged over 3
     /// points, so the line keeps the whole move past the obstacle and eases out and back.
     /// </summary>
     static void KeepRideClear(List<Vector3> line, bool lht)
     {
+        // (a handlebar is 0.3 m to either side of the rider's middle, and the rider follows its line within some 0.3-0.4 m:
+        // a post a metre from the line, other things 0.6 m)
+        const float Clearance = 0.6f, PostClearance = 1f;
         if (line.Count < 2) return;
         // (towards the kerb: to the right, to the left in left-hand traffic)
         var side = new List<Vector3>(line.Count);
@@ -829,8 +841,8 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         {
             var g = SeenGround(p);
             if (g == Ground.Pavement || g == Ground.Green) return true;
-            foreach (var sp in _signPosts) { float dx = sp.x - p.x, dz = sp.z - p.z; if (dx * dx + dz * dz < 0.5f * 0.5f && Mathf.Abs(sp.y - p.y) < 2f) return true; }
-            int n = Physics.OverlapCapsuleNonAlloc(p + Vector3.up * 0.4f, p + Vector3.up * 1.6f, 0.45f, _near, ~0, QueryTriggerInteraction.Ignore);
+            foreach (var sp in _signPosts) { float dx = sp.x - p.x, dz = sp.z - p.z; if (dx * dx + dz * dz < PostClearance * PostClearance && Mathf.Abs(sp.y - p.y) < 2f) return true; }
+            int n = Physics.OverlapCapsuleNonAlloc(p + Vector3.up * 0.4f, p + Vector3.up * 1.6f, Clearance, _near, ~0, QueryTriggerInteraction.Ignore);
             for (int i = 0; i < n; i++)
             {
                 var c = _near[i];
@@ -877,6 +889,8 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
     /// <summary>Riding-line points moved clear of posts, pavement corners and the like.</summary>
     public static int RideMoves;
     static List<Vector3> _signPosts;
+
+    static Vector3 Flat(Vector3 v) { v.y = 0f; return v; }
 
     static float Normal(System.Random rng)
     {
