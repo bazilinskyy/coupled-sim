@@ -35,6 +35,7 @@ Transform:
   - {fileID: 6804236418905656271}
   - {fileID: 8888962295438423819}
   - {fileID: 7001873165330521930}
+  - {fileID: 530354700029446248}
   m_Father: {fileID: 7609667120526454229}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1311683244
@@ -122,6 +123,9 @@ MonoBehaviour:
   Weather: 1
   ExtraFog: 0
   RainOverride: -1
+  SnowCover: -1
+  WindSpeed: 2
+  WindDirection: 240
   UseBakedLighting: 0
   Sun: {fileID: 0}
   StreetLights: []
@@ -138,9 +142,26 @@ MonoBehaviour:
   - pavement
   - crossing
   - tile
+  LiveReflections: 1
+  LiveReflectionResolution: 128
+  LiveReflectionDistance: 30
   SunElevation: 0
   Rain: 0
+  Snowfall: 0
+  Snow: 0
   StreetLightsOn: 0
+  SnowSurfaceKeywords:
+  - grass
+  - green
+  - roof
+  - pavement
+  - paving
+  - sidewalk
+  - ground
+  - kerb
+  - gravel
+  - cycle
+  - tile
 --- !u!1 &732286849548543705
 GameObject:
   m_ObjectHideFlags: 0
@@ -1735,8 +1756,11 @@ MonoBehaviour:
     TopHMI: {fileID: 0}
     WindshieldHMI: {fileID: 0}
     HoodHMI: {fileID: 0}
+    EhmiDesign: 
+    EhmiDesignPlacement: 0
     carIdx: 0
     twoWheelerIdx: 0
+    droneIdx: 0
     SpawnPoint:
       Point: {fileID: 571469619656576747}
       Type: 1
@@ -1744,12 +1768,29 @@ MonoBehaviour:
       VehicleType: 0
     AutonomousPath: {fileID: 0}
     AutonomousIsYielding: 0
+    Steering: 0
+    RideInCarOf: 
+    Seat: 0
+    HudDesign: 
+    CentreScreenDesign: 
+    ClusterDesign: 
+    InCarMessages: 
+    Response:
+      Button: 0
+      ButtonLabel: 
+      Slider: 0
+      SliderLabel: 
+      SliderStart: 0
+      Hidden: 0
   - Name: Automated - Passenger
     TopHMI: {fileID: 114674626593462642, guid: 9eaaf159fd53e9043a6a0f42f3729fa0, type: 3}
     WindshieldHMI: {fileID: 114674626593462642, guid: 9eaaf159fd53e9043a6a0f42f3729fa0, type: 3}
     HoodHMI: {fileID: 114674626593462642, guid: 9eaaf159fd53e9043a6a0f42f3729fa0, type: 3}
+    EhmiDesign: 
+    EhmiDesignPlacement: 0
     carIdx: 1
     twoWheelerIdx: 0
+    droneIdx: 0
     SpawnPoint:
       Point: {fileID: 1311683245}
       Type: 2
@@ -1757,12 +1798,29 @@ MonoBehaviour:
       VehicleType: 1
     AutonomousPath: {fileID: 8043761391078894673}
     AutonomousIsYielding: 1
+    Steering: 0
+    RideInCarOf: 
+    Seat: 0
+    HudDesign: 
+    CentreScreenDesign: 
+    ClusterDesign: 
+    InCarMessages: 
+    Response:
+      Button: 0
+      ButtonLabel: 
+      Slider: 0
+      SliderLabel: 
+      SliderStart: 0
+      Hidden: 0
   - Name: Pedestrian
     TopHMI: {fileID: 0}
     WindshieldHMI: {fileID: 0}
     HoodHMI: {fileID: 0}
+    EhmiDesign: 
+    EhmiDesignPlacement: 0
     carIdx: 0
     twoWheelerIdx: 0
+    droneIdx: 0
     SpawnPoint:
       Point: {fileID: 9168689610437224543}
       Type: 0
@@ -1770,12 +1828,29 @@ MonoBehaviour:
       VehicleType: 0
     AutonomousPath: {fileID: 0}
     AutonomousIsYielding: 0
+    Steering: 0
+    RideInCarOf: 
+    Seat: 0
+    HudDesign: 
+    CentreScreenDesign: 
+    ClusterDesign: 
+    InCarMessages: 
+    Response:
+      Button: 0
+      ButtonLabel: 
+      Slider: 0
+      SliderLabel: 
+      SliderStart: 0
+      Hidden: 0
   - Name: Cyclist
     TopHMI: {fileID: 0}
     WindshieldHMI: {fileID: 0}
     HoodHMI: {fileID: 0}
+    EhmiDesign: 
+    EhmiDesignPlacement: 0
     carIdx: 0
     twoWheelerIdx: 0
+    droneIdx: 0
     SpawnPoint:
       Point: {fileID: 6804236418905656271}
       Type: 3
@@ -1783,12 +1858,29 @@ MonoBehaviour:
       VehicleType: 0
     AutonomousPath: {fileID: 0}
     AutonomousIsYielding: 0
+    Steering: 0
+    RideInCarOf: 
+    Seat: 0
+    HudDesign: 
+    CentreScreenDesign: 
+    ClusterDesign: 
+    InCarMessages: 
+    Response:
+      Button: 0
+      ButtonLabel: 
+      Slider: 0
+      SliderLabel: 
+      SliderStart: 0
+      Hidden: 0
   - Name: E-scooter rider
     TopHMI: {fileID: 0}
     WindshieldHMI: {fileID: 0}
     HoodHMI: {fileID: 0}
+    EhmiDesign: 
+    EhmiDesignPlacement: 0
     carIdx: 0
     twoWheelerIdx: 1
+    droneIdx: 0
     SpawnPoint:
       Point: {fileID: 8888962295438423819}
       Type: 3
@@ -1796,12 +1888,29 @@ MonoBehaviour:
       VehicleType: 0
     AutonomousPath: {fileID: 0}
     AutonomousIsYielding: 0
+    Steering: 0
+    RideInCarOf: 
+    Seat: 0
+    HudDesign: 
+    CentreScreenDesign: 
+    ClusterDesign: 
+    InCarMessages: 
+    Response:
+      Button: 0
+      ButtonLabel: 
+      Slider: 0
+      SliderLabel: 
+      SliderStart: 0
+      Hidden: 0
   - Name: Moped rider
     TopHMI: {fileID: 0}
     WindshieldHMI: {fileID: 0}
     HoodHMI: {fileID: 0}
+    EhmiDesign: 
+    EhmiDesignPlacement: 0
     carIdx: 0
     twoWheelerIdx: 2
+    droneIdx: 0
     SpawnPoint:
       Point: {fileID: 7001873165330521930}
       Type: 3
@@ -1809,6 +1918,50 @@ MonoBehaviour:
       VehicleType: 0
     AutonomousPath: {fileID: 0}
     AutonomousIsYielding: 0
+    Steering: 0
+    RideInCarOf: 
+    Seat: 0
+    HudDesign: 
+    CentreScreenDesign: 
+    ClusterDesign: 
+    InCarMessages: 
+    Response:
+      Button: 0
+      ButtonLabel: 
+      Slider: 0
+      SliderLabel: 
+      SliderStart: 0
+      Hidden: 0
+  - Name: Race cyclist
+    TopHMI: {fileID: 0}
+    WindshieldHMI: {fileID: 0}
+    HoodHMI: {fileID: 0}
+    EhmiDesign: 
+    EhmiDesignPlacement: 0
+    carIdx: 0
+    twoWheelerIdx: 3
+    droneIdx: 0
+    SpawnPoint:
+      Point: {fileID: 530354700029446248}
+      Type: 3
+      CameraIndex: 0
+      VehicleType: 0
+    AutonomousPath: {fileID: 0}
+    AutonomousIsYielding: 0
+    Steering: 0
+    RideInCarOf: 
+    Seat: 0
+    HudDesign: 
+    CentreScreenDesign: 
+    ClusterDesign: 
+    InCarMessages: 
+    Response:
+      Button: 0
+      ButtonLabel: 
+      Slider: 0
+      SliderLabel: 
+      SliderStart: 0
+      Hidden: 0
   PointsOfInterest: []
   CarSpawners:
   - {fileID: 8156635355818172248}
@@ -1938,6 +2091,37 @@ Transform:
   m_Children: []
   m_Father: {fileID: 935614564}
   m_LocalEulerAnglesHint: {x: 0, y: -90, z: 0}
+--- !u!1 &8451484923368823732
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 530354700029446248}
+  m_Layer: 0
+  m_Name: Race cyclist spawn
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &530354700029446248
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8451484923368823732}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: 0.7071068, z: -0, w: -0.7071068}
+  m_LocalPosition: {x: -3.5, y: 0, z: 11.6}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 935614564}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1257692278195448331
 PrefabInstance:
   m_ObjectHideFlags: 0
