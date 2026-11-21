@@ -127,13 +127,18 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
             Debug.Log($"MapTraffic: {lanes.Count} routes in the map's area, {outside} leaving it (by up to {-worst:F0} m)");
         }
         Physics.SyncTransforms();
-        int moved = 0; _moves.Clear(); ParkedMoves = 0;
+        int moved = 0; _moves.Clear(); ParkedMoves = 0; CornerMoves = 0;
         var someone = FindAnyObjectByType<PlayerAvatar>();
         DebugFocus = someone != null && System.Array.IndexOf(CommandLine.Args, "-debugTraffic") >= 0 ? someone.transform.position : (Vector3?)null;
+        // (-debugLaneAt x,z: the lane points within 30 m of there instead)
+        int dla = System.Array.IndexOf(CommandLine.Args, "-debugLaneAt");
+        if (dla >= 0 && dla + 1 < CommandLine.Args.Length && CommandLine.Args[dla + 1].Split(',') is var xz && xz.Length == 2
+            && float.TryParse(xz[0], NumberStyles.Float, CultureInfo.InvariantCulture, out var fx) && float.TryParse(xz[1], NumberStyles.Float, CultureInfo.InvariantCulture, out var fz))
+            DebugFocus = new Vector3(fx, 0f, fz);
         BuildOncomingIndex(lanes);
         foreach (var lane in lanes) moved += KeepOnCarriageway(lane);
         _oncoming = null;
-        if (moved > 0) Debug.Log($"MapTraffic: {moved} route points moved off cycle paths, cycle lanes and pavements onto the carriageway ({ParkedMoves} of them off grass verges or clear of parked cars)");
+        if (moved > 0) Debug.Log($"MapTraffic: {moved} route points moved off cycle paths, cycle lanes and pavements onto the carriageway ({ParkedMoves} of them off grass verges or clear of parked cars, {CornerMoves} of them only a little, out of a corner)");
         if (moved > 0 && System.Array.IndexOf(CommandLine.Args, "-debugTraffic") >= 0)
         {
             var geo = new CoupledSim.Maps.GeoProjection(OsmMap.Current.Info.Latitude, OsmMap.Current.Info.Longitude);
@@ -565,7 +570,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
     /// a little to the side (as the Dutch topography's surfaces show it), or has a painted cycle lane at its edge, a car on
     /// the lane would drive partly or wholly on the cycle path, cycle lane, pavement or parking strip beside it (and into the benches
     /// and posts there), or where the lanes of a junction cut across a grass verge or median (the Dutch topography's green
-    /// areas) or the corner of a canal's quay (moved however short the stretch). Each point where the car's middle or either side (0.8 m out) is over a cycle path, cycle lane, pavement or
+    /// areas), the corner of a canal's quay, or a bend's inside corner over the kerb (moved however short the stretch). Each point where the car's middle or either side (0.8 m out) is over a cycle path, cycle lane, pavement or
     /// such grass, as it is seen (<see cref="SeenGround"/>), is moved across by the least that keeps all three off them, at
     /// most 4.5 m (a lane on the far half of a two-way cycle path); the moves are smoothed (a median over 24 m, then an average over 12 m), so a lone point does not bend
     /// the lane and it does not zigzag. A cycle path or pavement that crosses the road (no clear carriageway beside it) is
@@ -579,7 +584,10 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         var grassOnly = new bool[lane.Count];
         bool any = false;
         bool Off(Ground g) => g == Ground.Cycle || g == Ground.Pavement || g == Ground.Green;
-        bool Clear(Vector3 p, Vector3 s) => !Off(SeenGround(p)) && !Off(SeenGround(p + s * 0.8f)) && !Off(SeenGround(p - s * 0.8f));
+        // (and the car's middle over no drawn road at all: the map's bare ground or other paving, as at a corner where a
+        // narrower street's road begins further over)
+        bool Clear(Vector3 p, Vector3 s) => SeenGround(p) is var g && !Off(g) && g != Ground.Paving && g != Ground.None && g != Ground.Bare
+            && !Off(SeenGround(p + s * 0.8f)) && !Off(SeenGround(p - s * 0.8f));
         for (int i = 0; i < lane.Count; i++)
         {
             var d = lane[Mathf.Min(i + 1, lane.Count - 1)] - lane[Mathf.Max(i - 1, 0)]; d.y = 0f;
@@ -596,6 +604,18 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
                 foreach (int sgn in new[] { -1, 1 })
                     if (shift[i] == 0f && SeenGround(lane[i] + side[i] * (sgn * k * 0.25f)) == Ground.Road && Clear(lane[i] + side[i] * (sgn * k * 0.25f), side[i]))
                     { shift[i] = sgn * k * 0.25f; any = true; }
+            // (the road within 3 m beside: a lane cutting a corner over the kerb and the pavement, as where it enters a
+            // narrower street or rounds a bend; moved also for a short stretch, in a bend 0.3 m more for the vehicles' own
+            // cut inside it; a pavement or cycle path that crosses the road leaves no road that near beside it)
+            if (shift[i] != 0f && Mathf.Abs(shift[i]) <= 3f)
+            {
+                grassOnly[i] = true; CornerMoves++;
+                if (i >= 2 && i + 2 < lane.Count)
+                {
+                    var a = lane[i] - lane[i - 2]; var b = lane[i + 2] - lane[i]; a.y = 0f; b.y = 0f;
+                    if (Vector3.Angle(a, b) > 20f) shift[i] += Mathf.Sign(shift[i]) * 0.3f;
+                }
+            }
         }
         int moved = 0;
         // a median over 24 m (a lone point over a cycle path, as where one crosses the road, or a small patch, does
@@ -651,15 +671,17 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         }
         if (DebugFocus != null)
             for (int i = 0; i < lane.Count; i++)
-                if ((lane[i] - DebugFocus.Value).sqrMagnitude < 30f * 30f)
-                    Debug.Log($"TrafficDebug: lane point {i}/{lane.Count} at {lane[i]}: shift found {shift[i]:F2}, median {median[i]:F2}, applied {smooth[i]:F2}, parked cars {park[i]:F2}, in all {total[i]:F2}");
+                if (Flat(lane[i] - DebugFocus.Value).sqrMagnitude < 12f * 12f)
+                    Debug.Log($"TrafficDebug: lane point {i}/{lane.Count} at {lane[i]}: shift found {shift[i]:F2} (short {grassOnly[i]}), median {median[i]:F2}, applied {smooth[i]:F2}, parked cars {park[i]:F2}, in all {total[i]:F2}");
         // (no move brings the lane nearer than 2.3 m to the oncoming one, nor nearer than it was: two lanes of a two-way
         // street moved towards its middle came within 1.8 m, and a pickup and a tow truck met head-on)
         for (int i = 0; i < lane.Count; i++)
         {
             if (Mathf.Abs(total[i]) < 0.01f || side[i] == Vector3.zero) continue;
             var dir = Vector3.Cross(side[i], Vector3.up);
-            float limit = Mathf.Min(2.3f, OncomingDist(lane[i], dir));
+            // (a short move out of a corner or off a kerb may come to 1.9 m, as the narrowest streets' lanes: in a narrow
+            // street entered round a corner a car keeps to its middle rather than to the pavement)
+            float limit = Mathf.Min(grassOnly[i] ? 1.9f : 2.3f, OncomingDist(lane[i], dir));
             while (Mathf.Abs(total[i]) > 0.01f && OncomingDist(lane[i] + side[i] * total[i], dir) < limit - 0.01f)
                 total[i] = Mathf.MoveTowards(total[i], 0f, 0.1f);
         }
@@ -708,8 +730,8 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
     }
     static readonly RaycastHit[] _groundHits = new RaycastHit[16];
     static readonly Collider[] _near = new Collider[16];
-    /// <summary>Lane points moved away from parked cars.</summary>
-    static int ParkedMoves;
+    /// <summary>Lane points moved away from parked cars; out of a bend's inside corner.</summary>
+    static int ParkedMoves, CornerMoves;
 
     // the lanes' points before the moves, in 4 m cells, with their directions: the oncoming lane beside a lane
     static Dictionary<long, List<(Vector3 p, Vector3 dir, Vector3 next)>> _oncoming;
