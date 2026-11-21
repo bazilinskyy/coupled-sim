@@ -135,6 +135,43 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         if (dla >= 0 && dla + 1 < CommandLine.Args.Length && CommandLine.Args[dla + 1].Split(',') is var xz && xz.Length == 2
             && float.TryParse(xz[0], NumberStyles.Float, CultureInfo.InvariantCulture, out var fx) && float.TryParse(xz[1], NumberStyles.Float, CultureInfo.InvariantCulture, out var fz))
             DebugFocus = new Vector3(fx, 0f, fz);
+        if (dla >= 0 && DebugFocus != null)
+            foreach (var r in gen.Roads)
+                for (int i = 0; i < r.Line.Count; i++)
+                    if (Flat(r.Line[i] - DebugFocus.Value).sqrMagnitude < 20f * 20f)
+                        Debug.Log($"TrafficDebug: road {r.Type} width {r.Width:F1} one-way {r.OneWay} lanes {r.Lanes} point {i}/{r.Line.Count} at {r.Line[i]}");
+        if (dla >= 0 && DebugFocus != null)
+        {
+            // the ground seen around there, 24 m square every 0.5 m, north up (R road, P pavement, p other paving or bare, C cycle, G green, - none)
+            var f = DebugFocus.Value;
+            for (int zi = 24; zi >= -24; zi--)
+            {
+                var row = new System.Text.StringBuilder();
+                for (int xi = -24; xi <= 24; xi++)
+                {
+                    var g = SeenGround(new Vector3(f.x + xi * 0.5f, f.y + 2f, f.z + zi * 0.5f));
+                    row.Append(xi == 0 && zi == 0 ? '+' : g == Ground.Road ? 'R' : g == Ground.Cycle ? 'C' : g == Ground.Pavement ? 'P' : g == Ground.Paving ? 'p' : g == Ground.Green ? 'G' : g == Ground.Bare ? 'b' : '-');
+                }
+                Debug.Log($"TrafficDebug: ground z={f.z + zi * 0.5f,7:F1} {row}");
+            }
+            foreach (var h in Physics.RaycastAll(new Vector3(f.x, f.y + 6f, f.z), Vector3.down, 12f))
+            {
+                var mc = h.collider as MeshCollider; string tri = "";
+                if (mc != null && mc.sharedMesh != null && h.triangleIndex >= 0)
+                {
+                    var m = mc.sharedMesh; var t = m.triangles; var v = m.vertices;
+                    for (int q = 0; q < 3; q++) tri += " " + mc.transform.TransformPoint(v[t[h.triangleIndex * 3 + q]]).ToString("F1");
+                }
+                Debug.Log($"TrafficDebug: under the focus: {h.collider.name} at {h.point.y:F2}{tri}");
+            }
+        }
+        BuildOncomingIndex(lanes);
+        foreach (var lane in lanes) moved += KeepOnCarriageway(lane);
+        _oncoming = null;
+        // (the moves bend a lane within a few metres: smoothed again, lightly, so no bend is tighter than a car turns; a
+        // car swung 1.8 m wide of such a kink into one waiting beside its lane)
+        for (int i = 0; i < lanes.Count; i++) lanes[i] = SmoothMoved(lanes[i]);
+        // (and the smoothed lanes checked once more: smoothing can pull a lane back over a corner's kerb)
         BuildOncomingIndex(lanes);
         foreach (var lane in lanes) moved += KeepOnCarriageway(lane);
         _oncoming = null;
@@ -209,7 +246,48 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         // a realistic mix: mostly cars, some vans, few trucks, an occasional bus
         float Weight(AICar p) { var n = p.name.ToLowerInvariant(); return n.Contains("bus") ? 0.25f : n.Contains("truck") || n.Contains("daf") ? 0.5f : n.Contains("van") || n.Contains("delivery") ? 1.2f : n.Contains("ambulance") || n.Contains("police") || n.Contains("taxi") ? 0.6f : 3f; }
         float total = prefabs.Sum(Weight);
-        AICar Pick() { double x = rng.NextDouble() * total; foreach (var p in prefabs) { x -= Weight(p); if (x <= 0) return p; } return prefabs[prefabs.Length - 1]; }
+        AICar Pick(System.Random from = null) { double x = (from ?? rng).NextDouble() * total; foreach (var p in prefabs) { x -= Weight(p); if (x <= 0) return p; } return prefabs[prefabs.Length - 1]; }
+        // (the picks again for a truck or bus that cannot drive its route from a stream of their own, so the other
+        // vehicles keep their models and colours)
+        var swapRng = new System.Random(Seed + 7919);
+        // trucks and buses only on routes whose bends they can drive (none tighter than their turning circle, by their
+        // length as TrafficCar takes it, from the body's box): an articulated bus (8.4 m at its tightest) on a route
+        // that turned 155 degrees round a 5 m junction corner swung 6 m off its lane, circled at full lock, its rear
+        // section shoving the front, and drove across the junction into the cars and cyclists there
+        var turnRadius = new Dictionary<AICar, float>();
+        float TurnRadius(AICar prefab)
+        {
+            if (turnRadius.TryGetValue(prefab, out var r)) return r;
+            float len = prefab.TryGetComponent<BoxCollider>(out var box) && !box.isTrigger ? box.size.z * Mathf.Abs(prefab.transform.localScale.z) : 4.5f;
+            if (len < 2.5f || len > 25f) len = 4.5f;
+            return turnRadius[prefab] = Mathf.Clamp(0.6f * len + 2f, 2.5f, 9f);   // (as AICar steers)
+        }
+        var tightest = new Dictionary<WaypointCircuit, float>();
+        float Tightest(WaypointCircuit route)
+        {
+            if (tightest.TryGetValue(route, out var t)) return t;
+            // the smallest circle through three points 3 m apart along it (not its closing piece back to the start)
+            float best = float.MaxValue, len = route.OpenLength;
+            for (float s = 3f; s + 3f < len; s += 1f)
+            {
+                var a = route.GetRoutePosition(s - 3f); var b = route.GetRoutePosition(s); var c = route.GetRoutePosition(s + 3f);
+                a.y = b.y = c.y = 0f;
+                float twiceArea = Vector3.Cross(b - a, c - a).magnitude;
+                if (twiceArea > 1e-4f) best = Mathf.Min(best, (b - a).magnitude * (c - b).magnitude * (a - c).magnitude / (2f * twiceArea));
+            }
+            return tightest[route] = best;
+        }
+        int keptOff = 0;
+        AICar PickFor(WaypointCircuit route)
+        {
+            var car = Pick();
+            if (TurnRadius(car) <= 5f) return car;
+            float bend = Tightest(route);
+            if (TurnRadius(car) <= bend + 0.5f) return car;
+            keptOff++;
+            for (int k = 0; k < 20 && TurnRadius(car) > bend + 0.5f; k++) car = Pick(swapRng);
+            return TurnRadius(car) <= bend + 0.5f ? car : prefabs.Where(q => TurnRadius(q) <= 5f).DefaultIfEmpty(car).First();
+        }
         var spawn = new GameObject("Map traffic spawn point").transform;
         int count = 0;
         var placed = new List<Vector3>();   // (routes share lanes: no car placed within 10 m of another)
@@ -249,7 +327,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
             var dir = rp.direction; dir.y = 0;
             spawn.SetPositionAndRotation(pos + Vector3.up * 0.1f, Quaternion.LookRotation(dir.normalized, Vector3.up));
             var p = spawnParams;
-            p.SpawnPoint = spawn; p.Track = route; p.Car = Pick();
+            p.SpawnPoint = spawn; p.Track = route; p.Car = PickFor(route);
             p.color = Colors[rng.Next(Colors.Length)]; p.SpawnDriver = true;
             var car = Spawn(p, false);
             car.GetComponent<WaypointProgressTracker>().SetProgress(d);
@@ -267,6 +345,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
             if (count % 10 == 0) yield return null;
         }
         Destroy(spawn.gameObject);
+        if (keptOff > 0) Debug.Log($"MapTraffic: {keptOff} trucks or buses swapped for vehicles that turn tighter (their routes bend tighter than they can)");
         Debug.Log($"MapTraffic: {count} cars{(places.Count > MaxCars && placed.Count > 0 ? $" (of {places.Count} places at {CarsPerKm} per km: those within {Mathf.Sqrt(placed.Max(Near)):F0} m of the participants{(_autopilotRoute != null ? " and of the autopilot's way ahead" : "")})" : "")}");
         yield return SpawnCyclists();
     }
@@ -385,6 +464,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
             {
                 var lane = path.Select(q => new Vector3(q.X, q.Y, q.Z)).ToList();
                 KeepOnCarriageway(lane);
+                lane = SmoothMoved(lane);
                 best = MakeCircuit(lane, 900);
                 best.name = "Route to " + Destination;
                 best.GetRoutePoint(0f);
@@ -620,7 +700,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         int moved = 0;
         // a median over 24 m (a lone point over a cycle path, as where one crosses the road, or a small patch, does
         // not bend the lane: only a stretch of some 15 m and more moves), then an average over 12 m, so the lane eases
-        // across (the lanes' points are LaneSpacing, 3 m, apart)
+        // across (the lanes' points are LaneSpacing, 2 m, apart)
         int mh = Mathf.Max(1, Mathf.RoundToInt(12f / CoupledSim.Maps.MapRoutes.LaneSpacing)), ah = Mathf.Max(1, Mathf.RoundToInt(6f / CoupledSim.Maps.MapRoutes.LaneSpacing));
         var median = new float[lane.Count];
         for (int i = 0; i < lane.Count; i++)
@@ -765,7 +845,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
                 foreach (var (q, qd, qn) in c)
                 {
                     if (Vector3.Dot(qd, f) >= -0.7f || Mathf.Abs(q.y - p.y) >= 3f) continue;
-                    // (to the segment to its next point: the points are 3 m apart)
+                    // (to the segment to its next point: the points are 2 m apart)
                     float ax = qn.x - q.x, az = qn.z - q.z, l2 = ax * ax + az * az;
                     float t = l2 > 1e-6f ? Mathf.Clamp01(((p.x - q.x) * ax + (p.z - q.z) * az) / l2) : 0f;
                     float dx = p.x - (q.x + ax * t), dz = p.z - (q.z + az * t);
@@ -969,6 +1049,9 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
     static List<Vector3> _signPosts;
 
     static Vector3 Flat(Vector3 v) { v.y = 0f; return v; }
+
+    static List<Vector3> SmoothMoved(List<Vector3> lane) =>
+        CoupledSim.Maps.MapRoutes.Smooth(lane.Select(q => new System.Numerics.Vector3(q.x, q.y, q.z)).ToList(), 2.5f).Select(q => new Vector3(q.X, q.Y, q.Z)).ToList();
 
     // the car and cycle routes' points every 2 m, in 4 m cells: which lanes cross a car's path (TrafficCar.KeepLanesClear)
     Dictionary<long, List<(Vector3 p, Vector3 dir, WaypointCircuit route, bool cycle)>> _laneCells;

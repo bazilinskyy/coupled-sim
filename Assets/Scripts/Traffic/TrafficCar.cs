@@ -97,13 +97,15 @@ public class TrafficCar : MonoBehaviour
     static int RingsBroken;
 
     /// <summary>Whether <paramref name="t"/> waits for <paramref name="target"/>, directly or through up to eight others
-    /// (<paramref name="lowest"/>: the lowest rank of those between them, t included).</summary>
+    /// (<paramref name="lowest"/>: the lowest rank of those between them that give way, t included; not of those standing
+    /// for a body in their path: a car giving way to the participant's car, which stood for that car's body in its way,
+    /// never went on, the participant's rank being lower, and both stood for good).</summary>
     static bool WaitsFor(TrafficCar t, Transform target, out int lowest)
     {
         lowest = int.MaxValue;
         for (int i = 0; i < 8 && t != null; i++)
         {
-            lowest = Mathf.Min(lowest, t._rank);
+            if (t._conflictWith != null && t._blocker == t._conflictWith) lowest = Mathf.Min(lowest, t._rank);
             var b = t._blocker;
             if (b == null) return false;
             if (b == target) return true;
@@ -278,6 +280,8 @@ public class TrafficCar : MonoBehaviour
             var line = $"t={Time.time:F2} prog={_tracker.ProgressDistance:F1} v={Speed:F1} rb={rbv:F1} pos=({transform.position.x:F1},{transform.position.z:F1}) off={off:F2} {LeaderDescription}";
             _history.Enqueue(line);
             while (_history.Count > 12) _history.Dequeue();
+            // (-debugCar "Map traffic Map route 24 15": that vehicle's every line, with its heading)
+            if (DebugCar != null && name == DebugCar) Debug.Log($"TrafficDebug: {name}: {line} heading {transform.eulerAngles.y:F0} yaw rate {(rb0 != null ? rb0.angularVelocity.y * Mathf.Rad2Deg : 0f):F0}°/s");
             // the participant's autopilot: every 5 s
             if (Time.time >= _nextParticipantLog && GetComponent<AutomatedDriving>() != null)
             {
@@ -402,7 +406,47 @@ public class TrafficCar : MonoBehaviour
             // beside it that makes room for it, the side-by-side rule above: it waits for this one to go on ahead, and a
             // car and a cyclist merging stood beside each other for ever)
             if (c.tc != null && c.tc.LeaderDescription != null && c.tc.LeaderDescription.StartsWith("making room for ") && c.tc.LeaderDescription.EndsWith(name)) continue;
+            // (two standing in each other's way, as two cars meeting in a street too narrow for both: the one placed first
+            // goes on; else both waited for ever)
+            if (c.tc != null && c.tc.LeaderDescription != null && c.tc.LeaderDescription.StartsWith(name + " standing in the way") && _rank < c.tc._rank) continue;
             _standing.Add(c);
+        }
+
+        // a rider whose line moves across the road ahead (from the kerb towards the middle, onto another line) moves over
+        // only with a clear gap: not while a car close behind or beside it on that side would have to brake for it (one
+        // swerved from the edge across the lane in front of the autopilot's bonnet); it keeps its line and waits
+        if (IsRider && _rideBlockUntil > Time.time) { what = "keeping to its line for a car behind"; return Leader.Stationary(3f); }
+        if (IsRider)
+        {
+            var ahead = _circuit.GetRoutePoint(start + 8f).position;
+            var myRight = Vector3.Cross(Vector3.up, Flat(myFwd).normalized);
+            float lat = Vector3.Dot(Flat(ahead - me), myRight);
+            if (Mathf.Abs(lat) > 0.8f)
+            {
+                float side = Mathf.Sign(lat);
+                foreach (var c in _cars)
+                {
+                    if (c.t == transform || RiderOf(c.tc, c.t) || Vector3.Dot(c.fwd, myFwd) < 0.5f || Mathf.Abs(c.pos.y - me.y) > 3.5f) continue;
+                    var rel = Flat(c.pos - me);
+                    float along = Vector3.Dot(rel, Flat(myFwd).normalized), across = Vector3.Dot(rel, myRight) * side;
+                    if (along < -25f || along > 4f || across < -0.5f || across > Mathf.Abs(lat) + 2.5f) continue;
+                    // (where the rider's line goes is on that car's way: within its half width, the rider's and 0.5 m of
+                    // its path; in a bend both turn together, and the rider rides on)
+                    if (c.tc == null || c.tc._circuit == null || c.tc._tracker == null) continue;
+                    float near = float.MaxValue, cs = c.tc._tracker.ProgressDistance;
+                    for (float k = 0f; k <= 30f; k += 2f) near = Mathf.Min(near, Flat2(c.tc._circuit.GetRoutePosition(cs + k) - ahead));
+                    float r = HalfWidth(c.t) + 0.4f + 0.5f;
+                    if (near > r * r) continue;
+                    float vc = c.tc != null ? c.tc.Speed : SpeedOf(c.t);
+                    // (beside it, or coming up behind it within 3 s)
+                    if (along > -6f && vc > 0.5f || vc > Speed + 0.5f && (-along - 4f) / (vc - Speed) < 3f)
+                    {
+                        _rideBlockUntil = Time.time + 1f;
+                        what = $"keeping to its line for {c.name}";
+                        return Leader.Stationary(3f);
+                    }
+                }
+            }
         }
 
         if (routeEnd < LookAhead) anyCarClose = true;   // (not the shortcut below: the route ends ahead)
@@ -461,14 +505,22 @@ public class TrafficCar : MonoBehaviour
         if (sameCar != null && sameAlong <= conflict && sameAlong < step + offset)
         {
             what = $"car {sameCar.name} at {sameAlong:F0} m (same route)";
-            _blocker = sameCar.transform; return Leader.Vehicle(Mathf.Max(0.1f, sameAlong - (VehicleLength + sameCar.VehicleLength) / 2f), sameCar.Speed);
+            _blocker = sameCar.transform; return Leader.Vehicle(Mathf.Max(0.1f, BehindRider(sameAlong - (VehicleLength + sameCar.VehicleLength) / 2f, sameCar, sameCar.transform)), sameCar.Speed);
         }
         var prevP = _circuit.GetRoutePoint(start).position;
+        var prevSeg = _circuit.GetRoutePoint(start - step).position;
         float myReach = HalfWidth(transform) + 0.05f;
+        float riderReach2 = (HalfWidth(transform) + 0.4f + 1.5f) * (HalfWidth(transform) + 0.4f + 1.5f);
         for (float d = step; d <= LookAhead; d += step)
         {
             var p = _circuit.GetRoutePoint(start + d).position;
             var segFrom = prevP; prevP = p;
+            // (in a bend tighter than this vehicle can turn, a lorry or a bus, it runs wide of its path by about the
+            // difference of the radii: its body sweeps that much further out, and what stands there is in its way)
+            float wide = 0f;
+            if (d > step && Vector3.Angle(Flat(p - segFrom), Flat(segFrom - prevSeg)) is var bend && bend > 1f)
+                wide = Mathf.Clamp(MinTurnRadius - step / (bend * Mathf.Deg2Rad), 0f, 2.5f);
+            prevSeg = segFrom;
             float along = d + offset;
             if (along < 1f) continue;
             if (d >= routeEnd - 4f)
@@ -489,7 +541,7 @@ public class TrafficCar : MonoBehaviour
             if (along >= sameAlong && sameCar != null)
             {
                 what = $"car {sameCar.name} at {sameAlong:F0} m (same route)";
-                _blocker = sameCar.transform; return Leader.Vehicle(Mathf.Max(0.1f, sameAlong - (VehicleLength + sameCar.VehicleLength) / 2f), sameCar.Speed);
+                _blocker = sameCar.transform; return Leader.Vehicle(Mathf.Max(0.1f, BehindRider(sameAlong - (VehicleLength + sameCar.VehicleLength) / 2f, sameCar, sameCar.transform)), sameCar.Speed);
             }
 
             if (along <= 42f)
@@ -498,10 +550,10 @@ public class TrafficCar : MonoBehaviour
                     var c = _standing[i];
                     // (this car's body, half its width and 5 cm to either side of the path, would touch the other's; two cars
                     // in the narrowest two-way streets' lanes, 1.9 m apart, pass)
-                    if (BodyDist(p, c) >= myReach && BodyDist((segFrom + p) / 2f, c) >= myReach) continue;
+                    if (BodyDist(p, c) >= myReach + wide && BodyDist((segFrom + p) / 2f, c) >= myReach + wide) continue;
                     if (along - step < 0.5f && Vector3.Dot(Flat(c.pos - me), myFwd) < 0f) continue;   // (behind it)
                     what = $"{c.name} standing in the way at {along:F0} m";
-                    _blocker = c.t; return Leader.Stationary(Mathf.Max(0.1f, along - step / 2f - VehicleLength / 2f));
+                    _blocker = c.t; return Leader.Stationary(Mathf.Max(0.1f, BehindRider(along - step / 2f - VehicleLength / 2f, c.tc, c.t)));
                 }
 
             for (int i = 0; i < _nearCars.Count; i++)
@@ -509,14 +561,17 @@ public class TrafficCar : MonoBehaviour
                 var c = _nearCars[i];
                 // (within the lane anywhere along the 2 m since the last sample, not only near the samples: a vehicle up to
                 // a metre between two of them and 0.8 m beside the line, as one overtaken on a parallel route, was missed)
-                if (SegmentDist2(c.pos, segFrom, p, out float u) < lw2)
+                // (a rider ahead: within this car's half width, the rider's 0.4 m and 1.5 m beside the path a car does not
+                // pass it but follows it: it passes a cyclist only with 1.5 m to spare)
+                float reach2 = !IsRider && RiderOf(c.tc, c.t) ? riderReach2 : lw2;
+                if (SegmentDist2(c.pos, segFrom, p, out float u) < reach2)
                 {
                     float at = along - step * (1f - u);   // (where along the segment it is)
                     if (at < 1f) continue;   // (beside this vehicle: the side-by-side rule above)
                     float leaderSpeed = c.tc != null ? c.tc.Speed : SpeedOf(c.t);
                     what = $"car {c.name} at {at:F0} m";
                     // (centre to centre: half of each one's length; a participant's car without TrafficCar taken as 4.5 m)
-                    _blocker = c.t; return Leader.Vehicle(Mathf.Max(0.1f, at - (VehicleLength + (c.tc != null ? c.tc.VehicleLength : 4.5f)) / 2f), leaderSpeed);
+                    _blocker = c.t; return Leader.Vehicle(Mathf.Max(0.1f, BehindRider(at - (VehicleLength + (c.tc != null ? c.tc.VehicleLength : 4.5f)) / 2f, c.tc, c.t)), leaderSpeed);
                 }
             }
             if (YieldToPedestrians)
@@ -571,6 +626,15 @@ public class TrafficCar : MonoBehaviour
 
     readonly List<Vector3> _ahead = new List<Vector3>();
     float _stoppedSince;
+    bool IsRider => LaneHalfWidth < 1f;
+    /// <summary>Its smallest turning circle (as AICar.SteerPursuit steers it): about 4.7 m for a car, 8-9 m for a lorry or bus.</summary>
+    float MinTurnRadius => Mathf.Clamp(0.6f * VehicleLength + 2f, 2.5f, 9f);
+    float _rideBlockUntil;
+    static bool RiderOf(TrafficCar tc, Transform t) => tc != null ? tc.LaneHalfWidth < 1f : t != null && t.GetComponent<TwoWheelerController>() != null;
+    /// <summary>The gap a car keeps behind a cyclist (or a moped rider): the model's own gap less 3 m and 0.8 s at its speed, so
+    /// it stays 5 m and about 2 s back and slows early, as drivers do behind a rider (a rider behind a rider: its own gap).</summary>
+    float BehindRider(float gap, TrafficCar otc, Transform ot) => !IsRider && RiderOf(otc, ot) ? gap - 3f - 0.8f * Speed : gap;
+
     static float HalfWidth(Transform v) => v.TryGetComponent<TrafficCar>(out var tc) ? (tc.LaneHalfWidth < 1f ? 0.4f : tc.VehicleWidth / 2f)
         : v.GetComponent<TwoWheelerController>() != null ? 0.4f : 0.9f;
     static int _ranks;
@@ -607,6 +671,7 @@ public class TrafficCar : MonoBehaviour
         Debug.Log($"TrafficDebug: participant t={Time.time:F1} at ({me.x:F1},{me.z:F1}) heading {Mathf.Atan2(fwd.x, fwd.z) * Mathf.Rad2Deg:F0} v={Speed:F1} off={LaneOffset():F2} {LeaderDescription}{sb}");
     }
     static readonly bool DebugTraffic = System.Array.IndexOf(CommandLine.Args, "-debugTraffic") >= 0;
+    static readonly string DebugCar = System.Array.IndexOf(CommandLine.Args, "-debugCar") is var dci && dci >= 0 && dci + 1 < CommandLine.Args.Length ? CommandLine.Args[dci + 1] : null;
     static int _overlapFrames, _yieldFrames, _frames; static float _nextReport = 10f;
     static void DebugCount()
     {
@@ -757,7 +822,7 @@ public class TrafficCar : MonoBehaviour
         if (_reportedHits.Add(name + "|" + path) && _reportedHits.Count <= 40)
             Debug.Log($"TrafficDebug: {name} held by {path} (model {Speed:F1} m/s, body {rbv:F1} m/s) at {transform.position}"
                 + (c.collider.attachedRigidbody != null && c.collider.attachedRigidbody.TryGetComponent<TrafficCar>(out var other)
-                    ? $"; this one: {LeaderDescription}; the other: {other.LeaderDescription}; its last 3 s:\n  {string.Join("\n  ", _history)}" : ""));
+                    ? $"; this one ({VehicleLength:F1} m long): {LeaderDescription}; the other ({other.VehicleLength:F1} m): {other.LeaderDescription}; its last 3 s:\n  {string.Join("\n  ", _history)}" : ""));
     }
 
     static string Describe(Transform t)

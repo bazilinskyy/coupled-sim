@@ -312,7 +312,10 @@ public static class MapRoutes
             float miter = 1f / Math.Max(0.5f, Vector3.Dot(din, d));   // (at most twice the offset: turns up to 120°)
             var right = Vector3.Cross(Vector3.UnitY, d);
             var road = roads[rs[Math.Min(i, rs.Count - 1)]];
-            float off = road.OneWay ? OneWayLane(road.Width, road.Lanes) : Clamp(road.Width / 4f, 1.5f, 3.5f);
+            // (a two-way road: a quarter of its width out, 1.5 to 3.5 m, but on a narrow street no further than keeps a car's
+            // body, 1.1 m to either side of the lane, on it, and at least 0.95 m, so two cars still pass: at 1.5 m on a 4 m
+            // street a car drove with a wheel on the pavement, and over its corner turning into it)
+            float off = road.OneWay ? OneWayLane(road.Width, road.Lanes) : Math.Max(0.95f, Math.Min(Clamp(road.Width / 4f, 1.5f, 3.5f), road.Width / 2f - 1.1f));
             if (road.ParkLeft || road.ParkRight)
             {
                 // parked cars take ParkDepth of the carriageway on their side: the lane runs between them and the centre
@@ -350,7 +353,7 @@ public static class MapRoutes
     }
 
     /// <summary>Spacing (m) of a smoothed lane's points.</summary>
-    public const float LaneSpacing = 3f;
+    public const float LaneSpacing = 2f;
 
     /// <summary>
     /// A lane as vehicles drive it: the polyline of the roads' offset centre lines turns at a junction within a metre or
