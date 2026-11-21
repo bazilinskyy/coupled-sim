@@ -140,9 +140,13 @@ namespace UnityStandardAssets.Utility
                 // get our current progress along the route
                 progressPoint = circuit.GetRoutePoint(progressDistance);
                 Vector3 progressDelta = progressPoint.position - transform.position;
-                if (Vector3.Dot(progressDelta, progressPoint.direction) < 0)
+                // (by half its distance along the route, not half the distance to it: a vehicle a metre or two beside
+                // its line in a slow turn moved its progress, and so its target, metres ahead every frame, turned less for
+                // the further target, came further off and drove off its lane across a junction, 7 m out)
+                float along = -Vector3.Dot(progressDelta, progressPoint.direction);
+                if (along > 0)
                 {
-                    progressDistance += progressDelta.magnitude*0.5f;
+                    progressDistance += along*0.5f;
                 }
                 // a few times a second: the nearest point of the route up to 25 m further on, where the vehicle is
                 // nearer to it than to the progress point (it cut a corner, or was pushed or steered off its line): the
