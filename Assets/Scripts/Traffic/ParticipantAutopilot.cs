@@ -15,6 +15,10 @@ public class ParticipantAutopilot : MonoBehaviour
     public float LookAhead = 5f;
     [Tooltip("Rider's effort (0..1).")]
     public float Effort = 0.55f;
+    /// <summary>A plan for the rider's effort and braking over time (the smoke test's -smokeRidePlan): (effort 0..1,
+    /// brake 0..1), or null to ride as usual. The autopilot still steers and still eases off and brakes for bends and
+    /// for what is in its way.</summary>
+    public static System.Func<(float effort, float brake)?> RidePlan;
     KeyboardPlayerMovement _walker;
     TwoWheelerController _rider;
     Rigidbody _body;
@@ -85,6 +89,11 @@ public class ParticipantAutopilot : MonoBehaviour
                 float stopping = speed * speed / (2f * 3f) + 1.5f;   // braking at 3 m/s², stopping 1.5 m short
                 if (gap < stopping + 1f) { effort = 0f; brake = Mathf.Clamp01((stopping + 1f - gap) / 2f + 0.3f); }
                 else effort *= Mathf.Clamp01((gap - stopping) / 6f);
+            }
+            if (RidePlan != null && RidePlan() is var (planEffort, planBrake))
+            {
+                effort = planEffort * effort / Mathf.Max(0.01f, Effort);
+                brake = Mathf.Max(brake, planBrake);
             }
             _rider.Input = new CoupledSim.TwoWheelers.TwoWheelerInput { Drive = effort, Steer = Mathf.Clamp(err / 25f, -1f, 1f), Brake = brake };
         }
