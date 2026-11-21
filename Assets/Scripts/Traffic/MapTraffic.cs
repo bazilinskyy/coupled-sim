@@ -130,7 +130,9 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         int moved = 0; _moves.Clear(); ParkedMoves = 0;
         var someone = FindAnyObjectByType<PlayerAvatar>();
         DebugFocus = someone != null && System.Array.IndexOf(CommandLine.Args, "-debugTraffic") >= 0 ? someone.transform.position : (Vector3?)null;
+        BuildOncomingIndex(lanes);
         foreach (var lane in lanes) moved += KeepOnCarriageway(lane);
+        _oncoming = null;
         if (moved > 0) Debug.Log($"MapTraffic: {moved} route points moved off cycle paths, cycle lanes and pavements onto the carriageway ({ParkedMoves} of them off grass verges or clear of parked cars)");
         if (moved > 0 && System.Array.IndexOf(CommandLine.Args, "-debugTraffic") >= 0)
         {
@@ -325,7 +327,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
             var rp = bikeRoute.GetRoutePoint(d);
             if (placed.Any(q => (q - rp.position).sqrMagnitude < 6f * 6f)) continue;
             placed.Add(rp.position);
-            used.Add(bikeRoute);
+            if (used.Add(bikeRoute)) CycleRoutes.Add(bikeRoute);
             var pos = rp.position;
             if (Physics.Raycast(pos + Vector3.up * 5f, Vector3.down, out var hit, 20f, ~0, QueryTriggerInteraction.Ignore)) pos.y = hit.point.y;
             var dir = rp.direction; dir.y = 0;
@@ -348,6 +350,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         // (the cycle routes without a cyclist)
         int withCyclists = used.Count;
         foreach (var (bikeRoute, _, _, _) in places) if (used.Add(bikeRoute)) Destroy(bikeRoute.gameObject);
+        _laneCells = null;   // (built again with the cycle routes)
         Destroy(spawn.gameObject);
         Debug.Log($"MapTraffic: {count} cyclists on {withCyclists} cycle routes");
     }
@@ -626,11 +629,12 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
             var p = lane[i] + side[i] * median[i];
             var dir = Vector3.Cross(side[i], Vector3.up);
             if (!ParkedCarNear(p, dir)) continue;
+            float before = OncomingDist(p, dir);   // (the move does not bring it closer to the oncoming lane than 2.3 m)
             for (int k = 1; k <= 10 && park[i] == 0f; k++)
                 foreach (int sgn in new[] { -1, 1 })
                 {
                     var q = p + side[i] * (sgn * k * 0.25f);
-                    if (park[i] == 0f && !ParkedCarNear(q, dir) && SeenGround(q) == Ground.Road && Clear(q, side[i])) park[i] = sgn * k * 0.25f;
+                    if (park[i] == 0f && !ParkedCarNear(q, dir) && SeenGround(q) == Ground.Road && Clear(q, side[i]) && OncomingDist(q, dir) >= Mathf.Min(2.3f, before)) park[i] = sgn * k * 0.25f;
                 }
         }
         int ph = Mathf.Max(1, Mathf.RoundToInt(6f / CoupledSim.Maps.MapRoutes.LaneSpacing));
@@ -649,6 +653,16 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
             for (int i = 0; i < lane.Count; i++)
                 if ((lane[i] - DebugFocus.Value).sqrMagnitude < 30f * 30f)
                     Debug.Log($"TrafficDebug: lane point {i}/{lane.Count} at {lane[i]}: shift found {shift[i]:F2}, median {median[i]:F2}, applied {smooth[i]:F2}, parked cars {park[i]:F2}, in all {total[i]:F2}");
+        // (no move brings the lane nearer than 2.3 m to the oncoming one, nor nearer than it was: two lanes of a two-way
+        // street moved towards its middle came within 1.8 m, and a pickup and a tow truck met head-on)
+        for (int i = 0; i < lane.Count; i++)
+        {
+            if (Mathf.Abs(total[i]) < 0.01f || side[i] == Vector3.zero) continue;
+            var dir = Vector3.Cross(side[i], Vector3.up);
+            float limit = Mathf.Min(2.3f, OncomingDist(lane[i], dir));
+            while (Mathf.Abs(total[i]) > 0.01f && OncomingDist(lane[i] + side[i] * total[i], dir) < limit - 0.01f)
+                total[i] = Mathf.MoveTowards(total[i], 0f, 0.1f);
+        }
         for (int i = 0; i < lane.Count; i++)
             if (Mathf.Abs(total[i]) > 0.01f) { _moves.Add((lane[i], total[i])); if (Mathf.Abs(park[i]) > 0f) ParkedMoves++; lane[i] += side[i] * total[i]; moved++; }
         return moved;
@@ -696,6 +710,48 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
     static readonly Collider[] _near = new Collider[16];
     /// <summary>Lane points moved away from parked cars.</summary>
     static int ParkedMoves;
+
+    // the lanes' points before the moves, in 4 m cells, with their directions: the oncoming lane beside a lane
+    static Dictionary<long, List<(Vector3 p, Vector3 dir, Vector3 next)>> _oncoming;
+    static void BuildOncomingIndex(List<List<Vector3>> lanes)
+    {
+        _oncoming = new Dictionary<long, List<(Vector3, Vector3, Vector3)>>();
+        foreach (var l in lanes)
+            for (int i = 0; i + 1 < l.Count; i++)
+            {
+                var d = l[i + 1] - l[i]; d.y = 0f; if (d.sqrMagnitude < 1e-6f) continue;
+                var k = ((long)Mathf.FloorToInt(l[i].x / 4f) << 32) ^ (uint)Mathf.FloorToInt(l[i].z / 4f);
+                if (!_oncoming.TryGetValue(k, out var c)) _oncoming[k] = c = new List<(Vector3, Vector3, Vector3)>();
+                c.Add((l[i], d.normalized, l[i + 1]));
+            }
+    }
+
+    /// <summary>How far a lane point at p (heading dir) is from the nearest oncoming lane's line (up to 4 m; more:
+    /// infinity). A lane moved clear of parked cars comes no nearer than 2.3 m to the oncoming one (nor nearer than it
+    /// was), so two vehicles of 2 m and more (a pickup, a tow truck) still pass each other: moved towards the road's middle,
+    /// one came within 1.8 m of it, and they met head-on.</summary>
+    static float OncomingDist(Vector3 p, Vector3 dir)
+    {
+        if (_oncoming == null) return float.PositiveInfinity;
+        var f = new Vector3(dir.x, 0f, dir.z).normalized;
+        float best = float.PositiveInfinity;
+        int cx = Mathf.FloorToInt(p.x / 4f), cz = Mathf.FloorToInt(p.z / 4f);
+        for (int x = cx - 1; x <= cx + 1; x++)
+            for (int z = cz - 1; z <= cz + 1; z++)
+            {
+                if (!_oncoming.TryGetValue(((long)x << 32) ^ (uint)z, out var c)) continue;
+                foreach (var (q, qd, qn) in c)
+                {
+                    if (Vector3.Dot(qd, f) >= -0.7f || Mathf.Abs(q.y - p.y) >= 3f) continue;
+                    // (to the segment to its next point: the points are 3 m apart)
+                    float ax = qn.x - q.x, az = qn.z - q.z, l2 = ax * ax + az * az;
+                    float t = l2 > 1e-6f ? Mathf.Clamp01(((p.x - q.x) * ax + (p.z - q.z) * az) / l2) : 0f;
+                    float dx = p.x - (q.x + ax * t), dz = p.z - (q.z + az * t);
+                    best = Mathf.Min(best, Mathf.Sqrt(dx * dx + dz * dz));
+                }
+            }
+        return best;
+    }
 
     /// <summary>Whether a car (4.6 m by 1.8 m) at p heading along dir would come within 0.25 m of a parked car.</summary>
     static bool ParkedCarNear(Vector3 p, Vector3 dir)
@@ -892,37 +948,42 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
 
     static Vector3 Flat(Vector3 v) { v.y = 0f; return v; }
 
-    // the car routes' points every 2 m, in 4 m cells: which lanes cross a car's path (TrafficCar.KeepLanesClear)
-    Dictionary<long, List<(Vector3 p, Vector3 dir, WaypointCircuit route)>> _laneCells;
-    static long LaneCell(float x, float z) => ((long)Mathf.FloorToInt(x / 4f) << 32) ^ (uint)Mathf.FloorToInt(z / 4f);
+    // the car and cycle routes' points every 2 m, in 4 m cells: which lanes cross a car's path (TrafficCar.KeepLanesClear)
+    Dictionary<long, List<(Vector3 p, Vector3 dir, WaypointCircuit route, bool cycle)>> _laneCells;
+    /// <summary>The cycle routes that have cyclists.</summary>
+    public readonly List<WaypointCircuit> CycleRoutes = new List<WaypointCircuit>();
 
-    /// <summary>Whether a car lane (another route) that crosses the direction <paramref name="dir"/> (at more than 45°)
-    /// runs within <paramref name="radius"/> m of p.</summary>
-    public bool CrossingLaneNear(Vector3 p, Vector3 dir, float radius, WaypointCircuit mine)
+    /// <summary>Whether a car lane (another route) or a cycle route that crosses the direction <paramref name="dir"/> (at
+    /// more than 45°) runs where a car's body (<paramref name="halfWidth"/> to either side of p) would overlap it: within
+    /// 1.2 m of a car lane's line, 0.4 m of a cyclist's.</summary>
+    public bool CrossingLaneNear(Vector3 p, Vector3 dir, float halfWidth, WaypointCircuit mine)
     {
         if (_laneCells == null)
         {
-            _laneCells = new Dictionary<long, List<(Vector3, Vector3, WaypointCircuit)>>();
-            foreach (var r in Routes)
+            _laneCells = new Dictionary<long, List<(Vector3, Vector3, WaypointCircuit, bool)>>();
+            foreach (var (r, cycle) in Routes.Select(r => (r, false)).Concat(CycleRoutes.Where(r => r != null).Select(r => (r, true))))
                 for (float d = 0f; d < r.OpenLength; d += 2f)
                 {
-                    var rp = r.GetRoutePoint(d); var k = LaneCell(rp.position.x, rp.position.z);
-                    if (!_laneCells.TryGetValue(k, out var l)) _laneCells[k] = l = new List<(Vector3, Vector3, WaypointCircuit)>();
-                    l.Add((rp.position, rp.direction, r));
+                    var rp = r.GetRoutePoint(d);
+                    var k = ((long)Mathf.FloorToInt(rp.position.x / 4f) << 32) ^ (uint)Mathf.FloorToInt(rp.position.z / 4f);
+                    if (!_laneCells.TryGetValue(k, out var l)) _laneCells[k] = l = new List<(Vector3, Vector3, WaypointCircuit, bool)>();
+                    l.Add((rp.position, rp.direction, r, cycle));
                 }
         }
         var f = Flat(dir).normalized;
+        float radius = halfWidth + 1.2f;
         int cx = Mathf.FloorToInt(p.x / 4f), cz = Mathf.FloorToInt(p.z / 4f), reach = Mathf.CeilToInt(radius / 4f);
         for (int x = cx - reach; x <= cx + reach; x++)
             for (int z = cz - reach; z <= cz + reach; z++)
             {
                 if (!_laneCells.TryGetValue(((long)x << 32) ^ (uint)z, out var l)) continue;
-                foreach (var (q, qd, route) in l)
+                foreach (var (q, qd, route, cycle) in l)
                 {
                     if (route == mine || Mathf.Abs(q.y - p.y) > 3f) continue;
                     if (Mathf.Abs(Vector3.Dot(Flat(qd).normalized, f)) > 0.7f) continue;   // (along the same road)
+                    float r = cycle ? halfWidth + 0.4f : radius;
                     float dx = q.x - p.x, dz = q.z - p.z;
-                    if (dx * dx + dz * dz < radius * radius) return true;
+                    if (dx * dx + dz * dz < r * r) return true;
                 }
             }
         return false;
