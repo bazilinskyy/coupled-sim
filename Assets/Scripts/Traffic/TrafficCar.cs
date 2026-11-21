@@ -398,7 +398,10 @@ public class TrafficCar : MonoBehaviour
             if (c.t == transform || Flat2(c.pos - me) > 40f * 40f || Mathf.Abs(c.pos.y - me.y) > 3.5f) continue;
             float vc = c.tc != null ? c.tc.Speed : SpeedOf(c.t);
             if (vc >= 1f) continue;
-            // (also one that gives way to this car: the one giving way then sees the ring and goes on, below)
+            // (also one that gives way to this car: the one giving way then sees the ring and goes on, below; but not one
+            // beside it that makes room for it, the side-by-side rule above: it waits for this one to go on ahead, and a
+            // car and a cyclist merging stood beside each other for ever)
+            if (c.tc != null && c.tc.LeaderDescription != null && c.tc.LeaderDescription.StartsWith("making room for ") && c.tc.LeaderDescription.EndsWith(name)) continue;
             _standing.Add(c);
         }
 
@@ -618,12 +621,11 @@ public class TrafficCar : MonoBehaviour
                 var d = b.position - a.position;
                 if (Mathf.Abs(d.y) > 3.5f) continue;   // (one on a bridge over the other)
                 d.y = 0f;
-                if (d.sqrMagnitude > 9f) continue;
-                // overlapping footprints: closer than half their widths across and half their lengths along
-                float along = Mathf.Abs(Vector3.Dot(d, a.forward)), across = Mathf.Abs(Vector3.Dot(d, a.right));
-                bool bikes = a.name.Contains("cyclist") || b.name.Contains("cyclist") || a.GetComponent<TwoWheelerController>() != null || b.GetComponent<TwoWheelerController>() != null;
-                // footprints: two cars closer than 3.2 m along and 1.4 m across; with a bicycle 1.6 m along and 0.8 m across
-                if (bikes ? along < 1.6f && across < 0.8f : along < 3.2f && across < 1.4f)
+                if (d.sqrMagnitude > 14f * 14f) continue;
+                // overlapping footprints: the two bodies (rectangles of their lengths and widths, a little smaller: 0.15 m
+                // all round) overlap; by their own sizes, so a lorry's side driven into is counted (by their middles alone,
+                // 3 m apart at most, it was not)
+                if (BodiesOverlap(_cars[i], _cars[j], 0.15f))
                 {
                     _overlapFrames++;
                     if (_reportedPairs.Add(a.name + "|" + b.name) && _reportedPairs.Count <= 12)
@@ -927,6 +929,29 @@ public class TrafficCar : MonoBehaviour
     {
         float hl = (c.tc != null ? c.tc.VehicleLength : 4.5f) / 2f, hw = HalfWidth(c.t);
         return BodyDist(p, c.pos, c.fwd, hl, hw);
+    }
+
+    /// <summary>Whether the bodies of two vehicles (rectangles of their lengths and widths, each shrunk by
+    /// <paramref name="inset"/> all round) overlap on the ground (separating axis test).</summary>
+    static bool BodiesOverlap(CachedCar a, CachedCar b, float inset)
+    {
+        static void Box(CachedCar c, out Vector2 centre, out Vector2 f, out float hl, out float hw)
+        {
+            centre = new Vector2(c.pos.x, c.pos.z);
+            f = new Vector2(c.fwd.x, c.fwd.z); if (f.sqrMagnitude < 1e-6f) f = Vector2.up; f.Normalize();
+            hl = (c.tc != null ? c.tc.VehicleLength : 4.5f) / 2f; hw = HalfWidth(c.t);
+        }
+        Box(a, out var ca, out var fa, out var la, out var wa); Box(b, out var cb, out var fb, out var lb, out var wb);
+        la -= inset; wa -= inset; lb -= inset; wb -= inset;
+        var ra = new Vector2(fa.y, -fa.x); var rb = new Vector2(fb.y, -fb.x);
+        var d = cb - ca;
+        foreach (var axis in new[] { fa, ra, fb, rb })
+        {
+            float pa = la * Mathf.Abs(Vector2.Dot(fa, axis)) + wa * Mathf.Abs(Vector2.Dot(ra, axis));
+            float pb = lb * Mathf.Abs(Vector2.Dot(fb, axis)) + wb * Mathf.Abs(Vector2.Dot(rb, axis));
+            if (Mathf.Abs(Vector2.Dot(d, axis)) > pa + pb) return false;
+        }
+        return true;
     }
 
     /// <summary>Distance on the ground from p to a rectangle (centre, forward, half length, half width), 0 inside it.</summary>
