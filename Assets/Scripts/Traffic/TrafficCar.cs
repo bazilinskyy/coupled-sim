@@ -89,6 +89,7 @@ public class TrafficCar : MonoBehaviour
     static readonly List<CachedPed> _nearPeds = new List<CachedPed>();
     static readonly List<CachedAnimal> _nearAnimals = new List<CachedAnimal>();
     static readonly List<CachedLight> _nearLights = new List<CachedLight>();
+    static readonly List<CachedCar> _standing = new List<CachedCar>();
 
     static int _cacheFrame = -1;
     static float _cacheFixedTime = -1f;
@@ -365,6 +366,20 @@ public class TrafficCar : MonoBehaviour
             }
         }
 
+        // vehicles standing within 40 m, whatever their heading (one waiting across this car's lane for a cyclist, with its
+        // nose in the lane, was driven into: its middle was off the path, and it faced across): their bodies, against the
+        // path below (not one that waits for this car: it gives way, and this car goes)
+        _standing.Clear();
+        for (int i = 0; i < _cars.Count; i++)
+        {
+            var c = _cars[i];
+            if (c.t == transform || Flat2(c.pos - me) > 40f * 40f || Mathf.Abs(c.pos.y - me.y) > 3.5f) continue;
+            float vc = c.tc != null ? c.tc.Speed : SpeedOf(c.t);
+            if (vc >= 1f) continue;
+            if (c.tc != null && c.tc.LeaderDescription != null && c.tc.LeaderDescription.Contains(name)) continue;
+            _standing.Add(c);
+        }
+
         if (routeEnd < LookAhead) anyCarClose = true;   // (not the shortcut below: the route ends ahead)
         if (!anyCarClose && _nearCars.Count == 0 && _nearAnimals.Count == 0 && _nearPeds.Count == 0 && _nearLights.Count == 0)
             return Leader.None;
@@ -418,6 +433,7 @@ public class TrafficCar : MonoBehaviour
             return Leader.Vehicle(Mathf.Max(0.1f, sameAlong - (VehicleLength + sameCar.VehicleLength) / 2f), sameCar.Speed);
         }
         var prevP = _circuit.GetRoutePoint(start).position;
+        float myReach = HalfWidth(transform) + 0.05f;
         for (float d = step; d <= LookAhead; d += step)
         {
             var p = _circuit.GetRoutePoint(start + d).position;
@@ -432,13 +448,30 @@ public class TrafficCar : MonoBehaviour
             if (along >= conflict)
             {
                 what = conflictWhat;
-                return Leader.Stationary(Mathf.Max(0.1f, conflict - VehicleLength / 2f - 2f));
+                float gap = conflict - VehicleLength / 2f - 2f;
+                // (not waiting with the body across another lane: the car stops before a lane it crosses on its way to the
+                // conflict, as drivers keep a junction clear, unless it is in that lane already)
+                float back = KeepLanesClear(start, offset, gap);
+                if (back > 0f) what += $" (clear of the lane it crosses, {back:F0} m back)";
+                return Leader.Stationary(Mathf.Max(0.1f, gap - back));
             }
             if (along >= sameAlong && sameCar != null)
             {
                 what = $"car {sameCar.name} at {sameAlong:F0} m (same route)";
                 return Leader.Vehicle(Mathf.Max(0.1f, sameAlong - (VehicleLength + sameCar.VehicleLength) / 2f), sameCar.Speed);
             }
+
+            if (along <= 42f)
+                for (int i = 0; i < _standing.Count; i++)
+                {
+                    var c = _standing[i];
+                    // (this car's body, half its width and 5 cm to either side of the path, would touch the other's; two cars
+                    // in the narrowest two-way streets' lanes, 1.9 m apart, pass)
+                    if (BodyDist(p, c) >= myReach && BodyDist((segFrom + p) / 2f, c) >= myReach) continue;
+                    if (along - step < 0.5f && Vector3.Dot(Flat(c.pos - me), myFwd) < 0f) continue;   // (behind it)
+                    what = $"{c.name} standing in the way at {along:F0} m";
+                    return Leader.Stationary(Mathf.Max(0.1f, along - step / 2f - VehicleLength / 2f));
+                }
 
             for (int i = 0; i < _nearCars.Count; i++)
             {
@@ -807,6 +840,62 @@ public class TrafficCar : MonoBehaviour
     public static Vector3 LightFacing(Transform light) => light.right; // the signal heads in this project shine along their local x axis
 
     static float Flat2(Vector3 v) => v.x * v.x + v.z * v.z;
+
+    /// <summary>How much further back than <paramref name="gap"/> (from its front, along its path) this car has to stop so
+    /// that, standing, its body is clear of other car lanes that cross its path (MapTraffic.CrossingLaneNear); 0 when
+    /// the stop is clear, or when no clear place lies between the car and it (it is in that lane already).</summary>
+    float _keepBack, _keepFor = float.NaN, _nextKeep;
+    float KeepLanesClear(float start, float offset, float gap)
+    {
+        var mt = MapTraffic.Current;
+        if (mt == null || gap <= 0.5f) return 0f;
+        // (every quarter second, or when the place to stop at has moved by more than a metre)
+        float stopAt = start - offset + gap;
+        if (Time.time < _nextKeep && Mathf.Abs(stopAt - _keepFor) < 1f) return Mathf.Min(_keepBack, gap - 0.1f);
+        _nextKeep = Time.time + 0.25f; _keepFor = stopAt;
+        _keepBack = KeepLanesClearNow(start, offset, gap);
+        return _keepBack;
+    }
+
+    float KeepLanesClearNow(float start, float offset, float gap)
+    {
+        var mt = MapTraffic.Current;
+        // the car's middle where it would stop (IDM keeps 2 m short of the obstacle), then back in 1 m steps
+        float stop = gap - 2f + VehicleLength / 2f;
+        float half = VehicleWidth / 2f;
+        for (float back = 0f; stop - back >= VehicleLength / 2f; back += 1f)
+        {
+            float centre = stop - back;
+            bool clear = true;
+            for (float b = -VehicleLength / 2f; b <= VehicleLength / 2f + 0.01f && clear; b += 1f)
+            {
+                var rp = _circuit.GetRoutePoint(start - offset + centre + b);
+                if (mt.CrossingLaneNear(rp.position, rp.direction, half + 1.2f, _circuit)) clear = false;
+            }
+            if (clear) return back;
+        }
+        return 0f;
+    }
+
+    /// <summary>Distance on the ground from p to the body of a vehicle (a rectangle of its length and width; 4.5 by 1.8 m
+    /// for one without TrafficCar, a participant's car), 0 inside it.</summary>
+    static float BodyDist(Vector3 p, CachedCar c)
+    {
+        float hl = (c.tc != null ? c.tc.VehicleLength : 4.5f) / 2f, hw = HalfWidth(c.t);
+        return BodyDist(p, c.pos, c.fwd, hl, hw);
+    }
+
+    /// <summary>Distance on the ground from p to a rectangle (centre, forward, half length, half width), 0 inside it.</summary>
+    public static float BodyDist(Vector3 p, Vector3 centre, Vector3 forward, float halfLength, float halfWidth)
+    {
+        var f = new Vector3(forward.x, 0f, forward.z);
+        if (f.sqrMagnitude < 1e-6f) f = Vector3.forward;
+        f.Normalize();
+        var r = new Vector3(f.z, 0f, -f.x);
+        var d = new Vector3(p.x - centre.x, 0f, p.z - centre.z);
+        float a = Mathf.Max(0f, Mathf.Abs(Vector3.Dot(d, f)) - halfLength), b = Mathf.Max(0f, Mathf.Abs(Vector3.Dot(d, r)) - halfWidth);
+        return Mathf.Sqrt(a * a + b * b);
+    }
 
     /// <summary>Squared distance on the ground from q to the segment a-b (t: where along it, 0 at a, 1 at b).</summary>
     static float SegmentDist2(Vector3 q, Vector3 a, Vector3 b, out float t)
