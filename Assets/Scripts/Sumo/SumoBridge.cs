@@ -683,7 +683,7 @@ public class SumoBridge : CarSpawnerBase
             {
                 speed = tw.Speed;
                 typeId = tw.Type == CoupledSim.TwoWheelers.TwoWheelerType.Bicycle || tw.Type == CoupledSim.TwoWheelers.TwoWheelerType.EBike
-                    || tw.Type == CoupledSim.TwoWheelers.TwoWheelerType.EScooter ? "DEFAULT_BIKETYPE" : "DEFAULT_VEHTYPE";
+                    || tw.Type == CoupledSim.TwoWheelers.TwoWheelerType.EScooter || tw.Type == CoupledSim.TwoWheelers.TwoWheelerType.RaceBike ? "DEFAULT_BIKETYPE" : "DEFAULT_VEHTYPE";
             }
             _egoBuffer.Add(new EgoPose { Id = id, TypeId = typeId, X = x, Y = y, Angle = angle, Speed = speed });
         }

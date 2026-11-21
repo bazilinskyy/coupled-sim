@@ -813,7 +813,7 @@ public static class SmokeTest
 
     // -smokeLineup "ToyotaCorolla,DafXF95,...": those vehicle prefabs parked ahead of the participant (for pictures of
     // vehicles in a real street; their scripts are removed, they only stand there). Besides vehicles: two-wheelers with
-    // their riders (Bicycle, EScooter, Moped), pedestrians (ped:Female_Adult_01, ped:Claudia), animals (animal:Dog) and
+    // their riders (Bicycle, EScooter, Moped, RaceBicycle), pedestrians (ped:Female_Adult_01, ped:Claudia), animals (animal:Dog) and
     // the drone (Drone, hovering). -smokeLineupAngle deg: 0 a queue in the oncoming lane facing the participant; e.g. 45
     // side by side at that angle (echelon parking), fronts on a line, facing the camera of the "lineup" view.
     // -smokeLineupAt x,z,heading: the line's start and direction instead of ahead of the participant.

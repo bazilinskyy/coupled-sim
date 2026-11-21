@@ -35,6 +35,7 @@ Transform:
   - {fileID: 2644176048728654129}
   - {fileID: 2167766844878595663}
   - {fileID: 7549882227282848619}
+  - {fileID: 4770081325388558412}
   m_Father: {fileID: 7609667120526454229}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1311683244
@@ -2372,6 +2373,36 @@ MonoBehaviour:
       SliderLabel: 
       SliderStart: 0
       Hidden: 0
+  - Name: Race cyclist
+    TopHMI: {fileID: 0}
+    WindshieldHMI: {fileID: 0}
+    HoodHMI: {fileID: 0}
+    EhmiDesign: 
+    EhmiDesignPlacement: 0
+    carIdx: 0
+    twoWheelerIdx: 3
+    droneIdx: 0
+    SpawnPoint:
+      Point: {fileID: 4770081325388558412}
+      Type: 3
+      CameraIndex: 0
+      VehicleType: 0
+    AutonomousPath: {fileID: 0}
+    AutonomousIsYielding: 0
+    Steering: 0
+    RideInCarOf: 
+    Seat: 0
+    HudDesign: 
+    CentreScreenDesign: 
+    ClusterDesign: 
+    InCarMessages: 
+    Response:
+      Button: 0
+      ButtonLabel: 
+      Slider: 0
+      SliderLabel: 
+      SliderStart: 0
+      Hidden: 0
   PointsOfInterest: []
   CarSpawners:
   - {fileID: 8156635355818172248}
@@ -2380,6 +2411,37 @@ MonoBehaviour:
     AIPedestrians:
     - Pedestrian: {fileID: 7157347147832208027}
       Path: {fileID: 8694987241760910644}
+--- !u!1 &6858290219137515860
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4770081325388558412}
+  m_Layer: 0
+  m_Name: Race cyclist spawn
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4770081325388558412
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6858290219137515860}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: 0.7071068, z: -0, w: -0.7071068}
+  m_LocalPosition: {x: -3.5, y: 0, z: 11.6}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 935614564}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &7005373354728422933
 GameObject:
   m_ObjectHideFlags: 0

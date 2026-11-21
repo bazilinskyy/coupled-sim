@@ -24,6 +24,11 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
     [Tooltip("Cyclists per km of route, near the kerb (Dutch and Belgian maps: twice as many).")]
     public float CyclistsPerKm = 6f;
     public int MaxCyclists = 40;
+    [Tooltip("Share of the cyclists that are road racing cyclists (AIRaceBicycle): on the carriageway near the kerb, at 28-38 km/h.")]
+    [Range(0f, 1f)] public float RaceCyclistShare = 0.1f;
+    /// <summary>Road speed limit (km/h) up to which a race cyclist rides on the carriageway; beside faster roads it takes the
+    /// cycle path (in the Netherlands one beside such a road is nearly always compulsory, the blue sign G11).</summary>
+    public const float RaceOnRoadUpToKmh = 50f;
     public float DesiredSpeedKmh = 40f, DesiredSpeedSdKmh = 6f;
     [Tooltip("Car prefabs (each in NetworkingManager ➡️ AI Car System ➡️ Prefabs); empty: SUMO's car list or the AI car system's prefabs.")]
     public AICar[] CarPrefabs;
@@ -357,7 +362,8 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
     IEnumerator SpawnCyclists()
     {
         var sumo = FindAnyObjectByType<SumoBridge>();
-        var bikes = sumo != null && sumo.BicyclePrefabs != null && sumo.BicyclePrefabs.Length > 0 ? sumo.BicyclePrefabs : _syncSystem.Prefabs.Where(p => p != null && p.name.Contains("Bicycle")).ToArray();
+        var bikes = sumo != null && sumo.BicyclePrefabs != null && sumo.BicyclePrefabs.Length > 0 ? sumo.BicyclePrefabs : _syncSystem.Prefabs.Where(p => p != null && p.name.Contains("Bicycle") && !p.name.Contains("Race")).ToArray();
+        var raceBike = _syncSystem.Prefabs.FirstOrDefault(p => p != null && p.name.Contains("RaceBicycle"));
         if (bikes.Length == 0 || CyclistsPerKm <= 0f || MaxCyclists <= 0) yield break;
         var country = OsmMap.Current.Info.Country ?? "";
         float perKm = CyclistsPerKm * (country == "Netherlands" || country == "Belgium" || country == "Denmark" ? 2f : 1f);
@@ -383,6 +389,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         }
         stretches.Sort((x, y) => x.near.CompareTo(y.near));
         var places = new List<(WaypointCircuit bike, int i, float d, Vector3 at)>();
+        var stretchOf = new Dictionary<WaypointCircuit, (WaypointCircuit route, float from, float to, List<Vector3> line)>();
         int index = 0;
         foreach (var (route, from, to, near) in stretches)
         {
@@ -393,6 +400,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
             var bikeRoute = MakeCircuit(kerb, Routes.Count + 1000 + index++);
             bikeRoute.name = "Map cycle route " + index;
             bikeRoute.GetRoutePoint(0f);
+            stretchOf[bikeRoute] = (route, from, to, kerb);
             float bikeLength = bikeRoute.OpenLength;
             int n = Mathf.RoundToInt(bikeLength / 1000f * perKm);
             for (int i = 0; i < n; i++)
@@ -401,6 +409,32 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
                 if (d <= bikeLength - 60f) places.Add((bikeRoute, i, d, bikeRoute.GetRoutePoint(d).position));
             }
         }
+        // race cyclists: their own line on the carriageway (where the road is up to 50 km/h), made for a stretch when one
+        // rides there; preferably a stretch whose cyclists are on a cycle path beside the road (where the race cyclist
+        // overtakes no one on its line), on a map without cycle paths any
+        var raceLines = new Dictionary<WaypointCircuit, WaypointCircuit>();
+        bool anyCyclePaths = OsmMap.Current.Generator != null && OsmMap.Current.Generator.CyclePaths.Count > 0;
+        int raceCount = 0, raceIndex = 0;
+        WaypointCircuit RaceRoute(WaypointCircuit bikeRoute)
+        {
+            if (raceLines.TryGetValue(bikeRoute, out var rr)) return rr;
+            var (route, from, to, kerb) = stretchOf[bikeRoute];
+            var line = RideLine(route, from, to, 4f, lht, false, RaceOnRoadUpToKmh, 1.0f);
+            rr = null;
+            if (line.Count >= 10)
+            {
+                // (apart from the cyclists' line: more than 1.5 m on average, where both are)
+                float apart = 0f; int m = Mathf.Min(line.Count, kerb.Count);
+                for (int k = 0; k < m; k++) apart += Vector3.Distance(line[k], kerb[k]);
+                if (!anyCyclePaths || apart / Mathf.Max(1, m) > 1.5f)
+                {
+                    rr = MakeCircuit(line, Routes.Count + 3000 + raceIndex++);
+                    rr.name = "Map race route " + raceIndex;
+                    rr.GetRoutePoint(0f);
+                }
+            }
+            return raceLines[bikeRoute] = rr;
+        }
         var spawn = new GameObject("Map cyclists spawn point").transform;
         int count = 0;
         var placed = Cars.Select(c => c.transform.position).ToList();   // (6 m from every car and cyclist placed)
@@ -408,23 +442,36 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         foreach (var (bikeRoute, i, d, at) in places.OrderBy(x => Near(x.at)))
         {
             if (count >= MaxCyclists) break;
-            var rp = bikeRoute.GetRoutePoint(d);
+            // (every so often a race cyclist, on its line on the carriageway beside this stretch)
+            bool race = raceBike != null && RaceCyclistShare > 0f && raceCount < Mathf.CeilToInt(MaxCyclists * RaceCyclistShare)
+                && (count + 1) * RaceCyclistShare >= raceCount + 1f;
+            var ride = bikeRoute; float rd = d;
+            if (race)
+            {
+                var rr = RaceRoute(bikeRoute);
+                if (rr == null) race = false;
+                else { ride = rr; rd = Mathf.Min(d, rr.OpenLength - 60f); if (rd < 0f) race = false; }
+                if (!race) { ride = bikeRoute; rd = d; }
+            }
+            var rp = ride.GetRoutePoint(rd);
             if (placed.Any(q => (q - rp.position).sqrMagnitude < 6f * 6f)) continue;
             placed.Add(rp.position);
-            if (used.Add(bikeRoute)) CycleRoutes.Add(bikeRoute);
+            if (used.Add(ride)) CycleRoutes.Add(ride);
             var pos = rp.position;
             if (Physics.Raycast(pos + Vector3.up * 5f, Vector3.down, out var hit, 20f, ~0, QueryTriggerInteraction.Ignore)) pos.y = hit.point.y;
             var dir = rp.direction; dir.y = 0;
             spawn.SetPositionAndRotation(pos + Vector3.up * 0.05f, Quaternion.LookRotation(dir.normalized, Vector3.up));
             var p = spawnParams;
-            p.SpawnPoint = spawn; p.Track = bikeRoute; p.Car = bikes[rng.Next(bikes.Length)]; p.color = Colors[rng.Next(Colors.Length)]; p.SpawnDriver = true;
+            p.SpawnPoint = spawn; p.Track = ride; p.Car = race ? raceBike : bikes[rng.Next(bikes.Length)]; p.color = Colors[rng.Next(Colors.Length)]; p.SpawnDriver = true;
             var bike = Spawn(p, false);
-            bike.GetComponent<WaypointProgressTracker>().SetProgress(d);
-            bike.name = $"Map cyclist {bikeRoute.name.Substring("Map cycle route ".Length)} {i}";
+            bike.GetComponent<WaypointProgressTracker>().SetProgress(rd);
+            bike.name = race ? $"Map race cyclist {ride.name.Substring("Map race route ".Length)} {i}" : $"Map cyclist {bikeRoute.name.Substring("Map cycle route ".Length)} {i}";
             var t = bike.gameObject.AddComponent<TrafficCar>();
             t.VehicleLength = 1.8f; t.LaneHalfWidth = 0.8f;
-            float v = (16f + Normal(rng) * 3f) / 3.6f;
-            t.Init(CoupledSim.Traffic.CarFollowingModelType.IDM, Mathf.Clamp(v, 2.5f, 7f), new System.Random(rng.Next()));
+            // city cyclists about 16 km/h; race cyclists about 32 km/h (28-38), quicker off the mark
+            float v = race ? (32f + Normal(rng) * 2.5f) / 3.6f : (16f + Normal(rng) * 3f) / 3.6f;
+            t.Init(CoupledSim.Traffic.CarFollowingModelType.IDM, race ? Mathf.Clamp(v, 7.8f, 10.5f) : Mathf.Clamp(v, 2.5f, 7f), new System.Random(rng.Next()));
+            if (race && t.Model is CoupledSim.Traffic.IntelligentDriverModel idm) { idm.MaxAcceleration = Mathf.Max(idm.MaxAcceleration, 1.6f); t.VehicleLength = 1.75f; raceCount++; }
             t.Speed = v * 0.7f;
             bike.gameObject.AddComponent<MapRouteRecycler>();
             Cars.Add(t);
@@ -434,9 +481,10 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         // (the cycle routes without a cyclist)
         int withCyclists = used.Count;
         foreach (var (bikeRoute, _, _, _) in places) if (used.Add(bikeRoute)) Destroy(bikeRoute.gameObject);
+        foreach (var rr in raceLines.Values) if (rr != null && used.Add(rr)) Destroy(rr.gameObject);
         _laneCells = null;   // (built again with the cycle routes)
         Destroy(spawn.gameObject);
-        Debug.Log($"MapTraffic: {count} cyclists on {withCyclists} cycle routes");
+        Debug.Log($"MapTraffic: {count} cyclists on {withCyclists} cycle routes ({raceCount} of them race cyclists on the carriageway)");
     }
 
     /// <summary>The participant's car drives itself along the route nearest to it (where it points).</summary>
@@ -601,10 +649,12 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
             if (bestR != null)
             {
                 // bicycles, e-scooters and 25 km/h mopeds on the cycle path or track beside the road where there is one;
-                // 45 km/h mopeds on the road
+                // 45 km/h mopeds on the road; race cyclists on the road up to 50 km/h, on the cycle path beside faster roads
                 var tw = me.GetComponent<TwoWheelerController>();
                 bool moped = tw != null && tw.Type == CoupledSim.TwoWheelers.TwoWheelerType.Moped45;
-                path = RideLine(bestR, bestD, Mathf.Max(bestD + 6f, bestR.OpenLength - 50f), 3f, OsmMap.Current.Info.LeftHandTraffic, !moped);
+                bool racer = tw != null && tw.Type == CoupledSim.TwoWheelers.TwoWheelerType.RaceBike;
+                path = racer ? RideLine(bestR, bestD, Mathf.Max(bestD + 6f, bestR.OpenLength - 50f), 3f, OsmMap.Current.Info.LeftHandTraffic, false, RaceOnRoadUpToKmh, 1.0f)
+                    : RideLine(bestR, bestD, Mathf.Max(bestD + 6f, bestR.OpenLength - 50f), 3f, OsmMap.Current.Info.LeftHandTraffic, !moped);
                 KeepRideClear(path, OsmMap.Current.Info.LeftHandTraffic);
                 if (Array.IndexOf(CommandLine.Args, "-debugTraffic") >= 0 && _signPosts != null)
                 {
@@ -894,7 +944,10 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
     /// </summary>
     public static bool DebugRide = Array.IndexOf(CommandLine.Args, "-debugRide") >= 0;
 
-    static List<Vector3> RideLine(WaypointCircuit route, float from, float to, float step, bool lht, bool preferCycle)
+    /// <param name="cycleAboveKmh">With <paramref name="preferCycle"/> off: still the cycle path where the road's speed limit is
+    /// over this (a race cyclist: on the road up to 50 km/h, the cycle path beside faster roads).</param>
+    /// <param name="edge">How far from the carriageway's edge (m) a rider on it rides (a race cyclist a little further out).</param>
+    static List<Vector3> RideLine(WaypointCircuit route, float from, float to, float step, bool lht, bool preferCycle, float cycleAboveKmh = float.MaxValue, float edge = 0.8f)
     {
         Physics.SyncTransforms();
         var pts = new List<(Vector3 p, Vector3 side)>();
@@ -923,8 +976,8 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
                 if (b2 - a >= 2 && dist < bestDist) { bestDist = dist; bestA = a; bestB = b2; }
             }
             float roadEdge = bestB >= 0 ? (bestB - inner) * 0.5f : 0f, roadStart = bestB >= 0 ? (bestA - inner) * 0.5f : 0f;
-            float pick = bestB >= 0 ? Mathf.Max(roadStart + 0.5f, Mathf.Min(roadEdge - 0.8f, 4f)) : 0.5f;
-            if (preferCycle)
+            float pick = bestB >= 0 ? Mathf.Max(roadStart + 0.5f, Mathf.Min(roadEdge - edge, 4f)) : 0.5f;
+            if (preferCycle || (cycleAboveKmh < float.MaxValue && RoadSpeedLimits.At(p) > cycleAboveKmh))
             {
                 // a cycle path starting within 6 m of the carriageway's edge, at least 1 m wide
                 float start = -1f, end = -1f;
