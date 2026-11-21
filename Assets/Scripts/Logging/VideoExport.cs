@@ -66,7 +66,7 @@ public class VideoExport : MonoBehaviour
         return v;
     }
 
-    sealed class Shot { public string Name, Spec; public Camera Cam; public string Dir; public int Frames; public Camera[] Grid; }
+    sealed class Shot { public string Name, Spec; public Camera Cam; public string Dir; public int Frames; public Camera[] Grid; public Transform Target; }
 
     IEnumerator Start_()
     {
@@ -432,6 +432,35 @@ public class VideoExport : MonoBehaviour
                 return;
         }
         var ci = CultureInfo.InvariantCulture;
+        // "follow:<name>:x,y,z,yaw,pitch[,fov[,hold]]": relative to the AI agent nearest the participant whose name starts
+        // with <name> (e.g. "Map race cyclist"); hold 1: the camera stays where it was put until the agent is 12 m past it
+        // (a roadside camera it rides past), then is put ahead of it again
+        if (s.Spec.StartsWith("follow:", StringComparison.OrdinalIgnoreCase))
+        {
+            var parts = s.Spec.Split(':');
+            var r = parts.Length > 2 ? parts[2].Split(',') : new string[0];
+            float G(int i, float d) => i < r.Length && float.TryParse(r[i], NumberStyles.Float, ci, out var x) ? x : d;
+            if (s.Target == null || !s.Target.gameObject.activeInHierarchy)
+            {
+                var from = me != null ? me.transform.position : t.position; float best = float.MaxValue;
+                foreach (var a in FindObjectsByType<PlayerAvatar>())
+                    if (a != me && a.name.StartsWith(parts[1]) && (a.transform.position - from).sqrMagnitude < best) { best = (a.transform.position - from).sqrMagnitude; s.Target = a.transform; }
+                if (s.Target != null) Debug.Log($"VideoExport: camera {s.Name} follows {s.Target.name}");
+            }
+            if (s.Target == null) return;
+            var yaw = Quaternion.Euler(0, s.Target.eulerAngles.y, 0);
+            var target = s.Target.position + yaw * new Vector3(G(0, 0), G(1, 1.6f), G(2, -5f));
+            var rot = yaw * Quaternion.Euler(G(4, 10), G(3, 0), 0);
+            bool hold = G(6, 0f) > 0.5f;
+            if (hold)
+            {
+                if (s.Frames == 0 || Vector3.Dot(s.Target.position - t.position, s.Target.forward) > 12f) t.SetPositionAndRotation(target, rot);
+            }
+            else if (s.Frames == 0) t.SetPositionAndRotation(target, rot);
+            else { float k = 1f - Mathf.Exp(-10f / Fps); t.SetPositionAndRotation(Vector3.Lerp(t.position, target, k), Quaternion.Slerp(t.rotation, rot, k)); }
+            s.Cam.fieldOfView = G(5, 60f);
+            return;
+        }
         if (s.Spec.StartsWith("rel:", StringComparison.OrdinalIgnoreCase) && me != null)
         {
             var r = s.Spec.Substring(4).Split(',');

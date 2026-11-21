@@ -50,12 +50,11 @@ public class RiderIK : MonoBehaviour
     TwoWheelerController _tw;
 
     // ---- the skeleton (measured from the bind pose and the first animated frames)
-    Transform _hips, _head, _chest, _spine;
+    Transform _hips, _head;
     float _thigh, _shin, _arm, _torso, _eyeAbove, _toeHeight = 0.03f, _hipDown = 0.07f, _hipSide = 0.09f;
     Vector3 _toeL, _toeR;                               // foot bone to toe bone, in the foot's bind frame
     Quaternion _footBasisL, _footBasisR;                // the foot's toe and up directions in its bind frame
     Quaternion _handBasisL, _handBasisR;                // the hand's finger and palm directions in its bind frame
-    Quaternion _chestBind, _spineBind; Vector3 _chestAxis, _spineAxis;
     readonly HumanBodyBones[] _fingers = new HumanBodyBones[24];
     readonly Quaternion[] _fingerBind = new Quaternion[24];
     readonly Vector3[] _fingerAxis = new Vector3[24];
@@ -86,8 +85,7 @@ public class RiderIK : MonoBehaviour
     void MeasureBindPose()
     {
         if (!_animator.isHuman) { Cycling = false; return; }
-        _hips = B(HumanBodyBones.Hips); _head = B(HumanBodyBones.Head); _spine = B(HumanBodyBones.Spine);
-        _chest = B(HumanBodyBones.UpperChest) ?? B(HumanBodyBones.Chest);
+        _hips = B(HumanBodyBones.Hips); _head = B(HumanBodyBones.Head);
         var ul = B(HumanBodyBones.LeftUpperLeg); var ll = B(HumanBodyBones.LeftLowerLeg); var fl = B(HumanBodyBones.LeftFoot);
         var ua = B(HumanBodyBones.LeftUpperArm); var la = B(HumanBodyBones.LeftLowerArm); var hl = B(HumanBodyBones.LeftHand);
         if (_hips == null || ul == null || ll == null || fl == null || ua == null || la == null || hl == null || _head == null) { Cycling = false; return; }
@@ -117,9 +115,6 @@ public class RiderIK : MonoBehaviour
             if (left) { _toeL = inv * toeVec; _footBasisL = basis; _handBasisL = hbasis; }
             else { _toeR = inv * toeVec; _footBasisR = basis; _handBasisR = hbasis; }
         }
-        // the spine bends forward about the body's right axis
-        if (_chest != null) { _chestBind = _chest.localRotation; _chestAxis = Quaternion.Inverse(_chest.rotation) * right; }
-        if (_spine != null) { _spineBind = _spine.localRotation; _spineAxis = Quaternion.Inverse(_spine.rotation) * right; }
         // fingers curl round the grip: about the palm's side axis, towards the palm
         _fingerCount = 0;
         for (int side = 0; side < 2; side++)
@@ -303,8 +298,8 @@ public class RiderIK : MonoBehaviour
 
         // hips: on the saddle; standing: up and forward; foot down: forward off the saddle and lower
         var hips = HipTarget.position + (up * 0.13f + fwd * 0.1f) * stand + fwd * (0.13f * down) - up * (0.06f * down);
-        // the body leans forward about the hips: most of the lean at the pelvis, the rest in the spine
-        float bodyPitch = pitch * 0.8f;
+        // the body leans forward about the hips (the spine keeps its natural curve from the animation)
+        float bodyPitch = pitch;
         var bodyRot = frameRot * Quaternion.Euler(bodyPitch, twist, -roll) * (Quaternion.Inverse(frameRot) * _animator.bodyRotation);
 
         // feet
@@ -349,10 +344,7 @@ public class RiderIK : MonoBehaviour
         Knee(AvatarIKHint.LeftKnee, ankleL, -1f);
         Knee(AvatarIKHint.RightKnee, ankleR, 1f);
 
-        // spine: the rest of the lean, rounded a little (a city rider) or flat (a racer low on the bike)
         var bodyRight = bodyRot * Vector3.right;
-        if (_spine != null) _animator.SetBoneLocalRotation(HumanBodyBones.Spine, _spineBind * Quaternion.AngleAxis(pitch * 0.1f, _spineAxis));
-        if (_chest != null) _animator.SetBoneLocalRotation(_chest == B(HumanBodyBones.UpperChest) ? HumanBodyBones.UpperChest : HumanBodyBones.Chest, _chestBind * Quaternion.AngleAxis(pitch * 0.1f + 3f * effort * (1f - stand), _chestAxis));
 
         // hands: wrists just behind the grips, fingers round them (hoods: over the levers), elbows bent out and down
         HandGoal(2, AvatarIKGoal.LeftHand, gripL, true, frameRot, drops, w);
