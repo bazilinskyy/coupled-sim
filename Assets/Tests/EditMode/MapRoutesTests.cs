@@ -113,6 +113,23 @@ namespace CoupledSim.Tests
         }
 
         [Test]
+        public void NarrowStreetsKeepTheCarsOnTheRoad()
+        {
+            // a two-way street 4 m wide: each lane close enough to the middle that a car (1.8 m) stays on the road, and the
+            // two lanes 1.9 m apart at least, so two cars pass
+            var road = Road(-200, 0, 200, 0); road.Width = 4f;
+            var routes = MapRoutes.Build(new[] { road }, 200f, false);
+            Assert.AreEqual(2, routes.Count);
+            foreach (var r in routes)
+            {
+                var dir = Vector3.Normalize(r[r.Count - 1] - r[0]);
+                float off = Vector3.Dot(r[r.Count / 2], Vector3.Cross(Vector3.UnitY, dir));
+                Assert.LessOrEqual(off + 0.9f, 2f + 0.01f, "on the road");
+                Assert.GreaterOrEqual(off, 0.95f - 0.01f, "clear of the oncoming lane");
+            }
+        }
+
+        [Test]
         public void SmoothingKeepsStraightLanesAndEnds()
         {
             var line = new List<Vector3>();
