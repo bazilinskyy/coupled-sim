@@ -160,22 +160,23 @@ public class AICar : MonoBehaviour, IVehicle
     /// sideways offset, L its distance), turns the vehicle at its own speed times that curvature, so it turns no faster
     /// than it moves (no turning on the spot, no orbiting a point it cannot reach), within its smallest turning circle
     /// (by length: about 3 m for a bicycle, 4.7 m for a car, 8-9 m for trucks and buses), and the steering takes
-    /// about 0.2 s to follow (no jitter, no swerving).
+    /// about 0.1 s to follow (no jitter, no swerving).
     /// </summary>
     void SteerPursuit()
     {
         if (_trafficCar == null) _trafficCar = GetComponent<TrafficCar>();
         float length = _trafficCar != null ? _trafficCar.VehicleLength : 4.5f;
         float minRadius = Mathf.Clamp(0.6f * length + 2f, 2.5f, 9f);   // (car 4.7 m, bicycle 3 m, trucks and buses 8-9 m)
-        // the point to pursue: on the route, 3 m plus a quarter of the speed (m/s) ahead of the progress point (the
+        // the point to pursue: on the route, 2.5 m plus 0.22 times the speed (m/s) ahead of the progress point (the
         // tracker's own target, 5 m and more ahead, cut tight corners by a metre or two: on a canal-side street, over the
-        // quay's edge)
+        // quay's edge; 3 m plus a quarter of the speed, with the steering 0.2 s behind, still let a car swing 0.9 m out of
+        // a bend into a car standing beside its lane)
         if (_tracker == null) _tracker = GetComponent<WaypointProgressTracker>();
         var aim = target.position;
         if (_tracker != null && _tracker.Circuit != null)
         {
             float vNow = Mathf.Max(0f, Vector3.Dot(theRigidbody.linearVelocity, transform.forward));
-            aim = _tracker.Circuit.GetRoutePoint(_tracker.ProgressDistance + 3f + 0.25f * vNow).position;
+            aim = _tracker.Circuit.GetRoutePoint(_tracker.ProgressDistance + 2.5f + 0.22f * vNow).position;
         }
         Vector3 local = transform.InverseTransformPoint(aim);
         float l2 = local.x * local.x + local.z * local.z;
@@ -186,7 +187,7 @@ public class AICar : MonoBehaviour, IVehicle
         float v = Mathf.Max(0f, Vector3.Dot(theRigidbody.linearVelocity, transform.forward));
         if (v < 0.05f) v = Mathf.Max(0f, ExternalSpeed);
         float wanted = v * curvature;   // rad/s
-        _yawRate = Mathf.Lerp(_yawRate, wanted, 1f - Mathf.Exp(-Time.fixedDeltaTime / 0.2f));
+        _yawRate = Mathf.Lerp(_yawRate, wanted, 1f - Mathf.Exp(-Time.fixedDeltaTime / 0.1f));
         theRigidbody.angularVelocity = new Vector3(0f, _yawRate, 0f);
     }
 

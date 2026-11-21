@@ -129,5 +129,56 @@ namespace CoupledSim.Maps
             if (length - pos >= minLength) result.Add((pos, length));
             return result;
         }
+        /// <summary>The kerb's rounding between two roads meeting at a node: arm a and arm b leave the node along the unit
+        /// directions <paramref name="da"/> and <paramref name="db"/> (b counter-clockwise from a, 20-160° apart), with
+        /// half widths <paramref name="ha"/> and <paramref name="hb"/>. Returns the patch that fills the square corner
+        /// between their facing edges out to an arc of <paramref name="radius"/> tangent to both: the corner point first,
+        /// then the arc from arm a's edge to arm b's (null where the arms are too close to straight or too sharp for it,
+        /// or the arc would run more than <paramref name="maxTangent"/> along an edge).</summary>
+        public static List<Vector2> CornerFillet(Vector2 node, Vector2 da, float ha, Vector2 db, float hb, float radius, float maxTangent = 8f, int arcPieces = 8)
+        {
+            double ang = Math.Atan2(db.Y, db.X) - Math.Atan2(da.Y, da.X);
+            if (ang <= 0) ang += 2 * Math.PI;
+            float theta = (float)ang;
+            if (theta < 20f * MathF.PI / 180f || theta > 160f * MathF.PI / 180f) return null;
+            // the facing edges: arm a's on its left (towards b), arm b's on its right (towards a)
+            Vector2 pa = node + new Vector2(-da.Y, da.X) * ha, pb = node + new Vector2(db.Y, -db.X) * hb;
+            float det = Cross(db, da);
+            if (Math.Abs(det) < 1e-4f) return null;
+            // where they cross (the square corner): pa + s da = pb + u db
+            float s = Cross(db, pb - pa) / det;
+            if (s < 0f) return null;
+            var c = pa + da * s;
+            float t = radius / MathF.Tan(theta / 2f);
+            if (t > maxTangent) return null;
+            var centre = c + Vector2.Normalize(da + db) * (radius / MathF.Sin(theta / 2f));
+            Vector2 a = c + da * t, b = c + db * t;
+            float a0 = MathF.Atan2(a.Y - centre.Y, a.X - centre.X), a1 = MathF.Atan2(b.Y - centre.Y, b.X - centre.X);
+            float sweep = a1 - a0;
+            while (sweep > MathF.PI) sweep -= 2f * MathF.PI;
+            while (sweep < -MathF.PI) sweep += 2f * MathF.PI;
+            var poly = new List<Vector2> { c, a };
+            for (int k = 1; k < arcPieces; k++)
+            {
+                float q = a0 + sweep * k / arcPieces;
+                poly.Add(centre + new Vector2(MathF.Cos(q), MathF.Sin(q)) * radius);
+            }
+            poly.Add(b);
+            return poly;
+        }
+        /// <summary>Where a road goes on narrower (arm b counter-clockwise from arm a by 160-200°, their edges on that side
+        /// <paramref name="ha"/> and <paramref name="hb"/> from the line), the step between their square ends filled
+        /// with a taper along the narrower one, 4 m per metre of step and at least 3 m long (a lane moving over from the
+        /// wider road's middle keeps its wheels on the road); null where they differ by less than 0.2 m.</summary>
+        public static List<Vector2> WidthTaper(Vector2 node, Vector2 da, float ha, Vector2 db, float hb)
+        {
+            double ang = Math.Atan2(db.Y, db.X) - Math.Atan2(da.Y, da.X);
+            if (ang <= 0) ang += 2 * Math.PI;
+            if (ang < 160.0 * Math.PI / 180.0 || ang > 200.0 * Math.PI / 180.0 || Math.Abs(ha - hb) < 0.2f) return null;
+            Vector2 na = new Vector2(-da.Y, da.X), nb = new Vector2(db.Y, -db.X);
+            Vector2 pa = node + na * ha, pb = node + nb * hb;
+            float len = Math.Max(3f, 4f * Math.Abs(ha - hb));
+            return ha > hb ? new List<Vector2> { pa, pb, pb + db * len } : new List<Vector2> { pb, pa, pa + da * len };
+        }
     }
 }
