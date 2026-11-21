@@ -733,12 +733,17 @@ public class TrafficCar : MonoBehaviour
             // positions do not skip the narrow strip where this car's path crosses its lane)
             bool gap = turnsAcross && facing < -0.7f && vc >= 1f;
             float horizon = gap ? 6f : 3f, dt = gap ? Mathf.Clamp(1.5f / vc, 0.1f, 0.5f) : 0.5f;
+            // (a vehicle standing beside the path, oncoming or across, is in the way when the two bodies would overlap: half
+            // of each one's width, more than the lane's half width a moving one is reckoned in; a car turning across in
+            // front of one waiting for it drove into it)
+            float standReach = HalfWidth(transform) + HalfWidth(c); standReach *= standReach;
             for (float tt = 0f; tt <= horizon; tt += dt)
             {
                 var q = c.position + fwd * Mathf.Min(vc * tt, further);
+                float r2 = tt == 0f && vc < 1f ? Mathf.Max(reach, standReach) : reach;
                 for (int k = 0; k < _ahead.Count; k++)
                 {
-                    if (Flat2(q - _ahead[k]) > reach) continue;
+                    if (Flat2(q - _ahead[k]) > r2) continue;
                     float along = (k + 1) * 2f + offset;
                     if (along >= best) break;
                     // committed: its front is at the conflict point already, or it could not stop before it braking at
