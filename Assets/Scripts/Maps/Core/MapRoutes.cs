@@ -127,7 +127,7 @@ public static class MapRoutes
         long Cell(Vector3 p) => ((long)Math.Floor(p.X / 5f) << 32) ^ (uint)(int)Math.Floor(p.Z / 5f);
         foreach (var (nodes, rs, len) in found)
         {
-            var lane = Offset(nodes, rs, pos, roads, leftHandTraffic);
+            var lane = Smooth(Offset(nodes, rs, pos, roads, leftHandTraffic));
             if (depth != null) lane = TrimToArea(lane, depth);
             if (lane.Count < 2) continue;
             int overlap = 0, total = 0;
@@ -235,7 +235,7 @@ public static class MapRoutes
         }
         nodes.Reverse(); rs.Reverse();
         // (Offset takes the road of each step from the second node on)
-        return Offset(nodes, rs, pos, roads, leftHandTraffic);
+        return Smooth(Offset(nodes, rs, pos, roads, leftHandTraffic));
     }
 
     /// <summary>A route of a map with corridors: its longest stretch inside the area (checked every 5 m: a straight
@@ -297,9 +297,19 @@ public static class MapRoutes
         {
             var p = pos[nodes[i]];
             var a = pos[nodes[Math.Max(0, i - 1)]]; var b = pos[nodes[Math.Min(nodes.Count - 1, i + 1)]];
-            var d = Flat(b - a);
+            // the directions into and out of the point; at a bend the lane's point is where the lanes along both legs
+            // meet (their offset lines' intersection, off / cos(half the angle) out along the bisector; not off along the
+            // perpendicular of a to b, which with legs of different lengths tilts towards the longer one and at a junction
+            // put the lane's corner up to a third of its offset inside the bend)
+            var din = Flat(p - a); var dout = Flat(b - p);
+            if (din.LengthSquared() < 1e-6f) din = dout;
+            if (dout.LengthSquared() < 1e-6f) dout = din;
+            if (din.LengthSquared() < 1e-6f) continue;
+            din = Vector3.Normalize(din); dout = Vector3.Normalize(dout);
+            var d = din + dout;
             if (d.LengthSquared() < 1e-6f) continue;
             d = Vector3.Normalize(d);
+            float miter = 1f / Math.Max(0.5f, Vector3.Dot(din, d));   // (at most twice the offset: turns up to 120°)
             var right = Vector3.Cross(Vector3.UnitY, d);
             var road = roads[rs[Math.Min(i, rs.Count - 1)]];
             float off = road.OneWay ? OneWayLane(road.Width, road.Lanes) : Clamp(road.Width / 4f, 1.5f, 3.5f);
@@ -324,7 +334,7 @@ public static class MapRoutes
                     off = free >= 1.9f ? Clamp(Math.Min(free / 2f + 0.2f, free - 1.0f), 0.95f, 3.5f) : 0.95f;
                 }
             }
-            var q = p + right * side * off;
+            var q = p + right * side * off * miter;
             if (lane.Count > 0)
             {
                 // fill long segments, so the route follows the road and not a spline between far points
@@ -337,6 +347,51 @@ public static class MapRoutes
             lane.Add(q);
         }
         return lane;
+    }
+
+    /// <summary>Spacing (m) of a smoothed lane's points.</summary>
+    public const float LaneSpacing = 3f;
+
+    /// <summary>
+    /// A lane as vehicles drive it: the polyline of the roads' offset centre lines turns at a junction within a metre or
+    /// two, sharper than any car can turn (a car following it at a speed fit for the bend swung out over the next lane: a
+    /// right turn into the oncoming lane of the road it turned into, before it reached its own), and jumps sideways where
+    /// the roads' widths change. Smoothed along the lane with a Gaussian of <paramref name="sigma"/> m (from points every
+    /// metre), a 90° turn becomes a bend of at least 5 m radius (a car's tightest turning circle is 4.7 m), tangent to the
+    /// lanes before and after it and inside their corner, as drivers turn; a straight lane stays where it is and a long
+    /// bend moves inwards by about sigma²/(2 r) (17 cm in a 90 m bend). Points every <see cref="LaneSpacing"/> m, the
+    /// first and last kept.
+    /// </summary>
+    public static List<Vector3> Smooth(List<Vector3> lane, float sigma = 5.5f)
+    {
+        if (lane == null || lane.Count < 3) return lane;
+        // every metre along the lane
+        var even = new List<Vector3> { lane[0] };
+        float carry = 0f;
+        for (int i = 1; i < lane.Count; i++)
+        {
+            var a = lane[i - 1]; var b = lane[i]; float seg = Vector3.Distance(a, b);
+            if (seg < 1e-4f) continue;
+            float t = 1f - carry;
+            while (t <= seg) { even.Add(Vector3.Lerp(a, b, t / seg)); t += 1f; }
+            carry = seg - (t - 1f);
+        }
+        if (Vector3.Distance(even[even.Count - 1], lane[lane.Count - 1]) > 0.3f) even.Add(lane[lane.Count - 1]);
+        int n = even.Count, k = (int)Math.Ceiling(3f * sigma);
+        var w = new float[k + 1];
+        for (int j = 0; j <= k; j++) w[j] = (float)Math.Exp(-0.5 * j * j / (sigma * sigma));
+        int step = Math.Max(1, Round(LaneSpacing));
+        var smooth = new List<Vector3>();
+        for (int i = 0; i < n; i += step)
+        {
+            // (near the ends a symmetric window, as wide as there are points on both sides: the ends stay where they are)
+            int r = Math.Min(k, Math.Min(i, n - 1 - i));
+            Vector3 sum = Vector3.Zero; float ws = 0f;
+            for (int j = -r; j <= r; j++) { sum += even[i + j] * w[Math.Abs(j)]; ws += w[Math.Abs(j)]; }
+            smooth.Add(sum / ws);
+        }
+        if ((n - 1) % step != 0) smooth.Add(even[n - 1]);
+        return smooth;
     }
 
     public static float Length(List<Vector3> l)
