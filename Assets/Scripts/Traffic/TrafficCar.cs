@@ -29,6 +29,19 @@ public class TrafficCar : MonoBehaviour
     [Tooltip("Stop at red (and yellow, if it can stop comfortably) traffic lights.")]
     public bool ObeyTrafficLights = true;
     public float VehicleLength = 4.5f;
+    public float VehicleWidth = 1.8f;
+
+    /// <summary>The vehicle's length and width from its body (the box collider on its root that VehicleBuilder fits to
+    /// the model): a van, a truck or a bus keeps its gap to the vehicle ahead from its own front bumper, and turns in its
+    /// own wider circle (AICar.SteerPursuit), not a 4.5 m car's.</summary>
+    public void FitToBody()
+    {
+        if (!TryGetComponent<BoxCollider>(out var box) || box.isTrigger) return;
+        var s = transform.lossyScale;
+        float length = box.size.z * Mathf.Abs(s.z), width = box.size.x * Mathf.Abs(s.x);
+        if (length < 2.5f || length > 25f || width < 1.2f || width > 3.2f) return;   // (not a car's body)
+        VehicleLength = length; VehicleWidth = width;
+    }
     [Tooltip("Comfortable lateral acceleration in bends (m/s²); drivers slow down before curves to stay below it.")]
     public float MaxLateralAcceleration = 2.5f;
 
@@ -238,7 +251,9 @@ public class TrafficCar : MonoBehaviour
         {
             _nextHistory = Time.time + 0.25f;
             var rbv = TryGetComponent<Rigidbody>(out var rb0) ? rb0.linearVelocity.magnitude : -1f;
-            var line = $"t={Time.time:F2} prog={_tracker.ProgressDistance:F1} v={Speed:F1} rb={rbv:F1} pos=({transform.position.x:F1},{transform.position.z:F1}) {LeaderDescription}";
+            float off = LaneOffset();
+            if (Mathf.Abs(off) > Mathf.Abs(_maxOff)) { _maxOff = off; _maxOffAt = transform.position; }
+            var line = $"t={Time.time:F2} prog={_tracker.ProgressDistance:F1} v={Speed:F1} rb={rbv:F1} pos=({transform.position.x:F1},{transform.position.z:F1}) off={off:F2} {LeaderDescription}";
             _history.Enqueue(line);
             while (_history.Count > 12) _history.Dequeue();
             // the participant's autopilot: every 5 s
@@ -402,9 +417,11 @@ public class TrafficCar : MonoBehaviour
             what = $"car {sameCar.name} at {sameAlong:F0} m (same route)";
             return Leader.Vehicle(Mathf.Max(0.1f, sameAlong - (VehicleLength + sameCar.VehicleLength) / 2f), sameCar.Speed);
         }
+        var prevP = _circuit.GetRoutePoint(start).position;
         for (float d = step; d <= LookAhead; d += step)
         {
             var p = _circuit.GetRoutePoint(start + d).position;
+            var segFrom = prevP; prevP = p;
             float along = d + offset;
             if (along < 1f) continue;
             if (d >= routeEnd - 4f)
@@ -426,11 +443,16 @@ public class TrafficCar : MonoBehaviour
             for (int i = 0; i < _nearCars.Count; i++)
             {
                 var c = _nearCars[i];
-                if (Flat2(c.pos - p) < lw2)
+                // (within the lane anywhere along the 2 m since the last sample, not only near the samples: a vehicle up to
+                // a metre between two of them and 0.8 m beside the line, as one overtaken on a parallel route, was missed)
+                if (SegmentDist2(c.pos, segFrom, p, out float u) < lw2)
                 {
+                    float at = along - step * (1f - u);   // (where along the segment it is)
+                    if (at < 1f) continue;   // (beside this vehicle: the side-by-side rule above)
                     float leaderSpeed = c.tc != null ? c.tc.Speed : SpeedOf(c.t);
-                    what = $"car {c.name} at {along:F0} m";
-                    return Leader.Vehicle(Mathf.Max(0.1f, along - VehicleLength), leaderSpeed);
+                    what = $"car {c.name} at {at:F0} m";
+                    // (centre to centre: half of each one's length; a participant's car without TrafficCar taken as 4.5 m)
+                    return Leader.Vehicle(Mathf.Max(0.1f, at - (VehicleLength + (c.tc != null ? c.tc.VehicleLength : 4.5f)) / 2f), leaderSpeed);
                 }
             }
             if (YieldToPedestrians)
@@ -485,7 +507,7 @@ public class TrafficCar : MonoBehaviour
 
     readonly List<Vector3> _ahead = new List<Vector3>();
     float _stoppedSince;
-    static float HalfWidth(Transform v) => v.TryGetComponent<TrafficCar>(out var tc) ? (tc.LaneHalfWidth < 1f ? 0.4f : 0.9f)
+    static float HalfWidth(Transform v) => v.TryGetComponent<TrafficCar>(out var tc) ? (tc.LaneHalfWidth < 1f ? 0.4f : tc.VehicleWidth / 2f)
         : v.GetComponent<TwoWheelerController>() != null ? 0.4f : 0.9f;
     static int _ranks;
     /// <summary>-noYield: no yielding to crossing traffic (for comparisons); -debugTraffic: logs overlaps and yielding every 10 s.</summary>
@@ -518,7 +540,7 @@ public class TrafficCar : MonoBehaviour
             float slip = c.t.TryGetComponent<Rigidbody>(out var orb) && Flat(orb.linearVelocity).sqrMagnitude > 0.25f ? Vector3.Angle(Flat(c.fwd), Flat(orb.linearVelocity)) : 0f;
             sb.Append($"; oncoming {c.name} at {Vector3.Dot(d, fwd):F0} m, {Vector3.Dot(d, Vector3.Cross(Vector3.up, fwd)):F1} m right, heading {Vector3.SignedAngle(-fwd, Flat(c.fwd), Vector3.up):F0}°, slip {slip:F0}°{(c.tc != null ? " [" + c.tc.LeaderDescription + "]" : "")}");
         }
-        Debug.Log($"TrafficDebug: participant t={Time.time:F1} at ({me.x:F1},{me.z:F1}) heading {Mathf.Atan2(fwd.x, fwd.z) * Mathf.Rad2Deg:F0} v={Speed:F1} {LeaderDescription}{sb}");
+        Debug.Log($"TrafficDebug: participant t={Time.time:F1} at ({me.x:F1},{me.z:F1}) heading {Mathf.Atan2(fwd.x, fwd.z) * Mathf.Rad2Deg:F0} v={Speed:F1} off={LaneOffset():F2} {LeaderDescription}{sb}");
     }
     static readonly bool DebugTraffic = System.Array.IndexOf(CommandLine.Args, "-debugTraffic") >= 0;
     static int _overlapFrames, _yieldFrames, _frames; static float _nextReport = 10f;
@@ -565,12 +587,80 @@ public class TrafficCar : MonoBehaviour
             }
             foreach (var g in heights.GroupBy(x => x.kind))
                 Debug.Log($"TrafficDebug: {g.Key} above the ground: {g.Count()}, from {g.Min(x => x.h):F2} to {g.Max(x => x.h):F2} m, mean {g.Average(x => x.h):F2} m");
+            LogWheelContact();
+            // the vehicles furthest beside their lanes in the last 10 s (a wide turn: over the line into the next lane)
+            var wide = _cars.Where(x => x.tc != null && x.t != null).Select(x => x.tc).OrderByDescending(x => Mathf.Abs(x._maxOff)).Take(6).ToList();
+            Debug.Log("TrafficDebug: furthest beside their lanes: " + string.Join("; ", wide.Select(x => $"{x.name} {x._maxOff:F2} m at ({x._maxOffAt.x:F0},{x._maxOffAt.z:F0})")));
+            int over1 = _cars.Count(x => x.tc != null && Mathf.Abs(x.tc._maxOff) > 1f);
+            Debug.Log($"TrafficDebug: vehicles more than 1 m beside their lanes in the last 10 s: {over1} of {_cars.Count(x => x.tc != null)}");
+            foreach (var x in _cars) if (x.tc != null) x.tc._maxOff = 0f;
             int n = 0;
             foreach (var cc in _cars)
                 if (cc.t is Transform c && c != null && c.TryGetComponent<TrafficCar>(out var tc) && tc._stoppedSince > 0f && Time.time - tc._stoppedSince > 20f && n++ < 8)
                     Debug.Log($"TrafficDebug: stopped {Time.time - tc._stoppedSince:F0} s: {c.name} at {c.position}: {tc.LeaderDescription}");
         }
     }
+    float _maxOff; Vector3 _maxOffAt;
+    /// <summary>-debugTraffic: how far the vehicle is beside its route's line (m, to the right positive), from the nearest
+    /// point of the route within 15 m of its progress point.</summary>
+    float LaneOffset()
+    {
+        var me = transform.position; float best = float.MaxValue, bd = 0f;
+        for (float d = -15f; d <= 15f; d += 0.5f)
+        {
+            float e = Flat2(_circuit.GetRoutePosition(_tracker.ProgressDistance + d) - me);
+            if (e < best) { best = e; bd = d; }
+        }
+        var rp = _circuit.GetRoutePoint(_tracker.ProgressDistance + bd);
+        var right = Vector3.Cross(Vector3.up, Flat(rp.direction).normalized);
+        return Vector3.Dot(Flat(me - rp.position), right);
+    }
+
+    /// <summary>-debugTraffic: per vehicle model, how far the bottoms of its wheel models are above the ground under them
+    /// (below 0: sunk into the road), and where its wheel colliders hold it.</summary>
+    static readonly Dictionary<string, (Vector3 hub, float radius)> _wheelShape = new Dictionary<string, (Vector3, float)>();
+    static void LogWheelContact()
+    {
+        var rows = new List<(string model, float gap, float hubDiff, float rModel, float rCol, float hubLocal, float colTop)>();
+        foreach (var cc in _cars)
+        {
+            if (cc.t == null || cc.tc == null || cc.tc.LaneHalfWidth < 1f) continue;
+            var pa = cc.t.GetComponent<PlayerAvatar>();
+            string model = pa != null && !string.IsNullOrEmpty(pa.PrefabName) ? pa.PrefabName : cc.t.name;
+            if (cc.t.GetComponent<AutomatedDriving>() != null) model += " (participant)";
+            foreach (var s in cc.t.GetComponentsInChildren<VehicleBehaviour.Suspension>(true))
+            {
+                if (s.wheelModel == null || !s.TryGetComponent<WheelCollider>(out var wc)) continue;
+                // the wheel's centre and radius in the body, from its meshes' vertices (once per model and wheel: turning
+                // about its axle does not change them)
+                var key = model + "|" + s.name;
+                if (!_wheelShape.TryGetValue(key, out var shape))
+                {
+                    Vector3 lo = Vector3.one * float.MaxValue, hi = Vector3.one * float.MinValue;
+                    foreach (var mf in s.wheelModel.GetComponentsInChildren<MeshFilter>())
+                    {
+                        if (mf.sharedMesh == null) continue;
+                        var m = cc.t.worldToLocalMatrix * mf.transform.localToWorldMatrix;
+                        foreach (var v in mf.sharedMesh.vertices) { var q = m.MultiplyPoint3x4(v); lo = Vector3.Min(lo, q); hi = Vector3.Max(hi, q); }
+                    }
+                    shape = _wheelShape[key] = hi.y >= lo.y ? ((lo + hi) / 2f, (hi.y - lo.y) / 2f) : (Vector3.zero, -1f);
+                }
+                if (shape.radius <= 0f) continue;
+                var centre = cc.t.TransformPoint(shape.hub); float radius = shape.radius;
+                var hits = Physics.RaycastAll(centre + Vector3.up * 1.5f, Vector3.down, 4f, ~0, QueryTriggerInteraction.Ignore);
+                float ground = float.NegativeInfinity;
+                foreach (var h in hits) if (h.collider.attachedRigidbody == null && h.normal.y > 0.7f && h.point.y < centre.y + 0.5f && h.point.y > ground) ground = h.point.y;
+                if (float.IsNegativeInfinity(ground)) continue;
+                wc.GetWorldPose(out var hub, out _);
+                var up = cc.t.up;
+                rows.Add((model, centre.y - radius - ground, Vector3.Dot(hub - centre, up), radius, wc.radius * wc.transform.lossyScale.y,
+                    cc.t.InverseTransformPoint(hub).y, cc.t.InverseTransformPoint(wc.transform.TransformPoint(wc.center)).y));
+            }
+        }
+        foreach (var g in rows.GroupBy(x => x.model).OrderBy(g => g.Average(x => x.gap)))
+            Debug.Log($"TrafficDebug: wheels of {g.Key}: {g.Count()}, bottom above the ground {g.Min(x => x.gap):F3} to {g.Max(x => x.gap):F3} m (mean {g.Average(x => x.gap):F3}); collider hub above the model's {g.Average(x => x.hubDiff):F3} m, radius model {g.Average(x => x.rModel):F3} collider {g.Average(x => x.rCol):F3}, hub at {g.Average(x => x.hubLocal):F3} in the body (suspension top {g.Average(x => x.colTop):F3})");
+    }
+
     readonly int _rank = ++_ranks;
     float _nextHistory;
     readonly Queue<string> _history = new Queue<string>();
@@ -643,12 +733,17 @@ public class TrafficCar : MonoBehaviour
             // positions do not skip the narrow strip where this car's path crosses its lane)
             bool gap = turnsAcross && facing < -0.7f && vc >= 1f;
             float horizon = gap ? 6f : 3f, dt = gap ? Mathf.Clamp(1.5f / vc, 0.1f, 0.5f) : 0.5f;
+            // (a vehicle standing beside the path, oncoming or across, is in the way when the two bodies would overlap: half
+            // of each one's width, more than the lane's half width a moving one is reckoned in; a car turning across in
+            // front of one waiting for it drove into it)
+            float standReach = HalfWidth(transform) + HalfWidth(c); standReach *= standReach;
             for (float tt = 0f; tt <= horizon; tt += dt)
             {
                 var q = c.position + fwd * Mathf.Min(vc * tt, further);
+                float r2 = tt == 0f && vc < 1f ? Mathf.Max(reach, standReach) : reach;
                 for (int k = 0; k < _ahead.Count; k++)
                 {
-                    if (Flat2(q - _ahead[k]) > reach) continue;
+                    if (Flat2(q - _ahead[k]) > r2) continue;
                     float along = (k + 1) * 2f + offset;
                     if (along >= best) break;
                     // committed: its front is at the conflict point already, or it could not stop before it braking at
@@ -712,4 +807,13 @@ public class TrafficCar : MonoBehaviour
     public static Vector3 LightFacing(Transform light) => light.right; // the signal heads in this project shine along their local x axis
 
     static float Flat2(Vector3 v) => v.x * v.x + v.z * v.z;
+
+    /// <summary>Squared distance on the ground from q to the segment a-b (t: where along it, 0 at a, 1 at b).</summary>
+    static float SegmentDist2(Vector3 q, Vector3 a, Vector3 b, out float t)
+    {
+        float abx = b.x - a.x, abz = b.z - a.z, l2 = abx * abx + abz * abz;
+        t = l2 > 1e-6f ? Mathf.Clamp01(((q.x - a.x) * abx + (q.z - a.z) * abz) / l2) : 1f;
+        float dx = q.x - (a.x + abx * t), dz = q.z - (a.z + abz * t);
+        return dx * dx + dz * dz;
+    }
 }

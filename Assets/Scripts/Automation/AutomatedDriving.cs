@@ -129,6 +129,7 @@ public class AutomatedDriving : MonoBehaviour
         if (_traffic != null) return;
         // reuse a collision-avoidance supervisor the traffic spawner may have added
         if (!TryGetComponent(out _traffic)) _traffic = gameObject.AddComponent<TrafficCar>();
+        _traffic.FitToBody();
         _traffic.Init(Model, DesiredSpeedKmh / 3.6f, new System.Random(1));
         _traffic.SpeedLimitFactor = SpeedLimitFactor;
     }
