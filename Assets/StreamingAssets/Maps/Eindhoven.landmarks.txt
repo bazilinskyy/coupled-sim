@@ -1,0 +1,17 @@
+# Landmarks of the Eindhoven map (OsmMapGenerator.Landmarks.cs): façades the generic styles do not show, and lettering.
+# facade <OSM way id> curtainwall <panel width m> <floor height m> <glass rrggbb> <frame rrggbb> <share of blinds down>
+# roofletters <OSM way id> <text> <letter height m> <colour rrggbb> [city | bearing the letters face, degrees]
+# groundletters <lat> <lon> <text> <letter height m> <colour rrggbb> <bearing the letters face, degrees>
+
+# Atlas, the TU/e's main building (S.J. van Embden 1958-1963; Team V Architectuur 2019): wrapped in a glass curtain wall
+# of floor-high panes (12 floors in 44 m), triple solar-control glass with reflective fabric blinds behind it
+facade 483163232 curtainwall 1.8 3.67 2B3640 CDD1D4 0.45
+# MetaForum (Ector Hoogstad Architecten 2012, in the old W-hal): a transparent glass façade in light steel frames
+facade 44755865 curtainwall 1.5 4.2 3A4A52 B9BEC2 0.1
+# Flux (2017): glass in dark frames
+facade 263943254 curtainwall 1.35 3.6 33443F 3A3D40 0.2
+
+# the TU/e logo (capital T and U, a slash, a lowercase e) in the house style's red on the roof of Vertigo, facing the
+# city centre and the station; and the red steel logo, 1.1 m high and 5 m long, on the field before the Auditorium
+roofletters 44772779 TU/e 4.5 C72125 city
+groundletters 51.44712 5.48478 TU/e 1.1 C72125 90

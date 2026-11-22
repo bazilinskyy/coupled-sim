@@ -16,8 +16,17 @@ public class OsmMap : MonoBehaviour
 {
     /// <summary>Map to build when the scene loads (set before loading the scene).</summary>
     public static string Requested;
-    /// <summary>"lat,lon": spawn points near this place instead of the map centre (trial parameter start, -start).</summary>
+    /// <summary>"lat,lon" or "lat,lon,bearing": spawn points near this place instead of the map centre (trial parameter
+    /// start, -start), facing the bearing (degrees from north) where the road runs both ways.</summary>
     public static string RequestedStart;
+
+    /// <summary>The requested start's bearing as a direction, or zero when none was given.</summary>
+    static Vector3 StartHeading()
+    {
+        var f = (RequestedStart ?? "").Split(',');
+        if (f.Length < 3 || !float.TryParse(f[2], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var b)) return Vector3.zero;
+        return new Vector3(Mathf.Sin(b * Mathf.Deg2Rad), 0f, Mathf.Cos(b * Mathf.Deg2Rad));
+    }
 
     /// <summary>The local point spawn points are nearest to: the requested start, else the map centre.</summary>
     Vector3 SpawnFocus()
@@ -364,6 +373,9 @@ public class OsmMap : MonoBehaviour
             foreach (var d in atStart ? AlongFrom(Length(road.Line), NearestAlong(road.Line, focus), 5f) : Along(Length(road.Line), 5f))
             {
                 PointAt(road.Line, d, out var centre, out var forward);
+                // (facing the requested bearing on a road that runs both ways)
+                var hd = atStart ? StartHeading() : Vector3.zero;
+                if (hd != Vector3.zero && !road.OneWay && Vector3.Dot(forward, hd) < 0f) forward = -forward;
                 var rightVec = Vector3.Cross(Vector3.up, forward).normalized;
                 position = centre + rightVec * side * offset + Vector3.up * 0.05f;
                 rotation = Quaternion.LookRotation(forward, Vector3.up);
