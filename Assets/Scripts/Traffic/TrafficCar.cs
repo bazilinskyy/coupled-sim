@@ -563,7 +563,11 @@ public class TrafficCar : MonoBehaviour
                 // a metre between two of them and 0.8 m beside the line, as one overtaken on a parallel route, was missed)
                 // (a rider ahead: within this car's half width, the rider's 0.4 m and 1.5 m beside the path a car does not
                 // pass it but follows it: it passes a cyclist only with 1.5 m to spare)
-                float reach2 = !IsRider && RiderOf(c.tc, c.t) ? riderReach2 : lw2;
+                // (a rider and a car ahead: the rider passes it only with half a metre between the car's body and its own,
+                // else it follows; by the car's middle alone a race cyclist overtook a car slowing beside it a hand's
+                // breadth from its side)
+                float carReach = HalfWidth(c.t) + 0.4f + 0.5f;
+                float reach2 = !IsRider && RiderOf(c.tc, c.t) ? riderReach2 : IsRider && !RiderOf(c.tc, c.t) ? Mathf.Max(lw2, carReach * carReach) : lw2;
                 if (SegmentDist2(c.pos, segFrom, p, out float u) < reach2)
                 {
                     float at = along - step * (1f - u);   // (where along the segment it is)

@@ -459,7 +459,7 @@ public class Soundscape : MonoBehaviour, IExperimentModifier
             var dyn = car.GetComponentInChildren<RealisticVehicleDynamics>(true);
             var preset = dyn != null ? dyn.Car : RealisticVehicleDynamics.CarPreset.Hatchback;
             var type = tw != null ? tw.Type : (CoupledSim.TwoWheelers.TwoWheelerType?)null;
-            _bicycle = n.Contains("bicycle") || type == CoupledSim.TwoWheelers.TwoWheelerType.Bicycle || type == CoupledSim.TwoWheelers.TwoWheelerType.EBike;
+            _bicycle = n.Contains("bicycle") || type == CoupledSim.TwoWheelers.TwoWheelerType.Bicycle || type == CoupledSim.TwoWheelers.TwoWheelerType.EBike || type == CoupledSim.TwoWheelers.TwoWheelerType.RaceBike;
             _scooter = n.Contains("scooter") || type == CoupledSim.TwoWheelers.TwoWheelerType.EScooter;
             bool moped = n.Contains("moped") || type == CoupledSim.TwoWheelers.TwoWheelerType.Moped25 || type == CoupledSim.TwoWheelers.TwoWheelerType.Moped45;
             _twoWheeler = _bicycle || _scooter || moped;

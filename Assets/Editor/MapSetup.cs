@@ -239,6 +239,7 @@ public static class MapSetup
                 Role("Moped rider", SpawnPointType.PlayerRidingTwoWheeler, OsmMap.SpawnKind.RoadEdge, 1, twoWheelerIdx: 2),
                 Role("Second driver", SpawnPointType.PlayerControlingCar, OsmMap.SpawnKind.RoadLane, 1),
                 Role("Drone pilot", SpawnPointType.PlayerFlyingDrone, OsmMap.SpawnKind.Pavement, 2),
+                Role("Race cyclist", SpawnPointType.PlayerRidingTwoWheeler, OsmMap.SpawnKind.RoadEdge, 2, twoWheelerIdx: 3),
             };
             var drones = new GameObject("Drones (AI)").AddComponent<DroneSpawner>();
             drones.transform.SetParent(root.transform, false);
@@ -258,7 +259,8 @@ public static class MapSetup
             sumo.CarPrefabs = cars;
             var bike = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/TwoWheelers/AIBicycle.prefab")?.GetComponent<AICar>();
             if (bike != null) sumo.BicyclePrefabs = new[] { bike };
-            prefabsToRegister = cars.Append(bike).Where(c => c != null).Select(c => AssetDatabase.GetAssetPath(c)).ToArray();
+            var raceBike = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/TwoWheelers/AIRaceBicycle.prefab")?.GetComponent<AICar>();   // (the built-in traffic's race cyclists)
+            prefabsToRegister = cars.Append(bike).Append(raceBike).Where(c => c != null).Select(c => AssetDatabase.GetAssetPath(c)).ToArray();
             sumo.spawnParams = new CarSpawnParams { Car = cars.FirstOrDefault(), SpawnDriver = true, VehicleType = PlayerSystem.VehicleType.MDV };
             exp.CarSpawners = new CarSpawnerBase[] { sumo };
 

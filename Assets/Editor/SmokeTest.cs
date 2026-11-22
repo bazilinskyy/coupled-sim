@@ -237,6 +237,32 @@ public static class SmokeTest
                 dc.ExternalSticks = early ? new Vector4(1f, 0, 0, 0) : new Vector4(f.Length > 0 ? f[0] : 0, f.Length > 1 ? f[1] : 0, f.Length > 2 ? f[2] : 0, f.Length > 3 ? f[3] : 0);
             }
         }
+        // -smokeRidePlan "go:6:0.6;coast:3;brake:2:0.5;stop:4;go:8:1": the rider's effort and braking over game time
+        // (steps of seconds: go with an effort, coast, brake with a strength, stop), with -autopilot steering; then as usual
+        if (ParticipantAutopilot.RidePlan == null)
+        {
+            int ri = Array.IndexOf(Environment.GetCommandLineArgs(), "-smokeRidePlan");
+            if (ri >= 0 && ri + 1 < Environment.GetCommandLineArgs().Length)
+            {
+                var steps = Environment.GetCommandLineArgs()[ri + 1].Split(';').Select(x => x.Split(':')).ToArray();
+                float t0 = -1f;
+                ParticipantAutopilot.RidePlan = () =>
+                {
+                    if (t0 < 0f) t0 = Time.time;
+                    float at = 0f, t = Time.time - t0;
+                    foreach (var st in steps)
+                    {
+                        float len = float.Parse(st[1], System.Globalization.CultureInfo.InvariantCulture);
+                        float v = st.Length > 2 ? float.Parse(st[2], System.Globalization.CultureInfo.InvariantCulture) : 0f;
+                        if (t < at + len)
+                            return st[0] == "go" ? (v > 0f ? v : 0.6f, 0f) : st[0] == "brake" ? (0f, v > 0f ? v : 0.5f) : st[0] == "stop" ? (0f, 1f) : (0f, 0f);
+                        at += len;
+                    }
+                    return null;
+                };
+                Debug.Log($"SmokeTest: ride plan {Environment.GetCommandLineArgs()[ri + 1]}");
+            }
+        }
         // -smokeRide drive,steer: ride the participant's two-wheeler (if any) with fixed input
         var ride = SessionState.GetString(KeyRide, "");
         if (ride.Length > 0)
@@ -813,7 +839,7 @@ public static class SmokeTest
 
     // -smokeLineup "ToyotaCorolla,DafXF95,...": those vehicle prefabs parked ahead of the participant (for pictures of
     // vehicles in a real street; their scripts are removed, they only stand there). Besides vehicles: two-wheelers with
-    // their riders (Bicycle, EScooter, Moped), pedestrians (ped:Female_Adult_01, ped:Claudia), animals (animal:Dog) and
+    // their riders (Bicycle, EScooter, Moped, RaceBicycle), pedestrians (ped:Female_Adult_01, ped:Claudia), animals (animal:Dog) and
     // the drone (Drone, hovering). -smokeLineupAngle deg: 0 a queue in the oncoming lane facing the participant; e.g. 45
     // side by side at that angle (echelon parking), fronts on a line, facing the camera of the "lineup" view.
     // -smokeLineupAt x,z,heading: the line's start and direction instead of ahead of the participant.

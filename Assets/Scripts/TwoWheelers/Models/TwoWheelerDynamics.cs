@@ -11,6 +11,8 @@ namespace CoupledSim.TwoWheelers
         Moped25,
         /// <summary>Dutch "bromfiets": moped limited to 45 km/h.</summary>
         Moped45,
+        /// <summary>Road racing bicycle: light, low and aerodynamic, ridden by a fit rider (30-35 km/h cruising, up to about 45).</summary>
+        RaceBike,
     }
 
     /// <summary>Physical parameters of a two-wheeler with its rider.</summary>
@@ -47,11 +49,24 @@ namespace CoupledSim.TwoWheelers
 
         const float kmh = 1f / 3.6f;
 
-        /// <summary>Typical values: city bike and rider (Wilson, Bicycling Science; Kooijman &amp; Schwab), e-steps and mopeds from manufacturer data and Dutch speed limits.</summary>
+        /// <summary>Pedalled only (no motor): a bicycle or a race bike.</summary>
+        public bool PedalOnly => Type == TwoWheelerType.Bicycle || Type == TwoWheelerType.RaceBike;
+
+        /// <summary>Typical values: city bike and rider (Wilson, Bicycling Science; Kooijman &amp; Schwab), e-steps and mopeds from manufacturer data and Dutch speed limits;
+        /// the race bike: 8 kg bike and a 72 kg rider on the hoods, Cd·A 0.30 m² and Crr 0.004 (Wilson; Debraux et al. 2011,
+        /// "Aerodynamic drag in cycling"), 400 W at full effort (a fit amateur's few-minute power: about 45 km/h on the flat),
+        /// 200 W at half (about 35 km/h).</summary>
         public static TwoWheelerParameters Preset(TwoWheelerType type)
         {
             switch (type)
             {
+                case TwoWheelerType.RaceBike:
+                    return new TwoWheelerParameters
+                    {
+                        Type = type, Mass = 80, Wheelbase = 0.99f, RollingResistance = 0.004f, DragArea = 0.30f,
+                        Power = 400, MaxDriveForce = 250, MotorCutoffSpeed = 0, RiderPower = 0,
+                        MaxBraking = 5.5f, MaxSteerAngle = 30, SteerHalvingSpeed = 5f, LeanTimeConstant = 0.3f, MaxLean = 45,
+                    };
                 case TwoWheelerType.EBike:
                     return new TwoWheelerParameters
                     {
@@ -134,7 +149,7 @@ namespace CoupledSim.TwoWheelers
             if (drive <= 0f) return 0f;
             float vv = Math.Max(v, 0.5f);
             float motor = 0f, rider = 0f;
-            if (p.Type == TwoWheelerType.Bicycle)
+            if (p.PedalOnly)
             {
                 rider = Math.Min(p.MaxDriveForce, drive * p.Power / vv);
             }
