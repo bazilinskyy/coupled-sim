@@ -318,7 +318,12 @@ public static class VehicleBuilder
                 if (pivots[i] == null) continue;
                 var wc = colliders[i].GetComponent<WheelCollider>();
                 wc.radius = radius;
-                // at rest (spring target 0.5) the wheel sits where the model has it
+                // at rest (spring target 0.5) the wheel sits where the model has it: the collider unscaled and without
+                // a centre offset (the template's 0.9 scale and 0.15 m centre put the wheel 0.15 m plus a tenth of its
+                // radius higher, so the body sat that much too low, and the wheels of traffic, whose models do not
+                // follow the colliders, sank into the road)
+                colliders[i].localScale = Vector3.one;
+                wc.center = Vector3.zero;
                 colliders[i].position = pivots[i].position + root.up * wc.suspensionDistance * 0.5f;
                 var susp = colliders[i].GetComponent<VehicleBehaviour.Suspension>();
                 if (susp != null) { susp.wheelModel = pivots[i].gameObject; susp.localRotOffset = Vector3.zero; }
