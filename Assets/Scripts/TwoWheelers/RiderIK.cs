@@ -288,6 +288,8 @@ public class RiderIK : MonoBehaviour
         var hipLocal = Frame.InverseTransformPoint(HipTarget.position);
         float pitch = TorsoPitchFor(hipLocal, gripMid, _torso, _arm, Mathf.Lerp(TorsoPitch, DropsTorsoPitch, drops));
         pitch += 8f * stand - 10f * down;
+        // (sitting up a little for a look over the shoulder, more from low on the drops)
+        if (_checkUntil > time) { float t = 1f - (_checkUntil - time) / 0.9f; pitch -= Mathf.Lerp(4f, 10f, drops) * Smooth(Mathf.Min(t / 0.3f, (1f - t) / 0.3f)); }
         // sway with the effort: the shoulders rock a little with each stroke (more standing, when the bicycle rocks
         // under the rider: the rider stays over it)
         float effort = Mathf.Clamp01(_effort);
@@ -364,15 +366,21 @@ public class RiderIK : MonoBehaviour
             _animator.SetBoneLocalRotation(_fingers[i], _fingerBind[i] * Quaternion.AngleAxis(curl * w, _fingerAxis[i]));
         }
 
-        // head: ahead along the road and into the bend; now and then over the shoulder
+        // head: ahead along the road, 15-20 m ahead (a rider low on a road bike lifts the head to it rather than looking
+        // at the front wheel), and into the bend; now and then over the shoulder: as riders do it, the head turned some
+        // 70° (55° low on the drops) with the shoulders taking part of it, briefly, and level (aimed 150° round with the
+        // neck alone, the head twisted onto the shoulder)
         var eye = hips + bodyRot * (Vector3.up * _eyeAbove);
         var flatFwd = Vector3.ProjectOnPlane(fwd, Vector3.up).normalized;
         float yawLook = _look;
         float check = 0f;
-        if (_checkUntil > time) { float t = 1f - (_checkUntil - time) / 0.9f; check = Smooth(Mathf.Min(t / 0.3f, (1f - t) / 0.3f)); yawLook = Mathf.Lerp(yawLook, _checkSide * 150f, check); }
+        if (_checkUntil > time) { float t = 1f - (_checkUntil - time) / 0.9f; check = Smooth(Mathf.Min(t / 0.3f, (1f - t) / 0.3f)); yawLook = Mathf.Lerp(yawLook, _checkSide * Mathf.Lerp(72f, 55f, drops), check); }
         var lookDir = Quaternion.AngleAxis(yawLook, Vector3.up) * flatFwd;
-        _animator.SetLookAtWeight(w, 0.05f + 0.3f * check, 1f, 1f, 0.35f);
-        _animator.SetLookAtPosition(eye + lookDir * 12f - Vector3.up * 1.2f * (1f - check));
+        // (body: the shoulders turn with a look over the shoulder; head: most of the turn; clamp: no more than a neck
+        // turns, the rest left out)
+        _animator.SetLookAtWeight(w, 0.08f + 0.4f * check, 0.9f, 1f, 0.55f);
+        float eyeHeight = Mathf.Max(1.0f, eye.y - transform.position.y);
+        _animator.SetLookAtPosition(eye + lookDir * 18f - Vector3.up * eyeHeight * 0.8f * (1f - check));
     }
 
     /// <summary>The ankle and foot rotation for a foot on its pedal: the ball of the foot over the spindle, the ankle
