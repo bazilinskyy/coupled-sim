@@ -431,6 +431,11 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
                     rr = MakeCircuit(line, Routes.Count + 3000 + raceIndex++);
                     rr.name = "Map race route " + raceIndex;
                     rr.GetRoutePoint(0f);
+                    if (Array.IndexOf(CommandLine.Args, "-debugTraffic") >= 0)
+                    {
+                        int onCycle = line.Count(q => SeenGround(q) == Ground.Cycle), fast = line.Count(q => RoadSpeedLimits.At(q) > RaceOnRoadUpToKmh);
+                        Debug.Log($"TrafficDebug: {rr.name}: {line.Count} points from ({line[0].x:F0},{line[0].z:F0}), {onCycle} of them on a cycle path or lane, {fast} beside roads over {RaceOnRoadUpToKmh:F0} km/h, {apart / Mathf.Max(1, m):F1} m from the cyclists' line");
+                    }
                 }
             }
             return raceLines[bikeRoute] = rr;

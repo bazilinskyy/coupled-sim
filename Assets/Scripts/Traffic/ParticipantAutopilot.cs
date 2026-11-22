@@ -73,8 +73,10 @@ public class ParticipantAutopilot : MonoBehaviour
                 bend = Mathf.Max(bend, Vector3.Angle(Flat(Path[a] - p), Flat(Path[b] - Path[a])));
             }
             float effort = bend > 50f ? 0.2f : Effort, brake = bend > 70f ? 0.3f : 0f;
+            // a race cyclist sets off hard (out of the saddle), easing to its cruising effort by about 25 km/h
+            if (_rider.Type == CoupledSim.TwoWheelers.TwoWheelerType.RaceBike && bend <= 50f && v < 7f) effort = Mathf.Lerp(0.95f, Effort, v / 7f);
             // fast (a race cyclist): slow down earlier for a bend, to about 25 km/h for a corner
-            if (v > 6f && bend > 25f) { effort = 0f; brake = Mathf.Max(brake, Mathf.Clamp01((v - 7f) / 4f) * 0.5f); }
+            if (v > 7f && bend > 40f) { effort = Mathf.Min(effort, 0.1f); brake = Mathf.Max(brake, Mathf.Clamp01((v - 7f) / 4f) * 0.4f); }
             // something ahead (a vehicle, a person, an animal, a parked car): ease off, brake, wait 1.5 m behind it
             float obstacle = ObstacleAhead(), red = RedLightAhead();
             float gap = Mathf.Min(obstacle, red);
