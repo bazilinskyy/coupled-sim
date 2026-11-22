@@ -112,6 +112,50 @@ namespace CoupledSim.Tests
         }
 
         [Test]
+        public void JunctionCornersAreRoundedOnTheRoadsFacingEdges()
+        {
+            // an 8 m road east-west and a 4 m street off it to the north (London's narrow streets): the street's arm north,
+            // the road's east, so the corner between them is north-east of the node
+            var node = new Vector2(10, 20);
+            var east = new Vector2(1, 0); var north = new Vector2(0, 1);
+            var poly = Geometry2D.CornerFillet(node, east, 4f, north, 2f, 3f);
+            Assert.IsNotNull(poly);
+            // the square corner where the road's north edge meets the street's east edge
+            Assert.AreEqual(12f, poly[0].X, 1e-4); Assert.AreEqual(24f, poly[0].Y, 1e-4);
+            // tangent to both edges, 3 m from the corner, and the arc 3 m from its centre (15, 27) throughout
+            Assert.AreEqual(15f, poly[1].X, 1e-4); Assert.AreEqual(24f, poly[1].Y, 1e-4);
+            Assert.AreEqual(12f, poly[poly.Count - 1].X, 1e-4); Assert.AreEqual(27f, poly[poly.Count - 1].Y, 1e-4);
+            for (int i = 1; i < poly.Count; i++) Assert.AreEqual(3f, Vector2.Distance(poly[i], new Vector2(15, 27)), 1e-3);
+            // its area: the square less the quarter circle, so a car's corner cutting into it (0.5 m in from the
+            // square corner, diagonally) stands on road, and nothing of it reaches beyond 3 m along either edge
+            Assert.AreEqual(9f - MathF.PI * 9f / 4f, Math.Abs(Geometry2D.SignedArea(poly)), 0.06f);   // (8 chords: 0.045 m² more than the arc)
+            Assert.IsTrue(Geometry2D.PointInPolygon(new Vector2(12.5f, 24.5f), poly));
+            Assert.IsFalse(Geometry2D.PointInPolygon(new Vector2(14.5f, 26.5f), poly), "the kerb's inside stays off the road");
+            // the other way round (b clockwise from a, the corner's outside, 270°) and straight on: no corner
+            Assert.IsNull(Geometry2D.CornerFillet(node, north, 2f, east, 4f, 3f));
+            Assert.IsNull(Geometry2D.CornerFillet(node, east, 4f, new Vector2(-1, 0.05f), 4f, 3f));
+        }
+
+        [Test]
+        public void ARoadGoingOnNarrowerIsTapered()
+        {
+            // a 5.5 m street going on north as a 4 m one: the step of 0.75 m on each side filled over 3 m of the narrow one
+            var node = new Vector2(0, 0);
+            var south = new Vector2(0, -1); var north = new Vector2(0, 1);
+            // (from the narrow arm counter-clockwise to the wide one: the west side)
+            var west = Geometry2D.WidthTaper(node, north, 2f, south, 2.75f);
+            Assert.IsNotNull(west);
+            Assert.IsTrue(west.Exists(p => Vector2.Distance(p, new Vector2(-2.75f, 0)) < 1e-4f), "from the wide road's edge");
+            Assert.IsTrue(west.Exists(p => Vector2.Distance(p, new Vector2(-2f, 3f)) < 1e-4f), "to the narrow one's edge, 3 m on");
+            Assert.IsTrue(Geometry2D.PointInPolygon(new Vector2(-2.3f, 0.5f), west));
+            var east = Geometry2D.WidthTaper(node, south, 2.75f, north, 2f);
+            Assert.IsTrue(east.Exists(p => Vector2.Distance(p, new Vector2(2f, 3f)) < 1e-4f));
+            // equal widths or a real corner: none
+            Assert.IsNull(Geometry2D.WidthTaper(node, north, 2.75f, south, 2.75f));
+            Assert.IsNull(Geometry2D.WidthTaper(node, new Vector2(1, 0), 2f, north, 2.75f));
+        }
+
+        [Test]
         public void ParsesOsmXml()
         {
             var xml = "<osm><node id=\"1\" lat=\"51.44\" lon=\"5.47\"><tag k=\"highway\" v=\"crossing\"/></node>" +

@@ -4,7 +4,8 @@ using NUnit.Framework;
 
 namespace CoupledSim.Tests
 {
-    /// <summary>The road traffic noise model (CNOSSOS-EU), the engine's gears and air absorption.</summary>
+    /// <summary>The road traffic noise model (CNOSSOS-EU), the engine's gears, air absorption, the ambience's levels
+    /// (wind at the ears, distant traffic) and the drones' levels.</summary>
     public class SoundModelTests
     {
         static float PassBy(VehicleCategory c, float kmh, bool electric = false)
@@ -84,6 +85,55 @@ namespace CoupledSim.Tests
             }
             float p0 = Cnossos.PressureAt(90f, 0f);
             Assert.IsFalse(float.IsInfinity(p0) || float.IsNaN(p0));
+        }
+
+        [Test]
+        public void WindAtTheEarsIsSoftForWalkersAndARumbleForCyclists()
+        {
+            Assert.AreEqual(0.54f, Ambience.StreetWindFactor, 0.01f, "EN 1991-1-4, terrain category IV below z_min");
+            // a pedestrian walking (1.4 m/s) in a light breeze (2 m/s at 10 m) at the top of a gust (+35 %)
+            float walker = Ambience.WindNoiseDb(Ambience.AirSpeedAtEars(2f, 1.35f, 1.4f));
+            Assert.Less(walker, 50f, "the wind's rumble (about 13 dB less A-weighted) stays under the distant traffic");
+            Assert.Less(walker - 13f, Ambience.DistantTrafficDbA(7.75f) - 8f);
+            // a cyclist at 20 km/h in still air
+            Assert.AreEqual(68.5f, Ambience.WindNoiseDb(Ambience.AirSpeedAtEars(0f, 1f, 20f / 3.6f)), 1f);
+            // 45 dB per tenfold speed (Seidman et al. 2017), and no step: it fades out smoothly
+            Assert.AreEqual(45f, Ambience.WindNoiseDb(20f) - Ambience.WindNoiseDb(2f), 1e-3f);
+            for (float v = 1f; v < 3f; v += 0.05f) Assert.Less(Ambience.WindNoiseDb(v + 0.05f) - Ambience.WindNoiseDb(v), 2.2f);
+            // gusts change the wind, not the rider's own speed
+            Assert.AreEqual(Ambience.AirSpeedAtEars(0f, 1.35f, 5f), 5f, 1e-4f);
+        }
+
+        [Test]
+        public void DistantTrafficFollowsTheHourAtUrbanBackgroundLevels()
+        {
+            // L_A90 of a residential area (King et al. 2012): 45.4 dB(A) in the morning, 43.9 in the afternoon, 41.7 at night
+            Assert.That(Ambience.DistantTrafficDbA(9f), Is.InRange(44f, 48f));
+            Assert.That(Ambience.DistantTrafficDbA(14f), Is.InRange(43f, 47f));
+            Assert.That(Ambience.DistantTrafficDbA(3f), Is.InRange(35f, 42f));
+            Assert.Less(Ambience.DistantTrafficDbA(3f), Ambience.DistantTrafficDbA(8f) - 6f, "quieter at night");
+            Assert.AreEqual(Ambience.DistantTrafficDbA(1f), Ambience.DistantTrafficDbA(25f), 1e-4f);
+            Assert.AreEqual(Ambience.DistantTrafficDbA(0f), Ambience.DistantTrafficDbA(24f), 1e-4f);
+        }
+
+        // DroneSound is in the game's own assembly (Assembly-CSharp), which test assemblies cannot reference: called by reflection
+        static float Drone(string method, params object[] args) =>
+            (float)System.Type.GetType("DroneSound, Assembly-CSharp", true).GetMethod(method).Invoke(null, args);
+
+        [Test]
+        public void DronesHaveTheSoundPowerOfTheirClass()
+        {
+            // Regulation (EU) 2019/945: 81 dB(A) below 900 g, 18.5 dB more per tenfold mass
+            Assert.AreEqual(81f, Drone("SoundPowerDbA", 0.9f), 0.01f);
+            Assert.AreEqual(81f, Drone("SoundPowerDbA", 0.25f), 0.01f);
+            Assert.AreEqual(81f + 18.5f * 0.6478f, Drone("SoundPowerDbA", 4f), 0.05f);
+            // a consumer drone hovering 40 m away is faint (under a city's daytime background), 1 m away loud
+            float far = Drone("LevelDbA", 0.9f, 1f, 40f), near = Drone("LevelDbA", 0.9f, 1f, 1f);
+            Assert.That(far, Is.InRange(35f, 40f));
+            Assert.Less(far, Ambience.DistantTrafficDbA(10.5f));
+            Assert.That(near, Is.InRange(68f, 72f));
+            Assert.AreEqual(6f, Drone("LevelDbA", 0.9f, 1f, 1f) - Drone("LevelDbA", 0.9f, 1f, 2f), 0.05f, "-6 dB per doubling of distance");
+            Assert.Greater(Drone("LevelDbA", 0.9f, 1.5f, 10f), Drone("LevelDbA", 0.9f, 1f, 10f), "louder climbing");
         }
     }
 }

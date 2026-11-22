@@ -10,7 +10,7 @@ using UnityEngine;
 /// loose and soft ground, birds and distant city traffic. The rest is made from code, and so is each of these when its
 /// recording is missing (as in tests): noise shaped to octave-band spectra (vehicle rolling and propulsion noise by
 /// CNOSSOS-EU, rain, wind, distant traffic), engine harmonics at a firing frequency, an electric motor's whine, and
-/// short one-shots (footsteps, the tick of a pedestrian signal, a freewheel click) and bird calls. Every sound is
+/// short one-shots (footsteps, the tick of a pedestrian signal, a freewheel click), bird calls and drone rotors. Every sound is
 /// normalised to a known RMS (<see cref="Rms"/>, recordings through <see cref="Recording.Factor"/>) so that its level
 /// can be set in dB SPL (<see cref="Soundscape.ClipGain"/>).
 /// </summary>
@@ -266,16 +266,88 @@ public static class SoundClips
         return d;
     }
 
+    // ---- drones
+
+    // a loop of 2^16 samples; every tone a whole number of periods in it (so it repeats seamlessly): four rotors about
+    // 3 % apart around the blade-passing frequency DroneBaseHz (about 200 Hz at 48 kHz, a consumer drone in hover)
+    const int DroneLength = 1 << 16, DroneBaseBin = 273;
+    static readonly int[] DroneRotorBins = { 265, 269, 277, 281 };
+    static Recording _droneRotors;
+    static double[] _droneBands;   // its energy in sixth-octave bands from 16 Hz
+
+    /// <summary>Blade-passing frequency (Hz) of <see cref="DroneRotors"/> at pitch 1.</summary>
+    public static float DroneBaseHz => DroneBaseBin * (float)Rate / DroneLength;
+
+    /// <summary>A multirotor's rotors (played with pitch = blade-passing frequency / <see cref="DroneBaseHz"/>): the
+    /// blade-passing tone of each of four rotors with its harmonics (falling as 1/order), the rotors a few per cent apart
+    /// in speed as those of a flying multirotor are (so the tones beat instead of one pure buzz), 6 dB above broadband
+    /// rotor noise that peaks around 500 Hz-1 kHz. Its A-weighting at the pitch it is played at is
+    /// <see cref="DroneAWeightDb"/>.</summary>
+    public static Recording DroneRotors()
+    {
+        if (_droneRotors != null && _droneRotors.Clip != null) return _droneRotors;
+        int n = DroneLength;
+        var d = OctaveNoise((n - 0.5f) / Rate, new[] { -14f, -10f, -7f, -5f, -5f, -7f, -11f, -17f }, 77);
+        double eb = 0; for (int i = 0; i < n; i++) eb += d[i] * d[i];
+        var tone = new double[n];
+        var rnd = new System.Random(11);
+        foreach (int m in DroneRotorBins)
+            for (int h = 1; h <= 10; h++)
+            {
+                double ph = rnd.NextDouble() * 2 * Math.PI, w = 2 * Math.PI * m * h / n;
+                for (int i = 0; i < n; i++) tone[i] += Math.Sin(w * i + ph) / h;
+            }
+        double et = 0; for (int i = 0; i < n; i++) et += tone[i] * tone[i];
+        double k = Math.Sqrt(eb / Math.Max(et, 1e-12) * Math.Pow(10, 0.6));
+        for (int i = 0; i < n; i++) d[i] += (float)(k * tone[i]);
+        _droneRotors = Measure("drone rotors", Make("drone rotors", d, true));
+        // (Make normalised d in place) its spectrum in sixth-octave bands
+        var re = new double[n]; var im = new double[n];
+        for (int i = 0; i < n; i++) re[i] = d[i];
+        Fft(re, im, false);
+        _droneBands = new double[61];
+        for (int b = 1; b < n / 2; b++)
+        {
+            int j = Mathf.RoundToInt(6f * Mathf.Log(b * (float)Rate / n / 16f, 2f));
+            if (j >= 0 && j < _droneBands.Length) _droneBands[j] += re[b] * re[b] + im[b] * im[b];
+        }
+        return _droneRotors;
+    }
+
+    /// <summary>A-weighted minus unweighted level (dB) of <see cref="DroneRotors"/> played at <paramref name="pitch"/>
+    /// (its tones are low, where the A-weighting changes fast with frequency).</summary>
+    public static float DroneAWeightDb(float pitch)
+    {
+        DroneRotors();
+        double e = 0, ea = 0;
+        for (int j = 0; j < _droneBands.Length; j++) { e += _droneBands[j]; ea += _droneBands[j] * Math.Pow(10, AWeighting(16f * Mathf.Pow(2f, j / 6f) * pitch) / 10); }
+        return e > 0 ? (float)(10 * Math.Log10(Math.Max(ea, 1e-30) / e)) : 0f;
+    }
+
+    /// <summary>The A-weighting (dB) at <paramref name="f"/> Hz (IEC 61672-1).</summary>
+    public static float AWeighting(float f)
+    {
+        double f2 = (double)f * f;
+        double ra = 12194.0 * 12194.0 * f2 * f2 / ((f2 + 20.6 * 20.6) * Math.Sqrt((f2 + 107.7 * 107.7) * (f2 + 737.9 * 737.9)) * (f2 + 12194.0 * 12194.0));
+        return (float)(20 * Math.Log10(Math.Max(ra, 1e-20)) + 2.0);
+    }
+
     // ---- environment
 
     /// <summary>Road traffic far away (behind buildings): the spectrum of a car at 50 km/h with the highs lost on the way.</summary>
-    public static AudioClip DistantTraffic() => Cached("distant traffic", () =>
+    public static AudioClip DistantTraffic() => Cached("distant traffic", () => Make("distant traffic", OctaveNoise(6f, DistantTrafficSpectrum(), 5), true));
+
+    static float[] DistantTrafficSpectrum()
     {
         var s = new float[8];
         float[] loss = { 0f, -2f, -5f, -9f, -14f, -20f, -28f, -38f };
         for (int i = 0; i < 8; i++) s[i] = Cnossos.Sum(Cnossos.Rolling(VehicleCategory.Light, 50f, i), Cnossos.Propulsion(VehicleCategory.Light, 50f, i)) + loss[i];
-        return Make("distant traffic", OctaveNoise(6f, s, 5), true);
-    });
+        return s;
+    }
+
+    /// <summary>A-weighted minus unweighted level of <see cref="DistantTraffic"/> (dB), to play it at an A-weighted level.</summary>
+    public static float DistantTrafficAShift => _distantAShift ??= Soundscape.AShift(i => DistantTrafficSpectrum()[i]);
+    static float? _distantAShift;
 
     /// <summary>Rain: broadband hiss with the energy in the highs, and single drops.</summary>
     public static AudioClip Rain(bool onRoof) => Cached("rain " + onRoof, () =>

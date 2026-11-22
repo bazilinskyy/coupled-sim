@@ -15,6 +15,10 @@ public class ParticipantAutopilot : MonoBehaviour
     public float LookAhead = 5f;
     [Tooltip("Rider's effort (0..1).")]
     public float Effort = 0.55f;
+    /// <summary>A plan for the rider's effort and braking over time (the smoke test's -smokeRidePlan): (effort 0..1,
+    /// brake 0..1), or null to ride as usual. The autopilot still steers and still eases off and brakes for bends and
+    /// for what is in its way.</summary>
+    public static System.Func<(float effort, float brake)?> RidePlan;
     KeyboardPlayerMovement _walker;
     TwoWheelerController _rider;
     Rigidbody _body;
@@ -33,6 +37,8 @@ public class ParticipantAutopilot : MonoBehaviour
         if (_walker != null) _walker.UseExternalInput = true;
         if (_rider != null) _rider.UseExternalInput = true;
         if (_rider != null) LookAhead = 7f;
+        // a race cyclist rides at about 32-35 km/h on the flat (some 180 W)
+        if (_rider != null && _rider.Type == CoupledSim.TwoWheelers.TwoWheelerType.RaceBike) Effort = 0.45f;
     }
 
     void FixedUpdate()
@@ -41,7 +47,9 @@ public class ParticipantAutopilot : MonoBehaviour
         var p = transform.position;
         // the point to head for: the first point of the path at least LookAhead ahead
         int step = _back ? -1 : 1;
-        while (_index + step >= 0 && _index + step < Path.Count && Flat(Path[_index] - p).magnitude < LookAhead) _index += step;
+        float v = _body != null ? _body.linearVelocity.magnitude : 0f;
+        float lookAhead = _rider != null ? Mathf.Max(LookAhead, v * 0.9f) : LookAhead;   // (further ahead when fast)
+        while (_index + step >= 0 && _index + step < Path.Count && Flat(Path[_index] - p).magnitude < lookAhead) _index += step;
         bool end = _index + step < 0 || _index + step >= Path.Count;
         if (end && Flat(Path[_index] - p).magnitude < 1.5f)
         {
@@ -65,6 +73,10 @@ public class ParticipantAutopilot : MonoBehaviour
                 bend = Mathf.Max(bend, Vector3.Angle(Flat(Path[a] - p), Flat(Path[b] - Path[a])));
             }
             float effort = bend > 50f ? 0.2f : Effort, brake = bend > 70f ? 0.3f : 0f;
+            // a race cyclist sets off hard (out of the saddle), easing to its cruising effort by about 25 km/h
+            if (_rider.Type == CoupledSim.TwoWheelers.TwoWheelerType.RaceBike && bend <= 50f && v < 7f) effort = Mathf.Lerp(0.95f, Effort, v / 7f);
+            // fast (a race cyclist): slow down earlier for a bend, to about 25 km/h for a corner
+            if (v > 7f && bend > 40f) { effort = Mathf.Min(effort, 0.1f); brake = Mathf.Max(brake, Mathf.Clamp01((v - 7f) / 4f) * 0.4f); }
             // something ahead (a vehicle, a person, an animal, a parked car): ease off, brake, wait 1.5 m behind it
             float obstacle = ObstacleAhead(), red = RedLightAhead();
             float gap = Mathf.Min(obstacle, red);
@@ -80,11 +92,17 @@ public class ParticipantAutopilot : MonoBehaviour
                 if (gap < stopping + 1f) { effort = 0f; brake = Mathf.Clamp01((stopping + 1f - gap) / 2f + 0.3f); }
                 else effort *= Mathf.Clamp01((gap - stopping) / 6f);
             }
+            if (RidePlan != null && RidePlan() is var (planEffort, planBrake))
+            {
+                effort = planEffort * effort / Mathf.Max(0.01f, Effort);
+                brake = Mathf.Max(brake, planBrake);
+            }
             _rider.Input = new CoupledSim.TwoWheelers.TwoWheelerInput { Drive = effort, Steer = Mathf.Clamp(err / 25f, -1f, 1f), Brake = brake };
         }
     }
 
     static Vector3 Flat(Vector3 v) { v.y = 0f; return v; }
+    float Speed2() => _body != null ? _body.linearVelocity.sqrMagnitude : 0f;
     static readonly bool DebugTraffic = System.Array.IndexOf(CommandLine.Args, "-debugTraffic") >= 0;
     float _nextDebug;
 
@@ -103,7 +121,7 @@ public class ParticipantAutopilot : MonoBehaviour
         int k = _index;
         // from the rider's front along the path: the rest of the way to the next point, then point by point
         var points = new List<Vector3>();
-        for (int i = 0; i < 6 && k >= 0 && k < Path.Count; i++, k += step) points.Add(Path[k]);
+        for (int i = 0; i < 10 && k >= 0 && k < Path.Count; i++, k += step) points.Add(Path[k]);
         foreach (var q in points)
         {
             var seg = Flat(q - prev); float len = seg.magnitude;
@@ -111,7 +129,7 @@ public class ParticipantAutopilot : MonoBehaviour
             {
                 float d = along + s;
                 if (d < 1.2f) continue;   // (the rider's own length)
-                if (d > 12f) return Crossing();
+                if (d > Mathf.Max(12f, Speed2() / 6f + 5f)) return Crossing();   // (far enough to stop at 3 m/s²)
                 var c = prev + seg * (s / len) + Vector3.up * 0.9f;
                 int n = Physics.OverlapSphereNonAlloc(c, 0.55f, _near, ~0, QueryTriggerInteraction.Ignore);
                 for (int i = 0; i < n; i++)

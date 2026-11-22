@@ -6,7 +6,9 @@ using UnityEngine;
 /// from the same axes as the car (keyboard W/S or arrows, Space to brake, A/D to steer; steering
 /// wheel and pedals), so existing input set-ups work. The vehicle follows the ground (it can mount
 /// kerbs up to MaxStepHeight at low speed) and stops when it runs into something.
-/// Visual parts: wheels spin, the handlebar turns, frame and rider lean, bicycle cranks turn.
+/// Visual parts: wheels spin, the handlebar turns, frame and rider lean; on a bicycle the cranks turn through the
+/// rider's gears (<see cref="Pedalling"/>), stop and come level when freewheeling, and the bicycle leans onto the rider's
+/// foot when stopped and rocks under a rider standing on the pedals (<see cref="RiderIK"/> poses the rider).
 /// </summary>
 [RequireComponent(typeof(Rigidbody))]
 public class TwoWheelerController : MonoBehaviour
@@ -30,8 +32,12 @@ public class TwoWheelerController : MonoBehaviour
     public Transform RearWheel;
     public Transform Crank;
     public float WheelRadius = 0.35f;
-    [Tooltip("Crank revolutions per wheel revolution (inverse gear ratio).")]
+    [Tooltip("Crank revolutions per wheel revolution (inverse gear ratio), without Gears.")]
     public float CrankRatio = 0.4f;
+    [Tooltip("The bicycle's gears and the cadence its rider keeps (a bicycle with a crank; empty: CrankRatio).")]
+    public PedallingParameters Gears;
+    [Tooltip("Lean (deg) of a stopped bicycle onto the rider's foot on the ground.")]
+    public float FootDownLean = 7f;
     [Tooltip("How much of the lean the camera follows (1 = all; less is more comfortable in VR).")]
     [Range(0f, 1f)] public float CameraLeanFactor = 0.4f;
     public Transform CameraRig;
@@ -45,6 +51,15 @@ public class TwoWheelerController : MonoBehaviour
     public float LeanDeg;
     public float SteerDeg;
     public bool Collided;
+    [Tooltip("The rider's legs: crank angle, gear, cadence, foot down, standing.")]
+    public PedallingState Legs;
+    /// <summary>Stopped, the rider puts the right foot down (left-hand traffic), else the left.</summary>
+    public bool FootDownRight;
+    /// <summary>The bicycle's rocking under a rider standing on the pedals (deg, positive right), on top of LeanDeg.</summary>
+    public float RockDeg;
+    /// <summary>When the parts last showed the motion (Time.time): the rider's pose follows Legs while this is recent.</summary>
+    public float LastShown = -1f;
+    float _extraLean;
 
     public TwoWheelerState State;
     public TwoWheelerInput Input;
@@ -65,6 +80,7 @@ public class TwoWheelerController : MonoBehaviour
 
     void Start()
     {
+        FootDownRight = OsmMap.Current != null && OsmMap.Current.Info.LeftHandTraffic;
         var p = transform.position;
         State = new TwoWheelerState { X = p.x, Z = p.z, Yaw = transform.eulerAngles.y * Mathf.Deg2Rad };
         _groundY = p.y;
@@ -158,6 +174,7 @@ public class TwoWheelerController : MonoBehaviour
     public void ShowMotion(float speed, float yawRate, float acceleration, float dt)
     {
         speed = Mathf.Max(0f, speed);
+        if (LastShown < 0f) FootDownRight = OsmMap.Current != null && OsmMap.Current.Info.LeftHandTraffic;   // (Start does not run: disabled)
         float maxLean = Parameters.MaxLean * Mathf.Deg2Rad;
         float lean = Mathf.Clamp(Mathf.Atan(speed * yawRate / 9.81f), -maxLean, maxLean);
         float steer = speed > 0.3f ? Mathf.Clamp(Mathf.Atan(Parameters.Wheelbase * yawRate / speed), -Parameters.MaxSteerAngle * Mathf.Deg2Rad, Parameters.MaxSteerAngle * Mathf.Deg2Rad) : State.Steer;
@@ -167,7 +184,12 @@ public class TwoWheelerController : MonoBehaviour
         State.Acceleration = acceleration;
         State.Lean = Mathf.Lerp(State.Lean, lean, k);
         State.Steer = Mathf.Lerp(State.Steer, steer, k);
-        Input.Drive = speed > 0.5f && acceleration > -0.3f ? 0.5f : 0f;
+        // the rider's effort: the share of its power that holds this speed and acceleration (pedalling on while it rides
+        // on, freewheeling while it slows down)
+        float need = (TwoWheelerDynamics.ResistanceForce(Parameters, speed, 0f) + Parameters.Mass * acceleration) * Mathf.Max(speed, 1f);
+        float power = Parameters.PedalOnly ? Parameters.Power : Mathf.Max(1f, Parameters.Power);
+        Input.Drive = acceleration > -0.25f && (speed > 0.3f || acceleration > 0.05f) ? Mathf.Clamp(need / power, 0.15f, 1f) : 0f;
+        Input.Brake = acceleration < -1f ? Mathf.Clamp01(-acceleration / Parameters.MaxBraking) : 0f;
         ShowParts(dt);
     }
 
@@ -181,13 +203,31 @@ public class TwoWheelerController : MonoBehaviour
         if (RearWheel != null) RearWheel.localRotation = Quaternion.Euler(_wheelAngle, 0, 0);
         if (SteeringPivot != null) SteeringPivot.localRotation = Quaternion.Euler(0, SteerDeg, 0);
         // positive lean = to the right = negative rotation around the forward (z) axis
-        if (LeanPivot != null) LeanPivot.localRotation = Quaternion.Euler(0, 0, -LeanDeg);
-        if (CameraRig != null) CameraRig.localRotation = Quaternion.Euler(0, 0, -LeanDeg * CameraLeanFactor);
-        if (Crank != null && Input.Drive > 0.05f)
+        RockDeg = 0f;
+        if (Crank != null && Gears.Developments != null && Gears.Developments.Length > 0)
         {
-            _crankAngle += State.Speed / Mathf.Max(0.05f, WheelRadius) * Mathf.Rad2Deg * CrankRatio * dt;
-            Crank.localRotation = Quaternion.Euler(_crankAngle, 0, 0);
+            // the rider's legs: gears, cadence, freewheeling with level cranks, foot down when stopped, standing to set off
+            Legs = Pedalling.Step(Legs, Gears, State.Speed, Input.Drive, Input.Brake, State.Lean, dt);
+            Crank.localRotation = Quaternion.Euler(Legs.CrankAngle, 0, 0);
+            // stopped, the bicycle leans onto the foot on the ground; standing on the pedals, it rocks from side to side
+            // under the rider (away from the pedal pushed down)
+            float fd = Legs.FootDown * Legs.FootDown * (3f - 2f * Legs.FootDown);
+            RockDeg = -Legs.Standing * (2f + 4f * Legs.Effort) * Mathf.Sin(Legs.CrankAngle * Mathf.Deg2Rad);
+            _extraLean = (FootDownRight ? 1f : -1f) * FootDownLean * fd + RockDeg;
         }
+        else
+        {
+            _extraLean = 0f;
+            if (Crank != null && Input.Drive > 0.05f)
+            {
+                _crankAngle += State.Speed / Mathf.Max(0.05f, WheelRadius) * Mathf.Rad2Deg * CrankRatio * dt;
+                Crank.localRotation = Quaternion.Euler(_crankAngle, 0, 0);
+            }
+        }
+        // (the camera follows only the riding lean, not the foot-down lean or the rocking)
+        if (LeanPivot != null) LeanPivot.localRotation = Quaternion.Euler(0, 0, -(LeanDeg + _extraLean));
+        if (CameraRig != null) CameraRig.localRotation = Quaternion.Euler(0, 0, -LeanDeg * CameraLeanFactor);
+        LastShown = Time.time;
     }
 
     /// <summary>Places the vehicle (e.g. at a spawn point) and stops it.</summary>
@@ -196,5 +236,6 @@ public class TwoWheelerController : MonoBehaviour
         transform.SetPositionAndRotation(position, Quaternion.Euler(0, yawDeg, 0));
         State = new TwoWheelerState { X = position.x, Z = position.z, Yaw = yawDeg * Mathf.Deg2Rad };
         _groundY = position.y;
+        Legs.Gear = 0;
     }
 }
