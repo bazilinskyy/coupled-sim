@@ -170,7 +170,8 @@ def fetch_osm(name, tile_m=500.0):
     import xml.etree.ElementTree as ET
     parts = read(name)
     if not parts: sys.exit("no area file: make one with --route first")
-    corridors = [p for p in parts if p[0] == "corridor"]
+    # (every part: the corridors and the boxes, e.g. a campus added to a city centre; elements already in the file stay)
+    corridors = list(parts)
     src = os.path.join(MAPS, name + ".osm.gz")
     text = gzip.open(src).read().decode("utf-8")
     have = set(re.findall(r'<(node|way|relation) id="(\d+)"', text))
@@ -202,7 +203,7 @@ def fetch_osm(name, tile_m=500.0):
     out = (out[:i] + block + " " + out[i:]) if i >= 0 else out + "\n" + block
     out = out.rstrip() + "\n" + "".join(" " + ET.tostring(x, encoding="unicode").strip() + "\n" for x in new_ways) + "</osm>\n"
     with gzip.open(src, "wt", encoding="utf-8") as f: f.write(out)
-    print("%s: %d new nodes and %d new ways from the corridors, bounds %.4f %.4f %.4f %.4f, %.1f MB" % (
+    print("%s: %d new nodes and %d new ways from the area's parts, bounds %.4f %.4f %.4f %.4f, %.1f MB" % (
         name, len(new_nodes), len(new_ways), s, w, n, e, os.path.getsize(src) / 1e6))
 
 
