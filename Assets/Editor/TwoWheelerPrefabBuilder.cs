@@ -625,7 +625,21 @@ public static class TwoWheelerPrefabBuilder
 
     /// <summary>The race cyclist: Rocketbox's athletic woman (her figure-hugging body takes a painted kit), in team colours.</summary>
     const string RaceRider = "Sports_Female_01";
-    static readonly Color TeamColour = new Color(0.0f, 0.52f, 0.62f), TeamDark = new Color(0.05f, 0.09f, 0.2f);
+    /// <summary>The race cyclist's kit: D.S.W.V. WTOS, Delft's student cycling club (its 2019 kit): a mid-blue jersey with
+    /// two white bands across the chest, white cuffs and WTOS in white down the back; black bib shorts with blue leg
+    /// bands. (TeamDark: the side panels and sleeves, here the jersey's blue too.)</summary>
+    static readonly Color TeamColour = new Color(0.27f, 0.53f, 0.82f), TeamDark = new Color(0.27f, 0.53f, 0.82f);
+    /// <summary>The lettering down the back of the jersey (white, read from top to bottom), or null.</summary>
+    const string BackLettering = "WTOS";
+
+    // a 5 x 7 block font for the back's lettering (rows top to bottom, '#' set)
+    static readonly Dictionary<char, string[]> Glyphs = new Dictionary<char, string[]>
+    {
+        ['W'] = new[] { "#...#", "#...#", "#...#", "#.#.#", "#.#.#", "##.##", "#...#" },
+        ['T'] = new[] { "#####", "..#..", "..#..", "..#..", "..#..", "..#..", "..#.." },
+        ['O'] = new[] { ".###.", "#...#", "#...#", "#...#", "#...#", "#...#", ".###." },
+        ['S'] = new[] { ".####", "#....", "#....", ".###.", "....#", "....#", "####." },
+    };
 
     static void Build(TwoWheelerType type, string name, Color paint, string riderModel)
     {
@@ -659,7 +673,11 @@ public static class TwoWheelerPrefabBuilder
             if (rider != null)
             {
                 rider.transform.SetParent(rig.Lean, false);
-                animator.runtimeAnimatorController = AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>("Assets/Prefabs/AIPedestrians/Pedestrian.controller");
+                // (a rider's seated posture as the animation, on which the IK puts the hands and feet: on a road bike a long,
+                // rounded back with the neck bent back to look ahead; leaning the body about the hips alone, with the
+                // standing spine, tipped the pelvis and kept the chest upright, the bottom pushed out)
+                animator.runtimeAnimatorController = bicycle ? RiderPostureController(type == TwoWheelerType.RaceBike)
+                    : AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>("Assets/Prefabs/AIPedestrians/Pedestrian.controller");
                 animator.applyRootMotion = false;
                 var hips = animator.GetBoneTransform(HumanBodyBones.Hips);
                 float hipHeight = hips != null ? hips.position.y - rider.transform.position.y : 0.95f;
@@ -672,8 +690,8 @@ public static class TwoWheelerPrefabBuilder
                 if (bicycle)
                 {
                     // the cycling pose: the hips on the saddle (the sit bones 9 cm below the hip joints), the torso leaning
-                    // as far as the grips need with slightly bent arms (at least 15° on a city bike, 42° on a road bike on
-                    // the hoods, 58° on the drops)
+                    // as far as the grips need with slightly bent arms (at least 15° on a city bike, 52° on a road bike on
+                    // the hoods, 64° on the drops)
                     var hipTarget = Empty("Hip target", rig.Lean, rig.SaddleTop + new Vector3(0, 0.09f + size.HipsAboveJoint, -0.02f));
                     ik.Cycling = true;
                     ik.Frame = rig.Lean;
@@ -683,8 +701,10 @@ public static class TwoWheelerPrefabBuilder
                     ik.Hoods = type == TwoWheelerType.RaceBike;
                     ik.LeftDrop = rig.LeftDrop;
                     ik.RightDrop = rig.RightDrop;
-                    ik.TorsoPitch = type == TwoWheelerType.RaceBike ? 42f : 15f;
-                    ik.DropsTorsoPitch = 58f;
+                    // (with the road posture's rounded back on top: the shoulders some 55° forward on the hoods, more on the
+                    // drops, the elbows bent)
+                    ik.TorsoPitch = type == TwoWheelerType.RaceBike ? 40f : 15f;
+                    ik.DropsTorsoPitch = 52f;
                     rider.transform.localPosition = hipTarget.localPosition - new Vector3(0, hipHeight, 0);
                     var grip = (rig.LeftGrip.position + rig.RightGrip.position) / 2f;
                     float pitch = RiderIK.TorsoPitchFor(hipTarget.localPosition, rig.Lean.InverseTransformPoint(grip), size.Torso, size.Arm, ik.TorsoPitch);
@@ -760,11 +780,59 @@ public static class TwoWheelerPrefabBuilder
         }
     }
 
+    // ------------------------------------------------------------------ a rider's posture
+
+    /// <summary>
+    /// An animator controller with one state: a still pose given as humanoid muscle values (Mecanim's ranges, -1 to 1),
+    /// the posture of a seated rider on which RiderIK's IK places the hands, feet and hips. Road: the spine, chest and
+    /// upper chest bent forward (a long, rounded back), the neck and head bent back to look up the road; city: nearly
+    /// upright.
+    /// </summary>
+    static RuntimeAnimatorController RiderPostureController(bool road)
+    {
+        string name = road ? "RiderPostureRoad" : "RiderPostureCity";
+        string clipPath = $"{Dir}/{name}.anim", ctrlPath = $"{Dir}/{name}.controller", maskPath = $"{Dir}/RiderPostureBack.mask";
+        // the back's posture: only the spine, chest, neck and head (the limbs stay as the idle pose has them, for the IK)
+        var clip = new AnimationClip { name = name };
+        var muscles = road
+            // (Mecanim's muscles run from the first word of their name to the second: Front-Back -1 is bent forward,
+            // Nod Down-Up +1 is the head up)
+            ? new (string m, float v)[] { ("Spine Front-Back", -0.3f), ("Chest Front-Back", -0.35f), ("UpperChest Front-Back", -0.3f), ("Neck Nod Down-Up", 0.45f), ("Head Nod Down-Up", 0.35f) }
+            : new (string m, float v)[] { ("Spine Front-Back", -0.12f), ("Chest Front-Back", -0.1f), ("UpperChest Front-Back", -0.05f), ("Neck Nod Down-Up", 0.1f) };
+        foreach (var (m, v) in muscles)
+            AnimationUtility.SetEditorCurve(clip, EditorCurveBinding.FloatCurve("", typeof(Animator), m), AnimationCurve.Constant(0f, 1f, v));
+        var settings = AnimationUtility.GetAnimationClipSettings(clip); settings.loopTime = true; AnimationUtility.SetAnimationClipSettings(clip, settings);
+        AssetDatabase.DeleteAsset(clipPath); AssetDatabase.CreateAsset(clip, clipPath);
+        var mask = AssetDatabase.LoadAssetAtPath<AvatarMask>(maskPath);
+        if (mask == null)
+        {
+            mask = new AvatarMask();
+            for (var part = AvatarMaskBodyPart.Root; part < AvatarMaskBodyPart.LastBodyPart; part++)
+                mask.SetHumanoidBodyPartActive(part, part == AvatarMaskBodyPart.Body || part == AvatarMaskBodyPart.Head);
+            AssetDatabase.CreateAsset(mask, maskPath);
+        }
+        // the pedestrian's controller (its idle pose, with the IK pass) and the posture's layer over it
+        AssetDatabase.DeleteAsset(ctrlPath);
+        AssetDatabase.CopyAsset("Assets/Prefabs/AIPedestrians/Pedestrian.controller", ctrlPath);
+        var ctrl = AssetDatabase.LoadAssetAtPath<UnityEditor.Animations.AnimatorController>(ctrlPath);
+        ctrl.AddLayer("Posture");
+        var layers = ctrl.layers;
+        var top = layers[layers.Length - 1];
+        top.defaultWeight = 1f; top.avatarMask = mask; top.blendingMode = UnityEditor.Animations.AnimatorLayerBlendingMode.Override; top.iKPass = false;
+        ctrl.layers = layers;
+        var state = ctrl.layers[layers.Length - 1].stateMachine.AddState("Posture");
+        state.motion = clip;
+        EditorUtility.SetDirty(ctrl);
+        AssetDatabase.SaveAssets();
+        return ctrl;
+    }
+
     // ------------------------------------------------------------------ the race cyclist's kit
 
     /// <summary>
-    /// Dresses the race cyclist: a cycling kit painted onto the body's texture (a close-fitting jersey in team colours with
-    /// dark side panels, a white chest band and cuffs, black shorts to above the knee with a gripper band, white socks and
+    /// Dresses the race cyclist: a cycling kit painted onto the body's texture (by default WTOS's: a close-fitting blue
+    /// jersey with two white chest bands, white cuffs and the club's name down the back, black shorts to above the knee
+    /// with a blue gripper band, white socks and
     /// white cycling shoes with black soles), a road helmet and wrap-around glasses. The kit follows the body: each texel
     /// is classed by where its point of the body is (from the mesh in its bind pose and the bones that move it).
     /// </summary>
@@ -788,9 +856,13 @@ public static class TwoWheelerPrefabBuilder
         // the body in its bind pose, in the rider's frame
         var mesh = main.sharedMesh;
         var baked = new Mesh(); main.BakeMesh(baked, true);
-        var bv = baked.vertices;
-        var vtx = new Vector3[bv.Length];
-        for (int i = 0; i < bv.Length; i++) vtx[i] = rider.transform.InverseTransformPoint(main.transform.position + main.transform.rotation * bv[i]);
+        var bv = baked.vertices; var bnm = baked.normals;
+        var vtx = new Vector3[bv.Length]; var nrm = new Vector3[bv.Length];
+        for (int i = 0; i < bv.Length; i++)
+        {
+            vtx[i] = rider.transform.InverseTransformPoint(main.transform.position + main.transform.rotation * bv[i]);
+            nrm[i] = i < bnm.Length ? rider.transform.InverseTransformDirection(main.transform.rotation * bnm[i]).normalized : Vector3.zero;
+        }
         var uv = mesh.uv;
         // each vertex's main bone, as a humanoid bone
         var human = new Dictionary<Transform, HumanBodyBones>();
@@ -814,18 +886,38 @@ public static class TwoWheelerPrefabBuilder
         var white = C(new Color(0.93f, 0.93f, 0.92f)); var black = C(new Color(0.05f, 0.05f, 0.06f));
         var team = C(TeamColour); var dark = C(TeamDark); var sole = C(new Color(0.08f, 0.08f, 0.08f));
         // the kit's colour at a point of the body (bone: the bone that moves it), or null for skin (the texture as it is)
-        Color32? Kit(Vector3 p, HumanBodyBones b)
+        // the lettering down the back: each letter turned a quarter clockwise (its top to the rider's right), from
+        // under the shoulder blades down, 12 cm across
+        // (front and back by the surface's direction: the spine's curve puts the small of the back ahead of the neck)
+        float letterTop = shL.y - 0.07f, letterPitch = 0.095f, letterLen = 0.08f, letterHalf = 0.07f;
+        bool Lettering(Vector3 p, Vector3 n)
+        {
+            if (string.IsNullOrEmpty(BackLettering) || n.z > -0.45f || Mathf.Abs(p.x) > letterHalf) return false;
+            float s = (letterTop - p.y) / letterPitch;
+            int li = Mathf.FloorToInt(s);
+            if (li < 0 || li >= BackLettering.Length || !Glyphs.TryGetValue(BackLettering[li], out var g)) return false;
+            float along = (s - li) * letterPitch;
+            if (along > letterLen) return false;
+            int col = Mathf.Clamp(Mathf.FloorToInt(along / letterLen * 5f), 0, 4);
+            int row = Mathf.Clamp(Mathf.FloorToInt((letterHalf - p.x) / (2f * letterHalf) * 7f), 0, 6);
+            return g[row][col] == '#';
+        }
+        bool Front(Vector3 n) => n.z > 0.35f;
+        Color32? Kit(Vector3 p, HumanBodyBones b, Vector3 n)
         {
             switch (b)
             {
                 case HumanBodyBones.Spine: case HumanBodyBones.Chest: case HumanBodyBones.UpperChest:
                 case HumanBodyBones.LeftShoulder: case HumanBodyBones.RightShoulder:
-                    if (Mathf.Abs(p.y - chestY) < 0.03f) return white;                              // chest band
+                    // two bands across the chest (on the front), the lettering down the back
+                    if (Front(n) && (Mathf.Abs(p.y - chestY) < 0.018f || Mathf.Abs(p.y - (chestY - 0.055f)) < 0.018f)) return white;
+                    if (Lettering(p, n)) return white;
                     return Mathf.Abs(p.x) > 0.105f ? dark : team;                                    // side panels
                 case HumanBodyBones.Neck:
-                    return p.y < neckP.y + 0.02f ? dark : (Color32?)null;                            // collar
+                    // (the jersey zipped up to a collar round the neck: not open down to the breastbone)
+                    return p.y < neckP.y + 0.035f ? team : (Color32?)null;                           // collar
                 case HumanBodyBones.Hips:
-                    if (p.y > hipsP.y + 0.04f) return Mathf.Abs(p.x) > 0.11f ? dark : team;          // the jersey's hem
+                    if (p.y > hipsP.y + 0.04f) return Lettering(p, n) ? white : Mathf.Abs(p.x) > 0.11f ? dark : team;   // the jersey's hem
                     return black;
                 case HumanBodyBones.LeftUpperLeg: case HumanBodyBones.RightUpperLeg:
                     if (p.y > kneeP.y + 0.16f) return black;                                          // shorts
@@ -867,10 +959,11 @@ public static class TwoWheelerPrefabBuilder
                     float w2 = 1f - w0 - w1;
                     if (w0 < -0.02f || w1 < -0.02f || w2 < -0.02f) continue;
                     var p = vtx[i0] * w0 + vtx[i1] * w1 + vtx[i2] * w2;
+                    var pn = (nrm[i0] * w0 + nrm[i1] * w1 + nrm[i2] * w2).normalized;
                     var bone = w0 >= w1 && w0 >= w2 ? vb[i0] : w1 >= w2 ? vb[i1] : vb[i2];
                     int k = y * W + x;
                     covered[k] = true;
-                    var kit = Kit(p, bone);
+                    var kit = Kit(p, bone, pn);
                     if (kit == null) continue;
                     // (lycra: the colour with a faint weave and the body's light and shade kept a little)
                     var o = pix[k];
@@ -910,6 +1003,74 @@ public static class TwoWheelerPrefabBuilder
         kitMat.SetFloat("_Smoothness", 0.32f);
         EditorUtility.SetDirty(kitMat);
         foreach (var r in smrs) r.sharedMaterials = r.sharedMaterials.Select(m => m == bodyMat ? kitMat : m).ToArray();
+        // the collar on the head's texture too: Rocketbox's head mesh reaches down over the neck to the breastbone, so
+        // the jersey looked open in a deep V
+        int hSlot = System.Array.FindIndex(main.sharedMaterials, m => m != null && m.HasProperty("_BaseMap") && m.GetTexture("_BaseMap") != null && m.GetTexture("_BaseMap").name.Contains("head"));
+        if (hSlot >= 0)
+        {
+            var headMat = main.sharedMaterials[hSlot];
+            var hsrc = new Texture2D(2, 2);
+            hsrc.LoadImage(File.ReadAllBytes(AssetDatabase.GetAssetPath(headMat.GetTexture("_BaseMap"))));
+            int HW = hsrc.width, HH = hsrc.height;
+            var hpix = hsrc.GetPixels32(); var hout = (Color32[])hpix.Clone();
+            var hcov = new bool[HW * HH]; var hpaint = new bool[HW * HH];
+            var htris = mesh.GetTriangles(hSlot);
+            float collarTop = neckP.y + 0.035f;
+            for (int t = 0; t < htris.Length; t += 3)
+            {
+                int i0 = htris[t], i1 = htris[t + 1], i2 = htris[t + 2];
+                if (Mathf.Min(vtx[i0].y, Mathf.Min(vtx[i1].y, vtx[i2].y)) > collarTop + 0.02f) continue;
+                Vector2 a = new Vector2(uv[i0].x * HW, uv[i0].y * HH), b = new Vector2(uv[i1].x * HW, uv[i1].y * HH), c = new Vector2(uv[i2].x * HW, uv[i2].y * HH);
+                int x0 = Mathf.Max(0, Mathf.FloorToInt(Mathf.Min(a.x, Mathf.Min(b.x, c.x))) - 1), x1 = Mathf.Min(HW - 1, Mathf.CeilToInt(Mathf.Max(a.x, Mathf.Max(b.x, c.x))) + 1);
+                int y0 = Mathf.Max(0, Mathf.FloorToInt(Mathf.Min(a.y, Mathf.Min(b.y, c.y))) - 1), y1 = Mathf.Min(HH - 1, Mathf.CeilToInt(Mathf.Max(a.y, Mathf.Max(b.y, c.y))) + 1);
+                float area = (b.x - a.x) * (c.y - a.y) - (c.x - a.x) * (b.y - a.y);
+                if (Mathf.Abs(area) < 1e-6f) continue;
+                for (int y = y0; y <= y1; y++)
+                    for (int x = x0; x <= x1; x++)
+                    {
+                        var q = new Vector2(x + 0.5f, y + 0.5f);
+                        float w0 = ((b.x - q.x) * (c.y - q.y) - (c.x - q.x) * (b.y - q.y)) / area;
+                        float w1 = ((c.x - q.x) * (a.y - q.y) - (a.x - q.x) * (c.y - q.y)) / area;
+                        float w2 = 1f - w0 - w1;
+                        if (w0 < -0.02f || w1 < -0.02f || w2 < -0.02f) continue;
+                        int k = y * HW + x;
+                        hcov[k] = true;
+                        var pp = vtx[i0] * w0 + vtx[i1] * w1 + vtx[i2] * w2;
+                        if (pp.y > collarTop) continue;
+                        var o = hpix[k];
+                        float shade = Mathf.Lerp(1f, (o.r + o.g + o.b) / (3f * 200f), 0.15f);
+                        hout[k] = new Color32((byte)Mathf.Clamp(team.r * shade, 0, 255), (byte)Mathf.Clamp(team.g * shade, 0, 255), (byte)Mathf.Clamp(team.b * shade, 0, 255), 255);
+                        hpaint[k] = true;
+                    }
+            }
+            for (int pass = 0; pass < 3; pass++)
+            {
+                var next = (bool[])hpaint.Clone();
+                for (int y = 1; y < HH - 1; y++)
+                    for (int x = 1; x < HW - 1; x++)
+                    {
+                        int k = y * HW + x;
+                        if (hpaint[k] || hcov[k]) continue;
+                        foreach (int n2 in new[] { k - 1, k + 1, k - HW, k + HW })
+                            if (hpaint[n2]) { hout[k] = hout[n2]; next[k] = true; break; }
+                    }
+                hpaint = next;
+            }
+            var htex = new Texture2D(HW, HH, TextureFormat.RGB24, true);
+            htex.SetPixels32(hout); htex.Apply();
+            var htexPath = $"{MatDir}/RaceKit_head_color.png";
+            File.WriteAllBytes(htexPath, htex.EncodeToPNG());
+            AssetDatabase.ImportAsset(htexPath);
+            var hmatPath = $"{MatDir}/RaceKit_head.mat";
+            var hkit = AssetDatabase.LoadAssetAtPath<Material>(hmatPath);
+            if (hkit == null) { hkit = new Material(headMat); AssetDatabase.CreateAsset(hkit, hmatPath); }
+            hkit.CopyPropertiesFromMaterial(headMat);
+            var hkTex = AssetDatabase.LoadAssetAtPath<Texture2D>(htexPath);
+            hkit.SetTexture("_BaseMap", hkTex);
+            if (hkit.HasProperty("_MainTex")) hkit.SetTexture("_MainTex", hkTex);
+            EditorUtility.SetDirty(hkit);
+            foreach (var r in smrs) r.sharedMaterials = r.sharedMaterials.Select(m => m == headMat ? hkit : m).ToArray();
+        }
         Object.DestroyImmediate(baked);
 
         // the helmet and the glasses, on the head (sized to the head: the head's own vertices above the jaw, not the hair)
