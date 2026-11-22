@@ -39,6 +39,8 @@ namespace CoupledSim.Maps
                 int hash = line.IndexOf('#'); if (hash >= 0) line = line.Substring(0, hash);
                 var f = line.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
                 if (f.Length == 0) continue;
+                // ("far ..." lines: the far city around the area, for Tools/bag3d_far.py; not the area itself)
+                if (f[0] == "far") continue;
                 if (f[0] == "box" && f.Length >= 5)
                 {
                     var a = toLocal(double.Parse(f[1], ci), double.Parse(f[2], ci)); var b = toLocal(double.Parse(f[3], ci), double.Parse(f[4], ci));

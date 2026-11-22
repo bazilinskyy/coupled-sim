@@ -99,6 +99,44 @@ public static class Bag3dBuildings
         if (b.RoofKind == 1 && slantedArea <= 0.5f * roofArea) b.RoofKind = 0;
     }
 
+    /// <summary>A building part of the far city: its outer ring in the scene (counter-clockwise seen from above), the
+    /// height of its roof above the ground, its roof kind.</summary>
+    public sealed class FarPart { public float Height; public byte Kind; public Vector2[] Ring; }
+
+    public static string FarPathFor(string map) => Path.Combine(Application.streamingAssetsPath, "Maps", map + ".far.bin.gz");
+
+    /// <summary>The far city around a Dutch map's area ({map}.far.bin.gz, Tools/bag3d_far.py: 3D BAG LoD 1.3 footprints
+    /// with their roofs' heights), in the scene's coordinates; null when the map has none.</summary>
+    public static List<FarPart> LoadFar(string map, GeoProjection proj)
+    {
+        var path = FarPathFor(map);
+        if (!File.Exists(path)) return null;
+        var list = new List<FarPart>();
+        using (var gz = new GZipStream(File.OpenRead(path), CompressionMode.Decompress))
+        using (var r = new BinaryReader(new BufferedStream(gz)))
+        {
+            if (new string(r.ReadChars(4)) != "BFR1") { Debug.LogWarning("Bag3dBuildings: unknown far city file " + path); return null; }
+            double ox = r.ReadDouble(), oy = r.ReadDouble();
+            int n = r.ReadInt32();
+            list.Capacity = n;
+            for (int b = 0; b < n; b++)
+            {
+                var part = new FarPart { Height = r.ReadSingle(), Kind = r.ReadByte() };
+                int nv = r.ReadUInt16();
+                part.Ring = new Vector2[nv];
+                for (int i = 0; i < nv; i++)
+                {
+                    double dx = r.ReadSingle(), dy = r.ReadSingle();
+                    RdProjection.ToWgs(ox + dx, oy + dy, out var lat, out var lon);
+                    proj.ToLocal(lat, lon, out var x, out var z);
+                    part.Ring[i] = new Vector2((float)x, (float)z);
+                }
+                list.Add(part);
+            }
+        }
+        return list;
+    }
+
     static int[] ReadInts(BinaryReader r)
     {
         int n = r.ReadInt32() * 3;
