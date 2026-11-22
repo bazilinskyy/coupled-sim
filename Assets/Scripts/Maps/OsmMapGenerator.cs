@@ -126,6 +126,17 @@ public partial class OsmMapGenerator
 
     static readonly Dictionary<string, Texture2D> _textures = new Dictionary<string, Texture2D>();
 
+    /// <summary>A detail texture for flat roofs (multiplied by two over the photo: 0.5 is no change): gravel grains
+    /// of a few millimetres to a few centimetres, and faint blotches of bitumen.</summary>
+    static Texture2D RoofGrain() => Tex("roof_grain_detail", 256, (x, y, r) =>
+    {
+        float g = 0.5f + ((float)r.NextDouble() - 0.5f) * 0.22f;
+        // (blotches: a smooth pattern over the tile, seamless)
+        float a = 2f * Mathf.PI * x / 256f, b = 2f * Mathf.PI * y / 256f;
+        g += 0.035f * (Mathf.Sin(a * 3f + 1.3f) * Mathf.Cos(b * 2f + 0.4f) + 0.6f * Mathf.Sin(a * 7f + b * 5f));
+        return new Color(g, g, g, 1f);
+    });
+
     static Texture2D Tex(string name, int size, Func<int, int, System.Random, Color> pixel)
     {
         if (_textures.TryGetValue(name, out var t) && t != null) return t;
@@ -967,6 +978,7 @@ public partial class OsmMapGenerator
             GroundPhoto(red, "cycle_red", 4f, Color.white);
             GroundPhoto(bricks, "bricks", 1.5f, new Color(1.45f, 1.0f, 1.0f)); GroundPhoto(parking, "parking", 1.5f, new Color(1.75f, 1.8f, 1.9f));
             GroundPhoto(paving, "paving", 1.5f, new Color(1.0f, 1.1f, 1.25f));
+            MacroVariation(paving, 1.8f); MacroVariation(footAsphalt, 4f); MacroVariation(grass, 2f, 17f); MacroVariation(gravel, 2f, 15f);
             GroundPhoto(cobbles, "cobbles", 1.5f, new Color(0.56f, 0.56f, 0.58f)); GroundPhoto(gravel, "gravel", 1.5f, new Color(0.68f, 0.66f, 0.62f));
             GroundPhoto(grass, "lawn", 4f, new Color(1.05f, 0.95f, 1.1f));
         }
@@ -1083,11 +1095,23 @@ public partial class OsmMapGenerator
         float h = HalfSize + 40;
         var ground = new MeshBuilder();
         // in tiles of at most 100 m: the physics engine warns about (and handles badly) triangles over 500 m
-        int tiles = Mathf.CeilToInt(2 * h / (Terrain != null || waterPolys.Count > 0 ? 10f : 100f));   // 10 m on terrain, so the ground follows it
-        float step = 2 * h / tiles;
+        // (2.5 m on terrain, so the ground follows it as closely as the roads do, and 3 cm lower: with 10 m cells the
+        // ground's straight edges stood up through the asphalt in triangles where the slope curved, as in Montreal)
+        int tiles = Mathf.CeilToInt(2 * h / (Terrain != null || waterPolys.Count > 0 ? 10f : 100f));
+        float step = 2 * h / tiles, gy = Terrain != null ? -0.03f : 0f;
         Vector2 Uv(float x, float z) => new Vector2((x + h) / 4f, (z + h) / 4f);
-        void GroundQuad(float x0, float z0, float x1, float z1) =>
-            ground.Quad(new Vector3(x0, 0, z0), new Vector3(x0, 0, z1), new Vector3(x1, 0, z1), new Vector3(x1, 0, z0), Uv(x0, z0), Uv(x0, z1), Uv(x1, z1), Uv(x1, z0));
+        void GroundQuad(float x0, float z0, float x1, float z1)
+        {
+            // (5 m on a map with corridors: kilometres of them in 2.5 m cells ran out of memory)
+            int n = Terrain != null ? Mathf.Max(1, Mathf.CeilToInt(Mathf.Max(x1 - x0, z1 - z0) / (Area != null ? 5f : 2.5f))) : 1;
+            float dx = (x1 - x0) / n, dz = (z1 - z0) / n;
+            for (int a = 0; a < n; a++)
+                for (int b = 0; b < n; b++)
+                {
+                    float qx0 = x0 + a * dx, qx1 = qx0 + dx, qz0 = z0 + b * dz, qz1 = qz0 + dz;
+                    ground.Quad(new Vector3(qx0, gy, qz0), new Vector3(qx0, gy, qz1), new Vector3(qx1, gy, qz1), new Vector3(qx1, gy, qz0), Uv(qx0, qz0), Uv(qx0, qz1), Uv(qx1, qz1), Uv(qx1, qz0));
+                }
+        }
         for (int i = 0; i < tiles; i++)
             for (int j = 0; j < tiles; j++)
             {
@@ -1165,30 +1189,53 @@ public partial class OsmMapGenerator
                 ground = photo;
                 if (beyondPhoto.V.Count > 0) Emit(world, "Ground grass", beyondPhoto, grass, true);
             }
-            for (int i = 0; i < ground.V.Count; i++) ground.UV[i] = Aerial.Uv(ground.V[i]);
-            var groundMat = Mat("Ground aerial photo", Color.white, 0.08f, Aerial.Texture);
-            if (_assets != null && _assets.DetailTemplate != null)
+            if (Array.IndexOf(CommandLine.Args, "-photoGround") >= 0)
             {
-                // fine grain every 2 m over the photo (0.2-0.3 m per pixel), so it is not blurry up close
-                groundMat.shader = _assets.DetailTemplate.shader;
-                groundMat.CopyPropertiesFromMaterial(_assets.DetailTemplate);
-                groundMat.SetTexture("_BaseMap", Aerial.GroundTexture != null ? Aerial.GroundTexture : Aerial.Texture);
-                groundMat.SetColor("_BaseColor", Color.white);
-                groundMat.SetFloat("_Smoothness", 0.08f);
-                groundMat.EnableKeyword("_DETAIL_MULX2");
-                // up close: real paving (the photo of concrete tiles in grey, Resources/paving_detail), 1.8 m a tile; the
-                // aerial photo gives the colour
-                var pavingDetail = _noPhotoWalls ? null : Resources.Load<Texture2D>("paving_detail");
-                groundMat.SetTexture("_DetailAlbedoMap", pavingDetail != null ? pavingDetail : Tex("ground_detail", 256, (x, y, r) =>
+                // (the photo itself on the ground, as before: -photoGround)
+                for (int i = 0; i < ground.V.Count; i++) ground.UV[i] = Aerial.Uv(ground.V[i]);
+                var groundMat = Mat("Ground aerial photo", Color.white, 0.08f, Aerial.Texture);
+                if (_assets != null && _assets.DetailTemplate != null)
                 {
-                    float v = 0.5f + ((float)r.NextDouble() - 0.5f) * 0.16f;
-                    if (r.NextDouble() < 0.004) v -= 0.12f;   // grit
-                    return new Color(v, v, v);
-                }));
-                groundMat.SetTextureScale("_DetailAlbedoMap", Vector2.one * (pavingDetail != null ? 2f * Aerial.HalfSize / 1.8f : Aerial.HalfSize));
-                groundMat.SetFloat("_DetailAlbedoMapScale", 1f);
+                    // fine grain every 2 m over the photo (0.2-0.3 m per pixel), so it is not blurry up close
+                    groundMat.shader = _assets.DetailTemplate.shader;
+                    groundMat.CopyPropertiesFromMaterial(_assets.DetailTemplate);
+                    groundMat.SetTexture("_BaseMap", Aerial.GroundTexture != null ? Aerial.GroundTexture : Aerial.Texture);
+                    groundMat.SetColor("_BaseColor", Color.white);
+                    groundMat.SetFloat("_Smoothness", 0.08f);
+                    groundMat.EnableKeyword("_DETAIL_MULX2");
+                    // up close: real paving (the photo of concrete tiles in grey, Resources/paving_detail), 1.8 m a tile; the
+                    // aerial photo gives the colour
+                    var pavingDetail = _noPhotoWalls ? null : Resources.Load<Texture2D>("paving_detail");
+                    groundMat.SetTexture("_DetailAlbedoMap", pavingDetail != null ? pavingDetail : Tex("ground_detail", 256, (x, y, r) =>
+                    {
+                        float v = 0.5f + ((float)r.NextDouble() - 0.5f) * 0.16f;
+                        if (r.NextDouble() < 0.004) v -= 0.12f;   // grit
+                        return new Color(v, v, v);
+                    }));
+                    groundMat.SetTextureScale("_DetailAlbedoMap", Vector2.one * (pavingDetail != null ? 2f * Aerial.HalfSize / 1.8f : Aerial.HalfSize));
+                    groundMat.SetFloat("_DetailAlbedoMapScale", 1f);
+                }
+                Emit(world, "Ground", ground, groundMat, true);
             }
-            Emit(world, "Ground", ground, groundMat, true);
+            else
+            {
+                // the ground as what it is, read from the photo (AerialPhoto.Classes, about half a metre a cell): paving
+                // everywhere, the lawns and verges as lawn and bare earth as gravelly soil over it, edges along the
+                // classes' borders (the photo itself, blurred, with its cars and shadows, looked smeared at eye level)
+                var paved = Mat("Ground", Color.white, 0.12f, pavingTex);
+                if (!_noPhotoWalls && !_noRelief && _assets != null && _assets.FacadeTemplate != null && _assets.GroundNames != null)
+                { GroundPhoto(paved, "paving", 4f, new Color(0.95f, 1.03f, 1.15f)); MacroVariation(paved, 1.8f); }
+                Emit(world, "Ground", ground, paved, true);
+                if (Aerial.Classes != null)
+                {
+                    TreeCrownsOffLawns();
+                    var lawn = ClassOverlay(AerialPhoto.Green, 0.004f, 4f);
+                    var soil = ClassOverlay(AerialPhoto.Soil, 0.003f, 1.5f);
+                    if (lawn.V.Count > 0) { Emit(world, "Ground lawn", lawn, grass, true); _grassMeshes.Add(lawn); }
+                    if (soil.V.Count > 0) Emit(world, "Ground soil", soil, gravel, true);
+                    Debug.Log($"OsmMap: ground from the aerial photo: {lawn.T.Count / 3} lawn and {soil.T.Count / 3} soil triangles over the paving");
+                }
+            }
             EmitSurroundings(world);
         }
         else if (!_data.Ways.Any(w => w.Tag("building") != null))
@@ -1529,6 +1576,7 @@ public partial class OsmMapGenerator
                     {
                         if ((sw == "left" && side > 0) || (sw == "right" && side < 0)) continue;
                         Geometry2D.Strip(piece, 2.0f, side * (width / 2 + 1.0f), left, right);
+                        if (bi == 0) OffCarriageways(left, right);
                         walks.Strip(left, right, PavementHeight, 1.5f);
                         kerbs.Wall(side < 0 ? right : left, 0.02f, PavementHeight, side < 0);
                         // kerb at both ends of the piece too, and its back edge down into the ground (which lies under the
@@ -1545,6 +1593,7 @@ public partial class OsmMapGenerator
             else if (IsCycleway(w))
             {
                 Geometry2D.Strip(line, ParseMetres(w.Tag("width"), 2.2f), 0, left, right);
+                if (bi == 0 && lift == 0f) OffCarriageways(left, right);
                 cycles.Strip(left, right, 0.04f + lift, 4f);
                 CyclePaths.Add(line.Select(p => P(p, 0.04f + lift)).ToList());
             }
@@ -1560,6 +1609,7 @@ public partial class OsmMapGenerator
                     foreach (var part in bi == 0 && lift == 0f ? OffRoads(line, hw == "pedestrian") : new List<List<V2>> { line })
                     {
                         Geometry2D.Strip(part, hw == "pedestrian" ? 4f : 1.8f, 0, left, right);
+                        if (bi == 0 && lift == 0f) OffCarriageways(left, right);
                         walks.Strip(left, right, 0.05f + lift, 1.5f);
                     }
                 Pavements.Add(line.Select(p => P(p, 0.05f + lift)).ToList());
@@ -1571,6 +1621,7 @@ public partial class OsmMapGenerator
                 for (int k = cyclesBefore; k < CyclePaths.Count; k++) BridgeLines[CyclePaths[k]] = bi;
             }
         }
+        if (PavementPointsMoved > 0) Debug.Log($"OsmMap: {PavementPointsMoved} points of pavements, footpaths and cycle paths moved off the carriageways to their edge");
         JunctionCorners(roadsAll.TryGetValue(0, out var groundRoads) ? groundRoads : roadsAll[0] = new MeshBuilder(), nodeUse);
         foreach (var bi in roadsAll.Keys.Union(cyclesAll.Keys).Union(walksAll.Keys).Union(cycleLanesAll.Keys).OrderBy(k => k).ToList())
         {
@@ -1588,6 +1639,14 @@ public partial class OsmMapGenerator
             Hidden(E("Roads gravel", gravelRoadsAll, gravel, true));
             if (!topo)
             {
+                // (the drawn road is often wider than OpenStreetMap's width, which OffCarriageways kept the strips off:
+                // what still lies on it moves off it now that it is built)
+                if (bi == 0)
+                {
+                    Physics.SyncTransforms();
+                    if (walksAll.TryGetValue(0, out var w0)) OffDrawnRoads(w0);
+                    if (cyclesAll.TryGetValue(0, out var c0)) OffDrawnRoads(c0);
+                }
                 E("Cycle paths", cyclesAll, red, true);
                 E("Pavements", walksAll, paving, true);
                 E("Kerbs", kerbsAll, kerb, true);
@@ -1746,12 +1805,40 @@ public partial class OsmMapGenerator
             var steep = new[] { new MeshBuilder(), new MeshBuilder() };
             roofs = AerialSplit(roofs, photoRoofs, steep);
             for (int i = 0; i < tileRoofs.Length; i++) tileRoofs[i] = AerialSplit(tileRoofs[i], photoRoofs, steep);
-            for (int i = 0; i < tileRoofs.Length; i++) tileRoofs[i].Append(steep[i]);
-            Emit(buildings, "Roofs aerial photo", photoRoofs, Mat("Roof aerial photo", Color.white, 0.15f, Aerial.Texture), true);
+            for (int i = 0; i < tileRoofs.Length; i++) { tileRoofs[i].Append(steep[i]); tileRoofs[i].Append(_realTileRoofs[i]); }
+            // (with a fine grain of gravel and bitumen over the photo, 1.2 m across: seen close from a drone, the photo's
+            // pixels were a blur)
+            var photoMat = Mat("Roof aerial photo", Color.white, 0.15f, Aerial.Texture);
+            photoMat.EnableKeyword("_DETAIL_MULX2");
+            photoMat.SetTexture("_DetailAlbedoMap", RoofGrain());
+            photoMat.SetFloat("_DetailAlbedoMapScale", 1f);
+            float reps = 2f * Aerial.HalfSize / 1.2f;
+            photoMat.SetTextureScale("_DetailAlbedoMap", new Vector2(reps, reps));
+            Emit(buildings, "Roofs aerial photo", photoRoofs, photoMat, true);
+        }
+        // real buildings' flat roofs, by their roofing
+        if (_realFlatRoofs.Any(m => m.V.Count > 0))
+        {
+            var grainTex = Tex("roof_bitumen", 256, (x, y, r) => Noise(new Color(0.22f, 0.22f, 0.23f), r, 0.25f));
+            var flatMats = new[]
+            {
+                Mat("Roof bitumen", Color.white, 0.25f, grainTex),
+                Mat("Roof gravel", Color.white, 0.05f, Tex("roof_gravel", 256, (x, y, r) => Noise(new Color(0.55f, 0.54f, 0.5f), r, 0.5f))),
+                Mat("Roof membrane", new Color(0.66f, 0.66f, 0.64f), 0.3f, Tex("roof_membrane", 256, (x, y, r) => Noise(new Color(0.95f, 0.95f, 0.94f), r, 0.06f))),
+                Mat("Roof sedum", Color.white, 0.05f, Tex("roof_sedum", 256, (x, y, r) => Noise(r.NextDouble() < 0.15 ? new Color(0.45f, 0.3f, 0.2f) : new Color(0.33f, 0.42f, 0.2f), r, 0.5f))),
+            };
+            if (!_noPhotoWalls && !_noRelief && _assets != null && _assets.FacadeTemplate != null && _assets.GroundNames != null)
+            {
+                GroundPhoto(flatMats[1], "gravel", 2.5f, new Color(0.75f, 0.75f, 0.75f));
+                GroundPhoto(flatMats[3], "lawn", 2.5f, new Color(0.8f, 0.9f, 0.6f));
+            }
+            for (int k = 0; k < 4; k++) Emit(buildings, "Roofs " + flatMats[k].name, _realFlatRoofs[k], flatMats[k], true);
+            Debug.Log($"OsmMap: real buildings' flat roofs: {RealFlatRoofs[0]} bitumen, {RealFlatRoofs[1]} gravel, {RealFlatRoofs[2]} light membrane, {RealFlatRoofs[3]} green");
         }
         // roofs collide too: drones land on them and measure their height above them, planners see the buildings' tops
         Emit(buildings, "Roofs", roofs, roof, true);
         EmitSkyline(buildings);
+        EmitFarCity(world);
         for (int i = 0; i < tileRoofs.Length; i++) Emit(buildings, "Roofs " + tileMats[i].name, tileRoofs[i], tileMats[i], true);
         // buildings cast shadows from both sides of their faces: the seams between walls, roofs and cornices let no
         // sunlight through into the shade of the street (it showed as bright slivers on the pavement)
@@ -1995,6 +2082,74 @@ public partial class OsmMapGenerator
 
     /// <summary>Whether a point lies in a car road's carriageway or within <paramref name="margin"/> m of its edge; then
     /// <paramref name="edge"/> is the point <paramref name="outside"/> m beyond that edge, square to the road.</summary>
+    /// <summary>
+    /// A pavement's, footpath's or cycle path's strip (its two edges, point by point) kept off the carriageways: the
+    /// edges get a point at least every metre, and each point more than 5 cm inside a car road (its estimated width) moves
+    /// out to that road's edge. A pavement drawn beside one road reached over the next road at a junction, and a footpath
+    /// mapped beside a road overlapped it by its width: the paving lay on the road in wedges.
+    /// </summary>
+    void OffCarriageways(List<V2> left, List<V2> right)
+    {
+        if (_roadCells == null || left.Count < 2 || left.Count != right.Count) return;
+        var nl = new List<V2>(); var nr = new List<V2>();
+        for (int i = 0; i < left.Count; i++)
+        {
+            if (i > 0)
+            {
+                float d = Math.Max(V2.Distance(left[i - 1], left[i]), V2.Distance(right[i - 1], right[i]));
+                int steps = (int)Math.Ceiling(d / 1f);
+                for (int k = 1; k < steps; k++) { nl.Add(V2.Lerp(left[i - 1], left[i], k / (float)steps)); nr.Add(V2.Lerp(right[i - 1], right[i], k / (float)steps)); }
+            }
+            nl.Add(left[i]); nr.Add(right[i]);
+        }
+        for (int i = 0; i < nl.Count; i++)
+        {
+            if (InCarriageway(nl[i], -0.05f, 0f, out var e1)) { nl[i] = e1; PavementPointsMoved++; }
+            if (InCarriageway(nr[i], -0.05f, 0f, out var e2)) { nr[i] = e2; PavementPointsMoved++; }
+        }
+        left.Clear(); left.AddRange(nl); right.Clear(); right.AddRange(nr);
+    }
+    /// <summary>
+    /// The points of a pavement's or cycle path's mesh that lie on a drawn road (its collider, built before them) move to
+    /// the nearest point off it within 3 m (eight directions, then halved down to 5 cm), so the strips end at the road's
+    /// edge: in Montreal a pavement's corner lay over the road in a slab.
+    /// </summary>
+    void OffDrawnRoads(MeshBuilder mb)
+    {
+        var done = new Dictionary<(int, int), Vector3>();
+        int moved = 0;
+        for (int i = 0; i < mb.V.Count; i++)
+        {
+            var v = mb.V[i];
+            var key = (Mathf.RoundToInt(v.x * 100f), Mathf.RoundToInt(v.z * 100f));
+            if (done.TryGetValue(key, out var to)) { if (to != v) { mb.V[i] = new Vector3(to.x, v.y, to.z); } continue; }
+            var q = new V2(v.x, v.z);
+            // (5 cm inside: a strip's edge lying on the road's edge stays)
+            if (!OnDrawnRoad(q))
+            { done[key] = v; continue; }
+            float best = float.MaxValue; V2 bestQ = q;
+            for (int k = 0; k < 8; k++)
+            {
+                var d = new V2(Mathf.Cos(k * Mathf.PI / 4f), Mathf.Sin(k * Mathf.PI / 4f));
+                float lo = 0f, hi = -1f;
+                for (float t = 0.25f; t <= 3f; t += 0.25f) if (!OnDrawnRoad(q + d * t)) { hi = t; break; }
+                if (hi < 0f || hi >= best) continue;
+                lo = hi - 0.25f;
+                while (hi - lo > 0.05f) { float m = (lo + hi) / 2f; if (OnDrawnRoad(q + d * m)) lo = m; else hi = m; }
+                if (hi < best) { best = hi; bestQ = q + d * hi; }
+            }
+            var nv = best < float.MaxValue ? new Vector3(bestQ.X, v.y, bestQ.Y) : v;
+            done[key] = nv;
+            if (best < float.MaxValue && best > 0.05f) { mb.V[i] = nv; moved++; }
+        }
+        if (moved > 0) Debug.Log($"OsmMap: {moved} points of pavements and cycle paths moved off the drawn roads");
+    }
+
+    /// <summary>Bicycle racks moved off the carriageway, or left out where they could not be.</summary>
+    public int RacksMoved, RacksLeftOut;
+    /// <summary>Points of pavements, footpaths and cycle paths moved off a carriageway to its edge.</summary>
+    public int PavementPointsMoved;
+
     bool InCarriageway(V2 q, float margin, float outside, out V2 edge)
     {
         edge = q;
@@ -2038,16 +2193,19 @@ public partial class OsmMapGenerator
                 {
                     o.position += new Vector3(edge.X - q.X, PavementHeight - Mathf.Min(o.position.y, PavementHeight), edge.Y - q.Y);
                     moved++;
-                    continue;
+                    q = edge;
+                    // (and on to the drawn road's check: the drawn road is often wider than OpenStreetMap's estimate, with
+                    // its lanes and rounded corners, and a sign moved to the estimate's edge still stood in the road)
                 }
-                // still on the drawn road (wider than OpenStreetMap's width at junctions and crossings, where a rider
-                // keeping to the kerb rode through a crossing sign's post): stepped away from the road until the ground
-                // under it is not road, then half a metre further
-                if (bench || !OnDrawnRoad(q) || !NearestRoad(q, out _, out var away)) continue;
+                // still on the drawn road or a cycle path or cycle lane (the drawn road is wider than OpenStreetMap's width at
+                // junctions and crossings, where a rider keeping to the kerb rode through a crossing sign's post; signs stood
+                // in red cycle paths): stepped away from the road until the ground under it is neither, then half a metre further
+                if (bench || !OnDrawnRoad(q, true) || !NearestRoad(q, out _, out var away)) continue;
                 var p2 = q;
-                for (int k = 0; k < 16 && OnDrawnRoad(p2); k++) p2 += away * 0.25f;
-                if (OnDrawnRoad(p2)) continue;
+                for (int k = 0; k < 24 && OnDrawnRoad(p2, true); k++) p2 += away * 0.25f;
+                if (OnDrawnRoad(p2, true)) continue;
                 p2 += away * 0.5f;
+                if (OnDrawnRoad(p2, true)) p2 -= away * 0.3f;
                 o.position += new Vector3(p2.X - q.X, PavementHeight - Mathf.Min(o.position.y, PavementHeight), p2.Y - q.Y);
                 movedOffDrawn++;
             }
@@ -2057,14 +2215,21 @@ public partial class OsmMapGenerator
 
     /// <summary>Whether the ground drawn at <paramref name="q"/> is a road (a car road's surface, not its markings; on maps
     /// with the national topography its carriageways, not OpenStreetMap's invisible driving surfaces).</summary>
-    bool OnDrawnRoad(V2 q)
+    bool OnDrawnRoad(V2 q, bool cycleToo = false)
     {
+        // (the surface seen there: the highest one, within 5 cm; the topography's cycle paths lie on its carriageways)
+        float top = float.NegativeInfinity; bool road = false, cycle = false;
         foreach (var h in Physics.RaycastAll(new Vector3(q.X, 200f, q.Y), Vector3.down, 400f, ~0, QueryTriggerInteraction.Ignore))
         {
             var n = h.collider.name;
-            if (TopographyGround ? n.StartsWith("BGT roads") : n.StartsWith("Roads")) return true;
+            bool isRoad = TopographyGround ? n.StartsWith("BGT roads") : n.StartsWith("Roads");
+            bool isCycle = n.IndexOf("ycle", StringComparison.Ordinal) >= 0;
+            bool isGround = isRoad || isCycle || n.StartsWith("BGT") || n.StartsWith("Pavements") || n.StartsWith("Ground") || n.StartsWith("Green") || n.StartsWith("Kerbs");
+            if (!isGround) continue;
+            if (h.point.y > top + 0.05f) { top = h.point.y; road = isRoad; cycle = isCycle; }
+            else if (h.point.y > top - 0.05f) { road |= isRoad; cycle |= isCycle; }
         }
-        return false;
+        return road || (cycleToo && cycle);
     }
 
     /// <summary>The nearest car road's centre line within 30 m: the point on it and the direction from it towards <paramref name="q"/>.</summary>
@@ -2128,6 +2293,85 @@ public partial class OsmMapGenerator
     /// OpenStreetMap): plain towers with rows of windows (lit at night), without collisions or shadows, so views along
     /// the streets end in the city's towers instead of empty sky.
     /// </summary>
+    /// <summary>Far city blocks built (-debug: how many, in how many chunks).</summary>
+    public int FarCityParts;
+
+    /// <summary>
+    /// The far city ({map}.far.bin.gz, Tools/bag3d_far.py): every building around the map's area as a block, its 3D BAG
+    /// LoD 1.3 footprint raised to its roof's height, so the city goes on to the horizon from a drone or the motorway (on
+    /// the TU/e campus it ended at the campus' edge). Walls in one of four plain façades with rows of windows a storey
+    /// apart; roofs in the colours of the surroundings photo over them (tiles, gravel, green roofs). In 500 m chunks
+    /// (culled out of view); no colliders (nobody drives there).
+    /// </summary>
+    void EmitFarCity(Transform world)
+    {
+        if (MapExtras.Disabled || string.IsNullOrEmpty(_map.Name)) return;
+        List<Bag3dBuildings.FarPart> parts;
+        try { parts = Bag3dBuildings.LoadFar(_map.Name, _proj); }
+        catch (Exception e) { Debug.LogWarning("Far city: " + e.Message); return; }
+        if (parts == null || parts.Count == 0) return;
+        var wallTones = new[] { new Color(0.47f, 0.26f, 0.19f), new Color(0.36f, 0.28f, 0.24f), new Color(0.74f, 0.71f, 0.65f), new Color(0.56f, 0.56f, 0.55f) };
+        var wallMats = new Material[wallTones.Length];
+        for (int k = 0; k < wallTones.Length; k++)
+        {
+            var tone = wallTones[k];
+            // (one bay 2.7 m wide and one storey 3 m high: a window 1.3 by 1.5 m in the wall's colour)
+            var tex = Tex("far_facade_" + k, 64, (x, y, r) =>
+            {
+                bool window = x >= 16 && x < 47 && y >= 22 && y < 54;
+                var c = window ? new Color(0.16f, 0.19f, 0.23f) : tone;
+                return Noise(c, r, window ? 0.15f : 0.08f);
+            });
+            wallMats[k] = Mat("Far city facade " + k, Color.white, 0.1f, tex);
+        }
+        var roofMat = Aerial != null && Aerial.FarTexture != null ? Mat("Far city roofs", Color.white, 0.1f, Aerial.FarTexture) : Mat("Far city roofs plain", new Color(0.33f, 0.32f, 0.31f), 0.1f);
+        float fh = Aerial != null ? Aerial.FarHalfSize : 1f;
+        var chunks = new Dictionary<long, MeshBuilder[]>();
+        const float Chunk = 500f, Base = -0.4f;
+        int built = 0;
+        foreach (var part in parts)
+        {
+            if (part.Ring.Length < 3) continue;
+            var poly = part.Ring.Select(v => new V2(v.x, v.y)).ToList();
+            var c = poly.Aggregate(V2.Zero, (acc, q) => acc + q) / poly.Count;
+            long key = ((long)Mathf.FloorToInt(c.X / Chunk) << 32) ^ (uint)Mathf.FloorToInt(c.Y / Chunk);
+            if (!chunks.TryGetValue(key, out var mbs)) chunks[key] = mbs = Enumerable.Range(0, wallTones.Length + 1).Select(_ => new MeshBuilder()).ToArray();
+            if (Geometry2D.SignedArea(poly) < 0) poly.Reverse();
+            uint seed = (uint)(Mathf.RoundToInt(c.X * 7.3f) * 73856093 ^ Mathf.RoundToInt(c.Y * 3.1f) * 19349663);
+            // (taller blocks: concrete and light plaster; low ones mostly brick)
+            int tone = part.Height > 14f ? 2 + (int)(seed % 2) : (int)(seed % 6 < 4 ? seed % 2 : 2 + seed % 2);
+            var wall = mbs[tone];
+            float top = Base + part.Height, u = 0f;
+            for (int i = 0; i < poly.Count; i++)
+            {
+                var a = poly[i]; var b = poly[(i + 1) % poly.Count];
+                float len = V2.Distance(a, b);
+                if (len < 0.05f) continue;
+                // (outward: the ring is counter-clockwise, the outside to the right of a->b; windows from 0.4 m up)
+                wall.Quad(P(a, Base), P(a, top), P(b, top), P(b, Base),
+                    new Vector2(u / 2.7f, (Base - 0.6f) / 3f), new Vector2(u / 2.7f, (top - 0.6f) / 3f), new Vector2((u + len) / 2.7f, (top - 0.6f) / 3f), new Vector2((u + len) / 2.7f, (Base - 0.6f) / 3f));
+                u += len;
+            }
+            var roofMb = mbs[wallTones.Length];
+            int v0 = roofMb.V.Count;
+            try { roofMb.Polygon(poly, top, 1f); } catch { continue; }
+            for (int i = v0; i < roofMb.V.Count; i++) { var q = roofMb.V[i]; roofMb.UV[i] = new Vector2((q.x + fh) / (2f * fh), (q.z + fh) / (2f * fh)); }
+            built++;
+        }
+        var farRoot = new GameObject("Far city").transform;
+        farRoot.SetParent(world, false);
+        foreach (var kv in chunks)
+        {
+            var chunkRoot = new GameObject($"Far city {(int)(kv.Key >> 32)},{(int)(kv.Key & 0xffffffff)}").transform;
+            chunkRoot.SetParent(farRoot, false);
+            for (int k = 0; k < kv.Value.Length; k++)
+                if (kv.Value[k].V.Count > 0) Emit(chunkRoot, k < wallTones.Length ? "Far city walls" : "Far city roofs", kv.Value[k], k < wallTones.Length ? wallMats[k] : roofMat, false);
+        }
+        FarCityParts = built;
+        RealDataCredits.Add($"{built} far buildings: 3D BAG LoD 1.3 (tudelft3d and 3DGI, CC BY 4.0)");
+        Debug.Log($"OsmMap: far city: {built} buildings around the area in {chunks.Count} chunks of {Chunk:F0} m");
+    }
+
     void EmitSkyline(Transform parent)
     {
         if (MapExtras.Disabled || string.IsNullOrEmpty(_map.Name)) return;
@@ -2311,6 +2555,132 @@ public partial class OsmMapGenerator
         }
         float size = _assets.GroundSize != null && i < _assets.GroundSize.Length && _assets.GroundSize[i] > 0f ? _assets.GroundSize[i] : 2f;
         m.SetTextureScale("_BaseMap", Vector2.one * (uvMetres / size));
+    }
+
+    /// <summary>
+    /// The aerial photo's green cells under the crown of a mapped tree (the city's register or OpenStreetMap; the crown's
+    /// diameter where known, else 7 m): a street tree's crown seen from above made a lawn under it on the pavement. The
+    /// crown keeps its green only where the ring just outside it is mostly green too (a tree in a lawn).
+    /// </summary>
+    void TreeCrownsOffLawns()
+    {
+        var a = Aerial; int n = a.ClassN; float cell = 2f * a.HalfSize / n;
+        var trees = new List<(V2 p, float r)>();
+        var reg = MapExtras.Load(_map.Name, "trees", _proj, out _);
+        if (reg != null) foreach (var t in reg) trees.Add((new V2(t.X, t.Z), Mathf.Clamp(t.Float("crown", 7f) / 2f, 2f, 9f)));
+        foreach (var nd in _data.Nodes.Values)
+            if (nd.Tag("natural") == "tree" && _pos.TryGetValue(nd.Id, out var q)) trees.Add((q, 3.5f));
+        var orig = (byte[])a.Classes.Clone();
+        int cleared = 0;
+        foreach (var (p, r) in trees)
+        {
+            int ci = (int)((p.X + a.HalfSize) / cell), cj = (int)((p.Y + a.HalfSize) / cell);
+            if (ci < 0 || cj < 0 || ci >= n || cj >= n) continue;
+            int green = 0, all = 0;
+            for (int k = 0; k < 16; k++)
+            {
+                float ang = k * Mathf.PI / 8f;
+                int ii = (int)((p.X + Mathf.Cos(ang) * (r + 1.5f) + a.HalfSize) / cell), jj = (int)((p.Y + Mathf.Sin(ang) * (r + 1.5f) + a.HalfSize) / cell);
+                if (ii < 0 || jj < 0 || ii >= n || jj >= n) continue;
+                all++; if (orig[jj * n + ii] == AerialPhoto.Green) green++;
+            }
+            if (all > 0 && green >= all * 0.6f) continue;
+            int rc = Mathf.CeilToInt(r / cell);
+            for (int dj = -rc; dj <= rc; dj++)
+                for (int di = -rc; di <= rc; di++)
+                {
+                    int ii = ci + di, jj = cj + dj;
+                    if (ii < 0 || jj < 0 || ii >= n || jj >= n || (di * di + dj * dj) * cell * cell > r * r) continue;
+                    if (a.Classes[jj * n + ii] == AerialPhoto.Green) { a.Classes[jj * n + ii] = AerialPhoto.Paved; cleared++; }
+                }
+        }
+        Debug.Log($"OsmMap: {cleared} ground cells under {trees.Count} trees' crowns taken off the lawns");
+    }
+
+    /// <summary>
+    /// The cells of one ground class as a mesh just above the ground (<paramref name="y"/>), by marching squares over
+    /// the cells' centres: the edges run along the class's border (cut at half a cell), not in steps. Squares wholly of
+    /// the class merge along a row, up to 8 m (the terrain lifts the mesh by its vertices). UVs in metres /
+    /// <paramref name="uvMetres"/>.
+    /// </summary>
+    MeshBuilder ClassOverlay(byte cls, float y, float uvMetres)
+    {
+        var mb = new MeshBuilder();
+        var a = Aerial; int n = a.ClassN; float cell = 2f * a.HalfSize / n;
+        bool In(int i, int j) => i >= 0 && j >= 0 && i < n && j < n && a.Classes[j * n + i] == cls;
+        Vector3 At(float i, float j) { float x = -a.HalfSize + (i + 0.5f) * cell, z = -a.HalfSize + (j + 0.5f) * cell; return new Vector3(x, y, z); }
+        void Tri(Vector3 p0, Vector3 p1, Vector3 p2)
+        {
+            int k = mb.V.Count;
+            foreach (var q in new[] { p0, p1, p2 }) { mb.V.Add(q); mb.UV.Add(new Vector2(q.x, q.z) / uvMetres); }
+            // (clockwise seen from above: Unity's front face points up)
+            mb.T.Add(k); mb.T.Add(k + 2); mb.T.Add(k + 1);
+        }
+        int maxRun = Math.Max(1, Mathf.RoundToInt(8f / cell));
+        var poly = new List<Vector3>(8);
+        for (int j = 0; j + 1 < n; j++)
+        {
+            int runStart = -1;
+            for (int i = 0; i + 1 <= n; i++)
+            {
+                bool full = i + 1 < n && In(i, j) && In(i + 1, j) && In(i + 1, j + 1) && In(i, j + 1);
+                if (full && runStart < 0) runStart = i;
+                if (runStart >= 0 && (!full || i - runStart + 1 >= maxRun))
+                {
+                    int end = full ? i + 1 : i;   // (exclusive: squares runStart .. end - 1)
+                    if (end > runStart)
+                    {
+                        Vector3 p00 = At(runStart, j), p10 = At(end, j), p11 = At(end, j + 1), p01 = At(runStart, j + 1);
+                        Tri(p00, p10, p11); Tri(p00, p11, p01);
+                    }
+                    runStart = full ? -1 : -1;
+                    if (full) { continue; }
+                }
+                if (full || i + 1 >= n) continue;
+                // a border square: its corners (counter-clockwise from the south-west) in or out
+                bool c0 = In(i, j), c1 = In(i + 1, j), c2 = In(i + 1, j + 1), c3 = In(i, j + 1);
+                if (!(c0 || c1 || c2 || c3)) continue;
+                var corners = new[] { At(i, j), At(i + 1, j), At(i + 1, j + 1), At(i, j + 1) };
+                var ins = new[] { c0, c1, c2, c3 };
+                poly.Clear();
+                for (int k = 0; k < 4; k++)
+                {
+                    if (ins[k]) poly.Add(corners[k]);
+                    if (ins[k] != ins[(k + 1) % 4]) poly.Add((corners[k] + corners[(k + 1) % 4]) * 0.5f);
+                }
+                for (int k = 1; k + 1 < poly.Count; k++) Tri(poly[0], poly[k], poly[k + 1]);
+            }
+        }
+        return mb;
+    }
+
+    /// <summary>A seamless 256 x 256 field of large-scale wear: tone that drifts by a few percent, darker stains and
+    /// lighter worn patches (multiplied by two over a surface: 0.5 is no change).</summary>
+    static Texture2D MacroTex() => Tex("surface_macro_variation", 256, (x, y, r) =>
+    {
+        float u = 2f * Mathf.PI * x / 256f, v = 2f * Mathf.PI * y / 256f, g = 0.5f;
+        // (integer frequencies on the torus: it repeats without a seam)
+        int[] fu = { 1, 2, 3, 5, 7, 11 }, fv = { 2, 1, 4, 3, 6, 9 };
+        float[] amp = { 0.035f, 0.03f, 0.022f, 0.016f, 0.012f, 0.008f }, ph = { 0.3f, 1.7f, 2.9f, 4.1f, 5.3f, 0.9f };
+        for (int k = 0; k < fu.Length; k++) g += amp[k] * Mathf.Sin(fu[k] * u + fv[k] * v + ph[k]) * Mathf.Cos(fv[k] * u - fu[k] * v + 2f * ph[k]);
+        // stains: a few soft dark blots
+        float s = Mathf.Sin(3 * u + 1.1f) * Mathf.Sin(2 * v + 0.6f) + Mathf.Sin(5 * u - 3 * v + 2.2f) * 0.6f;
+        if (s > 0.9f) g -= (s - 0.9f) * 0.12f;
+        return new Color(g, g, g, 1f);
+    });
+
+    /// <summary>
+    /// Large-scale variation over a tiled surface (the detail map at a far larger scale than the texture: wear and stains
+    /// over about <paramref name="period"/> metres): a scanned paving of 1.8 m repeated over a whole street showed as
+    /// the same flat squares everywhere. <paramref name="tileMetres"/>: the metres one repeat of the base texture covers.
+    /// </summary>
+    void MacroVariation(Material m, float tileMetres, float period = 23f)
+    {
+        if (_noRelief) return;
+        m.EnableKeyword("_DETAIL_MULX2");
+        m.SetTexture("_DetailAlbedoMap", MacroTex());
+        m.SetFloat("_DetailAlbedoMapScale", 1f);
+        m.SetTextureScale("_DetailAlbedoMap", Vector2.one * (tileMetres / period));
     }
 
     Material WaterMaterial(Material plain)
@@ -2849,6 +3219,31 @@ public partial class OsmMapGenerator
             {
                 int capacity = Math.Clamp(int.TryParse(node.Tag("capacity"), out var c) ? c : 8, 2, 20);
                 var right = new V2(dir.Y, -dir.X);
+                // (the whole row, bicycles 1.9 m long across it, at least 0.3 m off the carriageway: moved away from the road
+                // by the least that clears it, else left out; at a kerb the bicycles stood 1 m into the road)
+                bool Clear(V2 o)
+                {
+                    for (int i = 0; i < capacity; i++)
+                    {
+                        var q = o + dir * ((i - capacity / 2f) * 0.75f);
+                        if (InCarriageway(q + right * 1.25f, 0.3f, 0f, out _) || InCarriageway(q - right * 0.7f, 0.3f, 0f, out _) || InCarriageway(q, 0.3f, 0f, out _)) return false;
+                    }
+                    return true;
+                }
+                if (!Clear(p))
+                {
+                    InCarriageway(p, 50f, 0f, out var edgeAt);
+                    // (the edge point lies on p's side of the road: out from the road is from the edge to p, or from p to the
+                    // edge when p is on the carriageway)
+                    var away = InCarriageway(p, 0f, 0f, out _) ? edgeAt - p : p - edgeAt;
+                    away = away.LengthSquared() > 1e-4f ? V2.Normalize(away) : right;
+                    bool found = false;
+                    for (float m = 0.25f; m <= 3f && !found; m += 0.25f)
+                        foreach (var dd in new[] { away, right, -right })
+                            if (!found && Clear(p + dd * m)) { p += dd * m; found = true; }
+                    if (!found) { RacksLeftOut++; continue; }
+                    RacksMoved++;
+                }
                 for (int i = 0; i < capacity; i++)
                 {
                     var q = p + dir * ((i - capacity / 2f) * 0.75f);
@@ -2931,13 +3326,34 @@ public partial class OsmMapGenerator
                 var ax = V2.Normalize(poly[(longest + 1) % poly.Count] - poly[longest]); var ay = new V2(-ax.Y, ax.X);
                 float minA = float.MaxValue, maxA = float.MinValue, minB = float.MaxValue, maxB = float.MinValue;
                 foreach (var q in poly) { float u = V2.Dot(q, ax), v = V2.Dot(q, ay); minA = Math.Min(minA, u); maxA = Math.Max(maxA, u); minB = Math.Min(minB, v); maxB = Math.Max(maxB, v); }
-                int row = 0;
-                for (float v = minB + 3f; v < maxB - 2.5f; v += (row++ % 2 == 0) ? 5.2f : 6.5f)
-                    for (float u = minA + 1.5f; u < maxA - 1.2f; u += 2.6f)
+                // as real car parks are laid out: a 6 m aisle, then two rows of 5 m bays back to back facing the aisles on
+                // either side, and so on (5.2 m and 6.5 m between rows left aisles of 1.5 m: the cars at the back could not
+                // get out); bays 2.5 m wide; a car only where its whole footprint lies in the lot, nose to its aisle
+                bool Fits(V2 q, V2 facing)
+                {
+                    var side = new V2(-facing.Y, facing.X);
+                    foreach (var (f, sd) in new[] { (2.3f, 1.0f), (2.3f, -1.0f), (-2.3f, 1.0f), (-2.3f, -1.0f) })
+                        if (!Geometry2D.PointInPolygon(q + facing * f + side * sd, poly)) return false;
+                    return true;
+                }
+                const float Aisle = 6f, Bay = 5f, BayWidth = 2.5f;
+                for (float v0 = minB + Aisle; v0 + Bay <= maxB; v0 += 2f * Bay + Aisle)
+                {
+                    // (the second row only with an aisle behind it, else the lot's far edge closes it in)
+                    bool second = v0 + 2f * Bay + Aisle <= maxB + 0.5f;
+                    for (int r2 = 0; r2 < (second ? 2 : 1); r2++)
                     {
-                        var q = ax * u + ay * v;
-                        if (Geometry2D.PointInPolygon(q, poly) && rng.NextDouble() < 0.75) Car(q, Yaw(ay));
+                        float v = v0 + Bay * (r2 + 0.5f);
+                        var facing = r2 == 0 ? -ay : ay;   // (towards the aisle on its side)
+                        for (float u = minA + BayWidth * 0.6f; u < maxA - BayWidth * 0.5f; u += BayWidth)
+                        {
+                            var q = ax * u + ay * v;
+                            if (!Fits(q, facing) || rng.NextDouble() >= 0.75) continue;
+                            // (most drive in nose first; some reverse in)
+                            Car(q, Yaw(rng.NextDouble() < 0.8 ? -facing : facing));
+                        }
                     }
+                }
             }
             else if (amenity == "parking_space" && w.IsClosed)
             {
@@ -2972,6 +3388,7 @@ public partial class OsmMapGenerator
         if (assets != null && assets.ParkedBicycles != null && assets.ParkedBicycles.Length > 0)
             foreach (var b in bikes.OrderBy(b => b.p.Length()).Take(MaxParkedBicycles))
             { Place(assets.ParkedBicycles[rng.Next(assets.ParkedBicycles.Length)], b.p, b.yaw, "Parked bicycle"); ParkedBicycleCount++; }
+        if (RacksMoved + RacksLeftOut > 0) Debug.Log($"OsmMap: {RacksMoved} bicycle racks moved off the carriageway, {RacksLeftOut} left out (no room beside it)");
         Emit(props, "Bollards", bollards, metal, true);
         Emit(props, "Bicycle racks", racks, metal, false);
         Emit(props, "Hedges", hedges, green, true);
@@ -3050,7 +3467,30 @@ public partial class OsmMapGenerator
         // churches (OpenStreetMap's building or amenity tags, around a real building's middle): church windows, no shop fronts
         var churches = _data.Ways.Where(w => w.IsClosed && (w.Tag("building") == "church" || w.Tag("building") == "cathedral" || w.Tag("building") == "chapel" || w.Tag("amenity") == "place_of_worship"))
             .Select(w => Line(w).Select(q => new System.Numerics.Vector2(q.X, q.Y)).ToList()).Where(l => l.Count >= 4).ToList();
-        int churchCount = 0;
+        int churchCount = 0, downtownLow = 0;
+        // the buildings' heights by 40 m cell: a low building among towers (midtown New York) is a shop or an office's
+        // podium, not a brick house with sash windows
+        var cellTops = new Dictionary<long, List<float>>();
+        long CellOf(float x, float z) => ((long)Mathf.FloorToInt(x / 40f) << 32) ^ (uint)Mathf.FloorToInt(z / 40f);
+        var tops = new float[bag.Count]; var mids = new Vector2[bag.Count];
+        for (int bi = 0; bi < bag.Count; bi++)
+        {
+            float t = 0f, sx = 0f, sz = 0f;
+            foreach (var v in bag[bi].V) { t = Math.Max(t, v.y); sx += v.x; sz += v.z; }
+            tops[bi] = t; mids[bi] = bag[bi].V.Length > 0 ? new Vector2(sx, sz) / bag[bi].V.Length : Vector2.zero;
+            var key = CellOf(mids[bi].x, mids[bi].y);
+            if (!cellTops.TryGetValue(key, out var l)) cellTops[key] = l = new List<float>();
+            l.Add(t);
+        }
+        float NeighbourMedian(Vector2 m)
+        {
+            var hs = new List<float>();
+            int cx = Mathf.FloorToInt(m.x / 40f), cz = Mathf.FloorToInt(m.y / 40f);
+            for (int dx = -2; dx <= 2; dx++) for (int dz = -2; dz <= 2; dz++)
+                if (cellTops.TryGetValue(((long)(cx + dx) << 32) ^ (uint)(cz + dz), out var l)) hs.AddRange(l);
+            if (hs.Count < 6) return 0f;
+            hs.Sort(); return hs[hs.Count / 2];
+        }
         for (int bi = 0; bi < bag.Count; bi++)
         {
             var b = bag[bi];
@@ -3066,6 +3506,8 @@ public partial class OsmMapGenerator
             var style = StyleFor(b.Year, top, church ? "church" : null, (uint)(bi * 2246822519u));
             int kind = b.Year > 0 && b.Year < 1940 ? palette[pi % 3] : palette[pi];
             if (style == WindowStyle.Glass && kind < 3) kind = 3 + bi % 2;   // glass walls: plaster or concrete frames
+            bool lowAmongTowers = !church && top < 15f && NeighbourMedian(mids[bi]) > 35f;
+            if (lowAmongTowers) { style = bi % 2 == 0 ? WindowStyle.Ribbon : WindowStyle.Glass; kind = 3 + bi % 2; downtownLow++; }
             var wall = facadeMbs[kind * Styles + (int)style];
             var verts = b.V;
             if (OverRoad(b))
@@ -3088,19 +3530,96 @@ public partial class OsmMapGenerator
                 foreach (var poly in below)
                 {
                     var c = poly.Aggregate(Vector3.zero, (acc, q) => acc + q) / poly.Length;
-                    var gs = !church && NearShop(new V2(c.x, c.z), shopPoints) ? GroundStyle.Shop : gsBase;
+                    var gs = !church && (lowAmongTowers || NearShop(new V2(c.x, c.z), shopPoints)) ? GroundStyle.Shop : gsBase;
                     AddPolys(groundMbs[kind * GroundStyleCount + (int)gs], new List<Vector3[]> { poly }, true, GroundFloorHeight);
                 }
                 AddPolys(wall, above, true, 0f);
             }
             else AddTriangles(wall, verts, b.Walls, true);
             if (b.RoofKind != 1 && top > 6f) CorniceFromWalls(cornices, verts, b.Walls, top);
-            AddTriangles(b.RoofKind == 1 ? tileRoofs[bi % 3 == 0 ? 1 : 0] : flatRoofs, verts, b.Roofs, false);
+            if (Aerial != null) AddRealRoof(verts, b.Roofs, wall, flatRoofs, bi);
+            else AddTriangles(b.RoofKind == 1 ? tileRoofs[bi % 3 == 0 ? 1 : 0] : flatRoofs, verts, b.Roofs, false);
             BuildingCount++;
         }
         if (churchCount > 0) Debug.Log($"OsmMap: {churchCount} real buildings are churches (OpenStreetMap): church windows");
+        if (downtownLow > 0) Debug.Log($"OsmMap: {downtownLow} low buildings among towers get shopfronts and modern windows");
     }
 
+
+    /// <summary>The pitched roofs of real buildings, one tile colour per building ([0] red, [1] anthracite): added to
+    /// the tile roofs after the photo split, which would choose each triangle's colour on its own.</summary>
+    readonly MeshBuilder[] _realTileRoofs = { new MeshBuilder(), new MeshBuilder() };
+    /// <summary>Real buildings' flat roofs by roofing: [0] dark bitumen, [1] grey gravel, [2] light membrane, [3] green
+    /// (sedum); UVs in metres / 2.5.</summary>
+    readonly MeshBuilder[] _realFlatRoofs = { new MeshBuilder(), new MeshBuilder(), new MeshBuilder(), new MeshBuilder() };
+    public readonly int[] RealFlatRoofs = new int[4];
+
+    /// <summary>
+    /// A real building's roof on a map with an aerial photo: its faces by slope. Near-flat faces (under 25°) go to the
+    /// flat roofs (the photo's colours: gravel, solar panels, roof lights); pitched faces (25-72°) get tiles, one colour
+    /// for the whole building (red or anthracite by the photo's colour over all its pitched faces, weighted by their
+    /// area: chosen per triangle, a hip end came out grey on a red roof and looked like a loose slab); steeper faces
+    /// (a mansard's lower slope, a dormer's cheek that the model calls roof) are wall (the photo from above smeared down
+    /// them as white flaps).
+    /// </summary>
+    void AddRealRoof(Vector3[] v, int[] tris, MeshBuilder wall, MeshBuilder flat, int bi)
+    {
+        var flatT = new List<int>(); var pitched = new List<int>(); var steepT = new List<int>();
+        float redArea = 0f, greyArea = 0f;
+        for (int i = 0; i + 2 < tris.Length; i += 3)
+        {
+            Vector3 a = v[tris[i]], b = v[tris[i + 1]], c = v[tris[i + 2]];
+            var n = Vector3.Cross(b - a, c - a);
+            float area = n.magnitude * 0.5f;
+            if (area < 1e-6f) continue;
+            float up = Mathf.Abs(n.y) / (2f * area);
+            var dst = up > 0.906f ? flatT : up > 0.309f ? pitched : steepT;   // (cos 25°, cos 72°)
+            dst.Add(tris[i]); dst.Add(tris[i + 1]); dst.Add(tris[i + 2]);
+            if (dst == pitched && Aerial.Covers(a))
+            {
+                Color.RGBToHSV(Aerial.Sample((a + b + c) / 3f), out float h, out float sat, out float val);
+                if (sat > 0.18f && (h < 0.09f || h > 0.94f) && val > 0.22f) redArea += area; else greyArea += area;
+            }
+        }
+        // (flat faces: a roofing by the photo's mean colour over them, not the photo itself, which is not a true
+        // orthophoto: bits of walls, streets and shadows smeared over the roofs, and blurred seen close from a drone)
+        if (flatT.Count > 0)
+        {
+            float fa = 0f; Color sum = Color.black;
+            for (int i = 0; i + 2 < flatT.Count; i += 3)
+            {
+                Vector3 a = v[flatT[i]], b = v[flatT[i + 1]], c = v[flatT[i + 2]];
+                if (!Aerial.Covers(a)) continue;
+                float ar = Vector3.Cross(b - a, c - a).magnitude * 0.5f;
+                sum += Aerial.Sample((a + b + c) / 3f) * ar; fa += ar;
+            }
+            int kind = 1;
+            if (fa > 0f)
+            {
+                var m = sum / fa; float sm = m.r + m.g + m.b + 1e-3f, exg = (2f * m.g - m.r - m.b) / sm, lum = 0.3f * m.r + 0.59f * m.g + 0.11f * m.b;
+                kind = exg > 0.06f ? 3 : lum > 0.55f ? 2 : lum < 0.26f ? 0 : 1;
+            }
+            var dstFlat = _realFlatRoofs[kind];
+            int k0 = dstFlat.V.Count;
+            AddTriangles(dstFlat, v, flatT.ToArray(), false);
+            for (int i = k0; i < dstFlat.V.Count; i++) dstFlat.UV[i] = new Vector2(dstFlat.V[i].x, dstFlat.V[i].z) / 2.5f;
+            RealFlatRoofs[kind]++;
+        }
+        AddTriangles(wall, v, steepT.ToArray(), true);
+        if (pitched.Count == 0) return;
+        int colour = redArea + greyArea > 0f ? (redArea >= greyArea * 0.6f ? 0 : 1) : (bi % 3 == 0 ? 1 : 0);
+        var dstMb = _realTileRoofs[colour];
+        for (int i = 0; i + 2 < pitched.Count; i += 3)
+        {
+            // (turned over as AddTriangles does: the model's faces point inwards in Unity's axes)
+            Vector3 a = v[pitched[i]], b = v[pitched[i + 2]], c = v[pitched[i + 1]];
+            var n = Vector3.Cross(b - a, c - a).normalized; if (n.y < 0) n = -n;
+            var strike = Vector3.Cross(Vector3.up, n).normalized; var dip = Vector3.Cross(n, strike);
+            int k0 = dstMb.V.Count;
+            foreach (var q in new[] { a, b, c }) { dstMb.V.Add(q); dstMb.UV.Add(new Vector2(Vector3.Dot(q, strike), Vector3.Dot(q, dip)) / 2.6f); }
+            dstMb.T.Add(k0); dstMb.T.Add(k0 + 1); dstMb.T.Add(k0 + 2);
+        }
+    }
 
     static readonly HashSet<string> ShopAmenities = new HashSet<string> { "restaurant", "cafe", "bar", "pub", "fast_food", "bank", "pharmacy", "ice_cream" };
     static readonly int GroundStyleCount = Enum.GetValues(typeof(GroundStyle)).Length;

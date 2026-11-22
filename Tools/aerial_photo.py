@@ -103,6 +103,8 @@ def main():
     ap.add_argument("map", nargs="?")
     ap.add_argument("--size", type=int, default=4096, help="pixels per side of the saved photo")
     ap.add_argument("--zoom", type=int, help="tile zoom level (default: the source's best)")
+    ap.add_argument("--far-half", type=float, default=3000.0, help="half the side (m) of the surroundings photo (default 3 km)")
+    ap.add_argument("--far-size", type=int, default=2048, help="pixels per side of the surroundings photo")
     ap.add_argument("--list", action="store_true")
     a = ap.parse_args()
     if a.list or not a.map:
@@ -113,12 +115,19 @@ def main():
     z = a.zoom or src.get("zoom", 0)
     s_, w_, n_, e_ = bounds(a.map)
     lat0, lon0 = centre(a.map)
+    # a map with an area file (Tools/map_area.py): the photo over its boxes (the centre, a campus), not its corridors
+    # (the OpenStreetMap file's bounds then reach along a motorway for kilometres: 22 km at the finest zoom)
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import map_area
+    parts = map_area.read(a.map)
+    boxes = [p for p in (parts or []) if p[0] == "box"]
+    if boxes: s_, w_, n_, e_ = map_area.union_bbox(boxes)
     # the square the map builder covers: half size = the farthest corner coordinate (OsmMapGenerator.HalfSize)
     c0 = to_local(s_, w_, lat0, lon0); c1 = to_local(n_, e_, lat0, lon0)
     # plus the 40 m of ground the builder lays around the map, and a margin
     h = max(abs(c0[0]), abs(c0[1]), abs(c1[0]), abs(c1[1])) + 60
     # local metres -> (lat, lon): a quadratic fitted to the forward projection (error far below a pixel)
-    pad = 0.035   # about 3 km: the fit also covers the surroundings photo
+    pad = max(0.035, a.far_half / 85000.0)   # the fit also covers the surroundings photo
     lats = np.linspace(s_ - pad, n_ + pad, 15); lons = np.linspace(w_ - pad, e_ + pad, 15)
     LA, LO = np.meshgrid(lats, lons); LA = LA.ravel(); LO = LO.ravel()
     XZ = np.array([to_local(la, lo, lat0, lon0) for la, lo in zip(LA, LO)])
@@ -128,14 +137,15 @@ def main():
     cache = os.path.join(os.path.expanduser("~"), ".cache", "coupled-sim-aerial", MAP_SOURCE[a.map])
     os.makedirs(cache, exist_ok=True)
     dst = os.path.join(MAPS, a.map + ".aerial.jpg")
-    far_h = 3000.0
+    far_h = a.far_half
     if "cog" in src:
         cog_cut(src, h, a.size, basis, clat, clon, cache, dst, a.map)
-        cog_cut(src, far_h, 2048, basis, clat, clon, cache, os.path.join(MAPS, a.map + ".aerial-far.jpg"), a.map)
+        cog_cut(src, far_h, a.far_size, basis, clat, clon, cache, os.path.join(MAPS, a.map + ".aerial-far.jpg"), a.map)
     else:
         cut(src, z, h, a.size, basis, clat, clon, cache, dst, a.map)
-        # the surroundings, for distant views: 6 km square, coarser
-        cut(src, max(12, z - 4), far_h, 2048, basis, clat, clon, cache, os.path.join(MAPS, a.map + ".aerial-far.jpg"), a.map)
+        # the surroundings, for distant views: 6 km square (or --far-half), coarser
+        fz = max(12, min(z - 4, int(round(math.log2(156543.0 * math.cos(math.radians(lat0)) * a.far_size / (2 * far_h))))))
+        cut(src, fz, far_h, a.far_size, basis, clat, clon, cache, os.path.join(MAPS, a.map + ".aerial-far.jpg"), a.map)
     json.dump({"halfSize": h, "metresPerPixel": 2 * h / a.size, "zoom": z, "farHalfSize": far_h, "source": MAP_SOURCE[a.map], "credit": src["credit"]},
               open(os.path.join(MAPS, a.map + ".aerial.json"), "w"), indent=1)
 
