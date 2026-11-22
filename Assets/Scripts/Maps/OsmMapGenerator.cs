@@ -2308,9 +2308,13 @@ public partial class OsmMapGenerator
     /// apart; roofs in the colours of the surroundings photo over them (tiles, gravel, green roofs). In 500 m chunks
     /// (culled out of view); no colliders (nobody drives there).
     /// </summary>
+    /// <summary>No far city (the tests that build every map: it has no colliders and doubles Eindhoven's build time; on
+    /// the command line -noFarCity).</summary>
+    public static bool NoFarCity = Array.IndexOf(CommandLine.Args, "-noFarCity") >= 0;
+
     void EmitFarCity(Transform world)
     {
-        if (MapExtras.Disabled || string.IsNullOrEmpty(_map.Name)) return;
+        if (MapExtras.Disabled || NoFarCity || string.IsNullOrEmpty(_map.Name)) return;
         List<Bag3dBuildings.FarPart> parts;
         try { parts = Bag3dBuildings.LoadFar(_map.Name, _proj); }
         catch (Exception e) { Debug.LogWarning("Far city: " + e.Message); return; }
