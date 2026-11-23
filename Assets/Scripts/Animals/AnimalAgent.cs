@@ -46,6 +46,20 @@ public class AnimalAgent : MonoBehaviour
         _animator = GetComponentInChildren<Animator>();
         Current = State.Idle;
         _stateTimer = (float)_rng.NextDouble() * 4f;
+        // (the cat's model has no run, only its walk: it scurries at most as fast as that walk, played quicker, can show)
+        if (Species == AnimalSpecies.Cat) RunSpeed = Mathf.Min(RunSpeed, WalkSpeed * 2.6f);
+    }
+
+    void Awake()
+    {
+        // (always animated: culled by its skinned mesh's bounds, which the model's scaled and turned holder put off its
+        // body, the cat in Barcelona stood still in its pose while it walked across the screen)
+        if (_animator == null) _animator = GetComponentInChildren<Animator>();
+        if (_animator != null) _animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+        _skins = GetComponentsInChildren<SkinnedMeshRenderer>();
+        foreach (var sk in _skins) sk.updateWhenOffscreen = true;
+        _model = transform.Find("Model");
+        _lastPos = transform.position;
     }
 
     void OnEnable() => All.Add(this);
@@ -57,17 +71,75 @@ public class AnimalAgent : MonoBehaviour
     {
         if (Simulate && _rng != null) Think(Time.deltaTime);
         ShowState();
+        ShowPace(Time.deltaTime);
+    }
+
+    void LateUpdate() => KeepFeetOnGround();
+
+    SkinnedMeshRenderer[] _skins;
+    Transform _model;
+    Vector3 _lastPos;
+    float _pace, _nextGround, _groundFix;
+    Mesh _baked;
+    bool _hop;
+
+    /// <summary>
+    /// The walk and run played at the pace the animal moves (their clips at the speeds the species was set up with:
+    /// WalkSpeed, RunSpeed; the cat's run is its walk played quicker), so the paws do not slide: speeding up from a
+    /// stand, it steps quicker as it goes faster. On clients too: the pace comes from how far the body moved.
+    /// </summary>
+    void ShowPace(float dt)
+    {
+        if (_animator == null || dt <= 0f) return;
+        var d = transform.position - _lastPos; d.y = 0f;
+        _lastPos = transform.position;
+        _pace = Mathf.Lerp(_pace, d.magnitude / dt, 1f - Mathf.Exp(-dt / 0.15f));
+        float clipSpeed = Current == State.Walk ? WalkSpeed
+            : Current == State.Run ? (Species == AnimalSpecies.Cat ? WalkSpeed : RunSpeed) : 0f;
+        _animator.speed = clipSpeed > 0.05f ? Mathf.Clamp(_pace / clipSpeed, 0.35f, 2.8f) : 1f;
+    }
+
+    /// <summary>
+    /// The lowest point of the body on the ground in every pose (the model was set on the ground in its walk: standing,
+    /// eating or galloping, the horse and others hovered a few centimetres to a decimetre over it): every 0.3 s while
+    /// on screen, its mesh as it is posed now is measured and the model moved by what puts its lowest vertex on the
+    /// ground under the animal, eased in. Not in flight, and kept while it runs (a gallop has the feet off the ground).
+    /// </summary>
+    void KeepFeetOnGround()
+    {
+        if (_model == null || _skins == null || _skins.Length == 0 || Time.time < _nextGround) return;
+        _nextGround = Time.time + 0.3f;
+        if (Current == State.Fly || Current == State.Run || _hop) return;
+        bool seen = false;
+        foreach (var sk in _skins) if (sk != null && sk.isVisible) { seen = true; break; }
+        if (!seen) return;
+        if (_baked == null) _baked = new Mesh();
+        float low = float.MaxValue;
+        foreach (var sk in _skins)
+        {
+            if (sk == null || !sk.enabled || sk.sharedMesh == null) continue;
+            sk.BakeMesh(_baked, true);
+            var m = sk.transform.localToWorldMatrix;
+            var vs = _baked.vertices;
+            for (int i = 0; i < vs.Length; i += 2) { float y = m.MultiplyPoint3x4(vs[i]).y; if (y < low) low = y; }
+        }
+        if (low == float.MaxValue) return;
+        // (the body's offset from the ground, kept within 0.3 m: a wrong reading, as a mesh part far off, moves nothing much)
+        float want = Mathf.Clamp(_groundFix + (transform.position.y - low), -0.3f, 0.3f);
+        float step = want - _groundFix;
+        _groundFix += step * 0.6f;
+        _model.position += Vector3.up * (step * 0.6f);
     }
 
     void Think(float dt)
     {
         _stateTimer -= dt;
         // threats first
-        if (Current != State.Fly && Threat(out var away))
+        if ((Current != State.Fly || _hop) && Threat(out var away))
         {
             if (CanFly)
             {
-                Current = State.Fly;
+                Current = State.Fly; _hop = false;
                 _target = transform.position + away * Rand(15f, 30f);
                 _stateTimer = Rand(4f, 8f);
             }
@@ -94,10 +166,11 @@ public class AnimalAgent : MonoBehaviour
                 else if (Current == State.Run && _stateTimer <= 0f) { Current = State.Walk; _stateTimer = 10f; }
                 break;
             case State.Fly:
-                _speed = 7f;
-                _flyHeight = Mathf.MoveTowards(_flyHeight, _stateTimer > 1.5f ? 6f : 0f, dt * 3f);
+                _speed = _hop ? 2.5f : 7f;
+                // (a hop: up to 0.6 m and down again over a second; a flight: up to 6 m)
+                _flyHeight = Mathf.MoveTowards(_flyHeight, _hop ? (_stateTimer > 0.5f ? 0.6f : 0f) : (_stateTimer > 1.5f ? 6f : 0f), dt * (_hop ? 1.6f : 3f));
                 MoveTowardsTarget(dt);
-                if (_stateTimer <= 0f && _flyHeight <= 0.01f) { Current = State.Idle; _stateTimer = Rand(3f, 8f); }
+                if (_stateTimer <= 0f && _flyHeight <= 0.01f) { Current = State.Idle; _stateTimer = Rand(3f, 8f); _hop = false; }
                 break;
         }
     }
@@ -112,7 +185,18 @@ public class AnimalAgent : MonoBehaviour
         {
             var d = Random2(HomeRadius);
             var p = _home + new Vector3(d.x, 0, d.y);
-            if (Ground(p, out var y) && !Blocked(transform.position, p)) { _target = new Vector3(p.x, y, p.z); Current = State.Walk; _stateTimer = 0f; return; }
+            if (Ground(p, out var y) && !Blocked(transform.position, p))
+            {
+                // (a pigeon hops a few metres in a short flight: its model has no walk, and walking in its standing pose
+                // it slid over the ground)
+                if (CanFly)
+                {
+                    var to = new Vector3(p.x, y, p.z) - transform.position; to.y = 0f;
+                    if (to.magnitude > 3f) { p = transform.position + to.normalized * Rand(1.5f, 3f); if (!Ground(p, out y) || Blocked(transform.position, p)) continue; }
+                    _target = new Vector3(p.x, y, p.z); Current = State.Fly; _hop = true; _stateTimer = 1.1f; return;
+                }
+                _target = new Vector3(p.x, y, p.z); Current = State.Walk; _stateTimer = 0f; return;
+            }
         }
         Current = State.Idle;
         _stateTimer = Rand(2f, 4f);

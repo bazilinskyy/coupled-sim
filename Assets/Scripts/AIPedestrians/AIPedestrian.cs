@@ -266,6 +266,8 @@ public class AIPedestrian : MonoBehaviour
 
     // Where the pedestrian looks: the most urgent approaching car at the kerb (or scanning both
     // ways), a close non-yielding car while crossing, otherwise ahead.
+    float _glanceTimer = 2f, _glanceUntil; Vector3 _glanceAt; System.Random _glanceRng;
+
     void UpdateLookTarget(float dt, Vector3 desiredDir)
     {
         var head = transform.position + Vector3.up * 1.6f;
@@ -297,6 +299,29 @@ public class AIPedestrian : MonoBehaviour
                 target = head + along * (15f * _scanSide) + across.normalized * 3f;
                 weight = 1f;
             }
+        }
+        else if (_crossing == null)
+        {
+            // walking along: now and then a glance (every 3-8 s, for about a second) at a vehicle passing close by, or
+            // aside, as people walking along a street do, rather than staring ahead
+            _glanceTimer -= dt;
+            if (_glanceTimer <= 0f)
+            {
+                _glanceTimer = 3f + (float)(_glanceRng ??= new System.Random(StableHash(name) ^ 0x6a1))!.NextDouble() * 5f;
+                _glanceUntil = Time.time + 0.8f + (float)_glanceRng.NextDouble() * 0.7f;
+                _glanceAt = Vector3.zero;
+                float bestD = 20f;
+                if (VehicleTracker.Instance != null)
+                    foreach (var v in VehicleTracker.Instance.Vehicles)
+                    {
+                        if (!v.Active || v.Velocity.magnitude < 2f) continue;
+                        var rel = v.Position - transform.position; rel.y = 0f;
+                        if (rel.magnitude < bestD && Vector3.Dot(rel.normalized, transform.forward) > -0.3f) { bestD = rel.magnitude; _glanceAt = v.Position + Vector3.up * 1.1f; }
+                    }
+                if (_glanceAt == Vector3.zero)
+                    _glanceAt = head + (transform.forward + transform.right * (_glanceRng.NextDouble() < 0.5 ? -1.2f : 1.2f)).normalized * 6f + Vector3.down * 0.3f;
+            }
+            if (Time.time < _glanceUntil && _glanceAt != Vector3.zero) { target = _glanceAt; weight = 0.6f; }
         }
         _lookTarget = Vector3.Lerp(_lookTarget == Vector3.zero ? target : _lookTarget, target, 1f - Mathf.Exp(-dt * 5f));
         _lookWeight = Mathf.Lerp(_lookWeight, weight, 1f - Mathf.Exp(-dt * 3f));

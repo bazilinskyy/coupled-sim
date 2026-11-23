@@ -394,8 +394,64 @@ public class TrafficCar : MonoBehaviour
                 LogSignalsInView();
             }
         }
+        UpdateIndicators();
         _car.ExternalSpeed = Speed;
         _car.ExternalAcceleration = Acceleration;
+    }
+
+    CarBlinkers _blinkers; bool _blinkersChecked;
+    float _nextSignal, _signalSince;
+
+    /// <summary>
+    /// The indicators, as drivers use them: before a turn off the road (a heading change of more than 35° over 20 m of
+    /// the route at a junction, not the road's own bend; any such turn where the map's junctions are unknown, from 60°)
+    /// and a move across to another lane (1.8 m sideways within 30 m without a turn), from 3 s or 30 m before it,
+    /// whichever is further, until it is done; about 1.5 flashes a second. A van turned at a junction in Barcelona
+    /// without indicating.
+    /// </summary>
+    void UpdateIndicators()
+    {
+        if (IsRider || Time.time < _nextSignal) return;
+        _nextSignal = Time.time + 0.2f;
+        if (!_blinkersChecked)
+        {
+            _blinkersChecked = true;
+            _blinkers = TryGetComponent<PlayerAvatar>(out var pa) ? pa.CarBlinkers : null;
+            if (_blinkers == null) _blinkers = GetComponentInChildren<CarBlinkers>(true);
+            if (_blinkers != null) _blinkers.BlinkInterval = 0.33f;
+        }
+        if (_blinkers == null || _circuit == null || _tracker == null) return;
+        var want = BlinkerState.None;
+        float start = _tracker.ProgressDistance;
+        float reach = Mathf.Max(30f, Speed * 3f);
+        if (_endsRoute > 0) reach = Mathf.Min(reach, _circuit.OpenLength - Mathf.Repeat(start, _circuit.Length) - 20f);
+        Vector3 Dir(float d) { var v = _circuit.GetRoutePoint(start + d).direction; v.y = 0f; return v.sqrMagnitude > 1e-6f ? v.normalized : Flat(transform.forward).normalized; }
+        // (from just behind the car, so a turn it is in keeps the lamps going until it is out of it)
+        for (float d = -6f; d <= reach && want == BlinkerState.None; d += 3f)
+        {
+            float a = Vector3.SignedAngle(Dir(d), Dir(d + 20f), Vector3.up);
+            if (Mathf.Abs(a) < 45f) continue;
+            var apex = _circuit.GetRoutePoint(start + d + 10f).position;
+            bool? atJunction = MapTraffic.JunctionNear(apex, 15f);
+            if (atJunction == false || (atJunction == null && Mathf.Abs(a) < 60f)) continue;
+            want = a < 0f ? BlinkerState.Left : BlinkerState.Right;
+        }
+        if (want == BlinkerState.None)
+        {
+            // a move across to another lane: the route a full lane (2.8 m) to one side within 40 m, its heading the same
+            var p0 = _circuit.GetRoutePoint(start).position; var f0 = Dir(0f);
+            for (float d = 10f; d <= Mathf.Min(reach, 40f) && want == BlinkerState.None; d += 10f)
+            {
+                var p = _circuit.GetRoutePoint(start + d).position;
+                if (Vector3.Angle(f0, Dir(d)) > 12f) break;
+                float side = Vector3.Dot(Flat(p - p0), Vector3.Cross(Vector3.up, f0));
+                if (Mathf.Abs(side) > 2.8f) want = side < 0f ? BlinkerState.Left : BlinkerState.Right;
+            }
+        }
+        // (a few tenths of a second's hold, so a lamp does not flick off between two turns' readings)
+        if (want == BlinkerState.None && _blinkers.State != BlinkerState.None && Time.time - _signalSince < 1f) return;
+        if (want != _blinkers.State) { _blinkers.SwitchToState(want); _signalSince = Time.time; }
+        else if (want != BlinkerState.None) _signalSince = Time.time;
     }
 
     /// <summary>The desired speed from the speed limits here and ahead (slowing down comfortably, 1.5 m/s², before a
@@ -1139,6 +1195,10 @@ public class TrafficCar : MonoBehaviour
                 Debug.Log($"TrafficDebug: {g.Key} above the ground: {g.Count()}, from {g.Min(x => x.h):F2} to {g.Max(x => x.h):F2} m, mean {g.Average(x => x.h):F2} m");
             if (lowest != null) Debug.Log($"TrafficDebug: two-wheeler lowest: {lowest}");
             LogWheelContact();
+            // (the vehicles indicating now, by side)
+            int il = 0, ir = 0;
+            foreach (var x in _cars) if (x.tc != null && x.tc._blinkers != null) { if (x.tc._blinkers.State == BlinkerState.Left) il++; else if (x.tc._blinkers.State == BlinkerState.Right) ir++; }
+            Debug.Log($"TrafficDebug: indicating now: {il} left, {ir} right; pedestrians {_pedestrians.Count}, animals {_animals.Count}");
             // the vehicles the last check has held for more than 10 s (its rules wanted to go on: a deadlock, or a path
             // through something fixed)
             var heldLong = _cars.Where(x => x.tc != null && x.tc._guardSince >= 0f && Time.time - x.tc._guardSince > 10f).Select(x => x.tc).ToList();
