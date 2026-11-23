@@ -72,7 +72,7 @@ themselves.
 - **Cyclists:** city cyclists on the cycle path or near the kerb at about 16 km/h. Race cyclists ride at about 32 km/h on
   the carriageway up to 50 km/h, and on the cycle path in the Netherlands, Belgium and Denmark, where it is compulsory.
   Every bicycle prefab with "Bicycle" in its name is used, so more rider variants can be added as prefabs.
-- **Pedestrians:** the 15 pedestrian avatars: women, men and children. Each walks at their age group's speed (adults about
+- **Pedestrians:** 14 pedestrian avatars in everyday clothes: women, men, a girl and a boy. Each walks at their age group's speed (adults about
   1.34 m/s, children 1.2, older people 1.05), looks at traffic at crossings and glances at passing vehicles. One adult
   in six walks as an older person.
 - **Animals:** by default 12 pigeons, 2 dogs, 2 cats and a fox within 60 m of the first participant (AnimalSpawner).

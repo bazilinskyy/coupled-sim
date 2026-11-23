@@ -514,7 +514,9 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
     {
         var gen = OsmMap.Current.Generator;
         var assets = Resources.Load<PedestrianAvatars>("PedestrianAvatars");
-        if (gen == null || assets == null || assets.Prefabs.Length == 0 || PedestriansPerKm <= 0f || MaxPedestrians <= 0) yield break;
+        // (everyday clothes: not the athletic avatar in swimwear-like sportswear)
+        var avatars = assets != null ? assets.Prefabs.Where(p => p != null && !p.name.Contains("Sports")).ToArray() : new GameObject[0];
+        if (gen == null || avatars.Length == 0 || PedestriansPerKm <= 0f || MaxPedestrians <= 0) yield break;
         Physics.SyncTransforms();
         var rng = new System.Random(Seed + 29);
         // (the participants: not the map's own traffic, "Map traffic ...", "Map cyclist ...")
@@ -597,7 +599,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
             bool back = rng.NextDouble() < 0.5;
             float along = i * 2f;
             float progress = back ? circuit.OpenLength - along : along;
-            var prefab = assets.Prefabs[rng.Next(assets.Prefabs.Length)];
+            var prefab = avatars[rng.Next(avatars.Length)];
             var rp = circuit.GetRoutePoint(progress);
             var dir = Flat(rp.direction); if (dir.sqrMagnitude < 1e-4f) dir = Vector3.forward;
             var go = Instantiate(prefab, at, Quaternion.LookRotation(dir.normalized, Vector3.up));
@@ -763,7 +765,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         foreach (var rr in raceLines.Values) if (rr != null && used.Add(rr)) Destroy(rr.gameObject);
         _laneCells = null;   // (built again with the cycle routes)
         Destroy(spawn.gameObject);
-        Debug.Log($"MapTraffic: {count} cyclists on {withCyclists} cycle routes ({raceCount} of them race cyclists on the carriageway)");
+        Debug.Log($"MapTraffic: {count} cyclists on {withCyclists} cycle routes ({raceCount} of them race cyclists{(cyclingCountry ? ", on the cycle path where there is one" : " on the carriageway")})");
     }
 
     List<List<Vector3>> _correctedLanes;
@@ -1555,7 +1557,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
     /// <summary>
     /// Where a rider rides along a car route, every <paramref name="step"/> m: across the road towards its kerb (to the right,
     /// to the left in left-hand traffic) the ground is read every 0.5 m. A cycle path or cycle track within a few metres of
-    /// the carriageway is taken (its kerb-side half when it is wide enough for two directions) when
+    /// the carriageway (up to 14 m beyond its edge) is taken (its kerb-side half when it is wide enough for two directions) when
     /// <paramref name="preferCycle"/>; otherwise the carriageway 0.8 m from its edge (in a painted cycle lane, if the road
     /// has one), never the pavement, 1 m clear of parked cars. The offsets are smoothed (a median over 7 points, then an average over 3), so short
     /// gaps (junctions, driveways, parked vehicles) do not make the line jump.
@@ -1598,10 +1600,11 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
             bool farSide = false;
             if (preferCycle || (cycleAboveKmh < float.MaxValue && RoadSpeedLimits.At(p) > cycleAboveKmh))
             {
-                // a cycle path starting within 10 m of the carriageway's edge, at least 1 m wide (6 m missed the Dutch
-                // two-way paths beyond a verge and a row of trees, and the cyclists rode on the road beside them)
+                // a cycle path starting within 14 m of the carriageway's edge, at least 1 m wide (6 m missed the Dutch
+                // two-way paths beyond a verge and a row of trees, and 10 m those beyond a parking strip too: the cyclists
+                // rode on the road beside them)
                 float start = -1f, end = -1f;
-                for (int k = Mathf.Max(1, Mathf.RoundToInt(roadEdge / 0.5f)); k <= Mathf.RoundToInt((Mathf.Min(roadEdge, 6f) + 10f) / 0.5f); k++)
+                for (int k = Mathf.Max(1, Mathf.RoundToInt(roadEdge / 0.5f)); k <= Mathf.RoundToInt((Mathf.Min(roadEdge, 6f) + 14f) / 0.5f); k++)
                 {
                     bool cyc = GroundAt(p + side * (k * 0.5f)) == Ground.Cycle;
                     if (cyc && start < 0f) start = k * 0.5f;
@@ -1610,12 +1613,12 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
                 if (start >= 0f && end - start >= 0.9f) pick = end - start >= 2.4f ? start + 0.7f * (end - start) : (start + end) / 2f;
                 else
                 {
-                    // none on this side: a two-way cycle path (2.4 m and wider) on the far side, within 10 m beyond the
+                    // none on this side: a two-way cycle path (2.4 m and wider) on the far side, within 14 m beyond the
                     // carriageway's far edge; the rider keeps to its right, the half towards the road
                     int k0 = Mathf.RoundToInt(roadStart / 0.5f) - 1;
                     while (k0 > -60 && GroundAt(p + side * (k0 * 0.5f)) is var gk && (gk == Ground.Road || gk == Ground.None)) k0--;
                     float fs = 1f, fe = 1f;
-                    for (int k = k0; k >= k0 - 20; k--)
+                    for (int k = k0; k >= k0 - 28; k--)
                     {
                         bool cyc = GroundAt(p + side * (k * 0.5f)) == Ground.Cycle;
                         if (cyc && fs > 0f) fs = k * 0.5f;

@@ -353,6 +353,16 @@ public class TrafficCar : MonoBehaviour
             _reverseLeft = 4f; _backFor = other.transform; Reversals++;
             if (DebugTraffic) Debug.Log($"TrafficDebug: {name} backs up for {other.name} at ({transform.position.x:F1},{transform.position.z:F1}): each held by the other for {Time.time - _guardSince:F0} s");
         }
+        // held by something fixed for over 6 s while well beside its lane (a wide turn or a swerve that ended against a
+        // hedge or a post): it backs up 2.5 m at walking pace and then steers back onto its lane, as a driver does
+        // (inching past with 3 cm to spare did not free a car 1.4 m beside its lane against a hedge in Eindhoven at rush
+        // hour, and the queue behind it stood for good)
+        if (!IsRider && _reverseLeft <= 0f && Time.time >= _reverseAgain && _guardHeldByFixed && _guardSince >= 0f && Time.time - _guardSince > 6f
+            && _circuit != null && ClearBehind() >= 1.5f && Mathf.Abs(LaneOffset()) > 0.5f)
+        {
+            _reverseLeft = 2.5f; _backFor = null; Reversals++;
+            if (DebugTraffic) Debug.Log($"TrafficDebug: {name} backs up off something fixed at ({transform.position.x:F1},{transform.position.z:F1}), {LaneOffset():F2} m beside its lane, held for {Time.time - _guardSince:F0} s");
+        }
         if (_reverseLeft > 0f)
         {
             float room = ClearBehind();
@@ -409,6 +419,15 @@ public class TrafficCar : MonoBehaviour
     /// whichever is further, until it is done; about 1.5 flashes a second. A van turned at a junction in Barcelona
     /// without indicating.
     /// </summary>
+    static Transform[] _autopilots; static float _autopilotsAt = -10f;
+    /// <summary>-debugTraffic: this vehicle is the participant's autopilot or within <paramref name="r"/> m of it.</summary>
+    bool NearAutopilot(float r)
+    {
+        if (Time.time - _autopilotsAt > 5f) { _autopilotsAt = Time.time; _autopilots = FindObjectsByType<AutomatedDriving>().Select(a => a.transform).ToArray(); }
+        foreach (var a in _autopilots) if (a != null && (a.position - transform.position).sqrMagnitude < r * r) return true;
+        return false;
+    }
+
     void UpdateIndicators()
     {
         if (IsRider || Time.time < _nextSignal) return;
@@ -450,7 +469,11 @@ public class TrafficCar : MonoBehaviour
         }
         // (a few tenths of a second's hold, so a lamp does not flick off between two turns' readings)
         if (want == BlinkerState.None && _blinkers.State != BlinkerState.None && Time.time - _signalSince < 1f) return;
-        if (want != _blinkers.State) { _blinkers.SwitchToState(want); _signalSince = Time.time; }
+        if (want != _blinkers.State)
+        {
+            _blinkers.SwitchToState(want); _signalSince = Time.time;
+            if (DebugTraffic && NearAutopilot(40f)) Debug.Log($"TrafficDebug: signal {want} t={Time.time:F1} {name} at ({transform.position.x:F0},{transform.position.z:F0}), {Speed * 3.6f:F0} km/h");
+        }
         else if (want != BlinkerState.None) _signalSince = Time.time;
     }
 

@@ -809,6 +809,13 @@ public partial class OsmMapGenerator
 
     static GameObject Emit(Transform parent, string name, MeshBuilder mb, Material mat, bool collider)
     {
+        // (buildings open where a street, cycle path or footway runs through them: OsmMapGenerator.Passages)
+        if (_passages.Count > 0 && (name.StartsWith("Buildings ") || name == "Cornices")) mb = CutPassages(mb);
+        return EmitMesh(parent, name, mb, mat, collider);
+    }
+
+    static GameObject EmitMesh(Transform parent, string name, MeshBuilder mb, Material mat, bool collider)
+    {
         if (mb.V.Count == 0) return null;
         if (mb.T.Count / 3 > MaxTrianglesPerMesh)
         {
@@ -829,7 +836,7 @@ public partial class OsmMapGenerator
                 }
             }
             GameObject first = null;
-            foreach (var piece in pieces.Values) { var pieceGo = Emit(parent, name, piece, mat, collider); if (first == null) first = pieceGo; }
+            foreach (var piece in pieces.Values) { var pieceGo = EmitMesh(parent, name, piece, mat, collider); if (first == null) first = pieceGo; }
             return first;
         }
         var mesh = mb.Build(name);
@@ -914,7 +921,8 @@ public partial class OsmMapGenerator
         var hw = w.Tag("highway");
         return hw == "footway" || hw == "pedestrian" || hw == "path" || hw == "corridor";
     }
-    static int Layer(OsmWay w) => int.TryParse(w.Tag("layer"), out var l) ? l : 0;
+    // (a building passage is at street level: its layer, often -1, only says it runs under the building)
+    static int Layer(OsmWay w) => w.Tag("tunnel") == "building_passage" ? 0 : int.TryParse(w.Tag("layer"), out var l) ? l : 0;
 
     List<V2> Line(OsmWay w)
     {
@@ -1745,6 +1753,7 @@ public partial class OsmMapGenerator
         PlaceSigns(root, roadWays);
         PlaceTrafficSignals(root, roadWays, marking);
 
+        FindPassages();
         // buildings: real 3D models where available (3D BAG, the Netherlands), else OSM footprints extruded
         var buildingMbs = facades.Select(_ => new MeshBuilder()).ToArray();
         var groundMbs = grounds.Select(_ => new MeshBuilder()).ToArray();
@@ -1817,6 +1826,7 @@ public partial class OsmMapGenerator
             if (groundMbs[i].V.Count > 0) { var m = _groundMat(i); Emit(buildings, "Buildings " + m.name, groundMbs[i], m, true); }
         Emit(buildings, "Cornices", cornices, Mat("Cornice", new Color(0.72f, 0.7f, 0.66f), 0.15f), false);
         EmitLandmarkFacades(buildings);
+        EmitPassages(buildings, bag);
         EmitLetters(buildings, bag);
         if (Aerial != null)
         {
