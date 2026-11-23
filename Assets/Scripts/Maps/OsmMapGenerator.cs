@@ -852,6 +852,24 @@ public partial class OsmMapGenerator
         "tertiary", "tertiary_link", "unclassified", "residential", "living_street", "service", "road",
     };
 
+    static readonly HashSet<string> BarrierKinds = new HashSet<string> { "bollard", "block", "jersey_barrier", "planter", "chain", "bus_trap", "sump_buster", "full-height_turnstile" };
+
+    /// <summary>A road with a barrier on it that stops cars (bollards, blocks, planters: OpenStreetMap's barrier nodes on
+    /// the way, not open to motor vehicles): no through traffic (cars drove into a row of bollards across a street).</summary>
+    bool Barred(OsmWay w)
+    {
+        foreach (var id in w.NodeIds)
+        {
+            if (!_data.Nodes.TryGetValue(id, out var n) || n.Tags.Count == 0) continue;
+            var b = n.Tag("barrier");
+            if (b == null || !BarrierKinds.Contains(b)) continue;
+            var mv = n.Tag("motor_vehicle") ?? n.Tag("motorcar") ?? n.Tag("vehicle") ?? n.Tag("access");
+            if (mv == "yes" || mv == "designated" || mv == "permissive") continue;
+            return true;
+        }
+        return false;
+    }
+
     static float ParseMetres(string s, float fallback)
     {
         if (string.IsNullOrEmpty(s)) return fallback;
@@ -1501,7 +1519,7 @@ public partial class OsmMapGenerator
                 Roads.Add(new Road { Line = roadLine, Width = width, Type = hw, OneWay = owDir != 0, Bridge = bi > 0, BridgeLayer = bi,
                     SpeedLimitKmh = limit > 0f ? limit : RoadSpeedLimits.Default(hw), Lanes = int.TryParse(w.Tag("lanes"), out var nLanes) ? nLanes : 0,
                     ParkLeft = owDir < 0 ? parkR : parkL, ParkRight = owDir < 0 ? parkL : parkR,
-                    NoThroughTraffic = access == "no" || access == "private" || (hw == "service" && (access == "customers" || access == "delivery" || w.Tag("service") == "driveway" || w.Tag("service") == "parking_aisle")) });
+                    NoThroughTraffic = access == "no" || access == "private" || (hw == "service" && (access == "customers" || access == "delivery" || w.Tag("service") == "driveway" || w.Tag("service") == "parking_aisle" || w.Tag("service") == "alley")) || Barred(w) });
                 // a dual carriageway's motorway: a steel guard rail along its inner edge (the central reservation), 0.45-0.8 m
                 // high, no collider (the lanes keep traffic off it)
                 if (hw == "motorway" && owDir != 0 && bi == 0 && roadLine.Count >= 2)
@@ -2247,6 +2265,21 @@ public partial class OsmMapGenerator
             bestD = d; centre = c; away = (q - c) / d; found = true;
         }
         return found;
+    }
+
+    /// <summary>Whether a point lies on a car road on the ground or within <paramref name="margin"/> of its edge, by the
+    /// roads' 20 m cells (every road for each of a car park's bays took minutes on a big map).</summary>
+    bool OnCarRoad(V2 q, float margin)
+    {
+        if (_roadCells == null) return NearestRoad(q, out _, out var rd, out var rw) && rd < rw / 2f + margin;
+        if (!_roadCells.TryGetValue(((int)Math.Floor(q.X / 20f), (int)Math.Floor(q.Y / 20f)), out var segs)) return false;
+        foreach (var (a, b, half) in segs)
+        {
+            var ab = b - a; float len2 = ab.LengthSquared(); if (len2 < 1e-4f) continue;
+            float u = Math.Max(0f, Math.Min(1f, V2.Dot(q - a, ab) / len2));
+            if (V2.Distance(q, a + ab * u) < half + margin) return true;
+        }
+        return false;
     }
 
     /// <summary>Parked cars, kept to take away those that stand in a tree, a post or a wall (RemoveBlockedParkedCars).</summary>
@@ -3349,6 +3382,9 @@ public partial class OsmMapGenerator
                         {
                             var q = ax * u + ay * v;
                             if (!Fits(q, facing) || rng.NextDouble() >= 0.75) continue;
+                            // (not on a road through or along the lot: cars stood on an alley through a car park in
+                            // Montreal, and the traffic on it stood behind them)
+                            if (OnCarRoad(q, 1.3f)) continue;
                             // (most drive in nose first; some reverse in)
                             Car(q, Yaw(rng.NextDouble() < 0.8 ? -facing : facing));
                         }

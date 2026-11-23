@@ -52,7 +52,21 @@ public class AnimalSpawner : MonoBehaviour, IExperimentModifier
         _log?.Dispose();
     }
 
-    void Start()
+    // (on a map, once it is built: its walls, fences and street furniture come late, and a fox placed before them stood
+    // in a garden wall)
+    System.Collections.IEnumerator Start()
+    {
+        if (FindAnyObjectByType<OsmMap>() != null)
+        {
+            float t0 = Time.realtimeSinceStartup;
+            while ((OsmMap.Current == null || OsmMap.Current.Generator == null || OsmMap.Current.Generator.Roads.Count == 0) && Time.realtimeSinceStartup - t0 < 180f) yield return null;
+            yield return null;
+            Physics.SyncTransforms();
+        }
+        Spawn();
+    }
+
+    void Spawn()
     {
         var assets = Resources.Load<AnimalAssets>("AnimalAssets");
         if (assets == null) { Debug.LogWarning("AnimalSpawner: Resources/AnimalAssets missing"); return; }
@@ -88,7 +102,12 @@ public class AnimalSpawner : MonoBehaviour, IExperimentModifier
         {
             float a = (float)rng.NextDouble() * Mathf.PI * 2f, r = Radius * Mathf.Sqrt((float)rng.NextDouble());
             var p = centre + new Vector3(Mathf.Cos(a) * r, 0, Mathf.Sin(a) * r);
-            if (Physics.Raycast(p + Vector3.up * 30f, Vector3.down, out var hit, 60f, ~0, QueryTriggerInteraction.Ignore) && hit.point.y < centre.y + 1.5f)
+            // (on the ground, and clear of walls, posts and parked cars: a cat placed in a building's doorway)
+            if (Physics.Raycast(p + Vector3.up * 30f, Vector3.down, out var hit, 60f, ~0, QueryTriggerInteraction.Ignore) && hit.point.y < centre.y + 1.5f
+                && !Physics.CheckCapsule(hit.point + Vector3.up * 0.45f, hit.point + Vector3.up * 1.2f, 0.4f, ~0, QueryTriggerInteraction.Ignore)
+                // (not on top of a wall, a hedge or a bus shelter, with ground under it more than 0.3 m lower: a fox was
+                // placed on a garden wall's top)
+                && (!Physics.Raycast(hit.point - Vector3.up * 0.05f, Vector3.down, out var below, 3f, ~0, QueryTriggerInteraction.Ignore) || below.distance < 0.25f))
                 return hit.point;
         }
         return null;
