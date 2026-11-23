@@ -81,6 +81,9 @@ themselves.
   `animals=2` doubles them, `animals=0` leaves them out, and `animalMix=Horse:1,Deer:2,Husky:1,Pigeon:8` picks the
   species and counts (Pigeon, Dog, Husky, Cat, Fox, Deer, Horse). They walk, run, eat and flee from vehicles, their
   animations matched to their pace and their feet on the ground; pigeons hop and fly.
+  `animalRole=1` gathers them around that role's start (here the pedestrian's), in its sight, instead of the first role's,
+  `animalRadius=25` within 25 m of it instead of 60, and `animalAhead=15` 15 m ahead of it, where a participant walking
+  or riding off will be (the README's walking video in Boulder: `animalRole=1;animalRadius=30;animalAhead=12`).
 
 ## Keeping clear of each other
 
