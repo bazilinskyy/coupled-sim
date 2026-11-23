@@ -20,6 +20,19 @@ public sealed class AerialPhoto
     public Texture2D FarTexture;
     public float FarHalfSize;
     public string Credit;
+    /// <summary>What the ground is, read from the photo's colours on a grid of about half a metre (<see cref="ClassN"/>
+    /// cells a side over the photo's square, row 0 south): <see cref="Paved"/>, <see cref="Green"/> (lawn, verges, tree
+    /// crowns: the generator takes out the crowns over mapped trees) or <see cref="Soil"/> (bare earth, sand, a tree pit).</summary>
+    public byte[] Classes; public int ClassN;
+    public const byte Paved = 0, Green = 1, Soil = 2;
+    /// <summary>The ground class at a scene point (Paved beyond the photo).</summary>
+    public byte ClassAt(float x, float z)
+    {
+        if (Classes == null) return Paved;
+        int i = (int)((x + HalfSize) / (2f * HalfSize) * ClassN), j = (int)((z + HalfSize) / (2f * HalfSize) * ClassN);
+        return i < 0 || j < 0 || i >= ClassN || j >= ClassN ? Paved : Classes[j * ClassN + i];
+    }
+
     /// <summary>A small readable copy of the photo (the texture itself lives only on the graphics card).</summary>
     Color32[] _small; int _smallWidth, _smallHeight;
 
@@ -49,16 +62,17 @@ public sealed class AerialPhoto
         if (!File.Exists(jpg) || !File.Exists(json)) return null;
         var meta = JsonUtility.FromJson<Meta>(File.ReadAllText(json));
         if (meta == null || meta.halfSize <= 0) return null;
-        var tex = Image(jpg, map + " aerial photo", out var small, out int smallWidth, out int smallHeight, out var ground);
+        var tex = Image(jpg, map + " aerial photo", out var small, out int smallWidth, out int smallHeight, out var ground, true, meta.halfSize, out var classes, out int classN);
         if (tex == null) return null;
         var far = Path.Combine(Path.GetDirectoryName(jpg), map + ".aerial-far.jpg");
-        var farTex = meta.farHalfSize > meta.halfSize && File.Exists(far) ? Image(far, map + " surroundings photo", out _, out _, out _, out _, false) : null;
-        return new AerialPhoto { GroundTexture = ground, _small = small, _smallWidth = smallWidth, _smallHeight = smallHeight, Texture = tex, HalfSize = meta.halfSize, Credit = meta.credit, FarTexture = farTex, FarHalfSize = meta.farHalfSize };
+        var farTex = meta.farHalfSize > meta.halfSize && File.Exists(far) ? Image(far, map + " surroundings photo", out _, out _, out _, out _, false, 0f, out _, out _) : null;
+        return new AerialPhoto { GroundTexture = ground, _small = small, _smallWidth = smallWidth, _smallHeight = smallHeight, Texture = tex, HalfSize = meta.halfSize, Credit = meta.credit, FarTexture = farTex, FarHalfSize = meta.farHalfSize, Classes = classes, ClassN = classN };
     }
 
-    static Texture2D Image(string path, string name, out Color32[] small, out int smallWidth, out int smallHeight, out Texture2D ground, bool withGround = true)
+    static Texture2D Image(string path, string name, out Color32[] small, out int smallWidth, out int smallHeight, out Texture2D ground, bool withGround, float halfSize,
+        out byte[] classes, out int classN)
     {
-        small = null; smallWidth = 0; smallHeight = 0; ground = null;
+        small = null; smallWidth = 0; smallHeight = 0; ground = null; classes = null; classN = 0;
         var tex = new Texture2D(2, 2, TextureFormat.RGB24, true) { name = name };
         if (!tex.LoadImage(File.ReadAllBytes(path))) { UnityEngine.Object.DestroyImmediate(tex); return null; }
         // a mip level of about 1024 px (2-4 m a pixel) kept for colour samples
@@ -67,6 +81,15 @@ public sealed class AerialPhoto
         small = tex.GetPixels32(level);
         smallWidth = Math.Max(1, tex.width >> level);
         smallHeight = Math.Max(1, tex.height >> level);
+        if (withGround && halfSize > 0f)
+        {
+            // the ground classes, from the mip level nearest half a metre a pixel
+            int cl = 0;
+            while (cl < tex.mipmapCount - 1 && 2f * halfSize / Math.Max(1, tex.width >> (cl + 1)) <= 0.7f) cl++;
+            var cp = tex.GetPixels32(cl);
+            classN = Math.Max(1, tex.width >> cl);
+            classes = Classify(cp, classN, Math.Max(1, tex.height >> cl));
+        }
         if (withGround)
         {
             var px = tex.GetPixels32(0);
@@ -103,6 +126,45 @@ public sealed class AerialPhoto
         tex.Compress(true);                  // about 11 MB of video memory for 4096² instead of 64 MB
         tex.Apply(true, true);
         return tex;
+    }
+
+    /// <summary>
+    /// The ground class of each pixel: green where green stands out (excess green over red and blue, in light and in
+    /// shade), soil where a clear, darker brown does (earth, a dry verge, a tree pit), else paved (asphalt, concrete, paving,
+    /// roofs and cars, which lie under the drawn roads and buildings). Then two passes of a 3 x 3 majority, so single
+    /// pixels (a car's green roof, a bench) do not make specks.
+    /// </summary>
+    static byte[] Classify(Color32[] px, int w, int h)
+    {
+        var c = new byte[w * h];
+        for (int i = 0; i < px.Length && i < c.Length; i++)
+        {
+            float r = px[i].r / 255f, g = px[i].g / 255f, b = px[i].b / 255f, sum = r + g + b + 1e-3f;
+            float exg = (2f * g - r - b) / sum;
+            float warm = (r - b) / sum;
+            float v = Mathf.Max(r, Mathf.Max(g, b));
+            if (exg > 0.07f && v > 0.08f) c[i] = Green;
+            // (a clear brown only, darker than paving: Barcelona's beige paving was taken for earth)
+            else if (warm > 0.25f && r > g && g > b && g < 0.85f * r && v > 0.2f && v < 0.62f && exg > -0.08f) c[i] = Soil;
+        }
+        for (int pass = 0; pass < 2; pass++)
+        {
+            var o = new byte[c.Length];
+            for (int y = 0; y < h; y++)
+                for (int x = 0; x < w; x++)
+                {
+                    int n0 = 0, n1 = 0, n2 = 0;
+                    for (int dy = -1; dy <= 1; dy++)
+                        for (int dx = -1; dx <= 1; dx++)
+                        {
+                            int xx = Mathf.Clamp(x + dx, 0, w - 1), yy = Mathf.Clamp(y + dy, 0, h - 1);
+                            byte k = c[yy * w + xx]; if (k == Green) n1++; else if (k == Soil) n2++; else n0++;
+                        }
+                    o[y * w + x] = n1 >= 5 ? Green : n2 >= 5 ? Soil : n0 >= 5 ? Paved : c[y * w + x];
+                }
+            c = o;
+        }
+        return c;
     }
 
     /// <summary>A box blur of a w x h field (rows, then columns; a running sum), radius in pixels.</summary>
