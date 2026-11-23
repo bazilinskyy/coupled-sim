@@ -2267,6 +2267,21 @@ public partial class OsmMapGenerator
         return found;
     }
 
+    /// <summary>Whether a point lies on a car road on the ground or within <paramref name="margin"/> of its edge, by the
+    /// roads' 20 m cells (every road for each of a car park's bays took minutes on a big map).</summary>
+    bool OnCarRoad(V2 q, float margin)
+    {
+        if (_roadCells == null) return NearestRoad(q, out _, out var rd, out var rw) && rd < rw / 2f + margin;
+        if (!_roadCells.TryGetValue(((int)Math.Floor(q.X / 20f), (int)Math.Floor(q.Y / 20f)), out var segs)) return false;
+        foreach (var (a, b, half) in segs)
+        {
+            var ab = b - a; float len2 = ab.LengthSquared(); if (len2 < 1e-4f) continue;
+            float u = Math.Max(0f, Math.Min(1f, V2.Dot(q - a, ab) / len2));
+            if (V2.Distance(q, a + ab * u) < half + margin) return true;
+        }
+        return false;
+    }
+
     /// <summary>Parked cars, kept to take away those that stand in a tree, a post or a wall (RemoveBlockedParkedCars).</summary>
     readonly List<(GameObject car, float yaw)> _parkedCars = new List<(GameObject, float)>();
 
@@ -3369,7 +3384,7 @@ public partial class OsmMapGenerator
                             if (!Fits(q, facing) || rng.NextDouble() >= 0.75) continue;
                             // (not on a road through or along the lot: cars stood on an alley through a car park in
                             // Montreal, and the traffic on it stood behind them)
-                            if (NearestRoad(q, out _, out var rd, out var rw) && rd < rw / 2f + 1.3f) continue;
+                            if (OnCarRoad(q, 1.3f)) continue;
                             // (most drive in nose first; some reverse in)
                             Car(q, Yaw(rng.NextDouble() < 0.8 ? -facing : facing));
                         }
