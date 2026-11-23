@@ -36,7 +36,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
     public bool UseCrowd = true;
     /// <summary>The trial's time of day (time=HH:MM), for the auto preset; negative: not given.</summary>
     public float HourOfDay = -1f;
-    bool _setCars, _setCyclists, _setPedestrians, _setBus;
+    bool _setCars, _setCyclists, _setPedestrians, _setBus, _setMax;
     [Tooltip("Share of the cyclists that are road racing cyclists (AIRaceBicycle): on the carriageway near the kerb, at 28-38 km/h.")]
     [Range(0f, 1f)] public float RaceCyclistShare = 0.1f;
     /// <summary>Road speed limit (km/h) up to which a race cyclist rides on the carriageway; beside faster roads it takes the
@@ -138,9 +138,9 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
             case "pedestriansperkm": if (F(out var pd)) { PedestriansPerKm = pd; _setPedestrians = true; } return true;
             case "busshare": if (F(out var b)) { BusShare = Mathf.Clamp(b, 0f, 0.5f); _setBus = true; } return true;
             case "racecyclistshare": if (F(out var r)) RaceCyclistShare = Mathf.Clamp01(r); return true;
-            case "maxcars": if (F(out var mc)) MaxCars = Mathf.Max(0, (int)mc); return true;
-            case "maxcyclists": if (F(out var my)) MaxCyclists = Mathf.Max(0, (int)my); return true;
-            case "maxpedestrians": if (F(out var mp)) MaxPedestrians = Mathf.Max(0, (int)mp); return true;
+            case "maxcars": if (F(out var mc)) { MaxCars = Mathf.Max(0, (int)mc); _setMax = true; } return true;
+            case "maxcyclists": if (F(out var my)) { MaxCyclists = Mathf.Max(0, (int)my); _setMax = true; } return true;
+            case "maxpedestrians": if (F(out var mp)) { MaxPedestrians = Mathf.Max(0, (int)mp); _setMax = true; } return true;
             case "traffic": TrafficPreset = value.Trim().ToLowerInvariant(); return true;
             case "crowd": UseCrowd = !(value == "0" || value.Equals("off", StringComparison.OrdinalIgnoreCase) || value.Equals("false", StringComparison.OrdinalIgnoreCase)); return true;
             case "time":
@@ -180,6 +180,13 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
             case "rush": cars = 1.6f; cyc = 2.5f; peds = 1.4f; bus = 1.8f; MaxCyclists = Mathf.RoundToInt(MaxCyclists * 1.5f); MaxCars = Mathf.RoundToInt(MaxCars * 1.2f); break;
             case "quiet": cars = cyc = peds = bus = 0.5f; break;
             case "night": cars = 0.4f; cyc = 0.3f; peds = f.PedestriansAtNight; bus = 0.5f; break;
+        }
+        // (a busier city than the average one: more of them placed too, up to 1.5 times the caps, so the density holds
+        // further from the participants; in New York 150 vehicles filled only the streets within 270 m)
+        if (!_setMax)
+        {
+            MaxCars = Mathf.RoundToInt(MaxCars * Mathf.Clamp(f.Cars, 1f, 1.5f));
+            MaxPedestrians = Mathf.RoundToInt(MaxPedestrians * Mathf.Clamp(f.Pedestrians, 1f, 1.5f));
         }
         if (!_setCars) CarsPerKm *= f.Cars * cars;
         if (!_setCyclists) CyclistsPerKm *= f.Cyclists * cyc;
@@ -505,9 +512,9 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
     /// <summary>
     /// Pedestrians on the pavements (the map's pavement lines; not its crossings): each walks a stretch of pavement to its
     /// end and back, the stretch cut where the line meets a carriageway or a cycle path (no one steps into the traffic)
-    /// and kept 0.35 m clear of posts, trees, benches and walls (moved aside by up to 1 m, else cut there), at
-    /// PedestriansPerKm on the stretches nearest the participants (up to MaxPedestrians, 4 m apart). The 15 pedestrian
-    /// avatars (women, men, children), each with its age group's walking speed, gap acceptance and looks
+    /// and kept 0.5 m clear of posts, trees, benches and walls (moved aside by up to 1 m, else cut there), at
+    /// PedestriansPerKm on the stretches nearest the participants (up to MaxPedestrians, 4 m apart, out of the
+    /// participants' way). The pedestrian avatars in everyday clothes (women, men, children), each with its age group's walking speed, gap acceptance and looks
     /// (AIPedestrian's behaviour models); one adult in six walks as an older person.
     /// </summary>
     IEnumerator SpawnPedestrians()
@@ -577,6 +584,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         var sync = FindAnyObjectByType<ExperimentDefinition>()?.AIPedestrians;
         var circuits = new Dictionary<List<Vector3>, WaypointCircuit>();
         var placed = new List<Vector3>();
+        var participants = Participants();
         int count = 0, index = 0;
         foreach (var (line, i) in places)
         {
@@ -584,6 +592,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
             var at = line[i];
             if (placed.Any(q => (q - at).sqrMagnitude < 4f * 4f)) continue;
             if (Cars.Any(c => c != null && (c.transform.position - at).sqrMagnitude < 3f * 3f)) continue;
+            if (InParticipantsWay(at, participants)) continue;
             placed.Add(at);
             if (!circuits.TryGetValue(line, out var circuit))
             {
@@ -629,6 +638,25 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
     /// carriageway near its kerb (RideLine), not on roads over 60 km/h (motorways, trunk roads). The routes nearest the
     /// participants first, and on them the places nearest the participants (up to MaxCyclists), so the cyclists ride
     /// where they are seen, also on a map with long corridors.</summary>
+    /// <summary>Whether a place is in a participant's way now: within 8 m of one, or in the 25 m in front of one (3 m to
+    /// either side). Cyclists and pedestrians are placed after the participants have started (in New York a cyclist was
+    /// placed in front of the autopilot's bonnet, and it drove into it).</summary>
+    static bool InParticipantsWay(Vector3 q, List<Transform> participants)
+    {
+        foreach (var t in participants)
+        {
+            if (t == null) continue;
+            var rel = q - t.position; rel.y = 0f;
+            if (rel.sqrMagnitude < 8f * 8f) return true;
+            var f = t.forward; f.y = 0f; f.Normalize();
+            float along = Vector3.Dot(rel, f), across = Mathf.Abs(Vector3.Dot(rel, Vector3.Cross(Vector3.up, f)));
+            if (along > 0f && along < 25f && across < 3f) return true;
+        }
+        return false;
+    }
+
+    static List<Transform> Participants() => FindObjectsByType<PlayerAvatar>().Where(a => !a.name.StartsWith("Map ") && a.GetComponent<AIPedestrian>() == null).Select(a => a.transform).ToList();
+
     IEnumerator SpawnCyclists()
     {
         var sumo = FindAnyObjectByType<SumoBridge>();
@@ -718,6 +746,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         var spawn = new GameObject("Map cyclists spawn point").transform;
         int count = 0;
         var placed = Cars.Select(c => c.transform.position).ToList();   // (6 m from every car and cyclist placed)
+        var participants = Participants();
         var used = new HashSet<WaypointCircuit>();
         foreach (var (bikeRoute, i, d, at) in places.OrderBy(x => Near(x.at)))
         {
@@ -735,6 +764,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
             }
             var rp = ride.GetRoutePoint(rd);
             if (placed.Any(q => (q - rp.position).sqrMagnitude < 6f * 6f)) continue;
+            if (InParticipantsWay(rp.position, participants)) continue;
             if (AnimalAgent.All.Any(an => an != null && (an.transform.position - rp.position).sqrMagnitude < 3f * 3f)) continue;
             placed.Add(rp.position);
             if (used.Add(ride)) CycleRoutes.Add(ride);
@@ -901,6 +931,13 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
                 best.name = "Route to " + Destination;
                 best.GetRoutePoint(0f);
                 bestScore = 0f;
+                // (from the point of it nearest the participant: the path begins at the road's node behind them)
+                float nearest = float.MaxValue;
+                for (float d = 0f; d <= Mathf.Min(40f, best.OpenLength - 5f); d += 0.5f)
+                {
+                    float e = (best.GetRoutePoint(d).position - at).sqrMagnitude;
+                    if (e < nearest) { nearest = e; bestD = d; }
+                }
                 Debug.Log($"MapTraffic: the autopilot drives to {Destination}: {best.OpenLength / 1000f:F1} km");
             }
             else Debug.LogWarning($"MapTraffic: no route from here to {Destination} ({CoupledSim.Maps.MapRoutes.Why}); the autopilot takes the nearest route");
@@ -979,12 +1016,16 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
                 Debug.Log($"TrafficDebug: across the autopilot's lane at {d - bestD:F0} m ({rp.position.x:F1},{rp.position.z:F1}): {row} (under it:{under})");
             }
         }
-        if ((start.position - at).sqrMagnitude > 9f)
+        // (facing along the route ahead: a closed circuit's direction at its start points back along its closing piece,
+        // and the autopilot stood facing into the TU/e's Atlas, its route running the other way)
+        var ahead = best.GetRoutePoint(Mathf.Min(bestD + 3f, best.OpenLength)).position - start.position; ahead.y = 0f;
+        if (ahead.sqrMagnitude < 0.25f) { ahead = start.direction; ahead.y = 0f; }
+        if ((start.position - at).sqrMagnitude > 9f || Vector3.Angle(Flat(fwd), ahead) > 45f)
         {
             var p = start.position;
             if (Physics.Raycast(p + Vector3.up * 5f, Vector3.down, out var hit, 20f, ~0, QueryTriggerInteraction.Ignore)) p.y = hit.point.y + 0.1f;
             var rb = me.GetComponent<Rigidbody>();
-            var rot = Quaternion.LookRotation(new Vector3(start.direction.x, 0, start.direction.z), Vector3.up);
+            var rot = Quaternion.LookRotation(ahead.normalized, Vector3.up);
             if (rb != null) { rb.position = p; rb.rotation = rot; rb.linearVelocity = Vector3.zero; }
             me.transform.SetPositionAndRotation(p, rot);
         }
