@@ -8,7 +8,7 @@ using UnityEngine;
 /// Animals in an experiment: spawns the given numbers of each species around a centre (on every
 /// agent, from the same seed, so every agent has the same animals). The host runs their behaviour,
 /// sends their poses to the clients and logs them to ExperimentLogs/Animals-{date}.csv.
-/// Trial parameter: animals (a multiplier of the counts; 0 = none).
+/// Trial parameters: animals (a multiplier of the counts; 0 = none), animalMix, animalRadius, animalRole, animalAhead.
 /// </summary>
 public class AnimalSpawner : MonoBehaviour, IExperimentModifier
 {
@@ -35,6 +35,9 @@ public class AnimalSpawner : MonoBehaviour, IExperimentModifier
     public static AnimalSpawner Current { get; private set; }
     public readonly List<AnimalAgent> Spawned = new List<AnimalAgent>();
     float _multiplier = 1f;
+    int _role;
+    bool _inSight;
+    float _ahead;
     StreamWriter _log;
     float _nextLog, _nextSend;
 
@@ -43,6 +46,12 @@ public class AnimalSpawner : MonoBehaviour, IExperimentModifier
         foreach (var p in experimentParameters)
         {
             if (p.name.ToLower() == "animals" && float.TryParse(p.value, NumberStyles.Float, CultureInfo.InvariantCulture, out var m)) _multiplier = Mathf.Max(0f, m);
+            // animalRadius=25: within this many metres of the centre (60 by default); animalRole=1: around that role's
+            // spawn point instead of the first role's (e.g. the pedestrian's), in its sight; animalAhead=15: the centre this many
+            // metres ahead of that spawn point, along its direction (where a participant walking or riding off will be)
+            if (p.name.ToLower() == "animalradius" && float.TryParse(p.value, NumberStyles.Float, CultureInfo.InvariantCulture, out var rr)) Radius = Mathf.Clamp(rr, 3f, 500f);
+            if (p.name.ToLower() == "animalrole" && int.TryParse(p.value, out var ro)) { _role = Mathf.Max(0, ro); _inSight = true; }
+            if (p.name.ToLower() == "animalahead" && float.TryParse(p.value, NumberStyles.Float, CultureInfo.InvariantCulture, out var ah)) _ahead = ah;
             // animalMix=Horse:1,Deer:2,Husky:1,Pigeon:12: these species, this many each (times animals=), instead of the
             // scene's own mix (pigeons, dogs, cats and a fox by default)
             if (p.name.ToLower() == "animalmix")
@@ -87,8 +96,13 @@ public class AnimalSpawner : MonoBehaviour, IExperimentModifier
         if (assets == null) { Debug.LogWarning("AnimalSpawner: Resources/AnimalAssets missing"); return; }
         var centre = Centre != null ? Centre.position : transform.position;
         var exp = GetComponentInParent<ExperimentDefinition>();
-        if (Centre == null && exp != null && exp.Roles != null && exp.Roles.Length > 0 && exp.Roles[0].SpawnPoint.Point != null)
-            centre = exp.Roles[0].SpawnPoint.Point.position;
+        if (Centre == null && exp != null && exp.Roles != null && exp.Roles.Length > 0)
+        {
+            var sp = exp.Roles[Mathf.Min(_role, exp.Roles.Length - 1)].SpawnPoint.Point;
+            if (sp == null) sp = exp.Roles[0].SpawnPoint.Point;
+            if (sp != null) centre = sp.position + Vector3.ProjectOnPlane(sp.forward, Vector3.up).normalized * _ahead;
+        }
+        Debug.Log($"AnimalSpawner: around ({centre.x:F0}, {centre.z:F0}) within {Radius:F0} m" + (exp != null && exp.Roles != null && exp.Roles.Length > 0 ? $" (role {exp.Roles[Mathf.Min(_role, exp.Roles.Length - 1)].Name})" : " (no experiment roles)"));
         var rng = new System.Random(Seed);
         bool host = NetworkingManager.Instance == null || NetworkingManager.Instance.NetSystem is Host;
         int id = 0;
@@ -113,7 +127,7 @@ public class AnimalSpawner : MonoBehaviour, IExperimentModifier
 
     Vector3? FindSpot(Vector3 centre, System.Random rng)
     {
-        for (int k = 0; k < 20; k++)
+        for (int k = 0; k < (_inSight ? 80 : 20); k++)
         {
             float a = (float)rng.NextDouble() * Mathf.PI * 2f, r = Radius * Mathf.Sqrt((float)rng.NextDouble());
             var p = centre + new Vector3(Mathf.Cos(a) * r, 0, Mathf.Sin(a) * r);
@@ -122,7 +136,9 @@ public class AnimalSpawner : MonoBehaviour, IExperimentModifier
                 && !Physics.CheckCapsule(hit.point + Vector3.up * 0.45f, hit.point + Vector3.up * 1.2f, 0.4f, ~0, QueryTriggerInteraction.Ignore)
                 // (not on top of a wall, a hedge or a bus shelter, with ground under it more than 0.3 m lower: a fox was
                 // placed on a garden wall's top)
-                && (!Physics.Raycast(hit.point - Vector3.up * 0.05f, Vector3.down, out var below, 3f, ~0, QueryTriggerInteraction.Ignore) || below.distance < 0.25f))
+                && (!Physics.Raycast(hit.point - Vector3.up * 0.05f, Vector3.down, out var below, 3f, ~0, QueryTriggerInteraction.Ignore) || below.distance < 0.25f)
+                // (around a given role: in its sight at knee height, not behind a building or a garden wall: animals for a participant to meet)
+                && (!_inSight || !Physics.Linecast(centre + Vector3.up * 0.4f, hit.point + Vector3.up * 0.4f, ~0, QueryTriggerInteraction.Ignore)))
                 return hit.point;
         }
         return null;
