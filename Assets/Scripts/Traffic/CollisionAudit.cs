@@ -91,7 +91,7 @@ public class CollisionAudit : MonoBehaviour
         foreach (var ped in FindObjectsByType<AIPedestrian>(FindObjectsSortMode.None))
             if (ped != null && ped.isActiveAndEnabled && ped.GetComponent<PlayerAvatar>() == null) Add(ped.transform, Kind.Pedestrian, 0.25f, 0.25f, ped.name, dt);
         foreach (var an in AnimalAgent.All)
-            if (an != null && an.Current != AnimalAgent.State.Fly && an.Species != AnimalSpecies.Pigeon) Add(an.transform, Kind.Animal, 0.3f, 0.3f, an.name, dt);
+            if (an != null && an.Current != AnimalAgent.State.Fly && an.Species != AnimalSpecies.Pigeon) Add(an.transform, Kind.Animal, an.BodyRadius, an.BodyRadius, an.name, dt);
     }
 
     void Add(Transform t, Kind k, float hl, float hw, string name, float dt)

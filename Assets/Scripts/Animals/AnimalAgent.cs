@@ -157,7 +157,7 @@ public class AnimalAgent : MonoBehaviour
     }
 
     /// <summary>The animal's half width (m): its body, not its middle, keeps clear of walls and posts.</summary>
-    float BodyRadius => Species == AnimalSpecies.Horse || Species == AnimalSpecies.Deer ? 0.45f : Species == AnimalSpecies.Pigeon ? 0.1f : Species == AnimalSpecies.Cat ? 0.2f : 0.3f;
+    public float BodyRadius => Species == AnimalSpecies.Horse || Species == AnimalSpecies.Deer ? 0.45f : Species == AnimalSpecies.Pigeon ? 0.1f : Species == AnimalSpecies.Cat ? 0.2f : 0.3f;
 
     /// <summary>Whether a wall, a post, a parked car or the like stands in the way of the animal's body (a sphere of its
     /// half width and 0.1 m more, at 0.55 m above the ground so the kerbs do not count) from <paramref name="from"/> to
