@@ -1760,6 +1760,7 @@ public partial class OsmMapGenerator
             Mat("Roof tiles anthracite", Color.white, 0.3f, RoofTiles("roof_tiles_grey", new Color(0.2f, 0.21f, 0.22f))),
         };
         List<Bag3dBuildings.Building> bag = null;
+        LoadLandmarks();
         try { bag = Bag3dBuildings.Load(_map.Name ?? "", _proj); }
         catch (Exception e) { Debug.LogWarning("Bag3dBuildings: " + e.Message); }
         if (bag != null)
@@ -1815,6 +1816,8 @@ public partial class OsmMapGenerator
         for (int i = 0; i < grounds.Length; i++)
             if (groundMbs[i].V.Count > 0) { var m = _groundMat(i); Emit(buildings, "Buildings " + m.name, groundMbs[i], m, true); }
         Emit(buildings, "Cornices", cornices, Mat("Cornice", new Color(0.72f, 0.7f, 0.66f), 0.15f), false);
+        EmitLandmarkFacades(buildings);
+        EmitLetters(buildings, bag);
         if (Aerial != null)
         {
             // roofs in the photo's colours (tiles, gravel, solar panels, dormers); roofs over 35 m keep
@@ -2163,6 +2166,8 @@ public partial class OsmMapGenerator
         if (moved > 0) Debug.Log($"OsmMap: {moved} points of pavements and cycle paths moved off the drawn roads");
     }
 
+    /// <summary>Bicycle parks mapped as areas filled with rows of bicycles.</summary>
+    public int BikeParkAreas;
     /// <summary>Bicycle racks moved off the carriageway, or left out where they could not be.</summary>
     public int RacksMoved, RacksLeftOut;
     /// <summary>Points of pavements, footpaths and cycle paths moved off a carriageway to its edge.</summary>
@@ -2336,9 +2341,13 @@ public partial class OsmMapGenerator
     /// apart; roofs in the colours of the surroundings photo over them (tiles, gravel, green roofs). In 500 m chunks
     /// (culled out of view); no colliders (nobody drives there).
     /// </summary>
+    /// <summary>No far city (the tests that build every map: it has no colliders and doubles Eindhoven's build time; on
+    /// the command line -noFarCity).</summary>
+    public static bool NoFarCity = Array.IndexOf(CommandLine.Args, "-noFarCity") >= 0;
+
     void EmitFarCity(Transform world)
     {
-        if (MapExtras.Disabled || string.IsNullOrEmpty(_map.Name)) return;
+        if (MapExtras.Disabled || NoFarCity || string.IsNullOrEmpty(_map.Name)) return;
         List<Bag3dBuildings.FarPart> parts;
         try { parts = Bag3dBuildings.LoadFar(_map.Name, _proj); }
         catch (Exception e) { Debug.LogWarning("Far city: " + e.Message); return; }
@@ -3391,6 +3400,39 @@ public partial class OsmMapGenerator
                     }
                 }
             }
+            else if (amenity == "bicycle_parking" && w.IsClosed && w.Tag("building") == null
+                && w.Tag("bicycle_parking") != "building" && w.Tag("bicycle_parking") != "underground" && w.Tag("location") != "underground")
+            {
+                // a bicycle park mapped as an area (a campus or a station has them by the hundred): rows of bicycles 1.9 m
+                // long facing aisles of 1.6 m, 0.7 m apart, a low rail along each row; each bicycle wholly in the area,
+                // about three quarters of the places taken (of its capacity where mapped), at most 300
+                var poly = Line(w); if (poly.Count < 4 || !poly.Any(Inside)) continue;
+                poly.RemoveAt(poly.Count - 1);
+                int longest = 0; float best = 0;
+                for (int i = 0; i < poly.Count; i++) { float l = V2.Distance(poly[i], poly[(i + 1) % poly.Count]); if (l > best) { best = l; longest = i; } }
+                var ax = V2.Normalize(poly[(longest + 1) % poly.Count] - poly[longest]); var ay = new V2(-ax.Y, ax.X);
+                float minA = float.MaxValue, maxA = float.MinValue, minB = float.MaxValue, maxB = float.MinValue;
+                foreach (var q in poly) { float u = V2.Dot(q, ax), v = V2.Dot(q, ay); minA = Math.Min(minA, u); maxA = Math.Max(maxA, u); minB = Math.Min(minB, v); maxB = Math.Max(maxB, v); }
+                int cap = int.TryParse(w.Tag("capacity"), out var cc) && cc > 0 ? cc : int.MaxValue, placed = 0;
+                for (float v = minB + 1.0f; v + 0.95f <= maxB && placed < Math.Min(300, cap); v += 3.5f)
+                {
+                    float rowStart = float.NaN, rowEnd = float.NaN;
+                    for (float u = minA + 0.4f; u < maxA - 0.3f && placed < Math.Min(300, cap); u += 0.7f)
+                    {
+                        var q = ax * u + ay * v;
+                        if (!Geometry2D.PointInPolygon(q + ay * 0.95f, poly) || !Geometry2D.PointInPolygon(q - ay * 0.95f, poly)) continue;
+                        if (float.IsNaN(rowStart)) rowStart = u; rowEnd = u;
+                        if (rng.NextDouble() < 0.75) { Bike(q, Yaw(ay) + (rng.NextDouble() < 0.5 ? 0 : 180)); placed++; }
+                    }
+                    if (!float.IsNaN(rowStart) && rowEnd - rowStart > 0.5f)
+                    {
+                        var a3 = ax * ((rowStart + rowEnd) / 2f) + ay * (v - 0.45f);
+                        var p3r = new Vector3(a3.X, GroundAt(a3, 0f), a3.Y);
+                        racks.Box(p3r, new Vector3(0.05f, 0.35f, rowEnd - rowStart + 0.5f), Yaw(ax));
+                    }
+                }
+                if (placed > 0) BikeParkAreas++;
+            }
             else if (amenity == "parking_space" && w.IsClosed)
             {
                 var poly = Line(w); if (poly.Count < 4) continue;
@@ -3424,6 +3466,7 @@ public partial class OsmMapGenerator
         if (assets != null && assets.ParkedBicycles != null && assets.ParkedBicycles.Length > 0)
             foreach (var b in bikes.OrderBy(b => b.p.Length()).Take(MaxParkedBicycles))
             { Place(assets.ParkedBicycles[rng.Next(assets.ParkedBicycles.Length)], b.p, b.yaw, "Parked bicycle"); ParkedBicycleCount++; }
+        if (BikeParkAreas > 0) Debug.Log($"OsmMap: {BikeParkAreas} bicycle parks mapped as areas filled with rows of bicycles");
         if (RacksMoved + RacksLeftOut > 0) Debug.Log($"OsmMap: {RacksMoved} bicycle racks moved off the carriageway, {RacksLeftOut} left out (no room beside it)");
         Emit(props, "Bollards", bollards, metal, true);
         Emit(props, "Bicycle racks", racks, metal, false);
@@ -3539,12 +3582,20 @@ public partial class OsmMapGenerator
             foreach (var v in b.V) { top = Math.Max(top, v.y); if (v.y < 0.5f) { mx += v.x; mz += v.z; nb++; } }
             bool church = nb > 0 && churches.Any(c => CoupledSim.Maps.Geometry2D.PointInPolygon(new System.Numerics.Vector2(mx / nb, mz / nb), c));
             if (church) churchCount++;
-            var style = StyleFor(b.Year, top, church ? "church" : null, (uint)(bi * 2246822519u));
+            // the mapped building here (OpenStreetMap): its use, and a landmark's own façade (Atlas' curtain wall)
+            var osmB = OsmBuildingFor(b.V);
+            var osmType = osmB?.Tag("building");
+            var landmark = LandmarkFacade(osmB);
+            var style = StyleFor(b.Year, top, church ? "church" : osmType, (uint)(bi * 2246822519u));
             int kind = b.Year > 0 && b.Year < 1940 ? palette[pi % 3] : palette[pi];
             if (style == WindowStyle.Glass && kind < 3) kind = 3 + bi % 2;   // glass walls: plaster or concrete frames
+            // (universities, offices and hospitals after the war: concrete and plaster with glass, not a brick house's
+            // façade: the TU/e's campus came out in red brick with sash windows)
+            bool institutional = osmType == "university" || osmType == "office" || osmType == "college" || osmType == "hospital" || osmType == "commercial" || osmType == "school";
+            if (institutional && !church && (b.Year == 0 || b.Year >= 1945)) { kind = 3 + bi % 2; if (style != WindowStyle.Glass) style = bi % 3 == 0 ? WindowStyle.Glass : WindowStyle.Ribbon; }
             bool lowAmongTowers = !church && top < 15f && NeighbourMedian(mids[bi]) > 35f;
             if (lowAmongTowers) { style = bi % 2 == 0 ? WindowStyle.Ribbon : WindowStyle.Glass; kind = 3 + bi % 2; downtownLow++; }
-            var wall = facadeMbs[kind * Styles + (int)style];
+            var wall = landmark ?? facadeMbs[kind * Styles + (int)style];
             var verts = b.V;
             if (OverRoad(b))
             {
@@ -3560,7 +3611,7 @@ public partial class OsmMapGenerator
             }
             // ground floor below GroundFloorHeight (shop fronts where OSM has businesses), the rest as before
             var gsBase = GroundStyleFor(style, null);
-            if (top > GroundFloorHeight + 1.5f && verts.Any(v => v.y < 0.5f))
+            if (landmark == null && top > GroundFloorHeight + 1.5f && verts.Any(v => v.y < 0.5f))
             {
                 SplitWalls(verts, b.Walls, GroundFloorHeight, out var below, out var above);
                 foreach (var poly in below)
@@ -3572,7 +3623,7 @@ public partial class OsmMapGenerator
                 AddPolys(wall, above, true, 0f);
             }
             else AddTriangles(wall, verts, b.Walls, true);
-            if (b.RoofKind != 1 && top > 6f) CorniceFromWalls(cornices, verts, b.Walls, top);
+            if (b.RoofKind != 1 && top > 6f && landmark == null) CorniceFromWalls(cornices, verts, b.Walls, top);
             if (Aerial != null) AddRealRoof(verts, b.Roofs, wall, flatRoofs, bi);
             else AddTriangles(b.RoofKind == 1 ? tileRoofs[bi % 3 == 0 ? 1 : 0] : flatRoofs, verts, b.Roofs, false);
             BuildingCount++;
