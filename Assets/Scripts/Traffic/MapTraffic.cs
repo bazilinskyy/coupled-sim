@@ -179,7 +179,21 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         // (and the smoothed lanes checked once more: smoothing can pull a lane back over a corner's kerb)
         BuildOncomingIndex(lanes);
         foreach (var lane in lanes) moved += KeepOnCarriageway(lane);
+        // (and the two lanes of a two-way street apart where it has room: where OpenStreetMap's centre line is off the
+        // drawn carriageway, one lane ran along the kerb and the oncoming one down the middle, 2 m apart, and the
+        // autopilot scraped an oncoming car)
+        BuildOncomingIndex(lanes);
+        int spread = 0; SpreadMax = 0f;
+        foreach (var lane in lanes) spread += SpreadFromOncoming(lane, OsmMap.Current.Info.LeftHandTraffic);
         _oncoming = null;
+        // (and clear of what stands beside the road: trees, lamp posts, building fronts, parked cars; a car's side
+        // brushed the trees along a lane and a building's corner at a junction)
+        BuildOncomingIndex(lanes);
+        int cleared = 0, blockedLeft = 0; _unclearedLogged = 0;
+        foreach (var lane in lanes) cleared += KeepLaneClear(lane, ref blockedLeft);
+        _oncoming = null;
+        if (cleared > 0 || blockedLeft > 0) Debug.Log($"MapTraffic: {cleared} lane points moved clear of trees, posts, walls and parked cars ({blockedLeft} could not be cleared)");
+        if (spread > 0) Debug.Log($"MapTraffic: {spread} lane points moved away from the oncoming lane (to {OncomingApart:F1} m apart where the carriageway has room; by up to {SpreadMax:F2} m)");
         if (moved > 0) Debug.Log($"MapTraffic: {moved} route points moved off cycle paths, cycle lanes and pavements onto the carriageway ({ParkedMoves} of them off grass verges or clear of parked cars, {CornerMoves} of them only a little, out of a corner)");
         if (moved > 0 && System.Array.IndexOf(CommandLine.Args, "-debugTraffic") >= 0)
         {
@@ -282,16 +296,48 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
             }
             return tightest[route] = best;
         }
-        int keptOff = 0;
+        // and only on routes with room for their width: the lanes keep 0.4 m beside a car of 1.8 m from what stands
+        // fixed (KeepLaneClear); a lorry of 3.1 m with its mirrors, placed by a row of parked cars in London, stood
+        // against them for good
+        var halfWidth = new Dictionary<AICar, float>();
+        float HalfWidthOf(AICar prefab)
+        {
+            if (halfWidth.TryGetValue(prefab, out var w)) return w;
+            float wid = prefab.TryGetComponent<BoxCollider>(out var box) && !box.isTrigger ? box.size.x * Mathf.Abs(prefab.transform.localScale.x) : 1.9f;
+            if (wid < 1.2f || wid > 3.2f) wid = 1.9f;
+            return halfWidth[prefab] = wid / 2f;
+        }
+        var room = new Dictionary<WaypointCircuit, float>();
+        float RoomBesideLane(WaypointCircuit route)
+        {
+            // the half width (m) a vehicle on it can have and keep 0.15 m from everything fixed along it: 0.9 m and the
+            // clearance found clear at every point (2 m apart), of 0.9, 0.75, 0.55 and 0.4 m
+            if (room.TryGetValue(route, out var r)) return r;
+            float len = route.OpenLength;
+            foreach (var c in new[] { 0.9f, 0.75f, 0.55f })
+            {
+                bool clear = true;
+                for (float s = 0f; s < len && clear; s += 2f) { var rp = route.GetRoutePoint(s); clear = !FixedBeside(rp.position, Flat(rp.direction), c); }
+                if (clear) return room[route] = 0.9f + c - 0.15f;
+            }
+            return room[route] = 0.9f + 0.4f - 0.15f;
+        }
+        int keptOff = 0, keptNarrow = 0;
         AICar PickFor(WaypointCircuit route)
         {
             var car = Pick();
+            if (HalfWidthOf(car) > 1.1f && HalfWidthOf(car) > RoomBesideLane(route))
+            {
+                keptNarrow++;
+                for (int k = 0; k < 20 && HalfWidthOf(car) > Mathf.Max(1.1f, RoomBesideLane(route)); k++) car = Pick(swapRng);
+                if (HalfWidthOf(car) > Mathf.Max(1.1f, RoomBesideLane(route))) car = prefabs.Where(q => HalfWidthOf(q) <= 1.1f && TurnRadius(q) <= 5f).DefaultIfEmpty(car).First();
+            }
             if (TurnRadius(car) <= 5f) return car;
             float bend = Tightest(route);
             if (TurnRadius(car) <= bend + 0.5f) return car;
             keptOff++;
-            for (int k = 0; k < 20 && TurnRadius(car) > bend + 0.5f; k++) car = Pick(swapRng);
-            return TurnRadius(car) <= bend + 0.5f ? car : prefabs.Where(q => TurnRadius(q) <= 5f).DefaultIfEmpty(car).First();
+            for (int k = 0; k < 20 && (TurnRadius(car) > bend + 0.5f || (HalfWidthOf(car) > 1.1f && HalfWidthOf(car) > RoomBesideLane(route))); k++) car = Pick(swapRng);
+            return TurnRadius(car) <= bend + 0.5f ? car : prefabs.Where(q => TurnRadius(q) <= 5f && HalfWidthOf(q) <= 1.1f).DefaultIfEmpty(car).First();
         }
         var spawn = new GameObject("Map traffic spawn point").transform;
         int count = 0;
@@ -326,6 +372,10 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
             var rp = route.GetRoutePoint(d);
             if (players.Any(p => (p - rp.position).sqrMagnitude < 15f * 15f)) continue;
             if (placed.Any(q => (q - rp.position).sqrMagnitude < 10f * 10f)) continue;
+            // (not on an animal: a car was placed over a cat)
+            if (AnimalAgent.All.Any(an => an != null && (an.transform.position - rp.position).sqrMagnitude < 5f * 5f)) continue;
+            // (nor against a parked car, a wall or a post: one placed by a parked car stayed stuck to it)
+            if (FixedBeside(rp.position, Flat(rp.direction), 0.3f)) continue;
             placed.Add(rp.position);
             var pos = rp.position;
             if (Physics.Raycast(pos + Vector3.up * 5f, Vector3.down, out var hit, 20f, ~0, QueryTriggerInteraction.Ignore)) pos.y = hit.point.y;
@@ -351,6 +401,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         }
         Destroy(spawn.gameObject);
         if (keptOff > 0) Debug.Log($"MapTraffic: {keptOff} trucks or buses swapped for vehicles that turn tighter (their routes bend tighter than they can)");
+        if (keptNarrow > 0) Debug.Log($"MapTraffic: {keptNarrow} wide vehicles swapped for narrower ones (their routes pass parked cars, posts or walls too near for their width)");
         Debug.Log($"MapTraffic: {count} cars{(places.Count > MaxCars && placed.Count > 0 ? $" (of {places.Count} places at {CarsPerKm} per km: those within {Mathf.Sqrt(placed.Max(Near)):F0} m of the participants{(_autopilotRoute != null ? " and of the autopilot's way ahead" : "")})" : "")}");
         yield return SpawnCyclists();
     }
@@ -397,6 +448,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
             if (places.Count >= MaxCyclists * 2 && near > places.Select(x => Near(x.at)).OrderBy(x => x).ElementAt(MaxCyclists - 1)) break;
             var kerb = RideLine(route, from, to, 4f, lht, true);
             if (kerb.Count < 10) continue;
+            KeepRideClear(kerb, lht);   // (posts, lamps, trees and walls: a cyclist rode into a street lamp)
             var bikeRoute = MakeCircuit(kerb, Routes.Count + 1000 + index++);
             bikeRoute.name = "Map cycle route " + index;
             bikeRoute.GetRoutePoint(0f);
@@ -420,6 +472,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
             if (raceLines.TryGetValue(bikeRoute, out var rr)) return rr;
             var (route, from, to, kerb) = stretchOf[bikeRoute];
             var line = RideLine(route, from, to, 4f, lht, false, RaceOnRoadUpToKmh, 1.0f);
+            KeepRideClear(line, lht);
             rr = null;
             if (line.Count >= 10)
             {
@@ -460,6 +513,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
             }
             var rp = ride.GetRoutePoint(rd);
             if (placed.Any(q => (q - rp.position).sqrMagnitude < 6f * 6f)) continue;
+            if (AnimalAgent.All.Any(an => an != null && (an.transform.position - rp.position).sqrMagnitude < 3f * 3f)) continue;
             placed.Add(rp.position);
             if (used.Add(ride)) CycleRoutes.Add(ride);
             var pos = rp.position;
@@ -910,6 +964,202 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         return best;
     }
 
+    /// <summary>How far apart (m) the two lanes of a two-way street are put, line to line, where the carriageway has room:
+    /// two cars of 2 m pass each other with 0.6 m between them.</summary>
+    const float OncomingApart = 2.6f;
+    static float SpreadMax;
+
+    /// <summary>The nearest oncoming lane's line from a lane point (as <see cref="OncomingDist"/>): its distance, and the
+    /// point on it.</summary>
+    static float OncomingNearest(Vector3 p, Vector3 dir, out Vector3 at)
+    {
+        at = p;
+        if (_oncoming == null) return float.PositiveInfinity;
+        var f = new Vector3(dir.x, 0f, dir.z).normalized;
+        float best = float.PositiveInfinity;
+        int cx = Mathf.FloorToInt(p.x / 4f), cz = Mathf.FloorToInt(p.z / 4f);
+        for (int x = cx - 1; x <= cx + 1; x++)
+            for (int z = cz - 1; z <= cz + 1; z++)
+            {
+                if (!_oncoming.TryGetValue(((long)x << 32) ^ (uint)z, out var c)) continue;
+                foreach (var (q, qd, qn) in c)
+                {
+                    if (Vector3.Dot(qd, f) >= -0.7f || Mathf.Abs(q.y - p.y) >= 3f) continue;
+                    float ax = qn.x - q.x, az = qn.z - q.z, l2 = ax * ax + az * az;
+                    float t = l2 > 1e-6f ? Mathf.Clamp01(((p.x - q.x) * ax + (p.z - q.z) * az) / l2) : 0f;
+                    var on = new Vector3(q.x + ax * t, q.y, q.z + az * t);
+                    float dx = p.x - on.x, dz = p.z - on.z, d = Mathf.Sqrt(dx * dx + dz * dz);
+                    if (d < best) { best = d; at = on; }
+                }
+            }
+        return best;
+    }
+
+    /// <summary>How far (m, up to 2 m in steps of 0.25 m) a car on a lane at p could move towards <paramref name="s"/> and
+    /// stay on the drawn carriageway, its side (1.1 m out) still over it and clear of parked cars.</summary>
+    static float RoomBeside(Vector3 p, Vector3 s, Vector3 dir)
+    {
+        float room = -1f;
+        for (float t = 0f; t <= 2.001f; t += 0.25f)
+        {
+            var c = p + s * t;
+            if (SeenGround(c) != Ground.Road || SeenGround(c + s * 1.1f) != Ground.Road || ParkedCarNear(c, dir)) break;
+            room = t;
+        }
+        return Mathf.Max(0f, room);
+    }
+
+    /// <summary>
+    /// The lanes of a two-way street nearer to each other than <see cref="OncomingApart"/> (line to line) are moved apart
+    /// where the drawn carriageway has room beside them: each point moves towards its kerb by its share of what is
+    /// missing (half, or more where the oncoming lane has less room: all of it where that one runs along its kerb), at
+    /// most by the room beside it. Both lanes are measured against the lanes before this pass, so their moves agree. The
+    /// moves are smoothed (a median over 24 m, then an average over 12 m), so a junction's mouth or a gap between parked
+    /// cars does not bend the lane. Returns the points moved.
+    /// </summary>
+    static int SpreadFromOncoming(List<Vector3> lane, bool lht)
+    {
+        if (lane.Count < 2) return 0;
+        var move = new float[lane.Count];
+        var side = new Vector3[lane.Count];
+        for (int i = 0; i < lane.Count; i++)
+        {
+            var d = lane[Mathf.Min(i + 1, lane.Count - 1)] - lane[Mathf.Max(i - 1, 0)]; d.y = 0f;
+            if (d.sqrMagnitude < 1e-6f) continue;
+            d.Normalize();
+            side[i] = Vector3.Cross(Vector3.up, d) * (lht ? -1f : 1f);   // (towards the kerb)
+            float dist = OncomingNearest(lane[i], d, out var on);
+            if (dist >= OncomingApart) continue;
+            // (the oncoming lane on the side of the road's middle, not on the kerb's: a lane of another street)
+            if (Vector3.Dot(Flat(lane[i] - on), side[i]) < dist * 0.7f) continue;
+            float need = OncomingApart - dist;
+            float mine = RoomBeside(lane[i], side[i], d);
+            if (mine <= 0f) continue;
+            float theirs = RoomBeside(on, -side[i], -d);
+            move[i] = Mathf.Min(mine, Mathf.Max(need / 2f, need - theirs));
+        }
+        int mh = Mathf.Max(1, Mathf.RoundToInt(12f / CoupledSim.Maps.MapRoutes.LaneSpacing)), ah = Mathf.Max(1, Mathf.RoundToInt(6f / CoupledSim.Maps.MapRoutes.LaneSpacing));
+        var median = new float[lane.Count];
+        for (int i = 0; i < lane.Count; i++)
+        {
+            var w = new List<float>();
+            for (int k = Mathf.Max(0, i - mh); k <= Mathf.Min(lane.Count - 1, i + mh); k++) w.Add(move[k]);
+            w.Sort(); median[i] = w[w.Count / 2];
+        }
+        int moved = 0;
+        var before = new List<Vector3>(lane);
+        for (int i = 0; i < lane.Count; i++)
+        {
+            float sum = 0f; int n = 0;
+            for (int k = Mathf.Max(0, i - ah); k <= Mathf.Min(lane.Count - 1, i + ah); k++) { sum += median[k]; n++; }
+            float m = sum / n;
+            if (m < 0.05f || side[i] == Vector3.zero) continue;
+            // (no further than the room beside this point: the smoothing carries a move on past where it was wanted)
+            var dir = Vector3.Cross(side[i], Vector3.up) * (lht ? -1f : 1f);
+            m = Mathf.Min(m, RoomBeside(before[i], side[i], dir));
+            if (m < 0.05f) continue;
+            if (DebugFocus != null && Flat(before[i] - DebugFocus.Value).sqrMagnitude < 12f * 12f)
+                Debug.Log($"TrafficDebug: lane point {i}/{lane.Count} at {before[i]}: {m:F2} m away from the oncoming lane (wanted {move[i]:F2})");
+            lane[i] = before[i] + side[i] * m;
+            SpreadMax = Mathf.Max(SpreadMax, m);
+            moved++;
+        }
+        return moved;
+    }
+
+    /// <summary>Whether something fixed (not the ground, a kerb or a road's surface; not a vehicle) stands within
+    /// <paramref name="clearance"/> of a car (5.2 by 1.8 m) at p heading along f, from 0.4 to 1.6 m above the road.</summary>
+    static bool FixedBeside(Vector3 p, Vector3 f, float clearance) => FixedBeside(p, f, clearance, out _);
+    static bool FixedBeside(Vector3 p, Vector3 f, float clearance, out string what)
+    {
+        what = null;
+        if (f.sqrMagnitude < 1e-6f) return false;
+        int n = Physics.OverlapBoxNonAlloc(p + Vector3.up * 1.0f, new Vector3(0.9f + clearance, 0.6f, 2.6f), _near, Quaternion.LookRotation(f, Vector3.up), ~0, QueryTriggerInteraction.Ignore);
+        for (int i = 0; i < n; i++)
+        {
+            var c = _near[i];
+            if (c.attachedRigidbody != null) continue;
+            var nm = c.name;
+            if (nm.StartsWith("Roads") || nm.StartsWith("Road ") || nm.StartsWith("BGT") || nm.StartsWith("Ground") || nm.StartsWith("Terrain") || nm.StartsWith("Zebra") || nm.StartsWith("Kerbs") || nm.StartsWith("Pavements") || nm.StartsWith("Cycle") || nm.StartsWith("Water")) continue;
+            if (c.bounds.max.y < p.y + 0.4f) continue;   // (a surface under it)
+            what = (c.transform.parent != null ? c.transform.parent.name + "/" : "") + nm;
+            return true;
+        }
+        return false;
+    }
+    static int _unclearedLogged;
+
+    /// <summary>
+    /// A car lane clear of what stands beside the road (trees, lamp and sign posts, building fronts, walls, parked cars):
+    /// where a car on it would come within 0.4 m of one, the point moves by the least that clears it (up to 2 m either
+    /// way, on the carriageway, no nearer the oncoming lane than 2.3 m, nor nearer than it was); each move holds the two
+    /// points either side (4 m) and the moves are averaged over 3 points, so the lane eases past. Points that cannot be
+    /// cleared (a gap narrower than the car) are counted in <paramref name="left"/>. Returns the points moved.
+    /// </summary>
+    static int KeepLaneClear(List<Vector3> lane, ref int left)
+    {
+        // (0.4 m beside a 1.8 m car: 0.3 m beside a 2 m SUV or van)
+        const float Clearance = 0.4f;
+        if (lane.Count < 2) return 0;
+        var shift = new float[lane.Count];
+        var side = new Vector3[lane.Count];
+        int found = 0;
+        for (int i = 0; i < lane.Count; i++)
+        {
+            var f = lane[Mathf.Min(i + 1, lane.Count - 1)] - lane[Mathf.Max(i - 1, 0)]; f.y = 0f;
+            if (f.sqrMagnitude < 1e-6f) continue;
+            f.Normalize();
+            side[i] = Vector3.Cross(Vector3.up, f);
+            if (!FixedBeside(lane[i], f, Clearance, out var what)) continue;
+            float before = OncomingDist(lane[i], f);
+            for (int k = 1; k <= 8 && shift[i] == 0f; k++)
+                foreach (float sgn in new[] { -1f, 1f })
+                {
+                    var q = lane[i] + side[i] * (sgn * k * 0.25f);
+                    if (shift[i] == 0f && SeenGround(q) == Ground.Road && OncomingDist(q, f) >= Mathf.Min(2.3f, before) && !FixedBeside(q, f, Clearance))
+                        shift[i] = sgn * k * 0.25f;
+                }
+            // (a street too narrow for that, house fronts on one side and the oncoming lane on the other: towards the
+            // middle, down to 1 m from the oncoming lane; the cars then take turns there, TrafficCar.NarrowWait, rather
+            // than one standing against a building's front for good)
+            for (int k = 1; k <= 8 && shift[i] == 0f; k++)
+                foreach (float sgn in new[] { -1f, 1f })
+                {
+                    var q = lane[i] + side[i] * (sgn * k * 0.25f);
+                    if (shift[i] == 0f && SeenGround(q) == Ground.Road && OncomingDist(q, f) >= Mathf.Min(1.0f, before) && !FixedBeside(q, f, 0.25f))
+                        shift[i] = sgn * k * 0.25f;
+                }
+            if (shift[i] != 0f) found++;
+            else
+            {
+                left++;
+                if (DebugFocus != null && _unclearedLogged++ < 25)
+                {
+                    // (what is in the way, and on which sides: 0.1 m clear to the left and right of the car)
+                    bool l = FixedBeside(lane[i] - side[i] * 0.5f, f, 0.1f), r = FixedBeside(lane[i] + side[i] * 0.5f, f, 0.1f);
+                    Debug.Log($"TrafficDebug: lane point at ({lane[i].x:F1},{lane[i].z:F1}) not clear of {what} (ground {SeenGround(lane[i])}, oncoming lane {before:F1} m away; 0.5 m left {(l ? "blocked" : "clear")}, right {(r ? "blocked" : "clear")})");
+                }
+            }
+        }
+        if (found == 0) return 0;
+        var held = new float[lane.Count];
+        for (int i = 0; i < lane.Count; i++)
+            for (int k = Mathf.Max(0, i - 2); k <= Mathf.Min(lane.Count - 1, i + 2); k++)
+                if (Mathf.Abs(shift[k]) > Mathf.Abs(held[i])) held[i] = shift[k];
+        int moved = 0;
+        for (int i = 0; i < lane.Count; i++)
+        {
+            float sum = 0f; int n = 0;
+            for (int k = Mathf.Max(0, i - 1); k <= Mathf.Min(lane.Count - 1, i + 1); k++) { sum += held[k]; n++; }
+            if (Mathf.Abs(sum / n) < 0.01f) continue;
+            if (DebugFocus != null && Flat(lane[i] - DebugFocus.Value).sqrMagnitude < 12f * 12f)
+                Debug.Log($"TrafficDebug: lane point {i}/{lane.Count} at {lane[i]}: {sum / n:F2} m clear of something fixed");
+            lane[i] += side[i] * (sum / n);
+            moved++;
+        }
+        return moved;
+    }
+
     /// <summary>Whether a car (4.6 m by 1.8 m) at p heading along dir would come within 0.25 m of a parked car.</summary>
     static bool ParkedCarNear(Vector3 p, Vector3 dir)
     {
@@ -1181,7 +1431,12 @@ public class MapRouteRecycler : MonoBehaviour
         // at the end of its route (TrafficCar stops there; a circuit's closing piece back to the start, straight across the
         // map, is never driven)
         if (d < c.OpenLength - 15f || !Recycle) return;
-        var start = c.GetRoutePoint(4f);
+        // (a start where its body stands clear of walls, posts and parked cars: a cyclist recycled to its route's start
+        // was put into a building's front)
+        float from = 4f;
+        while (from < 40f && !StartClear(c.GetRoutePoint(from))) from += 3f;
+        if (from >= 40f) return;
+        var start = c.GetRoutePoint(from);
         foreach (var other in Physics.OverlapSphere(start.position, 12f, ~0, QueryTriggerInteraction.Ignore))
             if (other.attachedRigidbody != null && other.attachedRigidbody != _rb && other.attachedRigidbody.GetComponent<AICar>() != null) return;
         // (cars moved to a start in this physics step are not in the overlap test yet)
@@ -1194,6 +1449,25 @@ public class MapRouteRecycler : MonoBehaviour
         float speed = _rb != null ? _rb.linearVelocity.magnitude : 0f;
         if (_rb != null) { _rb.position = p; _rb.rotation = rot; _rb.linearVelocity = rot * Vector3.forward * speed; }
         transform.SetPositionAndRotation(p, rot);
-        _tracker.SetProgress(4f);
+        _tracker.SetProgress(from);
+    }
+
+    TrafficCar _tc;
+    bool StartClear(WaypointCircuit.RoutePoint rp)
+    {
+        if (_tc == null) TryGetComponent(out _tc);
+        bool rider = _tc != null && _tc.IsRider;
+        float hl = rider ? 0.9f : (_tc != null ? _tc.VehicleLength / 2f : 2.3f), hw = rider ? 0.35f : (_tc != null ? _tc.VehicleWidth / 2f : 0.9f);
+        var f = new Vector3(rp.direction.x, 0f, rp.direction.z);
+        if (f.sqrMagnitude < 1e-6f) return true;
+        foreach (var c in Physics.OverlapBox(rp.position + Vector3.up * 1.0f, new Vector3(hw + 0.2f, 0.6f, hl + 0.2f), Quaternion.LookRotation(f, Vector3.up), ~0, QueryTriggerInteraction.Ignore))
+        {
+            if (c.attachedRigidbody != null || c.transform.IsChildOf(transform)) continue;
+            var nm = c.name;
+            if (nm.StartsWith("Roads") || nm.StartsWith("Road ") || nm.StartsWith("BGT") || nm.StartsWith("Ground") || nm.StartsWith("Terrain") || nm.StartsWith("Zebra") || nm.StartsWith("Kerbs") || nm.StartsWith("Pavements") || nm.StartsWith("Cycle") || nm.StartsWith("Water")) continue;
+            if (c.bounds.max.y < rp.position.y + 0.4f) continue;
+            return false;
+        }
+        return true;
     }
 }

@@ -156,13 +156,51 @@ public class AnimalAgent : MonoBehaviour
         return true;
     }
 
+    /// <summary>The animal's half width (m): its body, not its middle, keeps clear of walls and posts.</summary>
+    float BodyRadius => Species == AnimalSpecies.Horse || Species == AnimalSpecies.Deer ? 0.45f : Species == AnimalSpecies.Pigeon ? 0.1f : Species == AnimalSpecies.Cat ? 0.2f : 0.3f;
+
+    /// <summary>Whether a wall, a post, a parked car or the like stands in the way of the animal's body (a sphere of its
+    /// half width and 0.1 m more, at 0.55 m above the ground so the kerbs do not count) from <paramref name="from"/> to
+    /// <paramref name="to"/>: one ray along its middle let a dog walk with its side in a building's front.</summary>
     bool Blocked(Vector3 from, Vector3 to)
     {
-        var a = from + Vector3.up * 0.4f;
+        float r = BodyRadius + 0.1f;
+        var a = from + Vector3.up * Mathf.Max(0.55f, r + 0.3f);
         var d = to - from; d.y = 0;
         if (d.sqrMagnitude < 1e-4f) return false;
-        return Physics.Raycast(a, d.normalized, out var hit, d.magnitude, ~0, QueryTriggerInteraction.Ignore) && !hit.collider.transform.IsChildOf(transform) && hit.rigidbody == null;
+        // (another animal on the ground in the way, its body and this one's 0.1 m apart: a husky ran into a dog)
+        foreach (var o in All)
+        {
+            if (o == this || o == null || o.Current == State.Fly) continue;
+            var op = o.transform.position;
+            float reach = BodyRadius + o.BodyRadius + 0.1f;
+            if (Flat(to - op).sqrMagnitude < reach * reach && Flat(to - op).sqrMagnitude < Flat(from - op).sqrMagnitude) return true;
+        }
+        int n = Physics.SphereCastNonAlloc(a, r, d.normalized, _castHits, d.magnitude, ~0, QueryTriggerInteraction.Ignore);
+        for (int i = 0; i < n; i++)
+        {
+            var hit = _castHits[i];
+            // (a vehicle too: Threat keeps it from moving ones, and a cat walked into the side of a car standing in a queue)
+            if (hit.collider.transform.IsChildOf(transform)) continue;
+            if (hit.normal.y > 0.7f) continue;   // (ground it walks on, a slope)
+            if (hit.distance <= 0f && hit.point == Vector3.zero) continue;   // (it is in it already: lets it walk out)
+            return true;
+        }
+        // (and the body where it would be: walking along a wall it touched, the cast above starts in it and skips it)
+        int m = Physics.OverlapSphereNonAlloc(to + Vector3.up * Mathf.Max(0.55f, r + 0.3f), BodyRadius + 0.05f, _overlap, ~0, QueryTriggerInteraction.Ignore);
+        for (int i = 0; i < m; i++)
+        {
+            var c = _overlap[i];
+            if (c.transform.IsChildOf(transform)) continue;
+            if (c.bounds.max.y < to.y + 0.3f) continue;   // (the ground)
+            var nm = c.name;
+            if (nm.StartsWith("Roads") || nm.StartsWith("BGT") || nm.StartsWith("Ground") || nm.StartsWith("Terrain") || nm.StartsWith("Kerbs") || nm.StartsWith("Pavements") || nm.StartsWith("Green") || nm.StartsWith("Cycle")) continue;
+            return true;
+        }
+        return false;
     }
+    static readonly Collider[] _overlap = new Collider[16];
+    static readonly RaycastHit[] _castHits = new RaycastHit[16];
 
     // a vehicle about to arrive, or a person too close: returns the direction to run
     bool Threat(out Vector3 away)

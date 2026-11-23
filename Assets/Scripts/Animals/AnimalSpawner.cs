@@ -88,7 +88,9 @@ public class AnimalSpawner : MonoBehaviour, IExperimentModifier
         {
             float a = (float)rng.NextDouble() * Mathf.PI * 2f, r = Radius * Mathf.Sqrt((float)rng.NextDouble());
             var p = centre + new Vector3(Mathf.Cos(a) * r, 0, Mathf.Sin(a) * r);
-            if (Physics.Raycast(p + Vector3.up * 30f, Vector3.down, out var hit, 60f, ~0, QueryTriggerInteraction.Ignore) && hit.point.y < centre.y + 1.5f)
+            // (on the ground, and clear of walls, posts and parked cars: a cat placed in a building's doorway)
+            if (Physics.Raycast(p + Vector3.up * 30f, Vector3.down, out var hit, 60f, ~0, QueryTriggerInteraction.Ignore) && hit.point.y < centre.y + 1.5f
+                && !Physics.CheckCapsule(hit.point + Vector3.up * 0.45f, hit.point + Vector3.up * 1.2f, 0.4f, ~0, QueryTriggerInteraction.Ignore))
                 return hit.point;
         }
         return null;
