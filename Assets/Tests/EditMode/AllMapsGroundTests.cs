@@ -53,7 +53,12 @@ namespace CoupledSim.Tests
             var assets = TypeNamed("MapAssets").GetProperty("Instance").GetValue(null);
             var gen = Activator.CreateInstance(TypeNamed("OsmMapGenerator"), info, data, assets);
             _root = new GameObject(map);
-            gen.GetType().GetMethod("Build").Invoke(gen, new object[] { _root.transform });
+            // (without the far city: no colliders, nothing on the map's ground, and Eindhoven's build ran over the timeout)
+            var noFar = gen.GetType().GetField("NoFarCity");
+            var wasNoFar = noFar != null && (bool)noFar.GetValue(null);
+            noFar?.SetValue(null, true);
+            try { gen.GetType().GetMethod("Build").Invoke(gen, new object[] { _root.transform }); }
+            finally { noFar?.SetValue(null, wasNoFar); }
             var terrain = gen.GetType().GetProperty("Terrain").GetValue(gen);
             if (terrain != null) terrain.GetType().GetMethod("Apply").Invoke(terrain, new object[] { _root.transform, gen });
             Physics.SyncTransforms();
