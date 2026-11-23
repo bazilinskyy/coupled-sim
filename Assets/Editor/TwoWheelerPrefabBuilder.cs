@@ -246,7 +246,7 @@ public static class TwoWheelerPrefabBuilder
     static Rig BuildBicycle(Transform root, Color paint, float saddleTop = 1.03f)
     {
         var r = new Rig { Root = root, WheelRadius = 0.35f };
-        var frame = Mat("BikePaint", paint, 0.6f, 0.3f);
+        var frame = Mat("BikePaint" + _paintSuffix, paint, 0.6f, 0.3f);
         var steel = Mat("Steel", new Color(0.8f, 0.8f, 0.82f), 0.85f, 1f);
         var black = Mat("Rubber", new Color(0.05f, 0.05f, 0.05f), 0.25f);
         r.Lean = Empty("Lean", root, Vector3.zero);
@@ -788,10 +788,16 @@ public static class TwoWheelerPrefabBuilder
     /// upper chest bent forward (a long, rounded back), the neck and head bent back to look up the road; city: nearly
     /// upright.
     /// </summary>
+    /// <summary>Make the posture controllers again (their muscle values changed): the bicycles must then be rebuilt.</summary>
+    static bool _remakePostures;
+
     static RuntimeAnimatorController RiderPostureController(bool road)
     {
         string name = road ? "RiderPostureRoad" : "RiderPostureCity";
         string clipPath = $"{Dir}/{name}.anim", ctrlPath = $"{Dir}/{name}.controller", maskPath = $"{Dir}/RiderPostureBack.mask";
+        // (an existing controller is kept: made again, it got a new GUID, and the prefabs built before lost their posture)
+        var have = AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>(ctrlPath);
+        if (have != null && !_remakePostures) return have;
         // the back's posture: only the spine, chest, neck and head (the limbs stay as the idle pose has them, for the IK)
         var clip = new AnimationClip { name = name };
         var muscles = road
@@ -1291,6 +1297,57 @@ public static class TwoWheelerPrefabBuilder
     /// is skipped while it is out of sight.
     /// </summary>
     public static void BuildAIBicycle() => BuildAIBicycle("Bicycle", "AIBicycle");
+
+    /// <summary>The frame paint's material name suffix of the bicycle being built (each rider variant its own colour).</summary>
+    static string _paintSuffix = "";
+
+    /// <summary>The traffic's cyclists: women and men of the Rocketbox avatars in their own clothes, each on a bicycle
+    /// fitted to them (the saddle set to their legs) in a colour of its own. MapTraffic picks among every AI prefab
+    /// with "Bicycle" (and not "Race") in its name. (Race riders stay one: the painted kit needs a figure-hugging body.)</summary>
+    static readonly (string suffix, string rider, Color paint)[] RiderVariants =
+    {
+        ("F01", "Female_Adult_01", new Color(0.45f, 0.08f, 0.1f)),
+        ("F08", "Female_Adult_08", new Color(0.42f, 0.62f, 0.55f)),
+        ("F12", "Female_Adult_12", new Color(0.06f, 0.06f, 0.07f)),
+        ("M02", "Male_Adult_02", new Color(0.35f, 0.36f, 0.38f)),
+        ("M05", "Male_Adult_05", new Color(0.1f, 0.14f, 0.3f)),
+        ("M09", "Male_Adult_09", new Color(0.12f, 0.25f, 0.14f)),
+        ("M14", "Male_Adult_14", new Color(0.05f, 0.05f, 0.05f)),
+        ("BM01", "Business_Male_01", new Color(0.6f, 0.6f, 0.62f)),
+    };
+
+    /// <summary>
+    /// Builds an AI bicycle for each rider variant (AIBicycle_F01, AIBicycle_M05, ...) and registers them with the
+    /// traffic's prefabs. For batch mode: -executeMethod TwoWheelerPrefabBuilder.BuildRiderVariants.
+    /// </summary>
+    [MenuItem("Coupled Sim/Two-wheelers/Build the traffic's cyclist variants")]
+    public static void BuildRiderVariants()
+    {
+        Directory.CreateDirectory(MeshDir);
+        Directory.CreateDirectory(MatDir);
+        _materials.Clear();
+        _cylinder = Resources.GetBuiltinResource<Mesh>("Cylinder.fbx");
+        var built = new List<string>();
+        try
+        {
+            foreach (var (suffix, rider, paint) in RiderVariants)
+            {
+                if (AssetDatabase.LoadAssetAtPath<GameObject>($"{RocketboxImporter.Root}{rider}/{rider}.fbx") == null) { Debug.LogWarning($"TwoWheelerPrefabBuilder: no {rider}"); continue; }
+                _paintSuffix = "_" + suffix;
+                // (the participant's version is only the source of the AI one: removed after)
+                Build(TwoWheelerType.Bicycle, "Bicycle_" + suffix, paint, rider);
+                AssetDatabase.SaveAssets();
+                BuildAIBicycle("Bicycle_" + suffix, "AIBicycle_" + suffix);
+                AssetDatabase.DeleteAsset($"{Dir}/Bicycle_{suffix}.prefab");
+                built.Add($"{Dir}/AIBicycle_{suffix}.prefab");
+            }
+        }
+        finally { _paintSuffix = ""; }
+        AssetDatabase.SaveAssets();
+        TrafficTools.RegisterAICarPrefabs(built.Select(p => AssetDatabase.LoadAssetAtPath<GameObject>(p).GetComponent<AICar>()));
+        AssetDatabase.SaveAssets();
+        Debug.Log($"TwoWheelerPrefabBuilder: {built.Count} cyclist variants: {string.Join(", ", built.Select(Path.GetFileNameWithoutExtension))}");
+    }
 
     public static void BuildAIBicycle(string from, string name)
     {
