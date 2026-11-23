@@ -35,7 +35,9 @@ namespace CoupledSim.Tests
         const float MaxShareOff = 0.02f;
 
         // (building a map takes up to 3 minutes: Eindhoven's took 156-187 s, near NUnit's default limit of 180 s)
-        [TestCaseSource(nameof(Maps)), Timeout(360000)]
+        // (15 min: Eindhoven with its far city and the motorway corridor takes six to seven minutes to build on the CI
+        // runners, past the 6 min this had)
+        [TestCaseSource(nameof(Maps)), Timeout(900000)]
         public void EverythingStandsOnTheGround(string map)
         {
             var catType = TypeNamed("MapCatalog");
