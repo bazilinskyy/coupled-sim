@@ -41,7 +41,22 @@ public class AnimalSpawner : MonoBehaviour, IExperimentModifier
     public void SetParameter(NetworkingManager.ExperimentParameter[] experimentParameters)
     {
         foreach (var p in experimentParameters)
+        {
             if (p.name.ToLower() == "animals" && float.TryParse(p.value, NumberStyles.Float, CultureInfo.InvariantCulture, out var m)) _multiplier = Mathf.Max(0f, m);
+            // animalMix=Horse:1,Deer:2,Husky:1,Pigeon:12: these species, this many each (times animals=), instead of the
+            // scene's own mix (pigeons, dogs, cats and a fox by default)
+            if (p.name.ToLower() == "animalmix")
+            {
+                var groups = new List<Group>();
+                foreach (var part in p.value.Split(','))
+                {
+                    var kv = part.Split(':');
+                    if (kv.Length == 2 && Enum.TryParse<AnimalSpecies>(kv[0].Trim(), true, out var sp) && int.TryParse(kv[1].Trim(), out var n))
+                        groups.Add(new Group { Species = sp, Count = Mathf.Max(0, n) });
+                }
+                if (groups.Count > 0) Animals = groups.ToArray();
+            }
+        }
     }
 
     void Awake() => Current = this;
