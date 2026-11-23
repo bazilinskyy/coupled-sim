@@ -37,12 +37,14 @@ The time of day sets a preset:
 | `night` | 22:00-06:00 | 0.4x | 0.3x | the city's night share in CROWD | 0.5x |
 | `quiet` | only when asked for | 0.5x | 0.5x | 0.5x | 0.5x |
 
-At most 150 vehicles, 100 cyclists and 100 pedestrians are placed, the nearest to the participants first. The log says
+At most 150 vehicles, 100 cyclists and 100 pedestrians are placed, the nearest to the participants first, none in a
+participant's way. In a city busier than the average one, the caps for vehicles and pedestrians grow with its factor, up
+to 1.5 times (New York: 192 vehicles, 115 pedestrians). The log says
 what a map got, for example:
 
 ```
-MapTraffic: densities 25.6 cars, 4.0 cyclists and 27.6 pedestrians per km, 4 % buses, at most 150 vehicles,
-100 cyclists, 100 pedestrians (normal; city factors: cars 1.28, pedestrians 1.15, cyclists 0.50, from locality New York)
+MapTraffic: densities 25.6 cars, 4.0 cyclists and 27.6 pedestrians per km, 4 % buses, at most 192 vehicles,
+100 cyclists, 115 pedestrians (normal; city factors: cars 1.28, pedestrians 1.15, cyclists 0.50, from locality New York)
 ```
 
 ## Changing them
@@ -58,7 +60,7 @@ or on the command line (for example `-traffic rush -busShare 0.1`):
 | `pedestriansPerKm` | pedestrians per km of pavement, used as it is | 24 x factors |
 | `busShare` | share of the vehicles that are buses (0-0.5) | 0.04 x preset |
 | `raceCyclistShare` | share of the cyclists that are race cyclists (0-1) | 0.1 |
-| `maxCars`, `maxCyclists`, `maxPedestrians` | caps on how many are placed, the nearest to the participants | 150, 100, 100 |
+| `maxCars`, `maxCyclists`, `maxPedestrians` | caps on how many are placed, the nearest to the participants (used as they are) | 150, 100, 100, grown in busy cities and at rush hour |
 | `crowd` | `0` ignores CROWD: every city as an average one | `1` |
 | `time` | `HH:MM`; also picks the `auto` preset | the experiment's |
 
@@ -84,7 +86,10 @@ themselves.
 
 Every vehicle and rider checks its path before it moves and stops before touching anyone or anything. Drivers indicate
 before turns at junctions and lane changes, take turns in streets too narrow for two, and back up out of deadlocks.
-`-debugCollisions` logs every contact between moving agents, and with fixed objects, as `CollisionAudit:` lines.
+Pedestrians step round vehicles standing across their way. Streets, cycle paths and footways that run through a
+building (OpenStreetMap's `tunnel=building_passage`, as De Zaale under the TU/e's Atlas) are open, lined with walls and a
+ceiling. `-debugCollisions` logs every contact between moving agents, and with fixed objects, as `CollisionAudit:`
+lines.
 
 ## Data
 

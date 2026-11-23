@@ -604,6 +604,9 @@ public class TrafficCar : MonoBehaviour
                 float mine = (from - hl) / Mathf.Max(Speed, 1f), theirs = (along - to - chl) / Mathf.Max(c.tc.Speed, 1f);
                 wait = mine > theirs + 0.2f || (Mathf.Abs(mine - theirs) <= 0.2f && _rank > c.tc._rank);
             }
+            // (the other waiting for this one too: each measured the narrow part from its own way and found the other in
+            // it, and both stood for good in a Montreal street; the one placed first goes on)
+            if (wait && c.tc._narrowFor == transform && c.tc._narrowWait < float.MaxValue && _rank < c.tc._rank) wait = false;
             if (!wait) continue;
             float at = from - hl - 1f;
             if (at < best) { best = at; what = $"waiting for oncoming {c.name} to come through the narrow street"; whom = c.t; }
