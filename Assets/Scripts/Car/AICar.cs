@@ -144,8 +144,39 @@ public class AICar : MonoBehaviour, IVehicle
         // (not upwards: a push from a participant's vehicle must not lift or launch the car; gravity keeps it down)
         // (along the slope it lies on; the vertical speed beyond the slope's is its own: falling, or a little bump)
         var fwd = rotationAxis.forward;
+        if (_twoWheelerChecked == false) { _twoWheelerChecked = true; TryGetComponent(out _twoWheeler); }
+        if (_twoWheeler != null)
+        {
+            // a two-wheeler of the traffic: its wheels on the ground under it, as the participant's (TwoWheelerController):
+            // its collider (a capsule along the bicycle, 0.4 m above the wheels' bottom, clear of kerbs) does not carry it,
+            // so it falls no further than the ground and steps up kerbs (it rested on that capsule, 0.4 m into the road)
+            theRigidbody.useGravity = false;
+            var h = fwd; h.y = 0f;
+            h = h.sqrMagnitude > 1e-6f ? h.normalized : transform.forward;
+            // (no ground found for a moment, as over a gap between surfaces: it holds its height; falling there, it sank onto
+            // its collider, 0.4 m into the road, and stayed there)
+            float vy = TwoWheelerGroundY(transform.position, out var gy) ? Mathf.Clamp((gy - transform.position.y) / Mathf.Max(Time.fixedDeltaTime, 1e-3f) * 0.5f, -4f, 2f) : 0f;
+            theRigidbody.linearVelocity = h * ExternalSpeed + Vector3.up * vy;
+            return;
+        }
         float vyOwn = theRigidbody.linearVelocity.y - fwd.y * ExternalSpeed;
         theRigidbody.linearVelocity = fwd * ExternalSpeed + Vector3.up * Mathf.Min(vyOwn, 0.3f);
+    }
+
+    /// <summary>The ground a two-wheeler's wheels stand on at <paramref name="at"/>: the highest walkable surface (no
+    /// vehicle, not steeper than 45°) from 2 m below to 0.5 m above its present height (a kerb's step, and back onto the
+    /// road from where its collider would carry it, 0.4 m lower).</summary>
+    static bool TwoWheelerGroundY(Vector3 at, out float y)
+    {
+        y = 0f; bool found = false;
+        int n = Physics.RaycastNonAlloc(at + Vector3.up * 2f, Vector3.down, _groundHits, 4f, ~0, QueryTriggerInteraction.Ignore);
+        for (int i = 0; i < n; i++)
+        {
+            var hit = _groundHits[i];
+            if (hit.collider.attachedRigidbody != null || hit.normal.y < 0.7f || hit.point.y > at.y + 0.5f) continue;
+            if (!found || hit.point.y > y) { y = hit.point.y; found = true; }
+        }
+        return found;
     }
 
     TrafficCar _trafficCar;
@@ -262,6 +293,15 @@ public class AICar : MonoBehaviour, IVehicle
             speed = SpeedCap * conversion;
             theRigidbody.linearVelocity = rotationAxis.forward * SpeedCap;
             if (playerAvatar != null && playerAvatar.stopLights != null) playerAvatar.SetBreakLights(true);
+        }
+        // (a scripted two-wheeler: on the ground under its wheels as well, not on its collider 0.4 m into the road)
+        if (_twoWheelerChecked == false) { _twoWheelerChecked = true; TryGetComponent(out _twoWheeler); }
+        if (_twoWheeler != null && !theRigidbody.isKinematic)
+        {
+            theRigidbody.useGravity = false;
+            var v = theRigidbody.linearVelocity;
+            v.y = TwoWheelerGroundY(transform.position, out var gy) ? Mathf.Clamp((gy - transform.position.y) / Mathf.Max(Time.fixedDeltaTime, 1e-3f) * 0.5f, -4f, 2f) : 0f;
+            theRigidbody.linearVelocity = v;
         }
     }
 

@@ -841,6 +841,24 @@ public partial class OsmMapGenerator
         "tertiary", "tertiary_link", "unclassified", "residential", "living_street", "service", "road",
     };
 
+    static readonly HashSet<string> BarrierKinds = new HashSet<string> { "bollard", "block", "jersey_barrier", "planter", "chain", "bus_trap", "sump_buster", "full-height_turnstile" };
+
+    /// <summary>A road with a barrier on it that stops cars (bollards, blocks, planters: OpenStreetMap's barrier nodes on
+    /// the way, not open to motor vehicles): no through traffic (cars drove into a row of bollards across a street).</summary>
+    bool Barred(OsmWay w)
+    {
+        foreach (var id in w.NodeIds)
+        {
+            if (!_data.Nodes.TryGetValue(id, out var n) || n.Tags.Count == 0) continue;
+            var b = n.Tag("barrier");
+            if (b == null || !BarrierKinds.Contains(b)) continue;
+            var mv = n.Tag("motor_vehicle") ?? n.Tag("motorcar") ?? n.Tag("vehicle") ?? n.Tag("access");
+            if (mv == "yes" || mv == "designated" || mv == "permissive") continue;
+            return true;
+        }
+        return false;
+    }
+
     static float ParseMetres(string s, float fallback)
     {
         if (string.IsNullOrEmpty(s)) return fallback;
@@ -1454,7 +1472,7 @@ public partial class OsmMapGenerator
                 Roads.Add(new Road { Line = roadLine, Width = width, Type = hw, OneWay = owDir != 0, Bridge = bi > 0, BridgeLayer = bi,
                     SpeedLimitKmh = limit > 0f ? limit : RoadSpeedLimits.Default(hw), Lanes = int.TryParse(w.Tag("lanes"), out var nLanes) ? nLanes : 0,
                     ParkLeft = owDir < 0 ? parkR : parkL, ParkRight = owDir < 0 ? parkL : parkR,
-                    NoThroughTraffic = access == "no" || access == "private" || (hw == "service" && (access == "customers" || access == "delivery" || w.Tag("service") == "driveway" || w.Tag("service") == "parking_aisle")) });
+                    NoThroughTraffic = access == "no" || access == "private" || (hw == "service" && (access == "customers" || access == "delivery" || w.Tag("service") == "driveway" || w.Tag("service") == "parking_aisle" || w.Tag("service") == "alley")) || Barred(w) });
                 // a dual carriageway's motorway: a steel guard rail along its inner edge (the central reservation), 0.45-0.8 m
                 // high, no collider (the lanes keep traffic off it)
                 if (hw == "motorway" && owDir != 0 && bi == 0 && roadLine.Count >= 2)
@@ -2936,7 +2954,9 @@ public partial class OsmMapGenerator
                     for (float u = minA + 1.5f; u < maxA - 1.2f; u += 2.6f)
                     {
                         var q = ax * u + ay * v;
-                        if (Geometry2D.PointInPolygon(q, poly) && rng.NextDouble() < 0.75) Car(q, Yaw(ay));
+                        // (not on a road through or along the lot, its aisles included: cars stood on an alley through a
+                        // car park in Montreal, and the traffic on it stood behind them)
+                        if (Geometry2D.PointInPolygon(q, poly) && rng.NextDouble() < 0.75 && !(NearestRoad(q, out _, out var rd, out var rw) && rd < rw / 2f + 1.3f)) Car(q, Yaw(ay));
                     }
             }
             else if (amenity == "parking_space" && w.IsClosed)

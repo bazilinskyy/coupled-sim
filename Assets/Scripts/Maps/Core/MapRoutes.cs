@@ -269,15 +269,16 @@ public static class MapRoutes
     // one-way road), points every few metres
     /// <summary>
     /// How much of the carriageway a row of parked cars takes (m), as Dutch narrow streets do: fully on the road (2.1 m)
-    /// where the traffic still has its lanes beside them (1.9 m from the centre line to the parked cars per direction,
-    /// 2.4 m on a one-way street), else half on the kerb (1.0 m), else on the kerb (0.2 m). A parked car's centre is
-    /// then <c>width / 2 + 1.1 - depth</c> from the road's centre line.
+    /// where the traffic still has its lanes beside them (2.3 m from the centre line to the parked cars per direction,
+    /// 3.0 m on a one-way street: room for a car of 2.2 m with its mirrors to pass them; with 1.9 and 2.4 m the cars of a
+    /// one-way street in Montreal lined with parked cars stood for good), else half on the kerb (1.0 m), else on the kerb
+    /// (0.2 m). A parked car's centre is then <c>width / 2 + 1.1 - depth</c> from the road's centre line.
     /// </summary>
     public static float ParkDepth(float width, bool oneWay, int sides)
     {
         if (sides <= 0) return 0f;
         foreach (var depth in new[] { 2.1f, 1.0f })
-            if (oneWay ? width - depth * sides >= 2.4f : width / 2f - depth >= 1.9f) return depth;
+            if (oneWay ? width - depth * sides >= 3.0f : width / 2f - depth >= 2.3f) return depth;
         return 0.2f;
     }
 
