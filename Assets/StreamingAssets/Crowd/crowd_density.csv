@@ -1,0 +1,1287 @@
+# Pedestrians and cars per minute of urban dashcam driving, from CROWD: City Road Observations With Dashcams (crowd-dataset/crowd), crowd-dataset/crowd 14204a2d (2026-11-14): mapping.csv and analysis_data/detection_counts.csv.gz.
+# Licence: CC BY 4.0 (CROWD DATA_LICENSE.md); YouTube videos are not redistributed. Cite: Alam, M. S., Bazilinska, O., & Bazilinskyy, P. (2026). A global dataset of continuous urban dashcam driving. arXiv:2604.01044
+# Unique YOLO tracks (confidence >= 0.7) per processed minute of footage; localities with their position. Extracted from coupled-carla's coupledcarla/data/crowd_pedestrians.json (tools/crowd_table.py).
+level,key,name,continent,lat,lon,hours,persons_per_min,cars_per_min,persons_per_min_day,persons_per_min_night
+world,world,World,,,,31784.4,18.13,50.9,19.26,11.59
+continent,Africa,Africa,Africa,,,817.4,44.44,47.67,45.88,17.61
+continent,Asia,Asia,Asia,,,9511.7,25.91,44.79,28.57,15.8
+continent,Europe,Europe,Europe,,,8747.5,17.88,49.27,18.78,11.06
+continent,North America,North America,North America,,,9987.0,10.05,56.71,10.6,6.23
+continent,Oceania,Oceania,Oceania,,,1549.4,8.73,60.18,9.06,5.84
+continent,South America,South America,South America,,,1171.4,19.76,53.21,21.88,9.68
+country,ABW,Aruba,South America,,,0.8,6.35,48.26,,
+country,AFG,Afghanistan,Asia,,,5.3,40.83,58.54,42.17,
+country,AGO,Angola,Africa,,,4.1,48.13,61.27,49.66,
+country,AIA,Anguilla,North America,,,0.6,1.71,23.62,,
+country,ALA,Åland Islands,Europe,,,0.8,2.31,15.87,,
+country,ALB,Albania,Europe,,,14.8,21.74,58.57,22.49,13.52
+country,AND,Andorra,Europe,,,4.6,15.72,52.97,15.72,
+country,ARE,United Arab Emirates,Asia,,,305.3,5.76,48.36,6.35,4.34
+country,ARG,Argentina,South America,,,253.9,24.15,61.14,25.5,17.26
+country,ARM,Armenia,Asia,,,23.9,14.78,107.24,15.1,10.65
+country,ASM,American Samoa,Oceania,,,1.1,3.92,40.09,3.92,
+country,ATG,Antigua and Barbuda,North America,,,6.1,13.32,33.95,13.32,
+country,AUS,Australia,Oceania,,,1379.6,8.7,61.63,9.05,5.81
+country,AUT,Austria,Europe,,,199.5,11.14,47.08,11.84,7.13
+country,AZE,Azerbaijan,Asia,,,45.3,17.04,86.71,18.19,8.38
+country,BDI,Burundi,Africa,,,1.3,73.72,29.28,80.53,
+country,BEL,Belgium,Europe,,,61.8,19.31,50.78,20.05,10.71
+country,BEN,Benin,Africa,,,5.6,65.31,33.43,65.82,
+country,BES,"Bonaire, Sint Eustatius and Saba",South America,,,0.7,5.69,47.21,,
+country,BFA,Burkina Faso,Africa,,,0.8,61.62,61.73,,
+country,BGD,Bangladesh,Asia,,,106.8,66.54,18.33,67.4,57.67
+country,BGR,Bulgaria,Europe,,,162.5,8.77,58.37,9.49,4.49
+country,BHR,Bahrain,Asia,,,8.8,3.89,53.33,4.42,1.76
+country,BHS,Bahamas,North America,,,1.1,5.53,28.83,5.53,
+country,BIH,Bosnia and Herzegovina,Europe,,,62.0,18.75,59.85,19.53,7.39
+country,BLM,Saint Barthélemy,North America,,,0.5,6.61,45.02,,
+country,BLR,Belarus,Europe,,,81.3,9.63,41.92,9.9,4.51
+country,BLZ,Belize,North America,,,0.7,9.68,38.39,,
+country,BMU,Bermuda,North America,,,2.7,4.09,21.05,4.09,
+country,BOL,Bolivia,South America,,,21.5,25.66,40.25,26.12,
+country,BRA,Brazil,South America,,,539.7,17.02,52.62,19.86,6.42
+country,BRB,Barbados,North America,,,1.3,21.29,38.36,21.29,
+country,BRN,Brunei,Asia,,,0.8,1.59,31.2,,
+country,BTN,Bhutan,Asia,,,1.6,27.03,50.08,27.03,
+country,BWA,Botswana,Africa,,,2.3,12.11,41.86,12.11,
+country,CAF,Central African Republic,Africa,,,5.3,121.95,25.03,121.95,
+country,CAN,Canada,North America,,,1028.4,13.27,53.03,14.25,7.11
+country,CHE,Switzerland,Europe,,,92.5,19.81,36.8,20.49,13.55
+country,CHL,Chile,South America,,,26.4,17.42,52.54,17.51,15.47
+country,CHN,China,Asia,,,629.0,13.42,51.97,13.45,13.2
+country,CIV,Côte d'Ivoire,Africa,,,7.6,31.16,74.01,31.89,
+country,CMR,Cameroon,Africa,,,3.2,53.9,63.14,53.9,
+country,COD,Congo (Democratic Republic),Africa,,,3.2,54.06,42.18,57.65,
+country,COG,Congo (Congo-Brazzaville),Africa,,,11.8,42.32,34.47,46.67,14.57
+country,COK,Cook Islands,Oceania,,,0.3,4.25,16.38,,
+country,COL,Colombia,South America,,,50.3,38.61,42.27,38.67,37.8
+country,COM,Comoros,Africa,,,2.5,24.53,33.6,24.53,
+country,CPV,Cabo Verde,Africa,,,0.2,20.85,39.28,,
+country,CRI,Costa Rica,North America,,,4.3,17.12,41.4,17.12,
+country,CUB,Cuba,North America,,,34.3,56.92,24.1,57.11,
+country,CUW,Curaçao,South America,,,0.8,0.65,35.82,,
+country,CXR,Christmas Island,Asia,,,0.1,9.05,20.95,,
+country,CYM,Cayman Islands,North America,,,4.2,3.02,43.32,3.02,
+country,CYP,Cyprus,Europe,,,66.1,6.99,57.65,7.01,
+country,CZE,Czechia,Europe,,,214.6,17.32,45.43,19.86,5.86
+country,DEU,Germany,Europe,,,607.1,15.25,51.84,15.69,8.01
+country,DJI,Djibouti,Africa,,,1.5,8.34,18.29,8.34,
+country,DMA,Dominica,North America,,,0.3,11.28,27.38,,
+country,DNK,Denmark,Europe,,,250.6,25.96,51.88,26.65,16.62
+country,DOM,Dominican Republic,North America,,,2.9,22.66,42.01,22.66,
+country,DZA,Algeria,Africa,,,14.5,29.83,78.99,29.31,
+country,ECU,Ecuador,South America,,,22.8,21.05,54.76,21.05,
+country,EGY,Egypt,Africa,,,53.4,24.41,84.03,25.11,17.16
+country,ERI,Eritrea,Africa,,,4.6,56.03,27.04,55.34,
+country,ESH,Western Sahara,Africa,,,1.3,10.17,37.95,10.17,
+country,ESP,Spain,Europe,,,225.1,21.61,48.1,22.01,17.88
+country,EST,Estonia,Europe,,,65.3,8.83,47.05,9.99,4.36
+country,ETH,Ethiopia,Africa,,,42.1,48.65,49.5,49.54,15.85
+country,FIN,Finland,Europe,,,235.0,9.55,35.1,12.5,2.96
+country,FJI,Fiji,Oceania,,,3.2,11.53,41.47,11.53,
+country,FLK,Falkland Islands,South America,,,0.3,1.78,3.95,,
+country,FRA,France,Europe,,,711.4,20.38,44.65,20.43,19.59
+country,FRO,Faroe Islands,Europe,,,1.8,2.71,26.99,2.71,
+country,FSM,Micronesia,Oceania,,,0.6,4.47,18.4,,
+country,GAB,Gabon,Africa,,,3.0,27.44,39.49,27.44,
+country,GBR,United Kingdom,Europe,,,1506.7,31.72,39.72,31.58,32.83
+country,GEO,Georgia,Asia,,,42.4,13.24,79.05,13.71,8.42
+country,GGY,Guernsey,Europe,,,3.1,8.49,35.75,8.49,
+country,GHA,Ghana,Africa,,,11.4,35.95,46.5,35.0,
+country,GIB,Gibraltar,Europe,,,7.9,16.22,34.05,16.62,
+country,GIN,Guinea,Africa,,,4.9,68.93,60.95,71.03,
+country,GLP,Guadeloupe,North America,,,4.1,5.94,63.91,5.94,
+country,GMB,Gambia,Africa,,,95.4,43.04,55.66,44.49,21.51
+country,GNB,Guinea-Bissau,Africa,,,0.2,68.88,43.22,,
+country,GNQ,Equatorial Guinea,Africa,,,0.7,20.16,52.72,,
+country,GRC,Greece,Europe,,,66.5,19.32,73.41,19.55,15.61
+country,GRD,Grenada,North America,,,1.4,7.21,22.89,7.21,
+country,GRL,Greenland,North America,,,3.5,7.6,19.88,9.67,2.93
+country,GTM,Guatemala,North America,,,15.3,19.61,50.93,20.29,
+country,GUF,French Guiana,South America,,,1.7,8.25,71.82,8.25,
+country,GUM,Guam,Oceania,,,4.5,1.88,62.63,1.88,
+country,GUY,Guyana,South America,,,9.0,17.08,52.46,17.21,
+country,HKG,Hong Kong,Asia,,,59.1,30.59,30.07,30.08,31.99
+country,HND,Honduras,North America,,,10.3,21.72,55.48,22.9,
+country,HRV,Croatia,Europe,,,71.2,12.58,59.31,13.03,3.16
+country,HTI,Haiti,North America,,,2.9,49.78,28.04,49.78,
+country,HUN,Hungary,Europe,,,171.0,30.38,108.66,32.16,11.44
+country,IDN,Indonesia,Asia,,,1017.8,34.97,33.78,37.35,21.03
+country,IMN,Isle of Man,Europe,,,1.6,14.59,75.97,14.59,
+country,IND,India,Asia,,,476.3,47.55,40.63,50.26,29.71
+country,IRL,Ireland,Europe,,,137.9,13.83,41.41,14.15,10.09
+country,IRN,Iran,Asia,,,264.1,11.21,91.19,12.64,7.45
+country,IRQ,Iraq,Asia,,,9.8,7.37,65.78,8.56,4.34
+country,ISL,Iceland,Europe,,,12.8,9.82,41.02,9.76,
+country,ISR,Israel,Asia,,,19.0,13.26,65.09,13.06,15.75
+country,ITA,Italy,Europe,,,261.3,18.0,57.97,20.02,9.64
+country,JAM,Jamaica,North America,,,8.3,18.65,42.68,20.07,11.51
+country,JEY,Jersey,Europe,,,2.2,6.73,35.68,6.78,
+country,JOR,Jordan,Asia,,,78.3,10.2,76.12,9.91,13.06
+country,JPN,Japan,Asia,,,595.0,12.32,35.72,11.41,16.38
+country,KAZ,Kazakhstan,Asia,,,30.8,12.05,72.75,12.33,6.16
+country,KEN,Kenya,Africa,,,19.7,59.36,42.8,60.05,46.87
+country,KGZ,Kyrgyzstan,Asia,,,8.4,13.43,65.95,13.76,
+country,KHM,Cambodia,Asia,,,221.4,45.63,42.3,46.71,24.36
+country,KIR,Kiribati,Oceania,,,0.1,14.85,20.47,,
+country,KNA,Saint Kitts and Nevis,North America,,,2.1,14.37,26.45,14.37,
+country,KOR,South Korea,Asia,,,818.5,7.86,39.98,9.94,6.14
+country,KWT,Kuwait,Asia,,,6.9,6.6,67.65,7.31,4.5
+country,LAO,Laos,Asia,,,22.8,17.93,39.26,17.77,19.59
+country,LBN,Lebanon,Asia,,,35.2,11.1,77.73,10.99,13.83
+country,LBR,Liberia,Africa,,,6.8,70.2,45.0,70.2,
+country,LBY,Libya,Africa,,,13.2,6.32,81.37,6.5,
+country,LCA,Saint Lucia,North America,,,3.1,14.38,43.3,14.38,
+country,LIE,Liechtenstein,Europe,,,5.2,3.78,29.55,3.78,
+country,LKA,Sri Lanka,Asia,,,47.0,26.5,37.6,27.28,20.2
+country,LSO,Lesotho,Africa,,,1.5,20.29,27.43,20.29,
+country,LTU,Lithuania,Europe,,,33.4,16.44,53.03,16.68,10.1
+country,LUX,Luxembourg,Europe,,,7.0,20.44,39.62,20.44,
+country,LVA,Latvia,Europe,,,38.0,11.54,46.39,11.66,8.63
+country,MAC,Macau,Asia,,,4.5,12.79,22.67,18.24,4.7
+country,MAF,Saint Martin,North America,,,1.3,5.83,57.07,5.83,
+country,MAR,Morocco,Africa,,,47.3,32.84,70.87,35.22,15.4
+country,MCO,Monaco,Europe,,,20.3,31.87,27.04,35.06,23.77
+country,MDA,Moldova,Europe,,,24.2,18.37,78.44,18.54,
+country,MDG,Madagascar,Africa,,,4.3,91.92,27.23,101.27,
+country,MDV,Maldives,Asia,,,0.5,59.72,26.85,,
+country,MEX,Mexico,North America,,,138.4,17.23,59.38,18.12,9.28
+country,MHL,Marshall Islands,Oceania,,,0.8,2.36,7.04,,
+country,MKD,North Macedonia,Europe,,,24.4,18.22,67.01,18.68,
+country,MLI,Mali,Africa,,,0.9,97.56,48.63,,
+country,MLT,Malta,Europe,,,7.6,7.85,61.79,8.06,
+country,MMR,Myanmar,Asia,,,366.6,17.88,74.73,19.04,6.25
+country,MNE,Montenegro,Europe,,,10.2,14.69,68.96,14.69,
+country,MNG,Mongolia,Asia,,,71.4,21.44,80.44,22.14,10.14
+country,MNP,Northern Mariana Islands,Oceania,,,0.5,3.39,56.61,,
+country,MOZ,Mozambique,Africa,,,1.3,25.19,23.83,,
+country,MRT,Mauritania,Africa,,,1.3,26.39,61.3,26.39,
+country,MSR,Montserrat,North America,,,1.2,98.57,17.61,98.57,
+country,MTQ,Martinique,North America,,,0.2,8.22,45.89,,
+country,MUS,Mauritius,Africa,,,2.8,22.04,44.91,22.43,
+country,MWI,Malawi,Africa,,,31.5,41.64,17.33,43.38,1.11
+country,MYS,Malaysia,Asia,,,281.8,8.43,52.87,9.0,6.8
+country,MYT,Mayotte,Africa,,,0.2,12.12,25.59,,
+country,NAM,Namibia,Africa,,,1.8,16.0,47.05,16.0,
+country,NCL,New Caledonia,Oceania,,,2.6,4.31,38.84,4.31,
+country,NER,Niger,Africa,,,0.6,80.99,31.1,,
+country,NFK,Norfolk Island,Oceania,,,0.3,0.26,1.03,,
+country,NGA,Nigeria,Africa,,,66.1,66.13,55.6,66.51,
+country,NIC,Nicaragua,North America,,,4.6,23.35,38.15,22.6,
+country,NIU,Niue,Oceania,,,0.1,0.0,7.67,,
+country,NLD,Netherlands,Europe,,,437.1,19.73,41.73,20.45,7.38
+country,NOR,Norway,Europe,,,137.7,10.89,37.66,12.18,4.28
+country,NPL,Nepal,Asia,,,38.2,98.26,31.84,101.36,69.7
+country,NRU,Nauru,Oceania,,,0.9,6.38,20.8,,
+country,NZL,New Zealand,Oceania,,,144.9,9.4,49.82,9.51,7.05
+country,OMN,Oman,Asia,,,10.9,4.77,68.62,4.36,
+country,PAK,Pakistan,Asia,,,146.2,55.96,58.13,58.07,16.83
+country,PAN,Panama,North America,,,9.4,11.52,64.69,11.52,
+country,PER,Peru,South America,,,53.1,27.91,51.27,27.83,28.58
+country,PHL,Philippines,Asia,,,1313.8,30.79,30.54,35.02,13.78
+country,PLW,Palau,Oceania,,,0.6,0.67,16.08,,
+country,PNG,Papua New Guinea,Oceania,,,1.2,16.27,25.34,,
+country,POL,Poland,Europe,,,335.6,11.46,49.66,12.08,5.34
+country,PRI,Puerto Rico,North America,,,19.4,4.25,60.63,4.13,
+country,PRK,North Korea,Asia,,,4.4,59.91,15.14,61.72,
+country,PRT,Portugal,Europe,,,104.3,14.7,51.56,15.7,4.48
+country,PRY,Paraguay,South America,,,5.9,17.76,61.37,17.76,
+country,PSE,Palestine,Asia,,,8.3,11.09,59.16,11.28,
+country,PYF,French Polynesia,Oceania,,,4.3,8.03,46.98,8.44,
+country,QAT,Qatar,Asia,,,44.3,4.07,47.29,4.6,2.92
+country,REU,Réunion,Africa,,,2.0,10.46,46.33,10.46,
+country,ROU,Romania,Europe,,,240.6,13.7,84.59,14.51,5.28
+country,RUS,Russia,Europe,,,1446.8,9.72,49.72,10.87,4.24
+country,RWA,Rwanda,Africa,,,2.9,77.21,33.62,77.21,
+country,SAU,Saudi Arabia,Asia,,,32.4,2.66,87.16,2.62,2.83
+country,SDN,Sudan,Africa,,,0.6,33.08,103.6,,
+country,SEN,Senegal,Africa,,,4.3,47.07,52.67,48.91,
+country,SGP,Singapore,Asia,,,152.6,9.26,41.97,9.58,7.9
+country,SHN,Saint Helena,Africa,,,0.3,3.48,20.14,,
+country,SJM,Svalbard and Jan Mayen,Europe,,,0.7,1.41,12.4,,
+country,SLB,Solomon Islands,Oceania,,,0.1,20.57,47.76,,
+country,SLE,Sierra Leone,Africa,,,78.7,39.66,10.8,40.04,
+country,SLV,El Salvador,North America,,,10.8,28.55,52.8,28.55,
+country,SMR,San Marino,Europe,,,3.5,4.96,44.45,4.98,
+country,SOM,Somalia,Africa,,,2.8,47.72,29.13,49.15,
+country,SPM,Saint Pierre and Miquelon,North America,,,0.4,2.93,46.36,,
+country,SRB,Serbia,Europe,,,46.5,15.79,67.04,17.48,4.44
+country,SSD,South Sudan,Africa,,,1.9,78.66,39.92,78.66,
+country,STP,Sao Tome and Principe,Africa,,,0.2,46.19,18.04,,
+country,SUR,Suriname,South America,,,6.7,9.51,55.95,9.75,
+country,SVK,Slovakia,Europe,,,7.4,13.0,56.95,13.0,
+country,SVN,Slovenia,Europe,,,8.5,20.41,53.47,20.78,
+country,SWE,Sweden,Europe,,,265.1,8.92,30.15,11.08,3.5
+country,SWZ,Eswatini,Africa,,,0.4,27.89,38.01,,
+country,SXM,Sint Maarten,North America,,,0.8,12.49,63.56,,
+country,SYC,Seychelles,Africa,,,0.3,14.91,33.01,,
+country,SYR,Syria,Asia,,,122.7,31.34,77.23,31.68,11.58
+country,TCA,Turks and Caicos Islands,North America,,,1.0,1.7,26.25,,
+country,TCD,Chad,Africa,,,1.0,76.08,52.58,,
+country,TGO,Togo,Africa,,,1.2,41.53,20.38,,
+country,THA,Thailand,Asia,,,375.1,21.54,47.46,22.63,15.82
+country,TJK,Tajikistan,Asia,,,1.9,22.99,94.95,23.52,
+country,TKM,Turkmenistan,Asia,,,11.9,5.37,37.2,5.37,
+country,TLS,Timor-Leste,Asia,,,0.3,16.65,7.49,,
+country,TON,Tonga,Oceania,,,0.4,3.78,45.18,,
+country,TTO,Trinidad and Tobago,South America,,,4.6,6.24,35.78,6.24,
+country,TUN,Tunisia,Africa,,,5.1,33.04,85.61,33.04,
+country,TUR,Türkiye,Asia,,,226.4,21.02,69.38,22.2,13.64
+country,TUV,Tuvalu,Oceania,,,0.4,5.32,3.06,,
+country,TWN,Taiwan,Asia,,,43.7,19.82,48.68,19.75,20.2
+country,TZA,Tanzania,Africa,,,9.0,53.0,41.71,53.41,
+country,UGA,Uganda,Africa,,,84.9,98.48,37.46,101.52,20.18
+country,UKR,Ukraine,Europe,,,435.7,13.27,59.93,14.01,3.35
+country,URY,Uruguay,South America,,,25.3,22.01,65.63,22.3,
+country,USA,United States,North America,,,8652.1,9.28,57.39,9.75,6.07
+country,UZB,Uzbekistan,Asia,,,53.6,14.56,110.6,15.08,9.19
+country,VCT,Saint Vincent and the Grenadines,North America,,,5.7,11.86,23.81,11.94,
+country,VEN,Venezuela,South America,,,147.7,13.4,46.03,16.01,5.14
+country,VGB,British Virgin Islands,North America,,,2.2,5.27,41.03,5.53,
+country,VIR,United States Virgin Islands,North America,,,1.0,6.98,50.32,,
+country,VNM,Vietnam,Asia,,,1112.2,45.8,30.13,50.45,34.57
+country,VUT,Vanuatu,Oceania,,,1.0,18.34,25.6,,
+country,WSM,Samoa,Oceania,,,2.0,4.9,35.98,5.3,
+country,XKX,Kosovo,Europe,,,15.3,18.26,71.7,18.26,
+country,YEM,Yemen,Asia,,,2.5,51.69,69.89,51.69,
+country,ZAF,South Africa,Africa,,,130.9,12.15,46.03,12.65,4.83
+country,ZMB,Zambia,Africa,,,3.7,33.25,32.58,33.51,
+country,ZWE,Zimbabwe,Africa,,,6.3,49.29,75.98,49.29,
+locality,AFG,Kabul,,34.5266,69.1849,4.3,39.23,61.83,40.79,
+locality,AGO,Luanda,,-8.8273,13.244,4.1,48.39,61.65,49.94,
+locality,ALB,Korçë,,40.6159,20.7772,2.1,18.58,68.87,21.62,15.64
+locality,ALB,Tirana,,41.3276,19.8178,3.8,30.57,50.73,32.05,
+locality,AND,Andorra la Vella,,42.5069,1.5212,2.6,22.44,48.48,22.44,
+locality,ARE,Abu Dhabi,,24.4538,54.3774,13.0,6.15,46.46,5.79,6.81
+locality,ARE,Ajman,,25.4235,55.5357,6.6,7.71,96.91,6.79,
+locality,ARE,Al Ain,,24.2249,55.7452,4.2,3.86,42.46,4.89,1.48
+locality,ARE,Dubai,,25.2285,55.2888,259.4,5.42,44.58,6.0,4.06
+locality,ARE,Fujairah,,25.1335,56.3478,2.2,1.43,33.81,2.13,
+locality,ARE,Ras Al-Khaimah,,25.7738,55.9382,2.9,3.55,87.58,3.55,
+locality,ARE,Sharjah,,25.3583,55.424,15.9,12.11,88.51,13.29,7.32
+locality,ARG,Buenos Aires,,-34.6084,-58.4441,213.5,25.5,62.43,27.44,17.4
+locality,ARG,Córdoba,,-31.4167,-64.1834,2.0,19.06,55.53,19.06,
+locality,ARG,Mar del Plata,,-37.9976,-57.5482,2.7,40.95,78.7,40.95,
+locality,ARG,Salta,,-24.7917,-65.414,3.2,33.21,59.02,33.21,
+locality,ARG,San Rafael,,-34.6126,-68.3305,2.0,10.58,64.08,10.58,
+locality,ARG,Ushuaia,,-54.8073,-68.3084,2.9,8.95,52.05,9.23,
+locality,ARM,Yerevan,,40.1777,44.5126,20.1,15.09,116.72,15.5,10.65
+locality,ATG,St. John's,,17.1185,-61.8449,5.1,15.49,35.14,15.49,
+locality,AUS,Adelaide,,-34.9282,138.5999,42.4,3.77,56.8,4.17,1.74
+locality,AUS,Alice Springs,,-23.6984,133.8813,2.9,3.67,24.48,4.77,
+locality,AUS,Brisbane,,-27.469,153.0235,67.5,7.89,48.65,7.92,7.69
+locality,AUS,Broome,,-17.9567,122.224,2.9,2.32,18.85,2.95,
+locality,AUS,Cairns,,-16.9207,145.7722,3.0,3.11,49.61,3.11,
+locality,AUS,Canberra,,-35.2976,149.1013,4.7,5.07,33.07,4.8,
+locality,AUS,Darwin,,-12.4604,130.841,44.6,4.77,39.36,4.32,7.27
+locality,AUS,Gladstone,,-23.8432,151.2561,4.2,1.17,25.46,1.27,
+locality,AUS,Gold Coast,,-28.0024,153.4146,13.3,13.28,59.62,13.17,14.0
+locality,AUS,Hervey Bay,,-25.3,152.8522,3.6,3.57,38.05,3.57,
+locality,AUS,Hobart,,-42.883,147.3239,7.8,7.51,51.18,8.89,2.03
+locality,AUS,Mackay,,-21.142,149.1865,3.3,1.51,38.9,1.59,
+locality,AUS,Melbourne,,-37.8142,144.9632,311.8,11.4,65.12,12.29,6.17
+locality,AUS,Mount Isa,,-20.729,139.4932,2.2,0.55,12.99,,0.15
+locality,AUS,Newcastle,,-32.9282,151.7818,5.5,3.03,56.15,3.26,
+locality,AUS,Palmerston,,-12.48,130.9844,5.8,1.1,54.79,1.09,
+locality,AUS,Perth,,-31.9559,115.8606,99.6,3.16,45.65,3.24,2.22
+locality,AUS,Sydney,,-33.8698,151.2083,681.4,9.77,69.03,10.08,6.66
+locality,AUS,Toowoomba,,-27.561,151.9534,3.2,3.19,44.92,3.19,
+locality,AUS,Townsville,,-19.2569,146.824,6.2,2.62,45.83,2.72,
+locality,AUS,Warrnambool,,-38.3826,142.4814,7.0,2.1,44.44,2.12,
+locality,AUT,Graz,,47.0709,15.4383,7.2,17.13,45.3,17.53,
+locality,AUT,Innsbruck,,47.2654,11.3928,3.0,23.89,48.38,25.17,
+locality,AUT,Linz,,48.3063,14.2867,6.9,6.73,46.53,6.73,
+locality,AUT,Salzburg,,47.7981,13.0465,4.4,19.15,41.5,21.31,
+locality,AUT,Vienna,,48.2084,16.3725,171.5,10.62,47.55,11.3,7.23
+locality,AZE,Baku,,40.3756,49.8328,38.3,16.73,94.6,18.07,8.38
+locality,AZE,Lankaran,,38.7537,48.8539,4.1,18.08,36.21,18.08,
+locality,BEL,Antwerp,,51.2211,4.3997,6.6,35.76,47.65,35.76,
+locality,BEL,Bruges,,51.2086,3.2268,2.7,12.69,49.55,13.38,
+locality,BEL,Brussels,,50.8466,4.3517,37.1,21.14,53.25,22.56,9.96
+locality,BEL,Mechelen,,51.0281,4.4803,2.9,2.53,32.48,2.53,
+locality,BEN,Cotonou,,6.3677,2.4253,3.3,69.81,46.35,70.6,
+locality,BGD,Chhatak,,25.0337,91.6618,2.1,68.77,7.32,68.77,
+locality,BGD,Dhaka,,23.7644,90.389,14.7,44.99,27.54,49.64,17.9
+locality,BGD,Khulna,,22.8167,89.564,3.3,45.17,16.11,61.07,27.75
+locality,BGD,Moulvibazar,,24.4881,91.763,3.4,50.68,9.57,50.68,
+locality,BGD,Sunamganj,,25.0671,91.3986,2.0,69.64,7.49,69.64,
+locality,BGD,Sylhet,,24.8992,91.8685,74.2,74.11,18.18,73.32,83.99
+locality,BGR,Burgas,,42.4945,27.4718,2.2,10.08,65.67,10.08,
+locality,BGR,Haskovo,,41.9365,25.5563,4.3,6.76,73.87,6.76,
+locality,BGR,Sliven,,42.6822,26.3157,2.4,14.17,53.84,14.17,
+locality,BGR,Sofia,,42.6977,23.3217,132.2,8.78,59.33,9.6,4.48
+locality,BGR,Varna,,43.2052,27.8602,6.5,10.28,54.66,12.34,4.76
+locality,BHR,Manama,,26.2235,50.5822,6.3,4.41,50.39,5.26,1.73
+locality,BIH,Goražde,,43.6684,18.9759,2.7,9.68,33.84,9.68,
+locality,BIH,Sarajevo,,43.852,18.3867,44.0,21.08,63.71,22.16,6.86
+locality,BIH,Zenica,,44.1998,17.9093,2.9,18.48,62.05,19.31,
+locality,BLR,Babruysk,,53.145,29.2281,3.3,4.86,24.46,4.86,
+locality,BLR,Gomel,,52.4239,31.0132,4.3,14.15,53.69,14.15,
+locality,BLR,Minsk,,53.9025,27.5618,26.9,12.37,72.75,13.0,6.6
+locality,BLR,Rechytsa,,52.3718,30.386,9.8,5.48,21.61,5.89,
+locality,BLR,Vitebsk,,55.193,30.207,2.1,25.42,48.74,25.42,
+locality,BOL,La Paz,,-16.4955,-68.1336,7.5,34.2,37.9,34.2,
+locality,BOL,Santa Cruz de la Sierra,,-17.7834,-63.1821,2.7,15.23,60.77,14.88,
+locality,BRA,Balneário Camboriú,,-26.9924,-48.634,2.6,45.46,47.8,45.46,
+locality,BRA,Belem,,-1.4506,-48.4682,6.2,24.65,61.24,24.65,
+locality,BRA,Brasilia,,-15.794,-47.8828,4.4,5.68,46.34,5.68,
+locality,BRA,Búzios,,-22.7598,-41.8875,2.7,3.79,20.67,3.79,
+locality,BRA,Fortaleza,,-3.7305,-38.5218,2.8,15.52,56.46,15.52,
+locality,BRA,Goiânia,,-16.6809,-49.2533,28.8,9.18,49.43,9.22,
+locality,BRA,Manaus,,-3.1316,-59.9825,19.7,17.23,64.55,18.99,6.65
+locality,BRA,Porto Alegre,,-30.0352,-51.23,6.2,24.25,67.42,24.93,
+locality,BRA,Rio de Janeiro,,-22.911,-43.2094,146.5,18.55,55.59,23.2,8.85
+locality,BRA,Santarém,,-2.4385,-54.6996,2.0,12.64,44.91,12.64,
+locality,BRA,Sao Paulo,,-23.5507,-46.6334,249.1,16.59,50.1,20.56,4.46
+locality,BRA,São Luís,,-2.5295,-44.2964,5.4,20.95,80.3,22.14,
+locality,CAF,Bangui,,4.3635,18.5836,5.2,123.28,25.38,123.28,
+locality,CAN,Ajax,,43.8505,-79.0209,2.7,2.88,59.09,2.88,
+locality,CAN,Banff,,51.1751,-115.5721,2.7,14.56,29.17,14.56,
+locality,CAN,Brampton,,43.6858,-79.7599,23.3,3.86,83.34,4.16,0.83
+locality,CAN,Calgary,,51.0456,-114.0575,60.0,6.19,47.34,6.96,2.13
+locality,CAN,Canmore,,51.0867,-115.3481,2.2,8.78,44.64,8.78,
+locality,CAN,Cornwall,,45.0172,-74.729,2.6,2.77,46.48,2.77,
+locality,CAN,Dawson City,,64.0607,-139.4317,2.6,1.48,14.04,1.48,
+locality,CAN,Edmonton,,53.5462,-113.4912,30.4,4.25,57.53,4.37,2.89
+locality,CAN,Fort McMurray,,56.7292,-111.3885,16.2,1.25,30.03,1.38,0.3
+locality,CAN,Halifax,,44.6486,-63.5859,20.3,7.67,43.46,7.3,10.15
+locality,CAN,Hamilton,,43.2561,-79.8729,3.6,9.52,38.74,9.52,
+locality,CAN,Iqaluit,,63.7493,-68.5214,2.1,1.97,18.79,1.97,
+locality,CAN,Kelowna,,49.8879,-119.4959,2.8,5.78,54.84,5.78,
+locality,CAN,Kingston,,44.2295,-76.4854,2.9,5.61,45.04,5.74,
+locality,CAN,Mississauga,,43.5885,-79.6437,17.4,5.07,70.49,5.46,0.36
+locality,CAN,Montreal,,45.5032,-73.5698,203.2,10.03,52.62,11.87,4.83
+locality,CAN,Nanaimo,,49.1639,-123.9381,3.2,3.0,30.11,3.05,
+locality,CAN,Niagara Falls,,43.1066,-79.0639,6.9,36.3,37.3,38.13,
+locality,CAN,Ottawa,,45.4209,-75.6901,22.1,22.59,46.56,22.86,
+locality,CAN,Penticton,,49.5003,-119.5932,2.0,5.91,44.92,5.91,
+locality,CAN,Québec City,,46.8137,-71.2084,14.4,15.89,38.81,17.37,2.27
+locality,CAN,Regina,,50.448,-104.6159,5.2,7.63,60.0,7.63,
+locality,CAN,Surrey,,49.1913,-122.8491,3.1,4.18,49.09,4.18,
+locality,CAN,Toronto,,43.6535,-79.3839,372.9,21.96,58.07,23.33,11.97
+locality,CAN,Vancouver,,49.2609,-123.114,40.3,16.07,57.79,15.83,17.3
+locality,CAN,Victoria,,48.4283,-123.365,4.4,13.62,40.56,11.83,
+locality,CAN,Whitehorse,,60.7216,-135.0549,3.0,3.27,30.4,3.5,
+locality,CAN,Winnipeg,,49.8844,-97.147,59.1,5.95,57.54,6.65,2.34
+locality,CAN,Yellowknife,,62.4541,-114.3774,2.7,4.49,30.66,4.49,
+locality,CHE,Basel,,47.5581,7.5878,5.1,21.03,33.96,22.1,
+locality,CHE,Bern,,46.9485,7.4522,11.5,12.83,33.62,14.36,1.53
+locality,CHE,Geneva,,46.2018,6.1466,8.3,24.12,46.91,24.95,
+locality,CHE,Interlaken,,46.6855,7.8585,2.0,14.7,27.77,14.7,
+locality,CHE,Lausanne,,46.5218,6.6327,5.2,18.56,39.95,18.56,
+locality,CHE,Luzern,,47.0505,8.3055,4.6,18.91,39.09,21.76,13.52
+locality,CHE,Zürich,,47.3744,8.541,39.4,24.24,36.96,25.16,17.49
+locality,CHL,Concepción,,-36.8271,-73.0502,2.0,21.61,34.57,21.61,
+locality,CHL,Santiago,,-33.4378,-70.6505,2.6,24.9,59.8,27.36,
+locality,CHL,Viña del Mar,,-33.0245,-71.5518,5.5,21.39,72.69,21.39,
+locality,CHN,Baoshan,,25.1147,99.1592,2.9,13.59,34.04,13.59,
+locality,CHN,Beijing,,39.8937,116.3151,57.2,13.71,51.27,14.83,8.05
+locality,CHN,Changchun,,43.8882,125.3183,2.0,25.83,118.85,26.66,
+locality,CHN,Changsha,,28.1979,112.9713,5.4,12.14,69.48,4.69,16.95
+locality,CHN,Chaoyang,,41.5755,120.4391,2.1,14.36,63.27,14.36,
+locality,CHN,Chengdu,,30.6624,104.0633,27.9,10.41,69.35,10.32,12.26
+locality,CHN,Chongqing,,29.4921,106.5669,7.0,21.55,44.91,23.93,18.09
+locality,CHN,Dalian,,38.914,121.6147,3.2,14.79,66.95,9.23,
+locality,CHN,Foshan,,23.024,113.116,3.6,7.56,54.58,7.56,
+locality,CHN,Fuxin,,42.0126,121.6403,3.4,13.36,56.94,13.36,
+locality,CHN,Fuzhou,,26.7861,117.8286,2.3,34.08,59.75,,40.14
+locality,CHN,Guangzhou,,23.1302,113.2593,205.8,10.78,49.77,11.5,4.41
+locality,CHN,Guilin,,25.278,110.2911,3.4,10.02,37.0,10.02,
+locality,CHN,Guiyang,,26.5814,106.7053,4.0,16.97,54.78,8.25,24.97
+locality,CHN,Hangzhou,,30.249,120.2052,8.8,13.08,48.28,13.8,11.25
+locality,CHN,Huludao,,40.7515,120.8405,3.5,4.28,51.75,4.28,
+locality,CHN,Jiangmen,,22.5817,113.0761,2.0,13.74,60.36,13.74,
+locality,CHN,Jinan,,36.652,117.1138,14.0,13.4,56.26,13.81,
+locality,CHN,Jiujiang,,29.7051,116.002,3.9,26.91,50.5,26.91,
+locality,CHN,Kunming,,25.0363,102.7086,6.4,10.09,48.51,11.41,6.79
+locality,CHN,Lhasa,,29.6542,91.1173,2.1,18.59,69.15,18.59,
+locality,CHN,Lijiang,,26.8596,100.225,2.5,14.58,37.34,14.58,
+locality,CHN,Linyi,,35.1032,118.3507,2.4,4.2,49.74,4.2,
+locality,CHN,Mangshi,,24.4369,98.5887,2.1,13.94,34.95,13.94,
+locality,CHN,Nanning,,22.8212,108.316,3.1,28.47,88.25,28.47,
+locality,CHN,Ningbo,,29.872,121.55,2.7,8.06,54.77,8.06,
+locality,CHN,Panjin,,41.1796,122.0524,2.9,13.0,109.6,13.0,
+locality,CHN,Qingdao,,36.0645,120.3076,3.3,40.29,53.95,40.9,39.51
+locality,CHN,Shanghai,,31.2515,121.4511,40.0,23.68,38.97,24.63,19.04
+locality,CHN,Shenzhen,,22.5446,114.0545,46.2,14.21,45.43,14.33,13.73
+locality,CHN,Songzi,,30.1751,111.7513,2.5,2.25,17.15,3.22,1.34
+locality,CHN,Taian,,36.2606,117.0045,2.5,3.97,29.09,3.97,
+locality,CHN,Taiyuan,,37.8562,112.5562,2.5,23.54,78.47,23.54,
+locality,CHN,Tangshan,,39.6296,118.1739,2.6,1.55,27.11,1.55,
+locality,CHN,Tianjin,,39.0736,117.1695,5.3,20.85,72.43,16.07,30.11
+locality,CHN,Tongliao,,43.6152,122.2601,3.5,18.83,105.03,18.83,
+locality,CHN,Wuhan,,30.5374,114.3615,10.1,12.19,58.53,9.82,16.38
+locality,CHN,Xi'an,,34.3468,108.9366,5.0,15.19,40.13,25.22,12.56
+locality,CHN,Zaozhuang,,34.8647,117.5542,39.9,10.1,59.26,9.89,15.82
+locality,CHN,Zhengzhou,,34.7533,113.66,6.5,10.88,53.41,12.82,10.12
+locality,CHN,Zhongshan,,22.5197,113.3871,2.4,9.6,57.37,9.6,
+locality,CHN,Zhuhai,,22.2737,113.5721,2.1,7.28,19.62,3.26,
+locality,CHN,Zhuzhou,,27.8281,113.1304,2.1,9.11,44.73,9.11,
+locality,CHN,Ürümqi,,43.8244,87.6139,2.6,17.64,58.17,20.62,
+locality,CIV,Abidjan,,5.3204,-4.0161,7.5,31.17,74.13,31.9,
+locality,COG,Brazzaville,,-4.2694,15.2712,11.4,43.13,35.36,47.79,14.57
+locality,COL,Barranquilla,,11.0102,-74.8232,2.3,25.0,61.69,25.0,
+locality,COL,Bogotá,,4.6534,-74.0837,7.6,33.29,42.07,34.33,
+locality,COL,Cali,,3.436,-76.5115,3.9,33.27,51.28,33.27,
+locality,COL,Cartagena,,10.4266,-75.5442,5.1,39.15,48.86,39.15,
+locality,COL,Medellín,,6.2423,-75.5722,10.0,41.07,49.07,41.68,
+locality,CRI,San José,,9.9325,-84.0796,2.0,23.39,46.65,23.39,
+locality,CUB,Havana,,23.1353,-82.359,26.2,62.61,29.42,62.9,
+locality,CUB,Trinidad,,21.8052,-79.9846,2.0,25.86,4.09,25.86,
+locality,CYM,George Town,,19.2954,-81.3808,3.2,3.41,47.76,3.41,
+locality,CYP,Larnaca,,34.9236,33.6236,2.9,14.98,49.15,14.98,
+locality,CYP,Limassol,,34.6853,33.0333,6.6,13.28,81.67,13.28,
+locality,CYP,Nicosia,,35.1747,33.3639,37.0,4.9,61.69,4.92,
+locality,CYP,Pafos,,34.7744,32.4232,12.2,7.38,48.28,7.38,
+locality,CYP,Peyia,,34.8835,32.3803,2.1,1.56,13.52,1.56,
+locality,CZE,Brno,,49.1922,16.6113,11.0,9.85,59.7,10.36,
+locality,CZE,Prague,,50.0853,14.4223,187.1,18.7,45.31,21.88,5.96
+locality,DEU,Bamberg,,49.8916,10.8868,4.0,7.16,36.15,7.16,
+locality,DEU,Berlin,,52.5109,13.3989,210.4,20.92,69.21,22.06,8.41
+locality,DEU,Bielefeld,,52.0191,8.531,3.8,7.92,29.32,15.49,3.07
+locality,DEU,Bochum,,51.4818,7.2197,2.0,12.26,55.31,12.26,
+locality,DEU,Braunschweig,,52.2647,10.5236,3.3,10.76,64.48,10.76,
+locality,DEU,Dortmund,,51.5142,7.4653,5.4,16.29,62.01,16.29,
+locality,DEU,Dresden,,51.0493,13.7381,3.6,16.33,37.24,16.88,
+locality,DEU,Duisburg,,51.435,6.7596,2.9,15.94,55.07,15.94,
+locality,DEU,Essen,,51.4582,7.0158,4.0,11.39,74.06,11.39,
+locality,DEU,Flensburg,,54.7833,9.4333,2.0,14.61,47.11,14.61,
+locality,DEU,Halle,,51.4824,11.9713,5.0,8.75,49.45,9.14,
+locality,DEU,Hamburg,,53.5503,10.0007,11.7,20.42,64.69,20.54,
+locality,DEU,Hamm,,51.6794,7.8183,2.6,8.63,51.33,8.63,
+locality,DEU,Hanover,,52.3745,9.7386,4.6,18.33,60.76,18.74,
+locality,DEU,Köln,,50.9384,6.96,4.2,25.08,51.42,25.08,
+locality,DEU,Mönchengladbach,,51.1947,6.4354,2.1,16.06,55.97,16.06,
+locality,DEU,München,,48.1371,11.5754,81.7,17.34,59.06,18.9,8.65
+locality,DEU,Nürnberg,,49.4539,11.0773,2.7,19.09,67.23,19.09,
+locality,DEU,Oldenburg,,53.139,8.2146,151.4,9.03,26.04,9.04,
+locality,DEU,Paderborn,,51.7177,8.7527,3.1,11.79,42.59,11.79,
+locality,DEU,Ravensburg,,47.7811,9.6125,2.8,9.2,45.22,9.2,
+locality,DEU,Rostock,,54.0887,12.14,3.1,8.92,53.67,8.92,
+locality,DEU,Saarbrücken,,49.2344,6.9964,2.1,16.45,61.51,16.45,
+locality,DEU,Schwerin,,53.6288,11.4148,2.5,8.49,54.84,8.49,
+locality,DEU,Stuttgart,,48.7784,9.18,6.1,20.98,58.44,20.98,
+locality,DNK,Hillerød,,55.9286,12.3064,2.3,5.42,29.3,5.42,
+locality,DNK,København,,55.6776,12.5519,239.0,26.81,52.85,27.58,16.76
+locality,DZA,Algiers,,36.7729,3.0588,5.8,20.01,75.36,20.01,
+locality,DZA,Annaba,,36.8982,7.7549,7.9,37.23,83.82,37.22,
+locality,ECU,Quito,,-0.2202,-78.5123,14.0,21.03,64.14,21.03,
+locality,EGY,Alexandria,,31.1992,29.8952,2.0,37.77,91.99,43.78,
+locality,EGY,Cairo,,30.0488,31.2437,39.0,26.73,96.28,27.36,20.69
+locality,EGY,The New Capital,,29.8865,31.6846,2.5,9.32,9.35,10.05,
+locality,ERI,Asmara,,15.339,38.9327,2.9,51.72,39.32,49.7,
+locality,ESP,A Coruña,,43.371,-8.3959,2.1,34.07,70.23,34.07,
+locality,ESP,Alicante,,38.3436,-0.4882,9.2,13.11,56.67,13.11,
+locality,ESP,Almería,,36.8414,-2.4628,2.0,16.32,54.15,16.32,
+locality,ESP,Barcelona,,41.3829,2.1774,46.8,28.08,38.23,30.96,13.84
+locality,ESP,Bilbao,,43.263,-2.935,3.3,49.95,36.5,49.95,
+locality,ESP,Cadiz,,36.5297,-6.2929,2.6,25.09,87.85,25.09,
+locality,ESP,Eivissa,,38.9076,1.4236,2.5,30.97,64.85,28.95,
+locality,ESP,Girona,,41.9793,2.8199,3.0,19.27,35.4,19.27,
+locality,ESP,Granada,,37.1735,-3.5995,2.8,16.99,26.6,16.99,
+locality,ESP,Madrid,,40.4167,-3.7036,37.3,24.7,45.87,26.89,19.78
+locality,ESP,Marbella,,36.509,-4.8856,2.2,17.72,71.67,17.72,
+locality,ESP,Málaga,,36.7213,-4.4216,3.7,27.19,65.27,27.19,
+locality,ESP,Palma de Mallorca,,39.5696,2.6501,2.4,31.5,74.97,31.5,
+locality,ESP,Santa Cruz de Tenerife,,28.4672,-16.2508,2.0,14.0,44.27,14.0,
+locality,ESP,Seville,,37.3886,-5.9953,9.2,21.1,71.03,21.1,
+locality,ESP,Valencia,,39.4697,-0.3763,10.6,18.01,53.23,18.01,
+locality,ESP,Vigo,,42.2377,-8.7247,2.2,10.41,38.54,10.41,
+locality,ESP,Zaragoza,,41.6521,-0.8809,2.6,40.79,44.74,40.79,
+locality,EST,Pärnu,,58.3835,24.5082,2.2,7.29,33.93,7.29,
+locality,EST,Tallinn,,59.4372,24.7454,60.4,8.84,48.14,10.12,4.36
+locality,ETH,Addis Ababa,,9.0358,38.7524,40.3,47.63,50.91,48.53,15.85
+locality,FIN,Alastaro,,60.9526,22.8629,2.0,2.52,38.42,2.59,
+locality,FIN,Helsinki,,60.1699,24.9384,196.2,9.58,36.41,13.27,2.98
+locality,FIN,Hämeenlinna,,60.9966,24.4651,2.9,4.87,24.96,5.02,
+locality,FIN,Joensuu,,62.6006,29.7622,2.6,6.81,22.82,6.81,
+locality,FIN,Lahti,,60.9826,25.6614,2.7,7.59,29.24,7.59,
+locality,FIN,Rovaniemi,,66.5026,25.7312,4.3,4.77,18.63,4.77,
+locality,FIN,Tampere,,61.4986,23.761,5.0,16.58,29.3,17.75,
+locality,FIN,Turku,,60.4525,22.2669,4.8,25.47,46.91,25.47,
+locality,FJI,Nadi,,-17.7993,177.4179,2.8,10.27,39.87,10.27,
+locality,FRA,Angoulême,,45.6485,0.1562,2.1,7.22,37.57,7.22,
+locality,FRA,Antibes,,43.5811,7.1236,2.5,23.22,50.56,23.22,
+locality,FRA,Arcachon,,44.6616,-1.17,2.5,14.76,47.18,14.76,
+locality,FRA,Argelès-sur-Mer,,42.5477,3.0254,6.4,21.5,47.98,21.5,
+locality,FRA,Avignon,,43.9492,4.8059,2.7,10.44,36.16,10.44,
+locality,FRA,Bordeaux,,44.8412,-0.58,6.0,21.33,35.82,23.32,
+locality,FRA,Béziers,,43.3427,3.2131,3.0,8.01,27.48,8.01,
+locality,FRA,Canet-en-Roussillon,,42.7044,3.0105,5.0,16.18,58.03,16.18,
+locality,FRA,Cannes,,43.5515,7.0134,6.1,41.08,49.45,41.93,
+locality,FRA,Carcassonne,,43.213,2.3491,2.4,7.88,35.41,7.88,
+locality,FRA,Clermont-Ferrand,,45.7775,3.0819,3.0,11.15,41.91,11.15,
+locality,FRA,Dijon,,47.3216,5.0415,2.9,11.44,47.72,11.44,
+locality,FRA,Grenoble,,45.1876,5.7358,2.8,13.5,43.37,13.5,
+locality,FRA,La Baule-Escoublac,,47.2844,-2.3952,2.2,23.33,48.11,23.33,
+locality,FRA,La Rochelle,,46.1597,-1.1516,3.4,20.64,38.39,20.64,
+locality,FRA,Le Barcarès,,42.7947,3.0335,3.7,13.81,48.46,12.95,
+locality,FRA,Le Havre,,49.4983,0.1132,3.0,13.4,58.06,13.4,
+locality,FRA,Leucate,,42.91,3.027,3.2,8.95,27.16,8.95,
+locality,FRA,Limoges,,45.8354,1.2645,2.1,12.94,52.66,13.39,
+locality,FRA,Lyon,,45.7578,4.832,12.9,17.3,47.08,17.32,
+locality,FRA,Marseille,,43.2962,5.37,11.1,30.25,54.51,30.25,
+locality,FRA,Melun,,48.5399,2.6608,2.5,10.05,34.06,10.05,
+locality,FRA,Metz,,49.1197,6.1764,3.4,14.98,45.78,14.98,
+locality,FRA,Montpellier,,43.6112,3.8767,10.0,11.06,36.38,11.06,
+locality,FRA,Nantes,,47.2224,-1.5525,4.2,10.02,37.09,10.02,
+locality,FRA,Narbonne,,43.1838,3.0042,2.0,8.72,64.23,8.72,
+locality,FRA,Nice,,43.7009,7.2684,18.2,30.47,46.44,31.78,
+locality,FRA,Nimes,,43.8374,4.3601,3.9,9.48,44.3,9.48,
+locality,FRA,Orleans,,47.9027,1.9086,4.2,18.69,43.39,20.7,
+locality,FRA,Paris,,48.8589,2.32,407.8,24.42,46.04,24.71,21.68
+locality,FRA,Perpignan,,42.6985,2.8953,12.9,9.24,53.78,9.28,8.9
+locality,FRA,Reims,,49.2578,4.0319,2.2,7.12,38.4,7.12,
+locality,FRA,Sète,,43.4014,3.696,2.4,20.2,41.52,20.2,
+locality,FRA,Toulon,,43.1257,5.9305,2.6,11.86,47.98,11.86,
+locality,FRA,Toulouse,,43.6045,1.4442,11.7,27.85,38.83,27.85,
+locality,FRA,Valence,,44.9332,4.8921,3.0,8.87,42.22,8.87,
+locality,FRA,Versailles,,48.8035,2.1267,4.8,22.75,60.86,23.42,
+locality,GBR,Aberdeen,,57.1482,-2.0928,3.7,8.77,39.73,8.98,
+locality,GBR,Barnsley,,53.5528,-1.4828,2.2,7.24,41.17,7.24,
+locality,GBR,Bath,,51.3814,-2.3597,3.3,43.98,39.22,45.5,
+locality,GBR,Belfast,,54.5976,-5.9277,2.9,12.42,49.86,12.42,
+locality,GBR,Birmingham,,52.4797,-1.9027,31.4,8.49,59.3,8.94,3.54
+locality,GBR,Brighton,,50.8215,-0.1401,7.1,37.06,48.74,37.06,
+locality,GBR,Bristol,,51.4538,-2.5973,14.9,8.09,45.51,8.18,
+locality,GBR,Cambridge,,52.2055,0.1187,5.4,23.56,39.61,24.6,
+locality,GBR,Cardiff,,51.4817,-3.1792,6.4,13.11,43.32,16.04,8.55
+locality,GBR,Coventry,,52.4082,-1.5105,2.6,8.75,38.32,11.64,
+locality,GBR,Edinburgh,,55.9533,-3.1884,13.8,28.02,44.05,28.02,
+locality,GBR,Glasgow,,55.8612,-4.2502,4.6,9.59,51.71,9.59,
+locality,GBR,Leicester,,52.6362,-1.1332,3.9,17.77,55.24,18.89,
+locality,GBR,Liverpool,,53.4072,-2.9917,7.8,22.78,49.04,22.3,
+locality,GBR,London,,51.5074,-0.1278,1178.7,37.22,37.79,37.51,35.3
+locality,GBR,Luton,,51.8782,-0.4151,2.1,9.17,60.75,8.63,
+locality,GBR,Manchester,,53.4795,-2.2451,26.2,12.8,47.87,12.7,
+locality,GBR,Milton Keynes,,52.0407,-0.7594,27.7,0.95,39.51,0.95,
+locality,GBR,Newcastle upon Tyne,,54.9738,-1.6132,2.3,12.92,46.91,12.92,
+locality,GBR,Norwich,,52.6286,1.2924,2.7,9.53,50.06,9.53,
+locality,GBR,Nottingham,,52.9534,-1.1496,3.7,11.48,51.0,11.48,
+locality,GBR,Oxford,,51.752,-1.2578,3.2,35.65,28.83,39.41,
+locality,GBR,Peterborough,,52.5726,-0.2427,5.7,7.96,51.4,8.1,
+locality,GBR,Sheffield,,53.3807,-1.4702,3.9,7.47,49.12,7.47,
+locality,GBR,Slough,,51.5111,-0.5941,12.2,8.93,64.91,9.12,
+locality,GBR,Spalding,,52.7866,-0.1485,5.1,11.83,38.12,13.29,
+locality,GBR,Windsor,,51.4771,-0.6256,3.7,15.5,41.91,17.99,
+locality,GBR,Wolverhampton,,52.5848,-2.1276,3.4,2.99,47.75,2.99,
+locality,GBR,Wrexham,,53.0465,-2.9938,2.1,2.86,33.86,2.86,
+locality,GBR,York,,53.9657,-1.0743,2.8,29.02,33.33,29.02,
+locality,GEO,Batumi,,41.651,41.636,6.5,15.58,76.98,17.12,
+locality,GEO,Rustavi,,41.5501,44.9923,3.8,9.96,53.74,10.99,
+locality,GEO,Tbilisi,,41.7258,44.7753,29.6,13.19,83.73,13.44,10.54
+locality,GHA,Accra,,5.5571,-0.2012,7.1,29.97,51.97,27.92,
+locality,GHA,Kumasi,,6.6986,-1.6233,2.3,40.48,49.48,40.48,
+locality,GIB,Gibraltar,,36.1286,-5.3475,7.9,16.22,34.05,16.62,
+locality,GIN,Conakry,,9.5171,-13.6998,4.2,73.81,67.67,76.49,
+locality,GMB,Banjul,,13.4553,-16.5756,7.7,37.53,27.15,38.3,
+locality,GMB,Brikama,,13.272,-16.6483,7.4,60.91,45.2,60.91,
+locality,GMB,Serrekunda,,13.4388,-16.6748,77.0,42.25,61.15,43.9,21.67
+locality,GRC,Athens,,37.9756,23.7348,15.2,20.84,68.79,22.65,4.24
+locality,GRC,Kalamata,,37.0373,22.1107,2.2,23.68,69.97,23.68,
+locality,GRC,Larissa,,39.6383,22.4161,2.6,12.02,68.87,12.62,
+locality,GRC,Patras,,38.2462,21.7351,2.5,12.63,54.25,12.63,
+locality,GRC,Thessaloniki,,40.6403,22.9353,33.4,21.84,86.96,21.55,27.03
+locality,GRL,Nuuk,,64.1767,-51.7359,3.0,8.3,22.09,10.0,
+locality,GTM,Guatemala City,,14.6416,-90.5133,8.0,17.28,61.04,18.43,
+locality,GTM,Quetzaltenango,,14.8465,-91.5194,3.8,19.57,51.53,19.57,
+locality,GUM,Tumon,,13.5174,144.8106,2.1,2.96,70.03,2.96,
+locality,GUY,Georgetown,,6.8137,-58.1624,7.0,17.54,56.76,17.54,
+locality,HKG,Hong Kong,,22.3067,114.1759,56.2,30.71,30.18,30.16,32.13
+locality,HND,Comayagua,,14.4528,-87.6379,2.7,33.04,49.25,33.04,
+locality,HND,Tegucigalpa,,14.1057,-87.204,3.5,22.3,70.0,24.58,
+locality,HRV,Dubrovnik,,42.6491,18.094,2.0,14.89,51.34,17.31,
+locality,HRV,Osijek,,45.5549,18.6954,2.8,18.17,64.26,18.17,
+locality,HRV,Pula,,44.8702,13.8455,2.1,17.24,47.67,17.24,
+locality,HRV,Rijeka,,45.3268,14.4422,6.4,12.12,47.01,12.12,
+locality,HRV,Split,,43.5116,16.44,2.8,15.74,73.55,16.24,
+locality,HRV,Zagreb,,45.8131,15.9773,35.7,13.0,69.04,13.71,2.87
+locality,HTI,Port-au-Prince,,18.5473,-72.3396,2.9,49.78,28.04,49.78,
+locality,HUN,Budapest,,47.4968,19.0399,164.3,31.15,111.53,33.01,11.66
+locality,IDN,Balikpapan,,-1.2399,116.8593,2.1,28.83,34.85,28.83,
+locality,IDN,Banda Aceh,,5.5528,95.3193,2.8,20.78,30.57,22.97,
+locality,IDN,Bandar Lampung,,-5.4461,105.2644,5.4,29.87,38.37,33.06,16.78
+locality,IDN,Bandung,,-6.9218,107.6071,3.4,34.45,34.84,40.7,
+locality,IDN,Batam,,1.1597,104.0268,5.4,12.52,25.9,13.93,
+locality,IDN,Batang,,-6.9078,109.7303,3.0,14.91,13.09,16.63,
+locality,IDN,Bogor,,-6.5963,106.7972,10.8,44.83,38.98,47.76,21.41
+locality,IDN,Bontang,,0.1237,117.4717,7.1,22.14,24.28,22.47,
+locality,IDN,Cilegon,,-6.0174,106.0538,3.6,36.0,33.45,36.0,
+locality,IDN,Comal,,-6.9064,109.5331,4.6,22.6,25.08,22.83,
+locality,IDN,Denpasar,,-8.6525,115.2191,60.6,65.99,28.44,66.99,29.77
+locality,IDN,Jakarta,,-6.1754,106.8272,472.4,29.59,38.43,31.37,17.51
+locality,IDN,Kaliurang,,-7.5897,110.3888,3.4,26.86,20.7,26.86,
+locality,IDN,Kediri,,-7.8111,112.0046,4.9,30.96,22.32,38.42,6.35
+locality,IDN,Kendal,,-6.9244,110.2025,2.4,11.67,10.49,16.18,
+locality,IDN,Kudus,,-6.8092,110.8404,6.7,29.68,25.05,31.77,21.27
+locality,IDN,Magelang,,-7.4771,110.2182,7.1,26.31,29.67,27.99,
+locality,IDN,Makassar,,-5.1343,119.4124,9.8,34.64,43.87,36.44,
+locality,IDN,Malang,,-7.9771,112.634,4.0,36.32,35.82,37.56,
+locality,IDN,Manado,,1.4901,124.8409,3.2,20.2,36.33,24.15,
+locality,IDN,Medan,,3.5895,98.6742,4.4,19.35,38.69,28.41,11.19
+locality,IDN,Palembang,,-2.9888,104.7569,4.8,30.74,47.11,31.92,
+locality,IDN,Pati,,-6.7534,111.04,5.7,35.52,28.36,39.77,
+locality,IDN,Pekalongan,,-6.8905,109.6761,6.3,14.63,18.08,16.49,7.12
+locality,IDN,Pekanbaru,,0.5262,101.4516,3.6,17.62,26.61,21.8,10.97
+locality,IDN,Pemalang,,-6.892,109.3847,6.0,16.28,16.37,16.92,
+locality,IDN,Semarang,,-6.9904,110.4229,61.7,24.92,26.67,26.52,14.69
+locality,IDN,Serang,,-6.117,106.1518,2.7,38.29,42.38,38.29,
+locality,IDN,Surabaya,,-7.2463,112.7378,37.9,33.69,27.62,38.47,24.17
+locality,IDN,Surakarta,,-7.5692,110.8284,7.0,31.69,30.5,36.6,19.41
+locality,IDN,Tangerang,,-6.1762,106.6382,4.0,38.24,37.73,39.07,
+locality,IDN,Tegal,,-6.8674,109.1378,2.8,16.68,15.59,20.58,
+locality,IDN,Yogyakarta,,-7.8069,110.3625,168.2,52.85,34.27,58.43,33.91
+locality,IND,Ahmedabad,,23.0215,72.5801,2.0,81.25,39.15,81.25,
+locality,IND,Amritsar,,31.6357,74.8787,11.0,58.75,41.39,56.87,72.6
+locality,IND,Bengaluru,,12.9711,77.5882,32.5,41.42,38.6,44.48,10.53
+locality,IND,Bhubaneswar,,20.2603,85.8395,6.1,26.93,24.59,26.59,
+locality,IND,Chennai,,13.0837,80.2702,34.0,44.18,21.89,48.17,34.59
+locality,IND,Delhi,,28.6274,77.1717,57.6,28.48,48.58,31.42,18.03
+locality,IND,Gaya,,24.7964,85.008,3.0,91.63,10.63,91.63,
+locality,IND,Gurugram,,28.4809,77.0849,3.7,14.07,46.03,20.21,9.84
+locality,IND,Hyderabad,,17.3606,78.4741,5.5,67.62,36.32,65.57,
+locality,IND,Jaipur,,26.9155,75.819,5.1,68.65,59.98,72.32,
+locality,IND,Jalandhar,,31.3308,75.577,3.5,49.17,43.27,49.17,
+locality,IND,Kolkata,,22.5726,88.3639,45.6,47.9,28.84,48.06,
+locality,IND,Kozhikode,,11.2451,75.7755,2.9,48.11,37.27,59.82,39.8
+locality,IND,Ludhiana,,30.909,75.8516,12.1,52.25,44.86,59.92,19.87
+locality,IND,Meerut,,28.9958,77.7058,2.5,36.19,31.88,36.19,
+locality,IND,Mumbai,,18.9388,72.8353,97.9,43.99,61.05,45.87,33.57
+locality,IND,Mysore,,12.3052,76.6554,2.8,59.85,34.23,59.85,
+locality,IND,Noida,,28.5706,77.3272,6.4,26.21,33.04,29.34,15.62
+locality,IND,Pune,,18.5214,73.8545,5.7,49.57,47.58,50.65,
+locality,IND,Surat,,21.2095,72.8317,2.3,73.66,26.31,73.66,
+locality,IND,Thane,,19.2183,72.9781,6.4,42.73,48.22,42.02,
+locality,IND,Thiruvananthapuram,,8.4882,76.9476,24.3,44.51,40.04,45.28,
+locality,IND,Visakhapatnam,,17.6936,83.2921,2.7,72.59,30.09,68.33,
+locality,IRL,Dublin,,53.3494,-6.2606,114.9,14.61,41.89,14.93,11.11
+locality,IRL,Roscommon,,53.6312,-8.1907,2.1,5.33,34.77,7.3,
+locality,IRN,Isfahan,,32.6708,51.665,4.6,9.93,87.41,10.82,
+locality,IRN,Karaj,,35.8289,50.9889,3.0,12.37,110.32,13.23,10.84
+locality,IRN,Kermanshah,,34.3227,47.0744,88.5,11.19,108.83,11.52,5.78
+locality,IRN,Mashhad,,36.311,59.6109,41.4,6.81,60.26,,6.7
+locality,IRN,Qom,,34.6401,50.8764,2.6,15.2,107.71,15.03,
+locality,IRN,Sanandaj,,35.2974,46.9997,14.0,23.8,100.44,23.29,25.38
+locality,IRN,Tehran,,35.693,51.3831,69.6,12.48,91.15,12.91,9.39
+locality,IRQ,Erbil,,36.1912,44.0094,4.6,8.52,55.49,10.02,
+locality,ISL,Reykjavík,,64.146,-21.9422,8.9,11.87,43.86,11.84,
+locality,ISR,Jerusalem,,31.7788,35.2258,4.4,12.99,59.01,12.99,
+locality,ISR,Karmiel,,32.9125,35.3001,3.0,4.16,47.98,3.69,
+locality,ISR,Tel Aviv,,32.0853,34.7818,6.7,22.58,74.48,21.5,
+locality,ITA,Bari,,41.1258,16.862,2.9,23.58,85.99,25.69,
+locality,ITA,Bologna,,44.4938,11.3426,6.9,19.97,54.43,19.97,
+locality,ITA,Catania,,37.5024,15.0874,56.5,5.14,41.46,7.79,2.99
+locality,ITA,Como,,45.8113,9.0826,2.7,13.78,55.92,14.32,
+locality,ITA,Florence,,43.7698,11.2556,5.3,25.8,53.52,25.44,
+locality,ITA,Genoa,,44.4073,8.9339,34.3,23.14,65.95,23.14,
+locality,ITA,Massa,,44.0359,10.1396,2.2,19.53,71.44,19.53,
+locality,ITA,Milan,,45.4642,9.1896,52.9,24.84,64.34,25.25,23.14
+locality,ITA,Milazzo,,38.2208,15.2415,2.1,5.1,44.32,3.84,
+locality,ITA,Palermo,,38.1112,13.3524,2.8,8.99,73.33,6.23,12.91
+locality,ITA,Pisa,,43.7085,10.4036,3.1,18.39,56.69,18.56,
+locality,ITA,Rome,,41.8933,12.4829,36.7,28.89,74.05,29.59,23.97
+locality,ITA,Trieste,,45.6496,13.7773,2.2,21.09,50.51,21.09,
+locality,ITA,Turin,,45.0678,7.6825,2.9,13.72,67.19,13.72,
+locality,ITA,Verona,,45.4425,10.9857,3.4,24.1,52.57,24.1,
+locality,JAM,Kingston,,17.9712,-76.7928,3.5,19.65,54.09,19.65,
+locality,JOR,Amman,,31.9516,35.924,61.9,10.0,81.76,9.58,13.53
+locality,JOR,Irbid,,32.5567,35.8491,8.2,8.5,52.08,8.39,
+locality,JOR,Zarqa,,32.0668,36.0886,2.3,21.71,65.99,21.71,
+locality,JPN,Fukuoka,,33.5726,130.3917,3.2,18.95,59.51,19.73,
+locality,JPN,Fukushima,,37.7545,140.4592,3.8,1.15,39.12,1.15,
+locality,JPN,Gamagori,,34.8339,137.2252,68.8,3.19,39.11,3.33,2.18
+locality,JPN,Gifu,,35.4247,136.7711,2.2,2.54,36.55,2.54,
+locality,JPN,Hamamatsu,,34.711,137.7259,4.8,6.32,38.74,5.24,
+locality,JPN,Hiroshima,,34.3917,132.4518,7.8,11.61,39.79,11.98,
+locality,JPN,Ishinomaki,,38.4341,141.3028,2.2,1.46,32.3,1.46,
+locality,JPN,Itako,,35.9468,140.5555,4.7,0.68,25.84,0.68,
+locality,JPN,Kanazawa,,36.5616,136.6569,4.5,5.97,30.78,10.04,1.96
+locality,JPN,Kashima,,35.9661,140.645,2.0,0.18,15.85,,0.16
+locality,JPN,Kobe,,34.6932,135.1944,4.3,22.68,33.93,22.08,
+locality,JPN,Kumamoto,,32.809,130.7078,2.4,5.55,62.53,5.55,
+locality,JPN,Kyoto,,35.0116,135.7681,19.7,24.17,35.79,27.7,11.05
+locality,JPN,Kōchi,,33.5588,133.5311,5.0,4.08,54.12,4.08,
+locality,JPN,Nagoya,,35.1851,136.8998,12.0,23.31,43.12,24.04,19.3
+locality,JPN,Nara,,34.6844,135.8255,3.8,8.63,31.66,8.63,
+locality,JPN,Ninohe,,40.2711,141.3047,44.1,2.7,30.9,2.74,
+locality,JPN,Obihiro,,42.9238,143.1966,2.4,2.15,49.78,2.89,
+locality,JPN,Okayama,,34.6554,133.9195,3.7,4.45,41.18,3.94,
+locality,JPN,Okazaki,,34.9549,137.1728,10.9,3.87,47.84,4.17,1.42
+locality,JPN,Saitama,,35.9081,139.6566,6.1,3.81,23.69,4.57,1.85
+locality,JPN,Sapporo,,43.0619,141.3543,20.8,6.39,31.88,9.92,2.96
+locality,JPN,Sendai,,38.2678,140.8691,22.5,4.7,47.57,4.62,5.8
+locality,JPN,Shizuoka,,34.9752,138.3832,2.0,15.22,50.99,16.26,
+locality,JPN,Takamatsu,,34.3426,134.0465,3.4,5.38,52.26,5.38,
+locality,JPN,Tokushima,,34.0698,134.555,3.8,3.94,51.09,3.94,
+locality,JPN,Tokyo,,35.6828,139.7595,169.9,25.42,33.0,24.73,26.97
+locality,JPN,Toyohashi,,34.7691,137.3915,42.5,4.36,38.48,3.77,8.56
+locality,JPN,Toyokawa,,34.8276,137.3786,6.3,2.29,36.1,2.35,
+locality,JPN,Yokohama,,35.4503,139.6344,2.4,26.05,40.62,31.83,
+locality,JPN,Ōsaka,,34.6938,135.5015,21.2,24.39,35.95,26.23,19.9
+locality,KAZ,Almaty,,43.2364,76.9457,8.0,11.46,95.83,11.46,
+locality,KAZ,Astana,,51.1282,71.4307,5.3,9.06,77.72,9.94,6.17
+locality,KAZ,Karaganda,,49.8522,73.1139,4.9,11.86,68.93,11.86,
+locality,KEN,Nairobi,,-1.2833,36.8172,7.9,57.77,52.76,59.26,
+locality,KGZ,Bishkek,,42.8778,74.6067,5.4,14.44,73.07,15.07,
+locality,KHM,Kampot,,10.6315,104.1326,2.1,32.34,29.12,32.34,
+locality,KHM,Phnom Penh,,11.573,104.8578,200.9,47.38,43.3,48.17,28.52
+locality,KHM,Sihanoukville,,10.622,103.5223,14.1,24.75,35.83,28.1,9.4
+locality,KOR,Bucheon,,37.5093,126.793,7.9,8.37,59.37,8.22,
+locality,KOR,Busan,,35.1794,129.0721,121.7,9.5,47.75,9.62,9.08
+locality,KOR,Cheongju,,36.642,127.4881,21.4,4.92,51.59,5.57,1.39
+locality,KOR,Daegu,,35.8563,128.5385,13.4,5.07,64.61,7.63,1.6
+locality,KOR,Daejeon,,36.3799,127.3799,24.0,6.75,55.16,6.71,6.85
+locality,KOR,Gangneung,,37.7608,128.907,2.4,12.1,56.53,12.1,
+locality,KOR,Incheon,,37.4791,126.6303,8.0,3.83,58.79,4.39,1.38
+locality,KOR,Jeju,,33.5079,126.5209,3.5,1.83,36.58,1.87,
+locality,KOR,Jeonju,,35.8281,127.1156,7.5,11.37,49.71,11.93,10.54
+locality,KOR,Jincheon,,36.8724,127.4473,2.0,5.98,37.06,5.98,
+locality,KOR,Sejong,,36.6022,127.2979,10.2,3.99,25.73,4.21,3.02
+locality,KOR,Seoul,,37.5546,126.9708,542.9,8.02,34.94,13.16,6.06
+locality,KOR,Suncheon,,34.9828,127.4945,3.0,1.22,30.41,2.08,0.65
+locality,KOR,Suwon,,37.2722,127.004,5.5,10.19,75.01,10.19,
+locality,KOR,Ulsan,,35.5423,129.3318,3.6,2.76,42.89,3.09,
+locality,KWT,Kuwait City,,29.3797,47.9734,6.7,6.76,65.99,7.55,4.5
+locality,LAO,Pakse,,15.1154,105.8272,2.5,16.58,20.9,17.7,
+locality,LAO,Vientiane,,17.9641,102.6134,16.8,18.53,45.96,18.13,22.78
+locality,LBN,Beirut,,33.8892,35.5026,20.5,14.12,91.28,14.14,13.83
+locality,LBR,Monrovia,,6.328,-10.7978,6.3,67.2,47.46,67.2,
+locality,LBY,Benghazi,,32.12,20.0812,8.8,3.98,87.4,4.22,
+locality,LBY,Tobruk,,32.0774,23.96,3.6,10.56,72.83,10.45,
+locality,LKA,Colombo,,6.9344,79.8428,42.6,26.21,36.9,27.09,19.65
+locality,LTU,Kaunas,,54.8982,23.9045,4.3,6.21,55.13,6.21,
+locality,LTU,Vilnius,,54.687,25.2829,24.2,19.1,51.02,19.57,10.1
+locality,LTU,Šiauliai,,55.9341,23.3158,2.8,16.85,78.28,16.85,
+locality,LUX,Luxembourg City,,49.6113,6.1298,6.0,23.13,39.25,23.13,
+locality,LVA,Riga,,56.9494,24.1052,33.9,11.88,48.4,12.03,8.63
+locality,MAC,Macau,,22.1899,113.538,4.4,12.88,22.69,18.55,4.7
+locality,MAR,Casablanca,,33.5945,-7.62,5.9,29.59,102.84,30.72,
+locality,MAR,Marrakesh,,31.6258,-7.9892,11.4,28.34,60.23,31.7,6.32
+locality,MAR,Rabat,,34.0224,-6.834,6.5,25.01,69.69,25.7,
+locality,MAR,Tangier,,35.7696,-5.8034,7.8,36.36,83.96,39.71,14.73
+locality,MAR,Tétouan,,35.5702,-5.3743,2.2,61.25,77.71,61.25,
+locality,MCO,Monaco,,43.7384,7.4246,20.3,31.87,27.04,35.06,23.77
+locality,MDA,Chișinău,,47.0245,28.8323,19.7,19.53,87.55,19.76,
+locality,MDG,Antananarivo,,-18.91,47.5256,2.7,85.38,35.67,99.95,
+locality,MEX,Acapulco,,16.868,-99.894,4.4,21.0,101.61,20.37,
+locality,MEX,Cancun,,21.1636,-86.8516,4.0,16.76,97.31,16.76,
+locality,MEX,Cuernavaca,,18.9209,-99.234,3.0,14.29,50.11,14.29,
+locality,MEX,Culiacán,,24.7979,-107.3934,2.3,10.81,70.89,10.81,
+locality,MEX,Guadalajara,,20.672,-103.3384,5.0,15.01,75.58,15.01,
+locality,MEX,Mexico City,,19.4326,-99.1332,42.4,21.74,52.29,24.25,9.49
+locality,MEX,Monterrey,,25.6802,-100.3153,12.3,10.56,87.44,10.32,12.54
+locality,MEX,Morelia,,19.6546,-101.2624,2.0,21.5,52.57,21.5,
+locality,MEX,Oaxaca,,17.0581,-96.7262,2.7,14.58,51.8,14.58,
+locality,MEX,Puebla,,19.0439,-98.1971,3.7,19.09,47.69,19.09,
+locality,MEX,Puerto Escondido,,15.8693,-97.0726,2.4,15.68,33.55,15.68,
+locality,MEX,Santiago de Querétaro,,20.5923,-100.3917,9.0,9.67,54.15,8.56,15.5
+locality,MEX,Tulum,,20.2081,-87.465,2.9,24.39,45.05,24.39,
+locality,MKD,Skopje,,41.9962,21.4319,18.9,19.32,69.83,19.48,
+locality,MMR,Pathein,,16.7833,94.7333,2.7,72.01,17.28,73.22,
+locality,MMR,Yangon,,16.7953,96.162,352.3,17.27,76.66,18.39,6.1
+locality,MNE,Budva,,42.2886,18.842,3.0,21.85,67.0,21.85,
+locality,MNE,Podgorica,,42.4415,19.2621,2.3,10.49,73.85,10.49,
+locality,MNG,Ulaanbaatar,,47.9185,106.9177,70.2,21.77,81.66,22.5,10.14
+locality,MWI,Lilongwe,,-13.9875,33.7681,11.4,26.81,25.43,30.09,1.11
+locality,MWI,Zomba,,-15.3863,35.3268,4.8,57.0,15.73,57.0,
+locality,MYS,Bintulu,,3.1874,113.0473,2.3,1.41,37.98,1.77,
+locality,MYS,George Town,,5.4142,100.3287,8.9,12.65,60.97,12.11,14.65
+locality,MYS,Ipoh,,4.5987,101.09,2.4,6.92,61.82,7.64,
+locality,MYS,Johor Bahru,,1.4582,103.7649,29.1,6.24,70.64,6.54,4.6
+locality,MYS,Kuala Lumpur,,3.1517,101.6942,159.1,10.25,51.23,11.36,7.95
+locality,MYS,Kuantan,,3.7986,103.322,15.5,4.22,46.73,5.03,1.4
+locality,MYS,Kuching,,1.5598,110.3454,5.5,3.38,56.75,3.51,
+locality,MYS,Malacca,,2.1947,102.2511,6.1,7.46,46.61,7.82,5.84
+locality,MYS,Pasir Gudang,,1.4953,103.9207,10.6,4.79,43.12,6.18,1.77
+locality,MYS,Putrajaya,,2.9384,101.6922,4.9,3.09,32.1,3.09,
+locality,MYS,Sungai Petani,,5.6435,100.487,2.9,5.62,52.07,6.0,
+locality,MYS,Taiping,,4.8547,100.7439,3.3,5.68,45.63,6.92,
+locality,NCL,Nouméa,,-22.2745,166.4424,2.6,4.31,38.84,4.31,
+locality,NGA,Abuja,,9.0643,7.4893,3.9,31.07,60.84,32.09,
+locality,NGA,Asaba,,6.1859,6.7297,9.7,33.72,46.68,33.72,
+locality,NGA,Benin City,,6.3331,5.6221,3.3,60.63,91.48,60.63,
+locality,NGA,Ibadan,,7.3786,3.897,5.2,80.79,58.24,80.79,
+locality,NGA,Lagos,,6.4551,3.3942,34.1,82.06,54.3,82.86,
+locality,NLD,Amsterdam,,52.3728,4.8936,108.3,39.41,35.05,40.67,15.59
+locality,NLD,Delft,,52.0114,4.3584,5.7,8.49,30.26,11.89,0.26
+locality,NLD,Den Haag,,52.0749,4.2697,27.8,11.79,59.2,12.09,
+locality,NLD,Eindhoven,,51.4393,5.4786,171.1,15.81,42.44,16.23,8.03
+locality,NLD,Enschede,,52.221,6.8941,4.1,3.63,49.79,4.02,
+locality,NLD,Haarlem,,52.3837,4.6436,4.5,10.04,54.35,10.54,
+locality,NLD,Hilversum,,52.2252,5.1727,8.4,6.0,50.56,5.95,
+locality,NLD,Nijmegen,,51.8475,5.8638,2.4,12.58,44.55,15.22,
+locality,NLD,Rotterdam,,51.9244,4.4778,30.7,16.26,48.78,18.2,3.49
+locality,NLD,Utrecht,,52.0907,5.1216,9.9,21.32,38.45,21.32,
+locality,NLD,Veldhoven,,51.4191,5.4046,2.3,3.77,27.24,4.0,
+locality,NOR,Bergen,,60.3943,5.3259,3.8,33.39,31.58,33.39,
+locality,NOR,Oslo,,59.9133,10.739,115.0,10.75,39.72,12.12,4.58
+locality,NOR,Stavanger,,58.97,5.7318,3.2,10.84,25.3,11.68,
+locality,NOR,Tromsø,,69.6516,18.9559,2.6,12.94,28.28,12.94,
+locality,NPL,Kathmandu,,27.7083,85.3206,35.7,102.68,33.03,105.73,74.11
+locality,NZL,Auckland,,-36.8532,174.6372,61.5,12.91,51.57,12.88,
+locality,NZL,Christchurch,,-43.531,172.6364,7.5,7.49,53.89,7.56,
+locality,NZL,Hamilton,,-37.7879,175.2818,4.6,2.37,48.31,2.51,
+locality,NZL,Queenstown,,-45.0322,168.661,4.8,11.8,49.95,12.23,
+locality,NZL,Wellington,,-41.2888,174.7772,34.8,9.01,52.79,9.29,6.72
+locality,OMN,Muscat,,23.5882,58.3829,8.0,5.64,81.63,5.04,
+locality,PAK,Islamabad,,33.6938,73.0652,23.6,21.52,53.64,21.92,
+locality,PAK,Karachi,,24.8547,67.0207,62.7,55.77,70.02,57.64,14.21
+locality,PAK,Lahore,,31.5657,74.3142,11.7,57.01,69.39,63.78,17.41
+locality,PAK,Mansehra,,34.3287,73.1993,2.1,93.53,55.16,93.53,
+locality,PAK,Multan,,30.1978,71.472,9.8,99.96,33.89,105.54,
+locality,PAK,Peshawar,,34.0124,71.5787,3.7,53.34,45.76,53.34,
+locality,PAK,Rawalpindi,,33.5915,73.0537,9.3,49.39,69.15,53.57,
+locality,PAK,Sialkot,,32.4935,74.5412,3.4,105.14,33.65,105.14,
+locality,PAN,Panama City,,8.9714,-79.5342,6.7,12.03,65.87,12.03,
+locality,PER,Chiclayo,,-6.7716,-79.8387,2.0,27.39,38.97,27.39,
+locality,PER,Cusco,,-13.5171,-71.9785,5.4,22.19,35.42,23.33,
+locality,PER,Juliaca,,-15.4932,-70.1356,4.0,35.29,24.11,35.29,
+locality,PER,Lima,,-12.0621,-77.0365,24.3,30.39,75.94,31.66,22.99
+locality,PHL,Antipolo,,14.5872,121.1759,6.0,41.27,38.3,64.36,3.99
+locality,PHL,Bacolod,,10.777,123.018,3.4,23.12,59.43,23.12,
+locality,PHL,Baguio,,16.412,120.5934,2.2,15.7,36.85,15.7,
+locality,PHL,Biñan,,14.3388,121.0842,2.9,50.66,22.82,58.49,
+locality,PHL,Cabanatuan,,15.4905,120.9684,2.1,25.15,32.77,31.0,
+locality,PHL,Cabuyao,,14.2796,121.1236,13.7,45.82,20.49,47.78,30.66
+locality,PHL,Cainta,,14.578,121.1163,3.0,10.4,30.32,,3.04
+locality,PHL,Calamba,,14.206,121.1556,6.0,44.89,27.14,50.12,
+locality,PHL,Cebu City,,10.2936,123.9019,8.8,38.53,30.19,43.43,15.9
+locality,PHL,Cotabato,,7.2238,124.2467,286.7,44.35,34.63,44.66,18.07
+locality,PHL,Dagupan,,16.0353,120.3376,4.9,33.43,35.98,33.43,
+locality,PHL,Dipolog,,8.5864,123.3449,4.9,23.62,11.97,24.69,
+locality,PHL,General Santos,,6.1122,125.1722,2.1,21.07,28.24,27.58,
+locality,PHL,Iligan,,8.2237,124.243,2.1,31.49,32.27,31.49,
+locality,PHL,Iloilo,,10.6903,122.5676,4.5,21.55,44.27,22.59,
+locality,PHL,Manila,,14.5906,120.98,787.9,26.06,31.21,31.49,13.69
+locality,PHL,Santa Rosa,,14.3146,121.1137,4.2,30.29,25.69,30.76,
+locality,PHL,Zamboanga,,6.99,121.9247,2.2,47.61,18.48,54.24,
+locality,POL,Gdańsk,,54.3483,18.654,3.1,7.83,38.13,7.83,
+locality,POL,Katowice,,50.263,19.0187,6.0,11.35,40.74,11.37,
+locality,POL,Kraków,,50.0619,19.9369,8.4,17.39,45.42,18.14,
+locality,POL,Lublin,,51.2506,22.5701,4.1,10.17,37.16,12.1,
+locality,POL,Poznań,,52.415,16.9368,5.6,18.77,53.46,19.73,
+locality,POL,Szczecin,,53.4302,14.551,6.8,13.63,57.8,13.63,
+locality,POL,Warsaw,,52.2337,21.0714,218.0,12.02,54.68,12.88,5.54
+locality,POL,Wroclaw,,51.109,17.0327,8.5,13.92,42.41,14.61,
+locality,POL,Łódź,,51.7728,19.4785,10.7,14.49,53.08,15.67,
+locality,PRI,Mayagüez,,18.1987,-67.1402,2.6,1.41,81.91,1.41,
+locality,PRI,San Juan,,18.4164,-66.0587,4.0,12.94,49.51,12.75,
+locality,PRK,Pyongyang,,39.0168,125.7474,4.4,59.91,15.14,61.72,
+locality,PRT,Aveiro,,40.6405,-8.6538,4.0,16.81,62.19,16.81,
+locality,PRT,Coimbra,,40.2112,-8.4295,5.6,11.12,49.57,13.19,3.9
+locality,PRT,Funchal,,32.6496,-16.9087,2.8,15.23,34.17,15.23,
+locality,PRT,Lisbon,,38.7078,-9.1366,37.2,14.07,55.67,15.6,5.85
+locality,PRT,Porto,,41.1495,-8.6108,22.4,23.38,48.7,25.48,1.12
+locality,PRT,Sintra,,38.7985,-9.3881,2.4,3.85,20.13,3.85,
+locality,PRY,Asunción,,-25.28,-57.6344,3.4,20.1,67.6,20.1,
+locality,PSE,Ramallah,,31.9031,35.1952,4.7,7.71,65.69,7.71,
+locality,PYF,Papeete,,-17.5374,-149.566,2.1,9.38,62.0,10.43,
+locality,QAT,Doha,,25.2856,51.5264,39.5,4.34,48.84,5.02,2.99
+locality,QAT,Lusail,,25.4229,51.5197,3.0,1.44,36.23,1.27,
+locality,ROU,Bacău,,46.556,26.9154,2.9,11.51,88.0,11.89,
+locality,ROU,Brașov,,45.6525,25.6106,10.4,20.58,88.8,22.19,
+locality,ROU,Bucharest,,44.4361,26.1027,165.0,13.13,86.65,14.11,5.2
+locality,ROU,Cluj Napoca,,46.7694,23.59,2.8,27.16,95.56,27.16,
+locality,ROU,Constanța,,44.1767,28.6508,6.3,10.59,106.45,11.1,
+locality,ROU,Iași,,47.1616,27.5838,2.6,20.14,85.4,20.14,
+locality,ROU,Medias,,46.1625,24.3474,3.2,11.59,43.18,11.59,
+locality,ROU,Ploiești,,44.9417,26.0237,11.7,10.73,82.62,10.73,
+locality,ROU,Sibiu,,45.7974,24.1519,3.1,15.85,81.78,15.85,
+locality,ROU,Timișoara,,45.7538,21.2257,5.0,16.25,82.5,16.28,
+locality,RUS,Arkhangelsk,,64.541,40.5287,5.2,11.57,38.78,16.44,3.67
+locality,RUS,Astrakhan,,46.3498,48.0326,2.5,10.89,73.84,11.27,
+locality,RUS,Balakovo,,52.0181,47.8191,7.7,6.28,44.38,6.34,
+locality,RUS,Borovskii,,57.0412,65.7278,17.8,1.71,11.73,1.86,0.63
+locality,RUS,Cheboksary,,56.14,47.2481,8.8,9.63,54.27,10.06,
+locality,RUS,Cherepovets,,59.1242,37.9123,24.5,18.28,53.14,18.76,
+locality,RUS,Chita,,52.028,113.4051,2.4,11.12,41.01,11.12,
+locality,RUS,Gelendzhik,,44.5624,38.0811,3.5,9.52,53.64,9.52,
+locality,RUS,Ivanovo,,56.9957,40.9812,3.1,9.03,51.66,10.38,
+locality,RUS,Izhevsk,,56.8605,53.1977,13.1,15.61,62.73,15.84,
+locality,RUS,Kamyshin,,50.0807,45.4038,2.4,14.49,42.8,14.49,
+locality,RUS,Kazan,,55.7824,49.1242,2.1,5.87,77.58,6.13,
+locality,RUS,Khabarovsk,,48.4814,135.0769,4.1,7.01,52.97,8.54,
+locality,RUS,Kimovsk,,53.9699,38.5327,7.1,6.69,30.0,6.69,
+locality,RUS,Krasnoyarsk,,56.0091,92.8726,3.7,6.71,56.61,6.38,
+locality,RUS,Lipetsk,,52.5997,39.5951,7.6,12.6,71.63,12.6,
+locality,RUS,Morozovsk,,48.3524,41.8288,2.6,2.97,29.14,2.97,
+locality,RUS,Moscow,,55.7504,37.6175,327.2,10.91,59.74,12.38,5.11
+locality,RUS,Murom,,55.5793,42.0528,4.3,9.82,36.96,15.01,0.09
+locality,RUS,Nizhny Novgorod,,56.2769,43.9213,2.3,15.08,83.61,15.08,
+locality,RUS,Novosibirsk,,55.0288,82.9227,3.2,16.92,93.63,16.92,
+locality,RUS,Omsk,,54.983,73.3745,2.2,14.44,59.94,14.57,
+locality,RUS,Penza,,53.1953,45.019,3.8,14.46,31.04,14.46,
+locality,RUS,Rostov-on-Don,,47.2596,39.7391,3.8,12.48,85.4,12.48,
+locality,RUS,Ryazan,,54.6289,39.7431,5.9,12.16,54.73,12.5,10.64
+locality,RUS,Rybinsk,,58.0486,38.8556,2.4,10.11,30.61,11.7,
+locality,RUS,Saint Petersburg,,59.9387,30.3162,565.4,8.78,45.23,10.24,4.02
+locality,RUS,Samara,,53.1986,50.114,4.8,9.39,64.21,9.39,
+locality,RUS,Saransk,,54.1867,45.1838,2.3,5.22,51.98,5.22,
+locality,RUS,Saratov,,51.53,46.0347,5.0,10.76,78.99,11.32,
+locality,RUS,Sochi,,43.5855,39.7231,4.2,16.93,54.34,18.14,
+locality,RUS,Stavropol,,45.0269,41.9568,23.9,9.61,65.43,9.61,
+locality,RUS,Syktyvkar,,61.6685,50.8352,12.3,11.98,40.76,12.31,9.31
+locality,RUS,Syzran,,53.1554,48.4741,6.1,5.06,42.67,5.79,
+locality,RUS,Tomsk,,56.4887,84.9523,4.6,14.69,66.81,14.69,
+locality,RUS,Tyumen,,57.1535,65.5423,147.5,10.75,54.55,11.94,4.03
+locality,RUS,Ufa,,54.7261,55.9475,2.0,13.16,60.02,13.16,
+locality,RUS,Ulyanovsk,,54.315,48.4034,7.0,7.65,56.98,7.89,
+locality,RUS,Volsk,,52.0428,47.386,89.1,7.5,29.12,7.9,2.1
+locality,RUS,Voronezh,,51.6606,39.2006,4.3,10.54,81.54,11.63,
+locality,RUS,Yekaterinburg,,56.8391,60.6082,3.6,10.15,55.38,10.18,
+locality,RUS,Yuryev-Polsky,,56.4972,39.6786,13.7,10.14,32.32,10.14,
+locality,RWA,Kigali,,-1.9521,30.061,2.5,83.35,37.88,83.35,
+locality,SAU,Jeddah,,21.5504,39.1742,6.7,2.91,90.06,3.38,1.65
+locality,SAU,Jubail,,27.0007,49.6532,2.0,0.85,37.13,0.85,
+locality,SAU,Riyadh,,24.7136,46.6753,18.7,2.61,99.12,2.5,3.26
+locality,SEN,Dakar,,14.6934,-17.4479,2.9,45.89,66.08,45.67,
+locality,SGP,Singapore,,1.2962,103.7769,152.6,9.26,41.97,9.58,7.9
+locality,SLE,Bo,,7.9621,-11.7366,2.6,90.46,10.12,90.46,
+locality,SLE,Freetown,,8.479,-13.268,36.4,46.86,19.12,47.86,
+locality,SLE,Kenema,,7.886,-11.1864,2.4,100.05,7.25,100.05,
+locality,SLE,Port Loko,,8.7664,-12.7848,2.0,28.68,4.59,28.68,
+locality,SLE,Waterloo,,8.339,-13.0696,6.5,24.23,3.23,24.23,
+locality,SLV,San Salvador,,13.699,-89.1914,6.9,29.98,58.06,29.98,
+locality,SMR,San Marino,,43.9413,12.4467,3.2,5.24,42.13,5.24,
+locality,SOM,Mogadishu,,2.0349,45.3419,2.2,49.62,30.07,51.78,
+locality,SRB,Belgrade,,44.8178,20.4569,32.1,16.54,73.94,18.6,4.4
+locality,SRB,Novi Sad,,45.2551,19.8452,2.5,15.97,90.86,15.97,
+locality,SRB,Sjenica,,43.2729,19.9992,3.4,8.32,30.92,10.2,4.81
+locality,SUR,Paramaribo,,5.8242,-55.1663,6.5,9.58,56.32,9.83,
+locality,SVK,Bratislava,,48.1517,17.1093,3.7,14.82,61.67,14.82,
+locality,SVN,Ljubljana,,46.05,14.5069,5.3,20.72,58.8,21.32,
+locality,SWE,Eskilstuna,,59.3717,16.5051,2.9,3.99,23.59,4.17,
+locality,SWE,Göteborg,,57.7072,11.967,16.2,14.47,31.97,15.81,3.9
+locality,SWE,Jönköping,,57.7826,14.1657,2.4,5.97,30.28,5.97,
+locality,SWE,Malmö,,55.6053,13.0002,3.6,11.86,42.43,12.07,
+locality,SWE,Stockholm,,59.3251,18.0711,168.2,9.49,29.92,13.79,3.5
+locality,SWE,Södertälje,,59.1964,17.6272,6.4,3.47,31.27,4.13,1.2
+locality,SWE,Uppsala,,59.8586,17.6389,2.2,11.4,28.57,11.79,
+locality,SWE,Östersund,,63.1794,14.6357,8.9,7.11,35.77,7.11,
+locality,SYR,Aleppo,,36.1992,37.1637,50.2,38.81,77.4,39.35,
+locality,SYR,Damascus,,33.5131,36.3096,64.5,27.1,79.16,27.34,
+locality,SYR,Latakia,,35.5799,35.9773,2.7,18.87,72.83,19.36,
+locality,THA,Bangkok,,13.7525,100.4935,292.3,22.61,49.8,24.45,14.11
+locality,THA,Chiang Mai,,18.7883,98.9859,21.0,12.8,35.7,13.44,7.06
+locality,THA,Chiang Rai,,19.9063,99.8324,2.0,9.76,32.9,9.76,
+locality,THA,Hua Hin,,12.5699,99.9573,3.2,10.17,35.41,10.17,
+locality,THA,Koh Samui,,9.5357,99.9357,3.5,27.73,34.11,27.73,
+locality,THA,Krabi,,8.0635,98.9162,2.4,10.34,40.1,11.84,
+locality,THA,Pattaya,,12.9367,100.8865,19.0,26.69,43.3,23.02,43.37
+locality,THA,Phuket Town,,7.8848,98.3892,4.7,25.0,43.32,22.99,
+locality,TKM,Ashgabat,,37.9405,58.3823,11.9,5.37,37.2,5.37,
+locality,TTO,Petit Valley,,10.6981,-61.5476,2.2,2.0,17.88,2.0,
+locality,TUN,Tunis,,36.8002,10.1858,4.3,32.1,88.65,32.1,
+locality,TUR,Alanya,,36.5443,31.9979,3.3,19.63,49.02,18.12,
+locality,TUR,Ankara,,39.9208,32.854,19.3,14.49,85.39,14.78,
+locality,TUR,Antalya,,36.8967,30.715,4.9,19.68,72.93,19.65,
+locality,TUR,Bodrum,,37.0344,27.4307,2.9,19.52,42.28,19.52,
+locality,TUR,Bursa,,40.1827,29.0675,2.6,19.94,62.32,15.86,
+locality,TUR,Fethiye,,36.6221,29.1153,2.6,9.87,54.37,9.68,
+locality,TUR,Istanbul,,41.0064,28.9759,128.9,22.01,70.8,24.01,13.31
+locality,TUR,Kuşadası,,37.8632,27.2669,3.1,17.64,62.92,17.64,
+locality,TUR,Samsun,,41.2956,36.3314,3.4,20.63,59.0,22.13,
+locality,TUR,Trabzon,,41.0055,39.7301,3.0,15.24,44.0,15.24,
+locality,TUR,İzmir,,38.4213,27.1376,16.5,21.5,79.84,23.86,9.15
+locality,TWN,Chiayi,,23.4829,120.4524,3.2,12.09,48.96,14.51,
+locality,TWN,Kaohsiung,,22.6281,120.294,6.4,18.54,54.68,19.4,
+locality,TWN,Taichung,,24.1486,120.6744,3.4,19.76,54.73,19.57,20.17
+locality,TWN,Tainan,,23.0048,120.2241,9.3,18.31,47.52,17.19,24.49
+locality,TWN,Taipei,,25.0479,121.517,19.6,23.62,47.23,23.53,24.13
+locality,TZA,Dar es Salaam,,-6.8187,39.2795,6.5,52.44,46.75,53.32,
+locality,UGA,Jinja,,0.4348,33.2053,2.2,64.11,30.01,64.11,
+locality,UGA,Kabale,,-1.2571,29.9906,3.1,103.17,20.53,103.17,
+locality,UGA,Kampala,,0.3177,32.5814,68.2,98.79,40.02,102.62,20.18
+locality,UGA,Mubende,,0.5551,31.3947,3.2,109.17,40.1,109.17,
+locality,UGA,Mukono,,0.3595,32.7465,4.1,76.23,27.86,76.23,
+locality,UKR,Bila Tserkva,,49.797,30.1158,2.9,14.03,65.79,14.03,
+locality,UKR,Cherkasy,,49.4447,32.0588,7.8,9.58,51.55,9.75,
+locality,UKR,Chernihiv,,51.4941,31.2943,4.5,12.4,34.34,12.56,
+locality,UKR,Dnipro,,48.468,35.0418,3.7,12.98,41.69,12.98,
+locality,UKR,Donetsk,,48.0159,37.8013,8.4,12.99,47.93,14.09,6.96
+locality,UKR,Ivano-Frankivsk,,48.9225,24.7133,4.4,18.56,53.38,18.56,
+locality,UKR,Kharkiv,,49.9923,36.231,35.1,11.57,50.08,12.32,6.36
+locality,UKR,Khmelnytskyi,,49.4239,26.9884,4.2,10.33,45.42,10.33,
+locality,UKR,Kyiv,,50.45,30.5241,234.0,11.94,70.77,12.93,1.86
+locality,UKR,Luhansk,,48.5717,39.2973,6.0,12.39,56.71,12.39,
+locality,UKR,Lutsk,,50.7451,25.3201,3.0,9.72,44.95,9.72,
+locality,UKR,Lviv,,49.842,24.0316,44.2,23.56,49.59,24.39,8.45
+locality,UKR,Makiivka,,48.0448,37.9635,2.0,10.96,35.36,10.96,
+locality,UKR,Mykolaiv,,46.9759,31.994,4.4,18.73,43.16,19.18,
+locality,UKR,Odesa,,46.4843,30.7323,8.1,11.93,64.03,11.93,
+locality,UKR,Poltava,,49.5897,34.5508,2.6,9.87,55.16,9.87,
+locality,UKR,Rivne,,50.6196,26.2513,4.1,14.92,57.34,14.92,
+locality,UKR,Sevastopol,,44.6054,33.5221,3.3,12.17,50.74,12.17,
+locality,UKR,Simferopol,,44.9521,34.1025,3.2,13.25,60.85,13.88,
+locality,UKR,Uzhhorod,,48.6224,22.3023,2.4,15.66,45.88,15.66,
+locality,UKR,Vinnytsia,,49.232,28.468,5.5,13.86,44.55,13.86,
+locality,UKR,Yalta,,44.4971,34.1587,2.6,9.97,47.11,9.97,
+locality,UKR,Zhytomyr,,50.2598,28.6692,3.6,13.89,46.29,13.89,
+locality,URY,Montevideo,,-34.9059,-56.1913,9.8,32.85,90.9,33.42,
+locality,URY,Punta del Este,,-34.9632,-54.944,7.2,15.97,57.94,15.94,
+locality,USA,Abilene,,32.4464,-99.7476,4.0,1.31,45.43,1.31,
+locality,USA,Akron,,41.0831,-81.5185,2.4,1.87,35.62,1.94,
+locality,USA,Albany,,42.6512,-73.755,4.8,8.87,51.12,8.99,
+locality,USA,Albuquerque,,35.0841,-106.651,10.8,3.09,44.97,3.09,
+locality,USA,Alexandria,,38.8051,-77.047,4.3,8.52,67.46,9.02,
+locality,USA,Allentown,,40.6023,-75.4716,2.3,3.39,64.7,3.72,
+locality,USA,Amarillo,,35.2073,-101.8371,2.8,1.08,40.49,1.08,
+locality,USA,Anchorage,,61.2163,-149.8949,122.6,0.8,27.09,0.91,0.31
+locality,USA,Asheville,,35.5954,-82.5508,5.4,10.54,43.7,10.61,
+locality,USA,Aspen,,39.1911,-106.8236,2.9,6.7,45.49,5.29,
+locality,USA,Astoria,,46.1882,-123.832,2.0,6.7,40.82,6.7,
+locality,USA,Athens,,33.9598,-83.3764,2.3,8.11,43.74,8.11,
+locality,USA,Atlanta,,33.749,-84.3903,153.2,3.54,45.55,3.76,1.35
+locality,USA,Atlantic City,,39.3643,-74.4229,7.1,11.9,51.03,12.27,
+locality,USA,Austin,,30.2711,-97.7437,33.8,9.64,52.09,9.64,
+locality,USA,Baltimore,,39.2909,-76.6108,78.1,4.79,57.18,4.97,2.78
+locality,USA,Baton Rouge,,30.4494,-91.187,9.1,2.39,31.35,2.39,
+locality,USA,Beaverton,,45.4872,-122.8038,5.1,3.62,62.52,3.62,
+locality,USA,Bellevue,,47.6144,-122.1923,11.3,6.96,57.16,6.47,
+locality,USA,Bellingham,,48.7544,-122.4788,4.5,5.16,69.03,5.16,
+locality,USA,Bend,,44.0582,-121.3153,2.3,4.11,31.45,4.11,
+locality,USA,Billings,,45.7875,-108.4961,3.3,1.92,52.74,1.9,
+locality,USA,Biloxi,,30.4008,-88.8894,3.1,1.43,47.92,1.53,
+locality,USA,Birmingham,,33.5207,-86.8024,11.7,2.96,51.5,3.04,
+locality,USA,Boca Raton,,26.3587,-80.0831,3.1,3.61,41.32,3.61,
+locality,USA,Boise,,43.6166,-116.2009,3.1,6.22,32.65,6.05,
+locality,USA,Boston,,42.3554,-71.0605,35.0,27.69,50.86,28.84,9.73
+locality,USA,Boulder,,40.015,-105.2705,3.0,5.18,35.29,5.18,
+locality,USA,Bozeman,,45.6794,-111.044,3.0,9.87,69.73,9.87,
+locality,USA,Bradenton,,27.4989,-82.5748,5.9,3.75,71.44,3.87,
+locality,USA,Breckenridge,,39.4829,-106.0465,2.7,8.18,28.58,8.18,
+locality,USA,Brownsville,,25.9024,-97.4982,4.1,2.68,43.97,2.68,
+locality,USA,Buffalo,,42.8867,-78.8784,7.7,8.97,62.84,9.32,
+locality,USA,Burlington,,44.4762,-73.2129,3.3,10.74,63.91,10.74,
+locality,USA,Camden,,39.9448,-75.1199,5.3,3.21,50.04,3.21,
+locality,USA,Chapel Hill,,35.9132,-79.0558,2.0,1.83,18.94,1.83,
+locality,USA,Charleston,,32.7884,-79.9399,23.0,18.53,43.77,19.35,10.62
+locality,USA,Charleston,,38.3506,-81.6333,3.1,3.99,43.75,3.99,
+locality,USA,Charlotte,,35.2272,-80.8431,11.3,12.47,37.71,12.47,
+locality,USA,Chattanooga,,35.0457,-85.3095,7.0,6.28,55.93,6.28,
+locality,USA,Cheyenne,,41.14,-104.8202,3.7,2.02,48.84,2.02,
+locality,USA,Chicago,,41.8756,-87.6244,1699.1,7.0,64.42,7.45,5.34
+locality,USA,Cincinnati,,39.1015,-84.5125,15.0,9.82,38.81,10.2,7.68
+locality,USA,Clearwater,,27.9659,-82.8001,13.4,10.06,47.87,11.42,0.56
+locality,USA,Cleveland,,41.4997,-81.6937,11.6,11.23,39.2,11.23,
+locality,USA,Cleveland,,35.1595,-84.8766,4.7,0.53,31.04,0.53,
+locality,USA,Cocoa Beach,,28.3184,-80.6095,2.4,2.9,60.44,3.12,
+locality,USA,College Station,,30.6184,-96.3456,2.7,3.32,44.8,3.32,
+locality,USA,Colorado Springs,,38.834,-104.8253,5.7,3.0,52.99,3.0,
+locality,USA,Columbia,,34.0008,-81.0352,3.9,3.25,70.17,3.25,
+locality,USA,Columbus,,39.9623,-83.0007,13.6,12.49,53.78,12.62,
+locality,USA,Conroe,,30.3115,-95.4562,3.6,0.54,26.85,0.54,
+locality,USA,Corpus Christi,,27.7635,-97.4033,10.9,2.88,35.39,2.88,
+locality,USA,Cuero,,29.0938,-97.2901,3.3,0.84,19.05,0.77,
+locality,USA,Cupertino,,37.3229,-122.0323,2.6,1.61,40.93,2.2,
+locality,USA,Dallas,,32.7763,-96.7969,120.6,1.93,33.13,2.88,0.96
+locality,USA,Daly City,,37.6905,-122.4727,2.7,3.15,74.05,4.88,0.46
+locality,USA,Dayton,,39.7589,-84.1916,3.3,2.04,35.13,1.94,
+locality,USA,Daytona Beach,,29.2108,-81.0228,15.0,9.59,43.55,10.22,1.82
+locality,USA,Denver,,39.7156,-104.9963,57.2,4.98,38.61,8.63,1.1
+locality,USA,Des Moines,,41.5864,-93.6245,5.9,2.9,53.31,2.9,
+locality,USA,Destin,,30.3935,-86.4958,2.1,4.34,49.63,4.34,
+locality,USA,Detroit,,42.3316,-83.0466,197.3,2.23,50.84,2.14,3.62
+locality,USA,Durham,,35.9967,-78.9018,5.9,6.34,45.87,6.34,
+locality,USA,El Paso,,31.7601,-106.487,2.3,2.49,57.92,2.06,
+locality,USA,Elk Grove,,38.4088,-121.3716,11.2,1.21,69.13,1.21,
+locality,USA,Eugene,,44.0505,-123.0951,4.3,4.84,39.59,4.99,
+locality,USA,Findlay,,41.0414,-83.6504,2.1,1.46,38.95,1.46,
+locality,USA,Fort Lauderdale,,26.1223,-80.1434,11.3,13.35,53.44,14.09,
+locality,USA,Fort Myers,,26.6406,-81.8723,3.8,6.04,42.51,6.04,
+locality,USA,Fort Wayne,,41.0795,-85.138,2.2,3.35,57.72,3.35,
+locality,USA,Fort Worth,,32.7532,-97.3327,9.6,7.02,40.02,6.23,
+locality,USA,Foster City,,37.56,-122.2689,2.4,1.98,48.58,2.86,
+locality,USA,Fredericksburg,,30.2752,-98.872,2.4,5.15,37.68,5.15,
+locality,USA,Fresno,,36.7394,-119.7848,5.9,3.17,62.16,3.17,
+locality,USA,Gainesville,,29.652,-82.325,3.7,4.77,57.38,4.77,
+locality,USA,Galveston,,29.2999,-94.7952,8.0,10.2,63.19,10.2,
+locality,USA,Gary,,41.6021,-87.3371,2.1,0.55,22.47,0.55,
+locality,USA,Gatlinburg,,35.7143,-83.5102,3.8,19.75,40.31,19.75,
+locality,USA,Georgetown,,30.637,-97.6776,2.2,3.46,42.75,3.54,
+locality,USA,Golden,,39.7546,-105.2206,2.2,9.61,49.19,9.61,
+locality,USA,Grand Junction,,39.0673,-108.5645,2.4,2.33,53.8,2.33,
+locality,USA,Grand Rapids,,42.9632,-85.6679,3.5,14.28,44.12,16.78,
+locality,USA,Greensboro,,36.0726,-79.792,3.4,5.42,45.62,5.42,
+locality,USA,Hartford,,41.7646,-72.6909,4.6,7.3,47.06,7.3,
+locality,USA,Hillsboro,,45.5229,-122.9898,3.4,2.66,61.66,2.66,
+locality,USA,Hilo,,19.7074,-155.0816,2.5,1.75,33.79,1.75,
+locality,USA,Hollywood Beach,,30.2541,-85.9569,2.7,14.16,45.43,14.16,
+locality,USA,Honolulu,,21.3045,-157.8557,24.0,11.12,45.39,13.42,7.75
+locality,USA,Houston,,29.7589,-95.3677,37.4,4.33,44.87,4.33,4.43
+locality,USA,Huntsville,,34.7293,-86.586,2.6,1.96,28.32,1.96,
+locality,USA,Indianapolis,,39.7683,-86.1584,12.4,10.43,51.43,10.47,
+locality,USA,Jackson,,32.2999,-90.183,4.5,1.25,22.36,1.25,
+locality,USA,Jacksonville,,30.3322,-81.6557,12.6,2.67,39.28,2.77,
+locality,USA,Jersey City,,40.7216,-74.0475,34.9,7.23,58.26,7.46,5.9
+locality,USA,Joliet,,41.5264,-88.084,2.3,2.29,70.91,2.19,
+locality,USA,Jonesboro,,33.5215,-84.3538,2.0,0.52,39.89,0.52,
+locality,USA,Juneau,,58.302,-134.4197,8.3,6.82,25.79,8.37,1.51
+locality,USA,Kansas City,,39.1135,-94.6265,27.8,2.09,42.94,2.07,2.19
+locality,USA,Kansas City,,39.1001,-94.5781,5.1,2.41,33.37,2.41,
+locality,USA,Key West,,24.5548,-81.8021,8.2,34.12,34.52,34.22,
+locality,USA,Kingsville,,27.5159,-97.8561,2.0,0.98,32.96,0.98,
+locality,USA,Kissimmee,,28.2919,-81.4076,2.1,1.95,57.31,1.74,
+locality,USA,Knoxville,,35.9604,-83.921,6.1,7.22,35.89,8.01,
+locality,USA,La Jolla,,32.8459,-117.2576,2.4,10.38,64.91,11.5,
+locality,USA,Laguna Beach,,33.5427,-117.7854,3.7,8.82,94.29,8.66,
+locality,USA,Lansing,,42.7338,-84.5546,2.5,2.63,31.06,2.96,
+locality,USA,Las Vegas,,36.1673,-115.1485,111.0,9.06,48.35,10.35,6.79
+locality,USA,Lawrence,,38.9719,-95.2359,7.9,7.04,67.79,6.99,7.25
+locality,USA,Lexington,,38.0464,-84.497,7.9,4.15,47.18,4.25,
+locality,USA,Lincoln,,38.8916,-121.2932,2.1,1.21,38.27,1.21,
+locality,USA,Little Rock,,34.7492,-92.2877,6.3,1.71,31.51,1.71,
+locality,USA,Livermore,,37.6821,-121.7681,2.1,1.41,48.05,1.5,
+locality,USA,Lodi,,38.1343,-121.2736,2.4,2.53,68.33,2.53,
+locality,USA,Los Angeles,,34.0537,-118.2428,1087.8,9.93,70.63,10.34,5.98
+locality,USA,Louisville,,38.2542,-85.7594,12.4,6.66,49.86,7.01,
+locality,USA,Lubbock,,33.5856,-101.847,3.3,3.85,51.93,3.85,
+locality,USA,Macon,,32.8407,-83.6324,2.3,0.84,34.4,0.84,
+locality,USA,Madison,,43.0747,-89.3844,5.1,12.49,57.3,12.98,
+locality,USA,Malibu,,34.0356,-118.6894,16.7,4.13,78.57,4.3,2.18
+locality,USA,Memphis,,35.146,-90.0518,13.2,4.9,37.35,5.18,
+locality,USA,Miami,,25.7742,-80.1936,144.8,11.46,54.97,12.5,5.91
+locality,USA,Millbrae,,37.599,-122.4009,2.0,1.94,46.21,3.2,
+locality,USA,Milwaukee,,43.0386,-87.9091,10.4,7.18,51.44,7.59,4.24
+locality,USA,Moab,,38.5738,-109.5462,2.6,2.68,35.81,2.78,
+locality,USA,Mobile,,30.6913,-88.0438,5.4,2.41,32.72,2.41,
+locality,USA,Monterey,,36.599,-121.8947,6.5,9.02,38.09,9.02,
+locality,USA,Montgomery,,32.3774,-86.3092,7.2,1.28,37.66,1.31,
+locality,USA,Morgantown,,39.6297,-79.9559,3.0,2.85,40.19,2.86,
+locality,USA,Moses Lake,,47.1301,-119.2781,7.0,1.45,36.2,1.45,
+locality,USA,Myrtle Beach,,33.6956,-78.89,6.9,7.05,47.45,7.05,
+locality,USA,Naples,,26.1422,-81.7943,2.3,3.25,21.91,2.97,
+locality,USA,Nashville,,36.1623,-86.7743,51.5,12.26,47.18,13.11,6.28
+locality,USA,New Haven,,41.3082,-72.9251,3.6,16.57,46.97,16.57,
+locality,USA,New Orleans,,29.976,-90.0782,21.8,19.9,46.08,19.9,
+locality,USA,New York,,40.7121,-74.0063,1465.6,20.83,65.05,22.4,11.33
+locality,USA,Newark,,40.7357,-74.1724,4.6,12.82,65.04,13.4,
+locality,USA,Newport,,41.49,-71.3138,3.7,4.85,48.34,4.85,
+locality,USA,Newport News,,36.9775,-76.4298,2.0,2.13,66.82,2.13,
+locality,USA,Norfolk,,36.8494,-76.29,5.0,5.38,44.82,5.35,5.49
+locality,USA,Oakland,,37.8045,-122.2714,4.6,5.15,61.96,5.78,
+locality,USA,Ocala,,29.1872,-82.1401,2.7,0.57,34.06,0.57,
+locality,USA,Oklahoma City,,35.473,-97.5171,6.4,3.84,50.19,3.84,
+locality,USA,Omaha,,41.2587,-95.9384,26.0,2.21,55.54,2.22,2.14
+locality,USA,Orlando,,28.5421,-81.379,52.1,5.48,50.2,5.33,8.39
+locality,USA,Oxnard,,34.1976,-119.1804,3.9,1.99,56.06,1.99,
+locality,USA,Palestine,,31.7621,-95.6308,3.3,0.76,17.9,0.76,
+locality,USA,Palm Beach,,26.7128,-80.056,10.2,5.52,31.11,5.45,
+locality,USA,Palm Springs,,33.8246,-116.5403,2.9,2.63,48.62,2.73,
+locality,USA,Panama City,,30.1587,-85.6603,2.9,5.48,49.32,5.35,
+locality,USA,Park City,,40.6461,-111.498,4.4,5.82,27.34,5.82,
+locality,USA,Pasadena,,29.6911,-95.2092,3.4,1.03,70.36,1.03,
+locality,USA,Paterson,,40.9168,-74.1718,4.4,13.98,71.26,13.98,
+locality,USA,Pensacola,,30.4213,-87.2169,2.7,2.21,46.94,2.21,
+locality,USA,Philadelphia,,39.9527,-75.1635,296.9,8.22,60.05,8.53,5.02
+locality,USA,Phoenix,,33.4484,-112.0741,43.7,3.6,45.89,3.67,2.4
+locality,USA,Pigeon Forge,,35.7884,-83.5543,4.0,2.95,62.28,2.99,
+locality,USA,Pittsburgh,,40.4402,-80.003,23.9,9.55,36.71,9.92,7.97
+locality,USA,Pittston,,41.3259,-75.7894,2.5,1.49,46.19,1.49,
+locality,USA,Portland,,45.5202,-122.6742,89.8,10.57,43.16,11.18,7.8
+locality,USA,Portland,,43.6574,-70.2587,8.5,11.4,65.39,11.4,
+locality,USA,Providence,,41.824,-71.4128,2.9,12.11,42.71,12.11,
+locality,USA,Provo,,40.2337,-111.6587,2.4,5.31,74.62,5.31,
+locality,USA,Raleigh,,35.7804,-78.6391,11.5,7.5,44.26,7.14,11.05
+locality,USA,Reno,,39.5261,-119.8127,4.5,12.55,54.33,12.96,
+locality,USA,Richmond,,37.5385,-77.4343,9.9,2.75,52.97,2.89,
+locality,USA,Richmond,,29.5821,-95.7578,2.9,1.34,34.82,1.34,
+locality,USA,Riverside,,33.9825,-117.3742,3.3,3.88,57.4,2.81,
+locality,USA,Rochester,,43.1573,-77.6152,2.0,3.83,47.73,3.83,
+locality,USA,Rock Hill,,34.9249,-81.0251,2.0,0.37,21.57,0.37,
+locality,USA,Rocklin,,38.7907,-121.2358,2.6,1.21,56.31,1.21,
+locality,USA,Roseville,,38.7521,-121.288,18.4,1.13,72.44,1.11,
+locality,USA,Roswell,,33.3943,-104.523,4.0,0.58,22.93,0.58,
+locality,USA,Sacramento,,38.5811,-121.4939,157.5,1.85,64.76,1.91,0.87
+locality,USA,Salem,,44.9392,-123.0331,3.8,3.9,56.34,4.06,
+locality,USA,Salem,,42.5195,-70.8967,2.7,17.08,49.51,18.45,
+locality,USA,Salt Lake City,,40.7596,-111.8868,8.4,6.54,61.97,7.0,4.36
+locality,USA,San Antonio,,29.4246,-98.4951,11.1,13.93,35.68,13.93,
+locality,USA,San Diego,,32.7174,-117.1628,65.9,13.62,62.75,13.64,13.42
+locality,USA,San Francisco,,37.7793,-122.4193,128.0,22.63,60.21,24.14,12.38
+locality,USA,San Jose,,37.3362,-121.8906,134.3,3.16,81.12,3.28,1.88
+locality,USA,San Mateo,,37.5623,-122.328,2.7,4.18,54.22,,5.01
+locality,USA,Santa Barbara,,34.4221,-119.7027,6.9,14.94,50.89,14.68,
+locality,USA,Santa Cruz,,36.9718,-122.0265,3.2,13.99,51.77,14.69,
+locality,USA,Santa Fe,,35.6876,-105.9385,7.0,6.84,44.54,6.84,
+locality,USA,Santa Rosa,,38.4405,-122.7141,3.2,3.41,53.41,3.41,
+locality,USA,Sarasota,,27.3366,-82.5309,5.1,3.26,51.35,2.85,
+locality,USA,Savannah,,32.079,-81.0921,17.2,13.75,45.01,13.75,
+locality,USA,Scottsdale,,33.4942,-111.926,2.6,5.42,65.86,6.03,
+locality,USA,Scranton,,41.4087,-75.6621,4.9,2.49,46.94,2.49,
+locality,USA,Seattle,,47.6038,-122.3301,2.5,20.73,45.32,22.15,
+locality,USA,Sedona,,34.8689,-111.7614,2.6,3.89,41.97,3.89,
+locality,USA,Shreveport,,32.5135,-93.7478,7.7,1.03,17.25,1.03,
+locality,USA,Sioux City,,42.4967,-96.4059,2.7,1.35,49.56,1.35,
+locality,USA,South Padre Island,,26.1037,-97.1647,2.5,3.98,58.15,3.98,
+locality,USA,Spokane,,47.6572,-117.4235,16.6,1.94,64.49,2.1,0.64
+locality,USA,Spring Hill,,28.4635,-82.5364,3.4,0.45,22.08,0.45,
+locality,USA,Springfield,,42.1019,-72.5887,2.8,6.03,40.11,6.03,
+locality,USA,St Paul,,44.9497,-93.0931,3.2,7.89,43.73,7.89,
+locality,USA,St. Augustine,,29.8947,-81.3145,12.0,13.52,41.51,13.83,
+locality,USA,St. Louis,,38.628,-90.191,15.0,9.55,48.64,10.08,
+locality,USA,St. Petersburg,,27.77,-82.6359,12.2,5.62,48.67,6.13,1.18
+locality,USA,Stafford,,38.4219,-77.4083,2.2,0.58,32.97,0.58,
+locality,USA,Stamford,,41.0534,-73.5387,2.7,9.43,63.65,9.43,
+locality,USA,Stockton,,37.9577,-121.2908,9.3,2.37,63.1,2.4,
+locality,USA,Syracuse,,43.0481,-76.1474,5.7,7.53,45.7,7.53,
+locality,USA,Tacoma,,47.2455,-122.4383,8.6,3.39,51.35,3.39,
+locality,USA,Tampa,,27.9478,-82.4584,32.4,5.59,46.89,5.81,3.97
+locality,USA,Tempe,,33.4255,-111.94,3.7,6.43,48.78,6.86,
+locality,USA,The Villages,,28.927,-82.0042,6.2,2.85,40.34,2.85,
+locality,USA,The Woodlands,,30.165,-95.4609,6.3,1.85,17.81,1.85,
+locality,USA,Thousand Oaks,,34.1706,-118.8376,3.4,1.2,47.76,1.25,
+locality,USA,Tigard,,45.4307,-122.7719,2.7,3.87,51.52,3.87,
+locality,USA,Toledo,,41.6529,-83.5378,4.3,3.69,42.68,3.69,
+locality,USA,Topeka,,39.0484,-95.6782,2.9,2.08,44.35,2.08,
+locality,USA,Tracy,,37.7386,-121.4201,2.2,1.33,61.58,1.33,
+locality,USA,Tucson,,32.2229,-110.9748,2.5,13.0,45.77,13.0,
+locality,USA,Tulsa,,36.1548,-95.9905,6.3,2.12,28.52,2.12,
+locality,USA,Tuscaloosa,,33.2096,-87.5675,3.6,6.48,48.36,6.48,
+locality,USA,Tyler,,32.3513,-95.3011,5.2,0.87,40.91,0.87,
+locality,USA,Valdosta,,30.8327,-83.2785,2.4,0.66,29.48,0.69,
+locality,USA,Vancouver,,45.6307,-122.6745,5.6,5.04,46.65,5.04,
+locality,USA,Virginia Beach,,36.8489,-75.978,3.2,17.47,44.74,16.17,
+locality,USA,Waco,,31.5481,-97.1476,3.8,5.87,42.75,5.87,
+locality,USA,Washington,,38.895,-77.0365,120.9,11.87,57.87,12.94,3.63
+locality,USA,Watertown,,43.9748,-75.9108,2.4,2.68,54.19,2.68,
+locality,USA,West Linn,,45.3657,-122.6123,2.8,2.51,26.27,2.67,
+locality,USA,Wichita Falls,,33.9005,-98.5021,2.5,0.72,32.7,0.72,
+locality,USA,Wilkes-Barre,,41.2465,-75.8817,3.1,3.44,61.49,3.53,
+locality,USA,Wilmington,,34.2353,-77.9487,2.1,9.0,65.26,9.0,
+locality,USA,Wilmington,,39.7453,-75.5466,4.0,4.13,44.87,4.13,
+locality,USA,Yonkers,,40.9312,-73.8987,2.1,4.77,72.27,5.31,
+locality,USA,York,,39.9625,-76.7277,2.7,4.55,60.62,4.55,
+locality,UZB,Samarkand,,39.655,66.9757,23.5,17.11,99.66,18.37,10.18
+locality,UZB,Toshkent,,41.3123,69.2787,28.2,12.35,123.21,12.62,6.2
+locality,VCT,Kingstown,,13.1562,-61.228,3.6,14.65,31.78,14.65,
+locality,VEN,Barquisimeto,,10.0647,-69.357,2.3,24.03,56.07,24.03,
+locality,VEN,Caracas,,10.5061,-66.9146,10.6,21.41,36.66,20.69,
+locality,VEN,Maracaibo,,10.6429,-71.6062,119.2,11.58,46.66,14.58,3.6
+locality,VEN,Maturín,,9.7412,-63.1882,7.9,21.33,53.27,22.81,16.74
+locality,VEN,San Cristóbal,,7.7706,-72.2252,2.1,23.65,46.66,23.65,
+locality,VNM,Ben Tre,,10.2435,106.3749,44.6,56.59,12.12,58.14,49.85
+locality,VNM,Ca Mau,,9.176,105.1508,3.9,37.84,16.86,43.26,25.02
+locality,VNM,Da Lat,,11.9409,108.4376,6.9,61.17,40.92,61.35,
+locality,VNM,Da Nang,,16.068,108.212,12.2,28.53,28.78,30.84,21.69
+locality,VNM,Hanoi,,21.0283,105.854,834.7,48.33,33.39,54.57,35.65
+locality,VNM,Ho Chi Minh City,,10.7764,106.7011,59.8,57.49,24.33,64.14,39.52
+locality,VNM,Hoi An,,15.8791,108.3314,2.5,32.07,10.34,40.14,
+locality,VNM,Hạ Long,,20.9528,107.08,3.1,20.57,56.53,20.57,
+locality,VNM,Moc Chau,,20.8544,104.6183,2.1,16.4,24.59,16.4,
+locality,VNM,Nam Dinh,,20.424,106.1715,35.5,31.55,21.79,32.82,20.39
+locality,VNM,Nha Trang,,12.2273,109.1889,3.8,41.63,31.17,43.39,
+locality,VNM,Ninh Binh,,20.2421,105.9746,55.7,19.69,17.73,22.36,8.81
+locality,VNM,Phat Diem,,20.0896,106.0809,7.2,23.86,10.78,26.19,
+locality,VNM,Phu Quoc,,10.2149,103.9615,10.6,23.36,17.45,25.96,17.68
+locality,VNM,Tam Ky,,15.5632,108.4821,5.2,24.29,17.22,24.29,
+locality,WSM,Apia,,-13.8345,-171.7631,2.0,4.9,35.98,5.3,
+locality,XKX,Peja,,42.6594,20.2886,2.0,30.29,79.74,30.29,
+locality,XKX,Pristina,,42.6639,21.1641,7.6,18.48,78.12,18.48,
+locality,ZAF,Cape Town,,-33.9288,18.4172,82.8,11.56,51.94,12.14,5.07
+locality,ZAF,Johannesburg,,-26.2015,28.0382,18.2,13.73,43.62,14.16,
+locality,ZAF,Mabopane,,-25.5081,28.0681,2.9,11.88,18.91,11.88,
+locality,ZAF,Pretoria,,-25.7459,28.1879,5.5,11.6,40.91,11.75,
+locality,ZAF,Stellenbosch,,-33.9344,18.8692,3.9,11.84,38.64,11.84,
+locality,ZMB,Lusaka,,-15.4163,28.2818,2.6,30.62,37.66,30.95,
+locality,ZWE,Harare,,-17.8322,31.0451,5.1,51.52,78.15,51.52,

@@ -17,6 +17,8 @@ public class CarBlinkers : MonoBehaviour
     public bool LampOn { get; private set; }
     [SerializeField]
     float blinkInterval = 0.25f;
+    /// <summary>Seconds on and off (the traffic sets 0.33: about 1.5 flashes a second, within the 1-2 Hz rules ask for).</summary>
+    public float BlinkInterval { get => blinkInterval; set => blinkInterval = Mathf.Max(0.1f, value); }
 
     [SerializeField]
     MeshRenderer[] leftBlinkers;

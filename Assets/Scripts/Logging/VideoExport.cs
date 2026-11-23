@@ -445,6 +445,9 @@ public class VideoExport : MonoBehaviour
                 var from = me != null ? me.transform.position : t.position; float best = float.MaxValue;
                 foreach (var a in FindObjectsByType<PlayerAvatar>())
                     if (a != me && a.name.StartsWith(parts[1]) && (a.transform.position - from).sqrMagnitude < best) { best = (a.transform.position - from).sqrMagnitude; s.Target = a.transform; }
+                // (and the animals: "follow:Cat")
+                foreach (var a in AnimalAgent.All)
+                    if (a != null && a.name.StartsWith(parts[1]) && (a.transform.position - from).sqrMagnitude < best) { best = (a.transform.position - from).sqrMagnitude; s.Target = a.transform; }
                 if (s.Target != null) Debug.Log($"VideoExport: camera {s.Name} follows {s.Target.name}");
             }
             if (s.Target == null) return;
