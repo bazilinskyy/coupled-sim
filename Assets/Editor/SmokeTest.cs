@@ -21,6 +21,15 @@ using UnityEngine.SceneManagement;
 [InitializeOnLoad]
 public static class SmokeTest
 {
+    /// <summary>How long (s) the experiment may take to start: 300, or -smokeStartTimeout s (a city map with its far city
+    /// builds in some 4 minutes on a slow machine).</summary>
+    static double StartTimeout()
+    {
+        var a = Environment.GetCommandLineArgs();
+        int i = Array.IndexOf(a, "-smokeStartTimeout");
+        return i >= 0 && i + 1 < a.Length && double.TryParse(a[i + 1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var t) && t > 0 ? t : 300;
+    }
+
     const string KeyActive = "SmokeTest.Active";
     const string KeySeconds = "SmokeTest.Seconds";
     const string KeyOut = "SmokeTest.Out";
@@ -167,9 +176,9 @@ public static class SmokeTest
                     _startPositions[a.GetInstanceIDSafe()] = (a.name, a.transform.position);
                 Debug.Log($"SmokeTest: experiment running after {_inGameSince - _startTime:F0} s");
             }
-            else if (EditorApplication.timeSinceStartup - _startTime > 300)
+            else if (EditorApplication.timeSinceStartup - _startTime > StartTimeout())
             {
-                Fail("experiment did not start within 300 s");
+                Fail($"experiment did not start within {StartTimeout():F0} s");
             }
             return;
         }
