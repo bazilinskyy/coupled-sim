@@ -136,6 +136,8 @@ public class AnimalSpawner : MonoBehaviour, IExperimentModifier
                 // (not on a building: on a hillside a flat roof down the slope is lower than the participant, and a dog and a
                 // husky walked about on the roofs in São Paulo)
                 && !OnBuilding(hit.collider)
+                // (nor on a canal's water, below the quay)
+                && !hit.collider.name.StartsWith("Water", System.StringComparison.Ordinal)
                 && !Physics.CheckCapsule(hit.point + Vector3.up * 0.45f, hit.point + Vector3.up * 1.2f, 0.4f, ~0, QueryTriggerInteraction.Ignore)
                 // (not on top of a wall, a hedge or a bus shelter, with ground under it more than 0.3 m lower: a fox was
                 // placed on a garden wall's top)
