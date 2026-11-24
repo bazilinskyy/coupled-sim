@@ -441,12 +441,22 @@ public class AIPedestrian : MonoBehaviour
     }
 
     static readonly Collider[] _crossingHits = new Collider[16];
+    float _kerbSince = -1f, _kerbOffUntil; Vector3 _kerbFrom;
     void KeepOffCarriageway(ref Vector3 pos, float dt)
     {
         var here = transform.position;
         var v = new Vector3(_velocity.X, 0f, _velocity.Y); float sp = v.magnitude; var dir = v / sp;
         const float lead = 0.3f;   // (the body's side and a little)
-        if (!MapTraffic.OnCarriageway(here + dir * lead) || MapTraffic.OnCarriageway(here)) return;
+        if (Time.time < _kerbOffUntil) return;
+        if (!MapTraffic.OnCarriageway(here + dir * lead) || MapTraffic.OnCarriageway(here)) { _kerbSince = -1f; return; }
+        // (turned along the kerb for 2 s without getting half a metre anywhere, as in a building passage over a street
+        // in London, where one walked 36 s into its wall: the kerb is let be for 6 s)
+        if (_kerbSince < 0f) { _kerbSince = Time.time; _kerbFrom = here; }
+        else if (Time.time - _kerbSince > 2f)
+        {
+            if ((here - _kerbFrom).sqrMagnitude < 0.5f * 0.5f) { _kerbOffUntil = Time.time + 6f; _kerbSince = -1f; return; }
+            _kerbSince = Time.time; _kerbFrom = here;
+        }
         // (not where its own way goes over the road: a footway across a street with no crossing marked, as out of a
         // building passage in London; a pedestrian kept off the road there stood against the passage's walls)
         if (_tracker != null && _tracker.Circuit != null)
