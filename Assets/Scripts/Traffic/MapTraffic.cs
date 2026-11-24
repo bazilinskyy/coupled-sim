@@ -1799,6 +1799,10 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         }
         var shift = new float[line.Count];
         int moved = 0;
+        if (DebugFocus != null)
+            for (int i = 0; i < line.Count; i++)
+                if (Flat(line[i] - DebugFocus.Value).sqrMagnitude < 12f * 12f)
+                    Debug.Log($"TrafficDebug: riding line point {i}/{line.Count} at {line[i]}: ground {SeenGround(line[i])}, blocked {Blocked(line[i])}");
         for (int i = 0; i < line.Count; i++)
         {
             // (this point, and halfway to the next one)
