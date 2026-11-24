@@ -105,12 +105,17 @@ public class AnimalAgent : MonoBehaviour
     /// on screen, its mesh as it is posed now is measured and the model moved by what puts its lowest vertex on the
     /// ground under the animal, eased in. Not in flight, and kept while it runs (a gallop has the feet off the ground).
     /// </summary>
-    void KeepFeetOnGround()
+    /// <summary>Its lowest point on the ground at once, seen or not (a still shot's camera sees it only when it is taken:
+    /// animals in the README's pictures stood over their shadows).</summary>
+    public void GroundNow() { _nextGround = 0f; KeepFeetOnGround(true); }
+
+    void KeepFeetOnGround() => KeepFeetOnGround(false);
+    void KeepFeetOnGround(bool now)
     {
         if (_model == null || _skins == null || _skins.Length == 0 || Time.time < _nextGround) return;
         _nextGround = Time.time + 0.3f;
         if (Current == State.Fly || Current == State.Run || _hop) return;
-        bool seen = false;
+        bool seen = now;
         foreach (var sk in _skins) if (sk != null && sk.isVisible) { seen = true; break; }
         if (!seen) return;
         if (_baked == null) _baked = new Mesh();
@@ -126,9 +131,9 @@ public class AnimalAgent : MonoBehaviour
         if (low == float.MaxValue) return;
         // (the body's offset from the ground, kept within 0.3 m: a wrong reading, as a mesh part far off, moves nothing much)
         float want = Mathf.Clamp(_groundFix + (transform.position.y - low), -0.3f, 0.3f);
-        float step = want - _groundFix;
-        _groundFix += step * 0.6f;
-        _model.position += Vector3.up * (step * 0.6f);
+        float step = (want - _groundFix) * (now ? 1f : 0.6f);
+        _groundFix += step;
+        _model.position += Vector3.up * step;
     }
 
     void Think(float dt)
@@ -216,7 +221,7 @@ public class AnimalAgent : MonoBehaviour
         var look = Quaternion.LookRotation(dir, Vector3.up);
         transform.rotation = Quaternion.Slerp(transform.rotation, look, 1f - Mathf.Exp(-dt * 8f));
         var next = transform.position + transform.forward * _speed * dt;
-        if (Current != State.Fly && Blocked(transform.position, next + transform.forward * 0.5f))
+        if (Current != State.Fly && (Blocked(transform.position, next + transform.forward * 0.5f) || DropAhead(next + transform.forward * 0.3f)))
         {
             Current = State.Idle;
             _stateTimer = 1f;
@@ -228,6 +233,15 @@ public class AnimalAgent : MonoBehaviour
     }
 
     static Vector3 Flat(Vector3 v) { v.y = 0; return v; }
+
+    /// <summary>Water, or the ground more than 0.4 m lower, just ahead: a quay's edge (a cat walked off a canal's quay
+    /// in Delft and stood on the water).</summary>
+    bool DropAhead(Vector3 p)
+    {
+        if (!Physics.Raycast(p + Vector3.up * 1.5f, Vector3.down, out var hit, 4f, ~0, QueryTriggerInteraction.Ignore)) return true;
+        if (hit.collider.transform.IsChildOf(transform)) return false;
+        return hit.collider.name.StartsWith("Water", System.StringComparison.Ordinal) || hit.point.y < _groundY - 0.4f;
+    }
 
     bool Ground(Vector3 p, out float y)
     {
