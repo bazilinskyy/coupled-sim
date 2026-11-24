@@ -54,6 +54,40 @@ public class TrafficCar : MonoBehaviour
     }
     static readonly HashSet<string> _sizeLogged = new HashSet<string>();
 
+    /// <summary>
+    /// A vehicle of the map's traffic whose body lies well ahead of or behind its pivot (the articulated bus: its pivot
+    /// at the front section's rear axle, the body's middle 3.7 m ahead) gets its pivot moved to the body's middle: the
+    /// traffic's checks (gaps, guards, stops clear of crossing lanes) and the collision audit take a vehicle's body as
+    /// centred on its pivot, and took the bus's rear 3.7 m behind where it is (stopping for, and counting contacts with,
+    /// a lamp post and a tree behind it in São Paulo) and its front 3.7 m short. Nothing moves in the world: the root
+    /// moves forward and its parts, colliders and the hitch of a rear section back. Not for a participant's vehicle,
+    /// whose position is logged.
+    /// </summary>
+    public void CentrePivot()
+    {
+        float ahead;
+        if (TryGetComponent<BoxCollider>(out var box) && !box.isTrigger && Mathf.Abs(box.size.z * Mathf.Abs(transform.lossyScale.z) - VehicleLength) < 0.2f)
+            ahead = box.center.z * transform.lossyScale.z;
+        else { SeenSize(out var c); ahead = c.y; }
+        if (Mathf.Abs(ahead) < 0.5f) return;
+        float local = ahead / transform.lossyScale.z;
+        var shift = new Vector3(0f, 0f, local);
+        for (int i = 0; i < transform.childCount; i++) transform.GetChild(i).localPosition -= shift;
+        foreach (var c in GetComponents<Collider>())
+        {
+            if (c is BoxCollider b) b.center -= shift;
+            else if (c is CapsuleCollider cc) cc.center -= shift;
+            else if (c is SphereCollider sc) sc.center -= shift;
+            else if (c is WheelCollider wc) wc.center -= shift;
+        }
+        if (TryGetComponent<ArticulatedTrailer>(out var art)) art.HitchLocal -= shift;
+        var to = transform.position + transform.forward * ahead;
+        transform.position = to;
+        if (TryGetComponent<Rigidbody>(out var rb)) { rb.position = to; if (!rb.automaticCenterOfMass) rb.centerOfMass -= shift; }
+        Physics.SyncTransforms();
+        if (DebugTraffic) Debug.Log($"TrafficDebug: {name}: pivot moved {ahead:F2} m ahead, to its body's middle");
+    }
+
     /// <summary>The width (x) and length (y) of the vehicle's visible meshes, in its own frame (wheels, mirrors and all;
     /// not lights' glow, shadows or anything over 25 m), and their centre's offset from the pivot (x right, y ahead).</summary>
     Vector2 SeenSize(out Vector2 centre)
@@ -346,8 +380,10 @@ public class TrafficCar : MonoBehaviour
         // two vehicles each held by the other for over 4 s (one stopped to let the other through a narrow street, its nose
         // in the other's turn): the one placed later backs up, up to 4 m at walking pace into room clear behind it, and then
         // waits until the other has gone by, as a driver does; else both stood for good and the queue behind them too
+        // (the other held by its last check, or standing over 4 s by its rules for this one in its path: two cars nose to
+        // nose in a narrow street in London, one stopped by its check, the other by its rules for the first, stood 20 s)
         if (!IsRider && _reverseLeft <= 0f && Time.time >= _reverseAgain && _blocker != null && _blocker.TryGetComponent<TrafficCar>(out var other)
-            && other._blocker == transform && other.HeldLong && (HeldLong || _narrowFor == other.transform)
+            && other._blocker == transform && (other.HeldLong || other.WaitingLong) && (HeldLong || _narrowFor == other.transform)
             && ClearBehind() >= 1f && (_narrowFor == other.transform || !other.HeldLong || _rank > other._rank || other.ClearBehind() < 1f))
         {
             _reverseLeft = 4f; _backFor = other.transform; Reversals++;
@@ -390,6 +426,14 @@ public class TrafficCar : MonoBehaviour
             var line = $"t={Time.time:F2} prog={_tracker.ProgressDistance:F1} v={Speed:F1} rb={rbv:F1} pos=({transform.position.x:F1},{transform.position.z:F1}) off={off:F2} {LeaderDescription}";
             _history.Enqueue(line);
             while (_history.Count > 12) _history.Dequeue();
+            // (first more than 0.8 m off its lane: the last 3 s, with what it was doing and what was round it)
+            if (Mathf.Abs(off) > 0.8f && !_offLogged && _offLogs < 40)
+            {
+                _offLogged = true; _offLogs++;
+                string near = string.Join(", ", _cars.Where(c => c.t != transform && Flat2(c.pos - transform.position) < 6f * 6f).Select(c => $"{c.name} {Mathf.Sqrt(Flat2(c.pos - transform.position)):F1} m"));
+                Debug.Log($"TrafficDebug: off its lane: {name} ({(IsRider ? "rider" : $"{VehicleLength:F1} m")}) {off:F2} m at ({transform.position.x:F1},{transform.position.z:F1}); near: {(near.Length > 0 ? near : "nothing")}; the last 3 s: " + string.Join(" | ", _history));
+            }
+            if (Mathf.Abs(off) < 0.4f) _offLogged = false;
             // (-debugCar "Map traffic Map route 24 15": that vehicle's every line, with its heading)
             if (DebugCar != null && name == DebugCar) Debug.Log($"TrafficDebug: {name}: {line} heading {transform.eulerAngles.y:F0} yaw rate {(rb0 != null ? rb0.angularVelocity.y * Mathf.Rad2Deg : 0f):F0}°/s");
             // the participant's autopilot: every 5 s
@@ -526,6 +570,8 @@ public class TrafficCar : MonoBehaviour
     public float HeldByFixedFor => _guardHeldByFixed && _guardSince >= 0f ? Time.time - _guardSince : 0f;
     /// <summary>Held by the last check for over 4 s.</summary>
     bool HeldLong => _guardSince >= 0f && Time.time - _guardSince > 4f;
+    /// <summary>Standing over 4 s (by its rules or its last check).</summary>
+    bool WaitingLong => _stoppedSince > 0f && Time.time - _stoppedSince > 4f;
     /// <summary>-debugTraffic: deadlocks broken by one vehicle backing up.</summary>
     public static int Reversals;
 
@@ -1313,6 +1359,7 @@ public class TrafficCar : MonoBehaviour
 
     readonly int _rank = ++_ranks;
     float _nextHistory;
+    bool _offLogged; static int _offLogs;
     readonly Queue<string> _history = new Queue<string>();
     static readonly HashSet<string> _reportedPairs = new HashSet<string>();
 

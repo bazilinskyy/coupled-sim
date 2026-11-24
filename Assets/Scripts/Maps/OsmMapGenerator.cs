@@ -2016,6 +2016,70 @@ public partial class OsmMapGenerator
             var n = hit.collider.name;
             return !(n == "Green areas" || n == "BGT green areas");
         });
+        GroundShoulders(world, waterIndex);
+    }
+
+    /// <summary>
+    /// On a map with terrain the base ground lies <see cref="TerrainHeight.GroundDrop"/> and 3 cm under the streets (so
+    /// its cells do not rise through them where the slope curves), which left a ledge of 15-25 cm at a road's edge
+    /// wherever nothing else (pavement, grass) covers the ground beside it: a cyclist that had strayed a metre off its
+    /// line stood in such a ditch between a road and a lawn in São Paulo. Each car road gets a shoulder on both sides,
+    /// the ground's own surface: from 0.3 m under the road's edge, just below its asphalt, down to the ground 1.5 m out,
+    /// under the pavements and lawns where there are some. Not on maps with corridors (there the ground stays under the
+    /// roads' lower edges anyway), not on bridges, not over water.
+    /// </summary>
+    void GroundShoulders(Transform world, WaterIndex water)
+    {
+        if (Terrain == null || Area != null || world == null) return;
+        var groundGo = world.Find("Ground");
+        if (groundGo == null || !groundGo.TryGetComponent<MeshRenderer>(out var mr)) return;
+        var mb = new MeshBuilder();
+        float h = HalfSize + 40;
+        Vector2 Uv(V2 q) => new Vector2((q.X + h) / 4f, (q.Y + h) / 4f);
+        float inY = Terrain.GroundDrop - 0.01f, outY = -0.03f;   // (lifted with the ground: 1 cm under the terrain, and the ground's own level)
+        void Quad(V2 a, float ya, V2 b, float yb, V2 c, float yc, V2 d, float yd)
+        {
+            // (clockwise seen from above: facing up)
+            float area = a.X * b.Y - b.X * a.Y + b.X * c.Y - c.X * b.Y + c.X * d.Y - d.X * c.Y + d.X * a.Y - a.X * d.Y;
+            if (area > 0f) { (b, d) = (d, b); (yb, yd) = (yd, yb); }
+            mb.Quad(new Vector3(a.X, ya, a.Y), new Vector3(b.X, yb, b.Y), new Vector3(c.X, yc, c.Y), new Vector3(d.X, yd, d.Y), Uv(a), Uv(b), Uv(c), Uv(d));
+        }
+        int quads = 0;
+        foreach (var r in Roads)
+        {
+            if (r.Bridge || r.Line == null || r.Line.Count < 2 || !CarRoads.Contains(r.Type)) continue;
+            // the centre line every 2.5 m at most (the ground's own cells), with each point's sideways direction
+            var pts = new List<V2>();
+            for (int i = 0; i + 1 < r.Line.Count; i++)
+            {
+                var a = new V2(r.Line[i].x, r.Line[i].z); var b = new V2(r.Line[i + 1].x, r.Line[i + 1].z);
+                int n = Math.Max(1, (int)Math.Ceiling(V2.Distance(a, b) / 2.5f));
+                for (int k = 0; k < n; k++) pts.Add(V2.Lerp(a, b, k / (float)n));
+            }
+            pts.Add(new V2(r.Line[r.Line.Count - 1].x, r.Line[r.Line.Count - 1].z));
+            if (pts.Count < 2) continue;
+            var side = new V2[pts.Count];
+            for (int i = 0; i < pts.Count; i++)
+            {
+                var d = pts[Math.Min(i + 1, pts.Count - 1)] - pts[Math.Max(i - 1, 0)];
+                side[i] = d.LengthSquared() > 1e-6f ? V2.Normalize(new V2(d.Y, -d.X)) : V2.Zero;
+            }
+            float inner = Math.Max(0.5f, r.Width / 2f - 0.3f), outer = r.Width / 2f + 1.5f;
+            foreach (float sgn in new[] { -1f, 1f })
+                for (int i = 0; i + 1 < pts.Count; i++)
+                {
+                    if (side[i] == V2.Zero || side[i + 1] == V2.Zero) continue;
+                    V2 ai = pts[i] + side[i] * (sgn * inner), ao = pts[i] + side[i] * (sgn * outer);
+                    V2 bi = pts[i + 1] + side[i + 1] * (sgn * inner), bo = pts[i + 1] + side[i + 1] * (sgn * outer);
+                    if (!Inside(ao) && !Inside(bo)) continue;
+                    if (water != null && water.Any && (water.Inside(ao) || water.Inside(bo))) continue;
+                    Quad(ai, inY, ao, outY, bo, outY, bi, inY);
+                    quads++;
+                }
+        }
+        if (quads == 0) return;
+        Emit(world, "Ground shoulders", mb, mr.sharedMaterial, true);
+        Debug.Log($"OsmMap: {quads} ground shoulder quads along the car roads (no ledge at their edges)");
     }
 
     /// <summary>

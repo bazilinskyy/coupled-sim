@@ -521,6 +521,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
             car.name = $"Map traffic {route.name} {i}";
             var traffic = car.gameObject.AddComponent<TrafficCar>();
             traffic.FitToBody();
+            traffic.CentrePivot();
             float v = (DesiredSpeedKmh + Normal(rng) * DesiredSpeedSdKmh) / 3.6f;
             traffic.Init(CoupledSim.Traffic.CarFollowingModelType.IDM, Mathf.Max(3f, v), new System.Random(rng.Next()));
             // (on fast roads: the limit times the driver's own factor, 0.85-1.12)
