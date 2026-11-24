@@ -266,6 +266,10 @@ public class AIPedestrian : MonoBehaviour
         pos.z += _velocity.Y * dt;
         // (and not into a wall: when the step would put the body into one it was clear of, it stays and slows)
         if (_walls.Count > 0 && InWall(pos) && !InWall(transform.position)) { pos.x = transform.position.x; pos.z = transform.position.z; _velocity *= 0.5f; }
+        // (and, on a city map, not off the pavement onto the carriageway unless crossing: a step that would put its leading
+        // side over the road turns along the kerb, or it stays; people making way for each other on a narrow London
+        // pavement walked along the street half on the road)
+        if (_crossing == null && OsmMap.Current != null && _velocity.LengthSquared() > 1e-4f) KeepOffCarriageway(ref pos, dt);
         SnapToGround(ref pos);
         transform.position = pos;
 
@@ -434,6 +438,30 @@ public class AIPedestrian : MonoBehaviour
             var t = Vector3.Cross(Vector3.up, n.normalized) * 0.4f;
             _walls.Add(new WallSegment(ToSys(h.point - t), ToSys(h.point + t)));
         }
+    }
+
+    static readonly Collider[] _crossingHits = new Collider[16];
+    void KeepOffCarriageway(ref Vector3 pos, float dt)
+    {
+        var here = transform.position;
+        var v = new Vector3(_velocity.X, 0f, _velocity.Y); float sp = v.magnitude; var dir = v / sp;
+        const float lead = 0.3f;   // (the body's side and a little)
+        if (!MapTraffic.OnCarriageway(here + dir * lead) || MapTraffic.OnCarriageway(here)) return;
+        // (not near a crossing: its trigger, placed by the road's estimated width, may lie on the drawn road, and the
+        // pedestrian has to reach it to cross)
+        int nc = Physics.OverlapSphereNonAlloc(here, 2.5f, _crossingHits, ~0, QueryTriggerInteraction.Collide);
+        for (int i = 0; i < nc; i++) if (_crossingHits[i].isTrigger && _crossingHits[i].GetComponent<PedestrianCrossing>() != null) return;
+        foreach (float turn in new[] { 45f, -45f, 90f, -90f })
+        {
+            var d = Quaternion.Euler(0f, turn, 0f) * dir;
+            if (MapTraffic.OnCarriageway(here + d * lead)) continue;
+            float keep = Mathf.Cos(turn * Mathf.Deg2Rad);
+            var step = d * sp * keep;
+            pos.x = here.x + step.x * dt; pos.z = here.z + step.z * dt;
+            _velocity = new SysVector2(step.x, step.z);
+            return;
+        }
+        pos.x = here.x; pos.z = here.z; _velocity *= 0.3f;
     }
 
     bool InWall(Vector3 p)
