@@ -2256,7 +2256,7 @@ public partial class OsmMapGenerator
     /// </summary>
     void PostsOutOfCarriageway(Transform root)
     {
-        int moved = 0, movedOffDrawn = 0;
+        int moved = 0, movedOffDrawn = 0, keptBack = 0;
         Physics.SyncTransforms();
         var containers = new HashSet<string> { "Street furniture", "Street furniture (OSM)", "Traffic signs", "Traffic signals", "Pedestrian crossings" };
         foreach (var c in root.GetComponentsInChildren<Transform>(true).Where(t => containers.Contains(t.name)).ToList())
@@ -2266,9 +2266,11 @@ public partial class OsmMapGenerator
                 var rs = o.GetComponentsInChildren<Renderer>();
                 if (rs.Length == 0) continue;
                 var b = rs[0].bounds; foreach (var r in rs) b.Encapsulate(r.bounds);
-                // (signals with an arm over the road stay; benches, up to 2 m long, are kept a little further from the edge)
+                // (signals with an arm over the road stay; benches, up to 2 m long, are kept a little further from the edge;
+                // a street lamp's arm reaches over the road, but its pole is a post)
                 bool bench = o.name.Contains("Bench") || o.name.Contains("bench");
-                if ((!bench && Mathf.Max(b.size.x, b.size.z) > 1.3f) || (!bench && b.size.y < 0.8f)) continue;
+                bool lamp = o.name.StartsWith("StreetLamp", StringComparison.Ordinal);
+                if ((!bench && !lamp && Mathf.Max(b.size.x, b.size.z) > 1.3f) || (!bench && b.size.y < 0.8f)) continue;
                 var q = new V2(o.position.x, o.position.z);
                 float reach = bench ? Mathf.Max(b.size.x, b.size.z) / 2f + 0.3f : 0.3f;
                 if (InCarriageway(q, reach, reach + 0.3f, out var edge))
@@ -2282,7 +2284,20 @@ public partial class OsmMapGenerator
                 // still on the drawn road or a cycle path or cycle lane (the drawn road is wider than OpenStreetMap's width at
                 // junctions and crossings, where a rider keeping to the kerb rode through a crossing sign's post; signs stood
                 // in red cycle paths): stepped away from the road until the ground under it is neither, then half a metre further
-                if (bench || !OnDrawnRoad(q, true) || !NearestRoad(q, out _, out var away)) continue;
+                if (bench || !NearestRoad(q, out _, out var away)) continue;
+                if (!OnDrawnRoad(q, true))
+                {
+                    // (beside the drawn road, at least half a metre back from its edge, as posts stand behind a kerb: a
+                    // lamp every 25 m stood on the kerb line where the drawn road is wider than OpenStreetMap's estimate,
+                    // and cars passing it brushed its pole; moved back up to a metre, not into a building)
+                    if (!OnDrawnRoad(q - away * 0.5f, true)) continue;
+                    var back = q;
+                    for (int k = 0; k < 4 && (OnDrawnRoad(back - away * 0.5f, true) || OnDrawnRoad(back, true)); k++) back += away * 0.25f;
+                    if (OnDrawnRoad(back - away * 0.5f, true) || InBuilding(back)) continue;
+                    o.position += new Vector3(back.X - q.X, 0f, back.Y - q.Y);
+                    keptBack++;
+                    continue;
+                }
                 var p2 = q;
                 for (int k = 0; k < 24 && OnDrawnRoad(p2, true); k++) p2 += away * 0.25f;
                 if (OnDrawnRoad(p2, true)) continue;
@@ -2293,6 +2308,14 @@ public partial class OsmMapGenerator
             }
         if (moved > 0) Debug.Log($"OsmMap: {moved} posts moved out of the carriageway to its edge");
         if (movedOffDrawn > 0) Debug.Log($"OsmMap: {movedOffDrawn} posts moved off the drawn road at junctions");
+        if (keptBack > 0) Debug.Log($"OsmMap: {keptBack} posts moved back to half a metre from the drawn road's edge");
+        // (a building's walls or roof at the post's foot, its 30 cm round)
+        bool InBuilding(V2 q)
+        {
+            foreach (var c in Physics.OverlapSphere(new Vector3(q.X, PavementHeight + 1f, q.Y), 0.3f, ~0, QueryTriggerInteraction.Ignore))
+                if (c.name.StartsWith("Buildings", StringComparison.Ordinal) || c.name.StartsWith("Roofs", StringComparison.Ordinal)) return true;
+            return false;
+        }
     }
 
     /// <summary>Whether the ground drawn at <paramref name="q"/> is a road (a car road's surface, not its markings; on maps
