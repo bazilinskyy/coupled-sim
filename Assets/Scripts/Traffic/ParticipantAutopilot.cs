@@ -65,14 +65,21 @@ public class ParticipantAutopilot : MonoBehaviour
         }
         if (_rider != null)
         {
-            // bends ahead: slow down for sharp ones
-            float bend = 0f;
-            for (int k = 1; k < 4; k++)
+            // bends ahead: slow down for sharp ones; the turn between the path's own pieces in the next 15 m (not from the
+            // rider's position: from a point a few centimetres away its direction swung about, a "bend" of 90 degrees and
+            // more), and only braking while faster than a walking pace: braking at 0.3 against an effort of 0.2 for a kink
+            // at the start, a rider stood still for the whole ride (Eindhoven, at rush hour)
+            float bend = 0f, run = 0f;
+            for (int k = 0; k < 12 && run < 15f; k++)
             {
-                int a = Mathf.Clamp(_index + step * k, 0, Path.Count - 1), b = Mathf.Clamp(a + step, 0, Path.Count - 1);
-                bend = Mathf.Max(bend, Vector3.Angle(Flat(Path[a] - p), Flat(Path[b] - Path[a])));
+                int a = _index + step * k, b = a + step, c = b + step;
+                if (a < 0 || a >= Path.Count || c < 0 || c >= Path.Count) break;
+                var ab = Flat(Path[b] - Path[a]); var bc = Flat(Path[c] - Path[b]);
+                run += ab.magnitude;
+                if (ab.sqrMagnitude < 0.04f || bc.sqrMagnitude < 0.04f) continue;   // (points under 20 cm apart)
+                bend = Mathf.Max(bend, Vector3.Angle(ab, bc));
             }
-            float effort = bend > 50f ? 0.2f : Effort, brake = bend > 70f ? 0.3f : 0f;
+            float effort = bend > 50f && v > 2.5f ? 0.2f : Effort, brake = bend > 70f && v > 3f ? 0.3f : 0f;
             // a race cyclist sets off hard (out of the saddle), easing to its cruising effort by about 25 km/h
             if (_rider.Type == CoupledSim.TwoWheelers.TwoWheelerType.RaceBike && bend <= 50f && v < 7f) effort = Mathf.Lerp(0.95f, Effort, v / 7f);
             // fast (a race cyclist): slow down earlier for a bend, to about 25 km/h for a corner
@@ -83,7 +90,7 @@ public class ParticipantAutopilot : MonoBehaviour
             if (DebugTraffic && Time.time >= _nextDebug)
             {
                 _nextDebug = Time.time + 1f;
-                Debug.Log($"TrafficDebug: rider t={Time.time:F1} at ({p.x:F1},{p.z:F1}) v={(_body != null ? _body.linearVelocity.magnitude : 0f):F1} obstacle {(obstacle < float.MaxValue ? obstacle.ToString("F1") : "-")} red light {(red < float.MaxValue ? red.ToString("F1") : "-")}");
+                Debug.Log($"TrafficDebug: rider t={Time.time:F1} at ({p.x:F1},{p.z:F1}) v={(_body != null ? _body.linearVelocity.magnitude : 0f):F1} obstacle {(obstacle < float.MaxValue ? obstacle.ToString("F1") : "-")} red light {(red < float.MaxValue ? red.ToString("F1") : "-")}{(_rider.Collided ? " blocked by " + _rider.BlockedBy : "")} input {_rider.Input.Drive:F2}/{_rider.Input.Brake:F2} index {_index}/{Path.Count}");
             }
             if (gap < float.MaxValue)
             {
