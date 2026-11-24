@@ -182,27 +182,6 @@ public class AICar : MonoBehaviour, IVehicle
     TrafficCar _trafficCar;
     WaypointProgressTracker _tracker;
     float _yawRate;
-    float _laneOffset; int _laneOffsetTick;
-
-    /// <summary>How far to the right of its route the vehicle is (m, negative to the left), from the route's nearest
-    /// point within 4 m of its progress point; measured every fourth physics step.</summary>
-    float LaneOffsetCached()
-    {
-        if ((++_laneOffsetTick & 3) != 1) return _laneOffset;
-        var c = _tracker.Circuit; float s0 = _tracker.ProgressDistance;
-        var me = transform.position; float best = float.MaxValue, bd = 0f;
-        for (float d = -4f; d <= 4f; d += 0.5f)
-        {
-            var q = c.GetRoutePosition(s0 + d); float e = (q.x - me.x) * (q.x - me.x) + (q.z - me.z) * (q.z - me.z);
-            if (e < best) { best = e; bd = d; }
-        }
-        var rp = c.GetRoutePoint(s0 + bd);
-        var dir = rp.direction; dir.y = 0f;
-        if (dir.sqrMagnitude < 1e-6f || best > 3f * 3f) return _laneOffset = 0f;   // (far off its route: being moved, or backing up)
-        var right = Vector3.Cross(Vector3.up, dir.normalized);
-        var off = me - rp.position; off.y = 0f;
-        return _laneOffset = Vector3.Dot(off, right);
-    }
     TwoWheelerController _twoWheeler;
     bool _twoWheelerChecked;
 
@@ -234,15 +213,7 @@ public class AICar : MonoBehaviour, IVehicle
         float l2 = local.x * local.x + local.z * local.z;
         float curvature;
         if (local.z < 0.3f) curvature = Mathf.Sign(local.x == 0f ? 1f : local.x) / minRadius;   // behind: turn round as tightly as it can
-        else
-        {
-            curvature = l2 > 1e-4f ? 2f * local.x / l2 : 0f;
-            // (and a pull back towards the lane, by how far beside it the vehicle is: pursuing a point ahead, a car
-            // turns before the bend and ran up to a metre inside its lane through junctions, nearer the kerb or the
-            // oncoming lane; 0.08 per m per m, so 0.5 m beside the lane bends its path by 1/25 m: with the pursuit's own
-            // pull, critically damped at 0.7, the sway back stays damped at 0.5 and more)
-            if (_tracker != null && _tracker.Circuit != null) curvature -= 0.08f * Mathf.Clamp(LaneOffsetCached(), -1.5f, 1.5f);
-        }
+        else curvature = l2 > 1e-4f ? 2f * local.x / l2 : 0f;
         curvature = Mathf.Clamp(curvature, -1f / minRadius, 1f / minRadius);
         float v = Mathf.Max(0f, Vector3.Dot(theRigidbody.linearVelocity, transform.forward));
         if (v < 0.05f) v = Mathf.Max(0f, ExternalSpeed);
