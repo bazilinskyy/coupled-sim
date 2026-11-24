@@ -1612,7 +1612,10 @@ public partial class OsmMapGenerator
                         kerbs.Wall(side < 0 ? left : right, -0.45f, PavementHeight, side > 0);
                         var centre = new List<V2>(); var dummy = new List<V2>();
                         Geometry2D.Strip(piece, 0f, side * (width / 2 + 1.0f), centre, dummy);
-                        Pavements.Add(centre.Select(p => P(p, PavementHeight)).ToList());
+                        // (the walking line off the other carriageways, as the paving is: on a dual carriageway the inner
+                        // pavement's line ran down the other carriageway, and people walked on it in Ho Chi Minh City)
+                        foreach (var part in bi == 0 ? WalkingLineOffCarriageways(centre, false) : new List<List<V2>> { centre })
+                            Pavements.Add(part.Select(p => P(p, PavementHeight)).ToList());
                     }
                 }
             }
@@ -1638,8 +1641,12 @@ public partial class OsmMapGenerator
                         if (bi == 0 && lift == 0f) OffCarriageways(left, right);
                         walks.Strip(left, right, 0.05f + lift, 1.5f);
                     }
-                Pavements.Add(line.Select(p => P(p, 0.05f + lift)).ToList());
-                if (crossing) CrossingLines.Add(Pavements[Pavements.Count - 1]);
+                if (crossing) { Pavements.Add(line.Select(p => P(p, 0.05f + lift)).ToList()); CrossingLines.Add(Pavements[Pavements.Count - 1]); }
+                else
+                    // (a footpath mapped beside a road, overlapping it: its walking line off the carriageway where it runs
+                    // along it; where it crosses a road, people still walk over)
+                    foreach (var part in bi == 0 && lift == 0f ? WalkingLineOffCarriageways(line, true) : new List<List<V2>> { line })
+                        Pavements.Add(part.Select(p => P(p, 0.05f + lift)).ToList());
             }
             if (bi > 0)
             {
@@ -2182,6 +2189,48 @@ public partial class OsmMapGenerator
     public int RacksMoved, RacksLeftOut;
     /// <summary>Points of pavements, footpaths and cycle paths moved off a carriageway to its edge.</summary>
     public int PavementPointsMoved;
+
+    /// <summary>
+    /// The parts of a walking line (the middle of a pavement, a footpath) not on a carriageway: points every metre, the line
+    /// cut where one lies more than 0.3 m inside a car road (its estimated width); with <paramref name="alongOnly"/> only
+    /// where the line runs along that road (within 40 degrees of it), so a footpath over a road still crosses it. Parts
+    /// under 4 m are left out. The AI pedestrians walk these lines.
+    /// </summary>
+    List<List<V2>> WalkingLineOffCarriageways(List<V2> line, bool alongOnly)
+    {
+        var parts = new List<List<V2>>();
+        if (_roadCells == null || line.Count < 2) { parts.Add(line); return parts; }
+        var cur = new List<V2>();
+        void Close() { if (cur.Count >= 2 && Geometry2D.Length(cur) >= 4f) parts.Add(cur); cur = new List<V2>(); }
+        for (int i = 1; i < line.Count; i++)
+        {
+            var a = line[i - 1]; var b = line[i]; float d = V2.Distance(a, b); if (d < 1e-3f) continue;
+            var dir = (b - a) / d;
+            int n = Math.Max(1, (int)Math.Ceiling(d));
+            for (int k = i == 1 ? 0 : 1; k <= n; k++)
+            {
+                var q = V2.Lerp(a, b, k / (float)n);
+                if (OnCarriageway(q, dir, alongOnly)) Close();
+                else cur.Add(q);
+            }
+        }
+        Close();
+        return parts;
+    }
+
+    bool OnCarriageway(V2 q, V2 dir, bool alongOnly)
+    {
+        if (!_roadCells.TryGetValue(((int)Math.Floor(q.X / 20f), (int)Math.Floor(q.Y / 20f)), out var segs)) return false;
+        foreach (var (a, b, half) in segs)
+        {
+            var ab = b - a; float len2 = ab.LengthSquared(); if (len2 < 1e-4f) continue;
+            float u = Math.Max(0f, Math.Min(1f, V2.Dot(q - a, ab) / len2));
+            if (V2.Distance(q, a + ab * u) > half - 0.3f) continue;
+            if (alongOnly && Math.Abs(V2.Dot(V2.Normalize(ab), dir)) < 0.766f) continue;
+            return true;
+        }
+        return false;
+    }
 
     bool InCarriageway(V2 q, float margin, float outside, out V2 edge)
     {
