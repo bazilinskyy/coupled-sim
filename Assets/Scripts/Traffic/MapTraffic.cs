@@ -56,6 +56,35 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
     List<CoupledSim.Maps.MapRoutes.RoadLine> _lines;
     WaypointCircuit _autopilotRoute;
     float _autopilotFrom;
+    /// <summary>The way the participant on the autopilot will go (car, rider or pedestrian): points every 20 m of its next
+    /// 1.2 km, each with a handicap of 0.3 m for every metre to go (NearParticipants).</summary>
+    readonly List<(Vector3 at, float handicap)> _wayAhead = new List<(Vector3, float)>();
+
+    /// <summary>
+    /// How near a place is to the participants (squared metres), for placing the traffic, cyclists and pedestrians nearest
+    /// first: the distance to the nearest participant, or with a participant on the autopilot to a point of its way ahead
+    /// plus 0.3 m for every metre it has to go to get there, so they are where it will be in the next minute too, not only
+    /// where it starts: a rush hour stays a rush hour along the way (cyclists placed only round a car's start were all
+    /// behind it after 20 s on De Zaale in Eindhoven).
+    /// </summary>
+    float NearParticipants(Vector3 q, List<Vector3> players)
+    {
+        float b = float.MaxValue;
+        foreach (var c in players) b = Mathf.Min(b, (c - q).magnitude);
+        foreach (var (c, h) in _wayAhead) if (h < b) b = Mathf.Min(b, (c - q).magnitude + h);
+        return b * b;
+    }
+
+    void SetWayAhead(List<Vector3> path, int from)
+    {
+        _wayAhead.Clear();
+        float s = 0f, next = 20f;
+        for (int i = Mathf.Max(0, from) + 1; i < path.Count && s <= 1200f; i++)
+        {
+            s += Vector3.Distance(path[i - 1], path[i]);
+            if (s >= next) { _wayAhead.Add((path[i], 0.3f * s)); next = s + 20f; }
+        }
+    }
 
     public static MapTraffic Current { get; private set; }
     public readonly List<WaypointCircuit> Routes = new List<WaypointCircuit>();
@@ -459,11 +488,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         // (with the participant's car on the autopilot: also along the route it will drive, each point as though it were
         // 0.3 m further for every metre the car has to drive to get there, so the traffic is where the car will be in the
         // next minute too, not only where it starts: a rush hour stays a rush hour along the way)
-        var centre = (players.Count > 0 ? players : new List<Vector3> { Vector3.zero }).Select(c => (c, 0f)).ToList();
-        if (_autopilotRoute != null)
-            for (float s = 20f; s <= 1200f && _autopilotFrom + s < _autopilotRoute.OpenLength; s += 20f)
-                centre.Add((_autopilotRoute.GetRoutePoint(_autopilotFrom + s).position, 0.3f * s));
-        float Near(Vector3 q) { float b = float.MaxValue; foreach (var (c, h) in centre) b = Mathf.Min(b, (c - q).magnitude + h); return b * b; }
+        float Near(Vector3 q) => NearParticipants(q, players);
         if (places.Count > MaxCars) places = places.OrderBy(x => Near(x.at)).ToList();
         foreach (var (route, i, d, at) in places)
         {
@@ -501,7 +526,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         Destroy(spawn.gameObject);
         if (keptOff > 0) Debug.Log($"MapTraffic: {keptOff} trucks or buses swapped for vehicles that turn tighter (their routes bend tighter than they can)");
         if (keptNarrow > 0) Debug.Log($"MapTraffic: {keptNarrow} wide vehicles swapped for narrower ones (their routes pass parked cars, posts or walls too near for their width)");
-        Debug.Log($"MapTraffic: {count} cars{(places.Count > MaxCars && placed.Count > 0 ? $" (of {places.Count} places at {CarsPerKm} per km: those within {Mathf.Sqrt(placed.Max(Near)):F0} m of the participants{(_autopilotRoute != null ? " and of the autopilot's way ahead" : "")})" : "")}");
+        Debug.Log($"MapTraffic: {count} cars{(places.Count > MaxCars && placed.Count > 0 ? $" (of {places.Count} places at {CarsPerKm} per km: those within {Mathf.Sqrt(placed.Max(Near)):F0} m of the participants{(_wayAhead.Count > 0 ? " and of the autopilot's way ahead" : "")})" : "")}");
         yield return SpawnCyclists();
         yield return SpawnPedestrians();
     }
@@ -529,7 +554,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         // (the participants: not the map's own traffic, "Map traffic ...", "Map cyclist ...")
         var players = FindObjectsByType<PlayerAvatar>().Where(a => !a.name.StartsWith("Map ") && a.GetComponent<AIPedestrian>() == null).Select(a => a.transform.position).ToList();
         if (players.Count == 0) players.Add(Vector3.zero);
-        float Near(Vector3 q) { float b = float.MaxValue; foreach (var c in players) b = Mathf.Min(b, (c - q).sqrMagnitude); return b; }
+        float Near(Vector3 q) => NearParticipants(q, players);
         bool Walkable(Vector3 q) { var g = SeenGround(q); return g != Ground.Road && g != Ground.Cycle && g != Ground.None; }
         bool Clear(Vector3 q)
         {
@@ -669,7 +694,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         var rng = new System.Random(Seed + 11);
         var players = FindObjectsByType<PlayerAvatar>().Where(a => !a.name.StartsWith("Map ") && a.GetComponent<AIPedestrian>() == null).Select(a => a.transform.position).ToList();
         if (players.Count == 0) players.Add(Vector3.zero);
-        float Near(Vector3 q) { float b = float.MaxValue; foreach (var c in players) b = Mathf.Min(b, (c - q).sqrMagnitude); return b; }
+        float Near(Vector3 q) => NearParticipants(q, players);
         // each route's stretch for cyclists: the one nearest the participants without a road over 60 km/h
         var stretches = new List<(WaypointCircuit route, float from, float to, float near)>();
         foreach (var route in Routes.ToList())
@@ -784,7 +809,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
             t.Init(CoupledSim.Traffic.CarFollowingModelType.IDM, race ? Mathf.Clamp(v, 7.8f, 10.5f) : Mathf.Clamp(v, 2.5f, 7f), new System.Random(rng.Next()));
             if (race && t.Model is CoupledSim.Traffic.IntelligentDriverModel idm) { idm.MaxAcceleration = Mathf.Max(idm.MaxAcceleration, 1.6f); t.VehicleLength = 1.75f; raceCount++; }
             t.Speed = v * 0.7f;
-            bike.gameObject.AddComponent<MapRouteRecycler>();
+            bike.gameObject.AddComponent<MapRouteRecycler>().KeepNear = true;
             Cars.Add(t);
             count++;
             if (count % 10 == 0) yield return null;
@@ -1032,6 +1057,8 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         tracker.Init(best);
         tracker.SetProgress(bestD);
         _autopilotRoute = best; _autopilotFrom = bestD;
+        _wayAhead.Clear();
+        for (float w = 20f; w <= 1200f && bestD + w < best.OpenLength; w += 20f) _wayAhead.Add((best.GetRoutePoint(bestD + w).position, 0.3f * w));
         aiCar.target = tracker.target;
         if (!me.TryGetComponent<AutomatedDriving>(out var automation)) automation = me.gameObject.AddComponent<AutomatedDriving>();
         automation.Mode = AutomatedDriving.DrivingMode.TrafficModel;
@@ -1117,6 +1144,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
             if (tw != null) tw.Teleport(p0, rot.eulerAngles.y);
         }
         me.gameObject.AddComponent<ParticipantAutopilot>().Init(path);
+        SetWayAhead(path, i0);
         Debug.Log($"MapTraffic: autopilot for the {(me.GetComponent<KeyboardPlayerMovement>() != null ? "pedestrian" : "rider")} along {path.Count} points{(RideMoves > 0 ? $" ({RideMoves} of them moved clear of posts and pavement)" : "")}");
     }
 
@@ -1249,6 +1277,10 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
     /// national topography's surfaces, OpenStreetMap's roads are invisible driving surfaces under or over the topography's
     /// cycle paths and pavements, so the first collider is not always the surface one sees; and the topography's cycle
     /// paths can lie on its carriageway at the same height).</summary>
+    /// <summary>Whether the surface one sees at a point is a carriageway (SeenGround; the collision audit's pedestrians on
+    /// the road).</summary>
+    public static bool OnCarriageway(Vector3 p) => SeenGround(p) == Ground.Road;
+
     static Ground SeenGround(Vector3 p)
     {
         int n = Physics.RaycastNonAlloc(p + Vector3.up * 4f, Vector3.down, _groundHits, 10f, ~0, QueryTriggerInteraction.Ignore);
@@ -1846,12 +1878,151 @@ public class MapRouteRecycler : MonoBehaviour
 
     void Start() { _tracker = GetComponent<WaypointProgressTracker>(); _rb = GetComponent<Rigidbody>(); }
 
+    /// <summary>
+    /// A cyclist: when it has ridden over FarMetres from every participant, away from them, it is moved back along its own
+    /// route to where it is 150-220 m from the nearest participant and riding towards them (out of sight in a town, clear of
+    /// others), so a busy street stays busy: placed nearest the participants, the cyclists all rode out of the stretch
+    /// round the participant in under a minute, and nothing came after them (at rush hour on De Zaale in Eindhoven).
+    /// </summary>
+    public bool KeepNear;
+    public const float FarMetres = 260f;
+    /// <summary>Cyclists moved back near the participants so far (-debugTraffic's summary).</summary>
+    public static int KeptNear;
+    float _nextKeep = -1f;
+    static readonly List<Transform> _participants = new List<Transform>();
+    static float _participantsAt = -10f;
+
+    static float NearestParticipant(Vector3 q, out Transform who)
+    {
+        if (Time.time - _participantsAt > 5f)
+        {
+            _participantsAt = Time.time;
+            _participants.Clear();
+            foreach (var a in FindObjectsByType<PlayerAvatar>())
+                if (!a.name.StartsWith("Map ") && a.GetComponent<AIPedestrian>() == null) _participants.Add(a.transform);
+        }
+        float b = float.MaxValue; who = null;
+        foreach (var t in _participants)
+        {
+            if (t == null) continue;
+            var r = t.position - q; r.y = 0f;
+            float d = r.magnitude;
+            if (d < b) { b = d; who = t; }
+        }
+        return b;
+    }
+
+    void KeepNearParticipants(WaypointCircuit c)
+    {
+        var p = transform.position;
+        float near = NearestParticipant(p, out var who);
+        if (who == null || near < FarMetres) return;
+        var v = _rb != null ? _rb.linearVelocity : transform.forward; v.y = 0f;
+        var rel = p - who.position; rel.y = 0f;
+        if (Vector3.Dot(v, rel) <= 0f) return;   // (riding towards them: on its way)
+        // (the places of its route from a random point on, so the cyclists moved do not all come to the same one)
+        float span = c.OpenLength - 70f; if (span < 20f) return;
+        float offset = UnityEngine.Random.Range(0f, span);
+        for (float k = 0f; k < span; k += 10f)
+        {
+            float d = 4f + Mathf.Repeat(offset + k, span);
+            var q = c.GetRoutePoint(d).position;
+            float dq = NearestParticipant(q, out _);
+            if (dq < 150f || dq > 220f) continue;
+            if (NearestParticipant(c.GetRoutePoint(d + 20f).position, out _) >= dq) continue;   // (then towards them)
+            var rp = c.GetRoutePoint(d);
+            if (!StartClear(rp)) continue;
+            if (!Free(q)) continue;
+            _recent.RemoveAll(r => Time.time - r.time > 3f);
+            if (_recent.Exists(r => (r.pos - q).sqrMagnitude < 8f * 8f)) continue;
+            _recent.Add((q, Time.time));
+            MoveTo(rp, d);
+            KeptNear++;
+            return;
+        }
+    }
+
+    /// <summary>Whether a place is free for a cyclist moved there: no vehicle, rider, person or animal within 12 m, and none
+    /// that would get there in the next 5 s (moving towards it, passing within 3 m of it): put in front of a car that came on
+    /// at 13 km/h, a cyclist was driven into (London).</summary>
+    bool Free(Vector3 q)
+    {
+        foreach (var other in Physics.OverlapSphere(q, 40f, ~0, QueryTriggerInteraction.Ignore))
+        {
+            var rb = other.attachedRigidbody;
+            if (rb == null || rb == _rb) continue;
+            var rel = q - rb.position; rel.y = 0f;
+            if (rel.sqrMagnitude < 12f * 12f) return false;
+            var v = rb.linearVelocity;
+            // (a kinematic body, a cyclist of the traffic: its model's speed along its heading)
+            if (rb.isKinematic && rb.TryGetComponent<TrafficCar>(out var tc)) v = rb.transform.forward * tc.Speed;
+            v.y = 0f;
+            float speed = v.magnitude;
+            if (speed < 0.5f) continue;
+            float along = Vector3.Dot(rel, v / speed);
+            if (along <= 0f || along / speed > 5f) continue;
+            if ((rel - v / speed * along).magnitude < 3f) return false;
+        }
+        foreach (var a in AnimalAgent.All) if (a != null && (a.transform.position - q).sqrMagnitude < 12f * 12f) return false;
+        return true;
+    }
+
+    /// <summary>Vehicles and riders moved on past something fixed so far (-debugTraffic's summary).</summary>
+    public static int MovedOn;
+    float _nextMoveOn;
+
+    float HeldByFixedFor()
+    {
+        if (_tc == null) TryGetComponent(out _tc);
+        return _tc != null ? _tc.HeldByFixedFor : 0f;
+    }
+
+    /// <summary>
+    /// Held for over 10 s by something fixed it cannot get past (a building passage narrower than a cyclist's line keeps
+    /// clear, a post or a wall corner its route passes too near; a cyclist stood 35 s against a passage's wall in Ho Chi Minh
+    /// City), with no participant within 40 m: moved on along its route to the first place 6-40 m ahead where it stands
+    /// clear, so it does not stand there for the rest of the session.
+    /// </summary>
+    void MoveOnPast(WaypointCircuit c, float at)
+    {
+        if (NearestParticipant(transform.position, out _) < 40f) return;
+        for (float s = at + 6f; s <= at + 40f && s < c.OpenLength - 15f; s += 2f)
+        {
+            var rp = c.GetRoutePoint(s);
+            if (NearestParticipant(rp.position, out _) < 40f || !StartClear(rp)) continue;
+            bool taken = false;
+            foreach (var other in Physics.OverlapSphere(rp.position, 6f, ~0, QueryTriggerInteraction.Ignore))
+                if (other.attachedRigidbody != null && other.attachedRigidbody != _rb) { taken = true; break; }
+            if (taken) continue;
+            MoveTo(rp, s);
+            MovedOn++;
+            return;
+        }
+    }
+
+    void MoveTo(WaypointCircuit.RoutePoint start, float progress)
+    {
+        var p = start.position;
+        if (Physics.Raycast(p + Vector3.up * 5f, Vector3.down, out var hit, 20f, ~0, QueryTriggerInteraction.Ignore)) p.y = hit.point.y + 0.1f;
+        var rot = Quaternion.LookRotation(new Vector3(start.direction.x, 0, start.direction.z), Vector3.up);
+        float speed = _rb != null ? _rb.linearVelocity.magnitude : 0f;
+        if (_rb != null) { _rb.position = p; _rb.rotation = rot; _rb.linearVelocity = rot * Vector3.forward * speed; }
+        transform.SetPositionAndRotation(p, rot);
+        _tracker.SetProgress(progress);
+    }
+
     void FixedUpdate()
     {
         if (_tracker == null || _tracker.Circuit == null || Time.time < _nextCheck) return;
         _nextCheck = Time.time + 0.5f;
         var c = _tracker.Circuit;
         float d = Mathf.Repeat(_tracker.ProgressDistance, c.Length);
+        if (Recycle && Time.time >= _nextMoveOn && HeldByFixedFor() > 10f) { _nextMoveOn = Time.time + 5f; MoveOnPast(c, d); }
+        if (KeepNear && Recycle && Time.time >= _nextKeep)
+        {
+            _nextKeep = Time.time + UnityEngine.Random.Range(2f, 3f);
+            KeepNearParticipants(c);
+        }
         // at the end of its route (TrafficCar stops there; a circuit's closing piece back to the start, straight across the
         // map, is never driven)
         if (d < c.OpenLength - 15f || !Recycle) return;
@@ -1867,13 +2038,7 @@ public class MapRouteRecycler : MonoBehaviour
         _recent.RemoveAll(r => Time.time - r.time > 3f);
         if (_recent.Exists(r => (r.pos - start.position).sqrMagnitude < 12f * 12f)) return;
         _recent.Add((start.position, Time.time));
-        var p = start.position;
-        if (Physics.Raycast(p + Vector3.up * 5f, Vector3.down, out var hit, 20f, ~0, QueryTriggerInteraction.Ignore)) p.y = hit.point.y + 0.1f;
-        var rot = Quaternion.LookRotation(new Vector3(start.direction.x, 0, start.direction.z), Vector3.up);
-        float speed = _rb != null ? _rb.linearVelocity.magnitude : 0f;
-        if (_rb != null) { _rb.position = p; _rb.rotation = rot; _rb.linearVelocity = rot * Vector3.forward * speed; }
-        transform.SetPositionAndRotation(p, rot);
-        _tracker.SetProgress(from);
+        MoveTo(start, from);
     }
 
     TrafficCar _tc;

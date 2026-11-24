@@ -65,6 +65,7 @@ public class CollisionAudit : MonoBehaviour
                 }
             }
             Statics(a, dt);
+            if (a.kind == Kind.Pedestrian) OnRoad(a, dt);
         }
         if (Time.time >= _nextReport) { _nextReport += 10f; Report(); }
     }
@@ -176,6 +177,19 @@ public class CollisionAudit : MonoBehaviour
         }
     }
 
+    /// <summary>A pedestrian of the map's crowd on a carriageway (the road surface under it) while not crossing the road:
+    /// "pedestrian-on-road", with the place (people walked down a dual carriageway in Ho Chi Minh City).</summary>
+    void OnRoad(Agent a, float dt)
+    {
+        if (!a.t.TryGetComponent<AIPedestrian>(out var ped) || ped.IsCrossing) return;
+        // (the surface one sees under it: on the maps with the national topography OpenStreetMap's roads are invisible
+        // driving surfaces, under the pavements too); at four points 0.4 m around it, not through its own body, three of
+        // them on the road
+        int road = 0;
+        for (int k = 0; k < 4; k++) if (MapTraffic.OnCarriageway(a.pos + Quaternion.Euler(0f, 45f + 90f * k, 0f) * Vector3.forward * 0.4f)) road++;
+        if (road >= 3) Record(a, "the carriageway", "under 15 cm", "pedestrian-on-road", 0f, dt);
+    }
+
     /// <summary>Which part of a vehicle's footprint a fixed object touches (front, middle or rear third; left or right
     /// half): " at its front-left" and the like.</summary>
     string Part(Agent a, Collider c)
@@ -211,12 +225,15 @@ public class CollisionAudit : MonoBehaviour
         return "under 15 cm";
     }
     readonly Collider[] _deep = new Collider[32];
+    readonly Dictionary<string, (float seconds, string label, Vector3 at)> _pairSeconds = new Dictionary<string, (float, string, Vector3)>();
 
     void Record(Agent a, string other, string depth, string label, float otherSpeed, float dt)
     {
         if (depth != "under 15 cm") label += " 15 cm+";
         _seconds[label] = (_seconds.TryGetValue(label, out var s) ? s : 0f) + dt;
         string key = a.name + "|" + other;
+        float before = _pairSeconds.TryGetValue(key, out var ps) ? ps.seconds : 0f;
+        _pairSeconds[key] = (before + dt, label, a.pos);
         if (_seen.Add(key))
         {
             _pairs[label] = (_pairs.TryGetValue(label, out var p) ? p : 0) + 1;
@@ -245,6 +262,10 @@ public class CollisionAudit : MonoBehaviour
     {
         if (_seconds.Count == 0) { Debug.Log($"CollisionAudit: t={Time.time:F0} s, {_agents.Count} agents, no contacts"); return; }
         Debug.Log($"CollisionAudit: t={Time.time:F0} s, {_agents.Count} agents, contacts: " + string.Join(", ", _seconds.OrderByDescending(x => x.Value).Select(x => $"{x.Key} {(_pairs.TryGetValue(x.Key, out var np) ? np : 0)} pairs {x.Value:F1} s")));
+        // (the pairs in contact longest: what an agent is stuck against, and where)
+        var longest = _pairSeconds.Where(x => x.Value.seconds >= 2f).OrderByDescending(x => x.Value.seconds).Take(6).ToList();
+        if (longest.Count > 0)
+            Debug.Log("CollisionAudit: longest contacts: " + string.Join("; ", longest.Select(x => $"{x.Key.Replace("|", " with ")} ({x.Value.label}) {x.Value.seconds:F1} s, last at ({x.Value.at.x:F1},{x.Value.at.y:F1},{x.Value.at.z:F1})")));
     }
 
     static Vector3 Flat(Vector3 v) { v.y = 0f; return v; }

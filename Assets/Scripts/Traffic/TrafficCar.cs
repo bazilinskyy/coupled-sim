@@ -522,6 +522,8 @@ public class TrafficCar : MonoBehaviour
 
     float _guardSince = -1f; string _guardWhat; bool _guardHeldByFixed;
     float _reverseLeft, _reverseAgain, _waitUntil; Transform _backFor, _waitFor;
+    /// <summary>How long (s) the last check has held it for something fixed (a wall, a post, a parked car), 0 when not.</summary>
+    public float HeldByFixedFor => _guardHeldByFixed && _guardSince >= 0f ? Time.time - _guardSince : 0f;
     /// <summary>Held by the last check for over 4 s.</summary>
     bool HeldLong => _guardSince >= 0f && Time.time - _guardSince > 4f;
     /// <summary>-debugTraffic: deadlocks broken by one vehicle backing up.</summary>
@@ -1198,7 +1200,7 @@ public class TrafficCar : MonoBehaviour
         if (Time.time >= _nextReport)
         {
             _nextReport += 10f;
-            Debug.Log($"TrafficDebug: t={Time.time:F0} s, {_frames} frames, car-overlap frames {_overlapFrames}, yielding car-frames {_yieldFrames}, freed from obstacles {Freed}, stops kept clear of crossing lanes {KeptClear}, rings of waiting vehicles broken {RingsBroken}, steps slowed by the last check {GuardFrames}, deadlocks broken by backing up {Reversals}");
+            Debug.Log($"TrafficDebug: t={Time.time:F0} s, {_frames} frames, car-overlap frames {_overlapFrames}, yielding car-frames {_yieldFrames}, freed from obstacles {Freed}, stops kept clear of crossing lanes {KeptClear}, rings of waiting vehicles broken {RingsBroken}, steps slowed by the last check {GuardFrames}, deadlocks broken by backing up {Reversals}, cyclists moved back near the participants {MapRouteRecycler.KeptNear}, moved on past something fixed {MapRouteRecycler.MovedOn}");
             // how high the vehicles stand on the ground under them (a two-wheeler's wheels sunk into the road: below 0)
             var heights = new List<(string kind, float h)>();
             string lowest = null; float lowestH = 0f;
