@@ -1277,6 +1277,10 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
     /// national topography's surfaces, OpenStreetMap's roads are invisible driving surfaces under or over the topography's
     /// cycle paths and pavements, so the first collider is not always the surface one sees; and the topography's cycle
     /// paths can lie on its carriageway at the same height).</summary>
+    /// <summary>Whether the surface one sees at a point is a carriageway (SeenGround; the collision audit's pedestrians on
+    /// the road).</summary>
+    public static bool OnCarriageway(Vector3 p) => SeenGround(p) == Ground.Road;
+
     static Ground SeenGround(Vector3 p)
     {
         int n = Physics.RaycastNonAlloc(p + Vector3.up * 4f, Vector3.down, _groundHits, 10f, ~0, QueryTriggerInteraction.Ignore);

@@ -182,17 +182,12 @@ public class CollisionAudit : MonoBehaviour
     void OnRoad(Agent a, float dt)
     {
         if (!a.t.TryGetComponent<AIPedestrian>(out var ped) || ped.IsCrossing) return;
-        // (the highest surface under it that is not its own body)
-        int n = Physics.RaycastNonAlloc(a.pos + Vector3.up * 1.0f, Vector3.down, _down, 2.5f, ~0, QueryTriggerInteraction.Ignore);
-        RaycastHit best = default; float bestD = float.MaxValue;
-        for (int i = 0; i < n; i++)
-        {
-            var c = _down[i].collider;
-            if (c == null || c.transform.IsChildOf(a.t) || c.attachedRigidbody != null) continue;
-            if (_down[i].distance < bestD) { bestD = _down[i].distance; best = _down[i]; }
-        }
-        if (bestD < float.MaxValue && best.collider.name.StartsWith("Roads", StringComparison.Ordinal))
-            Record(a, "the carriageway", "under 15 cm", "pedestrian-on-road", 0f, dt);
+        // (the surface one sees under it: on the maps with the national topography OpenStreetMap's roads are invisible
+        // driving surfaces, under the pavements too); at four points 0.4 m around it, not through its own body, three of
+        // them on the road
+        int road = 0;
+        for (int k = 0; k < 4; k++) if (MapTraffic.OnCarriageway(a.pos + Quaternion.Euler(0f, 45f + 90f * k, 0f) * Vector3.forward * 0.4f)) road++;
+        if (road >= 3) Record(a, "the carriageway", "under 15 cm", "pedestrian-on-road", 0f, dt);
     }
 
     /// <summary>Which part of a vehicle's footprint a fixed object touches (front, middle or rear third; left or right
@@ -230,7 +225,6 @@ public class CollisionAudit : MonoBehaviour
         return "under 15 cm";
     }
     readonly Collider[] _deep = new Collider[32];
-    readonly RaycastHit[] _down = new RaycastHit[8];
     readonly Dictionary<string, (float seconds, string label, Vector3 at)> _pairSeconds = new Dictionary<string, (float, string, Vector3)>();
 
     void Record(Agent a, string other, string depth, string label, float otherSpeed, float dt)
