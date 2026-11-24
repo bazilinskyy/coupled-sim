@@ -39,7 +39,7 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
     [Tooltip("Hours ahead of UTC of the clock time (CET 1, CEST 2).")]
     public float UtcOffset = 2f;
     /// <summary>The city map's place, whose clock (summer time or not) follows <see cref="DayOfYear"/>.</summary>
-    MapInfo _clockZone;
+    MapInfo _clockZone; bool _hasClockZone;
     [Range(1, 365)] public int DayOfYear = 172;
     [Tooltip("How fast simulated time runs relative to real time; 0 keeps the time fixed.")]
     public float TimeSpeed = 0f;
@@ -174,7 +174,7 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
             Latitude = (float)map.Info.Latitude;
             Longitude = (float)map.Info.Longitude;
             UtcOffset = map.Info.UtcOffsetJune;
-            _clockZone = map.Info;
+            _clockZone = map.Info; _hasClockZone = true;
         }
         if (Sun == null)
         {
@@ -580,7 +580,7 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
             {
                 // the weather that really was then and there (the city map's place, if it is built already)
                 var map = OsmMap.Current;
-                if (map != null && map.Generator != null) { Latitude = (float)map.Info.Latitude; Longitude = (float)map.Info.Longitude; UtcOffset = map.Info.UtcOffsetJune; _clockZone = map.Info; }
+                if (map != null && map.Generator != null) { Latitude = (float)map.Info.Latitude; Longitude = (float)map.Info.Longitude; UtcOffset = map.Info.UtcOffsetJune; _clockZone = map.Info; _hasClockZone = true; }
                 RealWeather.Apply(this, p.value);
             }
         }
@@ -725,7 +725,7 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
         SetBareTrees(snow >= 0.3f);
 
         // (the city's clock on that day: summer time or not, as the date falls)
-        if (_clockZone != null) UtcOffset = _clockZone.UtcOffsetOn(DayOfYear);
+        if (_hasClockZone) UtcOffset = _clockZone.UtcOffsetOn(DayOfYear);
         float solarTime = TimeOfDay - UtcOffset + Longitude / 15f; // local solar time
         SolarPosition(solarTime, Latitude, DayOfYear, out var elevation, out var azimuth);
         SunElevation = elevation;
