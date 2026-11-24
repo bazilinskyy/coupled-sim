@@ -460,6 +460,8 @@ public static class SmokeTest
         int shot = _shotsDone, viewIndex = -1;
         int viewLogStart = sb.Length;
         sb.Append(_viewLog);
+        // (the animals' feet on the ground for the still cameras, which they were not in view of until now)
+        foreach (var an in AnimalAgent.All) if (an != null) an.GroundNow();
         // extra views: -smokeShot "x,y,z,yaw,pitch;x,y,z,yaw,pitch", "chase" (behind the participant) or "front" (ahead, looking back),
         // "cluster" (the instrument cluster, see ClusterView)
         foreach (var view in SessionState.GetString(KeyShot, "").Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
@@ -968,6 +970,22 @@ public static class SmokeTest
             }
             float ground = Physics.Raycast(at + Vector3.up * 20f, Vector3.down, out var hit, 40f, ~0, QueryTriggerInteraction.Ignore) ? hit.point.y : t.position.y;
             go.transform.position = new Vector3(at.x, ground + (drone ? 1.2f : 0f), at.z);
+            // (an animal with its lowest point, as posed, on the ground: its script, which does that on the map
+            // (AnimalAgent.KeepFeetOnGround), is gone, and the models were set on the ground in their walk; standing,
+            // the dog, husky, fox and deer stood a few centimetres over their shadows in the README's line-up)
+            if (name.StartsWith("animal:"))
+            {
+                var baked = new Mesh(); float low = float.MaxValue;
+                foreach (var sk in go.GetComponentsInChildren<SkinnedMeshRenderer>())
+                {
+                    if (!sk.enabled || sk.sharedMesh == null) continue;
+                    sk.BakeMesh(baked, true);
+                    var m = sk.transform.localToWorldMatrix;
+                    foreach (var v in baked.vertices) low = Mathf.Min(low, m.MultiplyPoint3x4(v).y);
+                }
+                UnityEngine.Object.DestroyImmediate(baked);
+                if (low < float.MaxValue && Mathf.Abs(low - ground) < 0.3f) go.transform.position += Vector3.up * (ground - low);
+            }
             placed.Add(go);
         }
         UnityEngine.Object.Destroy(holder);
