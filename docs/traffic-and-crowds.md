@@ -38,7 +38,11 @@ The time of day sets a preset:
 | `quiet` | only when asked for | 0.5x | 0.5x | 0.5x | 0.5x |
 
 At most 150 vehicles, 100 cyclists and 100 pedestrians are placed, the nearest to the participants first, none in a
-participant's way. In a city busier than the average one, the caps for vehicles and pedestrians grow with its factor, up
+participant's way. With a participant on the autopilot (`-autopilot`, driving, riding or walking), "nearest" also counts
+the way it will go in the next 1.2 km, each point as though it were 0.3 m further for every metre to go, so the traffic is
+where the participant will be in the next minute, not only where it starts. A cyclist that has ridden more than 260 m away
+from every participant is moved back along its own route to where it is 150-220 m from the nearest participant and riding
+towards them, at a place with nothing within 12 m and nothing coming there in the next 5 s, so a busy street stays busy. In a city busier than the average one, the caps for vehicles and pedestrians grow with its factor, up
 to 1.5 times (New York: 192 vehicles, 115 pedestrians). The log says
 what a map got, for example:
 

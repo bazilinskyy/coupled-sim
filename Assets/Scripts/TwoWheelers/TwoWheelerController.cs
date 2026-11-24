@@ -61,6 +61,8 @@ public class TwoWheelerController : MonoBehaviour
     public float LastShown = -1f;
     float _extraLean;
 
+    /// <summary>What stopped it in the last step (when Collided): a collider's name, or a step too high.</summary>
+    [System.NonSerialized] public string BlockedBy;
     public TwoWheelerState State;
     public TwoWheelerInput Input;
     Rigidbody _rb;
@@ -124,6 +126,7 @@ public class TwoWheelerController : MonoBehaviour
                     next.Z = State.Z;
                     next.Speed = 0f;
                     Collided = true;
+                    BlockedBy = _hits[i].collider.name + " (" + _hits[i].collider.transform.root.name + ")";
                     break;
                 }
             }
@@ -138,6 +141,7 @@ public class TwoWheelerController : MonoBehaviour
             if (step > MaxStepHeight)
             {
                 next.X = State.X; next.Z = State.Z; next.Speed = 0f; Collided = true; // kerb too high
+                BlockedBy = $"a step of {step:F2} m up onto {hit.collider.name} ({hit.collider.transform.root.name})";
             }
             else
             {

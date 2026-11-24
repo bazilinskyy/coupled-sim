@@ -54,6 +54,8 @@ public class AIPedestrian : MonoBehaviour
 
     GapAcceptanceModel _crossingModel;
     PedestrianCrossing _crossing;
+    /// <summary>Crossing a road now (at a crossing, by its behaviour model).</summary>
+    public bool IsCrossing => _crossing != null;
     float _redWait;
     Vector3 _crossFrom, _crossTo;
     SysVector2 _velocity;
@@ -254,13 +256,16 @@ public class AIPedestrian : MonoBehaviour
             }
         }
         var me = new SocialAgent { Position = ToSys(transform.position), Velocity = _velocity, Radius = Profile.Radius };
-        var acc = SocialForceModel.Acceleration(me, self, ToSys(desiredDir), desiredSpeed, _agents, null, SocialForce);
+        if (Time.time >= _nextWalls) { _nextWalls = Time.time + 0.4f; ScanWalls(transform.position); }
+        var acc = SocialForceModel.Acceleration(me, self, ToSys(desiredDir), desiredSpeed, _agents, _walls, SocialForce);
         _velocity = SocialForceModel.Integrate(_velocity, acc, Mathf.Max(desiredSpeed, 0.1f), dt, SocialForce);
         if (desiredSpeed <= 0.01f && _velocity.Length() < 0.05f) _velocity = SysVector2.Zero;
 
         var pos = transform.position;
         pos.x += _velocity.X * dt;
         pos.z += _velocity.Y * dt;
+        // (and not into a wall: when the step would put the body into one it was clear of, it stays and slows)
+        if (_walls.Count > 0 && InWall(pos) && !InWall(transform.position)) { pos.x = transform.position.x; pos.z = transform.position.z; _velocity *= 0.5f; }
         SnapToGround(ref pos);
         transform.position = pos;
 
@@ -395,6 +400,48 @@ public class AIPedestrian : MonoBehaviour
     }
 
     static SysVector2 ToSys(Vector3 v) => new SysVector2(v.x, v.z);
+
+
+    // ---- walls: building fronts, walls, posts and parked cars near the pedestrian, for the social force. Without them a
+    // pedestrian stepping aside for another one or for a passing car walked into the doors and shop fronts beside the
+    // pavement (London: 4-5 s against a door).
+    readonly List<WallSegment> _walls = new List<WallSegment>();
+    float _nextWalls;
+    static readonly Collider[] _wallHits = new Collider[16];
+
+    bool IsWall(Collider c)
+    {
+        if (c == null || c.isTrigger || c.attachedRigidbody != null || c.transform.IsChildOf(transform)) return false;
+        var nm = c.name;
+        if (nm.StartsWith("Roads") || nm.StartsWith("Road ") || nm.StartsWith("BGT") || nm.StartsWith("Ground") || nm.StartsWith("Terrain") || nm.StartsWith("Kerbs")
+            || nm.StartsWith("Pavements") || nm.StartsWith("Cycle") || nm.StartsWith("Green") || nm.StartsWith("Zebra") || nm.StartsWith("Water") || nm.StartsWith("Crossing")) return false;
+        if (c.GetComponentInParent<AIPedestrian>() != null || c.GetComponentInParent<PlayerAvatar>() != null || c.GetComponentInParent<AnimalAgent>() != null) return false;
+        return true;
+    }
+
+    /// <summary>Eight rays at 1 m above the feet, 1.5 m long: each wall hit as a piece of wall 0.8 m long across its normal.</summary>
+    void ScanWalls(Vector3 p)
+    {
+        _walls.Clear();
+        var o = p + Vector3.up * 1.0f;
+        for (int k = 0; k < 8; k++)
+        {
+            float a = k * Mathf.PI / 4f;
+            var d = new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a));
+            if (!Physics.Raycast(o, d, out var h, 1.5f, ~0, QueryTriggerInteraction.Ignore) || !IsWall(h.collider)) continue;
+            var n = h.normal; n.y = 0f;
+            if (n.sqrMagnitude < 1e-4f) n = -d;
+            var t = Vector3.Cross(Vector3.up, n.normalized) * 0.4f;
+            _walls.Add(new WallSegment(ToSys(h.point - t), ToSys(h.point + t)));
+        }
+    }
+
+    bool InWall(Vector3 p)
+    {
+        int n = Physics.OverlapCapsuleNonAlloc(p + Vector3.up * 0.6f, p + Vector3.up * 1.5f, 0.2f, _wallHits, ~0, QueryTriggerInteraction.Ignore);
+        for (int i = 0; i < n; i++) if (IsWall(_wallHits[i]) && _wallHits[i].bounds.max.y > p.y + 0.4f) return true;
+        return false;
+    }
 
     void OnTriggerEnter(Collider other)
     {
