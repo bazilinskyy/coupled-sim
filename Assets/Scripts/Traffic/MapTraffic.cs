@@ -600,10 +600,17 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
                     var q = Vector3.Lerp(a, b, d / Mathf.Max(len, 1e-3f));
                     if (Physics.Raycast(q + Vector3.up * 3f, Vector3.down, out var hit, 6f, ~0, QueryTriggerInteraction.Ignore)) q.y = hit.point.y;
                     Vector3? ok = null;
-                    foreach (float off in new[] { 0f, 0.25f, -0.25f, 0.5f, -0.5f, 0.75f, -0.75f, 1f, -1f })
+                    // (the ground 0.45 m to either side off the road too, where the pavement is wide enough: the line at a
+                    // pavement's middle by OpenStreetMap's road width lay on the kerb where the drawn road is wider, and
+                    // people walked along a London street half on the road)
+                    foreach (bool wide in new[] { true, false })
                     {
-                        var t = q + side * off;
-                        if (Walkable(t) && Clear(t)) { ok = t; break; }
+                        foreach (float off in new[] { 0f, 0.25f, -0.25f, 0.5f, -0.5f, 0.75f, -0.75f, 1f, -1f })
+                        {
+                            var t = q + side * off;
+                            if (Walkable(t) && (!wide || Walkable(t + side * 0.45f) && Walkable(t - side * 0.45f)) && Clear(t)) { ok = t; break; }
+                        }
+                        if (ok.HasValue) break;
                     }
                     // (and the way there from the last point clear too: a tree between two clear points)
                     if (ok.HasValue && cur.Count > 0 && !Clear((cur[cur.Count - 1] + ok.Value) / 2f)) ok = null;
