@@ -133,6 +133,9 @@ public class AnimalSpawner : MonoBehaviour, IExperimentModifier
             var p = centre + new Vector3(Mathf.Cos(a) * r, 0, Mathf.Sin(a) * r);
             // (on the ground, and clear of walls, posts and parked cars: a cat placed in a building's doorway)
             if (Physics.Raycast(p + Vector3.up * 30f, Vector3.down, out var hit, 60f, ~0, QueryTriggerInteraction.Ignore) && hit.point.y < centre.y + 1.5f
+                // (not on a building: on a hillside a flat roof down the slope is lower than the participant, and a dog and a
+                // husky walked about on the roofs in São Paulo)
+                && !OnBuilding(hit.collider)
                 && !Physics.CheckCapsule(hit.point + Vector3.up * 0.45f, hit.point + Vector3.up * 1.2f, 0.4f, ~0, QueryTriggerInteraction.Ignore)
                 // (not on top of a wall, a hedge or a bus shelter, with ground under it more than 0.3 m lower: a fox was
                 // placed on a garden wall's top)
@@ -142,6 +145,13 @@ public class AnimalSpawner : MonoBehaviour, IExperimentModifier
                 return hit.point;
         }
         return null;
+    }
+
+    static bool OnBuilding(Collider c)
+    {
+        for (var t = c.transform; t != null; t = t.parent)
+            if (t.name.StartsWith("Building", System.StringComparison.Ordinal) || t.name.Contains("Roof") || t.name.StartsWith("Bus shelter", System.StringComparison.Ordinal)) return true;
+        return false;
     }
 
     void Update()
