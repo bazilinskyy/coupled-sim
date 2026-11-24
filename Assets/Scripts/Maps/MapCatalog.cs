@@ -18,6 +18,26 @@ public struct MapInfo
     public bool LeftHandTraffic;
     public string Area;
 
+    /// <summary>
+    /// Hours ahead of UTC on a day of the year: <see cref="UtcOffsetJune"/> with the country's summer time (the
+    /// European Union and the United Kingdom from the last Sunday of March to the last of October, the United States
+    /// and Canada from the second Sunday of March to the first of November, Egypt from the last Friday of April to the
+    /// last Thursday of October; south of the equator Australia's south-east from the first Sunday of October to the
+    /// first of April and New Zealand from the last Sunday of September to the first of April), to the nearest days
+    /// of a typical year. A June offset is summer time in the north and standard time in the south.
+    /// </summary>
+    public float UtcOffsetOn(int dayOfYear)
+    {
+        bool north = (Country == "Netherlands" || Country == "United Kingdom" || Country == "Spain" || Country == "Belgium"
+            || Country == "Germany" || Country == "France" || Country == "Italy");
+        if (north) return dayOfYear >= 87 && dayOfYear < 300 ? UtcOffsetJune : UtcOffsetJune - 1f;
+        if (Country == "United States" || Country == "Canada") return dayOfYear >= 70 && dayOfYear < 307 ? UtcOffsetJune : UtcOffsetJune - 1f;
+        if (Country == "Egypt") return dayOfYear >= 116 && dayOfYear < 302 ? UtcOffsetJune : UtcOffsetJune - 1f;
+        if (Country == "Australia" && Longitude > 140.0 && Latitude < -28.0) return dayOfYear < 95 || dayOfYear >= 276 ? UtcOffsetJune + 1f : UtcOffsetJune;
+        if (Country == "New Zealand") return dayOfYear < 95 || dayOfYear >= 268 ? UtcOffsetJune + 1f : UtcOffsetJune;
+        return UtcOffsetJune;
+    }
+
     public override string ToString() => $"{City} ({Country})";
 }
 

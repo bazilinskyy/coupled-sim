@@ -38,6 +38,8 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
     public float Longitude = 5.48f;
     [Tooltip("Hours ahead of UTC of the clock time (CET 1, CEST 2).")]
     public float UtcOffset = 2f;
+    /// <summary>The city map's place, whose clock (summer time or not) follows <see cref="DayOfYear"/>.</summary>
+    MapInfo _clockZone; bool _hasClockZone;
     [Range(1, 365)] public int DayOfYear = 172;
     [Tooltip("How fast simulated time runs relative to real time; 0 keeps the time fixed.")]
     public float TimeSpeed = 0f;
@@ -172,6 +174,7 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
             Latitude = (float)map.Info.Latitude;
             Longitude = (float)map.Info.Longitude;
             UtcOffset = map.Info.UtcOffsetJune;
+            _clockZone = map.Info; _hasClockZone = true;
         }
         if (Sun == null)
         {
@@ -562,12 +565,22 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
             else if (name == "winddirection") WindDirection = ParseFloat(p.value);
             else if (name == "timespeed") TimeSpeed = ParseFloat(p.value);
             else if (name == "dayofyear") DayOfYear = (int)ParseFloat(p.value);
+            // (date=12-15 or 2026-12-15: that day's sun, and the city's clock on it)
+            else if (name == "date")
+            {
+                var parts = p.value.Trim().Split('-');
+                int y = parts.Length == 3 && int.TryParse(parts[0], out var yy) ? yy : 2025;
+                if (parts.Length >= 2 && int.TryParse(parts[parts.Length - 2], out var mo) && int.TryParse(parts[parts.Length - 1], out var dd)
+                    && mo >= 1 && mo <= 12 && dd >= 1 && dd <= DateTime.DaysInMonth(y, mo))
+                    DayOfYear = new DateTime(y, mo, dd).DayOfYear;
+                else Debug.LogWarning($"Date '{p.value}' unknown: use MM-DD or YYYY-MM-DD");
+            }
             else if (name == "latitude") Latitude = ParseFloat(p.value);
             else if (name == "realweather")
             {
                 // the weather that really was then and there (the city map's place, if it is built already)
                 var map = OsmMap.Current;
-                if (map != null && map.Generator != null) { Latitude = (float)map.Info.Latitude; Longitude = (float)map.Info.Longitude; UtcOffset = map.Info.UtcOffsetJune; }
+                if (map != null && map.Generator != null) { Latitude = (float)map.Info.Latitude; Longitude = (float)map.Info.Longitude; UtcOffset = map.Info.UtcOffsetJune; _clockZone = map.Info; _hasClockZone = true; }
                 RealWeather.Apply(this, p.value);
             }
         }
@@ -711,6 +724,8 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
         SetSnowfall(snowfall);
         SetBareTrees(snow >= 0.3f);
 
+        // (the city's clock on that day: summer time or not, as the date falls)
+        if (_hasClockZone) UtcOffset = _clockZone.UtcOffsetOn(DayOfYear);
         float solarTime = TimeOfDay - UtcOffset + Longitude / 15f; // local solar time
         SolarPosition(solarTime, Latitude, DayOfYear, out var elevation, out var azimuth);
         SunElevation = elevation;
