@@ -1313,7 +1313,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         // the surfaces at the top (within 5 cm: the topography's polygons overlap, a cycle path or cycle lane lies on the
         // carriageway's polygon at the same height, and the one drawn over it is what one sees): a cycle path or pavement
         // among them counts
-        var g = MapTraffic.Ground.Paving; bool road = false, bare = false, osmGreen = false;
+        var g = MapTraffic.Ground.Paving; bool road = false, bare = false;
         for (int i = 0; i < n; i++)
         {
             var h = _groundHits[i];
@@ -1331,12 +1331,8 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
             // topography's reach; not moved off, but a route over it is not the autopilot's first choice; on other maps
             // the ground beside a narrow road)
             else if (name.StartsWith("Ground")) bare = true;
-            // (OpenStreetMap's parks, lawns and verges: grass where no road lies on them, off the maps with the national
-            // topography; they read as paving, and lanes and riding lines were not kept off verges beside them)
-            else if (name.StartsWith("Green areas")) osmGreen = true;
         }
         bool topography = OsmMap.Current != null && OsmMap.Current.Generator != null && OsmMap.Current.Generator.TopographyGround;
-        if (osmGreen && !road && !topography && g == MapTraffic.Ground.Paving) return MapTraffic.Ground.Green;
         return g == MapTraffic.Ground.Pavement || g == MapTraffic.Ground.Green ? g : road ? MapTraffic.Ground.Road : bare && topography ? MapTraffic.Ground.Bare : g;
         // ground one sees: not a vehicle, not an invisible driving surface, not a wall or pole
         static bool Seen(RaycastHit h) => h.collider.attachedRigidbody == null && h.normal.y >= 0.7f
