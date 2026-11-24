@@ -255,11 +255,12 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         int moved = 0; _moves.Clear(); ParkedMoves = 0; CornerMoves = 0;
         var someone = FindAnyObjectByType<PlayerAvatar>();
         DebugFocus = someone != null && System.Array.IndexOf(CommandLine.Args, "-debugTraffic") >= 0 ? someone.transform.position : (Vector3?)null;
-        // (-debugLaneAt x,z: the lane points within 30 m of there instead)
+        // (-debugLaneAt x,z or x,y,z: the lane points within 30 m of there instead; y, the ground's height there on a map
+        // with terrain, for the ground seen around it)
         int dla = System.Array.IndexOf(CommandLine.Args, "-debugLaneAt");
-        if (dla >= 0 && dla + 1 < CommandLine.Args.Length && CommandLine.Args[dla + 1].Split(',') is var xz && xz.Length == 2
-            && float.TryParse(xz[0], NumberStyles.Float, CultureInfo.InvariantCulture, out var fx) && float.TryParse(xz[1], NumberStyles.Float, CultureInfo.InvariantCulture, out var fz))
-            DebugFocus = new Vector3(fx, 0f, fz);
+        if (dla >= 0 && dla + 1 < CommandLine.Args.Length && CommandLine.Args[dla + 1].Split(',') is var xz && (xz.Length == 2 || xz.Length == 3)
+            && float.TryParse(xz[0], NumberStyles.Float, CultureInfo.InvariantCulture, out var fx) && float.TryParse(xz[^1], NumberStyles.Float, CultureInfo.InvariantCulture, out var fz))
+            DebugFocus = new Vector3(fx, xz.Length == 3 && float.TryParse(xz[1], NumberStyles.Float, CultureInfo.InvariantCulture, out var fy) ? fy : 0f, fz);
         if (dla >= 0 && DebugFocus != null)
             foreach (var r in gen.Roads)
                 for (int i = 0; i < r.Line.Count; i++)
@@ -278,6 +279,13 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
                     row.Append(xi == 0 && zi == 0 ? '+' : g == Ground.Road ? 'R' : g == Ground.Cycle ? 'C' : g == Ground.Pavement ? 'P' : g == Ground.Paving ? 'p' : g == Ground.Green ? 'G' : g == Ground.Bare ? 'b' : '-');
                 }
                 Debug.Log($"TrafficDebug: ground z={f.z + zi * 0.5f,7:F1} {row}");
+            }
+            // (and the surfaces under a line across there, west to east every 0.5 m: name and height of each)
+            for (int xi = -12; xi <= 12; xi++)
+            {
+                var q = new Vector3(f.x + xi * 0.5f, f.y + 6f, f.z);
+                var hs = Physics.RaycastAll(q, Vector3.down, 14f, ~0, QueryTriggerInteraction.Ignore).OrderByDescending(h => h.point.y);
+                Debug.Log($"TrafficDebug: across x={q.x:F1}: " + string.Join(", ", hs.Select(h => $"{h.collider.name} {h.point.y:F2}{(h.collider.attachedRigidbody != null ? " (body)" : "")}")));
             }
             foreach (var h in Physics.RaycastAll(new Vector3(f.x, f.y + 6f, f.z), Vector3.down, 12f))
             {

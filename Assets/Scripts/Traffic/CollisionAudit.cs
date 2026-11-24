@@ -17,7 +17,7 @@ public class CollisionAudit : MonoBehaviour
 
     struct Agent
     {
-        public Transform t; public Kind kind; public Vector3 pos, fwd; public float hl, hw; public string name;
+        public Transform t; public Kind kind; public Vector3 pos, fwd; public Quaternion rot; public float hl, hw; public string name;
         public float speed;
     }
 
@@ -101,7 +101,11 @@ public class CollisionAudit : MonoBehaviour
         float v = _lastPos.TryGetValue(t, out var last) ? Flat(p - last).magnitude / Mathf.Max(dt, 1e-3f) : 0f;
         _lastPos[t] = p;
         var f = t.forward; f.y = 0f; f = f.sqrMagnitude > 1e-6f ? f.normalized : Vector3.forward;
-        _agents.Add(new Agent { t = t, kind = k, pos = p, fwd = f, hl = hl, hw = hw, name = name, speed = v });
+        // (a vehicle's box pitched with it, not its lean: level, on a steep road its ends reached into the ground beside
+        // it, as a parked van's rear on a 19% slope in São Paulo into the grass beside the road)
+        var rot = Quaternion.LookRotation(f, Vector3.up);
+        if ((k == Kind.Vehicle || k == Kind.Rider) && Mathf.Abs(t.forward.y) < 0.6f) rot = Quaternion.LookRotation(t.forward, Vector3.up);
+        _agents.Add(new Agent { t = t, kind = k, pos = p, fwd = f, rot = rot, hl = hl, hw = hw, name = name, speed = v });
     }
 
     /// <summary>A participant's car without TrafficCar: its size from its colliders.</summary>
@@ -156,7 +160,7 @@ public class CollisionAudit : MonoBehaviour
         if (a.kind == Kind.Pedestrian || a.kind == Kind.Animal)
             n = Physics.OverlapCapsuleNonAlloc(a.pos + Vector3.up * (0.3f + a.hw), a.pos + Vector3.up * Mathf.Max(0.3f + a.hw, (a.kind == Kind.Animal ? 0.6f : 1.5f) - a.hw), a.hw, _hits, ~0, QueryTriggerInteraction.Ignore);
         else
-            n = Physics.OverlapBoxNonAlloc(a.pos + Vector3.up * 0.9f, new Vector3(a.hw + 0.05f, 0.6f, a.hl + 0.05f), _hits, Quaternion.LookRotation(a.fwd, Vector3.up), ~0, QueryTriggerInteraction.Ignore);
+            n = Physics.OverlapBoxNonAlloc(a.pos + a.rot * Vector3.up * 0.9f, new Vector3(a.hw + 0.05f, 0.6f, a.hl + 0.05f), _hits, a.rot, ~0, QueryTriggerInteraction.Ignore);
         for (int i = 0; i < n; i++)
         {
             var c = _hits[i];
@@ -196,16 +200,16 @@ public class CollisionAudit : MonoBehaviour
     {
         if (a.kind == Kind.Pedestrian || a.kind == Kind.Animal) return "";
         string along = "", side = "";
-        var rot = Quaternion.LookRotation(a.fwd, Vector3.up); var right = Vector3.Cross(Vector3.up, a.fwd);
+        var rot = a.rot; var right = rot * Vector3.right; var fwd = rot * Vector3.forward;
         bool In(Vector3 centre, Vector3 half)
         {
-            int n = Physics.OverlapBoxNonAlloc(centre + Vector3.up * 0.9f, half, _deep, rot, ~0, QueryTriggerInteraction.Ignore);
+            int n = Physics.OverlapBoxNonAlloc(centre + rot * Vector3.up * 0.9f, half, _deep, rot, ~0, QueryTriggerInteraction.Ignore);
             for (int i = 0; i < n; i++) if (_deep[i] == c) return true;
             return false;
         }
         float third = (a.hl + 0.05f) * 2f / 3f;
         foreach (var (k, label) in new[] { (1, "front"), (0, "middle"), (-1, "rear") })
-            if (In(a.pos + a.fwd * (k * third), new Vector3(a.hw + 0.05f, 0.6f, third / 2f))) { along = label; break; }
+            if (In(a.pos + fwd * (k * third), new Vector3(a.hw + 0.05f, 0.6f, third / 2f))) { along = label; break; }
         bool l = In(a.pos - right * ((a.hw + 0.05f) / 2f), new Vector3((a.hw + 0.05f) / 2f, 0.6f, a.hl + 0.05f));
         bool r = In(a.pos + right * ((a.hw + 0.05f) / 2f), new Vector3((a.hw + 0.05f) / 2f, 0.6f, a.hl + 0.05f));
         side = l && !r ? "-left" : r && !l ? "-right" : "";
@@ -219,7 +223,7 @@ public class CollisionAudit : MonoBehaviour
         {
             int n = a.kind == Kind.Pedestrian || a.kind == Kind.Animal
                 ? Physics.OverlapSphereNonAlloc(a.pos + Vector3.up * 0.9f, Mathf.Max(0.01f, a.hw - inset), _deep, ~0, QueryTriggerInteraction.Ignore)
-                : Physics.OverlapBoxNonAlloc(a.pos + Vector3.up * 0.9f, new Vector3(Mathf.Max(0.01f, a.hw - inset), 0.6f, Mathf.Max(0.01f, a.hl - inset)), _deep, Quaternion.LookRotation(a.fwd, Vector3.up), ~0, QueryTriggerInteraction.Ignore);
+                : Physics.OverlapBoxNonAlloc(a.pos + a.rot * Vector3.up * 0.9f, new Vector3(Mathf.Max(0.01f, a.hw - inset), 0.6f, Mathf.Max(0.01f, a.hl - inset)), _deep, a.rot, ~0, QueryTriggerInteraction.Ignore);
             for (int i = 0; i < n; i++) if (_deep[i] == c) return label;
         }
         return "under 15 cm";
