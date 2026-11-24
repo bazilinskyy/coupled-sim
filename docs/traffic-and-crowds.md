@@ -92,7 +92,7 @@ themselves.
 ## Keeping clear of each other
 
 Every vehicle and rider checks its path before it moves and stops before touching anyone or anything. Drivers indicate
-before turns at junctions and lane changes, take turns in streets too narrow for two, and back up out of deadlocks.
+before turns at junctions and lane changes, take turns in streets too narrow for two, and back up out of deadlocks (also when one of the two stands by its rules for the other in its path, not only when both are held by their last check).
 Pedestrians step round vehicles standing across their way. Streets, cycle paths and footways that run through a
 building (OpenStreetMap's `tunnel=building_passage`, as De Zaale under the TU/e's Atlas) are open, lined with walls and a
 ceiling. `-debugCollisions` logs every contact between moving agents, and with fixed objects, as `CollisionAudit:`
