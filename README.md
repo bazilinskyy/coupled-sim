@@ -772,7 +772,7 @@ Five detailed models from Sketchfab (CC BY 4.0, [credits](Assets/ThirdParty/Vehi
 | `DrivableArticulatedBus` | 18 m articulated city bus with full interior | 18.0 × 2.99 × 3.39 m; 5.13 m (front section) | `CityBus` | yes (no passenger figure) |
 | `DrivableBoxTruck` | box truck | 7.4 × 3.0 × 3.33 m; 4.11 m | `Truck` | traffic only |
 
-The articulated bus's rear section is a trailer (`ArticulatedTrailer`): its axle follows the joint, so it cuts corners like a real articulated bus (`DetailedVehicleTests` checks the angle between the sections on a steady circle against the geometry of a trailer). It is moved from the front section's motion on every PC, so it needs no network data. The extra axles of the truck's tandem and the bus's rear section turn with the driven wheels.
+The articulated bus's rear section is a trailer (`ArticulatedTrailer`): its axle follows the joint, so it cuts corners like a real articulated bus (`DetailedVehicleTests` checks the angle between the sections on a steady circle against the geometry of a trailer). It is moved from the front section's motion on every PC, so it needs no network data. In the map's own traffic the bus's pivot is moved to its front section's middle (its body lies 3.7 m ahead of the model's pivot), as the traffic's checks and the collision audit take a vehicle's body to be centred on its pivot. The extra axles of the truck's tandem and the bus's rear section turn with the driven wheels.
 
 ![The detailed vehicles waiting at a junction in Montreal (top), the Corolla's and the DAF's driver views with the live instrument cluster in Eindhoven (bottom left, middle) and the articulated bus in Eindhoven, from above (bottom right)](ReadmeFiles/detailed_vehicles.jpg)
 
