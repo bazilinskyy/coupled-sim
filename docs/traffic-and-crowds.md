@@ -96,7 +96,9 @@ before turns at junctions and lane changes, take turns in streets too narrow for
 Pedestrians step round vehicles standing across their way. Streets, cycle paths and footways that run through a
 building (OpenStreetMap's `tunnel=building_passage`, as De Zaale under the TU/e's Atlas) are open, lined with walls and a
 ceiling. `-debugCollisions` logs every contact between moving agents, and with fixed objects, as `CollisionAudit:`
-lines.
+lines; a vehicle's box for fixed objects is pitched with it, so on a steep road the ground beside it does not count.
+`-debugLaneAt x,z` (or `x,y,z`, with the ground's height there on a hilly map) logs the lane points, the ground seen
+and the surfaces under a line across there.
 
 ## Data
 
