@@ -576,11 +576,17 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         {
             if (line == null || line.Count < 2 || gen.CrossingLines.Contains(line)) continue;
             var cur = new List<Vector3>();
+            // (every 2 m along the whole line, not from each of its pieces' starts: a line with points every metre gave a
+            // point every metre, and the pedestrians, placed at 2 m per point, were given a progress twice as far along
+            // their way and walked to it straight over the roads)
+            float next = 0f, run = 0f;
             for (int i = 0; i + 1 < line.Count; i++)
             {
                 var a = line[i]; var b = line[i + 1]; float len = Vector3.Distance(a, b);
                 var side = Vector3.Cross(Vector3.up, Flat(b - a).normalized);
-                for (float d = 0f; d < len; d += 2f)
+                float first = next - run;
+                run += len;
+                for (float d = first; d < len; d += 2f, next += 2f)
                 {
                     var q = Vector3.Lerp(a, b, d / Mathf.Max(len, 1e-3f));
                     if (Physics.Raycast(q + Vector3.up * 3f, Vector3.down, out var hit, 6f, ~0, QueryTriggerInteraction.Ignore)) q.y = hit.point.y;
@@ -600,9 +606,17 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         }
         // places: along each stretch at the density, the nearest to the participants first
         var places = new List<(List<Vector3> line, int i)>();
+        // (the distance along each stretch to each of its points: about 2 m apart, more where one was moved aside)
+        var alongOf = new Dictionary<List<Vector3>, float[]>();
         foreach (var st in stretches)
         {
-            int n = Mathf.Max(0, Mathf.RoundToInt(st.Count * 2f / 1000f * PedestriansPerKm + (float)rng.NextDouble() - 0.5f));
+            var al = new float[st.Count];
+            for (int k = 1; k < st.Count; k++) al[k] = al[k - 1] + Vector3.Distance(st[k - 1], st[k]);
+            alongOf[st] = al;
+        }
+        foreach (var st in stretches)
+        {
+            int n = Mathf.Max(0, Mathf.RoundToInt(alongOf[st][st.Count - 1] / 1000f * PedestriansPerKm + (float)rng.NextDouble() - 0.5f));
             for (int k = 0; k < n; k++) places.Add((st, (int)((k + 0.5f) / n * (st.Count - 1))));
         }
         places = places.OrderBy(x => Near(x.line[x.i])).ToList();
@@ -631,7 +645,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
             }
             // (going one way or the other along it)
             bool back = rng.NextDouble() < 0.5;
-            float along = i * 2f;
+            float along = alongOf[line][i];
             float progress = back ? circuit.OpenLength - along : along;
             var prefab = avatars[rng.Next(avatars.Length)];
             var rp = circuit.GetRoutePoint(progress);

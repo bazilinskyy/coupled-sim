@@ -443,12 +443,34 @@ public class AIPedestrian : MonoBehaviour
         return false;
     }
 
+    /// <summary>
+    /// Whether the pedestrian's own way goes over the road at this crossing: a point of its route in the next 40 m beyond
+    /// the middle of the road, within 10 m of the crossing's line. A pedestrian of the map's crowd walking along the
+    /// pavement past a crossing walks on: crossing anyway, it then walked back over the carriageway, away from the crossing,
+    /// to the next point of its way on the first side (people all over the roads in Ho Chi Minh City).
+    /// </summary>
+    bool WayCrosses(PedestrianCrossing crossing)
+    {
+        if (_tracker == null || _tracker.Circuit == null) return true;
+        var near = crossing.NearPoint; var across = crossing.FarPoint - near; across.y = 0f;
+        float width = across.magnitude; if (width < 0.5f) return true;
+        across /= width;
+        var side = Vector3.Cross(Vector3.up, across);
+        var c = _tracker.Circuit;
+        for (float s = 0f; s <= 40f; s += 1f)
+        {
+            var q = c.GetRoutePoint(_tracker.ProgressDistance + s).position - near; q.y = 0f;
+            if (Vector3.Dot(q, across) > width * 0.6f && Mathf.Abs(Vector3.Dot(q, side)) < 10f) return true;
+        }
+        return false;
+    }
+
     void OnTriggerEnter(Collider other)
     {
         if (Behaviour == BehaviourMode.BehaviourModels)
         {
             var crossing = other.GetComponent<PedestrianCrossing>();
-            if (crossing != null && _crossing == null && _crossingModel != null)
+            if (crossing != null && _crossing == null && _crossingModel != null && WayCrosses(crossing))
             {
                 _crossing = crossing;
                 // cross from wherever we reached the kerb, perpendicular-ish to the far kerb point
