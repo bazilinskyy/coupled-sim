@@ -440,6 +440,9 @@ public class AIPedestrian : MonoBehaviour
     {
         int n = Physics.OverlapCapsuleNonAlloc(p + Vector3.up * 0.6f, p + Vector3.up * 1.5f, 0.2f, _wallHits, ~0, QueryTriggerInteraction.Ignore);
         for (int i = 0; i < n; i++) if (IsWall(_wallHits[i]) && _wallHits[i].bounds.max.y > p.y + 0.4f) return true;
+        return false;
+    }
+
     /// <summary>
     /// Whether the pedestrian's own way goes over the road at this crossing: a point of its route in the next 40 m beyond
     /// the middle of the road, within 10 m of the crossing's line. A pedestrian of the map's crowd walking along the
