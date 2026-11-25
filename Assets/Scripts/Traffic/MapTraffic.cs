@@ -970,34 +970,8 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         WaypointCircuit best = null; float bestD = 0f, bestScore = float.MaxValue;
         var at = me.transform.position; var fwd = me.transform.forward;
         // destination=lat,lon (-destination): the quickest route there through the road network
-        var dest = Destination != null ? Destination.Split(',') : null;
-        if (dest != null && dest.Length >= 2 && double.TryParse(dest[0], NumberStyles.Float, CultureInfo.InvariantCulture, out var dla)
-            && double.TryParse(dest[1], NumberStyles.Float, CultureInfo.InvariantCulture, out var dlo) && _lines != null)
-        {
-            new CoupledSim.Maps.GeoProjection(OsmMap.Current.Info.Latitude, OsmMap.Current.Info.Longitude).ToLocal(dla, dlo, out var dx, out var dz);
-            var path = CoupledSim.Maps.MapRoutes.ShortestPath(_lines, new System.Numerics.Vector3(at.x, at.y, at.z), new System.Numerics.Vector3(fwd.x, 0f, fwd.z),
-                new System.Numerics.Vector3((float)dx, 0f, (float)dz), OsmMap.Current.Info.LeftHandTraffic);
-            if (path.Count >= 2)
-            {
-                // (the traffic's corrections: on the carriageway, smoothed, on it again, apart from the oncoming lane,
-                // clear of what stands beside the road; with one pass, smoothed, it cut a corner over a lawn on the
-                // TU/e campus)
-                var lane = CorrectLane(path.Select(q => new Vector3(q.X, q.Y, q.Z)).ToList());
-                best = MakeCircuit(lane, 900);
-                best.name = "Route to " + Destination;
-                best.GetRoutePoint(0f);
-                bestScore = 0f;
-                // (from the point of it nearest the participant: the path begins at the road's node behind them)
-                float nearest = float.MaxValue;
-                for (float d = 0f; d <= Mathf.Min(40f, best.OpenLength - 5f); d += 0.5f)
-                {
-                    float e = (best.GetRoutePoint(d).position - at).sqrMagnitude;
-                    if (e < nearest) { nearest = e; bestD = d; }
-                }
-                Debug.Log($"MapTraffic: the autopilot drives to {Destination}: {best.OpenLength / 1000f:F1} km");
-            }
-            else Debug.LogWarning($"MapTraffic: no route from here to {Destination} ({CoupledSim.Maps.MapRoutes.Why}); the autopilot takes the nearest route");
-        }
+        best = RouteToDestination(at, fwd, out bestD);
+        if (best != null) bestScore = 0f;
         // (a route whose lane runs over unpaved ground in the next 300 m, where OpenStreetMap's road crosses a verge or a
         // median the topography has as grass, counts as 20 m further away: of the routes along the participant's street, one
         // that keeps to the road is taken, then one that goes straight on)
@@ -1101,6 +1075,39 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
     }
 
     /// <summary>Pedestrians walk along the nearest long pavement; riders follow the nearest lane route on its riding line (RideLine).</summary>
+    /// <summary>The route from <paramref name="at"/> to destination=lat,lon (-destination) by the quickest way through the
+    /// road network, with the distance along it nearest <paramref name="at"/>; null without a destination or a way there.</summary>
+    WaypointCircuit RouteToDestination(Vector3 at, Vector3 fwd, out float startD)
+    {
+        startD = 0f;
+        var dest = Destination != null ? Destination.Split(',') : null;
+        if (dest == null || dest.Length < 2 || _lines == null || !double.TryParse(dest[0], NumberStyles.Float, CultureInfo.InvariantCulture, out var dla)
+            || !double.TryParse(dest[1], NumberStyles.Float, CultureInfo.InvariantCulture, out var dlo)) return null;
+        new CoupledSim.Maps.GeoProjection(OsmMap.Current.Info.Latitude, OsmMap.Current.Info.Longitude).ToLocal(dla, dlo, out var dx, out var dz);
+        var path = CoupledSim.Maps.MapRoutes.ShortestPath(_lines, new System.Numerics.Vector3(at.x, at.y, at.z), new System.Numerics.Vector3(fwd.x, 0f, fwd.z),
+            new System.Numerics.Vector3((float)dx, 0f, (float)dz), OsmMap.Current.Info.LeftHandTraffic);
+        if (path.Count < 2)
+        {
+            Debug.LogWarning($"MapTraffic: no route from here to {Destination} ({CoupledSim.Maps.MapRoutes.Why}); the autopilot takes the nearest route");
+            return null;
+        }
+        // (the traffic's corrections: on the carriageway, smoothed, on it again, apart from the oncoming lane, clear of what
+        // stands beside the road; with one pass, smoothed, it cut a corner over a lawn on the TU/e campus)
+        var lane = CorrectLane(path.Select(q => new Vector3(q.X, q.Y, q.Z)).ToList());
+        var route = MakeCircuit(lane, 900);
+        route.name = "Route to " + Destination;
+        route.GetRoutePoint(0f);
+        // (from the point of it nearest the participant: the path begins at the road's node behind them)
+        float nearest = float.MaxValue;
+        for (float d = 0f; d <= Mathf.Min(40f, route.OpenLength - 5f); d += 0.5f)
+        {
+            float e = (route.GetRoutePoint(d).position - at).sqrMagnitude;
+            if (e < nearest) { nearest = e; startD = d; }
+        }
+        Debug.Log($"MapTraffic: the autopilot goes to {Destination}: {route.OpenLength / 1000f:F1} km");
+        return route;
+    }
+
     void WalkOrRide(PlayerAvatar me)
     {
         var gen = OsmMap.Current.Generator;
@@ -1117,7 +1124,9 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         }
         else if (Routes.Count > 0)
         {
-            WaypointCircuit bestR = null; float bestD = 0f, bestScore = float.MaxValue;
+            // (to a destination by the quickest way there, as a driver; else the nearest route pointing the rider's way)
+            var bestR = RouteToDestination(at, fwd, out float bestD); float bestScore = float.MaxValue;
+            if (bestR == null)
             foreach (var r in Routes)
                 for (float d = 0; d < r.OpenLength - 100f; d += 4f)
                 {
