@@ -508,6 +508,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
             if (AnimalAgent.All.Any(an => an != null && (an.transform.position - rp.position).sqrMagnitude < 5f * 5f)) continue;
             // (nor against a parked car, a wall or a post: one placed by a parked car stayed stuck to it)
             if (FixedBeside(rp.position, Flat(rp.direction), 0.3f)) continue;
+            if (VehicleAt(rp.position, rp.direction, 3.5f, 1.4f)) continue;
             placed.Add(rp.position);
             var pos = rp.position;
             if (Physics.Raycast(pos + Vector3.up * 5f, Vector3.down, out var hit, 20f, ~0, QueryTriggerInteraction.Ignore)) pos.y = hit.point.y;
@@ -813,6 +814,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
             var rp = ride.GetRoutePoint(rd);
             if (placed.Any(q => (q - rp.position).sqrMagnitude < 6f * 6f)) continue;
             if (InParticipantsWay(rp.position, participants)) continue;
+            if (VehicleAt(rp.position, rp.direction, 1.4f, 0.8f)) continue;
             if (AnimalAgent.All.Any(an => an != null && (an.transform.position - rp.position).sqrMagnitude < 3f * 3f)) continue;
             placed.Add(rp.position);
             if (used.Add(ride)) CycleRoutes.Add(ride);
@@ -1486,6 +1488,19 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
             moved++;
         }
         return moved;
+    }
+
+    /// <summary>Whether a vehicle placed already (its body or an articulated vehicle's rear section, which reaches 8 m
+    /// behind its pivot) stands within <paramref name="halfLength"/> along and <paramref name="halfWidth"/> across of p:
+    /// two cyclists were placed inside an articulated bus's rear section in Ghent and stood against it for good.</summary>
+    static bool VehicleAt(Vector3 p, Vector3 dir, float halfLength, float halfWidth)
+    {
+        dir.y = 0f; if (dir.sqrMagnitude < 1e-6f) dir = Vector3.forward;
+        Physics.SyncTransforms();
+        int n = Physics.OverlapBoxNonAlloc(p + Vector3.up * 1.0f, new Vector3(halfWidth, 0.8f, halfLength), _near, Quaternion.LookRotation(dir.normalized, Vector3.up), ~0, QueryTriggerInteraction.Ignore);
+        for (int i = 0; i < n; i++)
+            if (_near[i].attachedRigidbody != null || _near[i].name.StartsWith("Rear section", StringComparison.Ordinal)) return true;
+        return false;
     }
 
     /// <summary>Whether something fixed (not the ground, a kerb or a road's surface; not a vehicle) stands within
