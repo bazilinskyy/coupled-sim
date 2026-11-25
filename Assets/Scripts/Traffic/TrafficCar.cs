@@ -437,7 +437,18 @@ public class TrafficCar : MonoBehaviour
             {
                 _offLogged = true; _offLogs++;
                 string near = string.Join(", ", _cars.Where(c => c.t != transform && Flat2(c.pos - transform.position) < 6f * 6f).Select(c => $"{c.name} {Mathf.Sqrt(Flat2(c.pos - transform.position)):F1} m"));
-                Debug.Log($"TrafficDebug: off its lane: {name} ({(IsRider ? "rider" : $"{VehicleLength:F1} m")}) {off:F2} m at ({transform.position.x:F1},{transform.position.z:F1}); near: {(near.Length > 0 ? near : "nothing")}; the last 3 s: " + string.Join(" | ", _history));
+                // (the lane's tightest bend within 10 m, and whether the vehicle is off to its inside or outside)
+                float tight = float.MaxValue, bendSign = 0f;
+                for (float d = -10f; d <= 10f; d += 1f)
+                {
+                    var a = Flat(_circuit.GetRoutePosition(_tracker.ProgressDistance + d - 3f)); var b = Flat(_circuit.GetRoutePosition(_tracker.ProgressDistance + d)); var c = Flat(_circuit.GetRoutePosition(_tracker.ProgressDistance + d + 3f));
+                    float cr = Vector3.Cross(b - a, c - b).y, twice = Vector3.Cross(b - a, c - a).magnitude;
+                    if (twice < 1e-4f) continue;
+                    float rad = (b - a).magnitude * (c - b).magnitude * (a - c).magnitude / (2f * twice);
+                    if (rad < tight) { tight = rad; bendSign = Mathf.Sign(cr); }
+                }
+                string bend = tight < 200f ? $"bend {tight:F1} m to the {(bendSign > 0 ? "right" : "left")}, off to its {(Mathf.Sign(off) == bendSign ? "inside" : "outside")}" : "straight";
+                Debug.Log($"TrafficDebug: off its lane: {name} ({(IsRider ? "rider" : $"{VehicleLength:F1} m")}) {off:F2} m at ({transform.position.x:F1},{transform.position.z:F1}), {bend}; near: {(near.Length > 0 ? near : "nothing")}; the last 3 s: " + string.Join(" | ", _history));
             }
             if (Mathf.Abs(off) < 0.4f) _offLogged = false;
             // (-debugCar "Map traffic Map route 24 15": that vehicle's every line, with its heading)
