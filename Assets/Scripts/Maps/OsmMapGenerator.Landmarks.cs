@@ -17,7 +17,9 @@ using V2 = System.Numerics.Vector2;
 /// groundletters &lt;lat&gt; &lt;lon&gt; &lt;text&gt; &lt;letter height m&gt; &lt;colour rrggbb&gt; &lt;bearing the letters face, degrees&gt;
 /// passage &lt;OSM way id&gt; &lt;opening's width m&gt; &lt;clearance m&gt;
 /// </code>
-/// Lettering is built from strokes for T, U, /, e and a few more (capitals and the logo's lowercase e).
+/// and the details in three dimensions of OsmMapGenerator.LandmarkDetails (crown, pyramidroof, balcony, entrance,
+/// letterframe: <see cref="ParseLandmarkDetail"/>). Lettering is built from strokes for T, U, /, e and a few more
+/// (capitals and the logo's lowercase e).
 /// </summary>
 public partial class OsmMapGenerator
 {
@@ -61,6 +63,7 @@ public partial class OsmMapGenerator
                 }
                 else if ((f[0] == "roofletters" && f.Length >= 5) || (f[0] == "groundletters" && f.Length >= 7)) _letterLines.Add(f);
                 else if (f[0] == "passage" && f.Length >= 4) _passageSizes[long.Parse(f[1], ci)] = (float.Parse(f[2], ci), float.Parse(f[3], ci));
+                else if (ParseLandmarkDetail(f)) { }
                 else Debug.LogWarning($"OsmMap: landmarks: cannot read '{raw.Trim()}'");
             }
             catch (Exception e) { Debug.LogWarning($"OsmMap: landmarks: '{raw.Trim()}': {e.Message}"); }
@@ -96,13 +99,15 @@ public partial class OsmMapGenerator
     OsmWay OsmBuildingFor(Vector3[] v)
     {
         var votes = new Dictionary<OsmWay, int>();
-        int step = Math.Max(1, v.Length / 40);
+        // (up to 40 of its corners on the ground, not every so many of all its vertices: Neuron's model has 6 on the ground
+        // among 429, every tenth vertex missed them all, and its landmark façade was never found)
+        var ground = v.Where(q => q.y <= 0.5f).ToList();
+        int step = Math.Max(1, ground.Count / 40);
         float mx = 0, mz = 0; int n = 0;
-        for (int i = 0; i < v.Length; i += step)
+        for (int i = 0; i < ground.Count; i += step)
         {
-            if (v[i].y > 0.5f) continue;
-            mx += v[i].x; mz += v[i].z; n++;
-            var w = OsmBuildingAt(new V2(v[i].x, v[i].z));
+            mx += ground[i].x; mz += ground[i].z; n++;
+            var w = OsmBuildingAt(new V2(ground[i].x, ground[i].z));
             if (w != null) votes[w] = (votes.TryGetValue(w, out var c) ? c : 0) + 1;
         }
         var mid = n > 0 ? OsmBuildingAt(new V2(mx / n, mz / n)) : null;
@@ -238,31 +243,71 @@ public partial class OsmMapGenerator
                 var poly = Line(way); if (poly.Count < 4) continue;
                 poly.RemoveAt(poly.Count - 1);
                 if (Geometry2D.SignedArea(poly) < 0) poly.Reverse();
-                // the top of the real building (or the mapped height)
                 var c = poly.Aggregate(V2.Zero, (s, q) => s + q) / poly.Count;
-                float top = 0f;
-                if (bag != null)
-                    foreach (var b in bag)
-                    {
-                        float mx = 0, mz = 0; int n = 0; foreach (var v in b.V) if (v.y < 0.5f) { mx += v.x; mz += v.z; n++; }
-                        if (n > 0 && Geometry2D.PointInPolygon(new V2(mx / n, mz / n), poly)) foreach (var v in b.V) top = Math.Max(top, v.y);
-                    }
-                if (top <= 0f) top = BuildingHeight(way);
                 float hgt = float.Parse(f[3], ci);
+                // the roof to stand on: the real building's top roof, else the mapped outline at the mapped height
+                var (roof, top, obstacles) = TopRoof(way, poly, bag);
                 // the edge to stand on: the longest whose outside faces the map's centre (or the bearing given)
                 V2 want = f.Length > 5 && f[5] != "city" && float.TryParse(f[5], NumberStyles.Float, ci, out var brg)
                     ? new V2(Mathf.Sin(brg * Mathf.Deg2Rad), Mathf.Cos(brg * Mathf.Deg2Rad)) : V2.Normalize(-c);
-                int best = 0; float bestScore = float.MinValue;
-                for (int i = 0; i < poly.Count; i++)
+                // (the edges by how well they face it; the first with room for the letters, else the best one's middle)
+                var edges = new List<(int i, float score)>();
+                for (int i = 0; i < roof.Count; i++)
                 {
-                    var a = poly[i]; var b2 = poly[(i + 1) % poly.Count]; var e = b2 - a; float len = e.Length(); if (len < 1f) continue;
+                    var a = roof[i]; var b2 = roof[(i + 1) % roof.Count]; var e = b2 - a; float len = e.Length(); if (len < 1f) continue;
                     var outward = new V2(e.Y, -e.X) / len;   // (counter-clockwise ring: the outside is to the right)
-                    float score = V2.Dot(outward, want) * Mathf.Min(len, 4f * hgt);
-                    if (score > bestScore) { bestScore = score; best = i; }
+                    edges.Add((i, V2.Dot(outward, want) * Mathf.Min(len, 4f * hgt)));
                 }
-                var ea = poly[best]; var eb = poly[(best + 1) % poly.Count]; var dir = V2.Normalize(eb - ea); var outN = new V2(dir.Y, -dir.X);
-                var mid = (ea + eb) / 2f - outN * 0.8f;   // (a little in from the edge)
-                Lettering(mb, f[2], new Vector3(mid.X, top, mid.Y), new Vector3(outN.X, 0f, outN.Y), hgt, 0.35f);
+                edges.Sort((x, y) => y.score.CompareTo(x.score));
+                // a little in from the edge, and along it clear of the plant rooms on the roof (as carla-digitaltwins' twin
+                // slides its letters): the letters and the frame behind them all on the roof and off anything higher; on the
+                // next best edge if there is no room (Vertigo's south edge has a stair tower in its middle: its west edge)
+                float wide = Lettering(new MeshBuilder(), f[2], Vector3.zero, Vector3.forward, hgt, 0.35f);
+                bool frameToo = _letterFrames.ContainsKey(id);
+                V2 dir = V2.UnitX, outN = V2.UnitY, mid = V2.Zero;
+                bool Clear(V2 m)
+                {
+                    for (float u = -wide / 2f - 0.3f; u <= wide / 2f + 0.31f; u += 0.5f)
+                        for (float v = -0.4f; v <= (frameToo ? 1.6f : 0.4f); v += 0.4f)
+                        {
+                            var q = m + dir * u - outN * v;
+                            if (!Geometry2D.PointInPolygon(q, roof)) return false;
+                            foreach (var (o0, o1, o2) in obstacles) if (NearTriangle(q, o0, o1, o2, 0.3f)) return false;
+                        }
+                    return true;
+                }
+                bool placed = false;
+                foreach (var (ei, score) in edges.Where(e => e.score > 0f).DefaultIfEmpty(edges.Count > 0 ? edges[0] : (0, 0f)))
+                {
+                    var ea = roof[ei]; var eb = roof[(ei + 1) % roof.Count];
+                    dir = V2.Normalize(eb - ea); outN = new V2(dir.Y, -dir.X);
+                    float edgeLen = V2.Distance(ea, eb);
+                    foreach (float setback in new[] { 0.8f, 1.5f, 2.5f, 4f })
+                    {
+                        for (float k = 0f; k <= edgeLen / 2f && !placed; k += 0.5f)
+                            foreach (float sg in new[] { 1f, -1f })
+                            {
+                                var m = (ea + eb) / 2f - outN * setback + dir * (k * sg);
+                                if (Clear(m)) { mid = m; placed = true; break; }
+                            }
+                        if (placed) break;
+                    }
+                    if (placed) break;
+                }
+                if (!placed && edges.Count > 0)
+                {
+                    var ea = roof[edges[0].i]; var eb = roof[(edges[0].i + 1) % roof.Count];
+                    dir = V2.Normalize(eb - ea); outN = new V2(dir.Y, -dir.X); mid = (ea + eb) / 2f - outN * 0.8f;
+                }
+                if (!placed) Debug.LogWarning($"OsmMap: landmarks: no place clear of plant rooms on building {id} for '{f[2]}'");
+                float width = Lettering(mb, f[2], new Vector3(mid.X, top, mid.Y), new Vector3(outN.X, 0f, outN.Y), hgt, 0.35f);
+                // (a steel frame behind the letters, where a line asks for one)
+                if (_letterFrames.TryGetValue(id, out var frameCol))
+                {
+                    var frame = new MeshBuilder();
+                    LetterFrame(frame, new Vector3(mid.X, top, mid.Y), new Vector3(outN.X, 0f, outN.Y), width, hgt, 0.35f);
+                    Emit(parent, "Lettering frame " + id, frame, MetalMat("Lettering frame " + ColorUtility.ToHtmlStringRGB(frameCol), frameCol, 0.5f, 0.7f), true);
+                }
             }
             else
             {
@@ -282,11 +327,86 @@ public partial class OsmMapGenerator
     }
 
     /// <summary>
+    /// The top roof of a mapped building, for lettering to stand on: of the real (3D BAG) buildings that stand for it, the
+    /// flat roof levels (triangles grouped by height), the largest within 6 m of the highest (as carla-digitaltwins' twin
+    /// picks it), as the outline of its points (convex), its height, and what stands over 1.5 m higher on it (plant rooms,
+    /// their roofs' triangles; not a parapet). Without a real building: the mapped outline at the mapped height. Vertigo's lettering stood on
+    /// the mapped outline at its mapped height (31 m), in the air over the 20 m block south of its 57 m tower.
+    /// </summary>
+    (List<V2> roof, float top, List<(V2, V2, V2)> obstacles) TopRoof(OsmWay way, List<V2> poly, List<Bag3dBuildings.Building> bag)
+    {
+        var none = (poly, BuildingHeight(way), new List<(V2, V2, V2)>());
+        if (bag == null) return none;
+        float x0 = poly.Min(q => q.X) - 5f, x1 = poly.Max(q => q.X) + 5f, z0 = poly.Min(q => q.Y) - 5f, z1 = poly.Max(q => q.Y) + 5f;
+        var tris = new List<(Vector3 a, Vector3 b, Vector3 c, float area, bool flat)>();
+        foreach (var b in bag)
+        {
+            if (b.V.Length == 0 || !b.V.Any(v => v.x > x0 && v.x < x1 && v.z > z0 && v.z < z1) || OsmBuildingFor(b.V) != way) continue;
+            for (int t = 0; t + 2 < b.Roofs.Length; t += 3)
+            {
+                Vector3 a = b.V[b.Roofs[t]], c = b.V[b.Roofs[t + 1]], d = b.V[b.Roofs[t + 2]];
+                var n = Vector3.Cross(c - a, d - a); float area = n.magnitude / 2f;
+                if (area > 1e-4f) tris.Add((a, c, d, area, Mathf.Abs(n.y) / (2f * area) > 0.9f));
+            }
+        }
+        if (tris.Count == 0) return none;
+        float H((Vector3 a, Vector3 b, Vector3 c, float area, bool flat) t) => (t.a.y + t.b.y + t.c.y) / 3f;
+        float highest = tris.Max(H);
+        // flat triangles by height, a new level where the next is over 45 cm higher
+        var flat = tris.Where(t => t.flat).OrderBy(H).ToList();
+        if (flat.Count == 0) return none;
+        var levels = new List<List<(Vector3 a, Vector3 b, Vector3 c, float area, bool flat)>> { new List<(Vector3, Vector3, Vector3, float, bool)> { flat[0] } };
+        for (int i = 1; i < flat.Count; i++)
+        {
+            if (H(flat[i]) - H(flat[i - 1]) > 0.45f) levels.Add(new List<(Vector3, Vector3, Vector3, float, bool)>());
+            levels[levels.Count - 1].Add(flat[i]);
+        }
+        var main = levels.Where(l => l.Average(H) >= highest - 6f).OrderByDescending(l => l.Sum(t => t.area)).First();
+        float top = main.Sum(t => H(t) * t.area) / main.Sum(t => t.area);
+        var pts = main.SelectMany(t => new[] { new V2(t.a.x, t.a.z), new V2(t.b.x, t.b.z), new V2(t.c.x, t.c.z) }).ToList();
+        // (within the mapped outline: a point of the model's roof 6 m out beyond Vertigo's west wall turned the hull's edge,
+        // and the letters along it, 10° off the wall)
+        var inside = pts.Where(q => Geometry2D.PointInPolygon(q, poly)).ToList();
+        var hull = ConvexHull(inside.Count >= 3 ? inside : pts);
+        if (hull.Count < 3) return none;
+        var obstacles = tris.Where(t => H(t) > top + 1.5f).Select(t => (new V2(t.a.x, t.a.z), new V2(t.b.x, t.b.z), new V2(t.c.x, t.c.z))).ToList();
+        return (hull, top, obstacles);
+    }
+
+    /// <summary>Whether a point lies in a triangle or within <paramref name="pad"/> of it.</summary>
+    static bool NearTriangle(V2 q, V2 a, V2 b, V2 c, float pad)
+    {
+        float d1 = Geometry2D.Cross(b - a, q - a), d2 = Geometry2D.Cross(c - b, q - b), d3 = Geometry2D.Cross(a - c, q - c);
+        if ((d1 >= 0 && d2 >= 0 && d3 >= 0) || (d1 <= 0 && d2 <= 0 && d3 <= 0)) return true;
+        float Seg(V2 p, V2 e) { var d = e - p; float t = Mathf.Clamp01(V2.Dot(q - p, d) / Math.Max(1e-6f, d.LengthSquared())); return V2.Distance(q, p + d * t); }
+        return Seg(a, b) < pad || Seg(b, c) < pad || Seg(c, a) < pad;
+    }
+
+    /// <summary>The convex hull of points, counter-clockwise (monotone chain).</summary>
+    static List<V2> ConvexHull(List<V2> pts)
+    {
+        var p = pts.Distinct().OrderBy(q => q.X).ThenBy(q => q.Y).ToList();
+        if (p.Count < 3) return p;
+        var h = new List<V2>();
+        for (int pass = 0; pass < 2; pass++)
+        {
+            int start = h.Count;
+            foreach (var q in pass == 0 ? p : Enumerable.Reverse(p))
+            {
+                while (h.Count >= start + 2 && Geometry2D.Cross(h[h.Count - 1] - h[h.Count - 2], q - h[h.Count - 2]) <= 0f) h.RemoveAt(h.Count - 1);
+                h.Add(q);
+            }
+            h.RemoveAt(h.Count - 1);
+        }
+        return h;
+    }
+
+    /// <summary>
     /// Text standing upright, centred at <paramref name="centre"/> (its base), facing <paramref name="face"/> (towards its
     /// reader, for whom it reads from left to right), letters <paramref name="height"/> high and <paramref name="depth"/>
-    /// deep, from strokes (a bold sans: the TU/e logo's capitals, slash and lowercase e).
+    /// deep, from strokes (a bold sans: the TU/e logo's capitals, slash and lowercase e). Returns its width.
     /// </summary>
-    static void Lettering(MeshBuilder mb, string text, Vector3 centre, Vector3 face, float height, float depth)
+    static float Lettering(MeshBuilder mb, string text, Vector3 centre, Vector3 face, float height, float depth)
     {
         face.y = 0f; face.Normalize();
         // (the reader looks along -face: their right is up x forward)
@@ -305,6 +425,7 @@ public partial class OsmMapGenerator
             var p1 = centre + right * (x1 - total / 2f) + Vector3.up * y1;
             Stroke(mb, p0, p1, sw, face, depth);
         }
+        return total;
     }
 
     /// <summary>Adds a glyph's strokes (in letter units: x from <paramref name="x"/>, y up from the base); returns its width.</summary>

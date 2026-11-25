@@ -1,7 +1,20 @@
-# Landmarks of the Eindhoven map (OsmMapGenerator.Landmarks.cs): façades the generic styles do not show, and lettering.
+# Landmarks of the Eindhoven map (OsmMapGenerator.Landmarks.cs, .LandmarkDetails.cs): façades the generic styles do not show, lettering, passages and details.
 # facade <OSM way id> curtainwall <panel width m> <floor height m> <glass rrggbb> <frame rrggbb> <share of blinds down> [<wall rrggbb> <window share of a bay 0-1> <spandrel height m>]
 # roofletters <OSM way id> <text> <letter height m> <colour rrggbb> [city | bearing the letters face, degrees]
 # groundletters <lat> <lon> <text> <letter height m> <colour rrggbb> <bearing the letters face, degrees>
+# passage <OSM way id> <opening's width m> <clearance m>
+# letterframe <OSM way id> <colour rrggbb>: a steel frame behind the building's roof letters (posts every 2 m, two rails)
+# crown <OSM way id> <panel width m> <panels per module> <crown height m> <relief m> <colour rrggbb>: a band at the top of
+#   the outer walls of precast elements with pyramid-shaped faces, one per module deeper
+# pyramidroof <OSM way id> <centre lat> <centre lon> <side m> <cells> <roofing rrggbb> <glass rrggbb>: square pyramids in a
+#   staggered diamond lattice over a raised square of the roof (replacing the real roof there; heights measured from it),
+#   the two north faces of each glazed
+# balcony <OSM way id> <bearing the front faces, degrees> <depth m> <height m> <module m> <railing rrggbb>: a slab along
+#   that front, a column on each module line, a pair of tube railings per module
+# entrance <lat> <lon> <bearing the door faces, degrees> revolving <steps> <stairs width m> <landing depth m>: a revolving
+#   door on a landing against the façade at the top of a flight of steps (16 cm risers, 30 cm treads) with handrails
+# The details in three dimensions (letterframe, crown, pyramidroof, balcony, entrance) are ported from carla-digitaltwins'
+# campus twin (TwinModel/tools/landmarks.py on branch campus-landmarks, its TUE_CAMPUS spec; tools/osm_detail.py)
 
 # Atlas, the TU/e's main building (S.J. van Embden 1958-1963; Team V Architectuur 2019): wrapped in a glass curtain wall
 # of floor-high panes (12 floors in 44 m), triple solar-control glass with reflective fabric blinds behind it
@@ -27,11 +40,43 @@ facade 44755889 curtainwall 1.8 3.6 34404A 2E3034 0.2 3A3C40 0.6 1.2
 # Neuron: glazing under white precast elements, 4 m storeys
 facade 113957453 curtainwall 2.525 4.0 3A4A52 E6E4DE 0.15 E6E4DE 0.8 0.9
 
-# the TU/e logo (capital T and U, a slash, a lowercase e) in the house style's red on the roof of Vertigo, facing the
-# city centre and the station; and the red steel logo, 1.1 m high and 5 m long, on the field before the Auditorium
+# the TU/e logo (capital T and U, a slash, a lowercase e) in the house style's red on the roof of Vertigo's tower, on its
+# edge towards the city centre and the station that has room clear of the plant rooms (the west edge: a stair tower stands
+# in the middle of the south one; carla-digitaltwins' twin faces it west too); and the red steel logo, 1.1 m high and 5 m long, on the field before the Auditorium
 roofletters 44772779 TU/e 4.5 C72125 city
+# a steel frame behind Vertigo's roof letters, as the twin's roof_letters stands them (its size and place not published)
+letterframe 44772779 3E4044
 groundletters 51.44712 5.48478 TU/e 1.1 C72125 90
 
 # De Zaale through Atlas: an opening 11 m wide (the carriageway, 7 m, and 2 m pavements) and 4.2 m high ("Doorrijhoogte 4.20 m")
 passage 298831051 11 4.2
 passage 1371365412 11 4.2
+# Atlas's entrance halls under the ends of its tower: the tower stands on columns 8 m high at both ends (OSM building:part
+# 1292491038, min_height 8), and the entrances lie in recesses 14 m wide in the low block between them; the footway to the
+# north entrance and the steps to the south one are mapped through those ends (tunnel=building_passage), opened here as wide
+# as the recesses and up to the tower's underside
+passage 1292493544 14 8
+passage 1292493545 14 8
+
+# Neuron (former Rekencentrum / Laplace, 1971-72; renovated by Team V, opened 2023), as the twin measured it from the 2024
+# PDOK aerial photo and 3D BAG: its crown, a continuous row of white precast concrete elements with pyramid-shaped faces
+# (2.525 m each, four per 10.1 m structural module, a deeper one on each module line), 2.6 m high, standing 0.55 m proud
+crown 113957453 2.525 4 2.6 0.55 E6E4DE
+# Neuron's central atrium roof, raised (Team V: "a partially raised roof with a special wooden construction") into twelve
+# square pyramids in a staggered diamond lattice over a square of 30.2 m in 6 cells (Heinze: twelve points, 24 triangular
+# glazing units of about 6 m2, two per pyramid: the two north faces, assumed); its centre is the twin's [-83.9, 10.2]
+# (lies on the middle of 3D BAG's raised block, 27 by 27 m at 14-16.6 m over the 12.1 m roof)
+pyramidroof 113957453 51.448841 5.488791 30.2 6 4A4D50 2E3A44
+# Neuron's south front: a balcony 2 m deep at 4 m (assumed) with pairs of red tube railings per 10.1 m module (Stevens Van
+# Dijck: "balconies with red tube profiles" kept in the renovation)
+balcony 113957453 180 2.0 4.0 10.1 B8262A
+
+# Atlas's three entrances: revolving doors at the top of entrance stairs (user, 2026-11-22, for the twin: OSM tags only
+# the west one and has no stairs at the north one), the stairs spanning the entrance fronts (estimated between the cores)
+# west: OSM node 13516865984 (door=revolving), steps way 1078555767 (6 steps, handrail) whose top is 7.8 m from the door
+entrance 51.4479155 5.4858841 270 revolving 6 9 7.8
+# north: at the south end of the footway 1292493544 under the tower (OSM entrance node 11981764684); 6 steps assumed, as
+# at the west entrance
+entrance 51.448274 5.486115 0 revolving 6 10.5 2.5
+# south: at the top of steps way 1292493545 (7 steps, handrail; OSM entrance node 11981764686)
+entrance 51.447488 5.486115 180 revolving 7 10.5 2.5
