@@ -75,7 +75,7 @@ shows: seconds from, length.
 | Clip | Role | `-smokeParams` | Camera | `-videoStart` / `-videoSeconds` | Window | Extra |
 |---|---|---|---|---|---|---|
 | rush_eindhoven | 2 | `map=Eindhoven;start=51.44844,5.48535,90;destination=51.44838,5.49000;time=08:15;weather=Clear;maxCyclists=250` | `chase=rel:0,3.4,-7.5,0,13,64` | 4 / 40 | 12, 20 | `-videoListener 1` |
-| cycle_ghent | 2 | `map=Ghent;time=10:30;weather=Clear` | `chase=rel:0,1.8,-3.6,0,8,62` | 6 / 36 | 12, 20 | `-videoListener 1` |
+| cycle_ghent | 2 | `map=Ghent;time=10:30;weather=Clear;start=51.054091,3.718936,235;destination=51.053830,3.718369` | `chase=rel:0,1.8,-3.6,0,8,62` | 6 / 40 | 8, 20 | `-videoListener 1` |
 | walk_boulder | 1 | `map=Boulder;time=08:30;weather=Clear;start=40.01795,-105.2788,90;animalMix=Dog:1,Deer:1,Pigeon:6;animalRole=1;animalRadius=30;animalAhead=12` | `chase=rel:0,1.9,-3.2,0,6,62` | 6 / 30 | 0, 20 | |
 | race_stellenbosch | 7 | `map=Stellenbosch;time=10:30;weather=Clear;animalMix=Horse:1,Dog:1,Pigeon:4` | `chase=rel:0,1.8,-3.8,0,8,62` | 6 / 30 | 6, 20 | `-videoListener 1` |
 | escooter_tokyo | 3 | `map=Tokyo;time=11:00;weather=Clear` | `chase=rel:0,1.8,-3.8,0,8,62` | 6 / 30 | 0, 20 | `-videoListener 1` |
