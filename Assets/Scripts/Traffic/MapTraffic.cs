@@ -334,7 +334,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         }
         BuildJunctions(gen.Roads);
         _correctedLanes = lanes;
-        foreach (var lane in lanes) Routes.Add(MakeCircuit(lane, Routes.Count));
+        foreach (var lane in lanes) { EaseBends(lane); Routes.Add(MakeCircuit(lane, Routes.Count)); }
         RoadSpeedLimits.Build(gen.Roads);
         foreach (var r in Routes) r.GetRoutePoint(0f);   // (the circuit works out its length on first use)
         Debug.Log($"MapTraffic: {Routes.Count} routes ({Routes.Sum(r => r.OpenLength) / 1000f:F1} km of lanes){(sumoRuns ? ", SUMO runs the traffic" : "")}");
@@ -365,6 +365,34 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
                 if (told.Count >= 6) yield break;
             }
         }
+    }
+
+    /// <summary>Lane bends tighter than a car can drive (its centre's turning circle, about 4.7 m) eased, a little each pass:
+    /// the lane is smoothed to bends of 5 m and more, but the corrections after it (onto the carriageway, apart from the
+    /// oncoming lane, clear of what stands beside it) put kinks back, of 2.8 m radius at junctions in São Paulo, and the
+    /// cars following them swung a metre out of their lanes. Only those points move, towards their neighbours' middle.</summary>
+    public static int BendsEased;
+    static void EaseBends(List<Vector3> lane, float minRadius = 5.2f)
+    {
+        if (lane == null || lane.Count < 5) return;
+        var moved = new HashSet<int>();
+        for (int pass = 0; pass < 25; pass++)
+        {
+            bool any = false;
+            for (int i = 1; i + 1 < lane.Count; i++)
+            {
+                var a = Flat(lane[i - 1]); var b = Flat(lane[i]); var c = Flat(lane[i + 1]);
+                float twice = Vector3.Cross(b - a, c - a).magnitude;
+                if (twice < 1e-4f) continue;
+                float r = (b - a).magnitude * (c - b).magnitude * (a - c).magnitude / (2f * twice);
+                if (r >= minRadius) continue;
+                var mid = (lane[i - 1] + lane[i + 1]) * 0.5f;
+                lane[i] = Vector3.Lerp(lane[i], new Vector3(mid.x, lane[i].y, mid.z), 0.5f);
+                moved.Add(i); any = true;
+            }
+            if (!any) break;
+        }
+        BendsEased += moved.Count;
     }
 
     WaypointCircuit MakeCircuit(List<Vector3> lane, int index)
@@ -1110,6 +1138,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         // (the traffic's corrections: on the carriageway, smoothed, on it again, apart from the oncoming lane, clear of what
         // stands beside the road; with one pass, smoothed, it cut a corner over a lawn on the TU/e campus)
         var lane = CorrectLane(path.Select(q => new Vector3(q.X, q.Y, q.Z)).ToList());
+        EaseBends(lane);
         var route = MakeCircuit(lane, 900);
         route.name = "Route to " + Destination;
         route.GetRoutePoint(0f);
