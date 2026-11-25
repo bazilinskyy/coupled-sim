@@ -32,6 +32,9 @@ public partial class OsmMapGenerator
         /// with the national topography's surfaces) a road that lies mostly on paving, grass or gravel there (pedestrian
         /// streets and squares, yards).</summary>
         public bool NoThroughTraffic;
+        /// <summary>Left out of the traffic's routes only as it lies on the topography's paving, grass or gravel (a pedestrian
+        /// street, a square, a yard, a campus boulevard): riders still find their way along it.</summary>
+        public bool PavedOver;
         /// <summary>Speed limit (km/h): OpenStreetMap's maxspeed (mph converted), else a default by road type.</summary>
         public float SpeedLimitKmh;
         /// <summary>Lanes (OpenStreetMap's lanes; 0: not given).</summary>
@@ -2181,7 +2184,7 @@ public partial class OsmMapGenerator
                     if (kind.StartsWith("BGT pavements") || kind.StartsWith("BGT green") || kind.StartsWith("BGT gravel")) off++; else on++;
                 }
             }
-            if (off * 2 > on + off && off * 2f >= 30f) { r.NoThroughTraffic = true; marked++; }
+            if (off * 2 > on + off && off * 2f >= 30f) { r.NoThroughTraffic = true; r.PavedOver = true; marked++; }
         }
         if (marked > 0) Debug.Log($"OsmMap: {marked} roads on paving, grass or gravel (pedestrian streets, squares, yards) left out of the traffic's routes");
     }
