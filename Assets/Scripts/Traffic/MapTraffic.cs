@@ -53,7 +53,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
     public bool AutopilotFixed;
     /// <summary>"lat,lon": the autopilot drives there by the quickest route (trial parameter destination, -destination).</summary>
     public string Destination;
-    List<CoupledSim.Maps.MapRoutes.RoadLine> _lines;
+    List<CoupledSim.Maps.MapRoutes.RoadLine> _lines, _rideLines;
     WaypointCircuit _autopilotRoute;
     float _autopilotFrom;
     /// <summary>The way the participant on the autopilot will go (car, rider or pedestrian): points every 20 m of its next
@@ -236,8 +236,11 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         ApplyDensities();
 
         var gen = OsmMap.Current.Generator;
-        var lines = _lines = gen.Roads.Where(r => !r.NoThroughTraffic)
-            .Select(r => new CoupledSim.Maps.MapRoutes.RoadLine { Line = r.Line.Select(p => new System.Numerics.Vector3(p.x, p.y, p.z)).ToList(), Width = r.Width, OneWay = r.OneWay, ParkLeft = r.ParkLeft, ParkRight = r.ParkRight, SpeedKmh = r.SpeedLimitKmh, Lanes = r.Lanes }).ToList();
+        CoupledSim.Maps.MapRoutes.RoadLine Line(OsmMapGenerator.Road r) => new CoupledSim.Maps.MapRoutes.RoadLine { Line = r.Line.Select(p => new System.Numerics.Vector3(p.x, p.y, p.z)).ToList(), Width = r.Width, OneWay = r.OneWay, ParkLeft = r.ParkLeft, ParkRight = r.ParkRight, SpeedKmh = r.SpeedLimitKmh, Lanes = r.Lanes };
+        var lines = _lines = gen.Roads.Where(r => !r.NoThroughTraffic).Select(Line).ToList();
+        // (riders to a destination also along the streets on paving and through buildings: on the TU/e campus, De Zaale
+        // through Atlas)
+        _rideLines = gen.Roads.Where(r => !r.NoThroughTraffic || r.PavedOver).Concat(gen.PassageStreets).Select(Line).ToList();
         // (a map with corridors along a highway: routes start and end at its area's edge; more of them, as it is longer)
         var area = gen.Area;
         System.Func<System.Numerics.Vector3, float> depth = area == null ? null : p => area.Depth(new System.Numerics.Vector2(p.X, p.Z));
@@ -970,34 +973,8 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         WaypointCircuit best = null; float bestD = 0f, bestScore = float.MaxValue;
         var at = me.transform.position; var fwd = me.transform.forward;
         // destination=lat,lon (-destination): the quickest route there through the road network
-        var dest = Destination != null ? Destination.Split(',') : null;
-        if (dest != null && dest.Length >= 2 && double.TryParse(dest[0], NumberStyles.Float, CultureInfo.InvariantCulture, out var dla)
-            && double.TryParse(dest[1], NumberStyles.Float, CultureInfo.InvariantCulture, out var dlo) && _lines != null)
-        {
-            new CoupledSim.Maps.GeoProjection(OsmMap.Current.Info.Latitude, OsmMap.Current.Info.Longitude).ToLocal(dla, dlo, out var dx, out var dz);
-            var path = CoupledSim.Maps.MapRoutes.ShortestPath(_lines, new System.Numerics.Vector3(at.x, at.y, at.z), new System.Numerics.Vector3(fwd.x, 0f, fwd.z),
-                new System.Numerics.Vector3((float)dx, 0f, (float)dz), OsmMap.Current.Info.LeftHandTraffic);
-            if (path.Count >= 2)
-            {
-                // (the traffic's corrections: on the carriageway, smoothed, on it again, apart from the oncoming lane,
-                // clear of what stands beside the road; with one pass, smoothed, it cut a corner over a lawn on the
-                // TU/e campus)
-                var lane = CorrectLane(path.Select(q => new Vector3(q.X, q.Y, q.Z)).ToList());
-                best = MakeCircuit(lane, 900);
-                best.name = "Route to " + Destination;
-                best.GetRoutePoint(0f);
-                bestScore = 0f;
-                // (from the point of it nearest the participant: the path begins at the road's node behind them)
-                float nearest = float.MaxValue;
-                for (float d = 0f; d <= Mathf.Min(40f, best.OpenLength - 5f); d += 0.5f)
-                {
-                    float e = (best.GetRoutePoint(d).position - at).sqrMagnitude;
-                    if (e < nearest) { nearest = e; bestD = d; }
-                }
-                Debug.Log($"MapTraffic: the autopilot drives to {Destination}: {best.OpenLength / 1000f:F1} km");
-            }
-            else Debug.LogWarning($"MapTraffic: no route from here to {Destination} ({CoupledSim.Maps.MapRoutes.Why}); the autopilot takes the nearest route");
-        }
+        best = RouteToDestination(at, fwd, out bestD);
+        if (best != null) bestScore = 0f;
         // (a route whose lane runs over unpaved ground in the next 300 m, where OpenStreetMap's road crosses a verge or a
         // median the topography has as grass, counts as 20 m further away: of the routes along the participant's street, one
         // that keeps to the road is taken, then one that goes straight on)
@@ -1100,7 +1077,54 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         Debug.Log($"MapTraffic: autopilot at {AutopilotKmh} km/h{(AutopilotFixed ? "" : " in town, the speed limit on faster roads")} on {best.name} from {bestD:F0} m, at {start.position} (the participant was at {at})");
     }
 
-    /// <summary>Pedestrians walk along the nearest long pavement; riders follow the nearest lane route on its riding line (RideLine).</summary>
+    /// <summary>The route from <paramref name="at"/> to destination=lat,lon (-destination) by the quickest way through the
+    /// road network, with the distance along it nearest <paramref name="at"/>; null without a destination or a way there.</summary>
+    WaypointCircuit RouteToDestination(Vector3 at, Vector3 fwd, out float startD, bool rider = false)
+    {
+        startD = 0f;
+        var dest = Destination != null ? Destination.Split(',') : null;
+        var roads = rider && _rideLines != null ? _rideLines : _lines;
+        if (dest == null || dest.Length < 2 || roads == null || !double.TryParse(dest[0], NumberStyles.Float, CultureInfo.InvariantCulture, out var dla)
+            || !double.TryParse(dest[1], NumberStyles.Float, CultureInfo.InvariantCulture, out var dlo)) return null;
+        new CoupledSim.Maps.GeoProjection(OsmMap.Current.Info.Latitude, OsmMap.Current.Info.Longitude).ToLocal(dla, dlo, out var dx, out var dz);
+        // (a rider from the requested start and its bearing: the second participant's spawn point is on the next road, on
+        // the TU/e campus 20 m away on Den Dolech; the rider is then put at the beginning of the path)
+        if (rider && OsmMap.Current.RequestedStartPose(out var sp, out var sh) && (new Vector2(sp.x - at.x, sp.z - at.z)).sqrMagnitude < 100f * 100f)
+        {
+            at = new Vector3(sp.x, at.y, sp.z);
+            if (sh != Vector3.zero) fwd = sh;
+        }
+        var path = CoupledSim.Maps.MapRoutes.ShortestPath(roads, new System.Numerics.Vector3(at.x, at.y, at.z), new System.Numerics.Vector3(fwd.x, 0f, fwd.z),
+            new System.Numerics.Vector3((float)dx, 0f, (float)dz), OsmMap.Current.Info.LeftHandTraffic);
+        if (path.Count < 2)
+        {
+            Debug.LogWarning($"MapTraffic: no route from here to {Destination} ({CoupledSim.Maps.MapRoutes.Why}); the autopilot takes the nearest route");
+            if (Array.IndexOf(CommandLine.Args, "-debugTraffic") >= 0)
+                foreach (var r in OsmMap.Current.Generator.Roads)
+                {
+                    float m = r.Line.Min(q => (new Vector2(q.x - at.x, q.z - at.z)).magnitude);
+                    if (m < 50f) Debug.Log($"TrafficDebug: road {r.Type} {m:F0} m away, from ({r.Line[0].x:F0},{r.Line[0].z:F0}) to ({r.Line[r.Line.Count - 1].x:F0},{r.Line[r.Line.Count - 1].z:F0}){(r.OneWay ? " one-way" : "")}{(r.NoThroughTraffic ? " no through traffic" : "")}{(r.PavedOver ? " on paving" : "")}");
+                }
+            return null;
+        }
+        // (the traffic's corrections: on the carriageway, smoothed, on it again, apart from the oncoming lane, clear of what
+        // stands beside the road; with one pass, smoothed, it cut a corner over a lawn on the TU/e campus)
+        var lane = CorrectLane(path.Select(q => new Vector3(q.X, q.Y, q.Z)).ToList());
+        var route = MakeCircuit(lane, 900);
+        route.name = "Route to " + Destination;
+        route.GetRoutePoint(0f);
+        // (from the point of it nearest the participant: the path begins at the road's node behind them)
+        float nearest = float.MaxValue;
+        for (float d = 0f; d <= Mathf.Min(40f, route.OpenLength - 5f); d += 0.5f)
+        {
+            float e = (route.GetRoutePoint(d).position - at).sqrMagnitude;
+            if (e < nearest) { nearest = e; startD = d; }
+        }
+        Debug.Log($"MapTraffic: the autopilot goes to {Destination}: {route.OpenLength / 1000f:F1} km");
+        return route;
+    }
+
+    /// <summary>Pedestrians walk along the nearest long pavement; riders follow the route to their destination, else the nearest lane route, on its riding line (RideLine).</summary>
     void WalkOrRide(PlayerAvatar me)
     {
         var gen = OsmMap.Current.Generator;
@@ -1117,7 +1141,10 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         }
         else if (Routes.Count > 0)
         {
-            WaypointCircuit bestR = null; float bestD = 0f, bestScore = float.MaxValue;
+            // (to a destination by the quickest way there, as a driver; else the nearest route pointing the rider's way)
+            var bestR = RouteToDestination(at, fwd, out float bestD, rider: true); float bestScore = float.MaxValue;
+            bool toDestination = bestR != null;
+            if (bestR == null)
             foreach (var r in Routes)
                 for (float d = 0; d < r.OpenLength - 100f; d += 4f)
                 {
@@ -1136,8 +1163,10 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
                 var tw = me.GetComponent<TwoWheelerController>();
                 bool moped = tw != null && tw.Type == CoupledSim.TwoWheelers.TwoWheelerType.Moped45;
                 bool racer = tw != null && tw.Type == CoupledSim.TwoWheelers.TwoWheelerType.RaceBike;
-                path = racer ? RideLine(bestR, bestD, Mathf.Max(bestD + 6f, bestR.OpenLength - 50f), 3f, OsmMap.Current.Info.LeftHandTraffic, false, RaceOnRoadUpToKmh, 1.0f)
-                    : RideLine(bestR, bestD, Mathf.Max(bestD + 6f, bestR.OpenLength - 50f), 3f, OsmMap.Current.Info.LeftHandTraffic, !moped);
+                // (to the destination itself; a traffic route's last 50 m left out, where it leaves the map)
+                float end = Mathf.Max(bestD + 6f, toDestination ? bestR.OpenLength - 1f : bestR.OpenLength - 50f);
+                path = racer ? RideLine(bestR, bestD, end, 3f, OsmMap.Current.Info.LeftHandTraffic, false, RaceOnRoadUpToKmh, 1.0f)
+                    : RideLine(bestR, bestD, end, 3f, OsmMap.Current.Info.LeftHandTraffic, !moped);
                 KeepRideClear(path, OsmMap.Current.Info.LeftHandTraffic);
                 if (Array.IndexOf(CommandLine.Args, "-debugTraffic") >= 0 && _signPosts != null)
                 {
