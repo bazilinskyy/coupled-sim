@@ -30,7 +30,9 @@ walkers walk at their own pace.
 **Where and when:** the `-smokeParams` are trial parameters:
 - `map=`: the city map.
 - `start=lat,lon,heading`: where the participant starts and which way it faces (degrees, 0 = north, 90 = east).
-- `destination=lat,lon`: where its route ends (the autopilot finds the way there).
+- `destination=lat,lon`: where its route ends: a driver or a rider on the autopilot takes the quickest way there,
+  through building passages too, and stops there. Without it, the participant goes on along the nearest route (a
+  walker always keeps to the pavements near the start).
 - `time=` (`17:30`) and `date=` (`12-15`): the time of day and the date; the sun follows the city's clock.
 - `weather=`: `Clear`, `Overcast`, `LightRain`, `HeavyRain`, `Fog`, `LightSnow`, ...
 
@@ -74,17 +76,17 @@ shows: seconds from, length.
 
 | Clip | Role | `-smokeParams` | Camera | `-videoStart` / `-videoSeconds` | Window | Extra |
 |---|---|---|---|---|---|---|
-| rush_eindhoven | 2 | `map=Eindhoven;start=51.44844,5.48535,90;destination=51.44838,5.49000;time=08:15;weather=Clear;maxCyclists=250` | `chase=rel:0,3.4,-7.5,0,13,64` | 4 / 40 | 12, 20 | `-videoListener 1` |
-| cycle_ghent | 2 | `map=Ghent;time=10:30;weather=Clear;start=51.054091,3.718936,235;destination=51.053830,3.718369` | `chase=rel:0,1.8,-3.6,0,8,62` | 6 / 40 | 8, 20 | `-videoListener 1` |
+| rush_eindhoven | 2 | `map=Eindhoven;start=51.44844,5.48535,90;destination=51.44838,5.49000;time=08:15;weather=Clear;maxCyclists=250` | `chase=rel:0,3.4,-7.5,0,13,64` | 4 / 40 | 6, 20 | `-videoListener 1` |
+| cycle_ghent | 2 | `map=Ghent;time=10:30;weather=Clear;start=51.054091,3.718936,235` | `chase=rel:0,1.8,-3.6,0,8,62` | 6 / 40 | 13, 20 | `-videoListener 1` |
 | walk_boulder | 1 | `map=Boulder;time=08:30;weather=Clear;start=40.01795,-105.2788,90;animalMix=Dog:1,Deer:1,Pigeon:6;animalRole=1;animalRadius=30;animalAhead=12` | `chase=rel:0,1.9,-3.2,0,6,62` | 6 / 30 | 0, 20 | |
 | race_stellenbosch | 7 | `map=Stellenbosch;time=10:30;weather=Clear;animalMix=Horse:1,Dog:1,Pigeon:4` | `chase=rel:0,1.8,-3.8,0,8,62` | 6 / 30 | 6, 20 | `-videoListener 1` |
 | escooter_tokyo | 3 | `map=Tokyo;time=11:00;weather=Clear` | `chase=rel:0,1.8,-3.8,0,8,62` | 6 / 30 | 0, 20 | `-videoListener 1` |
-| drive_saopaulo | 0 | `map=SaoPaulo;time=16:00;weather=Clear;start=-23.5605,-46.6573,129` | `chase=rel:0,2.4,-6.5,0,10,60` | 6 / 30 | 4, 20 | `-autopilot 40 -driverCar ToyotaCorolla` |
+| drive_saopaulo | 0 | `map=SaoPaulo;time=16:00;weather=Clear;start=-23.5605,-46.6573,129` | `chase=rel:0,2.4,-6.5,0,10,60` | 6 / 30 | 0, 20 | `-autopilot 40 -driverCar ToyotaCorolla` |
 | bus_nairobi | 0 | `map=Nairobi;time=10:00;weather=Clear` | `chase=rel:0,5,-16,0,12,60` | 6 / 30 | 4, 20 | `-autopilot 35 -driverCar ArticulatedBus` |
 | moped_hcmc | 4 | `map=HoChiMinhCity;time=17:30;weather=Clear` | `chase=rel:0,2.4,-4.5,0,12,62` | 6 / 30 | 0, 20 | |
 | rain_london | 0 | `map=London;time=17:30;weather=HeavyRain;animalMix=Fox:1,Pigeon:6` | `own=driver` | 6 / 48 | 12, 20 | `-autopilot 35` |
-| snow_montreal | 0 | `map=Montreal;time=15:00;weather=LightSnow;animalMix=Husky:1,Pigeon:4` | `chase=rel:0,2.3,-6.5,0,9,58` | 30 / 24 | 2, 20 | `-autopilot 40` |
-| dusk_newyork | 0 | `map=NewYork;time=20:25;weather=Clear` | `chase=rel:0,2.4,-6.5,0,10,60` | 8 / 24 | 0, 20 | `-autopilot 40` |
+| snow_montreal | 0 | `map=Montreal;time=15:00;weather=LightSnow;animalMix=Husky:1,Pigeon:4` | `chase=rel:0,2.3,-6.5,0,9,58` | 30 / 24 | 6, 18 | `-autopilot 40` |
+| dusk_newyork | 0 | `map=NewYork;time=20:25;weather=Clear` | `chase=rel:0,2.4,-6.5,0,10,60` | 8 / 24 | 4, 20 | `-autopilot 40` |
 | dusk_sydney | 0 | `map=Sydney;time=16:50;weather=Clear` | `chase=rel:0,2.4,-6.5,0,10,60` | 8 / 24 | 2, 20 | `-autopilot 40` |
 | dusk_barcelona | 0 | `map=Barcelona;time=21:20;weather=Clear` | `chase=rel:0,2.4,-6.5,0,10,60` | 8 / 24 | 2, 20 | `-autopilot 40` |
 | drone_tue | 6 | `location=51.4479,5.4904,500;time=10:30;weather=Clear` | `own=driver` | 9 / 20 | 0, 20 | `-smokeFly 0.3,0.05,0.5,0 -droneView chase` |
