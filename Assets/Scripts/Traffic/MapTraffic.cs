@@ -547,7 +547,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
     /// <summary>
     /// Pedestrians on the pavements (the map's pavement lines; not its crossings): each walks a stretch of pavement to its
     /// end and back, the stretch cut where the line meets a carriageway or a cycle path (no one steps into the traffic)
-    /// and kept 0.5 m clear of posts, trees, benches and walls (moved aside by up to 1 m, else cut there), at
+    /// and kept 0.65 m clear of posts, trees, benches and walls (0.5 m: walkers brushed benches and posts) (moved aside by up to 1 m, else cut there), at
     /// PedestriansPerKm on the stretches nearest the participants (up to MaxPedestrians, 4 m apart, out of the
     /// participants' way). The pedestrian avatars in everyday clothes (women, men, children), each with its age group's walking speed, gap acceptance and looks
     /// (AIPedestrian's behaviour models); one adult in six walks as an older person.
@@ -568,7 +568,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         bool Walkable(Vector3 q) { var g = SeenGround(q); return g != Ground.Road && g != Ground.Cycle && g != Ground.None; }
         bool Clear(Vector3 q)
         {
-            int n = Physics.OverlapCapsuleNonAlloc(q + Vector3.up * 0.6f, q + Vector3.up * 1.5f, 0.5f, _near, ~0, QueryTriggerInteraction.Ignore);
+            int n = Physics.OverlapCapsuleNonAlloc(q + Vector3.up * 0.6f, q + Vector3.up * 1.5f, 0.65f, _near, ~0, QueryTriggerInteraction.Ignore);
             for (int i = 0; i < n; i++)
             {
                 var c = _near[i];
@@ -671,6 +671,9 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
             else if (rng.NextDouble() < 1.0 / 6.0) ped.AgeGroup = CoupledSim.Pedestrians.AgeGroup.Older;
             var anim = go.GetComponentInChildren<Animator>();
             if (anim != null) anim.enabled = true;
+            // (posed whether a camera is known to see it or not: with the prefabs' culling, a video's camera did not count,
+            // and pedestrians slid along in a standing pose in the README's rush-hour clip)
+            if (anim != null) anim.cullingMode = AnimatorCullingMode.AlwaysAnimate;
             ped.Init(circuit);
             var tracker = go.GetComponent<WaypointProgressTracker>();
             if (tracker != null) tracker.SetProgress(progress);
@@ -829,6 +832,9 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
             bike.name = race ? $"Map race cyclist {ride.name.Substring("Map race route ".Length)} {i}" : $"Map cyclist {bikeRoute.name.Substring("Map cycle route ".Length)} {i}";
             var t = bike.gameObject.AddComponent<TrafficCar>();
             t.VehicleLength = 1.8f; t.LaneHalfWidth = 0.8f;
+            // (the rider pedals and looks round whether a camera is known to see it or not, as the pedestrians)
+            foreach (var an in bike.GetComponentsInChildren<Animator>(true)) an.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+            if (!race) t.InitRideLane(new System.Random(rng.Next()), OsmMap.Current.Info.LeftHandTraffic);
             // city cyclists about 16 km/h; race cyclists about 32 km/h (28-38), quicker off the mark
             float v = race ? (32f + Normal(rng) * 2.5f) / 3.6f : (16f + Normal(rng) * 3f) / 3.6f;
             t.Init(CoupledSim.Traffic.CarFollowingModelType.IDM, race ? Mathf.Clamp(v, 7.8f, 10.5f) : Mathf.Clamp(v, 2.5f, 7f), new System.Random(rng.Next()));
@@ -1652,7 +1658,9 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
     /// <summary>-debugTraffic: the lane points within 30 m of here (the participant) log their moves.</summary>
     static Vector3? DebugFocus;
 
-    enum Ground { None, Road, Cycle, Paving, Pavement, Green, Bare }
+    public enum Ground { None, Road, Cycle, Paving, Pavement, Green, Bare }
+    /// <summary>The ground one sees at a point (a cyclist's room to overtake: a cycle path or cycle lane).</summary>
+    public static Ground SeenGroundAt(Vector3 p) => SeenGround(p);
 
     static Ground GroundAt(Vector3 p)
     {

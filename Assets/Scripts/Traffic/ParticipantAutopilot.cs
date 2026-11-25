@@ -20,6 +20,8 @@ public class ParticipantAutopilot : MonoBehaviour
     /// for what is in its way.</summary>
     public static System.Func<(float effort, float brake)?> RidePlan;
     KeyboardPlayerMovement _walker;
+    float _walkTurn;
+    static readonly Collider[] _people = new Collider[24];
     TwoWheelerController _rider;
     Rigidbody _body;
     int _index;
@@ -48,7 +50,7 @@ public class ParticipantAutopilot : MonoBehaviour
         // the point to head for: the first point of the path at least LookAhead ahead
         int step = _back ? -1 : 1;
         float v = _body != null ? _body.linearVelocity.magnitude : 0f;
-        float lookAhead = _rider != null ? Mathf.Max(LookAhead, v * 0.9f) : LookAhead;   // (further ahead when fast)
+        float lookAhead = _rider != null ? Mathf.Max(LookAhead, v * 0.9f) : Mathf.Max(LookAhead, 2.5f);   // (further ahead when fast; a walker 2.5 m, so it does not weave from point to point)
         while (_index + step >= 0 && _index + step < Path.Count && Flat(Path[_index] - p).magnitude < lookAhead) _index += step;
         bool end = _index + step < 0 || _index + step >= Path.Count;
         if (end && Flat(Path[_index] - p).magnitude < 1.5f)
@@ -60,8 +62,25 @@ public class ParticipantAutopilot : MonoBehaviour
         float err = Vector3.SignedAngle(Flat(transform.forward), to, Vector3.up);
         if (_walker != null)
         {
-            _walker.ExternalTurnRate = Mathf.Clamp(err * 2.5f, -100f, 100f);
-            _walker.ExternalMove = new Vector2(0f, Mathf.Abs(err) > 70f ? 0.2f : 1f);
+            // (turning as people do: eased in and out, at most 90°/s, walking on in an arc, slower in a sharp turn; it turned
+            // on the spot at 100°/s with the legs still walking)
+            // (and round the people ahead, as one does: someone within 2.2 m in front turns it aside, the nearer the more,
+            // and very near it slows; it walked straight into a boy in Boulder)
+            float aside = 0f, slow = 1f;
+            int n = Physics.OverlapSphereNonAlloc(p + Vector3.up, 2.2f, _people, ~0, QueryTriggerInteraction.Ignore);
+            for (int i = 0; i < n; i++)
+            {
+                var ped = _people[i].GetComponentInParent<AIPedestrian>();
+                if (ped == null || ped.transform == transform) continue;
+                var rel = Flat(ped.transform.position - p); float d = rel.magnitude;
+                if (d < 0.05f || Vector3.Dot(rel / d, Flat(transform.forward)) < 0.4f) continue;
+                float side = Vector3.SignedAngle(Flat(transform.forward), rel, Vector3.up) >= 0f ? -1f : 1f;
+                aside += side * 35f * (1f - d / 2.2f);
+                if (d < 1.0f) slow = Mathf.Min(slow, 0.5f);
+            }
+            _walkTurn = Mathf.Lerp(_walkTurn, Mathf.Clamp(err * 1.8f + aside * 2f, -90f, 90f), 1f - Mathf.Exp(-Time.fixedDeltaTime / 0.25f));
+            _walker.ExternalTurnRate = _walkTurn;
+            _walker.ExternalMove = new Vector2(0f, (Mathf.Abs(err) > 100f ? 0.4f : Mathf.Abs(err) > 45f ? 0.65f : 1f) * slow);
         }
         if (_rider != null)
         {

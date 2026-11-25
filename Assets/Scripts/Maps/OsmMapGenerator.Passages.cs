@@ -33,6 +33,9 @@ public partial class OsmMapGenerator
         {
             var hw = w.Tag("highway");
             if (hw == null || w.Tag("tunnel") != "building_passage" || w.Tag("area") == "yes") continue;
+            // (not one below ground: a ramp down into a car park under a tower in Ho Chi Minh City, layer -1, got walls at
+            // street level standing in the road, and a dog and a cyclist were held against them)
+            if (int.TryParse(w.Tag("layer"), out var layer) && layer < 0) continue;
             var line = Line(w);
             if (line.Count < 2 || !line.Any(Inside)) continue;
             bool car = CarRoads.Contains(hw);

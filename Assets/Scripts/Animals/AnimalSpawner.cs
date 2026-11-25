@@ -1,3 +1,4 @@
+using System.Linq;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -43,6 +44,11 @@ public class AnimalSpawner : MonoBehaviour, IExperimentModifier
 
     public void SetParameter(NetworkingManager.ExperimentParameter[] experimentParameters)
     {
+        // a city map without animalMix: the animals one meets in a city centre by day, 10 pigeons, 2 dogs and a cat (the
+        // CityMap experiment's own 20 pigeons, 4 dogs, 3 cats and a fox were more than a city centre has; a fox, a husky, a
+        // deer or a horse is for animalMix where one is seen)
+        if (OsmMap.Current != null && OsmMap.Current.Generator != null && !experimentParameters.Any(e => e.name.ToLower() == "animalmix"))
+            Animals = new[] { new Group { Species = AnimalSpecies.Pigeon, Count = 10 }, new Group { Species = AnimalSpecies.Dog, Count = 2 }, new Group { Species = AnimalSpecies.Cat, Count = 1 } };
         foreach (var p in experimentParameters)
         {
             if (p.name.ToLower() == "animals" && float.TryParse(p.value, NumberStyles.Float, CultureInfo.InvariantCulture, out var m)) _multiplier = Mathf.Max(0f, m);
