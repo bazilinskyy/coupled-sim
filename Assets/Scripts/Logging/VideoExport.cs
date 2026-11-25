@@ -408,6 +408,25 @@ public class VideoExport : MonoBehaviour
             F(A(be.x)), F(A(be.z)), F(body != null ? body.localPosition.y : 0f), F(cam.position.x), F(cam.position.y), F(cam.position.z), F(cam.eulerAngles.y), F(A(cam.eulerAngles.x))));
     }
 
+    /// <summary>A following camera kept in front of the walls, ceilings and roofs between it and the participant: moved in
+    /// along the line from <paramref name="pivot"/> (where it sits on the screen stays the same), as a crane's boom. In the
+    /// passage under Atlas on the TU/e campus the camera behind the rider was against the passage's wall.</summary>
+    static Vector3 Boom(Vector3 pivot, Vector3 cam)
+    {
+        var d = cam - pivot; float len = d.magnitude;
+        if (len < 1.6f) return cam;
+        d /= len;
+        float best = len;
+        foreach (var h in Physics.SphereCastAll(pivot, 0.3f, d, len, ~0, QueryTriggerInteraction.Ignore))
+        {
+            if (h.distance <= 0f || h.collider == null) continue;
+            var n = h.collider.name;
+            if (n.StartsWith("Building", StringComparison.Ordinal) || n.StartsWith("Roofs", StringComparison.Ordinal) || n == "Cornices")
+                best = Mathf.Min(best, h.distance);
+        }
+        return best < len ? pivot + d * Mathf.Max(best - 0.2f, 1.5f) : cam;
+    }
+
     void Place(Shot s)
     {
         var t = s.Cam.transform;
@@ -452,7 +471,7 @@ public class VideoExport : MonoBehaviour
             }
             if (s.Target == null) return;
             var yaw = Quaternion.Euler(0, s.Target.eulerAngles.y, 0);
-            var target = s.Target.position + yaw * new Vector3(G(0, 0), G(1, 1.6f), G(2, -5f));
+            var target = Boom(s.Target.position + Vector3.up * 1.2f, s.Target.position + yaw * new Vector3(G(0, 0), G(1, 1.6f), G(2, -5f)));
             var rot = yaw * Quaternion.Euler(G(4, 10), G(3, 0), 0);
             bool hold = G(6, 0f) > 0.5f;
             if (hold)
@@ -469,10 +488,11 @@ public class VideoExport : MonoBehaviour
             var r = s.Spec.Substring(4).Split(',');
             float G(int i, float d) => i < r.Length && float.TryParse(r[i], NumberStyles.Float, ci, out var x) ? x : d;
             var yaw = Quaternion.Euler(0, me.transform.eulerAngles.y, 0);
-            var target = me.transform.position + yaw * new Vector3(G(0, 0), G(1, 1.6f), G(2, -5f));
+            var pivot = me.transform.position + Vector3.up * 1.2f;
+            var target = Boom(pivot, me.transform.position + yaw * new Vector3(G(0, 0), G(1, 1.6f), G(2, -5f)));
             var rot = yaw * Quaternion.Euler(G(4, 10), G(3, 0), 0);
             if (s.Frames == 0) t.SetPositionAndRotation(target, rot);
-            else { float k = 1f - Mathf.Exp(-10f / Fps); t.SetPositionAndRotation(Vector3.Lerp(t.position, target, k), Quaternion.Slerp(t.rotation, rot, k)); }
+            else { float k = 1f - Mathf.Exp(-10f / Fps); t.SetPositionAndRotation(Boom(pivot, Vector3.Lerp(t.position, target, k)), Quaternion.Slerp(t.rotation, rot, k)); }
             s.Cam.fieldOfView = G(5, 60f);
             return;
         }
