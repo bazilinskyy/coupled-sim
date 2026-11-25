@@ -71,8 +71,30 @@ public partial class OsmMapGenerator
         go.AddComponent<MeshFilter>().sharedMesh = (palm ? _palmMeshes : _coniferMeshes)[Math.Abs(variant) % 3];
         var mr = go.AddComponent<MeshRenderer>();
         mr.sharedMaterials = palm ? new[] { _palmBarkMat, _frondMat } : new[] { _barkMat, _needleMat };
+        // its trunk solid (people and vehicles keep clear of it, as of the other trees), 0.25 m round, 3 m up
+        var trunk = go.AddComponent<CapsuleCollider>();
+        trunk.radius = 0.25f / height; trunk.height = 3f / height; trunk.center = new Vector3(0f, 1.5f / height, 0f);
+        // on paving, a pit of soil round its foot, 1.4 m across, as the street trees have (a pine stood straight out of the
+        // paving of a pedestrian street in Boulder)
+        bool onPaving = true;
+        if (Physics.Raycast(new Vector3(pos.x, pos.y + 20f, pos.z), Vector3.down, out var hit, 40f, ~0, QueryTriggerInteraction.Ignore))
+        {
+            var n = hit.collider.name;
+            onPaving = !(n.StartsWith("Green") || n.StartsWith("BGT green") || n.Contains("lawn") || n.Contains("grass") || n.StartsWith("Water"));
+        }
+        if (onPaving)
+        {
+            var pit = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            pit.name = "Tree pit";
+            UnityEngine.Object.DestroyImmediate(pit.GetComponent<Collider>());
+            pit.transform.SetParent(parent, false);
+            pit.transform.SetPositionAndRotation(new Vector3(pos.x, pos.y - 0.08f, pos.z), Quaternion.identity);
+            pit.transform.localScale = new Vector3(1.4f, 0.015f, 1.4f);
+            pit.GetComponent<MeshRenderer>().sharedMaterial = _pitMat ??= Mat("Tree pit", new Color(0.26f, 0.21f, 0.16f), 0.05f);
+        }
         return go;
     }
+    Material _pitMat;
 
     // ---- meshes (one unit tall; sub-mesh 0 the trunk, 1 the foliage)
 

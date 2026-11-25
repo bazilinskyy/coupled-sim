@@ -68,6 +68,8 @@ public class RiderIK : MonoBehaviour
     // ---- the motion read from the bicycle, smoothed
     Vector3 _lastPos; float _lastYaw, _lastCrank, _speed, _yawRate, _effort, _footDown, _standing, _drops, _stillFor;
     bool _haveLast, _footRight;
+    /// <summary>How long a look over the shoulder takes (s): turned in a third of it, held, turned back.</summary>
+    const float CheckSeconds = 1.3f;
     float _look, _checkUntil = -1f, _checkSide, _nextCheck, _lastCheck = -100f, _prevYawRate;
     System.Random _rng;
 
@@ -240,7 +242,8 @@ public class RiderIK : MonoBehaviour
             _drops = Mathf.MoveTowards(_drops, target, dt / 0.6f);
         }
         // looking into the bend ahead (where the bicycle will be in about a second)
-        _look = Mathf.Lerp(_look, Mathf.Clamp(_yawRate * 0.9f * Mathf.Rad2Deg, -40f, 40f), 1f - Mathf.Exp(-dt / 0.4f));
+        // (calmly: at most 25°, eased over 0.6 s; the head swung 40° into every bend and looked restless)
+        _look = Mathf.Lerp(_look, Mathf.Clamp(_yawRate * 0.6f * Mathf.Rad2Deg, -25f, 25f), 1f - Mathf.Exp(-dt / 0.6f));
         // a look over the shoulder: now and then while riding, and when a turn begins (to the side it turns to)
         float now = Time.time;
         if (_checkUntil < now && _speed > 2f && _footDown < 0.1f)
@@ -249,8 +252,10 @@ public class RiderIK : MonoBehaviour
             if (turnStarts || now > _nextCheck)
             {
                 _checkSide = turnStarts ? Mathf.Sign(_yawRate) : (_footRight ? 1f : -1f);
-                _checkUntil = now + 0.9f; _lastCheck = now;
-                _nextCheck = now + 15f + (float)_rng.NextDouble() * 30f;
+                _checkUntil = now + CheckSeconds; _lastCheck = now;
+                // (riding straight on, now and then: every 40-80 s; every 15-45 s with a quick 72° turn of the head
+                // looked nervous)
+                _nextCheck = now + 40f + (float)_rng.NextDouble() * 40f;
             }
         }
         _prevYawRate = _yawRate;
@@ -289,7 +294,7 @@ public class RiderIK : MonoBehaviour
         float pitch = TorsoPitchFor(hipLocal, gripMid, _torso, _arm, Mathf.Lerp(TorsoPitch, DropsTorsoPitch, drops));
         pitch += 8f * stand - 10f * down;
         // (sitting up a little for a look over the shoulder, more from low on the drops)
-        if (_checkUntil > time) { float t = 1f - (_checkUntil - time) / 0.9f; pitch -= Mathf.Lerp(4f, 10f, drops) * Smooth(Mathf.Min(t / 0.3f, (1f - t) / 0.3f)); }
+        if (_checkUntil > time) { float t = 1f - (_checkUntil - time) / CheckSeconds; pitch -= Mathf.Lerp(4f, 10f, drops) * Smooth(Mathf.Min(t / 0.3f, (1f - t) / 0.3f)); }
         // sway with the effort: the shoulders rock a little with each stroke (more standing, when the bicycle rocks
         // under the rider: the rider stays over it)
         float effort = Mathf.Clamp01(_effort);
@@ -368,13 +373,13 @@ public class RiderIK : MonoBehaviour
 
         // head: ahead along the road, 15-20 m ahead (a rider low on a road bike lifts the head to it rather than looking
         // at the front wheel), and into the bend; now and then over the shoulder: as riders do it, the head turned some
-        // 70° (55° low on the drops) with the shoulders taking part of it, briefly, and level (aimed 150° round with the
+        // 50° (45° low on the drops) with the shoulders taking part of it, over 1.3 s, and level (aimed 150° round with the
         // neck alone, the head twisted onto the shoulder)
         var eye = hips + bodyRot * (Vector3.up * _eyeAbove);
         var flatFwd = Vector3.ProjectOnPlane(fwd, Vector3.up).normalized;
         float yawLook = _look;
         float check = 0f;
-        if (_checkUntil > time) { float t = 1f - (_checkUntil - time) / 0.9f; check = Smooth(Mathf.Min(t / 0.3f, (1f - t) / 0.3f)); yawLook = Mathf.Lerp(yawLook, _checkSide * Mathf.Lerp(72f, 55f, drops), check); }
+        if (_checkUntil > time) { float t = 1f - (_checkUntil - time) / CheckSeconds; check = Smooth(Mathf.Min(t / 0.35f, (1f - t) / 0.35f)); yawLook = Mathf.Lerp(yawLook, _checkSide * Mathf.Lerp(50f, 45f, drops), check); }
         var lookDir = Quaternion.AngleAxis(yawLook, Vector3.up) * flatFwd;
         // (body: the shoulders turn with a look over the shoulder; head: most of the turn; clamp: no more than a neck
         // turns, the rest left out)

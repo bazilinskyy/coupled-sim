@@ -1099,6 +1099,10 @@ public partial class OsmMapGenerator
             }
             // (not at bridges: their ramps rise on purpose, and the decks run between their ends' ground)
             Terrain.SmoothRoads(profiles, bridges);
+            // (on a flat map, its roads' profiles smoothed, the ground's 2.5 m cells do not rise through the streets: the
+            // base ground 3 cm under them, not 15 cm; in Ghent the open paving between the streets lay 20 cm under them,
+            // and a pavement's piece stood over it like a slab with a shadow under it)
+            if (Area == null && Terrain.Max - Terrain.Min < 12f) Terrain.GroundDrop = 0.03f;
             // (a map with corridors: TerrainHeight.Apply keeps the ground under the nearest road's lower edge, so its 10 m
             // tiles do not cut through a motorway's surface on an embankment or in a cutting)
         }
@@ -1598,6 +1602,9 @@ public partial class OsmMapGenerator
                         }
                     }
                     if (sw == "no" || sw == "none" || sw == "separate") continue;
+                    // (not a leftover under 5 m between two junctions' cut-outs: a 3 m piece stood raised in the middle of the
+                    // open paving at a junction in Ghent, like a slab dropped on the street)
+                    if (Geometry2D.Length(piece) < 5f) continue;
                     foreach (var side in new[] { -1, 1 })
                     {
                         if ((sw == "left" && side > 0) || (sw == "right" && side < 0)) continue;
