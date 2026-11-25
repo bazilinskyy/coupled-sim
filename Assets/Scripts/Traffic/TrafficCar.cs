@@ -428,6 +428,7 @@ public class TrafficCar : MonoBehaviour
             var rbv = TryGetComponent<Rigidbody>(out var rb0) ? rb0.linearVelocity.magnitude : -1f;
             float off = LaneOffset() - LateralRight;   // (a cyclist: from its own place across the path)
             if (Mathf.Abs(off) > Mathf.Abs(_maxOff)) { _maxOff = off; _maxOffAt = transform.position; }
+            if (!IsRider && Speed > 1f) { LaneSamples++; if (Mathf.Abs(off) > 0.5f) LaneOff05++; if (Mathf.Abs(off) > 1f) LaneOff10++; }
             var line = $"t={Time.time:F2} prog={_tracker.ProgressDistance:F1} v={Speed:F1} rb={rbv:F1} pos=({transform.position.x:F1},{transform.position.z:F1}) off={off:F2} {LeaderDescription}";
             _history.Enqueue(line);
             while (_history.Count > 12) _history.Dequeue();
@@ -1262,6 +1263,8 @@ public class TrafficCar : MonoBehaviour
     }
     /// <summary>-debugTraffic: overtakes begun by the map's cyclists.</summary>
     public static int Overtakes;
+    /// <summary>-debugTraffic: samples (every 0.25 s) of the moving cars, and of those more than 0.5 m and 1 m off their lane.</summary>
+    public static int LaneSamples, LaneOff05, LaneOff10;
     /// <summary>Its smallest turning circle (as AICar.SteerPursuit steers it): about 4.7 m for a car, 8-9 m for a lorry or bus.</summary>
     float MinTurnRadius => Mathf.Clamp(0.6f * VehicleLength + 2f, 2.5f, 9f);
     float _rideBlockUntil;
@@ -1337,7 +1340,7 @@ public class TrafficCar : MonoBehaviour
         if (Time.time >= _nextReport)
         {
             _nextReport += 10f;
-            Debug.Log($"TrafficDebug: t={Time.time:F0} s, {_frames} frames, car-overlap frames {_overlapFrames}, yielding car-frames {_yieldFrames}, freed from obstacles {Freed}, stops kept clear of crossing lanes {KeptClear}, rings of waiting vehicles broken {RingsBroken}, steps slowed by the last check {GuardFrames}, deadlocks broken by backing up {Reversals}, overtakes by cyclists {Overtakes}, cyclists moved back near the participants {MapRouteRecycler.KeptNear}, moved on past something fixed {MapRouteRecycler.MovedOn}");
+            Debug.Log($"TrafficDebug: t={Time.time:F0} s, {_frames} frames, car-overlap frames {_overlapFrames}, yielding car-frames {_yieldFrames}, freed from obstacles {Freed}, stops kept clear of crossing lanes {KeptClear}, rings of waiting vehicles broken {RingsBroken}, steps slowed by the last check {GuardFrames}, deadlocks broken by backing up {Reversals}, overtakes by cyclists {Overtakes}, moving car samples {LaneSamples} ({LaneOff05} over 0.5 m and {LaneOff10} over 1 m off their lane), cyclists moved back near the participants {MapRouteRecycler.KeptNear}, moved on past something fixed {MapRouteRecycler.MovedOn}");
             // how high the vehicles stand on the ground under them (a two-wheeler's wheels sunk into the road: below 0)
             var heights = new List<(string kind, float h)>();
             string lowest = null; float lowestH = 0f;
