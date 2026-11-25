@@ -703,8 +703,8 @@ public static class TwoWheelerPrefabBuilder
                     ik.RightDrop = rig.RightDrop;
                     // (with the road posture's rounded back on top: the shoulders some 55° forward on the hoods, more on the
                     // drops, the elbows bent)
-                    ik.TorsoPitch = type == TwoWheelerType.RaceBike ? 40f : 15f;
-                    ik.DropsTorsoPitch = 52f;
+                    ik.TorsoPitch = type == TwoWheelerType.RaceBike ? 28f : 15f;
+                    ik.DropsTorsoPitch = 44f;
                     rider.transform.localPosition = hipTarget.localPosition - new Vector3(0, hipHeight, 0);
                     var grip = (rig.LeftGrip.position + rig.RightGrip.position) / 2f;
                     float pitch = RiderIK.TorsoPitchFor(hipTarget.localPosition, rig.Lean.InverseTransformPoint(grip), size.Torso, size.Arm, ik.TorsoPitch);

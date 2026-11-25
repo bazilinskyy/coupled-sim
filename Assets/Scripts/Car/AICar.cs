@@ -207,7 +207,14 @@ public class AICar : MonoBehaviour, IVehicle
         if (_tracker != null && _tracker.Circuit != null)
         {
             float vNow = Mathf.Max(0f, Vector3.Dot(theRigidbody.linearVelocity, transform.forward));
-            aim = _tracker.Circuit.GetRoutePoint(_tracker.ProgressDistance + 2.5f + 0.22f * vNow).position;
+            var ap = _tracker.Circuit.GetRoutePoint(_tracker.ProgressDistance + 2.5f + 0.22f * vNow);
+            aim = ap.position;
+            // (a cyclist of the map's traffic riding beside its route's line: its own place across the path, or overtaking)
+            if (_trafficCar != null && Mathf.Abs(_trafficCar.LateralRight) > 0.01f)
+            {
+                var ad = ap.direction; ad.y = 0f;
+                if (ad.sqrMagnitude > 1e-6f) aim += Vector3.Cross(Vector3.up, ad.normalized) * _trafficCar.LateralRight;
+            }
         }
         Vector3 local = transform.InverseTransformPoint(aim);
         float l2 = local.x * local.x + local.z * local.z;

@@ -338,6 +338,7 @@ public class TrafficCar : MonoBehaviour
         if (Model == null || _circuit == null) return;
         float dt = Time.fixedDeltaTime;
         Model.DesiredSpeed = Mathf.Min(LimitDesired(), CurveSpeed());
+        if (IsRider && RideLanes) UpdateRideLane(dt);
         var leader = FindLeader(out LeaderDescription);
         LeaderGap = leader.Present ? leader.Gap : float.PositiveInfinity;
         if (Speed > 0.3f) _stoppedSince = 0f; else if (_stoppedSince == 0f) _stoppedSince = Time.time;
@@ -383,7 +384,11 @@ public class TrafficCar : MonoBehaviour
         // (the other held by its last check, or standing over 4 s by its rules for this one in its path: two cars nose to
         // nose in a narrow street in London, one stopped by its check, the other by its rules for the first, stood 20 s)
         if (!IsRider && _reverseLeft <= 0f && Time.time >= _reverseAgain && _blocker != null && _blocker.TryGetComponent<TrafficCar>(out var other)
-            && other._blocker == transform && (other.HeldLong || other.WaitingLong) && (HeldLong || _narrowFor == other.transform)
+            && other._blocker == transform && (other.HeldLong || other.WaitingLong)
+            // (this one held by its check, or standing by its rules while the other, held by its check, has no room to back
+            // up: in Montreal a car turning across stood with its nose in another's lane, a cyclist waiting behind it, and the
+            // other, with the road clear behind it, never backed up; both stood 41 s)
+            && (HeldLong || _narrowFor == other.transform || (WaitingLong && other.HeldLong && other.ClearBehind() < 1f))
             && ClearBehind() >= 1f && (_narrowFor == other.transform || !other.HeldLong || _rank > other._rank || other.ClearBehind() < 1f))
         {
             _reverseLeft = 4f; _backFor = other.transform; Reversals++;
@@ -421,7 +426,7 @@ public class TrafficCar : MonoBehaviour
         {
             _nextHistory = Time.time + 0.25f;
             var rbv = TryGetComponent<Rigidbody>(out var rb0) ? rb0.linearVelocity.magnitude : -1f;
-            float off = LaneOffset();
+            float off = LaneOffset() - LateralRight;   // (a cyclist: from its own place across the path)
             if (Mathf.Abs(off) > Mathf.Abs(_maxOff)) { _maxOff = off; _maxOffAt = transform.position; }
             var line = $"t={Time.time:F2} prog={_tracker.ProgressDistance:F1} v={Speed:F1} rb={rbv:F1} pos=({transform.position.x:F1},{transform.position.z:F1}) off={off:F2} {LeaderDescription}";
             _history.Enqueue(line);
@@ -688,7 +693,7 @@ public class TrafficCar : MonoBehaviour
         float hl = (IsRider ? 1.8f : VehicleLength) / 2f, hw = IsRider ? 0.35f : VehicleWidth / 2f;
         var me = transform.position; var fwd0 = Flat(transform.forward).normalized;
         float start = _tracker.ProgressDistance;
-        var path0 = _circuit.GetRoutePoint(start).position;
+        var path0 = _circuit.GetRoutePoint(start).position + RideOffset(start);
         var offset = Flat(me - path0);
         // (the agents within reach)
         float near2 = (reach + hl + 6f) * (reach + hl + 6f);
@@ -712,7 +717,7 @@ public class TrafficCar : MonoBehaviour
         {
             var rp = _circuit.GetRoutePoint(start + sd);
             float k = Mathf.Clamp01(1f - sd / 6f);
-            var pos = rp.position + offset * k;
+            var pos = rp.position + RideOffset(start + sd) + offset * k;
             var dir = Flat(pos - prev); prev = pos;
             var f = dir.sqrMagnitude > 1e-6f ? dir.normalized : fwd0;
             f = Vector3.Slerp(fwd0, f, Mathf.Clamp01(sd / 3f)).normalized;
@@ -781,8 +786,8 @@ public class TrafficCar : MonoBehaviour
             // (every 0.5 m over the first 3 m, then every metre; a hit found to 1/8 m between the last clear sample and it)
             bool HitAt(float sd, out string fw)
             {
-                var pos = _circuit.GetRoutePoint(start + sd).position + offset * Mathf.Clamp01(1f - sd / 6f);
-                var back = _circuit.GetRoutePoint(start + Mathf.Max(0f, sd - 0.5f)).position + offset * Mathf.Clamp01(1f - Mathf.Max(0f, sd - 0.5f) / 6f);
+                var pos = _circuit.GetRoutePoint(start + sd).position + RideOffset(start + sd) + offset * Mathf.Clamp01(1f - sd / 6f);
+                var back = _circuit.GetRoutePoint(start + Mathf.Max(0f, sd - 0.5f)).position + RideOffset(start + Mathf.Max(0f, sd - 0.5f)) + offset * Mathf.Clamp01(1f - Mathf.Max(0f, sd - 0.5f) / 6f);
                 var dir = Flat(pos - back);
                 var f = dir.sqrMagnitude > 1e-6f ? dir.normalized : fwd0;
                 // (along the path, and over the first 2 m also straight on: a car slow in a tight turn cuts inside its path)
@@ -1019,6 +1024,7 @@ public class TrafficCar : MonoBehaviour
             var o = c.tc;
             if (o == null || o == this || o._circuit != _circuit || o._tracker == null) continue;
             if (Vector3.Dot(c.fwd, myFwd) < -0.3f) continue;   // (a route that comes back along the same street: oncoming, Conflict's)
+            if (IsRider && o.IsRider && Mathf.Abs(o.LateralRight - LateralRight) >= 0.8f) continue;   // (riding beside it, or past it)
             if (Flat2(c.pos - me) > (LookAhead + 10f) * (LookAhead + 10f)) continue;
             float os = o._tracker.ProgressDistance;
             float oS = os - Vector3.Dot(_circuit.GetRoutePoint(os).position - c.pos, c.fwd);
@@ -1049,7 +1055,7 @@ public class TrafficCar : MonoBehaviour
         float riderReach2 = (HalfWidth(transform) + 0.4f + 1.5f) * (HalfWidth(transform) + 0.4f + 1.5f);
         for (float d = step; d <= LookAhead; d += step)
         {
-            var p = _circuit.GetRoutePoint(start + d).position;
+            var p = _circuit.GetRoutePoint(start + d).position + RideOffset(start + d);
             var segFrom = prevP; prevP = p;
             // (in a bend tighter than this vehicle can turn, a lorry or a bus, it runs wide of its path by about the
             // difference of the radii: its body sweeps that much further out, and what stands there is in its way)
@@ -1171,6 +1177,91 @@ public class TrafficCar : MonoBehaviour
     readonly List<Vector3> _ahead = new List<Vector3>();
     float _stoppedSince;
     public bool IsRider => LaneHalfWidth < 1f;
+
+    // ---- riders: a place of their own across the path, and overtaking
+    /// <summary>The map's cyclists: each keeps a place of its own across the path (0-0.5 m in from its line along the
+    /// kerb) and overtakes a slower one ahead, 1.1 m out, where the path has room (a cycle path or cycle lane, the place
+    /// beside clear, no one coming the other way near): Dutch cyclists rode in single file, each on the same line, and
+    /// queued behind the slower ones.</summary>
+    public bool RideLanes;
+    /// <summary>How far (m) to the right of its route's line the rider rides now (to the left of it, negative).</summary>
+    public float LateralRight;
+    float _baseLateral, _lateralTarget, _overtakeUntil, _nextOvertakeCheck; Transform _overtaking; int _middleSign = -1;
+
+    public void InitRideLane(System.Random rng, bool leftHandTraffic)
+    {
+        RideLanes = true;
+        _middleSign = leftHandTraffic ? 1 : -1;   // (towards the middle of the path, away from the kerb)
+        _baseLateral = _middleSign * (float)rng.NextDouble() * 0.5f;
+        _lateralTarget = LateralRight = _baseLateral;
+    }
+
+    /// <summary>The rider's offset from its route's line at route distance s, in the world.</summary>
+    Vector3 RideOffset(float s)
+    {
+        if (!IsRider || Mathf.Abs(LateralRight) < 0.01f || _circuit == null) return Vector3.zero;
+        var d = _circuit.GetRoutePoint(s).direction; d.y = 0f;
+        return d.sqrMagnitude < 1e-6f ? Vector3.zero : Vector3.Cross(Vector3.up, d.normalized) * LateralRight;
+    }
+
+    Vector3 RidePoint(float s, float lateral)
+    {
+        var rp = _circuit.GetRoutePoint(s); var d = rp.direction; d.y = 0f;
+        return d.sqrMagnitude < 1e-6f ? rp.position : rp.position + Vector3.Cross(Vector3.up, d.normalized) * lateral;
+    }
+
+    void UpdateRideLane(float dt)
+    {
+        if (_circuit == null || _tracker == null) return;
+        float start = _tracker.ProgressDistance;
+        var me = transform.position; var fwd = Flat(transform.forward).normalized;
+        if (_overtaking != null)
+        {
+            // past it (2.5 m ahead of it), or it has gone, or 15 s: back to its own place
+            var rel = _overtaking != null ? Flat(_overtaking.position - me) : Vector3.zero;
+            if (_overtaking == null || !_overtaking.gameObject.activeInHierarchy || Vector3.Dot(rel, fwd) < -2.5f || Time.time > _overtakeUntil || rel.magnitude > 20f)
+            { _overtaking = null; _lateralTarget = _baseLateral; }
+        }
+        else if (Time.time >= _nextOvertakeCheck)
+        {
+            _nextOvertakeCheck = Time.time + 0.5f;
+            _lateralTarget = _baseLateral;
+            TrafficCar slow = null; float slowAt = float.MaxValue;
+            foreach (var c in _cars)
+            {
+                var o = c.tc;
+                if (o == null || o == this || !o.IsRider || o._circuit != _circuit || Vector3.Dot(c.fwd, fwd) < 0.5f) continue;
+                var rel = Flat(c.pos - me); float along = Vector3.Dot(rel, fwd);
+                if (along < 1.5f || along > 9f || Mathf.Abs(o.LateralRight - LateralRight) >= 0.8f) continue;
+                // (slower than this one wants to ride, and riding: not one stopped at a light or in a queue)
+                if (o.Speed < 1f || Model.DesiredSpeed < o.Speed + 0.8f) continue;
+                if (along < slowAt) { slowAt = along; slow = o; }
+            }
+            if (slow != null)
+            {
+                float target = slow.LateralRight + _middleSign * 1.1f;
+                bool room = true;
+                for (float a = 0f; a <= 10f && room; a += 2.5f)
+                {
+                    var q = RidePoint(start + a, target);
+                    if (MapTraffic.SeenGroundAt(q) != MapTraffic.Ground.Cycle) room = false;
+                    foreach (var c in _cars)
+                    {
+                        if (!room) break;
+                        if (c.t == transform || c.tc == slow) continue;
+                        // (someone there, or coming the other way within 20 m near that place)
+                        float r = Vector3.Dot(c.fwd, fwd) < -0.3f ? 1.4f : 1.0f;
+                        if (Flat2(c.pos - q) < r * r) room = false;
+                        else if (Vector3.Dot(c.fwd, fwd) < -0.3f && Flat2(c.pos - me) < 20f * 20f && Mathf.Abs(Vector3.Dot(Flat(c.pos - q), Vector3.Cross(Vector3.up, fwd))) < 1.3f) room = false;
+                    }
+                }
+                if (room) { _overtaking = slow.transform; _lateralTarget = target; _overtakeUntil = Time.time + 15f; Overtakes++; }
+            }
+        }
+        LateralRight = Mathf.MoveTowards(LateralRight, _lateralTarget, dt * 0.6f);
+    }
+    /// <summary>-debugTraffic: overtakes begun by the map's cyclists.</summary>
+    public static int Overtakes;
     /// <summary>Its smallest turning circle (as AICar.SteerPursuit steers it): about 4.7 m for a car, 8-9 m for a lorry or bus.</summary>
     float MinTurnRadius => Mathf.Clamp(0.6f * VehicleLength + 2f, 2.5f, 9f);
     float _rideBlockUntil;
@@ -1246,7 +1337,7 @@ public class TrafficCar : MonoBehaviour
         if (Time.time >= _nextReport)
         {
             _nextReport += 10f;
-            Debug.Log($"TrafficDebug: t={Time.time:F0} s, {_frames} frames, car-overlap frames {_overlapFrames}, yielding car-frames {_yieldFrames}, freed from obstacles {Freed}, stops kept clear of crossing lanes {KeptClear}, rings of waiting vehicles broken {RingsBroken}, steps slowed by the last check {GuardFrames}, deadlocks broken by backing up {Reversals}, cyclists moved back near the participants {MapRouteRecycler.KeptNear}, moved on past something fixed {MapRouteRecycler.MovedOn}");
+            Debug.Log($"TrafficDebug: t={Time.time:F0} s, {_frames} frames, car-overlap frames {_overlapFrames}, yielding car-frames {_yieldFrames}, freed from obstacles {Freed}, stops kept clear of crossing lanes {KeptClear}, rings of waiting vehicles broken {RingsBroken}, steps slowed by the last check {GuardFrames}, deadlocks broken by backing up {Reversals}, overtakes by cyclists {Overtakes}, cyclists moved back near the participants {MapRouteRecycler.KeptNear}, moved on past something fixed {MapRouteRecycler.MovedOn}");
             // how high the vehicles stand on the ground under them (a two-wheeler's wheels sunk into the road: below 0)
             var heights = new List<(string kind, float h)>();
             string lowest = null; float lowestH = 0f;
