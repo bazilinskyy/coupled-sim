@@ -39,6 +39,14 @@ public class OsmMap : MonoBehaviour
         return new Vector3((float)x, 0f, (float)z);
     }
 
+    /// <summary>The requested start (trial parameter start, -start) as a local point and its bearing as a direction (zero
+    /// without one); false without a requested start.</summary>
+    public bool RequestedStartPose(out Vector3 at, out Vector3 heading)
+    {
+        at = SpawnFocus(); heading = StartHeading();
+        return at != Vector3.zero;
+    }
+
     static float Distance2(System.Collections.Generic.List<Vector3> line, Vector3 p)
     {
         float best = float.MaxValue;
