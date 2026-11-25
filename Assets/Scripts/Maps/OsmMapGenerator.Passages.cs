@@ -33,9 +33,10 @@ public partial class OsmMapGenerator
         {
             var hw = w.Tag("highway");
             if (hw == null || w.Tag("tunnel") != "building_passage" || w.Tag("area") == "yes") continue;
-            // (not one below ground: a ramp down into a car park under a tower in Ho Chi Minh City, layer -1, got walls at
-            // street level standing in the road, and a dog and a cyclist were held against them)
-            if (int.TryParse(w.Tag("layer"), out var layer) && layer < 0) continue;
+            // (not a service road below ground: a car park's ramp or drive-through under a tower in Ho Chi Minh City, layer -1,
+            // got walls at street level standing in the road, and a dog and a cyclist were held against them; a street mapped
+            // below ground stays, as De Zaale under Atlas in Eindhoven, layer -1 along its whole length)
+            if (int.TryParse(w.Tag("layer"), out var layer) && layer < 0 && hw == "service") continue;
             var line = Line(w);
             if (line.Count < 2 || !line.Any(Inside)) continue;
             bool car = CarRoads.Contains(hw);
@@ -44,6 +45,18 @@ public partial class OsmMapGenerator
             float half = width / 2f + (car ? 0.6f : 0.3f);
             float maxHeight = ParseMetres(w.Tag("maxheight"), 0f);
             float top = maxHeight > 2f ? maxHeight + 0.3f : car ? 4.5f : 3.2f;
+            // (its real size where the landmarks give it: De Zaale under Atlas is 11 m wide, the carriageway and its pavements, and
+            // 4.2 m high, as the sign there says; by OpenStreetMap's estimate it was a 5 m tunnel the street ran into)
+            if (_passageSizes.TryGetValue(w.Id, out var size)) { half = size.width / 2f; top = size.clearance; }
+            // (an end inside a building runs on to its façade: De Zaale's ways under Atlas end short of the far façade, and the
+            // passage was closed there by a wall)
+            V2 Out(V2 end, V2 dir)
+            {
+                for (float k = 0.5f; k <= 30f && OsmBuildingAt(end + dir * k) != null; k += 0.5f) if (OsmBuildingAt(end + dir * (k + 0.5f)) == null) return end + dir * (k + 0.5f);
+                return end;
+            }
+            if (line.Count >= 2 && OsmBuildingAt(line[0]) != null) line[0] = Out(line[0], V2.Normalize(line[0] - line[1]));
+            if (line.Count >= 2 && OsmBuildingAt(line[line.Count - 1]) != null) line[line.Count - 1] = Out(line[line.Count - 1], V2.Normalize(line[line.Count - 1] - line[line.Count - 2]));
             _passageLines.Add((line, half, top));
             for (int i = 0; i + 1 < line.Count; i++)
             {
@@ -60,6 +73,19 @@ public partial class OsmMapGenerator
             }
         }
         if (_passageLines.Count > 0) Debug.Log($"OsmMap: {_passageLines.Count} building passages (streets, cycle paths and footways through buildings) opened");
+    }
+
+    /// <summary>Whether a point on the ground lies in one of the passages.</summary>
+    static bool InPassage(float x, float z)
+    {
+        foreach (var b in _passages)
+        {
+            if (x < b.Min.X || x > b.Max.X || z < b.Min.Y || z > b.Max.Y) continue;
+            var r = new V2(x, z) - b.A;
+            float along = V2.Dot(r, b.Dir), across = V2.Dot(r, b.Side);
+            if (along >= 0f && along <= b.Len && Math.Abs(across) <= b.HalfWidth) return true;
+        }
+        return false;
     }
 
     /// <summary>The mesh without what lies inside the passages (triangles cut at their walls and ceiling).</summary>
