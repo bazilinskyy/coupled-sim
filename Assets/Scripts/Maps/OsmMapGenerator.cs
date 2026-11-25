@@ -1767,6 +1767,7 @@ public partial class OsmMapGenerator
         PlaceSigns(root, roadWays);
         PlaceTrafficSignals(root, roadWays, marking);
 
+        LoadLandmarks();   // (before the passages: a landmark line can give a passage its real width and clearance)
         FindPassages();
         // buildings: real 3D models where available (3D BAG, the Netherlands), else OSM footprints extruded
         var buildingMbs = facades.Select(_ => new MeshBuilder()).ToArray();
@@ -1783,7 +1784,6 @@ public partial class OsmMapGenerator
             Mat("Roof tiles anthracite", Color.white, 0.3f, RoofTiles("roof_tiles_grey", new Color(0.2f, 0.21f, 0.22f))),
         };
         List<Bag3dBuildings.Building> bag = null;
-        LoadLandmarks();
         try { bag = Bag3dBuildings.Load(_map.Name ?? "", _proj); }
         catch (Exception e) { Debug.LogWarning("Bag3dBuildings: " + e.Message); }
         if (bag != null)
@@ -3677,6 +3677,9 @@ public partial class OsmMapGenerator
                 {
                     var p = Vector3.Lerp(a, c, len > 0 ? d / len : 0);
                     if (p.x < x0 || p.x > x1 || p.z < z0 || p.z > z1) continue;
+                    // (not a mapped passage through the building, cut through it by itself: De Zaale under Atlas lifted
+                    // the whole of Atlas onto a 5 m open ground floor)
+                    if (InPassage(p.x, p.z)) continue;
                     for (int t = 0; t + 2 < b.Roofs.Length; t += 3)
                         if (InTriangle(p, b.V[b.Roofs[t]], b.V[b.Roofs[t + 1]], b.V[b.Roofs[t + 2]])) { if (++hits >= 3) return true; break; }
                 }
