@@ -18,6 +18,7 @@ public class AIPedestrian : MonoBehaviour
     public float moveSpeed = 1.6f;
     public float animationBlendFactor = 1f;
     float currentBlendFactor = 1f;
+    static int _animLogs;
     public float HeightDampingFactor = 0.05f;
     public float SpeedDampingFactor = 0.05f;
     public Animator animator;
@@ -117,6 +118,8 @@ public class AIPedestrian : MonoBehaviour
         }
         return speed > 0.3f ? speed : 1.4f; // in-place clips: typical walking speed
     }
+
+    static Vector3 Flat(Vector3 v) { v.y = 0f; return v.sqrMagnitude > 1e-6f ? v.normalized : Vector3.forward; }
 
     static int StableHash(string s)
     {
@@ -288,6 +291,12 @@ public class AIPedestrian : MonoBehaviour
         animator.SetFloat("Speed", currentBlendFactor);
         // faster than the clip: play it faster instead of sliding
         animator.speed = MatchAnimationToSpeed && speed > reference ? Mathf.Min(2f, speed / reference) : 1f;
+        if (speed > 0.6f && _animLogs < 12 && Time.time > 5f && System.Array.IndexOf(CommandLine.Args, "-debugAnimation") >= 0)
+        {
+            _animLogs++;
+            var st = animator.GetCurrentAnimatorClipInfo(0);
+            Debug.Log($"AnimDebug: {name} speed {speed:F2} reference {reference:F2} (walk clip {WalkClipSpeed:F2}, human scale {(animator.isHuman ? animator.humanScale : -1f):F2}) blend {currentBlendFactor:F2} enabled {animator.enabled} culling {animator.cullingMode} visible {GetComponentInChildren<SkinnedMeshRenderer>()?.isVisible} clips {string.Join(",", System.Linq.Enumerable.Select(st, c => c.clip.name + ":" + c.weight.ToString("F2")))}");
+        }
 
         UpdateLookTarget(dt, desiredDir);
     }
@@ -298,8 +307,10 @@ public class AIPedestrian : MonoBehaviour
 
     void UpdateLookTarget(float dt, Vector3 desiredDir)
     {
-        var head = transform.position + Vector3.up * 1.6f;
-        Vector3 target = head + (desiredDir.sqrMagnitude > 1e-4f ? desiredDir.normalized : transform.forward) * 10f;
+        // (from its own eyes: a child's are lower)
+        var head = transform.position + Vector3.up * (1.6f * (animator != null && animator.isHuman ? Mathf.Clamp(animator.humanScale, 0.6f, 1.2f) : 1f));
+        var flatDir = desiredDir; flatDir.y = 0f;
+        Vector3 target = head + (flatDir.sqrMagnitude > 1e-4f ? flatDir.normalized : Flat(transform.forward)) * 10f;
         float weight = 0.3f;
         var phase = _crossingModel != null ? _crossingModel.Phase : CrossingPhase.Approaching;
         if (_crossing != null && (phase == CrossingPhase.Waiting || phase == CrossingPhase.Starting || phase == CrossingPhase.Crossing))
@@ -351,6 +362,10 @@ public class AIPedestrian : MonoBehaviour
             }
             if (Time.time < _glanceUntil && _glanceAt != Vector3.zero) { target = _glanceAt; weight = 0.6f; }
         }
+        // (never more than 15° up or 25° down from level: a boy beside a man walking past tipped his head back)
+        var toT = target - head; float flat = new Vector2(toT.x, toT.z).magnitude;
+        if (flat > 0.1f) toT.y = Mathf.Clamp(toT.y, -flat * 0.47f, flat * 0.27f);
+        target = head + toT;
         _lookTarget = Vector3.Lerp(_lookTarget == Vector3.zero ? target : _lookTarget, target, 1f - Mathf.Exp(-dt * 5f));
         _lookWeight = Mathf.Lerp(_lookWeight, weight, 1f - Mathf.Exp(-dt * 3f));
     }

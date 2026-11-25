@@ -97,7 +97,14 @@ public class AnimalAgent : MonoBehaviour
         float clipSpeed = Current == State.Walk ? WalkSpeed
             : Current == State.Run ? (Species == AnimalSpecies.Cat ? WalkSpeed : RunSpeed) : 0f;
         _animator.speed = clipSpeed > 0.05f ? Mathf.Clamp(_pace / clipSpeed, 0.35f, 2.8f) : 1f;
+        if (_pace > 0.3f && _animLogs < 12 && Time.time > 5f && System.Array.IndexOf(CommandLine.Args, "-debugAnimation") >= 0)
+        {
+            _animLogs++;
+            var st = _animator.GetCurrentAnimatorClipInfo(0);
+            Debug.Log($"AnimDebug: {name} {Current} pace {_pace:F2} clip speed {clipSpeed:F2} animator speed {_animator.speed:F2} enabled {_animator.enabled} controller {(_animator.runtimeAnimatorController != null ? _animator.runtimeAnimatorController.name : "none")} clips {string.Join(",", System.Linq.Enumerable.Select(st, c => c.clip.name + ":" + c.weight.ToString("F2")))}");
+        }
     }
+    static int _animLogs;
 
     /// <summary>
     /// The lowest point of the body on the ground in every pose (the model was set on the ground in its walk: standing,
