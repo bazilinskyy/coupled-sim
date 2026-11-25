@@ -595,6 +595,14 @@ public partial class OsmMapGenerator
             T.Add(i); T.Add(i + 1); T.Add(i + 2); T.Add(i); T.Add(i + 2); T.Add(i + 3);
         }
 
+        public void Tri(Vector3 a, Vector3 b, Vector3 c, Vector2 ua, Vector2 ub, Vector2 uc)
+        {
+            int i = V.Count;
+            V.Add(a); V.Add(b); V.Add(c);
+            UV.Add(ua); UV.Add(ub); UV.Add(uc);
+            T.Add(i); T.Add(i + 1); T.Add(i + 2);
+        }
+
         public void Strip(List<V2> left, List<V2> right, float y, float uvScale = 1f)
         {
             float along = 0;
@@ -1845,6 +1853,7 @@ public partial class OsmMapGenerator
         EmitLandmarkFacades(buildings);
         EmitPassages(buildings, bag);
         EmitLetters(buildings, bag);
+        EmitLandmarkDetails(buildings);
         if (Aerial != null)
         {
             // roofs in the photo's colours (tiles, gravel, solar panels, dormers); roofs over 35 m keep
@@ -3745,6 +3754,7 @@ public partial class OsmMapGenerator
             var osmB = OsmBuildingFor(b.V);
             var osmType = osmB?.Tag("building");
             var landmark = LandmarkFacade(osmB);
+            NoteLandmarkBuilding(osmB, b);   // (a landmark's crown, balcony or roof: its walls' line and top; a roof it replaces taken out)
             var style = StyleFor(b.Year, top, church ? "church" : osmType, (uint)(bi * 2246822519u));
             int kind = b.Year > 0 && b.Year < 1940 ? palette[pi % 3] : palette[pi];
             if (style == WindowStyle.Glass && kind < 3) kind = 3 + bi % 2;   // glass walls: plaster or concrete frames
