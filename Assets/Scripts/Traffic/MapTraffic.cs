@@ -1077,7 +1077,6 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         Debug.Log($"MapTraffic: autopilot at {AutopilotKmh} km/h{(AutopilotFixed ? "" : " in town, the speed limit on faster roads")} on {best.name} from {bestD:F0} m, at {start.position} (the participant was at {at})");
     }
 
-    /// <summary>Pedestrians walk along the nearest long pavement; riders follow the nearest lane route on its riding line (RideLine).</summary>
     /// <summary>The route from <paramref name="at"/> to destination=lat,lon (-destination) by the quickest way through the
     /// road network, with the distance along it nearest <paramref name="at"/>; null without a destination or a way there.</summary>
     WaypointCircuit RouteToDestination(Vector3 at, Vector3 fwd, out float startD, bool rider = false)
@@ -1125,6 +1124,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         return route;
     }
 
+    /// <summary>Pedestrians walk along the nearest long pavement; riders follow the route to their destination, else the nearest lane route, on its riding line (RideLine).</summary>
     void WalkOrRide(PlayerAvatar me)
     {
         var gen = OsmMap.Current.Generator;
