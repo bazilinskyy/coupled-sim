@@ -19,6 +19,9 @@ public partial class OsmMapGenerator
 
     static readonly List<PassageBox> _passages = new List<PassageBox>();
     readonly List<(List<V2> line, float halfWidth, float top)> _passageLines = new List<(List<V2>, float, float)>();
+    /// <summary>Streets through a building mapped below ground (layer below 0), which <see cref="Roads"/> leaves out: no
+    /// through traffic, but riders to a destination find their way along them (De Zaale under Atlas on the TU/e campus).</summary>
+    public readonly List<Road> PassageStreets = new List<Road>();
 
     /// <summary>The building passages on the map (road, cycle and foot passages).</summary>
     public int PassageCount => _passageLines.Count;
@@ -28,7 +31,15 @@ public partial class OsmMapGenerator
 
     void FindPassages()
     {
-        _passages.Clear(); _passageLines.Clear();
+        _passages.Clear(); _passageLines.Clear(); PassageStreets.Clear();
+        var passageEnds = new HashSet<long>();
+        void AddPassageStreet(OsmWay w, List<V2> line, string hw)
+        {
+            int ow = OneWayDir(w);
+            var street = line.Select(q => P(q, 0.02f)).ToList();
+            if (ow < 0) street.Reverse();
+            PassageStreets.Add(new Road { Line = street, Width = RoadWidth(w), Type = hw, OneWay = ow != 0, SpeedLimitKmh = RoadSpeedLimits.Default(hw), NoThroughTraffic = true, PavedOver = true });
+        }
         foreach (var w in _data.Ways)
         {
             var hw = w.Tag("highway");
@@ -40,6 +51,7 @@ public partial class OsmMapGenerator
             var line = Line(w);
             if (line.Count < 2 || !line.Any(Inside)) continue;
             bool car = CarRoads.Contains(hw);
+            if (car && layer < 0) { AddPassageStreet(w, line, hw); passageEnds.Add(w.NodeIds[0]); passageEnds.Add(w.NodeIds[w.NodeIds.Count - 1]); }
             float width = car ? RoadWidth(w) : Math.Max(IsCycleway(w) ? 2.5f : 2f, ParseMetres(w.Tag("width"), 0f));
             // (a little room beside the carriageway, as a passage has a kerb or a walkway along it)
             float half = width / 2f + (car ? 0.6f : 0.3f);
@@ -73,6 +85,29 @@ public partial class OsmMapGenerator
             }
         }
         if (_passageLines.Count > 0) Debug.Log($"OsmMap: {_passageLines.Count} building passages (streets, cycle paths and footways through buildings) opened");
+        // (the short pieces below ground at a passage's ends that are not tagged as one: De Zaale's 3-4 m at Atlas's façades)
+        foreach (var w in _data.Ways)
+        {
+            var hw = w.Tag("highway");
+            if (hw == null || !CarRoads.Contains(hw) || hw == "service" || w.Tag("tunnel") == "building_passage" || w.Tag("tunnel") == "yes" || w.NodeIds.Count < 2) continue;
+            if (!int.TryParse(w.Tag("layer"), out var layer) || layer >= 0) continue;
+            if (!passageEnds.Contains(w.NodeIds[0]) && !passageEnds.Contains(w.NodeIds[w.NodeIds.Count - 1])) continue;
+            var line = Line(w);
+            if (line.Count >= 2 && line.Any(Inside)) AddPassageStreet(w, line, hw);
+        }
+    }
+
+    /// <summary>Whether a point lies in a passage wider than <paramref name="half"/> (half its width).</summary>
+    static bool InWiderPassage(V2 q, float half)
+    {
+        foreach (var b in _passages)
+        {
+            if (b.HalfWidth <= half + 0.1f || q.X < b.Min.X || q.X > b.Max.X || q.Y < b.Min.Y || q.Y > b.Max.Y) continue;
+            var r = q - b.A;
+            float along = V2.Dot(r, b.Dir), across = V2.Dot(r, b.Side);
+            if (along >= 0f && along <= b.Len && Math.Abs(across) <= b.HalfWidth) return true;
+        }
+        return false;
     }
 
     /// <summary>Whether a point on the ground lies in one of the passages.</summary>
@@ -208,7 +243,10 @@ public partial class OsmMapGenerator
                 float? from = null;
                 for (float x = -PassageOverhang; x <= len + PassageOverhang + 1e-3f; x += 0.5f)
                 {
-                    bool inB = InBuilding(a + d * Mathf.Clamp(x, 0f, len));
+                    var pq = a + d * Mathf.Clamp(x, 0f, len);
+                    // (not where it runs inside a wider passage: a footway through Atlas crosses De Zaale's passage, and its
+                    // walls and its 3.2 m ceiling stood across the street)
+                    bool inB = InBuilding(pq) && !InWiderPassage(pq, half);
                     if (inB && from == null) from = x;
                     if ((!inB || x + 0.5f > len + PassageOverhang + 1e-3f) && from != null)
                     {
