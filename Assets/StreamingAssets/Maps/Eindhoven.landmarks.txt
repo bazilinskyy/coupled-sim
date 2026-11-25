@@ -1,5 +1,5 @@
 # Landmarks of the Eindhoven map (OsmMapGenerator.Landmarks.cs): façades the generic styles do not show, and lettering.
-# facade <OSM way id> curtainwall <panel width m> <floor height m> <glass rrggbb> <frame rrggbb> <share of blinds down>
+# facade <OSM way id> curtainwall <panel width m> <floor height m> <glass rrggbb> <frame rrggbb> <share of blinds down> [<wall rrggbb> <window share of a bay 0-1> <spandrel height m>]
 # roofletters <OSM way id> <text> <letter height m> <colour rrggbb> [city | bearing the letters face, degrees]
 # groundletters <lat> <lon> <text> <letter height m> <colour rrggbb> <bearing the letters face, degrees>
 
@@ -8,10 +8,30 @@
 facade 483163232 curtainwall 1.8 3.67 2B3640 CDD1D4 0.45
 # MetaForum (Ector Hoogstad Architecten 2012, in the old W-hal): a transparent glass façade in light steel frames
 facade 44755865 curtainwall 1.5 4.2 3A4A52 B9BEC2 0.1
-# Flux (2017): glass in dark frames
-facade 263943254 curtainwall 1.35 3.6 33443F 3A3D40 0.2
+# facade ... [<wall rrggbb> <window share of a bay> <spandrel height m>]: windows, ribbons or slots in a wall; the other TU/e
+# buildings as carla-digitaltwins' campus twin has them (TwinModel/tools/landmarks.py, from street photos)
+# Flux (2017): ribbon windows between silver aluminium spandrels
+facade 263943254 curtainwall 1.8 3.6 33443F B0B4B8 0.2 B0B4B8 1 1.1
+# Vertigo: pale green glass in dark frames
+facade 44772779 curtainwall 1.5 3.6 7FA394 2E3236 0.2 2E3236 1 0.45
+# Auditorium: board-marked concrete, tall windows in 3 m bays
+facade 107455966 curtainwall 3.0 4.2 3A4650 6E6A62 0.1 B8B2A4 0.45 1.4
+# Helix: sand-coloured concrete with narrow vertical slots
+facade 44755859 curtainwall 1.2 3.6 3A4650 8A8070 0.1 C8B898 0.25 0.6
+# Luna: white render with window bands
+facade 483163235 curtainwall 1.8 3.4 3A4650 D8D8D4 0.2 E8E6E0 1 1.2
+# Nexus: aluminium bands
+facade 44755861 curtainwall 1.8 3.6 34404A A8ACB0 0.2 A8ACB0 1 1.1
+# Gemini-Noord: charcoal cladding with windows
+facade 44755889 curtainwall 1.8 3.6 34404A 2E3034 0.2 3A3C40 0.6 1.2
+# Neuron: glazing under white precast elements, 4 m storeys
+facade 113957453 curtainwall 2.525 4.0 3A4A52 E6E4DE 0.15 E6E4DE 0.8 0.9
 
 # the TU/e logo (capital T and U, a slash, a lowercase e) in the house style's red on the roof of Vertigo, facing the
 # city centre and the station; and the red steel logo, 1.1 m high and 5 m long, on the field before the Auditorium
 roofletters 44772779 TU/e 4.5 C72125 city
 groundletters 51.44712 5.48478 TU/e 1.1 C72125 90
+
+# De Zaale through Atlas: an opening 11 m wide (the carriageway, 7 m, and 2 m pavements) and 4.2 m high ("Doorrijhoogte 4.20 m")
+passage 298831051 11 4.2
+passage 1371365412 11 4.2
