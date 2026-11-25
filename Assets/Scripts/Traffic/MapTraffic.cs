@@ -547,7 +547,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
     /// <summary>
     /// Pedestrians on the pavements (the map's pavement lines; not its crossings): each walks a stretch of pavement to its
     /// end and back, the stretch cut where the line meets a carriageway or a cycle path (no one steps into the traffic)
-    /// and kept 0.5 m clear of posts, trees, benches and walls (moved aside by up to 1 m, else cut there), at
+    /// and kept 0.65 m clear of posts, trees, benches and walls (0.5 m: walkers brushed benches and posts) (moved aside by up to 1 m, else cut there), at
     /// PedestriansPerKm on the stretches nearest the participants (up to MaxPedestrians, 4 m apart, out of the
     /// participants' way). The pedestrian avatars in everyday clothes (women, men, children), each with its age group's walking speed, gap acceptance and looks
     /// (AIPedestrian's behaviour models); one adult in six walks as an older person.
@@ -568,7 +568,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         bool Walkable(Vector3 q) { var g = SeenGround(q); return g != Ground.Road && g != Ground.Cycle && g != Ground.None; }
         bool Clear(Vector3 q)
         {
-            int n = Physics.OverlapCapsuleNonAlloc(q + Vector3.up * 0.6f, q + Vector3.up * 1.5f, 0.5f, _near, ~0, QueryTriggerInteraction.Ignore);
+            int n = Physics.OverlapCapsuleNonAlloc(q + Vector3.up * 0.6f, q + Vector3.up * 1.5f, 0.65f, _near, ~0, QueryTriggerInteraction.Ignore);
             for (int i = 0; i < n; i++)
             {
                 var c = _near[i];
