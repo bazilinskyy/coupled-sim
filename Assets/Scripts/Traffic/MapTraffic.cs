@@ -1143,6 +1143,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         {
             // (to a destination by the quickest way there, as a driver; else the nearest route pointing the rider's way)
             var bestR = RouteToDestination(at, fwd, out float bestD, rider: true); float bestScore = float.MaxValue;
+            bool toDestination = bestR != null;
             if (bestR == null)
             foreach (var r in Routes)
                 for (float d = 0; d < r.OpenLength - 100f; d += 4f)
@@ -1162,8 +1163,10 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
                 var tw = me.GetComponent<TwoWheelerController>();
                 bool moped = tw != null && tw.Type == CoupledSim.TwoWheelers.TwoWheelerType.Moped45;
                 bool racer = tw != null && tw.Type == CoupledSim.TwoWheelers.TwoWheelerType.RaceBike;
-                path = racer ? RideLine(bestR, bestD, Mathf.Max(bestD + 6f, bestR.OpenLength - 50f), 3f, OsmMap.Current.Info.LeftHandTraffic, false, RaceOnRoadUpToKmh, 1.0f)
-                    : RideLine(bestR, bestD, Mathf.Max(bestD + 6f, bestR.OpenLength - 50f), 3f, OsmMap.Current.Info.LeftHandTraffic, !moped);
+                // (to the destination itself; a traffic route's last 50 m left out, where it leaves the map)
+                float end = Mathf.Max(bestD + 6f, toDestination ? bestR.OpenLength - 1f : bestR.OpenLength - 50f);
+                path = racer ? RideLine(bestR, bestD, end, 3f, OsmMap.Current.Info.LeftHandTraffic, false, RaceOnRoadUpToKmh, 1.0f)
+                    : RideLine(bestR, bestD, end, 3f, OsmMap.Current.Info.LeftHandTraffic, !moped);
                 KeepRideClear(path, OsmMap.Current.Info.LeftHandTraffic);
                 if (Array.IndexOf(CommandLine.Args, "-debugTraffic") >= 0 && _signPosts != null)
                 {
