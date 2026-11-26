@@ -15,7 +15,7 @@ using V2 = System.Numerics.Vector2;
 public partial class OsmMapGenerator
 {
     /// <summary>A straight piece of a passage: from A along Dir for Len (m), HalfWidth to each side, up to Top.</summary>
-    struct PassageBox { public V2 A, Dir, Side; public float Len, HalfWidth, Top; public V2 Min, Max; }
+    struct PassageBox { public V2 A, Dir, Side; public float Len, HalfWidth, Top; public V2 Min, Max; public int Line; }
 
     static readonly List<PassageBox> _passages = new List<PassageBox>();
     readonly List<(List<V2> line, float halfWidth, float top)> _passageLines = new List<(List<V2>, float, float)>();
@@ -79,7 +79,7 @@ public partial class OsmMapGenerator
                 var c = new[] { a0 + s * half, a0 - s * half, a0 + d * l0 + s * half, a0 + d * l0 - s * half };
                 _passages.Add(new PassageBox
                 {
-                    A = a0, Dir = d, Side = s, Len = l0, HalfWidth = half, Top = top,
+                    A = a0, Dir = d, Side = s, Len = l0, HalfWidth = half, Top = top, Line = _passageLines.Count - 1,
                     Min = new V2(c.Min(q => q.X), c.Min(q => q.Y)), Max = new V2(c.Max(q => q.X), c.Max(q => q.Y)),
                 });
             }
@@ -97,17 +97,26 @@ public partial class OsmMapGenerator
         }
     }
 
-    /// <summary>Whether a point lies in a passage wider than <paramref name="half"/> (half its width).</summary>
-    static bool InWiderPassage(V2 q, float half)
+    /// <summary>
+    /// Where passages cross (a footway through Atlas crosses De Zaale's passage; the entrances' halls under its tower cross
+    /// De Zaale and a cycle path): what is left of one passage's lining at a point inside others. Its walls stand only above
+    /// the others' openings (from the highest of their ceilings up to its own: a lower passage's walls and ceiling stood
+    /// across the street in a higher one, and a higher one's walls left a hole above a lower one's ceiling); its ceiling
+    /// only where no other passage there is higher (or as high and wider, or as high and as wide and earlier: one ceiling).
+    /// </summary>
+    static (float floor, bool ceiling) PassageCover(V2 q, int own, float half, float top)
     {
+        float floor = -0.5f; bool ceiling = true;
         foreach (var b in _passages)
         {
-            if (b.HalfWidth <= half + 0.1f || q.X < b.Min.X || q.X > b.Max.X || q.Y < b.Min.Y || q.Y > b.Max.Y) continue;
+            if (b.Line == own || q.X < b.Min.X || q.X > b.Max.X || q.Y < b.Min.Y || q.Y > b.Max.Y) continue;
             var r = q - b.A;
             float along = V2.Dot(r, b.Dir), across = V2.Dot(r, b.Side);
-            if (along >= 0f && along <= b.Len && Math.Abs(across) <= b.HalfWidth) return true;
+            if (along < 0f || along > b.Len || Math.Abs(across) > b.HalfWidth) continue;
+            floor = Math.Max(floor, Math.Min(b.Top, top));
+            if (b.Top > top + 0.05f || (Math.Abs(b.Top - top) <= 0.05f && (b.HalfWidth > half + 0.05f || (Math.Abs(b.HalfWidth - half) <= 0.05f && b.Line < own)))) ceiling = false;
         }
-        return false;
+        return (floor, ceiling);
     }
 
     /// <summary>Whether a point on the ground lies in one of the passages.</summary>
@@ -232,37 +241,69 @@ public partial class OsmMapGenerator
                 if (q.X >= boxes[i].min.X && q.X <= boxes[i].max.X && q.Y >= boxes[i].min.Y && q.Y <= boxes[i].max.Y && Geometry2D.PointInPolygon(q, outlines[i])) return true;
             return false;
         }
-        var walls = new MeshBuilder(); var ceiling = new MeshBuilder();
-        foreach (var (line, half, top) in _passageLines)
+        var walls = new MeshBuilder(); var ceiling = new MeshBuilder(); var fronts = new MeshBuilder();
+        var frontMats = new Dictionary<Material, MeshBuilder>();
+        for (int li = 0; li < _passageLines.Count; li++)
+        {
+            var (line, half, top) = _passageLines[li];
             for (int i = 0; i + 1 < line.Count; i++)
             {
                 var a = line[i]; var b = line[i + 1]; float len = V2.Distance(a, b);
                 if (len < 0.05f) continue;
                 var d = (b - a) / len; var s = new V2(d.Y, -d.X);
-                // (the stretches of this piece inside a building, every 0.5 m, to the façades' line and a little beyond)
-                float? from = null;
+                // (along this piece every 0.5 m, to the façades' line and a little beyond: in a building or not, and how much
+                // of its lining is left where other passages cross it; each run of the same, to halfway to its neighbours)
+                var xs = new List<float>(); var state = new List<(bool inB, float floor, bool ceil)>();
                 for (float x = -PassageOverhang; x <= len + PassageOverhang + 1e-3f; x += 0.5f)
                 {
                     var pq = a + d * Mathf.Clamp(x, 0f, len);
-                    // (not where it runs inside a wider passage: a footway through Atlas crosses De Zaale's passage, and its
-                    // walls and its 3.2 m ceiling stood across the street)
-                    bool inB = InBuilding(pq) && !InWiderPassage(pq, half);
-                    if (inB && from == null) from = x;
-                    if ((!inB || x + 0.5f > len + PassageOverhang + 1e-3f) && from != null)
+                    var (floor, ceil) = PassageCover(pq, li, half, top);
+                    xs.Add(x); state.Add((InBuilding(pq), floor, ceil));
+                }
+                for (int k0 = 0; k0 < xs.Count;)
+                {
+                    int k1 = k0;
+                    while (k1 + 1 < xs.Count && state[k1 + 1] == state[k0]) k1++;
+                    var (inB, floor, ceil) = state[k0];
+                    if (inB)
                     {
-                        float x0 = Mathf.Max(-PassageOverhang, from.Value - 0.5f), x1 = Mathf.Min(len + PassageOverhang, x);
+                        float x0 = Mathf.Max(-PassageOverhang, xs[k0] - 0.25f), x1 = Mathf.Min(len + PassageOverhang, xs[k1] + 0.25f);
                         var p0 = a + d * x0; var p1 = a + d * x1;
                         var l0 = p0 + s * half; var l1 = p1 + s * half; var r0 = p0 - s * half; var r1 = p1 - s * half;
                         float u = x1 - x0;
                         // walls (the right one faces left into the passage, the left one right), and the ceiling facing down
-                        walls.Quad(P(l0, -0.5f), P(l1, -0.5f), P(l1, top), P(l0, top), new Vector2(0, -0.5f / 3f), new Vector2(u / 3f, -0.5f / 3f), new Vector2(u / 3f, top / 3f), new Vector2(0, top / 3f));
-                        walls.Quad(P(r1, -0.5f), P(r0, -0.5f), P(r0, top), P(r1, top), new Vector2(0, -0.5f / 3f), new Vector2(u / 3f, -0.5f / 3f), new Vector2(u / 3f, top / 3f), new Vector2(0, top / 3f));
-                        ceiling.Quad(P(l0, top), P(l1, top), P(r1, top), P(r0, top), new Vector2(0, 0), new Vector2(u / 3f, 0), new Vector2(u / 3f, 2f * half / 3f), new Vector2(0, 2f * half / 3f));
-                        from = null;
+                        if (floor < top - 0.05f)
+                        {
+                            walls.Quad(P(l0, floor), P(l1, floor), P(l1, top), P(l0, top), new Vector2(0, floor / 3f), new Vector2(u / 3f, floor / 3f), new Vector2(u / 3f, top / 3f), new Vector2(0, top / 3f));
+                            walls.Quad(P(r1, floor), P(r0, floor), P(r0, top), P(r1, top), new Vector2(0, floor / 3f), new Vector2(u / 3f, floor / 3f), new Vector2(u / 3f, top / 3f), new Vector2(0, top / 3f));
+                        }
+                        if (ceil) ceiling.Quad(P(l0, top), P(l1, top), P(r1, top), P(r0, top), new Vector2(0, 0), new Vector2(u / 3f, 0), new Vector2(u / 3f, 2f * half / 3f), new Vector2(0, 2f * half / 3f));
                     }
+                    k0 = k1 + 1;
                 }
             }
+            // an end inside a building (a footway mapped up to a door: Atlas's entrances under its tower) closed by a front
+            // across the passage, facing into it, in the building's landmark façade where it has one: through the open end
+            // one looked into the empty inside of the real building's block, and through its walls' backs out the far side
+            for (int e = 0; e < 2 && line.Count >= 2; e++)
+            {
+                var end = e == 0 ? line[0] : line[line.Count - 1];
+                var prev = e == 0 ? line[1] : line[line.Count - 2];
+                if (!InBuilding(end) || PassageCover(end, li, half, top).floor > -0.5f) continue;
+                var d = V2.Normalize(end - prev); var s = new V2(d.Y, -d.X);
+                var bw = OsmBuildingAt(end);
+                var mat = bw != null && _facadeStyles.TryGetValue(bw.Id, out var st) && st.Mat != null ? st.Mat : null;
+                MeshBuilder mb = fronts;
+                if (mat != null && !frontMats.TryGetValue(mat, out mb)) frontMats[mat] = mb = new MeshBuilder();
+                var l = end + s * half; var r = end - s * half;
+                float w = 2f * half;
+                // (facing back along the passage: seen from it, l is to the right)
+                mb.Quad(P(r, -0.5f), P(r, top), P(l, top), P(l, -0.5f), new Vector2(0, -0.5f / 3f), new Vector2(0, top / 3f), new Vector2(w / 3f, top / 3f), new Vector2(w / 3f, -0.5f / 3f));
+            }
+        }
         Emit(buildings, "Building passage walls", walls, Mat("Building passage walls", new Color(0.62f, 0.61f, 0.58f), 0.1f), true);
         Emit(buildings, "Building passage ceilings", ceiling, Mat("Building passage ceilings", new Color(0.48f, 0.48f, 0.47f), 0.05f), true);
+        Emit(buildings, "Building passage ends", fronts, Mat("Building passage walls", new Color(0.62f, 0.61f, 0.58f), 0.1f), true);
+        foreach (var (mat, mb) in frontMats) Emit(buildings, "Building passage ends " + mat.name, mb, mat, true);
     }
 }
