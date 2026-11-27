@@ -1823,7 +1823,9 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
     {
         // (a handlebar is 0.3 m to either side of the rider's middle, and the rider follows its line within some 0.3-0.4 m:
         // a post a metre from the line, other things 0.6 m)
-        const float Clearance = 0.6f, PostClearance = 1f;
+        // (and a metre from a building's wall: cyclists keep off house fronts, where doors open and people step out; in
+        // Ghent the rider rode half a metre from the façades)
+        const float Clearance = 0.6f, PostClearance = 1f, WallClearance = 1f;
         if (line.Count < 2) return;
         // (towards the kerb: to the right, to the left in left-hand traffic)
         var side = new List<Vector3>(line.Count);
@@ -1848,6 +1850,9 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
                 if (nm.StartsWith("Roads") || nm.StartsWith("Road ") || nm.StartsWith("BGT") || nm.StartsWith("Ground") || nm.StartsWith("Terrain") || nm.StartsWith("Zebra") || nm.StartsWith("Kerbs") || nm.StartsWith("Pavements") || nm.StartsWith("Cycle")) continue;
                 return true;
             }
+            n = Physics.OverlapCapsuleNonAlloc(p + Vector3.up * 0.4f, p + Vector3.up * 1.6f, WallClearance, _near, ~0, QueryTriggerInteraction.Ignore);
+            for (int i = 0; i < n; i++)
+                if (_near[i].attachedRigidbody == null && _near[i].name.StartsWith("Building", StringComparison.Ordinal)) return true;
             return false;
         }
         var shift = new float[line.Count];
