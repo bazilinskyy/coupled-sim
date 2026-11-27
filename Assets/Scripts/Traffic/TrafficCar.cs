@@ -591,6 +591,19 @@ public class TrafficCar : MonoBehaviour
     bool WaitingLong => _stoppedSince > 0f && Time.time - _stoppedSince > 4f;
     /// <summary>-debugTraffic: deadlocks broken by one vehicle backing up.</summary>
     public static int Reversals;
+    /// <summary>How long (s) it has stood in a standoff: waiting for a vehicle that waits for it, directly or through up to
+    /// eight others (0 when not).</summary>
+    public float StandoffFor => _stoppedSince > 0f && _blocker != null && _blocker.TryGetComponent<TrafficCar>(out var b) && WaitsFor(b, transform, out _) ? Time.time - _stoppedSince : 0f;
+    /// <summary>The vehicles of its standoff, itself included (empty when not in one).</summary>
+    public List<TrafficCar> Standoff()
+    {
+        var ring = new List<TrafficCar>();
+        if (StandoffFor <= 0f) return ring;
+        var t = this;
+        for (int i = 0; i < 9 && t != null && !ring.Contains(t); i++) { ring.Add(t); t = t._blocker != null && t._blocker.TryGetComponent<TrafficCar>(out var n) ? n : null; }
+        return ring;
+    }
+    public int Rank => _rank;
 
     /// <summary>How far (m, up to 5) this vehicle can back up straight before its body (0.15 m more at the sides, 0.3 m
     /// behind) touches another agent or something fixed.</summary>
@@ -1319,7 +1332,7 @@ public class TrafficCar : MonoBehaviour
         }
         Debug.Log($"TrafficDebug: participant t={Time.time:F1} at ({me.x:F1},{me.z:F1}) heading {Mathf.Atan2(fwd.x, fwd.z) * Mathf.Rad2Deg:F0} v={Speed:F1} off={LaneOffset():F2} {LeaderDescription}{sb}");
     }
-    static readonly bool DebugTraffic = System.Array.IndexOf(CommandLine.Args, "-debugTraffic") >= 0;
+    internal static readonly bool DebugTraffic = System.Array.IndexOf(CommandLine.Args, "-debugTraffic") >= 0;
     static readonly string DebugCar = System.Array.IndexOf(CommandLine.Args, "-debugCar") is var dci && dci >= 0 && dci + 1 < CommandLine.Args.Length ? CommandLine.Args[dci + 1] : null;
     static int _overlapFrames, _yieldFrames, _frames; static float _nextReport = 10f;
     static void DebugCount()
@@ -1351,7 +1364,7 @@ public class TrafficCar : MonoBehaviour
         if (Time.time >= _nextReport)
         {
             _nextReport += 10f;
-            Debug.Log($"TrafficDebug: t={Time.time:F0} s, {_frames} frames, car-overlap frames {_overlapFrames}, yielding car-frames {_yieldFrames}, freed from obstacles {Freed}, stops kept clear of crossing lanes {KeptClear}, rings of waiting vehicles broken {RingsBroken}, steps slowed by the last check {GuardFrames}, deadlocks broken by backing up {Reversals}, overtakes by cyclists {Overtakes}, moving car samples {LaneSamples} ({LaneOff05} over 0.5 m and {LaneOff10} over 1 m off their lane), lane points eased out of too tight bends {MapTraffic.BendsEased}, cyclists moved back near the participants {MapRouteRecycler.KeptNear}, moved on past something fixed {MapRouteRecycler.MovedOn}");
+            Debug.Log($"TrafficDebug: t={Time.time:F0} s, {_frames} frames, car-overlap frames {_overlapFrames}, yielding car-frames {_yieldFrames}, freed from obstacles {Freed}, stops kept clear of crossing lanes {KeptClear}, rings of waiting vehicles broken {RingsBroken}, steps slowed by the last check {GuardFrames}, deadlocks broken by backing up {Reversals}, overtakes by cyclists {Overtakes}, moving car samples {LaneSamples} ({LaneOff05} over 0.5 m and {LaneOff10} over 1 m off their lane), lane points eased out of too tight bends {MapTraffic.BendsEased}, cyclists moved back near the participants {MapRouteRecycler.KeptNear}, moved on past something fixed {MapRouteRecycler.MovedOn}, standoffs left out of sight {MapRouteRecycler.OtherWay}");
             // how high the vehicles stand on the ground under them (a two-wheeler's wheels sunk into the road: below 0)
             var heights = new List<(string kind, float h)>();
             string lowest = null; float lowestH = 0f;

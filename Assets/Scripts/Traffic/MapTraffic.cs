@@ -2132,6 +2132,8 @@ public class MapRouteRecycler : MonoBehaviour
         var c = _tracker.Circuit;
         float d = Mathf.Repeat(_tracker.ProgressDistance, c.Length);
         if (Recycle && Time.time >= _nextMoveOn && HeldByFixedFor() > 10f) { _nextMoveOn = Time.time + 5f; MoveOnPast(c, d); }
+        if (_tc == null) TryGetComponent(out _tc);
+        if (Recycle && Time.time >= _nextMoveOn && _tc != null && _tc.StandoffFor > 12f) { _nextMoveOn = Time.time + 3f; if (TakeAnotherWay(c)) return; }
         if (KeepNear && Recycle && Time.time >= _nextKeep)
         {
             _nextKeep = Time.time + UnityEngine.Random.Range(2f, 3f);
@@ -2140,19 +2142,51 @@ public class MapRouteRecycler : MonoBehaviour
         // at the end of its route (TrafficCar stops there; a circuit's closing piece back to the start, straight across the
         // map, is never driven)
         if (d < c.OpenLength - 15f || !Recycle) return;
+        Restart(c, false);
+    }
+
+    /// <summary>Standoffs left out of sight so far (-debugTraffic's summary).</summary>
+    public static int OtherWay;
+
+    /// <summary>
+    /// In a standoff for over 12 s (vehicles each waiting for the next, round to the first: two cars nose to nose in a narrow
+    /// street that backing up did not free, stood 29 s in London; cyclists each held by the next one's body at rush hour in
+    /// Eindhoven, 24 s), with no participant within 40 m: the one of them placed last that no participant is near goes
+    /// another way, as a driver who turns round does: it is moved to its route's start, out of sight, and the others go on.
+    /// </summary>
+    bool TakeAnotherWay(WaypointCircuit c)
+    {
+        var ring = _tc.Standoff();
+        TrafficCar go = null;
+        foreach (var t in ring)
+            if (t != null && t.GetComponent<MapRouteRecycler>() is MapRouteRecycler r && r.Recycle && NearestParticipant(t.transform.position, out _) >= 40f && (go == null || t.Rank > go.Rank))
+                go = t;
+        if (go != _tc) return false;
+        if (!Restart(c, true)) return false;
+        OtherWay++;
+        if (TrafficCar.DebugTraffic) Debug.Log($"TrafficDebug: {name} leaves a standoff of {ring.Count} out of sight: {string.Join(", ", ring.Select(t => t.name))}");
+        return true;
+    }
+
+    /// <summary>Moves it to its route's start, where its body stands clear and no other vehicle is near (and, when
+    /// <paramref name="unseen"/>, no participant within 40 m).</summary>
+    bool Restart(WaypointCircuit c, bool unseen)
+    {
         // (a start where its body stands clear of walls, posts and parked cars: a cyclist recycled to its route's start
         // was put into a building's front)
         float from = 4f;
         while (from < 40f && !StartClear(c.GetRoutePoint(from))) from += 3f;
-        if (from >= 40f) return;
+        if (from >= 40f) return false;
         var start = c.GetRoutePoint(from);
+        if (unseen && NearestParticipant(start.position, out _) < 40f) return false;
         foreach (var other in Physics.OverlapSphere(start.position, 12f, ~0, QueryTriggerInteraction.Ignore))
-            if (other.attachedRigidbody != null && other.attachedRigidbody != _rb && other.attachedRigidbody.GetComponent<AICar>() != null) return;
+            if (other.attachedRigidbody != null && other.attachedRigidbody != _rb && other.attachedRigidbody.GetComponent<AICar>() != null) return false;
         // (cars moved to a start in this physics step are not in the overlap test yet)
         _recent.RemoveAll(r => Time.time - r.time > 3f);
-        if (_recent.Exists(r => (r.pos - start.position).sqrMagnitude < 12f * 12f)) return;
+        if (_recent.Exists(r => (r.pos - start.position).sqrMagnitude < 12f * 12f)) return false;
         _recent.Add((start.position, Time.time));
         MoveTo(start, from);
+        return true;
     }
 
     TrafficCar _tc;
