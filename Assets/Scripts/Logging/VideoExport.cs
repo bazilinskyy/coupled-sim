@@ -66,7 +66,7 @@ public class VideoExport : MonoBehaviour
         return v;
     }
 
-    sealed class Shot { public string Name, Spec; public Camera Cam; public string Dir; public int Frames; public Camera[] Grid; public Transform Target; }
+    sealed class Shot { public string Name, Spec; public Camera Cam; public string Dir; public int Frames; public Camera[] Grid; public Transform Target; public float NextSearch; }
 
     IEnumerator Start_()
     {
@@ -467,6 +467,13 @@ public class VideoExport : MonoBehaviour
                 // (and the animals: "follow:Cat")
                 foreach (var a in AnimalAgent.All)
                     if (a != null && a.name.StartsWith(parts[1]) && (a.transform.position - from).sqrMagnitude < best) { best = (a.transform.position - from).sqrMagnitude; s.Target = a.transform; }
+                // (and, when no agent has that name, the map's other things: "follow:Parked car")
+                if (s.Target == null && Time.time >= s.NextSearch)
+                {
+                    s.NextSearch = Time.time + 2f;
+                    foreach (var tr in FindObjectsByType<Transform>())
+                        if (tr.name.StartsWith(parts[1]) && (tr.position - from).sqrMagnitude < best) { best = (tr.position - from).sqrMagnitude; s.Target = tr; }
+                }
                 if (s.Target != null) Debug.Log($"VideoExport: camera {s.Name} follows {s.Target.name}");
             }
             if (s.Target == null) return;
