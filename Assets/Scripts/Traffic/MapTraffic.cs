@@ -851,6 +851,9 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
             if (InParticipantsWay(rp.position, participants)) continue;
             if (VehicleAt(rp.position, rp.direction, 1.4f, 0.8f)) continue;
             if (AnimalAgent.All.Any(an => an != null && (an.transform.position - rp.position).sqrMagnitude < 3f * 3f)) continue;
+            // (its bicycle clear of what stands beside its line: placed on a bend of a campus path, a cyclist stood 15 s with its
+            // front wheel 15-30 cm into a hedge, in Eindhoven)
+            if (!RiderClear(rp.position, rp.direction)) continue;
             placed.Add(rp.position);
             if (used.Add(ride)) CycleRoutes.Add(ride);
             var pos = rp.position;
@@ -1589,6 +1592,25 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         return false;
     }
     static int _unclearedLogged;
+
+    /// <summary>Whether a rider's bicycle (1.8 by 0.7 m, 0.2 m to spare) placed at p heading along f stands clear of
+    /// anything fixed from 0.3 to 1.6 m above the ground (a hedge, a post, a wall; not the ground, a kerb or a vehicle).</summary>
+    static bool RiderClear(Vector3 p, Vector3 f)
+    {
+        f.y = 0f;
+        if (f.sqrMagnitude < 1e-6f) return true;
+        int n = Physics.OverlapBoxNonAlloc(p + Vector3.up * 0.95f, new Vector3(0.55f, 0.65f, 1.1f), _near, Quaternion.LookRotation(f, Vector3.up), ~0, QueryTriggerInteraction.Ignore);
+        for (int i = 0; i < n; i++)
+        {
+            var c = _near[i];
+            if (c.attachedRigidbody != null) continue;
+            var nm = c.name;
+            if (nm.StartsWith("Roads") || nm.StartsWith("Road ") || nm.StartsWith("BGT") || nm.StartsWith("Ground") || nm.StartsWith("Terrain") || nm.StartsWith("Zebra") || nm.StartsWith("Kerbs") || nm.StartsWith("Pavements") || nm.StartsWith("Cycle") || nm.StartsWith("Water")) continue;
+            if (c.bounds.max.y < p.y + 0.3f) continue;
+            return false;
+        }
+        return true;
+    }
 
     /// <summary>
     /// A car lane clear of what stands beside the road (trees, lamp and sign posts, building fronts, walls, parked cars):
