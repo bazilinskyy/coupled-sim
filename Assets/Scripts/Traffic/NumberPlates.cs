@@ -54,7 +54,7 @@ public static class NumberPlates
         foreach (var mf in car.GetComponentsInChildren<MeshFilter>())
         {
             var mesh = mf.sharedMesh; var r = mf.GetComponent<Renderer>();
-            if (mesh == null || r == null || !r.enabled || (!mesh.isReadable && !Application.isEditor)) continue;   // (in a build only the readable models)
+            if (mesh == null || r == null || !r.enabled || !mesh.isReadable) continue;   // (only readable models: in play mode, the editor too refuses the others' vertices, with an error for each)
             var v = mesh.vertices; var t = mesh.triangles;
             var m = toFrame * mf.transform.localToWorldMatrix;
             for (int i = 0; i + 2 < t.Length; i += 3)
