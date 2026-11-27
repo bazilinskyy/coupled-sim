@@ -93,7 +93,11 @@ public static class NumberPlates
         }
         float bestScore = float.MaxValue; Pose? found = null;
         float want = b.min.y + (rear ? 0.55f : 0.45f);
-        float cx = b.center.x;
+        // (the middle of this end of the body, not of the whole model, whose parts on one side shift it: a parked van's plate
+        // stood some 15-20 cm left of its tail's middle)
+        float xMin = float.MaxValue, xMax = float.MinValue;
+        foreach (var q in tris) { xMin = Mathf.Min(xMin, q.x); xMax = Mathf.Max(xMax, q.x); }
+        float cx = tris.Count > 0 ? (xMin + xMax) / 2f : b.center.x;
         for (float y = b.min.y + 0.3f; y <= Mathf.Min(b.min.y + 1.0f, b.max.y - 0.2f); y += 0.04f)
         {
             float m0 = Hit(cx, y);
