@@ -3627,7 +3627,12 @@ public partial class OsmMapGenerator
         }
         if (assets != null && assets.ParkedCars != null && assets.ParkedCars.Length > 0)
             foreach (var c in cars.OrderBy(c => c.p.Length()).Take(MaxParkedCars))
-            { _parkedCars.Add((Place(assets.ParkedCars[rng.Next(assets.ParkedCars.Length)], c.p, c.yaw, "Parked car"), c.yaw)); ParkedCarCount++; }
+            {
+                var prefab = assets.ParkedCars[rng.Next(assets.ParkedCars.Length)];
+                var car = Place(prefab, c.p, c.yaw, "Parked car");
+                _parkedCars.Add((car, c.yaw)); ParkedCarCount++;
+                NumberPlates.Fit(car, prefab.name, NumberPlates.For(_map.Country), new System.Random(ParkedCarCount * 7919 + 17), Quaternion.Euler(0f, c.yaw, 0f));
+            }
         if (assets != null && assets.ParkedBicycles != null && assets.ParkedBicycles.Length > 0)
             foreach (var b in bikes.OrderBy(b => b.p.Length()).Take(MaxParkedBicycles))
             { Place(assets.ParkedBicycles[rng.Next(assets.ParkedBicycles.Length)], b.p, b.yaw, "Parked bicycle"); ParkedBicycleCount++; }
