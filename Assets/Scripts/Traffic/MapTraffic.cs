@@ -551,6 +551,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
             var car = Spawn(p, false);
             car.GetComponent<WaypointProgressTracker>().SetProgress(d);
             car.name = $"Map traffic {route.name} {i}";
+            NumberPlates.Fit(car.gameObject, p.Car.name, NumberPlates.For(OsmMap.Current.Info.Country), new System.Random(Seed * 7919 + Cars.Count), car.transform.rotation);   // (its own draws: the traffic stays as it was)
             var traffic = car.gameObject.AddComponent<TrafficCar>();
             traffic.FitToBody();
             traffic.CentrePivot();
