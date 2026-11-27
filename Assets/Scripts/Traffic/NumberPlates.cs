@@ -25,7 +25,11 @@ public static class NumberPlates
     {
         if (car == null || country != "NL") return;
         var frame = Matrix4x4.TRS(car.transform.position, heading, Vector3.one);
-        if (!_spots.TryGetValue(model, out var spots)) _spots[model] = spots = (Find(car, frame, true), Find(car, frame, false));
+        if (!_spots.TryGetValue(model, out var spots))
+        {
+            _spots[model] = spots = (Find(car, frame, true, 0.03f) ?? Find(car, frame, true, 0.08f), Find(car, frame, false, 0.03f) ?? Find(car, frame, false, 0.08f));
+            Debug.Log($"NumberPlates: {model}: rear {(spots.rear.HasValue ? $"{spots.rear.Value.position.y:F2} m up" : "none")}, front {(spots.front.HasValue ? $"{spots.front.Value.position.y:F2} m up" : "none")}");
+        }
         string text = Registration(rng);
         if (spots.rear.HasValue) Add(car, frame, spots.rear.Value, text, "Number plate rear");
         if (spots.front.HasValue) Add(car, frame, spots.front.Value, text, "Number plate front");
@@ -46,7 +50,10 @@ public static class NumberPlates
     }
 
     /// <summary>The flattest upright stretch a plate wide at the car's back (or front), in the car's own space.</summary>
-    static Pose? Find(GameObject car, Matrix4x4 frame, bool rear)
+    /// <remarks>(flat: within <paramref name="flat"/> m over the plate; a curved nose or tail, flat within 8 cm, gets its
+    /// plate on the stretch's most proud point, standing off the body at its edges as on a bracket: a sports car's rounded
+    /// nose, flat nowhere within 3 cm, had no front plate)</remarks>
+    static Pose? Find(GameObject car, Matrix4x4 frame, bool rear, float flat)
     {
         var toFrame = frame.inverse;
         var tris = new List<Vector3>();
@@ -54,7 +61,7 @@ public static class NumberPlates
         foreach (var mf in car.GetComponentsInChildren<MeshFilter>())
         {
             var mesh = mf.sharedMesh; var r = mf.GetComponent<Renderer>();
-            if (mesh == null || r == null || !r.enabled || (!mesh.isReadable && !Application.isEditor)) continue;   // (in a build only the readable models)
+            if (mesh == null || r == null || !r.enabled || !mesh.isReadable) continue;   // (only readable models: in play mode, the editor too refuses the others' vertices, with an error for each)
             var v = mesh.vertices; var t = mesh.triangles;
             var m = toFrame * mf.transform.localToWorldMatrix;
             for (int i = 0; i + 2 < t.Length; i += 3)
@@ -86,26 +93,31 @@ public static class NumberPlates
         }
         float bestScore = float.MaxValue; Pose? found = null;
         float want = b.min.y + (rear ? 0.55f : 0.45f);
-        float cx = b.center.x;
+        // (the middle of this end of the body, not of the whole model, whose parts on one side shift it: a parked van's plate
+        // stood some 15-20 cm left of its tail's middle)
+        float xMin = float.MaxValue, xMax = float.MinValue;
+        foreach (var q in tris) { xMin = Mathf.Min(xMin, q.x); xMax = Mathf.Max(xMax, q.x); }
+        float cx = tris.Count > 0 ? (xMin + xMax) / 2f : b.center.x;
         for (float y = b.min.y + 0.3f; y <= Mathf.Min(b.min.y + 1.0f, b.max.y - 0.2f); y += 0.04f)
         {
             float m0 = Hit(cx, y);
             if (m0 > 3f) continue;
-            float spread = 0f;
+            float spread = 0f, nearest = m0;
             foreach (var (dx, dy) in new[] { (-PlateW / 2f, 0f), (PlateW / 2f, 0f), (0f, PlateH / 2f), (0f, -PlateH / 2f), (-PlateW / 2f, PlateH / 2f), (PlateW / 2f, -PlateH / 2f) })
             {
                 float h = Hit(cx + dx, y + dy);
                 if (h > 3f) { spread = float.MaxValue; break; }
                 spread = Mathf.Max(spread, Mathf.Abs(h - m0));
+                nearest = Mathf.Min(nearest, h);
             }
-            if (spread > 0.03f) continue;
+            if (spread > flat) continue;
             // (not set back deep in the body: the plate's place is on its back, within 0.35 m of its rearmost point)
             if (m0 - 1f > 0.35f) continue;
             float score = Mathf.Abs(y - want) + spread * 4f;
             if (score < bestScore)
             {
                 bestScore = score;
-                var at = new Vector3(cx, y, startZ + sign * (m0 - 0.008f));
+                var at = new Vector3(cx, y, startZ + sign * (nearest - 0.008f));
                 found = new Pose(at, Quaternion.LookRotation(new Vector3(0f, 0f, sign), Vector3.up));
             }
         }
