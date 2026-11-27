@@ -2179,6 +2179,10 @@ public class MapRouteRecycler : MonoBehaviour
         if (from >= 40f) return false;
         var start = c.GetRoutePoint(from);
         if (unseen && NearestParticipant(start.position, out _) < 40f) return false;
+        // (nor onto an animal or a person: a car put back at its route's start stood 3 s over a cat, in Eindhoven)
+        foreach (var a in AnimalAgent.All) { if (a == null) continue; var r = a.transform.position - start.position; r.y = 0f; if (r.sqrMagnitude < 5f * 5f) return false; }
+        foreach (var other in Physics.OverlapSphere(start.position, 5f, ~0, QueryTriggerInteraction.Ignore))
+            if (other.attachedRigidbody != null && other.attachedRigidbody != _rb && !other.transform.IsChildOf(transform)) return false;
         foreach (var other in Physics.OverlapSphere(start.position, 12f, ~0, QueryTriggerInteraction.Ignore))
             if (other.attachedRigidbody != null && other.attachedRigidbody != _rb && other.attachedRigidbody.GetComponent<AICar>() != null) return false;
         // (cars moved to a start in this physics step are not in the overlap test yet)
