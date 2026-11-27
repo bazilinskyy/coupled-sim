@@ -34,6 +34,8 @@ public partial class OsmMapGenerator
     readonly List<string[]> _letterLines = new List<string[]>();
     /// <summary>Passages' real sizes (landmark lines "passage &lt;way&gt; &lt;width m&gt; &lt;clearance m&gt;"): the whole opening's width.</summary>
     readonly Dictionary<long, (float width, float clearance)> _passageSizes = new Dictionary<long, (float, float)>();
+    /// <summary>Passages (by way id) standing on rows of columns along their sides: the column spacing (m).</summary>
+    readonly Dictionary<long, float> _passageColumns = new Dictionary<long, float>();
     /// <summary>The OSM building ways by 50 m cell, for finding which mapped building a real one is (its id, tags).</summary>
     Dictionary<(int, int), List<(OsmWay way, List<V2> poly)>> _osmBuildingCells;
     public int LandmarkFacades, LandmarkLetters;
@@ -62,7 +64,11 @@ public partial class OsmMapGenerator
                     _facadeStyles[long.Parse(f[1], ci)] = st;
                 }
                 else if ((f[0] == "roofletters" && f.Length >= 5) || (f[0] == "groundletters" && f.Length >= 7)) _letterLines.Add(f);
-                else if (f[0] == "passage" && f.Length >= 4) _passageSizes[long.Parse(f[1], ci)] = (float.Parse(f[2], ci), float.Parse(f[3], ci));
+                else if (f[0] == "passage" && f.Length >= 4)
+                {
+                    _passageSizes[long.Parse(f[1], ci)] = (float.Parse(f[2], ci), float.Parse(f[3], ci));
+                    if (f.Length >= 5) _passageColumns[long.Parse(f[1], ci)] = float.Parse(f[4], ci);
+                }
                 else if (ParseLandmarkDetail(f)) { }
                 else Debug.LogWarning($"OsmMap: landmarks: cannot read '{raw.Trim()}'");
             }

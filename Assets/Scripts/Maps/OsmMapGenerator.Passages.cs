@@ -19,6 +19,8 @@ public partial class OsmMapGenerator
 
     static readonly List<PassageBox> _passages = new List<PassageBox>();
     readonly List<(List<V2> line, float halfWidth, float top)> _passageLines = new List<(List<V2>, float, float)>();
+    /// <summary>The column spacing of the passages (by their index in _passageLines) that stand on columns.</summary>
+    readonly Dictionary<int, float> _passageLineColumns = new Dictionary<int, float>();
     /// <summary>Streets through a building mapped below ground (layer below 0), which <see cref="Roads"/> leaves out: no
     /// through traffic, but riders to a destination find their way along them (De Zaale under Atlas on the TU/e campus).</summary>
     public readonly List<Road> PassageStreets = new List<Road>();
@@ -31,7 +33,7 @@ public partial class OsmMapGenerator
 
     void FindPassages()
     {
-        _passages.Clear(); _passageLines.Clear(); PassageStreets.Clear();
+        _passages.Clear(); _passageLines.Clear(); _passageLineColumns.Clear(); PassageStreets.Clear();
         var passageEnds = new HashSet<long>();
         void AddPassageStreet(OsmWay w, List<V2> line, string hw)
         {
@@ -70,6 +72,7 @@ public partial class OsmMapGenerator
             if (line.Count >= 2 && OsmBuildingAt(line[0]) != null) line[0] = Out(line[0], V2.Normalize(line[0] - line[1]));
             if (line.Count >= 2 && OsmBuildingAt(line[line.Count - 1]) != null) line[line.Count - 1] = Out(line[line.Count - 1], V2.Normalize(line[line.Count - 1] - line[line.Count - 2]));
             _passageLines.Add((line, half, top));
+            if (_passageColumns.TryGetValue(w.Id, out var spacing) && spacing > 1f) _passageLineColumns[_passageLines.Count - 1] = spacing;
             for (int i = 0; i + 1 < line.Count; i++)
             {
                 var a = line[i]; var b = line[i + 1]; float len = V2.Distance(a, b);
@@ -241,7 +244,7 @@ public partial class OsmMapGenerator
                 if (q.X >= boxes[i].min.X && q.X <= boxes[i].max.X && q.Y >= boxes[i].min.Y && q.Y <= boxes[i].max.Y && Geometry2D.PointInPolygon(q, outlines[i])) return true;
             return false;
         }
-        var walls = new MeshBuilder(); var ceiling = new MeshBuilder(); var fronts = new MeshBuilder();
+        var walls = new MeshBuilder(); var ceiling = new MeshBuilder(); var fronts = new MeshBuilder(); var columnsMb = new MeshBuilder();
         var frontMats = new Dictionary<Material, MeshBuilder>();
         for (int li = 0; li < _passageLines.Count; li++)
         {
@@ -301,9 +304,60 @@ public partial class OsmMapGenerator
                 mb.Quad(P(r, -0.5f), P(r, top), P(l, top), P(l, -0.5f), new Vector2(0, -0.5f / 3f), new Vector2(0, top / 3f), new Vector2(w / 3f, top / 3f), new Vector2(w / 3f, -0.5f / 3f));
             }
         }
+        int columns = PassageColumns(columnsMb, InBuilding);
+        if (columns > 0) Debug.Log($"OsmMap: {columns} columns in building passages that stand on them");
+        Emit(buildings, "Building passage columns", columnsMb, Mat("Building passage columns", new Color(0.78f, 0.77f, 0.74f), 0.1f), true);
         Emit(buildings, "Building passage walls", walls, Mat("Building passage walls", new Color(0.62f, 0.61f, 0.58f), 0.1f), true);
         Emit(buildings, "Building passage ceilings", ceiling, Mat("Building passage ceilings", new Color(0.48f, 0.48f, 0.47f), 0.05f), true);
         Emit(buildings, "Building passage ends", fronts, Mat("Building passage walls", new Color(0.62f, 0.61f, 0.58f), 0.1f), true);
         foreach (var (mat, mb) in frontMats) Emit(buildings, "Building passage ends " + mat.name, mb, mat, true);
+    }
+
+    /// <summary>
+    /// The columns of the passages that stand on them (landmarks: a spacing after a passage's size; Atlas's tower stands on
+    /// columns 8 m high over its entrance halls): square, 0.8 m, in a row 1.2 m in from each side every spacing along the
+    /// passage, where it runs inside a building; none where another passage crosses it (De Zaale's carriageway and the cycle
+    /// path through the halls) nor within 5 m of an end inside the building (an entrance's stairs and door). Returns how many.
+    /// </summary>
+    int PassageColumns(MeshBuilder mb, Func<V2, bool> inBuilding)
+    {
+        const float Half = 0.4f, In = 1.2f, EndRoom = 5f;
+        int n = 0;
+        foreach (var (li, spacing) in _passageLineColumns)
+        {
+            var (line, half, top) = _passageLines[li];
+            if (half < In + Half + 1f) continue;
+            float total = 0f;
+            for (int i = 0; i + 1 < line.Count; i++) total += V2.Distance(line[i], line[i + 1]);
+            bool endIn0 = inBuilding(line[0]), endIn1 = inBuilding(line[line.Count - 1]);
+            float at = 0f;
+            for (int i = 0; i + 1 < line.Count; i++)
+            {
+                var a = line[i]; var b = line[i + 1]; float len = V2.Distance(a, b);
+                if (len < 0.05f) continue;
+                var d = (b - a) / len; var s = new V2(d.Y, -d.X);
+                // (columns at spacing/2, 3 spacing/2, ... along the whole line)
+                float first = Mathf.Ceil((at - spacing / 2f) / spacing) * spacing + spacing / 2f;
+                for (float x = first; x <= at + len; x += spacing)
+                {
+                    if ((endIn0 && x < EndRoom) || (endIn1 && x > total - EndRoom)) continue;
+                    var p = a + d * (x - at);
+                    foreach (float sgn in new[] { -1f, 1f })
+                    {
+                        var q = p + s * (sgn * (half - In));
+                        if (!inBuilding(q)) continue;
+                        // (its whole footprint clear of every other passage)
+                        bool crossed = false;
+                        foreach (var c in new[] { q + d * Half + s * Half, q + d * Half - s * Half, q - d * Half + s * Half, q - d * Half - s * Half })
+                            if (PassageCover(c, li, half, top).floor > -0.5f) { crossed = true; break; }
+                        if (crossed) continue;
+                        StandingBox(mb, q, d, s, Half, -Half, Half, -0.5f, top);
+                        n++;
+                    }
+                }
+                at += len;
+            }
+        }
+        return n;
     }
 }
