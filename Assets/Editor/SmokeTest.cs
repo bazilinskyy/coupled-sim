@@ -931,11 +931,15 @@ public static class SmokeTest
             foreach (var rb in go.GetComponentsInChildren<Rigidbody>(true)) rb.isKinematic = true;
             foreach (var n in new[] { "DriverModel&Rig", "PassengerModel" }) { var f = go.transform.Find(n); if (f != null) f.gameObject.SetActive(false); }
             OsmMapGenerator.LampsOff(go);   // (its indicators off: their script is gone)
-            // pedestrians standing (their walking controller is set by their AI script, which is gone)
+            // pedestrians with the map pedestrians' walk (a man's or a woman's motion capture, at a normal pace), held in
+            // mid-stride once placed (their AI script, which sets this on the map, is gone)
             foreach (var an in go.GetComponentsInChildren<Animator>(true))
                 if (name.StartsWith("ped:"))
                 {
-                    if (an.runtimeAnimatorController == null) an.runtimeAnimatorController = AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>("Assets/Prefabs/AIPedestrians/Pedestrian.controller");
+                    bool female = name.Contains("Female") || name.Contains("Claudia");
+                    var walk = Resources.Load<RuntimeAnimatorController>(female ? "Pedestrians/Walk_Female" : "Pedestrians/Walk_Male");
+                    if (walk != null) an.runtimeAnimatorController = walk;
+                    else if (an.runtimeAnimatorController == null) an.runtimeAnimatorController = AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>("Assets/Prefabs/AIPedestrians/Pedestrian.controller");
                     an.enabled = true; an.cullingMode = AnimatorCullingMode.AlwaysAnimate;
                 }
             if (drone)
@@ -944,6 +948,16 @@ public static class SmokeTest
                 foreach (var d in discs) d.enabled = true;   // spinning
             }
             go.transform.SetParent(null, false);
+            // (active now: each in another point of its step, the pose applied, then held)
+            if (name.StartsWith("ped:"))
+                foreach (var an in go.GetComponentsInChildren<Animator>())
+                    if (an.runtimeAnimatorController != null && an.runtimeAnimatorController.name.StartsWith("Walk_"))
+                    {
+                        an.SetFloat("WalkSpeed", name.Contains("Female") || name.Contains("Claudia") ? 1.16f : 1.0f);
+                        an.Play(0, 0, (placed.Count * 0.37f) % 1f);
+                        an.Update(0f);
+                        an.speed = 0f;
+                    }
             var lb = LocalBounds(go);
             Vector3 at;
             if (_lineupAngle <= 5f)

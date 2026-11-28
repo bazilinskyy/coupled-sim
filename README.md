@@ -903,6 +903,10 @@ Every decision is written to `ExperimentLogs/PedestrianDecisions-{date}.csv` (ti
 
 **How the map's pedestrians walk.** From motion capture: Microsoft Rocketbox's walks (MIT, in `Assets/ThirdParty/Rocketbox/Animations`), a man's or a woman's, blended from a slow through a normal to a fast walk by each person's actual speed, so the feet keep pace at every speed (outside that range the clips play slower or faster, never mixed with standing). Each person gets one of four normal walks (three neutral and a stroll), a step phase and a cadence of their own (within 6%), so people placed at the same moment do not walk in step. The controllers are built from the clips by `Tools` ➡️ `Coupled Sim` ➡️ `Build pedestrian walk controllers` (`RocketboxWalkControllers`) into `Assets/Resources/Pedestrians`.
 
+**The map's pedestrians.** Fourteen avatars walk the city maps: two children, five women and seven men, in everyday clothes (eleven of the twelve Microsoft Rocketbox avatars, all but the one in sportswear, and three scanned people: Claudia, Eric and a man in a blue suit). Each is given an age group (the children their own; one adult in six is an older person) and from it a walking speed (adults N(1.34, 0.26) m/s; children and older people slower), the gaps they accept and how long they wait (see the individual parameters above), and one of four normal walks with a step phase and cadence of their own. They are shown here mid-stride, as the line-up of the smoke test (`-smokeLineup ped:Female_Child_01,...`) parks them on Delft's Markt:
+
+![The fourteen pedestrians of the city maps mid-stride on the Markt in Delft: two children, five women, seven men](ReadmeFiles/pedestrians.jpg)
+
 **Example.** The `PedestrianCrossings` experiment (made with `Coupled Sim` ➡️ `Examples` ➡️ `Create PedestrianCrossings experiment`) adds eight of these pedestrians to `Base`, walking a loop that crosses the road south of the central block twice where the AV of the `Automated - Passenger` role drives. `ExperimentPedestrianTools` has the helpers it uses (create a path, a crossing, add a group of pedestrians to an experiment).
 
 #### AI cars
