@@ -10,6 +10,9 @@ along streets and the signs it derives from OSM tags. The first line is "# <cred
   python3 Tools/city_data.py Delft --layers signs
   python3 Tools/city_data.py --list
 
+Trees: the register's, and where it leaves trees out (a campus, gardens, company grounds) the crowns of Meta and WRI's
+canopy height map (Tools/canopy.py, needs numpy; --no-canopy for the register alone).
+
 Columns:
   trees: lat,lon,height,kind,species,crown    (height in m; kind deciduous|conifer|palm; crown: the crown's
                                                diameter in m where the register has it, else empty)
@@ -569,10 +572,72 @@ def write(name, layer, rows, credit):
     print("%s: %d %s -> %s" % (name, len(rows), layer, os.path.relpath(path, ROOT)))
 
 
+def building_index(name):
+    """The map's OSM building outlines as a point-in-building test (5 m grid of their boxes)."""
+    import xml.etree.ElementTree as ET
+    nodes, polys = {}, []
+    for _, el in ET.iterparse(gzip.open(os.path.join(MAPS, name + ".osm.gz"))):
+        if el.tag == "node": nodes[el.get("id")] = (float(el.get("lat")), float(el.get("lon")))
+        elif el.tag == "way":
+            if any(t.get("k") in ("building", "building:part") for t in el.findall("tag")):
+                ring = [nodes[n.get("ref")] for n in el.findall("nd") if n.get("ref") in nodes]
+                if len(ring) >= 4: polys.append(ring)
+            el.clear()
+    cell = 0.0001
+    grid = {}
+    for i, ring in enumerate(polys):
+        las = [p[0] for p in ring]; los = [p[1] for p in ring]
+        for a in range(int(min(las) / cell), int(max(las) / cell) + 1):
+            for b in range(int(min(los) / cell), int(max(los) / cell) + 1): grid.setdefault((a, b), []).append(i)
+    def inside(lat, lon):
+        for i in grid.get((int(lat / cell), int(lon / cell)), ()):
+            ring, c = polys[i], False
+            for k in range(len(ring)):
+                (y1, x1), (y2, x2) = ring[k - 1], ring[k]
+                if (y1 > lat) != (y2 > lat) and lon < x1 + (lat - y1) * (x2 - x1) / (y2 - y1): c = not c
+            if c: return True
+        return False
+    return inside
+
+
+def add_canopy_trees(name, bbox, rows, area, budget_mb):
+    """The canopy map's crowns where no tree is within 6 m (Tools/canopy.py), outside buildings and, on a map with
+    corridors, within 60 m of its area: the trees the register leaves out (a campus, gardens, company grounds)."""
+    import canopy, math
+    try:
+        g = canopy.grid(name, bbox, budget_mb)
+    except Exception as err:      # offline, no numpy, a broken service: the register's trees alone
+        print("  canopy: not read (%s)" % err); return rows, None
+    if g is None: return rows, None
+    in_building = building_index(name)
+    lat0 = (bbox[0] + bbox[2]) / 2; ky, kx = 111200.0, 111200.0 * math.cos(math.radians(lat0))
+    taken = {}
+    def cell(lat, lon): return (int(lat * ky / 6.0), int(lon * kx / 6.0))
+    def near(lat, lon):
+        a, b = cell(lat, lon)
+        for da in (-1, 0, 1):
+            for db in (-1, 0, 1):
+                for (la, lo) in taken.get((a + da, b + db), ()):
+                    if ((la - lat) * ky) ** 2 + ((lo - lon) * kx) ** 2 < 36.0: return True
+        return False
+    for r in rows: taken.setdefault(cell(r["lat"], r["lon"]), []).append((r["lat"], r["lon"]))
+    added = 0
+    for lat, lon, c in canopy.crowns(g, bbox):
+        if area is not None and not map_area.inside(area, lat, lon, 60.0): continue
+        if near(lat, lon) or in_building(lat, lon): continue
+        rows.append(dict(lat=lat, lon=lon, height=canopy.height(c), kind="deciduous", species="", crown=""))
+        taken.setdefault(cell(lat, lon), []).append((lat, lon))
+        added += 1
+    print("  canopy: %d trees added where no tree was within 6 m" % added)
+    return rows, canopy.CREDIT if added else None
+
+
 def main():
     a = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     a.add_argument("map", nargs="?")
     a.add_argument("--layers", default="trees,lamps,signs,surfaces")
+    a.add_argument("--no-canopy", action="store_true", help="trees: the register's alone, not the canopy map's crowns")
+    a.add_argument("--canopy-mb", type=float, default=400.0, help="trees: the most canopy data to read (MB)")
     a.add_argument("--list", action="store_true")
     a = a.parse_args()
     if a.list or not a.map:
@@ -581,6 +646,7 @@ def main():
     bbox = bounds(a.map, margin=0.001)
     # a map with corridors (Tools/map_area.py): fetched in tiles of 500 m that cover its area, kept within 60 m of it
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    global map_area
     import map_area
     area = map_area.read(a.map)
     done = 0
@@ -600,6 +666,9 @@ def main():
                     if not any(map_area.inside(area, lat, lon, 60.0) for lon, lat in pts[::max(1, len(pts) // 12)]): continue
                     seen.add(key); rows.append(r)
                 print("  %s: tile %d/%d, %d so far" % (layer, k + 1, len(tiles), len(rows)), flush=True)
+        if layer == "trees" and not a.no_canopy:
+            rows, extra = add_canopy_trees(a.map, bbox, rows, area, a.canopy_mb)
+            if extra: credit = credit + "; " + extra
         write(a.map, layer, rows, credit)
         done += 1
     if done == 0: sys.exit("no source for %s (see --list)" % a.map)

@@ -3177,7 +3177,9 @@ public partial class OsmMapGenerator
 
     /// <summary>The map's terrain (null: flat). Ground and ways get finer vertices so the lift follows it.</summary>
     public TerrainHeight Terrain { get; private set; }
-    const int MaxRealTrees = 4000;
+    // (8000: a register with the canopy map's crowns added (Tools/canopy.py) has some 27,000 trees in Eindhoven's corridors;
+    // the nearest the centre first, so the TU/e campus, 1.1 km out, has its trees)
+    const int MaxRealTrees = 8000;
 
     static readonly Dictionary<GameObject, float> _prefabHeights = new Dictionary<GameObject, float>();
 
