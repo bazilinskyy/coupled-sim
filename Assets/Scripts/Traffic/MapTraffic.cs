@@ -1477,7 +1477,9 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
             else if (name.StartsWith("Ground")) bare = true;
         }
         bool topography = OsmMap.Current != null && OsmMap.Current.Generator != null && OsmMap.Current.Generator.TopographyGround;
-        return g == MapTraffic.Ground.Pavement || g == MapTraffic.Ground.Green ? g : road ? MapTraffic.Ground.Road : bare && topography ? MapTraffic.Ground.Bare : g;
+        // (a road over OpenStreetMap's green, a park drawn under its roads, is still road: only a pavement drawn over it wins;
+        // read as green, pedestrians were placed in its lanes in Nairobi and Ho Chi Minh City and nothing kept them off it)
+        return g == MapTraffic.Ground.Pavement ? g : road ? MapTraffic.Ground.Road : g == MapTraffic.Ground.Green ? g : bare && topography ? MapTraffic.Ground.Bare : g;
         // ground one sees: not a vehicle, not an invisible driving surface, not a wall or pole
         static bool Seen(RaycastHit h) => h.collider.attachedRigidbody == null && h.normal.y >= 0.7f
             && !(h.collider.TryGetComponent<MeshRenderer>(out var mr) && !mr.enabled);

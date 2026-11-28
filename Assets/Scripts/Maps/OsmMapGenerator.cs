@@ -1616,9 +1616,14 @@ public partial class OsmMapGenerator
                     // (not a leftover under 5 m between two junctions' cut-outs: a 3 m piece stood raised in the middle of the
                     // open paving at a junction in Ghent, like a slab dropped on the street)
                     if (Geometry2D.Length(piece) < 5f) continue;
+                    bool untagged = w.Tag("sidewalk") == null && w.Tag("sidewalk:both") == null;
+                    var (mid, midDir) = Geometry2D.PointAt(piece, Geometry2D.Length(piece) / 2f);
                     foreach (var side in new[] { -1, 1 })
                     {
                         if ((sw == "left" && side > 0) || (sw == "right" && side < 0)) continue;
+                        // (one carriageway of a dual carriageway, untagged: no pavement on the side where the other one lies
+                        // within 4 m beyond it, the central reservation; people walked there between the two streams)
+                        if (untagged && OneWayDir(w) != 0 && InCarriageway(mid + new V2(midDir.Y, -midDir.X) * side * (width / 2 + 4f), 0f, 0f, out _)) continue;
                         Geometry2D.Strip(piece, 2.0f, side * (width / 2 + 1.0f), left, right);
                         if (bi == 0) OffCarriageways(left, right);
                         walks.Strip(left, right, PavementHeight, 1.5f);
