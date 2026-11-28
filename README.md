@@ -59,7 +59,7 @@ The simulator is open source and free to use. It is aimed at, but not limited to
 
 More pages in [`docs/`](docs): [Getting started, step by step](docs/getting-started.md), [Your first study](docs/first-study.md), [Traffic and crowds](docs/traffic-and-crowds.md), [Making clips like the README's](docs/readme-videos.md).
 
-**Note on the git history (November 2026):** the history was rewritten to keep only files that the simulator still uses, which cut a clone from 5.2 GB to 0.7 GB. Clones and forks made before then cannot be merged with the new history: clone the repository again. Older study branches and the full earlier history are kept in an archive repository; ask the maintainer for access.
+**Note on the git history (November 2026):** the history was rewritten twice. On 14 November it was cut to the files that the simulator still uses (a clone went from 5.2 GB to 0.7 GB). On 28 November the README's clips (mp4), which every re-render had added again, and old versions of large files that were since replaced (lightmaps, a height map, a texture atlas) were taken out: the clips are now in the [demo-videos release](https://github.com/bazilinskyy/coupled-sim/releases/tag/demo-videos), and a clone went from 3.7 GB to 0.9 GB. Clones and forks made before either date cannot be merged with the new history: clone the repository again. Older study branches and the full earlier history are kept in an archive repository; ask the maintainer for access.
 
 ## Citation
 If you use the coupled simulator for academic work, please cite:
