@@ -5,7 +5,8 @@ using UnityStandardAssets.Utility;
 public enum SpawnPointType
 {
     PlayerControlledPedestrian,
-    PlayerControlingCar,
+    // (the name is misspelt; kept, as code and scenes use it, and shown spelt right in the inspector)
+    [InspectorName("Player Controlling Car")] PlayerControlingCar,
     PlayerInAIControlledCar,
     // cyclist, e-scooter or moped rider: the prefab is ExperimentRoleDefinition.twoWheelerIdx in PlayerSystem's two-wheeler list
     PlayerRidingTwoWheeler,
