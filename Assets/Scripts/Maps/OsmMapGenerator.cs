@@ -1850,6 +1850,11 @@ public partial class OsmMapGenerator
         for (int i = 0; i < grounds.Length; i++)
             if (groundMbs[i].V.Count > 0) { var m = _groundMat(i); Emit(buildings, "Buildings " + m.name, groundMbs[i], m, true); }
         Emit(buildings, "Cornices", cornices, Mat("Cornice", new Color(0.72f, 0.7f, 0.66f), 0.15f), false);
+        if (_realColumns.V.Count > 0)
+        {
+            Emit(buildings, "Building columns (3D BAG)", _realColumns, Mat("Building columns", new Color(0.78f, 0.77f, 0.74f), 0.1f), true);
+            Debug.Log($"OsmMap: {RealColumns} real buildings are columns: plain concrete");
+        }
         EmitLandmarkFacades(buildings);
         EmitPassages(buildings, bag);
         EmitLetters(buildings, bag);
@@ -3753,6 +3758,18 @@ public partial class OsmMapGenerator
             int pi = (int)((uint)(bi * 2654435761u) % (uint)palette.Length);
             float top = 0f; float mx = 0f, mz = 0f; int nb = 0;
             foreach (var v in b.V) { top = Math.Max(top, v.y); if (v.y < 0.5f) { mx += v.x; mz += v.z; nb++; } }
+            // a column (a footprint under 3.5 m across, standing taller than a person: Atlas's tower stands on 2 m square
+            // columns 8 m high, each a building of its own in the 3D BAG): plain concrete, no windows, door or cornice (they
+            // came out as narrow towers with windows and a front door)
+            float cx0 = float.MaxValue, cx1 = float.MinValue, cz0 = float.MaxValue, cz1 = float.MinValue;
+            foreach (var v in b.V) if (v.y < 0.5f) { cx0 = Math.Min(cx0, v.x); cx1 = Math.Max(cx1, v.x); cz0 = Math.Min(cz0, v.z); cz1 = Math.Max(cz1, v.z); }
+            if (nb > 0 && cx1 - cx0 < 3.5f && cz1 - cz0 < 3.5f && top > 3f)
+            {
+                AddTriangles(_realColumns, b.V, b.Walls, true);
+                AddTriangles(flatRoofs, b.V, b.Roofs, false);
+                RealColumns++;
+                continue;
+            }
             bool church = nb > 0 && churches.Any(c => CoupledSim.Maps.Geometry2D.PointInPolygon(new System.Numerics.Vector2(mx / nb, mz / nb), c));
             if (church) churchCount++;
             // the mapped building here (OpenStreetMap): its use, and a landmark's own façade (Atlas' curtain wall)
@@ -3771,6 +3788,11 @@ public partial class OsmMapGenerator
             if (lowAmongTowers) { style = bi % 2 == 0 ? WindowStyle.Ribbon : WindowStyle.Glass; kind = 3 + bi % 2; downtownLow++; }
             var wall = landmark ?? facadeMbs[kind * Styles + (int)style];
             var verts = b.V;
+            // the walls of columns it stands on, where OpenStreetMap maps them as small building parts (Atlas's tower on
+            // two rows of 2 m columns at each end, which the 3D BAG models with the building): plain concrete, not the
+            // building's façade (a column came out as a narrow tower with curtain-wall windows and a front door)
+            var walls = ColumnWalls(b, out var columnWalls);
+            if (columnWalls != null) { AddTriangles(_realColumns, b.V, columnWalls, true); RealColumns++; }
             if (OverRoad(b))
             {
                 // over a car road (a station building, a passage): the road stays open under it, at
@@ -3787,7 +3809,7 @@ public partial class OsmMapGenerator
             var gsBase = GroundStyleFor(style, null);
             if (landmark == null && top > GroundFloorHeight + 1.5f && verts.Any(v => v.y < 0.5f))
             {
-                SplitWalls(verts, b.Walls, GroundFloorHeight, out var below, out var above);
+                SplitWalls(verts, walls, GroundFloorHeight, out var below, out var above);
                 foreach (var poly in below)
                 {
                     var c = poly.Aggregate(Vector3.zero, (acc, q) => acc + q) / poly.Length;
@@ -3796,8 +3818,8 @@ public partial class OsmMapGenerator
                 }
                 AddPolys(wall, above, true, 0f);
             }
-            else AddTriangles(wall, verts, b.Walls, true);
-            if (b.RoofKind != 1 && top > 6f && landmark == null) CorniceFromWalls(cornices, verts, b.Walls, top);
+            else AddTriangles(wall, verts, walls, true);
+            if (b.RoofKind != 1 && top > 6f && landmark == null) CorniceFromWalls(cornices, verts, walls, top);
             if (Aerial != null) AddRealRoof(verts, b.Roofs, wall, flatRoofs, bi);
             else AddTriangles(b.RoofKind == 1 ? tileRoofs[bi % 3 == 0 ? 1 : 0] : flatRoofs, verts, b.Roofs, false);
             BuildingCount++;
@@ -3806,6 +3828,61 @@ public partial class OsmMapGenerator
         if (downtownLow > 0) Debug.Log($"OsmMap: {downtownLow} low buildings among towers get shopfronts and modern windows");
     }
 
+
+    List<List<V2>> _columnParts;
+
+    /// <summary>A real building's walls without those of the columns OpenStreetMap maps under it (building:parts under
+    /// 3.5 m across, standing on the ground): those walls (wall triangles whose middle is within 0.6 m of such a part) in
+    /// columnWalls, null if there are none.</summary>
+    int[] ColumnWalls(Bag3dBuildings.Building b, out int[] columnWalls)
+    {
+        columnWalls = null;
+        if (_columnParts == null)
+        {
+            _columnParts = new List<List<V2>>();
+            foreach (var w in _data.Ways)
+            {
+                if (!w.IsClosed || w.Tag("building:part") == null || w.Tag("building") != null) continue;
+                if (ParseMetres(w.Tag("min_height"), 0f) > 0.5f || (w.Tag("building:min_level") ?? "0") != "0") continue;
+                var poly = Line(w);
+                if (poly.Count < 4) continue;
+                float sx = poly.Max(q => q.X) - poly.Min(q => q.X), sz = poly.Max(q => q.Y) - poly.Min(q => q.Y);
+                if (sx < 3.5f && sz < 3.5f) _columnParts.Add(poly);
+            }
+        }
+        if (_columnParts.Count == 0) return b.Walls;
+        float x0 = float.MaxValue, x1 = float.MinValue, z0 = float.MaxValue, z1 = float.MinValue;
+        foreach (var v in b.V) { x0 = Math.Min(x0, v.x); x1 = Math.Max(x1, v.x); z0 = Math.Min(z0, v.z); z1 = Math.Max(z1, v.z); }
+        var here = _columnParts.Where(c => c.Any(q => q.X > x0 - 1f && q.X < x1 + 1f && q.Y > z0 - 1f && q.Y < z1 + 1f)).ToList();
+        if (here.Count == 0) return b.Walls;
+        var keep = new List<int>(); var cols = new List<int>();
+        for (int i = 0; i + 2 < b.Walls.Length; i += 3)
+        {
+            var m = (b.V[b.Walls[i]] + b.V[b.Walls[i + 1]] + b.V[b.Walls[i + 2]]) / 3f;
+            var q = new V2(m.x, m.z);
+            bool col = here.Any(c => Geometry2D.PointInPolygon(q, c) || DistToRing(q, c) < 0.6f);
+            (col ? cols : keep).AddRange(new[] { b.Walls[i], b.Walls[i + 1], b.Walls[i + 2] });
+        }
+        if (cols.Count == 0) return b.Walls;
+        columnWalls = cols.ToArray();
+        return keep.ToArray();
+    }
+
+    static float DistToRing(V2 q, List<V2> c)
+    {
+        float best = float.MaxValue;
+        for (int i = 0; i + 1 < c.Count; i++)
+        {
+            var a = c[i]; var ab = c[i + 1] - a; float l2 = ab.LengthSquared();
+            float t = l2 > 1e-6f ? Math.Clamp(V2.Dot(q - a, ab) / l2, 0f, 1f) : 0f;
+            best = Math.Min(best, V2.Distance(q, a + ab * t));
+        }
+        return best;
+    }
+
+    /// <summary>Real buildings that are columns (see AddRealBuildings): plain concrete.</summary>
+    readonly MeshBuilder _realColumns = new MeshBuilder();
+    public int RealColumns;
 
     /// <summary>The pitched roofs of real buildings, one tile colour per building ([0] red, [1] anthracite): added to
     /// the tile roofs after the photo split, which would choose each triangle's colour on its own.</summary>

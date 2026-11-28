@@ -238,10 +238,31 @@ public partial class OsmMapGenerator
         if (_passageLines.Count == 0) return;
         var outlines = _data.Ways.Where(w => w.IsClosed && (w.Tag("building") != null || w.Tag("building:part") != null)).Select(Line).Where(p => p.Count >= 4).ToList();
         var boxes = outlines.Select(p => (min: new V2(p.Min(q => q.X), p.Min(q => q.Y)), max: new V2(p.Max(q => q.X), p.Max(q => q.Y)))).ToList();
+        // the real buildings near a passage (their roofs' triangles seen from above: their footprint), so a passage is
+        // lined wherever the real building stands over it too: under Atlas the 3D BAG's block reaches past OpenStreetMap's
+        // outline, and through the unlined part one saw into the cut-open building and the sky
+        var near = new List<Bag3dBuildings.Building>();
+        if (bag != null)
+            foreach (var bb in bag)
+            {
+                float x0 = float.MaxValue, x1 = float.MinValue, z0 = float.MaxValue, z1 = float.MinValue;
+                foreach (var v in bb.V) { x0 = Math.Min(x0, v.x); x1 = Math.Max(x1, v.x); z0 = Math.Min(z0, v.z); z1 = Math.Max(z1, v.z); }
+                bool close = false;
+                foreach (var (pl, ph, _) in _passageLines)
+                {
+                    foreach (var q in pl) if (q.X > x0 - ph - 10f && q.X < x1 + ph + 10f && q.Y > z0 - ph - 10f && q.Y < z1 + ph + 10f) { close = true; break; }
+                    if (close) break;
+                }
+                if (close) near.Add(bb);
+            }
         bool InBuilding(V2 q)
         {
             for (int i = 0; i < outlines.Count; i++)
                 if (q.X >= boxes[i].min.X && q.X <= boxes[i].max.X && q.Y >= boxes[i].min.Y && q.Y <= boxes[i].max.Y && Geometry2D.PointInPolygon(q, outlines[i])) return true;
+            var p3 = new Vector3(q.X, 0f, q.Y);
+            foreach (var bb in near)
+                for (int t = 0; t + 2 < bb.Roofs.Length; t += 3)
+                    if (InTriangle(p3, bb.V[bb.Roofs[t]], bb.V[bb.Roofs[t + 1]], bb.V[bb.Roofs[t + 2]])) return true;
             return false;
         }
         var walls = new MeshBuilder(); var ceiling = new MeshBuilder(); var fronts = new MeshBuilder(); var columnsMb = new MeshBuilder();
@@ -281,6 +302,19 @@ public partial class OsmMapGenerator
                             walls.Quad(P(r1, floor), P(r0, floor), P(r0, top), P(r1, top), new Vector2(0, floor / 3f), new Vector2(u / 3f, floor / 3f), new Vector2(u / 3f, top / 3f), new Vector2(0, top / 3f));
                         }
                         if (ceil) ceiling.Quad(P(l0, top), P(l1, top), P(r1, top), P(r0, top), new Vector2(0, 0), new Vector2(u / 3f, 0), new Vector2(u / 3f, 2f * half / 3f), new Vector2(0, 2f * half / 3f));
+                        // a lintel over each open end (the façade's line), from the ceiling 2 m up into the building, both
+                        // ways: a building over a road stands on its underside at 5 m, a passage's ceiling is lower (De Zaale
+                        // under Atlas: 4.2 m), and through the slit between them one saw the sky from inside
+                        if (ceil)
+                            for (int end = 0; end < 2; end++)
+                            {
+                                bool open = end == 0 ? k0 == 0 || !state[k0 - 1].inB : k1 == xs.Count - 1 || !state[k1 + 1].inB;
+                                if (!open) continue;
+                                var pl = end == 0 ? l0 : l1; var pr = end == 0 ? r0 : r1;
+                                float lh = top + 2f;
+                                walls.Quad(P(pl, top), P(pr, top), P(pr, lh), P(pl, lh), new Vector2(0, top / 3f), new Vector2(2f * half / 3f, top / 3f), new Vector2(2f * half / 3f, lh / 3f), new Vector2(0, lh / 3f));
+                                walls.Quad(P(pr, top), P(pl, top), P(pl, lh), P(pr, lh), new Vector2(0, top / 3f), new Vector2(2f * half / 3f, top / 3f), new Vector2(2f * half / 3f, lh / 3f), new Vector2(0, lh / 3f));
+                            }
                     }
                     k0 = k1 + 1;
                 }
