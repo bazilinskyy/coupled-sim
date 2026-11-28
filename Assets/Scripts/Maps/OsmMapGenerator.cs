@@ -3900,10 +3900,24 @@ public partial class OsmMapGenerator
             if (landmark == null && top > GroundFloorHeight + 1.5f && verts.Any(v => v.y < 0.5f))
             {
                 SplitWalls(verts, walls, GroundFloorHeight, out var below, out var above);
+                // one style per wall plane, not per piece: the two triangles of a wall lay either side of a shop's 6 m reach
+                // and the shop front ended in a diagonal across the wall (on Delft's Markt)
+                (int, int, int) Plane(Vector3[] poly)
+                {
+                    var n = poly.Length >= 3 ? Vector3.Cross(poly[1] - poly[0], poly[2] - poly[0]) : Vector3.forward; n.y = 0f;
+                    n = n.sqrMagnitude > 1e-8f ? n.normalized : Vector3.forward;
+                    return (Mathf.RoundToInt(n.x * 20f), Mathf.RoundToInt(n.z * 20f), Mathf.RoundToInt(Vector3.Dot(n, poly[0]) * 2f));
+                }
+                var shopPlane = new HashSet<(int, int, int)>();
+                if (!church)
+                    foreach (var poly in below)
+                    {
+                        var c = poly.Aggregate(Vector3.zero, (acc, q) => acc + q) / poly.Length;
+                        if (lowAmongTowers || NearShop(new V2(c.x, c.z), shopPoints)) shopPlane.Add(Plane(poly));
+                    }
                 foreach (var poly in below)
                 {
-                    var c = poly.Aggregate(Vector3.zero, (acc, q) => acc + q) / poly.Length;
-                    var gs = !church && (lowAmongTowers || NearShop(new V2(c.x, c.z), shopPoints)) ? GroundStyle.Shop : gsBase;
+                    var gs = shopPlane.Contains(Plane(poly)) ? GroundStyle.Shop : gsBase;
                     AddPolys(groundMbs[kind * GroundStyleCount + (int)gs], new List<Vector3[]> { poly }, true, GroundFloorHeight);
                 }
                 AddPolys(wall, above, true, 0f);
