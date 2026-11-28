@@ -598,6 +598,7 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
         if (players.Count == 0) players.Add(Vector3.zero);
         float Near(Vector3 q) => NearParticipants(q, players);
         bool Walkable(Vector3 q) { var g = SeenGround(q); return g != Ground.Road && g != Ground.Cycle && g != Ground.None; }
+        bool Paved(Vector3 q) { var g = SeenGround(q); return g == Ground.Pavement || g == Ground.Paving; }
         bool Clear(Vector3 q)
         {
             int n = Physics.OverlapCapsuleNonAlloc(q + Vector3.up * 0.6f, q + Vector3.up * 1.5f, 0.65f, _near, ~0, QueryTriggerInteraction.Ignore);
@@ -633,11 +634,20 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
                     var q = Vector3.Lerp(a, b, d / Mathf.Max(len, 1e-3f));
                     if (Physics.Raycast(q + Vector3.up * 3f, Vector3.down, out var hit, 6f, ~0, QueryTriggerInteraction.Ignore)) q.y = hit.point.y;
                     Vector3? ok = null;
-                    foreach (float off in new[] { 0f, 0.25f, -0.25f, 0.5f, -0.5f, 0.75f, -0.75f, 1f, -1f })
+                    // (on paving first, up to 1.5 m aside: a footway mapped a metre beside the drawn path had its
+                    // pedestrians walk along the grass verge; on grass only where nothing paved is near, as on a park path)
+                    foreach (float off in Offsets)
                     {
                         var t = q + side * off;
-                        if (Walkable(t) && Clear(t)) { ok = t; break; }
+                        if (Paved(t) && Clear(t)) { ok = t; break; }
                     }
+                    if (!ok.HasValue)
+                        foreach (float off in Offsets)
+                        {
+                            if (Mathf.Abs(off) > 1f) break;
+                            var t = q + side * off;
+                            if (Walkable(t) && Clear(t)) { ok = t; break; }
+                        }
                     // (and the way there from the last point clear too: a tree between two clear points)
                     if (ok.HasValue && cur.Count > 0 && !Clear((cur[cur.Count - 1] + ok.Value) / 2f)) ok = null;
                     if (ok.HasValue) cur.Add(ok.Value);
@@ -732,6 +742,33 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
     /// <summary>The walk controller for a pedestrian avatar (Resources/Pedestrians/Walk_Male or Walk_Female, built from the
     /// Rocketbox motion-capture clips by RocketboxWalkControllers), with its normal walk replaced by one of several
     /// (people walk differently: a stroll, a brisker step); null if the controllers are not there.</summary>
+    /// <summary>A footway's points moved aside (up to 3 m: the drawn path can lie that far from OpenStreetMap's line) onto
+    /// paving where they lie on grass or bare ground (never onto a cycle path or road).</summary>
+    static List<Vector3> OntoPaving(List<Vector3> line)
+    {
+        var outLine = new List<Vector3>(line.Count);
+        int moved = 0;
+        for (int i = 0; i < line.Count; i++)
+        {
+            var q = line[i];
+            var dir = line[Mathf.Min(i + 1, line.Count - 1)] - line[Mathf.Max(i - 1, 0)]; dir.y = 0f;
+            var side = dir.sqrMagnitude > 1e-6f ? Vector3.Cross(Vector3.up, dir.normalized) : Vector3.right;
+            var g = SeenGround(q);
+            if (g != Ground.Pavement && g != Ground.Paving)
+                for (int k = 1; k <= 24; k++)
+                {
+                    var t = q + side * ((k % 2 == 1 ? 1f : -1f) * 0.25f * ((k + 1) / 2));
+                    var gt = SeenGround(t);
+                    if (gt == Ground.Pavement || gt == Ground.Paving) { q = t; moved++; break; }
+                }
+            outLine.Add(q);
+        }
+        if (moved > 0 && Array.IndexOf(CommandLine.Args, "-debugTraffic") >= 0) Debug.Log($"TrafficDebug: the walker's footway: {moved} of {line.Count} points moved onto the paving");
+        return outLine;
+    }
+
+    static readonly float[] Offsets = { 0f, 0.25f, -0.25f, 0.5f, -0.5f, 0.75f, -0.75f, 1f, -1f, 1.25f, -1.25f, 1.5f, -1.5f };
+
     static RuntimeAnimatorController WalkController(string avatar, System.Random rng)
     {
         bool female = avatar.Contains("Female") || avatar.Contains("Claudia");
@@ -1254,6 +1291,8 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
                 }
             }
         }
+        // (a walker's footway on the paving: OpenStreetMap's line can lie a metre beside the drawn path, on the verge)
+        if (path != null && me.GetComponent<KeyboardPlayerMovement>() != null) path = OntoPaving(path);
         if (path == null || path.Count < 2) { Debug.LogWarning("MapTraffic: no path for the autopilot"); return; }
         // start on the path, facing along it
         int i0 = 0; float bd = float.MaxValue;
@@ -1427,7 +1466,9 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
             if (name.StartsWith("BGT pavements") || name.StartsWith("Pavements") || name.StartsWith("Kerbs") || name.StartsWith("BGT parking")) g = MapTraffic.Ground.Pavement;
             // (the Dutch topography's verges and medians, at their exact outlines, never under a carriageway; a canal's quay
             // and water)
-            else if ((name.StartsWith("BGT green") || name.StartsWith("Quay") || name.StartsWith("Water")) && g != MapTraffic.Ground.Pavement) g = MapTraffic.Ground.Green;
+            // (and OpenStreetMap's green areas: grass, parks, meadows; they counted as paving, and pedestrians were placed on
+            // the grass beside a footway mapped a metre off the drawn path)
+            else if ((name.StartsWith("BGT green") || name.StartsWith("Green areas") || name.StartsWith("Quay") || name.StartsWith("Water")) && g != MapTraffic.Ground.Pavement) g = MapTraffic.Ground.Green;
             else if (name.StartsWith("Roads") || name.StartsWith("BGT roads") || name.StartsWith("Zebra") || name.StartsWith("Road ")) road = true;
             // (the map's own ground, grass, seen where no drawn surface covers it: on a map with the national topography,
             // where OpenStreetMap's invisible road runs over a verge or median the topography has as unpaved, or beyond the

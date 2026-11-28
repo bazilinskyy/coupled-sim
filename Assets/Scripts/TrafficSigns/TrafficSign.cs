@@ -61,6 +61,11 @@ public class TrafficSign : MonoBehaviour
         // pole: a thin box (cheaper than a cylinder and looks the same at a distance)
         var pole = Quad(root, "Pole", PoleMesh(0.03f, top + 0.05f), PoleMaterial);
         pole.transform.localPosition = new Vector3(0f, 0f, -0.04f);
+        // (solid: pedestrians placed along a pavement keep clear of it, and walked through it without)
+        var poleCollider = pole.AddComponent<BoxCollider>();
+        // (to 1.9 m: people's height, kept below the plate so a ray down for the ground seldom meets its top)
+        poleCollider.center = new Vector3(0f, 0.95f, 0f);
+        poleCollider.size = new Vector3(0.08f, 1.9f, 0.08f);
 
         var plate = new GameObject("Plate").transform;
         plate.SetParent(root, false);
