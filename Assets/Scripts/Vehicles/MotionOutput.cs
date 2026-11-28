@@ -66,9 +66,17 @@ public class MotionOutput : MonoBehaviour
         _lastVel = vel;
         float k = Smoothing > 0f ? 1f - Mathf.Exp(-Time.fixedDeltaTime / Smoothing) : 1f;
         _acc = Vector3.Lerp(_acc, t.InverseTransformDirection(a), k);
+        // angular velocity in the vehicle's axes from its turn since the last step, not the body's angular velocity: the
+        // autopilot (AICar) turns the heading itself, and a kinematic body has none
+        var rot = t.rotation;
+        if (!_rotInit) { _lastRot = rot; _rotInit = true; }
+        (Quaternion.Inverse(_lastRot) * rot).ToAngleAxis(out float ang, out Vector3 axis);
+        if (ang > 180f) ang -= 360f;
+        _w = float.IsFinite(axis.x) && Mathf.Abs(ang) > 1e-5f ? axis * (ang / Time.fixedDeltaTime) : Vector3.zero;
+        _lastRot = rot;
         if (Time.time < _next) return;
         _next = Time.time + 1f / Mathf.Max(1f, Rate);
-        var w = _rb != null ? t.InverseTransformDirection(_rb.angularVelocity) * Mathf.Rad2Deg : Vector3.zero;
+        var w = _w;
         var e = t.eulerAngles;
         float roll = Mathf.DeltaAngle(0f, e.z), pitch = Mathf.DeltaAngle(0f, e.x), yaw = e.y;
         float speed = Vector3.Dot(vel, t.forward);
@@ -91,5 +99,7 @@ public class MotionOutput : MonoBehaviour
         try { _udp.Send(bytes, bytes.Length, Host, Port); } catch (Exception ex) { Debug.LogWarning("MotionOutput: " + ex.Message); enabled = false; }
     }
 
-    Vector3 _lastPos;
+    Vector3 _lastPos, _w;
+    Quaternion _lastRot;
+    bool _rotInit;
 }
