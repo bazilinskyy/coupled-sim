@@ -3133,6 +3133,13 @@ public partial class OsmMapGenerator
                     var side = off.LengthSquared() > 1e-6f ? V2.Normalize(off) : new V2(travel.Y, -travel.X);
                     p = near + side * (width / 2f + 0.7f);
                 }
+                // in the first 2.5 m beside it (on the pavement, a few metres off in the data): just behind the kerb,
+                // where such signs stand, not in the middle of the footway (a pedestrian walked into one on De Zaale)
+                else if (dist < width / 2f + 2.5f)
+                {
+                    var off = p - near;
+                    if (off.LengthSquared() > 1e-6f) p = near + V2.Normalize(off) * (width / 2f + 0.5f);
+                }
             }
             var cell = ((int)Math.Round(p.X / 0.6f), (int)Math.Round(p.Y / 0.6f));
             poles.TryGetValue(cell, out var stacked);
