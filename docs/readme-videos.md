@@ -94,3 +94,9 @@ shows: seconds from, length.
 
 The clips are cut and encoded with `ffmpeg -ss FROM -t 20 -i render.mp4 -c:v libx264 -preset slow -crf 24
 -pix_fmt yuv420p -af "volume=4dB" -c:a aac -b:a 192k -movflags +faststart clip.mp4`.
+
+The clips are not in the repository: they are assets of the
+[demo-videos release](https://github.com/bazilinskyy/coupled-sim/releases/tag/demo-videos), which the README links to,
+so that a new version of a clip does not add to the size of every clone. Only the posters
+(`ReadmeFiles/videos/NAME.jpg`, a frame of the clip) are committed. To replace clips, upload them under the same names:
+`gh release upload demo-videos clip.mp4 --clobber` (the link stays the same), and commit their new posters.
