@@ -14,6 +14,7 @@
   <img alt="VR through OpenXR" src="https://img.shields.io/badge/VR-OpenXR-f97316">
   <img alt="Up to 8 participants" src="https://img.shields.io/badge/participants-up%20to%208-0f172a">
   <img alt="20 real cities" src="https://img.shields.io/badge/city%20maps-20%20%2B%20any%20place-94a3b8">
+  <a href="https://github.com/bazilinskyy/coupled-sim/releases"><img alt="Latest release" src="https://img.shields.io/github/v/release/bazilinskyy/coupled-sim?color=64748b"></a>
   <a href="#citation"><img alt="Cite: DSC 2020" src="https://img.shields.io/badge/cite-DSC%202020-b91c1c"></a>
   <a href="https://github.com/bazilinskyy/coupled-sim/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/bazilinskyy/coupled-sim?style=flat&logo=github"></a>
   <a href="https://github.com/sponsors/bazilinskyy"><img alt="Sponsor on GitHub" src="https://img.shields.io/badge/sponsor-GitHub-ea4aaa?logo=githubsponsors&logoColor=white"></a>
@@ -21,10 +22,11 @@
 </p>
 
 <p align="center">
-  <a href="#getting-started-step-by-step">Getting started</a> ·
+  <a href="#quick-start">Quick start</a> ·
+  <a href="docs/getting-started.md">Getting started</a> ·
   <a href="docs/first-study.md">First study (tutorial)</a> ·
   <a href="#features">Features</a> ·
-  <a href="#short-videos">Videos</a> ·
+  <a href="#videos">Videos</a> ·
   <a href="#running-the-simulator">Running</a> ·
   <a href="#configuration">Configuration</a> ·
   <a href="#study-tools">Study tools</a> ·
@@ -33,30 +35,16 @@
   <a href="#support-the-coupled-simulator">Support</a>
 </p>
 
-The coupled simulator lets several people take part in the same traffic scene at the same time: one or more drivers of manual cars, passengers of automated vehicles (AVs) who control an external human-machine interface (eHMI), and pedestrians who walk with a keyboard or a motion suit, on flat screens or in head-mounted displays. AI-controlled cars and pedestrians fill the scene. Everything that happens is logged for analysis.
+The coupled simulator lets several people take part in the same traffic scene at the same time: one or more drivers of manual cars, passengers of automated vehicles (AVs) who control an external human-machine interface (eHMI), pedestrians who walk with a keyboard or a motion suit, cyclists, e-scooter and moped riders and drone pilots, on flat screens or in head-mounted displays. AI-controlled cars, pedestrians, cyclists, drones and animals fill the scene. Everything that happens is logged for analysis.
 
 ![City maps: a Toyota Corolla in Eindhoven, a street in Tokyo, cycling in Ghent (top); heavy rain in London, night in Barcelona, an articulated bus in Eindhoven (bottom)](ReadmeFiles/overview.jpg)
 
-The simulator is open source and free to use. It is aimed at, but not limited to, academic research. Forks, pull requests and other contributions in the spirit of open science are welcome 😍. For enquiries about collaboration, contact p.bazilinskyy@tue.nl.
-
-📺 Demo of the initial version of the simulator with 3 agents (the town only, before the city maps, the new roles and most of the features below; the short videos further down show the current version):
-
-[![demo video](ReadmeFiles/thumbnail_demo_video.jpg)](https://www.youtube.com/watch?v=W2VWLYnTYrM)
-
-<a id="short-videos"></a>🎬 **Short videos** (20 s each in full HD, with the simulator's sound; click to play), in 14 cities on six continents. They were made by the simulator itself in batch mode ([videos from fixed cameras](#videos-from-fixed-cameras), frame by frame with the sound rendered in step), with the participants on the [autopilot](#city-maps-openstreetmap) and the built-in traffic of the city maps; all soundtracks have the same gain (+4 dB, peaks limited to -1 dBFS), so their levels compare as in the simulator: a quiet street on foot is about 16 dB quieter than inside a car:
-
-<table>
-<tr><td width="33%" valign="top"><a href="https://github.com/bazilinskyy/coupled-sim/releases/download/demo-videos/rush_eindhoven.mp4"><img src="ReadmeFiles/videos/rush_eindhoven.jpg" width="100%" alt="Rush hour (08:15) on the TU/e campus in Eindhoven, by bicycle through Atlas along De Zaale"></a><br>Rush hour (08:15) on the TU/e campus in Eindhoven, by bicycle through Atlas along De Zaale</td><td width="33%" valign="top"><a href="https://github.com/bazilinskyy/coupled-sim/releases/download/demo-videos/cycle_ghent.mp4"><img src="ReadmeFiles/videos/cycle_ghent.jpg" width="100%" alt="Cycling in Ghent, from cobblestones onto asphalt"></a><br>Cycling in Ghent, from cobblestones onto asphalt</td><td width="33%" valign="top"><a href="https://github.com/bazilinskyy/coupled-sim/releases/download/demo-videos/walk_boulder.mp4"><img src="ReadmeFiles/videos/walk_boulder.jpg" width="100%" alt="Walking on the Pearl Street Mall in Boulder, Colorado, among all seven animals (horse, deer, husky, fox, cat, dog, pigeon)"></a><br>Walking on the Pearl Street Mall in Boulder, Colorado, among all seven animals (horse, deer, husky, fox, cat, dog, pigeon)</td></tr>
-<tr><td width="33%" valign="top"><a href="https://github.com/bazilinskyy/coupled-sim/releases/download/demo-videos/drone_tue.mp4"><img src="ReadmeFiles/videos/drone_tue.jpg" width="100%" alt="Flying a drone over the TU/e campus in Eindhoven (a map built from its coordinates)"></a><br>Flying a drone over the TU/e campus in Eindhoven (a map built from its coordinates)</td><td width="33%" valign="top"><a href="https://github.com/bazilinskyy/coupled-sim/releases/download/demo-videos/drone_delft.mp4"><img src="ReadmeFiles/videos/drone_delft.jpg" width="100%" alt="Flying a drone over Delft, with an AI swarm"></a><br>Flying a drone over Delft, with an AI swarm</td><td width="33%" valign="top"><a href="https://github.com/bazilinskyy/coupled-sim/releases/download/demo-videos/dusk_barcelona.mp4"><img src="ReadmeFiles/videos/dusk_barcelona.jpg" width="100%" alt="Evening in Barcelona, the windows lit"></a><br>Evening in Barcelona, the windows lit</td></tr>
-<tr><td width="33%" valign="top"><a href="https://github.com/bazilinskyy/coupled-sim/releases/download/demo-videos/rain_london.mp4"><img src="ReadmeFiles/videos/rain_london.jpg" width="100%" alt="Heavy rain in London, right-hand drive"></a><br>Heavy rain in London, right-hand drive</td><td width="33%" valign="top"><a href="https://github.com/bazilinskyy/coupled-sim/releases/download/demo-videos/snow_montreal.mp4"><img src="ReadmeFiles/videos/snow_montreal.jpg" width="100%" alt="Snow in Montreal, on the autopilot"></a><br>Snow in Montreal, on the autopilot</td><td width="33%" valign="top"><a href="https://github.com/bazilinskyy/coupled-sim/releases/download/demo-videos/dusk_newyork.mp4"><img src="ReadmeFiles/videos/dusk_newyork.jpg" width="100%" alt="Dusk in Midtown New York (20:25), with the skyline around the map"></a><br>Dusk in Midtown New York (20:25), with the skyline around the map</td></tr>
-<tr><td width="33%" valign="top"><a href="https://github.com/bazilinskyy/coupled-sim/releases/download/demo-videos/dusk_sydney.mp4"><img src="ReadmeFiles/videos/dusk_sydney.jpg" width="100%" alt="Dusk in Sydney (16:50, left-hand traffic)"></a><br>Dusk in Sydney (16:50, left-hand traffic)</td><td width="33%" valign="top"><a href="https://github.com/bazilinskyy/coupled-sim/releases/download/demo-videos/moped_hcmc.mp4"><img src="ReadmeFiles/videos/moped_hcmc.jpg" width="100%" alt="A moped in Ho Chi Minh City at the evening rush, by the Nguyen Hue walking street"></a><br>A moped in Ho Chi Minh City at the evening rush, by the Nguyen Hue walking street</td><td width="33%" valign="top"><a href="https://github.com/bazilinskyy/coupled-sim/releases/download/demo-videos/escooter_tokyo.mp4"><img src="ReadmeFiles/videos/escooter_tokyo.jpg" width="100%" alt="An e-scooter in Tokyo (left-hand traffic)"></a><br>An e-scooter in Tokyo (left-hand traffic)</td></tr>
-<tr><td width="33%" valign="top"><a href="https://github.com/bazilinskyy/coupled-sim/releases/download/demo-videos/bus_nairobi.mp4"><img src="ReadmeFiles/videos/bus_nairobi.jpg" width="100%" alt="Driving an articulated bus through Nairobi (left-hand traffic)"></a><br>Driving an articulated bus through Nairobi (left-hand traffic)</td><td width="33%" valign="top"><a href="https://github.com/bazilinskyy/coupled-sim/releases/download/demo-videos/race_stellenbosch.mp4"><img src="ReadmeFiles/videos/race_stellenbosch.jpg" width="100%" alt="A race cyclist in Stellenbosch, South Africa"></a><br>A race cyclist in Stellenbosch, South Africa</td><td width="33%" valign="top"><a href="https://github.com/bazilinskyy/coupled-sim/releases/download/demo-videos/drive_saopaulo.mp4"><img src="ReadmeFiles/videos/drive_saopaulo.jpg" width="100%" alt="Driving along Avenida Paulista in São Paulo (a Toyota Corolla)"></a><br>Driving along Avenida Paulista in São Paulo (a Toyota Corolla)</td></tr>
-</table>
+The simulator is open source and free to use. It is aimed at, but not limited to, academic research. Forks, pull requests and other contributions in the spirit of open science are welcome 😍 (see [Contributing](#contributing)). For enquiries about collaboration, contact p.bazilinskyy@tue.nl.
 
 ## Contents
 - [Citation](#citation) · [Examples of use](#examples-of-use) · [License](#license)
-- [Features](#features) · [Agents at a glance](#agents-at-a-glance) · [Graphics](#graphics)
-- [Getting started, step by step](#getting-started-step-by-step) (for first-time users) · [Installation](#installation)
+- [Features](#features) · [Videos](#videos) · [Agents at a glance](#agents-at-a-glance) · [Graphics](#graphics)
+- [Quick start](#quick-start) · [Getting started, step by step](docs/getting-started.md) (for first-time users) · [Your first study](docs/first-study.md) (tutorial, without Unity) · [Installation](#installation)
 - [Running the simulator](#running-the-simulator): [host](#running-as-a-host), [client](#running-as-a-client), [several agents on one machine](#several-agents-on-one-machine), [builds and command line](#builds-and-command-line-options), [automatic trials](#running-trials-automatically), [trial files and counterbalancing](#trial-files-and-counterbalancing), [experiment files (YAML)](#experiment-files-yaml), [recording videos](#recording-trial-videos), [dashboard](#experimenter-dashboard)
 - [Controls](#controls)
 - [Environment and vehicles](#environment-and-vehicles): [city maps](#city-maps-openstreetmap), [traffic signs](#traffic-signs), [vehicles](#vehicles)
@@ -66,8 +54,10 @@ The simulator is open source and free to use. It is aimed at, but not limited to
 - [Study tools](#study-tools): [participant responses](#participant-responses), [designed eHMIs](#designed-ehmis), [in-car displays](#in-car-displays-head-up-display-centre-screen-instrument-cluster-and-timed-messages), [haptic cues](#haptic-cues), [sound](#sound), [several participants in one car and voice](#several-participants-in-one-car-and-voice), [pedestrian groups](#pedestrian-groups), [gaze over the network](#gaze-over-the-network-and-gaze-triggers), [OpenSCENARIO](#openscenario), [videos from fixed cameras](#videos-from-fixed-cameras), [scene descriptions and AI agents](#scene-descriptions-and-ai-agents)
 - [Testing](#testing)
 - [Hardware](#hardware): [monitors](#several-monitors-and-mirrors), [headsets](#head-mounted-displays-vr), [wheels](#steering-wheels-pedals-and-gamepads), [motion suit](#xsens-mvn-motion-suit), [motion platforms](#motion-platforms), [network](#network)
-- [FAQ](#faq) · [Support](#support-the-coupled-simulator)
+- [FAQ](#faq) · [Contributing](#contributing) · [Support](#support-the-coupled-simulator)
 - [Used assets](#used-assets)
+
+More pages in [`docs/`](docs): [Getting started, step by step](docs/getting-started.md), [Your first study](docs/first-study.md), [Traffic and crowds](docs/traffic-and-crowds.md), [Making clips like the README's](docs/readme-videos.md).
 
 **Note on the git history (November 2026):** the history was rewritten to keep only files that the simulator still uses, which cut a clone from 5.2 GB to 0.7 GB. Clones and forks made before then cannot be merged with the new history: clone the repository again. Older study branches and the full earlier history are kept in an archive repository; ask the maintainer for access.
 
@@ -75,6 +65,20 @@ The simulator is open source and free to use. It is aimed at, but not limited to
 If you use the coupled simulator for academic work, please cite:
 
 > Bazilinskyy, P., Kooijman, L., Dodou, D., & De Winter, J. C. F. (2020). Coupled simulator for research on the interaction between pedestrians and (automated) vehicles. 19th Driving Simulation Conference (DSC). Antibes, France.
+
+<details>
+<summary>BibTeX</summary>
+
+```bibtex
+@inproceedings{bazilinskyy2020coupled,
+  author    = {Bazilinskyy, P. and Kooijman, L. and Dodou, D. and De Winter, J. C. F.},
+  title     = {Coupled simulator for research on the interaction between pedestrians and (automated) vehicles},
+  booktitle = {19th Driving Simulation Conference (DSC)},
+  address   = {Antibes, France},
+  year      = {2020}
+}
+```
+</details>
 
 ## Examples of use
 1. Get out of the way! Examining eHMIs in critical driver-pedestrian encounters in a coupled simulator - [repo](https://github.com/bazilinskyy/coupled-sim-evasive), [paper](https://doi.org/10.1145/3543174.3546849).
@@ -85,34 +89,79 @@ If you use the coupled simulator for academic work, please cite:
 The source code of the coupled simulator is released under the [MIT License](LICENSE). Third-party assets included in this repository (see [Used assets](#used-assets)) are not covered by this license. They remain under the license of their developers, such as the Unity Asset Store EULA, MIT, CC0 or CC BY 4.0 (with the credits in [Used assets](#used-assets)).
 
 ## Features
-- **Ready-made simulators for Windows and macOS** on the [Releases page](https://github.com/bazilinskyy/coupled-sim/releases), with the tutorial [Your first study](docs/first-study.md): a complete small study without Unity.
-- Up to **8 human participants** in one scene (a host and seven clients) over a local network; several of them can sit in one car and talk to each other (voice is recorded).
-- Roles: driver of a manual car, passenger of an AV (controls its eHMI), pedestrian, cyclist, race cyclist, e-scooter rider, moped rider, drone pilot.
-- Input: keyboard, gamepads and steering wheels with pedals (Logitech, Thrustmaster, Fanatec, Moza; profiles and in-simulator calibration; force feedback on Logitech wheels), Xsens MVN motion suit for pedestrians.
-- Output: flat screens (also several monitors side by side, and mirror views) or head-mounted displays through OpenXR (Meta Quest, Varjo, HTC Vive, Valve Index, HP Reverb, Pico), with eye-tracking logs on headsets that have eye tracking.
-- AI cars that follow waypoint paths with configurable speed, acceleration, yielding, blinkers and driver eye contact.
-- Realistic car physics: engine and automatic gearbox, brakes with ABS, tyre grip that drops in the rain, suspension and anti-roll bars, matched to the real cars.
-- Background traffic with a choice of car-following models (IDM, Gipps, Krauss) that follows other cars, stops at red lights, slows down for bends and yields to pedestrians; on city maps a realistic mix of 18 cars, vans, trucks and buses that also turn at junctions, and AI cyclists near the kerb, now and then a race cyclist on the road.
-- Participants can also be cyclists, race cyclists, e-scooter riders or moped riders, with two-wheeler dynamics (power, legal speed limits, lean and steering) and riders that pedal, change gear, freewheel and put a foot down as real cyclists do. The race cyclist rides in a road posture (a long, rounded back with the head up, from a posture layer under the IK) in the kit of D.S.W.V. WTOS, Delft's student cycling club (blue jersey with white chest bands and WTOS down the back, black bib shorts; `TeamColour` and `BackLettering` in `Assets/Editor/TwoWheelerPrefabBuilder.cs`, then *Coupled Sim > Two-wheelers > Build the bicycles and add the race cyclist role*). Riders look over the shoulder as people do: the head turned some 70° with the shoulders, briefly.
-- Drones: a participant can fly a quadrotor (gimbal camera, line of sight or chase view), and AI drones deliver parcels, patrol and fly as a swarm; quadrotor rigid-body dynamics with a PX4-style flight controller, Dryden turbulence in the scene's wind, and flocking by the model of Vásárhelyi et al. (2018).
-- Animals moving around the world (pigeons, dogs, cats, foxes, deer, horses) that wander, eat and flee from traffic and people; traffic stops for them.
-- Time of day (solar position) and weather (clouds, rain with wet roads, fog), set per trial; URP graphics with post-processing and ambient occlusion, and a quality level that adapts to the PC (`-quality auto`).
-- 20 city maps from OpenStreetMap on six continents (Eindhoven, Delft, London, Tokyo, New York, Cairo, São Paulo, Sydney, ...), built at load time, and maps of any place by coordinates; real 3D buildings in Delft, Eindhoven, Tokyo, New York and Montreal; windows light up at night.
-- Coupling with [SUMO](https://eclipse.dev/sumo/) over TraCI: SUMO traffic in the scene, participants' cars and the AV in SUMO.
-- AI pedestrians with individual walking speeds, gap-acceptance crossing decisions that react to yielding cars and eHMIs, collision avoidance (social force model), traffic-aware head movements, and 12 realistic avatars.
-- eHMIs on the hood, roof and windshield of AVs, switched by the passenger or the host; auditory eHMIs (cues on eHMI states and on yielding, stopping, driving off) and AVAS sounds.
-- Interfaces described in small files instead of prefabs: eHMIs (light bars, text, arrows, chevrons, shapes, animations; on the car, its bumper, projected on the road, on infrastructure or wearables) and in-car displays (head-up display, centre screen with live speed and take-over countdown); haptic cues on gamepads, headset controllers, wheels and external devices (UDP).
-- Continuous responses of every participant (hold a button, e.g. "safe to cross"; a 0-100 slider, e.g. trust), logged every frame.
-- Virtual companion pedestrians that follow, cross or hesitate on cue, or decide with a language model; every participant's gaze on the host, with cars that react to being looked at.
-- Sound with calibrated dB levels: tyre-road and engine sound of every car by speed, the participant's car from inside, cabin music, city ambience.
-- Motion cues for motion platforms over UDP; tyres from Pacejka Magic Formula coefficients.
-- ASAM OpenSCENARIO playback; videos of trials from fixed cameras (also in builds and batch mode) for online studies; text descriptions of the scene for language-model studies.
-- Automated driving with take-over requests (visual and auditory warning, reaction times logged) and hand-back to the automation; AVs that follow waypoints, a car-following model or a path file (speed profiles, recorded trajectories).
-- Traffic lights with programmable sequences, with turn arrows and protected turn phases on city maps; traffic signs (stop, give way, speed limits, crossings, one way, ...) and working traffic lights, placed from OpenStreetMap on city maps; day and night versions of the town.
-- Logging of all agents (cars, pedestrian skeletons, drones, traffic lights, eye contact) to binary files, conversion to CSV, and live streaming over UDP; replay of every trial with a free camera; export of the road network (GeoJSON, OBJ) for analysis.
-- Automatic trial sequences with per-trial parameters and video recording; trial files (CSV/JSON) with counterbalancing per participant (balanced Latin square).
-- An experiment setup window: new experiments from templates on any map, a check of the whole set-up before Play.
-- A web dashboard for the experimenter: run the session, switch eHMIs, weather and time from any device, and watch a live map of all agents.
+
+| | |
+| --- | --- |
+| **Ready-made simulators** | For Windows and macOS on the [Releases page](https://github.com/bazilinskyy/coupled-sim/releases), with the tutorial [Your first study](docs/first-study.md): a complete small study without Unity. |
+| **Up to 8 participants** | A host and seven clients in one scene over a local network; several of them can sit in one car and talk to each other (voice is recorded) ([Networking](#networking), [one car and voice](#several-participants-in-one-car-and-voice)). |
+| **Roles** | Driver of a manual car, passenger of an AV (controls its eHMI), pedestrian, cyclist, race cyclist, e-scooter rider, moped rider, drone pilot ([Agents at a glance](#agents-at-a-glance)). |
+| **Input** | Keyboard, gamepads and steering wheels with pedals (Logitech, Thrustmaster, Fanatec, Moza; profiles and in-simulator calibration; force feedback on Logitech wheels), Xsens MVN motion suit for pedestrians ([Hardware](#hardware)). |
+| **Output** | Flat screens (also several monitors side by side, and mirror views) or head-mounted displays through OpenXR (Meta Quest, Varjo, HTC Vive, Valve Index, HP Reverb, Pico), with eye-tracking logs on headsets that have eye tracking ([Head-mounted displays](#head-mounted-displays-vr)). |
+| **AI cars** | Follow waypoint paths with configurable speed, acceleration, yielding, blinkers and driver eye contact ([AI cars](#ai-cars), [eye contact](#configuration-of-drivers-eye-contact)). |
+| **Car physics** | Engine and automatic gearbox, brakes with ABS, tyre grip that drops in the rain, suspension and anti-roll bars, matched to the real cars ([Vehicles](#vehicles)). |
+| **Background traffic** | A choice of car-following models (IDM, Gipps, Krauss) that follows other cars, stops at red lights, slows down for bends and yields to pedestrians; on city maps a realistic mix of 18 cars, vans, trucks and buses that also turn at junctions, and AI cyclists near the kerb, now and then a race cyclist on the road ([Background traffic](#configuration-of-background-traffic)). |
+| **Cyclists and riders** | Participants can also be cyclists, race cyclists, e-scooter riders or moped riders, with two-wheeler dynamics (power, legal speed limits, lean and steering) and riders that pedal, change gear, freewheel and put a foot down as real cyclists do. Riders look over the shoulder as people do: the head turned some 70° with the shoulders, briefly. The race cyclist rides in a road posture in the kit of D.S.W.V. WTOS, Delft's student cycling club ([Cyclists and riders](#cyclists-e-scooter-and-moped-riders)). |
+| **Drones** | A participant can fly a quadrotor (gimbal camera, line of sight or chase view), and AI drones deliver parcels, patrol and fly as a swarm; quadrotor rigid-body dynamics with a PX4-style flight controller, Dryden turbulence in the scene's wind, and flocking by the model of Vásárhelyi et al. (2018) ([Drones](#drones)). |
+| **Animals** | Pigeons, dogs, cats, foxes, deer and horses that wander, eat and flee from traffic and people; traffic stops for them ([Animals](#animals)). |
+| **Time of day and weather** | Solar position, clouds, rain with wet roads and fog, set per trial; URP graphics with post-processing and ambient occlusion, and a quality level that adapts to the PC (`-quality auto`) ([Time of day and weather](#time-of-day-and-weather), [Graphics](#graphics)). |
+| **City maps** | 20 city maps from OpenStreetMap on six continents (Eindhoven, Delft, London, Tokyo, New York, Cairo, São Paulo, Sydney, ...), built at load time, and maps of any place by coordinates; real 3D buildings in Delft, Eindhoven, Tokyo, New York and Montreal; windows light up at night ([City maps](#city-maps-openstreetmap)). |
+| **SUMO** | Coupling with [SUMO](https://eclipse.dev/sumo/) over TraCI: SUMO traffic in the scene, participants' cars and the AV in SUMO ([Traffic from SUMO](#traffic-from-sumo)). |
+| **AI pedestrians** | Individual walking speeds, gap-acceptance crossing decisions that react to yielding cars and eHMIs, collision avoidance (social force model), traffic-aware head movements, and 12 realistic avatars ([AI pedestrians](#ai-pedestrians), [behaviour models](#pedestrian-behaviour-models)). |
+| **eHMIs** | On the hood, roof and windshield of AVs, switched by the passenger or the host; auditory eHMIs (cues on eHMI states and on yielding, stopping, driving off) and AVAS sounds ([eHMIs](#configuration-of-ehmis), [auditory eHMIs](#auditory-ehmis)). |
+| **Interfaces from files** | Described in small files instead of prefabs: eHMIs (light bars, text, arrows, chevrons, shapes, animations; on the car, its bumper, projected on the road, on infrastructure or wearables) and in-car displays (head-up display, centre screen with live speed and take-over countdown); haptic cues on gamepads, headset controllers, wheels and external devices (UDP) ([Designed eHMIs](#designed-ehmis), [in-car displays](#in-car-displays-head-up-display-centre-screen-instrument-cluster-and-timed-messages), [haptic cues](#haptic-cues)). |
+| **Participant responses** | Continuous responses of every participant (hold a button, e.g. "safe to cross"; a 0-100 slider, e.g. trust), logged every frame ([Participant responses](#participant-responses)). |
+| **Companions and gaze** | Virtual companion pedestrians that follow, cross or hesitate on cue, or decide with a language model; every participant's gaze on the host, with cars that react to being looked at ([Pedestrian groups](#pedestrian-groups), [gaze](#gaze-over-the-network-and-gaze-triggers)). |
+| **Sound** | Calibrated dB levels: tyre-road and engine sound of every car by speed, the participant's car from inside, cabin music, city ambience ([Sound](#sound)). |
+| **Motion platforms** | Motion cues for motion platforms over UDP; tyres from Pacejka Magic Formula coefficients ([Motion platforms](#motion-platforms)). |
+| **Scenarios, videos, text** | ASAM OpenSCENARIO playback; videos of trials from fixed cameras (also in builds and batch mode) for online studies; text descriptions of the scene for language-model studies ([OpenSCENARIO](#openscenario), [videos from fixed cameras](#videos-from-fixed-cameras), [scene descriptions](#scene-descriptions-and-ai-agents)). |
+| **Automated driving** | Take-over requests (visual and auditory warning, reaction times logged) and hand-back to the automation; AVs that follow waypoints, a car-following model or a path file (speed profiles, recorded trajectories) ([Automated driving](#automated-driving-and-take-over-requests), [scripted paths](#scripted-paths)). |
+| **Traffic lights and signs** | Traffic lights with programmable sequences, with turn arrows and protected turn phases on city maps; traffic signs (stop, give way, speed limits, crossings, one way, ...) and working traffic lights, placed from OpenStreetMap on city maps; day and night versions of the town ([Traffic lights](#configuration-of-traffic-lights), [traffic signs](#traffic-signs)). |
+| **Logging and replay** | Logging of all agents (cars, pedestrian skeletons, drones, traffic lights, eye contact) to binary files, conversion to CSV, and live streaming over UDP; replay of every trial with a free camera; export of the road network (GeoJSON, OBJ) for analysis ([Data logging](#data-logging), [road network](#exporting-the-road-network)). |
+| **Trial sequences** | Automatic trial sequences with per-trial parameters and video recording; trial files (CSV/JSON) with counterbalancing per participant (balanced Latin square) ([Running trials automatically](#running-trials-automatically), [trial files](#trial-files-and-counterbalancing)). |
+| **Experiment setup** | A setup window: new experiments from templates on any map, a check of the whole set-up before Play ([Setting up a new experiment](#setting-up-a-new-experiment)). |
+| **Experimenter dashboard** | A web page for the experimenter: run the session, switch eHMIs, weather and time from any device, and watch a live map of all agents ([Experimenter dashboard](#experimenter-dashboard)). |
+
+## Videos
+<a id="short-videos"></a>Short clips of the current version, in 14 cities on six continents, with the simulator's sound (18-20 s, full HD 1920x1080, 8-32 MB; click a picture to play or download). They were made by the simulator itself in batch mode ([videos from fixed cameras](#videos-from-fixed-cameras), frame by frame with the sound rendered in step), with the participant on the [autopilot](#city-maps-openstreetmap) and the built-in traffic of the city maps. All soundtracks have the same gain (+4 dB, peaks limited to -1 dBFS), so their levels compare as in the simulator: a quiet street on foot is about 16 dB quieter than inside a car. All files: [release demo-videos](https://github.com/bazilinskyy/coupled-sim/releases/tag/demo-videos); the settings of each clip and how to make your own: [Making clips like the README's](docs/readme-videos.md).
+
+<table>
+<tr>
+<td width="50%" valign="top"><a href="https://github.com/bazilinskyy/coupled-sim/releases/download/demo-videos/rush_eindhoven.mp4"><img src="ReadmeFiles/videos/rush_eindhoven.jpg" alt="Rush hour on the TU/e campus"></a><br>🇳🇱&nbsp;<b>Rush hour on the TU/e campus</b><br><sub>Eindhoven, Netherlands, 08:15 · cyclist, chase camera · 20 s, 13.9 MB<br>by bicycle through Atlas along De Zaale</sub></td>
+<td width="50%" valign="top"><a href="https://github.com/bazilinskyy/coupled-sim/releases/download/demo-videos/cycle_ghent.mp4"><img src="ReadmeFiles/videos/cycle_ghent.jpg" alt="Cycling in Ghent"></a><br>🇧🇪&nbsp;<b>Cycling in Ghent</b><br><sub>Ghent, Belgium, 10:30 · cyclist, chase camera · 20 s, 10.4 MB<br>from cobblestones onto asphalt</sub></td>
+</tr>
+<tr>
+<td width="50%" valign="top"><a href="https://github.com/bazilinskyy/coupled-sim/releases/download/demo-videos/walk_boulder.mp4"><img src="ReadmeFiles/videos/walk_boulder.jpg" alt="Walking on the Pearl Street Mall"></a><br>🇺🇸&nbsp;<b>Walking on the Pearl Street Mall</b><br><sub>Boulder, Colorado, USA, 08:30 · pedestrian, chase camera · 20 s, 28.4 MB<br>among all seven animals: horse, deer, husky, fox, cat, dog and pigeon</sub></td>
+<td width="50%" valign="top"><a href="https://github.com/bazilinskyy/coupled-sim/releases/download/demo-videos/drone_tue.mp4"><img src="ReadmeFiles/videos/drone_tue.jpg" alt="A drone over the TU/e campus"></a><br>🇳🇱&nbsp;<b>A drone over the TU/e campus</b><br><sub>Eindhoven, Netherlands, 10:30 · drone pilot, chase view · 20 s, 19.7 MB<br>on a map built from the campus's coordinates</sub></td>
+</tr>
+<tr>
+<td width="50%" valign="top"><a href="https://github.com/bazilinskyy/coupled-sim/releases/download/demo-videos/drone_delft.mp4"><img src="ReadmeFiles/videos/drone_delft.jpg" alt="A drone over Delft"></a><br>🇳🇱&nbsp;<b>A drone over Delft</b><br><sub>Delft, Netherlands, 10:30 · drone pilot, chase view · 20 s, 17.9 MB<br>with a swarm of AI drones</sub></td>
+<td width="50%" valign="top"><a href="https://github.com/bazilinskyy/coupled-sim/releases/download/demo-videos/dusk_barcelona.mp4"><img src="ReadmeFiles/videos/dusk_barcelona.jpg" alt="Evening in Barcelona"></a><br>🇪🇸&nbsp;<b>Evening in Barcelona</b><br><sub>Barcelona, Spain, 21:20 · driver, chase camera · 20 s, 15.6 MB<br>the windows lit</sub></td>
+</tr>
+<tr>
+<td width="50%" valign="top"><a href="https://github.com/bazilinskyy/coupled-sim/releases/download/demo-videos/rain_london.mp4"><img src="ReadmeFiles/videos/rain_london.jpg" alt="Heavy rain in London"></a><br>🇬🇧&nbsp;<b>Heavy rain in London</b><br><sub>London, UK, 17:30 · driver, driver's view · 20 s, 8.1 MB<br>left-hand traffic, from a right-hand drive car</sub></td>
+<td width="50%" valign="top"><a href="https://github.com/bazilinskyy/coupled-sim/releases/download/demo-videos/snow_montreal.mp4"><img src="ReadmeFiles/videos/snow_montreal.jpg" alt="Snow in Montreal"></a><br>🇨🇦&nbsp;<b>Snow in Montreal</b><br><sub>Montreal, Canada, 15:00 · driver, chase camera · 18 s, 31.5 MB<br>light snow, driving on the autopilot</sub></td>
+</tr>
+<tr>
+<td width="50%" valign="top"><a href="https://github.com/bazilinskyy/coupled-sim/releases/download/demo-videos/dusk_newyork.mp4"><img src="ReadmeFiles/videos/dusk_newyork.jpg" alt="Dusk in Midtown New York"></a><br>🇺🇸&nbsp;<b>Dusk in Midtown New York</b><br><sub>New York, USA, 20:25 · driver, chase camera · 20 s, 11.0 MB<br>with the skyline around the map</sub></td>
+<td width="50%" valign="top"><a href="https://github.com/bazilinskyy/coupled-sim/releases/download/demo-videos/dusk_sydney.mp4"><img src="ReadmeFiles/videos/dusk_sydney.jpg" alt="Dusk in Sydney"></a><br>🇦🇺&nbsp;<b>Dusk in Sydney</b><br><sub>Sydney, Australia, 16:50 · driver, chase camera · 20 s, 13.4 MB<br>left-hand traffic</sub></td>
+</tr>
+<tr>
+<td width="50%" valign="top"><a href="https://github.com/bazilinskyy/coupled-sim/releases/download/demo-videos/moped_hcmc.mp4"><img src="ReadmeFiles/videos/moped_hcmc.jpg" alt="A moped in Ho Chi Minh City"></a><br>🇻🇳&nbsp;<b>A moped in Ho Chi Minh City</b><br><sub>Ho Chi Minh City, Vietnam, 17:30 · moped rider, chase camera · 20 s, 21.7 MB<br>at the evening rush, by the Nguyen Hue walking street</sub></td>
+<td width="50%" valign="top"><a href="https://github.com/bazilinskyy/coupled-sim/releases/download/demo-videos/escooter_tokyo.mp4"><img src="ReadmeFiles/videos/escooter_tokyo.jpg" alt="An e-scooter in Tokyo"></a><br>🇯🇵&nbsp;<b>An e-scooter in Tokyo</b><br><sub>Tokyo, Japan, 11:00 · e-scooter rider, chase camera · 20 s, 27.2 MB<br>left-hand traffic</sub></td>
+</tr>
+<tr>
+<td width="50%" valign="top"><a href="https://github.com/bazilinskyy/coupled-sim/releases/download/demo-videos/bus_nairobi.mp4"><img src="ReadmeFiles/videos/bus_nairobi.jpg" alt="An articulated bus in Nairobi"></a><br>🇰🇪&nbsp;<b>An articulated bus in Nairobi</b><br><sub>Nairobi, Kenya, 10:00 · bus driver, chase camera · 20 s, 17.9 MB<br>driving an articulated bus in left-hand traffic</sub></td>
+<td width="50%" valign="top"><a href="https://github.com/bazilinskyy/coupled-sim/releases/download/demo-videos/race_stellenbosch.mp4"><img src="ReadmeFiles/videos/race_stellenbosch.jpg" alt="A race cyclist in Stellenbosch"></a><br>🇿🇦&nbsp;<b>A race cyclist in Stellenbosch</b><br><sub>Stellenbosch, South Africa, 10:30 · race cyclist, chase camera · 20 s, 28.5 MB<br>on the road in the WTOS kit</sub></td>
+</tr>
+<tr>
+<td width="50%" valign="top"><a href="https://github.com/bazilinskyy/coupled-sim/releases/download/demo-videos/drive_saopaulo.mp4"><img src="ReadmeFiles/videos/drive_saopaulo.jpg" alt="Avenida Paulista, São Paulo"></a><br>🇧🇷&nbsp;<b>Avenida Paulista, São Paulo</b><br><sub>São Paulo, Brazil, 16:00 · driver, chase camera · 20 s, 19.3 MB<br>driving a Toyota Corolla along the avenue</sub></td>
+<td width="50%" valign="top"></td>
+</tr>
+</table>
+
+📺 Demo of the initial version of the simulator with 3 agents (the town only, before the city maps, the new roles and most of the features above):
+
+[![demo video](ReadmeFiles/thumbnail_demo_video.jpg)](https://www.youtube.com/watch?v=W2VWLYnTYrM)
 
 ## Agents at a glance
 Every kind of agent in the simulator, as the smoke test's line-up (`-smokeLineup`, see [Testing](#testing)) parks them on Delft's Markt: children and adults (Microsoft Rocketbox avatars), a cyclist, a race cyclist in the WTOS kit (`RaceBicycle` in the line-up), an e-scooter rider and a moped rider (top); the animals: pigeon, cat, dog, husky, fox, deer and horse (bottom). Participants can take the roles of a driver, an AV passenger, a pedestrian, a cyclist, a race cyclist, an e-scooter or moped rider and a drone pilot; all of them also exist as AI agents.
@@ -120,6 +169,7 @@ Every kind of agent in the simulator, as the smoke test's line-up (`-smokeLineup
 ![Pedestrians, a cyclist, a race cyclist, an e-scooter and a moped (top) and the seven animals (bottom) on the Markt in Delft](ReadmeFiles/agents.jpg)
 
 The vehicles are shown under [Vehicles](#vehicles).
+
 
 ## Graphics
 The simulator uses the **Universal Render Pipeline** (URP 17.6): the pipeline asset is `Assets/URPDefaultResources/Fantastic.asset` (HDR, 4× MSAA, soft shadows up to 150 m, forward rendering; the 24 street lamps nearest to the viewer are lit) with its renderer `Default_Forward_Renderer` (screen-space ambient occlusion). Post-processing (ACES tonemapping, bloom, colour grading, vignette) comes from the global volume `Post-processing (URP)` in the environment scenes with `Assets/Settings/Rendering/SimulatorVolumeProfile.asset`; every participant camera gets post-processing and SMAA anti-aliasing when it starts rendering (`UrpCameraSetup`). Materials were converted with the Render Pipeline Converter; `Assets/Editor/Graphics/GraphicsSetup.cs` holds the conversion steps (including baking the Tree Creator trees to normal meshes).
@@ -136,177 +186,45 @@ The simulator uses the **Universal Render Pipeline** (URP 17.6): the pipeline as
 
 Shadows cost most (about 40% of the frame on that GPU). In the town, the trees have mesh LODs, flat surfaces cast no shadows, and occlusion culling is baked (`Coupled Sim` ➡️ `Graphics` ➡️ `Optimise scenes` redoes this after changing the scenes); the smoke test measures the render time of the participant's view (`-smokeBench` also measures the cost of each feature).
 
+## Quick start
+Needs Windows 10 or 11 (macOS for trying things out: steering wheels, headsets and the motion suit work on Windows only) and, for a good frame rate, a graphics card such as a GeForce RTX 3060 or better.
+
+**Without Unity**, to run studies with the ready-made experiments: download the zip for Windows or macOS from the newest release on the [Releases page](https://github.com/bazilinskyy/coupled-sim/releases), unzip it and run it (on macOS, right-click the app and choose **Open** the first time). Then follow [Your first study](docs/first-study.md).
+
+**With Unity**, to make or change experiments (about 30 GB of free disk space): install [Unity Hub](https://unity.com/download) and Unity **6000.6.9f1** (exactly this version), then
+
+```bash
+git clone https://github.com/bazilinskyy/coupled-sim.git
+```
+
+1. In Unity Hub: **Projects** ➡️ **Add** ➡️ **Add project from disk**, choose the `coupled-sim` folder and open it (the first import takes 20-60 minutes).
+2. Open `Assets/_Scenes/StartScene.unity` and press **Play**.
+3. Press **Start host**, choose **Demo with 3 agents**, the role **Driver** and **Keyboard mode**, press **Initialise experiment** and then **Start simulation**. Drive with `W` `A` `S` `D`; `Esc` ends the drive.
+4. The data are in `ExperimentLogs` next to `Assets` (see [Data logging](#data-logging)).
+
+To check the project without a screen, run the [smoke test](#testing): `Unity -batchmode -projectPath . -executeMethod SmokeTest.Run -smokeSeconds 30 -smokeOut SmokeTest -logFile smoke.log`.
+
 ## Getting started, step by step
-This part is for anyone who has never used Unity or GitHub. Follow the steps in order; each takes a few minutes, except the first opening of the project (step 4), which takes up to an hour. Words in **bold** are the names of buttons or windows you will see on the screen.
+For anyone who has never used Unity or GitHub, the guide **[Getting started, step by step](docs/getting-started.md)** goes from an empty computer to a first drive, a session with several computers and a new experiment, with screenshots of every window. Each step takes a few minutes, except the first opening of the project, which takes up to an hour:
 
-### Words you will meet
-| Word | What it means here |
-| --- | --- |
-| **Unity** | The program the simulator is made with. You open the simulator in it, like you open a document in Word. |
-| **Unity Hub** | A small program that installs Unity and opens Unity projects. |
-| **Project** | The simulator's folder. Unity calls a folder like this a project. |
-| **Scene** | One "world" of the simulator: the start screen (`StartScene`), the town (`MainScene`), a city map (`OsmMap`). |
-| **Play / Play mode** | The ▶ button at the top of Unity starts the simulator inside Unity; pressing it again stops it. |
-| **Host** and **client** | Every computer taking part is an *agent*. One of them is the **host**: it chooses the experiment and starts it. The others are **clients**: they connect to the host. Alone, you are the host. |
-| **Role** | Who a participant is in the scene: driver, passenger of an automated car (AV), pedestrian, cyclist, race cyclist, e-scooter or moped rider. |
-| **Experiment** | A ready-made situation: a world, the roles in it, the AI cars and pedestrians, the weather. |
-| **Trial** | One run of an experiment with one participant. A session is usually several trials. |
-| **Inspector** | The window on the right of Unity that shows the settings of whatever you clicked. |
-| **Prefab** | A saved, reusable object (a car, a pedestrian, a whole experiment). Changing the prefab changes every copy of it. |
-| **Spawn point** | The place where a participant starts in the world. |
+1. <a id="1-what-you-need"></a>[What you need](docs/getting-started.md#1-what-you-need) (and <a id="words-you-will-meet"></a>[words you will meet](docs/getting-started.md#words-you-will-meet))
+2. <a id="2-install-unity-hub-and-unity"></a>[Install Unity Hub and Unity](docs/getting-started.md#2-install-unity-hub-and-unity)
+3. <a id="3-download-the-simulator"></a>[Download the simulator](docs/getting-started.md#3-download-the-simulator)
+4. <a id="4-open-the-project-in-unity"></a>[Open the project in Unity](docs/getting-started.md#4-open-the-project-in-unity)
+5. <a id="5-the-unity-window"></a>[The Unity window](docs/getting-started.md#5-the-unity-window)
+6. <a id="6-your-first-drive-alone-on-one-computer"></a>[Your first drive (alone, on one computer)](docs/getting-started.md#6-your-first-drive-alone-on-one-computer)
+7. <a id="7-where-your-data-are"></a>[Where your data are](docs/getting-started.md#7-where-your-data-are)
+8. <a id="8-with-several-participants-several-computers"></a>[With several participants (several computers)](docs/getting-started.md#8-with-several-participants-several-computers)
+9. <a id="9-making-your-own-experiment"></a>[Making your own experiment](docs/getting-started.md#9-making-your-own-experiment)
+10. <a id="10-running-a-whole-session-automatically"></a>[Running a whole session automatically](docs/getting-started.md#10-running-a-whole-session-automatically)
+11. <a id="11-when-something-goes-wrong"></a>[When something goes wrong](docs/getting-started.md#11-when-something-goes-wrong)
 
-**New to it? Start with the tutorial [Your first study](docs/first-study.md)**: a complete small study (an eHMI on an automated car and a pedestrian, two participants, counterbalanced trials, responses and logs, a short analysis) with the ready-made simulator from the [Releases page](https://github.com/bazilinskyy/coupled-sim/releases), without Unity. The steps below set up Unity, which you need to make new experiments.
-
-### 1. What you need
-- A computer with **Windows 10 or 11** (or a Mac, for trying things out: steering wheels, headsets and the motion suit only work on Windows).
-- About **30 GB of free disk space** (Unity takes about 10 GB, the simulator about 15 GB once opened).
-- An internet connection and a free **Unity account** (make one at [unity.com](https://unity.com) with your university e-mail; the free "Personal" license is enough).
-- For a good frame rate: a graphics card such as an NVIDIA GeForce RTX 3060 or better. On a laptop or office PC the simulator also runs, but slower (see [Graphics](#graphics) for the faster quality levels).
-
-### 2. Install Unity Hub and Unity
-1. Download **Unity Hub** from [unity.com/download](https://unity.com/download) and install it like any other program.
-2. Open Unity Hub and **Sign in** with your Unity account. If it asks for a license, choose the free **Personal** license.
-3. You do not have to install Unity itself yet: in step 4, Unity Hub notices which version the simulator needs (**6000.6.9f1**, also called Unity 6.6) and offers to install it. When it asks which **modules** to add, you need none to use the simulator inside Unity. Tick **Windows Build Support (Mono)** only if you want to make a stand-alone program for the lab PCs from a Mac (on Windows it is included); you do not need IL2CPP, Android, iOS or WebGL. Windows may ask for administrator permission while installing: that is normal.
-
-Use exactly version 6000.6.9f1. A newer Unity may change or break the project; an older one cannot open it.
-
-### 3. Download the simulator
-The easiest way, without typing commands:
-1. Install **GitHub Desktop** from [desktop.github.com](https://desktop.github.com) (you can skip signing in to GitHub).
-2. In GitHub Desktop choose **File** ➡️ **Clone repository** ➡️ the **URL** tab, and paste `https://github.com/bazilinskyy/coupled-sim`.
-3. Under **Local path** choose a short folder path **without spaces**, for example `C:\Unity\coupled-sim` (long paths cause errors on Windows). Press **Clone** and wait until it finishes (about 0.7 GB).
-
-Later, to get the newest version, open GitHub Desktop and press **Fetch origin** and then **Pull origin**. If GitHub Desktop says you have local changes (Unity changes a few files by itself), choose **Stash changes and continue**; your own experiments are best kept in new files (step 9), so nothing of yours is lost.
-
-(If you know git: `git clone https://github.com/bazilinskyy/coupled-sim.git` does the same. Downloading the ZIP file from GitHub also works, but then you cannot update it easily.)
-
-### 4. Open the project in Unity
-1. In Unity Hub, go to **Projects** and press **Add** ➡️ **Add project from disk**. Select the `coupled-sim` folder you just downloaded (the folder that contains `Assets`), and confirm.
-2. The project appears in the list. If Unity Hub shows a warning that the editor version is missing, press **Install** (this is the step-2 install of Unity 6000.6.9f1; it takes 10-30 minutes).
-3. Click the project to open it. **The first time takes long** (20-60 minutes): Unity prepares all the files. A small window shows "Importing" or "Compiling" with a progress bar that sometimes stands still for minutes; that is normal, do not close Unity. Wait until the Unity window appears and the progress bar at the bottom right is gone.
-4. If Unity asks whether to open in **Safe Mode**, choose **Ignore** (this happens when something did not finish preparing; see [When something goes wrong](#11-when-something-goes-wrong)).
-
-### 5. The Unity window
-![The Unity window](ReadmeFiles/guide/editor.png)
-
-1. **Play** ▶: starts and stops the simulator. While it runs, the button is blue.
-2. **Hierarchy**: what is in the open scene. In `StartScene` there is an object called `Managers` that holds the simulator's settings.
-3. **Scene** and **Game**: the **Game** tab shows what a participant sees when you press Play.
-4. **Inspector**: the settings of what you clicked (here `Managers`).
-5. **Project** and **Console**: the **Project** tab shows the files of the simulator; the **Console** tab shows messages. Red messages are errors (one red line about "light baking" or "OpenCL" can be ignored).
-
-The **Coupled Sim** menu (in the menu bar at the very top of the screen on a Mac, or at the top of the Unity window on Windows) has the simulator's own tools: setting up experiments, checking them, building, and more.
-
-**Open the start scene first.** In the **Project** tab open the folder `Assets` ➡️ `_Scenes` and double-click **StartScene**. The **Hierarchy** then shows `StartScene` with `Managers` in it. The simulator always starts from this scene: if another scene of the simulator (the town, a city map) is open when you press **Play**, Unity starts from `StartScene` anyway, but the settings you change in the **Inspector** (step 10) are those of `StartScene`, so keep it open.
-
-**Closing Unity:** **File** ➡️ **Quit** (on a Mac **Unity** ➡️ **Quit**). If Unity asks whether to save changes to a scene you did not mean to change, choose **Don't Save**.
-
-### 6. Your first drive (alone, on one computer)
-1. Press **Play** ▶. The **Game** tab shows three buttons:
-
-   ![Start screen](ReadmeFiles/guide/start_screen.png)
-
-   **1** Start host (you run the experiment), **2** Start client (you join someone else's experiment), **3** Convert log to csv (turn recorded data into a spreadsheet file, see step 7).
-2. Press **Start host**. You now see the host's choices:
-
-   ![Choosing the experiment and the role](ReadmeFiles/guide/host_lobby.png)
-
-   1. **Experiment**: click the experiment. **Demo with 3 agents** is a good first one (the arrow `<--` shows which one is selected).
-   2. **Role binding**: click the role you want to play, for example **Driver**. "Host role" then shows the role's number instead of -1 (the roles are counted from 0, so Driver, the first one, is 0).
-   3. **Mode**: click **Keyboard mode** to play on the screen with keyboard and mouse (**HMD mode** is for a VR headset, **Suite mode** for the Xsens motion suit).
-   4. Press **Initialise experiment** (the top button in the picture).
-3. Wait until the world has loaded (up to a minute). The screen then shows who is ready and a **Start simulation** button:
-
-   ![Ready to start](ReadmeFiles/guide/host_ready.png)
-
-   **Ready: 1** means your computer is ready; the other columns are for other computers (clients) and stay 0 when no client is connected, which is fine. Press **Start simulation**.
-4. Drive! First **click once in the Game view**, so the keys go to the simulator:
-
-   ![Driving](ReadmeFiles/guide/driving.jpg)
-
-   - `W` / `S` (or the arrow keys): accelerate / brake; `A` / `D`: steer; `Space`: brake; `R` then `W`: reverse (only when the car stands still); `F`: forward again; `Q` / `E`: blinkers; `Esc`: end the drive.
-   - As a pedestrian: `W` `A` `S` `D` to walk, `Shift` to run, hold the right mouse button and move the mouse to look around.
-   - All keys are listed under [Controls](#controls). The buttons and numbers in the corner are for the experimenter: **Visual syncing** flashes the screen to line up video recordings with the data, and the frame rate (FPS) shows how smoothly the simulator runs (60 or more is good). `Tab` hides them; press `Tab` again to show them.
-5. To stop, press **Play** ▶ again. Everything you changed while playing is undone; the data that was recorded stays (step 7).
-
-### 7. Where your data are
-Every run writes its data into the folder **`ExperimentLogs`** inside the `coupled-sim` folder, next to the `Assets` folder. To open it from Unity: in the **Project** tab right-click the `Assets` folder and choose **Show in Explorer** (Windows) or **Reveal in Finder** (Mac); this opens the `coupled-sim` folder, where you see `ExperimentLogs`. The folder only appears after your first run. The files are named after the role and the date and time, for example `HostLog-Driver-2026_11_13_14_05_22.binLog`; some experiments write extra `.csv` files next to it.
-
-`.binLog` files are compact but cannot be opened in Excel. To turn one into a spreadsheet file:
-1. Press **Play**, and on the start screen press **Convert log to csv** (3).
-2. Click the file you want (the newest is at the top). Ignore **Custom reference points** (they are for measuring from a chosen point, such as a crossing) and, under **Stored reference Point**, press **Transform with World Root**.
-3. A line "Saved ..." shows where the new file `World Root-HostLog-....csv` is (in `ExperimentLogs`). Open it in Excel, R or Python.
-
-In Excel, open it with **Data** ➡️ **From Text/CSV** and choose **Semicolon** as the delimiter. The numbers use a decimal point; if Excel shows them as dates or text (computers set to Dutch or German use a decimal comma), choose **Transform Data**, then **Use Locale** "English (United States)" for the number columns.
-
-To watch a run again, press **Replay a recording** on the start screen instead (see [Data logging](#data-logging)).
-
-What is in these files, and the other files there (pedestrian decisions, eye gaze, take-over times, animals), is described under [Data logging](#data-logging).
-
-### 8. With several participants (several computers)
-1. Install the simulator on every computer as above, **the same version on all** (in GitHub Desktop: Fetch and Pull on each).
-2. Connect all computers to the same network (the same lab switch or Wi-Fi). The first time you press **Start host** or **Start client**, Windows asks whether to allow Unity on the network: tick **Private networks** (and **Domain networks** on university PCs) and press **Allow access**. See [Network](#network) if the computers cannot find each other.
-3. On the host computer: press **Play** and **Start host**. The **Console** shows a line `Listening on ...` with the host's address (four numbers with dots, for example `192.168.1.20` or `10.0.0.5`).
-4. On each other computer: press **Play** and **Start client**. The address box already holds `192.168.1.11`: replace it with the host's address. The **Connect** button appears only when the address is complete (four numbers); press it, then choose the mode (for example **Keyboard mode**).
-5. On the host, the clients appear ("Connected: 1", ...). Choose the experiment, give each participant a role under **Role binding** (one row per computer), press **Initialise experiment**, wait until every column under **Ready** shows 1, and press **Start simulation**.
-
-The experimenter can also do all of this from a phone or tablet in the same network with the [dashboard](#experimenter-dashboard).
-
-### 9. Making your own experiment
-Open **Coupled Sim** ➡️ **Experiments** ➡️ **Setup…**. The window has three tabs.
-
-**New experiment**: give it a name, pick a **Template** (start from **Base** for the town, or **CityMap** for a real city), choose **Where** it takes place (the town, one of 20 cities, or any place by coordinates), untick roles you do not need, choose traffic, animals, time of day and weather, and press **Create and register**. Then place the spawn points:
-1. Press **Open it to place spawn points**. Unity opens the experiment's world with a copy of your experiment in it (for city maps, the experiment itself opens).
-2. In the **Hierarchy**, unfold the experiment and click a spawn point; move it with the arrows in the **Scene** view.
-3. When all are in place, click the experiment at the top of the **Hierarchy**, and in the **Inspector** choose **Overrides** ➡️ **Apply All**. This saves the positions into the experiment.
-4. Delete the copy from the **Hierarchy** (right-click ➡️ **Delete**), save the scene (`Ctrl+S`, on a Mac `Cmd+S`), and open **StartScene** again (step 5).
-
-![New experiment](ReadmeFiles/guide/setup_new_experiment.png)
-
-**Trials**: plan a session in a spreadsheet instead of clicking through it (step 10). Choose a trial file and a participant number and press **Preview** to see that participant's order:
-
-![Trials](ReadmeFiles/guide/setup_trials.png)
-
-**Check**: press **Check experiments and trials** to find mistakes before you run anything. Errors (red) must be fixed; warnings (yellow), such as older experiments that are not registered, can be ignored. The same check runs every time you press Play.
-
-![Check](ReadmeFiles/guide/setup_check.png)
-
-More detail: [Setting up a new experiment](#setting-up-a-new-experiment).
-
-### 10. Running a whole session automatically
-For a real study you usually want each participant to get a fixed list of trials, in a counterbalanced order, without clicking:
-1. Make a trial file: in the **Project** tab open `Assets/StreamingAssets/Trials`, click `example.csv`, press `Ctrl+D` (Mac `Cmd+D`) to copy it, and give the copy a new name. Open it in Excel (or double-click it in Unity). Each row is one trial: the experiment, the role, the conditions (weather, time, ...), and a `block` letter for the conditions whose order should change between participants. Keep the lines that start with `#` (they hold settings). Save it as CSV.
-2. **With Play off**, click `Managers` in the **Hierarchy**. In the **Inspector**, under **Networking Manager**: type the file name in **Trial File** (or press **Use in StartScene** in the **Trials** tab of step 9), the participant's number in **Participant**, and tick **Run Trial Sequence Automatically** (and **Hide Gui**, so the participant does not see the buttons). Save the scene (`Ctrl+S` / `Cmd+S`); changes made while playing are lost.
-
-   ![Trial settings](ReadmeFiles/guide/inspector_networking_manager.png)
-
-3. Press **Play**: the first trial starts by itself. **Esc** ends a trial and starts the next one; after the last trial the simulator stops.
-4. For the next participant, change **Participant** (Play off) and save. To go back to choosing by hand (step 6), untick **Run Trial Sequence Automatically** and **Hide Gui**.
-
-The log files of that session start with the participant and trial number (for example `HostLog-P03-T02-...`), and `ExperimentLogs/Session-P03-....csv` lists the order this participant got. Details: [Trial files and counterbalancing](#trial-files-and-counterbalancing).
-
-### 11. When something goes wrong
-| What you see | What to do |
-| --- | --- |
-| Unity Hub says the editor version is not installed | Press **Install** next to the project (step 4). Use 6000.6.9f1, not another version. |
-| Unity asks about **Safe Mode** when opening | Choose **Ignore**. If red errors stay in the **Console**, close Unity, delete the `Library` folder inside `coupled-sim`, and open the project again (Unity rebuilds it). |
-| Pressing **Play** shows a dialog **Experiment setup problems** | The check (step 9) found a mistake. Read it, fix it, or press **Play anyway** if you are only trying things out. |
-| Pressing **Play** shows no buttons | Open **StartScene** (step 5). If it is open, press `Tab` (it hides and shows the buttons) and check that **Hide Gui** on `Managers` is unticked. |
-| **Convert log to csv** shows no files | Nothing has been recorded yet: run an experiment first (step 6). |
-| Nothing happens when you press keys | Click once inside the **Game** view first. |
-| Parts of the world are **pink** | A material was not converted for the current graphics; see the [FAQ](#faq). |
-| The simulator is very slow | Close other programs, or use a lower quality level (see [Graphics](#graphics)). In Unity, close the **Scene** tab while playing. |
-| Clients cannot connect | Same network? Same simulator version? Firewall allowed? See [Network](#network). |
-| The steering wheel does nothing | While playing, press `F2` to open the wheel calibration window and follow it: |
-
-![Wheel calibration (F2)](ReadmeFiles/guide/wheel_calibration.png)
-
-If you are stuck, ask in the lab or open an issue on GitHub with a screenshot of the **Console**.
+Without Unity, with the ready-made simulator, start with the tutorial [Your first study](docs/first-study.md) instead.
 
 ## Installation
 **Without Unity:** ready-made simulators for Windows and macOS are on the [Releases page](https://github.com/bazilinskyy/coupled-sim/releases): unzip and run (on macOS, right-click the app and choose Open the first time). They take the same command-line options as below and contain the city maps, the trial files and the designed eHMIs (`StreamingAssets`), which you can edit without Unity. To change experiments, scenes or code you need the project in Unity:
 
-Step by step: see [Getting started](#getting-started-step-by-step). In short: Unity **6000.6.9f1** (Unity 6.6) through Unity Hub, with Windows Build Support to build for the lab PCs; clone `https://github.com/bazilinskyy/coupled-sim.git`; add the folder in Unity Hub. The first import takes 20-60 minutes.
+Step by step: see [Getting started](docs/getting-started.md). In short: Unity **6000.6.9f1** (Unity 6.6) through Unity Hub, with Windows Build Support to build for the lab PCs; clone `https://github.com/bazilinskyy/coupled-sim.git`; add the folder in Unity Hub. The first import takes 20-60 minutes.
 
 Platforms: the simulator is developed and used on Windows 10 and 11, and also runs on macOS (tested on macOS 15). Input and output devices (steering wheel, motion suit, HMD) are supported on Windows only. Unity stops providing the editor for Intel Macs after Unity 6.7 LTS. The version of the simulator for Unity 2022.3 is in the archive repository (see the note on the git history above).
 
@@ -703,10 +621,10 @@ Map data © OpenStreetMap contributors, available under the [Open Database Licen
 
 ![Eindhoven and Tokyo (top), New York and Sydney (bottom) from about 100 m](ReadmeFiles/city_maps.jpg)
 
-### Lane markings on city maps
+#### Lane markings on city maps
 Roads are marked from OpenStreetMap's lane tags: the lanes of each direction (`lanes`, `lanes:forward`, `lanes:backward`; else from the width) with dashed lines between lanes of one direction and a centre line between the directions (dashed on two-lane roads, a double line from three lanes), turn arrows 12 m before the junction a lane leads to (`turn:lanes`, `turn:lanes:forward`, `turn:lanes:backward`: through, left, right, slight turns, merges, U-turns and combinations), cycle lanes on the road (`cycleway=lane` and its sides: a line 1.5 m from the edge, on red asphalt in the Netherlands and Belgium) and bus lanes (`busway=lane`, `bus:lanes`, `psv:lanes`, `lanes:bus`: the outermost lane behind a solid line, with BUS painted every 60 m). Barcelona has 40 turn arrows, 34 bus lane pieces and 4 cycle lanes; Eindhoven 57 turn arrows.
 
-### Traffic lights on city maps
+#### Traffic lights on city maps
 City maps get working traffic lights where OpenStreetMap has them (`highway=traffic_signals`, and crossings tagged `crossing=traffic_signals`): a signal head on a mast arm over each approach lane, with a stop line (before a pedestrian crossing on the approach, not on its stripes); a signal mapped just before a junction (the usual Dutch and German mapping, with or without `traffic_signals:direction`) serves only the traffic towards it, a signal on the junction node every approach. Signalised crossings get pedestrian lights on both kerbs (a standing figure on red, a walking one on green; like the cars' heads, lit only towards those they face, not to the side), and dashed lines instead of zebra stripes unless mapped as a zebra. Signals within 40 m of each other form one junction with one controller: the approaches are split into the main direction (the widest road) and the crossing direction, each green in turn (24 s and 16 s, 3 s amber, 2 s all red; red and amber before green in the UK, Germany, Austria and Poland), and pedestrians walk while the road they cross is red, their green blinking for the last 5 s; at a junction signalled in one direction only, those crossing the side road walk with the main road's green (their heads face its drivers). A signal on one road only (a crossing in a street) alternates the cars with the pedestrians. Junctions start at different points of their cycle (the same on every agent).
 
 **Turn arrows.** An approach whose `turn:lanes` (OpenStreetMap) has a lane only for turning across the oncoming traffic (left, or right in left-hand traffic) gets a second head with arrow lenses over that lane, on the same mast arm, and its own protected phase: the junction's cycle is then main road straight on (with its pedestrians), its turns, crossing road straight on, its turns (straight-on greens shortened, 7 s for the turns). AI cars obey the arrow when their route turns that way and the main head otherwise. Eindhoven has 11 such heads, London 1 (right arrows); `-smokeShot arrow:0` shows the nearest one.
@@ -1028,7 +946,7 @@ A trigger `BoxCollider` with a `SpeedSettings` component on a waypoint changes t
 Roles with `SpawnPoint.Type` = `PlayerRidingTwoWheeler` let a participant ride a bicycle, an e-scooter, a moped or a road racing bicycle (`twoWheelerIdx` 0, 1, 2, 3 in `PlayerSystem` ➡️ `Avatar Prefab Two Wheeler`). `Base`, the example experiments and `CityMap` have the roles `Cyclist`, `E-scooter rider`, `Moped rider` and `Race cyclist` (the race cyclist comes after the other roles, so the older role numbers stay: in `Base` it is role 6, in `CityMap` role 7, e.g. `-smokeExperiment 4 -smokeRole 7`).
 - **Physics** (`TwoWheelerDynamics`, with tests): force balance of the rider's pedalling power (city bike: about 18-25 km/h on the flat at full effort; race bike: 8 kg bike and a 72 kg rider on the hoods, drag area Cd·A 0.30 m², rolling resistance 0.004, 400 W at full effort, about 45 km/h, and some 33 km/h at the autopilot's 180 W, from 0 to 30 km/h in about 8 s) or motor power with the legal cut-off speed (e-bike and e-scooter 25 km/h, moped 25 or 45 km/h), rolling resistance, air drag, slope and braking (bicycle: about 3 m from 20 km/h); a bicycle model for the yaw, with the steering range narrowing with speed and the rider leaning into turns (equilibrium lean, reached with a lag). The vehicle follows the ground, can mount kerbs up to 18 cm and stops when it hits something. Presets are in `TwoWheelerParameters.Preset`.
 - **Controls**: the car's axes: `W`/`↑` pedal or throttle, `S`/`↓` or `Space` brake, `A`/`D` steer; steering wheel and pedals work the same.
-- **Models**: the bicycle (Dutch city bike), the race bicycle and the e-scooter are built from code, the moped from a 3D model of a Vespa ("Moto Vespa", CC BY 4.0, see the credits), by `Coupled Sim` ➡️ `Two-wheelers` ➡️ `Build avatar prefabs` (`TwoWheelerPrefabBuilder`): wheels spin, the handlebar turns on its head tube, frame and rider lean. The race bicycle has a carbon diamond frame, 25 mm tyres on deep rims, a drop handlebar with brake hoods on a long low stem, a narrow saddle well above the bars, a double chainset and clipless pedals; its rider (Rocketbox's athletic woman) wears a kit painted onto her body's texture (a close-fitting jersey in team colours with dark side panels, black shorts, white socks and cycling shoes), a road helmet and wrap-around glasses, all made in code. The riders are Rocketbox avatars posed by IK (`RiderIK`); a bicycle's saddle is set to its rider's legs (the knee bent some 25-30° with the pedal at the bottom). The camera is at the rider's eyes (on the race bicycle low and forward, as in its riding position) and follows only part of the lean (`CameraLeanFactor`) for comfort in VR.
+- **Models**: the bicycle (Dutch city bike), the race bicycle and the e-scooter are built from code, the moped from a 3D model of a Vespa ("Moto Vespa", CC BY 4.0, see the credits), by `Coupled Sim` ➡️ `Two-wheelers` ➡️ `Build avatar prefabs` (`TwoWheelerPrefabBuilder`): wheels spin, the handlebar turns on its head tube, frame and rider lean. The race bicycle has a carbon diamond frame, 25 mm tyres on deep rims, a drop handlebar with brake hoods on a long low stem, a narrow saddle well above the bars, a double chainset and clipless pedals; its rider (Rocketbox's athletic woman) wears a kit painted onto her body's texture (a close-fitting jersey in team colours with dark side panels, black shorts, white socks and cycling shoes), a road helmet and wrap-around glasses, all made in code. She rides in a road posture (a long, rounded back with the head up, from a posture layer under the IK) in the kit of D.S.W.V. WTOS, Delft's student cycling club (blue jersey with white chest bands and WTOS down the back, black bib shorts; to change it, edit `TeamColour` and `BackLettering` in `Assets/Editor/TwoWheelerPrefabBuilder.cs`, then run *Coupled Sim > Two-wheelers > Build the bicycles and add the race cyclist role*). The riders are Rocketbox avatars posed by IK (`RiderIK`); a bicycle's saddle is set to its rider's legs (the knee bent some 25-30° with the pedal at the bottom). The camera is at the rider's eyes (on the race bicycle low and forward, as in its riding position) and follows only part of the lean (`CameraLeanFactor`) for comfort in VR.
 - **Cycling** (`Pedalling`, with tests, and `RiderIK`): the cranks turn with the rear wheel through the rider's gears (a 7-speed hub on the city bike, 2x11 on the race bike), the rider shifting to keep 60-85 rpm (race bike 80-100); they stop when the rider freewheels (coasting or braking) and come level, stay with the inside pedal up when leaning far into a bend, and come to the push-off position (the front pedal up) when stopping. Stopped, the rider puts the left foot on the ground (the right in left-hand traffic), forward off the saddle, and the bicycle leans 7° onto it; setting off with a hard effort the rider stands on the pedals, the bicycle rocking from side to side under them, and sits down once under way. The balls of the feet are on the pedals with the ankles moving through the stroke (heel a little down at the top, toes down at the bottom), knees forward; the torso leans as far as the grips need with slightly bent elbows (upright on the city bike; low and flat on the race bike, lower still with the hands on the drops above 38 km/h), the fingers round the grips or over the hoods; the upper body sways a little with each stroke, more with effort; the head looks ahead and into the bend, with a look over the shoulder now and then and when a turn begins. The AI cyclists in the traffic pedal the same way (their effort from the power their speed and acceleration need), and other participants' riders, replays and the line-up read the pose from how the bicycle and its cranks move.
 - Riders are logged and synchronised like vehicles (position, rotation, velocity; lean, steering, wheels and cranks as synced parts); AI pedestrians, model-driven traffic and SUMO (as a bicycle or moped; the race bicycle as a bicycle) react to them.
 
@@ -1337,7 +1255,7 @@ Without the GitHub CLI: on github.com open the repository ➡️ **Settings** �
 
 **Two agents.** A second editor on an instant copy of the project can be a client: on macOS `cp -cR coupled-sim coupled-sim-client` (APFS copies in seconds; delete its `Temp` folder), then run the host with `-clients 1` and the client with `SmokeTest.Run -connect 127.0.0.1`. The reports list what each agent saw.
 
-**Retaking the README pictures.** `Tools/readme_screenshots.sh` (macOS, screen unlocked, about 10 minutes) opens the editor and walks through the windows and screens shown in [Getting started](#getting-started-step-by-step) (`Assets/Editor/ReadmeScreenshots.cs`), saving them to `ReadmeShots/raw`. The pictures in `ReadmeFiles/guide` are made from these (cropped, with numbered markers).
+**Retaking the README pictures.** `Tools/readme_screenshots.sh` (macOS, screen unlocked, about 10 minutes) opens the editor and walks through the windows and screens shown in [Getting started](docs/getting-started.md) (`Assets/Editor/ReadmeScreenshots.cs`), saving them to `ReadmeShots/raw`. The pictures in `ReadmeFiles/guide` are made from these (cropped, with numbered markers).
 
 ## Hardware
 ### Several monitors and mirrors
@@ -1411,7 +1329,7 @@ All agents must be in the same local network; the host's IP address is in its co
 ![](ReadmeFiles/inbound_rules.png)
 
 ## FAQ
-**Which Unity version do I need?** Unity 6.6 (6000.6.9f1). Newer 6.x versions will probably open the project but are not tested; older versions cannot open it. Versions of the simulator for Unity 2022.3 are in the git history.
+**Which Unity version do I need?** Unity 6.6 (6000.6.9f1). Newer 6.x versions will probably open the project but are not tested; older versions cannot open it. The version of the simulator for Unity 2022.3 is in the archive repository (see the note on the git history under [Contents](#contents)).
 
 **Which computer do I need?** Windows 10/11 with a recent GPU: a GeForce RTX 3060 or better for screens, RTX 3070/4070 or better for VR at 90 Hz, 16 GB of RAM. The editor also runs on macOS (no VR, no force feedback). One PC per participant; several agents on one PC are for testing only.
 
@@ -1437,11 +1355,17 @@ All agents must be in the same local network; the host's IP address is in its co
 
 **The frame rate is low.** Start with `-quality auto` (or `-quality Performance`, see [Graphics](#graphics)): shadows and trees cost most (on a city map with a tree register, the nearby trees about a quarter of a frame). `SmokeTest ... -smokeBench` lists what each feature and each group of objects costs on your PC. Run a build rather than the editor; in the editor, close the Scene view and use `Play Maximized`; reduce `EnvironmentController` ➡️ `MaxActiveStreetLights` at night; use a smaller city map or radius. On laptops, make sure the simulator runs on the dedicated GPU (NVIDIA Control Panel ➡️ Manage 3D settings). In VR, the headset's refresh rate (72-90 Hz) is the target.
 
-**Cars drive on the left in London, but the car is left-hand drive.** Yes: maps with left-hand traffic place participants and SUMO traffic on the left, but there is no right-hand drive car model yet.
+**Do cars drive on the left in London, Tokyo or Sydney?** Yes: maps with left-hand traffic place participants and SUMO traffic on the left, and the participant's car (driver and AV passenger roles) is right-hand drive (see [City maps](#city-maps-openstreetmap)).
 
 **Can I use my own avatars or cars?** Pedestrians: any humanoid character; `Coupled Sim` ➡️ `Pedestrians` ➡️ `Build pedestrian prefabs` makes AI pedestrians from Rocketbox-style models. Cars: copy a drivable car prefab and replace the model; AI cars need to be in `NetworkingManager` ➡️ `AI Car System` ➡️ `Prefabs`.
 
 **Is there a way to test the simulator without screens and people?** Yes: the smoke test and the edit-mode tests (see [Testing](#testing)).
+
+## Contributing
+Bug reports, ideas and pull requests are welcome.
+- **Bugs and questions:** open an [issue](https://github.com/bazilinskyy/coupled-sim/issues) with the Unity version, what you did and a screenshot of the **Console** (or the log of a build).
+- **Pull requests** go to `master`. The edit-mode tests run on every pull request (see [Automatic tests on GitHub](#testing)); run them and the smoke test locally first ([Testing](#testing)). Keep your own experiments in new files rather than changing the examples, so updates do not clash with them.
+- **README pictures and clips:** the screenshots of the step-by-step guide are retaken with `Tools/readme_screenshots.sh` ([Testing](#testing)), the short videos as described in [Making clips like the README's](docs/readme-videos.md).
 
 ## Support the coupled simulator
 The coupled simulator is free and stays free. If it is useful for your research or teaching and you would like to give something back, you can [sponsor it on GitHub](https://github.com/sponsors/bazilinskyy) (monthly or once) or [buy me a coffee on Ko-fi](https://ko-fi.com/bazilinskyy). Citing the [paper](#citation), bug reports, ideas and pull requests help just as much.
