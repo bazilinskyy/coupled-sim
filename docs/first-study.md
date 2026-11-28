@@ -92,6 +92,6 @@ Watch a trial again to see what happened: `"Coupled Simulator.exe" -replay "Expe
 ## 7. Make it yours
 - **Your own eHMI**: copy `StreamingAssets/eHMI/LightBarCyan.json`, give it a new name and change the colours, the shapes (`lightbar`, `rect`, `circle`, `arrow`, `chevrons`, `text`) and what it shows in each state; use its name in `ehmiDesign`. No Unity needed. The README's [designed eHMIs](../README.md#designed-ehmis) lists everything you can set.
 - **Other conditions** per trial: time of day, weather, the AV's speed (`avSpeed`), sounds of the AV (`auditoryEhmi=1`), animals (`animals=3`).
-- **Other places and roles**: a real city (`map=Delft`), the pedestrian as a cyclist, several pedestrians at once (up to 8 participants). For new experiments (spawn points, routes) you need Unity: follow [Getting started, step by step](../README.md#getting-started-step-by-step), step 9, which uses a setup window rather than code.
+- **Other places and roles**: a real city (`map=Delft`), the pedestrian as a cyclist, several pedestrians at once (up to 8 participants). For new experiments (spawn points, routes) you need Unity: follow [Getting started, step by step](getting-started.md#9-making-your-own-experiment), step 9, which uses a setup window rather than code.
 
 **Before your real study**: run a pilot with two or three people, check that the files contain what you need, and ask your ethics committee for approval (simulators can cause motion sickness in some people: let participants stop at any time).
