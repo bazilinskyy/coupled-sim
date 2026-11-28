@@ -703,10 +703,14 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
             else if (rng.NextDouble() < 1.0 / 6.0) ped.AgeGroup = CoupledSim.Pedestrians.AgeGroup.Older;
             var anim = go.GetComponentInChildren<Animator>();
             if (anim != null) anim.enabled = true;
+            // (walking from motion capture: a man's or a woman's walk, one of several normal walks, its own step phase)
+            var walk = WalkController(prefab.name, rng);
+            if (anim != null && walk != null) anim.runtimeAnimatorController = walk;
             // (posed whether a camera is known to see it or not: with the prefabs' culling, a video's camera did not count,
             // and pedestrians slid along in a standing pose in the README's rush-hour clip)
             if (anim != null) anim.cullingMode = AnimatorCullingMode.AlwaysAnimate;
             ped.Init(circuit);
+            ped.VaryGait(rng);
             var tracker = go.GetComponent<WaypointProgressTracker>();
             if (tracker != null) tracker.SetProgress(progress);
             var avatar = go.GetComponent<PlayerAvatar>();
@@ -722,6 +726,35 @@ public class MapTraffic : CarSpawnerBase, IExperimentModifier
     /// carriageway near its kerb (RideLine), not on roads over 60 km/h (motorways, trunk roads). The routes nearest the
     /// participants first, and on them the places nearest the participants (up to MaxCyclists), so the cyclists ride
     /// where they are seen, also on a map with long corridors.</summary>
+    static readonly Dictionary<string, RuntimeAnimatorController> _walks = new Dictionary<string, RuntimeAnimatorController>();
+    static readonly string[] WalkStyles = { "walk_neutral_01", "walk_neutral_02", "walk_neutral_03", "walk_stroll_01" };
+
+    /// <summary>The walk controller for a pedestrian avatar (Resources/Pedestrians/Walk_Male or Walk_Female, built from the
+    /// Rocketbox motion-capture clips by RocketboxWalkControllers), with its normal walk replaced by one of several
+    /// (people walk differently: a stroll, a brisker step); null if the controllers are not there.</summary>
+    static RuntimeAnimatorController WalkController(string avatar, System.Random rng)
+    {
+        bool female = avatar.Contains("Female") || avatar.Contains("Claudia");
+        string style = WalkStyles[rng.Next(WalkStyles.Length)];
+        string key = (female ? "f_" : "m_") + style;
+        if (_walks.TryGetValue(key, out var cached)) return cached;
+        var baseController = Resources.Load<RuntimeAnimatorController>(female ? "Pedestrians/Walk_Female" : "Pedestrians/Walk_Male");
+        RuntimeAnimatorController result = baseController;
+        if (baseController != null)
+        {
+            var neutral = baseController.animationClips.FirstOrDefault(c => c.name.EndsWith("walk_neutral_01"));
+            var clip = baseController.animationClips.FirstOrDefault(c => c.name == key);
+            if (neutral != null && clip != null && clip != neutral)
+            {
+                var o = new AnimatorOverrideController(baseController) { name = "Walk " + key };
+                o[neutral] = clip;
+                result = o;
+            }
+        }
+        _walks[key] = result;
+        return result;
+    }
+
     /// <summary>Whether a place is in a participant's way now: within 8 m of one, or in the 25 m in front of one (3 m to
     /// either side). Cyclists and pedestrians are placed after the participants have started (in New York a cyclist was
     /// placed in front of the autopilot's bonnet, and it drove into it).</summary>

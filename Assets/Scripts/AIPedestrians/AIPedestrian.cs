@@ -44,6 +44,32 @@ public class AIPedestrian : MonoBehaviour
     [Tooltip("Walking speed (m/s) of the walk animation at full blend; 0 = measure it from the clip.")]
     public float WalkClipSpeed = 0f;
 
+    // the walk controllers' range (Resources/Pedestrians/Walk_*: a blend tree on WalkSpeed from a slow to a fast walk,
+    // each clip at its own speed), read from their parameters; 0 = another controller, driven by the Speed blend
+    float _slowWalk, _fastWalk, _cadence = 1f;
+    bool _walkChecked;
+
+    /// <summary>Starts the walk at a phase of its own and gives it a cadence of its own (a few percent either way), so
+    /// people placed at the same moment do not step in time with each other.</summary>
+    public void VaryGait(System.Random rng)
+    {
+        _cadence = 0.94f + 0.12f * (float)rng.NextDouble();
+        if (animator != null && animator.runtimeAnimatorController != null) animator.Play(0, 0, (float)rng.NextDouble());
+    }
+
+    void CheckWalkController()
+    {
+        _walkChecked = true;
+        _slowWalk = _fastWalk = 0f;
+        if (animator == null || animator.runtimeAnimatorController == null) return;
+        foreach (var p in animator.parameters)
+        {
+            if (p.name == "SlowWalk") _slowWalk = p.defaultFloat;
+            else if (p.name == "FastWalk") _fastWalk = p.defaultFloat;
+        }
+        if (_fastWalk <= _slowWalk) _slowWalk = _fastWalk = 0f;
+    }
+
     [Header("State (read only)")]
     public CrossingPhase Phase;
     public string DecisionReason;
@@ -286,11 +312,27 @@ public class AIPedestrian : MonoBehaviour
 
         float speed = _velocity.Length();
         float reference = MatchAnimationToSpeed ? WalkClipSpeed : Mathf.Max(0.1f, moveSpeed);
+        if (!_walkChecked) CheckWalkController();
+        if (_fastWalk > 0f)
+        {
+            // the walk controller: the blend follows the speed (for this person's size: the clips' speeds are for a
+            // human scale of 1, a child's steps are shorter), held within the clips' range; outside it the clips play
+            // slower or faster, never blended with the idle while walking (that gave half steps and hanging arms)
+            float scale = animator.isHuman ? Mathf.Max(0.3f, animator.humanScale) : 1f;
+            float v = speed / scale / _cadence;
+            float w = speed < 0.2f ? 0f : Mathf.Clamp(v, _slowWalk, _fastWalk);
+            currentBlendFactor = Damp(currentBlendFactor, w, 0.02f, dt);
+            animator.SetFloat("WalkSpeed", currentBlendFactor);
+            animator.speed = _cadence * (speed < 0.2f ? 1f : v < _slowWalk ? Mathf.Max(0.5f, v / _slowWalk) : v > _fastWalk ? Mathf.Min(1.8f, v / _fastWalk) : 1f);
+        }
+        else
+        {
         float blend = animationBlendFactor * Mathf.Clamp01(speed / reference);
         currentBlendFactor = Damp(currentBlendFactor, blend, SpeedDampingFactor, dt);
         animator.SetFloat("Speed", currentBlendFactor);
         // faster than the clip: play it faster instead of sliding
         animator.speed = MatchAnimationToSpeed && speed > reference ? Mathf.Min(2f, speed / reference) : 1f;
+        }
         if (speed > 0.6f && _animLogs < 12 && Time.time > 5f && System.Array.IndexOf(CommandLine.Args, "-debugAnimation") >= 0)
         {
             _animLogs++;
