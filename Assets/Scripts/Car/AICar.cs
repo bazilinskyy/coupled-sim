@@ -182,6 +182,8 @@ public class AICar : MonoBehaviour, IVehicle
     TrafficCar _trafficCar;
     WaypointProgressTracker _tracker;
     float _yawRate;
+    /// <summary>The yaw rate (rad/s) it turns its heading by under external speed control.</summary>
+    public float YawRate => _yawRate;
     TwoWheelerController _twoWheeler;
     bool _twoWheelerChecked;
 
@@ -226,8 +228,20 @@ public class AICar : MonoBehaviour, IVehicle
         if (v < 0.05f) v = Mathf.Max(0f, ExternalSpeed);
         float wanted = v * curvature;   // rad/s
         _yawRate = Mathf.Lerp(_yawRate, wanted, 1f - Mathf.Exp(-Time.fixedDeltaTime / 0.1f));
-        theRigidbody.angularVelocity = new Vector3(0f, _yawRate, 0f);
+        // the heading it should have by now, and an angular velocity that makes up what it lacks (in about 0.15 s): the
+        // wheel colliders' sideways grip held a car turning about its middle to some 55-60% of its yaw rate, so it ran a
+        // bend of 5.8 m on a circle of about 7.5 m and swung 0.9 m out of its lane on every tight turn in Montreal. Turned
+        // by the physics, not set: setting the heading of an articulated bus each step fought the hinge to its rear
+        // section, which pushed it sideways off the road when it stopped. A knock of more than 15 degrees (a collision)
+        // starts the reckoning again from the heading it has.
+        float yaw = rotationAxis.rotation.eulerAngles.y;
+        if (!_headingSet || Mathf.Abs(Mathf.DeltaAngle(yaw, _heading)) > 15f) { _heading = yaw; _headingSet = true; }
+        _heading = Mathf.Repeat(_heading + _yawRate * Mathf.Rad2Deg * Time.fixedDeltaTime, 360f);
+        float lag = Mathf.DeltaAngle(yaw, _heading) * Mathf.Deg2Rad;
+        theRigidbody.angularVelocity = new Vector3(0f, _yawRate + lag / 0.15f, 0f);
     }
+    float _heading;
+    bool _headingSet;
 
     float _groundPitch, _groundRoll;
     int _groundTick;

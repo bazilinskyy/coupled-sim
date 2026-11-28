@@ -452,7 +452,7 @@ public class TrafficCar : MonoBehaviour
             }
             if (Mathf.Abs(off) < 0.4f) _offLogged = false;
             // (-debugCar "Map traffic Map route 24 15": that vehicle's every line, with its heading)
-            if (DebugCar != null && name == DebugCar) Debug.Log($"TrafficDebug: {name}: {line} heading {transform.eulerAngles.y:F0} yaw rate {(rb0 != null ? rb0.angularVelocity.y * Mathf.Rad2Deg : 0f):F0}°/s");
+            if (DebugCar != null && name == DebugCar) Debug.Log($"TrafficDebug: {name}: {line} heading {transform.eulerAngles.y:F0} yaw rate {_car.YawRate * Mathf.Rad2Deg:F0}°/s");
             // the participant's autopilot: every 5 s
             if (Time.time >= _nextParticipantLog && GetComponent<AutomatedDriving>() != null)
             {

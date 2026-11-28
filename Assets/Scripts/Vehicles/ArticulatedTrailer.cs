@@ -34,6 +34,13 @@ public class ArticulatedTrailer : MonoBehaviour
         if (!Trailer.TryGetComponent<Rigidbody>(out var rb)) rb = Trailer.gameObject.AddComponent<Rigidbody>();
         rb.isKinematic = true;
         rb.interpolation = RigidbodyInterpolation.None;
+        // the two sections never collide with each other: at the hitch their bodies overlap in a tight turn, and the rear
+        // section, a kinematic body that is placed, not pushed, threw the front off the road (an articulated bus in São
+        // Paulo, stopped at a junction, went off at 35 km/h into a tree)
+        var front = GetComponentsInChildren<Collider>(true);
+        foreach (var r in Trailer.GetComponentsInChildren<Collider>(true))
+            foreach (var f in front)
+                if (r != f) Physics.IgnoreCollision(r, f, true);
         Align();
         _started = true;
     }
