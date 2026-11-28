@@ -552,6 +552,9 @@ public partial class OsmMapGenerator
             GroundPart(x % BayPx / (float)BayPx, x / BayPx, y / (float)BayPx, style) == 0 ? Color.white : new Color(1f, 1f, 1f, 0f));
 
     /// <summary>The window style of a building: from its construction year (3D BAG), height and OSM type.</summary>
+    /// <summary>Whether the map's country builds sash windows (Classic, Tall); elsewhere pairs and ribbons instead.</summary>
+    bool _sashWindows = true;
+
     public static WindowStyle StyleFor(int year, float height, string type, uint seed)
     {
         bool office = type == "office" || type == "commercial" || type == "retail" || type == "hotel" || type == "university";
@@ -1084,9 +1087,16 @@ public partial class OsmMapGenerator
             NightMaterials.Add(m);
             return grounds[k] = m;
         };
-        // brick-heavy palettes for the Netherlands, Belgium and the UK; more plaster/concrete elsewhere
-        bool brickCountry = _map.Country == "Netherlands" || _map.Country == "Belgium" || _map.Country == "United Kingdom";
-        int[] palette = brickCountry ? new[] { 0, 0, 1, 1, 2, 3 } : new[] { 3, 3, 4, 4, 2, 0 };
+        // wall kinds by region: brick-heavy in the Netherlands, Belgium and the UK; some brick in North America, Australia,
+        // New Zealand and South Africa; plaster and concrete elsewhere (São Paulo and Tokyo had Dutch red-brick townhouses,
+        // one building in three)
+        string country = _map.Country ?? "";
+        bool brickCountry = country == "Netherlands" || country == "Belgium" || country == "United Kingdom";
+        bool someBrick = country == "United States" || country == "Canada" || country == "Australia" || country == "New Zealand" || country == "South Africa";
+        int[] palette = brickCountry ? new[] { 0, 0, 1, 1, 2, 3 } : someBrick ? new[] { 3, 4, 0, 3, 4, 1 } : new[] { 3, 3, 4, 3, 4, 3 };
+        // (and sash windows only where they are built: in Japan, Latin America, South-East Asia and Africa pairs and ribbons)
+        _sashWindows = !(country == "Japan" || country == "Brazil" || country == "Peru" || country == "Uruguay" || country == "Vietnam"
+            || country == "Laos" || country == "Egypt" || country == "Kenya");
 
         // the national large-scale topography's surfaces (the Netherlands: BGT), drawn further down; known first, as with
         // them the roads' lines are not drawn and the ground between the surfaces is not the aerial photo
@@ -1820,6 +1830,7 @@ public partial class OsmMapGenerator
             float minHeight = ParseMetres(w.Tag("min_height"), 0f);
             if (Geometry2D.SignedArea(poly) < 0) poly.Reverse();
             var style = StyleFor(0, height, w.Tag("building"), (uint)(Math.Abs(w.Id) * 2654435761L));
+            if (!_sashWindows && (style == WindowStyle.Classic || style == WindowStyle.Tall)) style = w.Id % 2 == 0 ? WindowStyle.Pair : WindowStyle.Ribbon;
             int kindO = palette[(int)(Math.Abs(w.Id) % palette.Length)];
             var mb = buildingMbs[kindO * Styles + (int)style];
             var gsBase = GroundStyleFor(style, w.Tag("building"));
