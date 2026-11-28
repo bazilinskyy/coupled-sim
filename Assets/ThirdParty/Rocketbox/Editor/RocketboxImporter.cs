@@ -18,10 +18,26 @@ public class RocketboxImporter : AssetPostprocessor
 
     static bool InRoot(string path) => path.Replace('\\', '/').StartsWith(Root);
 
+    /// <summary>The walk and idle clips (motion capture from the Microsoft Rocketbox library, MIT): skeleton only.</summary>
+    public const string Animations = Root + "Animations/";
+
+    static bool IsClip(string path) => path.Replace('\\', '/').StartsWith(Animations);
+
     void OnPreprocessModel()
     {
         if (!InRoot(assetPath)) return;
         var importer = (ModelImporter)assetImporter;
+        if (IsClip(assetPath))
+        {
+            // a humanoid clip, so it retargets onto every avatar
+            importer.animationType = ModelImporterAnimationType.Human;
+            importer.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
+            importer.importAnimation = true;
+            importer.importCameras = false;
+            importer.importLights = false;
+            importer.materialImportMode = ModelImporterMaterialImportMode.None;
+            return;
+        }
         importer.animationType = ModelImporterAnimationType.Human;
         importer.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
         importer.importCameras = false;
@@ -29,6 +45,28 @@ public class RocketboxImporter : AssetPostprocessor
         importer.importAnimation = false;
         importer.materialImportMode = ModelImporterMaterialImportMode.ImportStandard;
         importer.materialLocation = ModelImporterMaterialLocation.InPrefab;
+    }
+
+    void OnPreprocessAnimation()
+    {
+        if (!IsClip(assetPath)) return;
+        var importer = (ModelImporter)assetImporter;
+        var clips = importer.defaultClipAnimations;
+        foreach (var c in clips)
+        {
+            // loops in place: the forward speed stays in the clip (its average speed sets the blend), turning and
+            // height go into the pose, so a walker neither drifts sideways nor bobs off the ground
+            c.name = System.IO.Path.GetFileNameWithoutExtension(assetPath);
+            c.loopTime = true;
+            c.loopPose = true;
+            c.lockRootRotation = true;
+            c.keepOriginalOrientation = true;
+            c.lockRootHeightY = true;
+            c.keepOriginalPositionY = true;
+            c.heightFromFeet = true;
+            c.lockRootPositionXZ = false;
+        }
+        importer.clipAnimations = clips;
     }
 
     void OnPreprocessTexture()
