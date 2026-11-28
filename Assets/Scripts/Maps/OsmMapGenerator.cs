@@ -3440,7 +3440,8 @@ public partial class OsmMapGenerator
         // parked vehicles are collected first and the ones nearest the centre placed (the caps keep the frame rate)
         var cars = new List<(V2 p, float yaw)>(); var bikes = new List<(V2 p, float yaw)>();
         void Car(V2 p, float yaw) { if (Inside(p)) cars.Add((p, yaw + (rng.Next(2) == 0 ? 0 : 180))); }
-        void Bike(V2 p, float yaw) { if (Inside(p)) bikes.Add((p, yaw + (float)(rng.NextDouble() * 10 - 5))); }
+        // (turned a little, ±1.5°: ±5° and 0.7 m apart, the handlebars, 0.76 m wide, went through each other)
+        void Bike(V2 p, float yaw) { if (Inside(p)) bikes.Add((p, yaw + (float)(rng.NextDouble() * 3 - 1.5))); }
 
         foreach (var node in _data.Nodes.Values)
         {
@@ -3483,11 +3484,12 @@ public partial class OsmMapGenerator
                 }
                 for (int i = 0; i < capacity; i++)
                 {
-                    var q = p + dir * ((i - capacity / 2f) * 0.75f);
+                    var q = p + dir * ((i - capacity / 2f) * 0.9f);
                     var q3 = new Vector3(q.X, y, q.Y);
                     racks.Box(q3, new Vector3(0.05f, 0.75f, 0.05f), along);              // a staple: two posts and a bar
                     racks.Box(q3 + new Vector3(right.X, 0, right.Y) * 0.5f, new Vector3(0.05f, 0.75f, 0.05f), along);
-                    if (rng.NextDouble() < 0.7) Bike(q + right * 0.25f, Yaw(right));
+                    // (every other one pushed in a little further, as people do so the handlebars pass)
+                    if (rng.NextDouble() < 0.7) Bike(q + right * (i % 2 == 0 ? 0.25f : 0.5f), Yaw(right));
                 }
             }
             else if (barrier == "bollard") { bollards.Box(p3, new Vector3(0.14f, 0.9f, 0.14f), along); PropCount++; }
@@ -3612,9 +3614,11 @@ public partial class OsmMapGenerator
                 for (float v = minB + 1.0f; v + 0.95f <= maxB && placed < Math.Min(300, cap); v += 3.5f)
                 {
                     float rowStart = float.NaN, rowEnd = float.NaN;
-                    for (float u = minA + 0.4f; u < maxA - 0.3f && placed < Math.Min(300, cap); u += 0.7f)
+                    int slot = 0;
+                    for (float u = minA + 0.4f; u < maxA - 0.3f && placed < Math.Min(300, cap); u += 0.85f, slot++)
                     {
-                        var q = ax * u + ay * v;
+                        // (0.85 m apart and every other one 0.3 m further in: 0.7 m apart, their handlebars went through each other)
+                        var q = ax * u + ay * (v + (slot % 2 == 0 ? 0f : 0.3f));
                         if (!Geometry2D.PointInPolygon(q + ay * 0.95f, poly) || !Geometry2D.PointInPolygon(q - ay * 0.95f, poly)) continue;
                         if (float.IsNaN(rowStart)) rowStart = u; rowEnd = u;
                         if (rng.NextDouble() < 0.75) { Bike(q, Yaw(ay) + (rng.NextDouble() < 0.5 ? 0 : 180)); placed++; }

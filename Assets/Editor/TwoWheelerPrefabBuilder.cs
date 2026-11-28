@@ -1259,6 +1259,9 @@ public static class TwoWheelerPrefabBuilder
     /// <summary>Static bicycles in several colours for city maps (no rider, no scripts), leaning slightly as on a kickstand.</summary>
     public static GameObject[] BuildParkedBicycles(string folder)
     {
+        // (the tubes need the built-in cylinder: called on its own, from MapPropBuilder, it was not loaded, and the parked
+        // bicycles had no frame, fork, handlebar or spokes: wheels and a coloured bar with the lights floating over them)
+        _cylinder = Resources.GetBuiltinResource<Mesh>("Cylinder.fbx");
         var colours = new[] { new Color(0.05f, 0.05f, 0.06f), new Color(0.1f, 0.2f, 0.45f), new Color(0.45f, 0.08f, 0.08f), new Color(0.75f, 0.75f, 0.72f), new Color(0.15f, 0.3f, 0.18f) };
         // the shared paint (and lights) of the rideable bicycle must keep their settings
         var keep = new[] { "BikePaint", "HeadLight", "RearLight" }
