@@ -190,14 +190,17 @@ public class AnimalAgent : MonoBehaviour
     void PickNext()
     {
         float r = (float)_rng.NextDouble();
-        if (r < 0.25f) { Current = State.Eat; _stateTimer = Rand(3f, 8f); return; }
-        if (r < 0.4f) { Current = State.Idle; _stateTimer = Rand(2f, 6f); return; }
+        // (never standing or grazing in a traffic lane: on to a place off it)
+        bool onRoad = MapTraffic.OnCarriageway(transform.position);
+        if (!onRoad && r < 0.25f) { Current = State.Eat; _stateTimer = Rand(3f, 8f); return; }
+        if (!onRoad && r < 0.4f) { Current = State.Idle; _stateTimer = Rand(2f, 6f); return; }
         // wander: a point around home (sometimes across the road, wherever that is)
         for (int i = 0; i < 6; i++)
         {
             var d = Random2(HomeRadius);
             var p = _home + new Vector3(d.x, 0, d.y);
-            if (Ground(p, out var y) && !Blocked(transform.position, p))
+            // (a place in a traffic lane only now and then: across the road, not to stand in it)
+            if (Ground(p, out var y) && !Blocked(transform.position, p) && (!MapTraffic.OnCarriageway(p) || (!onRoad && _rng.NextDouble() < 0.1)))
             {
                 // (a pigeon hops a few metres in a short flight: its model has no walk, and walking in its standing pose
                 // it slid over the ground)
