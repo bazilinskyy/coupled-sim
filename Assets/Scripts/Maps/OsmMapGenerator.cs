@@ -2473,6 +2473,16 @@ public partial class OsmMapGenerator
         return false;
     }
 
+    /// <summary>A parked vehicle's indicators and brake lights off: separate small lamps at its corners, switched by the
+    /// driving scripts a parked car does not run, they stayed lit, as orange dots beside its tail lamps (where the body
+    /// curves, just off it).</summary>
+    public static void LampsOff(GameObject car)
+    {
+        foreach (var t in car.GetComponentsInChildren<Transform>(true))
+            if (t.name.StartsWith("CarBlinker") || t.name == "BreakLights")
+                foreach (Transform c in t) c.gameObject.SetActive(false);
+    }
+
     /// <summary>Parked cars, kept to take away those that stand in a tree, a post or a wall (RemoveBlockedParkedCars).</summary>
     readonly List<(GameObject car, float yaw)> _parkedCars = new List<(GameObject, float)>();
 
@@ -2483,6 +2493,7 @@ public partial class OsmMapGenerator
     void RemoveBlockedParkedCars()
     {
         Physics.SyncTransforms();
+        SettleParkedCars();
         int removed = 0;
         foreach (var (car, yaw) in _parkedCars)
         {
@@ -2506,6 +2517,55 @@ public partial class OsmMapGenerator
             if (blocked) { if (Application.isPlaying) UnityEngine.Object.Destroy(car); else UnityEngine.Object.DestroyImmediate(car); removed++; ParkedCarCount--; }
         }
         if (removed > 0) Debug.Log($"OsmMap: {removed} parked cars taken away (in a tree, a post or a wall)");
+    }
+
+    /// <summary>
+    /// Each parked car on the ground under its four wheels: its height from theirs and tilted to them (a car half on the
+    /// kerb leans, as real ones do). They were placed level at the height under their middle, with heights over 0.6 m left
+    /// out (GroundAt ignores roofs that way): on a map with terrain, or half on the kerb, a car sank into the road on one
+    /// side (London's traffic-lights picture in the README).
+    /// </summary>
+    void SettleParkedCars()
+    {
+        int moved = 0;
+        var hits = new RaycastHit[16];
+        float GroundUnder(Vector3 p, Transform car, float fallback)
+        {
+            int n = Physics.RaycastNonAlloc(p + Vector3.up * 3f, Vector3.down, hits, 8f, ~0, QueryTriggerInteraction.Ignore);
+            float best = float.MinValue;
+            for (int i = 0; i < n; i++)
+            {
+                var c = hits[i].collider;
+                if (c.transform.IsChildOf(car) || c.attachedRigidbody != null) continue;
+                var nm = c.name;
+                if (!(nm.StartsWith("Roads") || nm.StartsWith("Road") || nm.StartsWith("Pavements") || nm.StartsWith("Kerbs") || nm.StartsWith("Cycle")
+                    || nm.StartsWith("BGT") || nm.StartsWith("Ground") || nm.StartsWith("Terrain") || nm.StartsWith("Green") || nm.StartsWith("Parking") || nm.StartsWith("Squares"))) continue;
+                best = Mathf.Max(best, hits[i].point.y);
+            }
+            return best == float.MinValue ? fallback : best;
+        }
+        foreach (var (car, yaw) in _parkedCars)
+        {
+            if (car == null) continue;
+            var t = car.transform;
+            var fwd = Quaternion.Euler(0f, yaw, 0f) * Vector3.forward; var right = Vector3.Cross(Vector3.up, fwd);
+            // the wheels' contact points, by the body's size (a small car's 2.4 m wheelbase to a van's 3.3 m)
+            float half = 0.75f, axle = 1.3f;
+            var bc = car.GetComponentInChildren<BoxCollider>();
+            if (bc != null) { half = Mathf.Clamp(bc.size.x * bc.transform.lossyScale.x / 2f - 0.15f, 0.55f, 1.0f); axle = Mathf.Clamp(bc.size.z * bc.transform.lossyScale.z / 2f - 0.75f, 1.0f, 1.8f); }
+            var c0 = t.position;
+            float fl = GroundUnder(c0 + fwd * axle - right * half, t, c0.y), fr = GroundUnder(c0 + fwd * axle + right * half, t, c0.y);
+            float rl = GroundUnder(c0 - fwd * axle - right * half, t, c0.y), rr = GroundUnder(c0 - fwd * axle + right * half, t, c0.y);
+            float y = (fl + fr + rl + rr) / 4f;
+            float pitch = Mathf.Clamp(Mathf.Atan2((rl + rr) - (fl + fr), 4f * axle) * Mathf.Rad2Deg, -8f, 8f);
+            float roll = Mathf.Clamp(Mathf.Atan2((fl + rl) - (fr + rr), 4f * half) * Mathf.Rad2Deg, -8f, 8f);
+            if (Mathf.Abs(y - c0.y) > 0.03f || Mathf.Abs(pitch) > 0.5f || Mathf.Abs(roll) > 0.5f) moved++;
+            var lean = Quaternion.AngleAxis(pitch, right) * Quaternion.AngleAxis(roll, fwd);
+            t.rotation = lean * t.rotation;
+            t.position = new Vector3(c0.x, y, c0.z);
+        }
+        Physics.SyncTransforms();
+        if (moved > 0) Debug.Log($"OsmMap: {moved} of {_parkedCars.Count} parked cars set on the ground under their wheels");
     }
 
     /// <summary>Not drawn once smaller than this fraction of the screen's height (thousands of register trees and lamps).</summary>
@@ -3664,6 +3724,7 @@ public partial class OsmMapGenerator
             {
                 var prefab = assets.ParkedCars[rng.Next(assets.ParkedCars.Length)];
                 var car = Place(prefab, c.p, c.yaw, "Parked car");
+                if (car != null) LampsOff(car);
                 _parkedCars.Add((car, c.yaw)); ParkedCarCount++;
                 NumberPlates.Fit(car, prefab.name, NumberPlates.For(_map.Country), new System.Random(ParkedCarCount * 7919 + 17), Quaternion.Euler(0f, c.yaw, 0f));
             }

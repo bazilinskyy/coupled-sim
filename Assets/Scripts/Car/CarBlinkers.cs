@@ -39,6 +39,16 @@ public class CarBlinkers : MonoBehaviour
         Stop();
     }
 
+    /// <summary>Shows a lamp lit or unlit. A small separate lamp (under 25 cm: the discs set on a detailed model's corners,
+    /// beside its own light clusters) is hidden while off: in its unlit amber it stood as an orange dot just off the body
+    /// where it curves, beside the tail lamps.</summary>
+    void Show(MeshRenderer r, bool on)
+    {
+        if (r == null) return;
+        r.sharedMaterial = on ? lightOn : lightOff;
+        if (r.localBounds.size.magnitude * r.transform.lossyScale.magnitude / 1.732f < 0.25f) r.enabled = on;
+    }
+
     public void StartLeftBlinkers()
     {
         TurnOnBlinkers(leftBlinkers, leftBlinkerObjects);
@@ -70,17 +80,11 @@ public class CarBlinkers : MonoBehaviour
     {
         if (leftBlinkers != null)
         {
-            foreach (MeshRenderer renderer in leftBlinkers)
-            {
-                if (renderer != null) renderer.sharedMaterial = lightOff;
-            }
+            foreach (MeshRenderer renderer in leftBlinkers) Show(renderer, false);
         }
         if (rightBlinkers != null)
         {
-            foreach (MeshRenderer renderer in rightBlinkers)
-            {
-                if (renderer != null) renderer.sharedMaterial = lightOff;
-            }
+            foreach (MeshRenderer renderer in rightBlinkers) Show(renderer, false);
         }
 
         if (leftBlinkerObjects != null)
@@ -108,10 +112,7 @@ public class CarBlinkers : MonoBehaviour
             LampOn = true;
             if (blinkerRenderers != null)
             {
-                foreach (MeshRenderer rend in blinkerRenderers)
-                {
-                    if (rend != null) rend.sharedMaterial = lightOn;
-                }
+                foreach (MeshRenderer rend in blinkerRenderers) Show(rend, true);
             }
             if (blinkerObjects != null)
             {
@@ -124,10 +125,7 @@ public class CarBlinkers : MonoBehaviour
             LampOn = false;
             if (blinkerRenderers != null)
             {
-                foreach (MeshRenderer rend in blinkerRenderers)
-                {
-                    if (rend != null) rend.sharedMaterial = lightOff;
-                }
+                foreach (MeshRenderer rend in blinkerRenderers) Show(rend, false);
             }
             if (blinkerObjects != null)
             {

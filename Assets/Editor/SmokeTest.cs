@@ -930,6 +930,7 @@ public static class SmokeTest
             foreach (var al in go.GetComponentsInChildren<AudioListener>(true)) UnityEngine.Object.DestroyImmediate(al);
             foreach (var rb in go.GetComponentsInChildren<Rigidbody>(true)) rb.isKinematic = true;
             foreach (var n in new[] { "DriverModel&Rig", "PassengerModel" }) { var f = go.transform.Find(n); if (f != null) f.gameObject.SetActive(false); }
+            OsmMapGenerator.LampsOff(go);   // (its indicators off: their script is gone)
             // pedestrians standing (their walking controller is set by their AI script, which is gone)
             foreach (var an in go.GetComponentsInChildren<Animator>(true))
                 if (name.StartsWith("ped:"))
