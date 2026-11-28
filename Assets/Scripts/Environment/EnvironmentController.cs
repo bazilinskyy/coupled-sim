@@ -493,6 +493,7 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
     {
         if (!force && Time.time < _nextLampUpdate) return;
         _nextLampUpdate = Time.time + 0.5f;
+        foreach (var g in _lampGlows) if (g != null && g.activeSelf != StreetLightsOn) g.SetActive(StreetLightsOn);
         if (!StreetLightsOn || MaxActiveStreetLights <= 0)
         {
             foreach (var l in StreetLights) if (l != null) l.enabled = StreetLightsOn;
@@ -802,6 +803,25 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
     }
 
     // A spot light under the head of each street lamp model (the highest part, at the end of the arm).
+    readonly List<GameObject> _lampGlows = new List<GameObject>();
+    static Material _lampGlow;
+
+    /// <summary>One warm emissive material for the street lamps' lenses (a copy of a lamp's own, so it is a shader every
+    /// build has).</summary>
+    static Material LampGlowMaterial(Material from)
+    {
+        if (_lampGlow != null) return _lampGlow;
+        _lampGlow = from != null ? new Material(from) : new Material(Shader.Find("Universal Render Pipeline/Lit"));
+        _lampGlow.name = "Street lamp glow";
+        var warm = new Color(1f, 0.82f, 0.55f);
+        if (_lampGlow.HasProperty("_BaseColor")) _lampGlow.SetColor("_BaseColor", warm);
+        if (_lampGlow.HasProperty("_BaseMap")) _lampGlow.SetTexture("_BaseMap", null);
+        _lampGlow.SetColor("_EmissionColor", warm * 6f);
+        _lampGlow.EnableKeyword("_EMISSION");
+        _lampGlow.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None;
+        return _lampGlow;
+    }
+
     void CreateLampLights()
     {
         foreach (var t in FindObjectsByType<Transform>())
@@ -832,6 +852,20 @@ public class EnvironmentController : MonoBehaviour, IExperimentModifier
             l.shadows = LightShadows.None;
             l.enabled = false;
             StreetLights.Add(l);
+            // the lamp's glowing lens under its head, lit with the street lights (without it the heads looked switched off at
+            // night, a lit street under dark lamps): a thin disc of the head's size in a warm emissive copy of its material
+            var glow = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            glow.name = "Lamp glow";
+            Destroy(glow.GetComponent<Collider>());
+            glow.transform.SetParent(t, true);
+            glow.transform.position = new Vector3(head.center.x, head.min.y + 0.01f, head.center.z);
+            float lens = Mathf.Clamp(Mathf.Min(head.size.x, head.size.z) * 0.7f, 0.15f, 0.6f);
+            glow.transform.localScale = Vector3.Scale(new Vector3(lens, 0.01f, lens), new Vector3(1f / Mathf.Max(1e-3f, t.lossyScale.x), 1f / Mathf.Max(1e-3f, t.lossyScale.y), 1f / Mathf.Max(1e-3f, t.lossyScale.z)));
+            var gr = glow.GetComponent<MeshRenderer>();
+            gr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            gr.sharedMaterial = LampGlowMaterial(renderers[0].sharedMaterial);
+            glow.SetActive(false);
+            _lampGlows.Add(glow);
         }
         Debug.Log($"EnvironmentController: {StreetLights.Count} street lights");
     }
